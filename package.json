@@ -1,0 +1,9 @@
+{
+  "name": "13-floors",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sim": "node tools/sim.mjs",
+    "serve": "npx --yes serve -l 8080 ."
+  }
+}
