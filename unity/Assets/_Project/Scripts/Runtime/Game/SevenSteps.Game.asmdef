@@ -3,6 +3,7 @@
     "rootNamespace": "SevenSteps.Game",
     "references": [
         "SevenSteps.Core",
+        "SevenSteps.Contracts",
         "Unity.InputSystem",
         "UnityEngine.UI"
     ],
