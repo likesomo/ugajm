@@ -1,6 +1,6 @@
 {
  "generator": "server/tools/telemetry-golden.mjs",
- "source": "origin/feat/core:unity/Assets/_Project/Tests/Golden/traces.golden.json + manual scenarios",
+ "source": "unity/Assets/_Project/Tests/Golden/traces.golden.json + manual scenarios",
  "reference": "prototypes/seven-steps/src/telemetry.js",
  "schema": 1,
  "notes": "Clock fixed at 0: no idle events. Removed fields: t, durationMs, idleMs, sessionMs. Excluded types: idle, session_end. Commands: U D L R K X, Z undo, * restart, H hint, > next stage via selector. session_start uses firstTime:true, cleared:0; attempts start at 1.",
@@ -63860,6 +63860,203 @@
    ]
   },
   {
+   "id": "edge-slide-into-pit",
+   "level": 1,
+   "levelName": "edge-slide-into-pit",
+   "levelKey": "6a1347cb",
+   "via": "boot",
+   "commands": "RR",
+   "map": [
+    "#######",
+    "#S~~o.#",
+    "#######"
+   ],
+   "bodies": 2,
+   "events": [
+    {
+     "seq": 0,
+     "type": "session_start",
+     "firstTime": true,
+     "cleared": 0
+    },
+    {
+     "seq": 1,
+     "type": "level_start",
+     "level": 1,
+     "levelName": "edge-slide-into-pit",
+     "levelKey": "6a1347cb",
+     "attempt": 1,
+     "via": "boot",
+     "bodies": 2
+    },
+    {
+     "seq": 2,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 1,
+     "dir": "right",
+     "from": [
+      1,
+      1
+     ],
+     "to": [
+      4,
+      1
+     ],
+     "result": "fell"
+    },
+    {
+     "seq": 3,
+     "type": "body_lost",
+     "level": 1,
+     "body": 1,
+     "at": [
+      4,
+      1
+     ],
+     "reason": "fell",
+     "wasted": true
+    },
+    {
+     "seq": 4,
+     "type": "move",
+     "level": 1,
+     "body": 2,
+     "step": 1,
+     "dir": "right",
+     "from": [
+      1,
+      1
+     ],
+     "to": [
+      4,
+      1
+     ],
+     "result": "fell"
+    },
+    {
+     "seq": 5,
+     "type": "body_lost",
+     "level": 1,
+     "body": 2,
+     "at": [
+      4,
+      1
+     ],
+     "reason": "fell",
+     "wasted": true
+    },
+    {
+     "seq": 6,
+     "type": "level_fail",
+     "level": 1,
+     "at": [
+      4,
+      1
+     ],
+     "moves": 2,
+     "bodiesUsed": 2
+    }
+   ]
+  },
+  {
+   "id": "edge-crumble-then-slide",
+   "level": 1,
+   "levelName": "edge-crumble-then-slide",
+   "levelKey": "a13ed72e",
+   "via": "boot",
+   "commands": "RRL",
+   "map": [
+    "#######",
+    "#Sx~~.#",
+    "#######"
+   ],
+   "bodies": 2,
+   "events": [
+    {
+     "seq": 0,
+     "type": "session_start",
+     "firstTime": true,
+     "cleared": 0
+    },
+    {
+     "seq": 1,
+     "type": "level_start",
+     "level": 1,
+     "levelName": "edge-crumble-then-slide",
+     "levelKey": "a13ed72e",
+     "attempt": 1,
+     "via": "boot",
+     "bodies": 2
+    },
+    {
+     "seq": 2,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 1,
+     "dir": "right",
+     "from": [
+      1,
+      1
+     ],
+     "to": [
+      2,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 3,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 2,
+     "dir": "right",
+     "from": [
+      2,
+      1
+     ],
+     "to": [
+      5,
+      1
+     ],
+     "result": "slid",
+     "crumbled": true
+    },
+    {
+     "seq": 4,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 3,
+     "dir": "left",
+     "from": [
+      5,
+      1
+     ],
+     "to": [
+      2,
+      1
+     ],
+     "result": "fell"
+    },
+    {
+     "seq": 5,
+     "type": "body_lost",
+     "level": 1,
+     "body": 1,
+     "at": [
+      2,
+      1
+     ],
+     "reason": "fell",
+     "wasted": true
+    }
+   ]
+  },
+  {
    "id": "edge-ice-stops-at-gate",
    "level": 1,
    "levelName": "edge-ice-stops-at-gate",
@@ -65460,6 +65657,718 @@
      "hints": 0,
      "fails": 0,
      "bodiesUsed": 2
+    }
+   ]
+  },
+  {
+   "id": "edge-two-doors-one-plate",
+   "level": 1,
+   "levelName": "edge-two-doors-one-plate",
+   "levelKey": "c81fe198",
+   "via": "boot",
+   "commands": "RRRLRLRK",
+   "map": [
+    "#######",
+    "#S..a.#",
+    "#A##A##",
+    "#######"
+   ],
+   "bodies": 2,
+   "events": [
+    {
+     "seq": 0,
+     "type": "session_start",
+     "firstTime": true,
+     "cleared": 0
+    },
+    {
+     "seq": 1,
+     "type": "level_start",
+     "level": 1,
+     "levelName": "edge-two-doors-one-plate",
+     "levelKey": "c81fe198",
+     "attempt": 1,
+     "via": "boot",
+     "bodies": 2
+    },
+    {
+     "seq": 2,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 1,
+     "dir": "right",
+     "from": [
+      1,
+      1
+     ],
+     "to": [
+      2,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 3,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 2,
+     "dir": "right",
+     "from": [
+      2,
+      1
+     ],
+     "to": [
+      3,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 4,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 3,
+     "dir": "right",
+     "from": [
+      3,
+      1
+     ],
+     "to": [
+      4,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 5,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 4,
+     "dir": "left",
+     "from": [
+      4,
+      1
+     ],
+     "to": [
+      3,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 6,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 5,
+     "dir": "right",
+     "from": [
+      3,
+      1
+     ],
+     "to": [
+      4,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 7,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 6,
+     "dir": "left",
+     "from": [
+      4,
+      1
+     ],
+     "to": [
+      3,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 8,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 7,
+     "dir": "right",
+     "from": [
+      3,
+      1
+     ],
+     "to": [
+      4,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 9,
+     "type": "seventh_step",
+     "level": 1,
+     "body": 1,
+     "at": [
+      4,
+      1
+     ],
+     "tile": "plate",
+     "effect": "choose"
+    },
+    {
+     "seq": 10,
+     "type": "keep",
+     "level": 1,
+     "body": 1,
+     "at": [
+      4,
+      1
+     ]
+    },
+    {
+     "seq": 11,
+     "type": "body_lost",
+     "level": 1,
+     "body": 1,
+     "at": [
+      4,
+      1
+     ],
+     "reason": "statue",
+     "wasted": false
+    }
+   ]
+  },
+  {
+   "id": "edge-last-body-opens-door",
+   "level": 1,
+   "levelName": "edge-last-body-opens-door",
+   "levelKey": "b38c2d7a",
+   "via": "boot",
+   "commands": "RRRLRLR",
+   "map": [
+    "######",
+    "#S..a#",
+    "####A#",
+    "######"
+   ],
+   "bodies": 1,
+   "events": [
+    {
+     "seq": 0,
+     "type": "session_start",
+     "firstTime": true,
+     "cleared": 0
+    },
+    {
+     "seq": 1,
+     "type": "level_start",
+     "level": 1,
+     "levelName": "edge-last-body-opens-door",
+     "levelKey": "b38c2d7a",
+     "attempt": 1,
+     "via": "boot",
+     "bodies": 1
+    },
+    {
+     "seq": 2,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 1,
+     "dir": "right",
+     "from": [
+      1,
+      1
+     ],
+     "to": [
+      2,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 3,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 2,
+     "dir": "right",
+     "from": [
+      2,
+      1
+     ],
+     "to": [
+      3,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 4,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 3,
+     "dir": "right",
+     "from": [
+      3,
+      1
+     ],
+     "to": [
+      4,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 5,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 4,
+     "dir": "left",
+     "from": [
+      4,
+      1
+     ],
+     "to": [
+      3,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 6,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 5,
+     "dir": "right",
+     "from": [
+      3,
+      1
+     ],
+     "to": [
+      4,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 7,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 6,
+     "dir": "left",
+     "from": [
+      4,
+      1
+     ],
+     "to": [
+      3,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 8,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 7,
+     "dir": "right",
+     "from": [
+      3,
+      1
+     ],
+     "to": [
+      4,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 9,
+     "type": "seventh_step",
+     "level": 1,
+     "body": 1,
+     "at": [
+      4,
+      1
+     ],
+     "tile": "plate",
+     "effect": "statue"
+    },
+    {
+     "seq": 10,
+     "type": "body_lost",
+     "level": 1,
+     "body": 1,
+     "at": [
+      4,
+      1
+     ],
+     "reason": "statue",
+     "wasted": false
+    },
+    {
+     "seq": 11,
+     "type": "level_fail",
+     "level": 1,
+     "at": [
+      4,
+      1
+     ],
+     "moves": 7,
+     "bodiesUsed": 1
+    }
+   ]
+  },
+  {
+   "id": "edge-second-plate-no-door-event",
+   "level": 1,
+   "levelName": "edge-second-plate-no-door-event",
+   "levelKey": "855aee72",
+   "via": "boot",
+   "commands": "LLLRLRLKRRRLRLRK",
+   "map": [
+    "#########",
+    "#a..S..a#",
+    "####A####",
+    "####E####"
+   ],
+   "bodies": 3,
+   "events": [
+    {
+     "seq": 0,
+     "type": "session_start",
+     "firstTime": true,
+     "cleared": 0
+    },
+    {
+     "seq": 1,
+     "type": "level_start",
+     "level": 1,
+     "levelName": "edge-second-plate-no-door-event",
+     "levelKey": "855aee72",
+     "attempt": 1,
+     "via": "boot",
+     "bodies": 3
+    },
+    {
+     "seq": 2,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 1,
+     "dir": "left",
+     "from": [
+      4,
+      1
+     ],
+     "to": [
+      3,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 3,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 2,
+     "dir": "left",
+     "from": [
+      3,
+      1
+     ],
+     "to": [
+      2,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 4,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 3,
+     "dir": "left",
+     "from": [
+      2,
+      1
+     ],
+     "to": [
+      1,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 5,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 4,
+     "dir": "right",
+     "from": [
+      1,
+      1
+     ],
+     "to": [
+      2,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 6,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 5,
+     "dir": "left",
+     "from": [
+      2,
+      1
+     ],
+     "to": [
+      1,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 7,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 6,
+     "dir": "right",
+     "from": [
+      1,
+      1
+     ],
+     "to": [
+      2,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 8,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 7,
+     "dir": "left",
+     "from": [
+      2,
+      1
+     ],
+     "to": [
+      1,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 9,
+     "type": "seventh_step",
+     "level": 1,
+     "body": 1,
+     "at": [
+      1,
+      1
+     ],
+     "tile": "plate",
+     "effect": "choose"
+    },
+    {
+     "seq": 10,
+     "type": "keep",
+     "level": 1,
+     "body": 1,
+     "at": [
+      1,
+      1
+     ]
+    },
+    {
+     "seq": 11,
+     "type": "body_lost",
+     "level": 1,
+     "body": 1,
+     "at": [
+      1,
+      1
+     ],
+     "reason": "statue",
+     "wasted": false
+    },
+    {
+     "seq": 12,
+     "type": "move",
+     "level": 1,
+     "body": 2,
+     "step": 1,
+     "dir": "right",
+     "from": [
+      4,
+      1
+     ],
+     "to": [
+      5,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 13,
+     "type": "move",
+     "level": 1,
+     "body": 2,
+     "step": 2,
+     "dir": "right",
+     "from": [
+      5,
+      1
+     ],
+     "to": [
+      6,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 14,
+     "type": "move",
+     "level": 1,
+     "body": 2,
+     "step": 3,
+     "dir": "right",
+     "from": [
+      6,
+      1
+     ],
+     "to": [
+      7,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 15,
+     "type": "move",
+     "level": 1,
+     "body": 2,
+     "step": 4,
+     "dir": "left",
+     "from": [
+      7,
+      1
+     ],
+     "to": [
+      6,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 16,
+     "type": "move",
+     "level": 1,
+     "body": 2,
+     "step": 5,
+     "dir": "right",
+     "from": [
+      6,
+      1
+     ],
+     "to": [
+      7,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 17,
+     "type": "move",
+     "level": 1,
+     "body": 2,
+     "step": 6,
+     "dir": "left",
+     "from": [
+      7,
+      1
+     ],
+     "to": [
+      6,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 18,
+     "type": "move",
+     "level": 1,
+     "body": 2,
+     "step": 7,
+     "dir": "right",
+     "from": [
+      6,
+      1
+     ],
+     "to": [
+      7,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 19,
+     "type": "seventh_step",
+     "level": 1,
+     "body": 2,
+     "at": [
+      7,
+      1
+     ],
+     "tile": "plate",
+     "effect": "choose"
+    },
+    {
+     "seq": 20,
+     "type": "keep",
+     "level": 1,
+     "body": 2,
+     "at": [
+      7,
+      1
+     ]
+    },
+    {
+     "seq": 21,
+     "type": "body_lost",
+     "level": 1,
+     "body": 2,
+     "at": [
+      7,
+      1
+     ],
+     "reason": "statue",
+     "wasted": false
     }
    ]
   },
