@@ -38,16 +38,63 @@ public static class BuildTools
         var scenes = EnabledScenes();
         if (scenes.Length == 0) throw new Exception("[BuildTools] No enabled scenes in Build Settings.");
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output)) ?? ".");
-        var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+
+        // Players report Application.version as "<bundleVersion>+<commit>[-dirty]" (telemetry `build` field).
+        // The commit is stamped only for the build and the project setting is put back afterwards.
+        string baseVersion = PlayerSettings.bundleVersion;
+        PlayerSettings.bundleVersion = BuildVersion(baseVersion);
+        BuildReport report;
+        try
         {
-            scenes = scenes,
-            locationPathName = output,
-            target = target,
-            options = BuildOptions.None,
-        });
+            report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+            {
+                scenes = scenes,
+                locationPathName = output,
+                target = target,
+                options = BuildOptions.None,
+            });
+        }
+        finally
+        {
+            Debug.Log($"[BuildTools] version {PlayerSettings.bundleVersion}");
+            PlayerSettings.bundleVersion = baseVersion;
+            AssetDatabase.SaveAssets();
+        }
         var s = report.summary;
         Debug.Log($"[BuildTools] {target}: {s.result}, {s.totalErrors} errors, {s.totalSize} bytes -> {output}");
         if (Application.isBatchMode) EditorApplication.Exit(s.result == BuildResult.Succeeded ? 0 : 1);
+    }
+
+    /// "0.1.0" -> "0.1.0+e6e39ca" (or "+e6e39ca-dirty" with uncommitted tracked changes, "+nogit" without git).
+    public static string BuildVersion(string baseVersion)
+    {
+        string hash = Git("rev-parse --short=7 HEAD");
+        if (string.IsNullOrEmpty(hash)) return $"{baseVersion}+nogit";
+        string dirty = string.IsNullOrEmpty(Git("status --porcelain --untracked-files=no")) ? "" : "-dirty";
+        return $"{baseVersion}+{hash}{dirty}";
+    }
+
+    static string Git(string args)
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo("git", args)
+            {
+                WorkingDirectory = Path.GetFullPath(Path.Combine(Application.dataPath, "..")),
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            using var p = System.Diagnostics.Process.Start(psi);
+            string output = p.StandardOutput.ReadToEnd().Trim();
+            p.WaitForExit(5000);
+            return p.ExitCode == 0 ? output : "";
+        }
+        catch (Exception)
+        {
+            return "";
+        }
     }
 }
 #endif
