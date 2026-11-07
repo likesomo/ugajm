@@ -65,4 +65,4 @@ unity/Tools/unity.sh all          # levels + setup + verify + build-win + smoke
 - `Scripts/Editor` (`SevenSteps.Editor`): `ProjectSetup`(에셋·씬 생성), `LevelVerifier`(C#↔JS 일치 검사), `BuildTools`
 - 에셋: `Art/Materials`·`Prefabs/Generated`는 `ProjectSetup`이 만든 임시 아트(URP 프리미티브). 직접 고치지 말고 `ProjectSetup.cs`를 고친 뒤 `setup`. 실제 아트로 바꿀 때는 `Data/GameAssets.asset`의 프리팹 참조를 교체한다(타일 윗면 y=0, 1칸=1유닛)
 - 폰트: `Assets/Shared/Fonts/Jua-Regular.ttf` (SIL OFL, 레거시 uGUI Text용 동적 폰트). 효과음: `Assets/Shared/Audio/*.wav` (`unity/Tools/gen-sfx.mjs`로 만든 임시음)
-- 빌드 로그에 URP `ScreenSpaceAmbientOcclusion`/`Blitter` 예외가 나오면 `unity/Assets/Settings/UniversalRenderPipelineGlobalSettings.asset`의 렌더 리소스 항목이 빠진 것이다. `git checkout -- <그 파일>` 후 다시 빌드 (`smoke`가 잡아낸다)
+- **URP 설정 손상 (Unity 6000.6 알려진 현상)**: 배치 실행(특히 새 작업 공간의 첫 실행)이 `unity/Assets/Settings/UniversalRenderPipelineGlobalSettings.asset`의 `m_RuntimeSettings`를 비우고 SSAO 리소스 id를 새로 만든다. 그 상태로 빌드하면 플레이어에서 `ScreenSpaceAmbientOcclusion`/`Blitter` 예외가 난다. `unity.sh`는 배치 명령 뒤에 이를 감지해 커밋된 파일로 되돌리고, 빌드 명령이면 한 번 더 빌드한다. Unity.exe를 직접 실행했다면 `git checkout -- <그 파일>`. **이 파일의 변경은 커밋하지 않는다** (`smoke`가 예외를 잡아낸다)

@@ -24,13 +24,46 @@ REPO="$(cd "$PROJ/.." && pwd)"
 U="${UNITY_EXE:-/c/Program Files/Unity/Hub/Editor/6000.6.8f1/Editor/Unity.exe}"
 export PATH="/c/Program Files/nodejs:$PATH"
 
+# Known Unity 6000.6 issue: a batch run (often the first one in a fresh work space) can re-serialize the
+# URP global settings with an empty m_RuntimeSettings list and regenerated SSAO resource ids. A player
+# built that way throws ScreenSpaceAmbientOcclusion/Blitter exceptions. Restore the committed file then.
+URPGS="unity/Assets/Settings/UniversalRenderPipelineGlobalSettings.asset"
+runtime_list_empty() { grep -A1 "m_RuntimeSettings:" "$1" | grep -q "m_List: \[\]"; }
+restore_urp_settings() {
+  local stat added deleted
+  stat="$(cd "$REPO" && git diff --numstat -- "$URPGS")"
+  [ -z "$stat" ] && return 1
+  read -r added deleted _ <<< "$stat"
+  local committed; committed="$(mktemp)"
+  (cd "$REPO" && git show "HEAD:$URPGS") > "$committed"
+  if { runtime_list_empty "$REPO/$URPGS" && ! runtime_list_empty "$committed"; } || { [ "$added" = "0" ] && [ "$deleted" != "0" ]; }; then
+    rm -f "$committed"
+    (cd "$REPO" && git checkout -- "$URPGS")
+    echo "[unity.sh] restored $URPGS (Unity emptied/stripped m_RuntimeSettings: +$added -$deleted)"
+    return 0
+  fi
+  rm -f "$committed"
+  echo "[unity.sh] WARNING: $URPGS changed (+$added -$deleted). Check before committing."
+  return 1
+}
+
+run_unity() {
+  local name="$1" method="$2"
+  (cd "$REPO" && "$U" -batchmode -nographics -projectPath unity -executeMethod "$method" -logFile "unity/Logs/batch-$name.log")
+}
+
 batch() {
   local name="$1" method="$2"
   local log="$PROJ/Logs/batch-$name.log"
   mkdir -p "$PROJ/Logs"
   echo "[unity.sh] $name: $method (log: unity/Logs/batch-$name.log)"
   local code=0
-  (cd "$REPO" && "$U" -batchmode -nographics -projectPath unity -executeMethod "$method" -logFile "unity/Logs/batch-$name.log") || code=$?
+  run_unity "$name" "$method" || code=$?
+  if restore_urp_settings && [ "$code" -eq 0 ] && [[ "$name" == build-* ]]; then
+    echo "[unity.sh] $name: rebuilding with the restored URP settings"
+    run_unity "$name" "$method" || code=$?
+    restore_urp_settings || true
+  fi
   grep -E "\[SevenSteps\]|\[BuildTools\]|^(OK|FAIL) |error CS|^[A-Za-z.]*Exception|Aborting batchmode" "$log" || true
   if [ "$code" -ne 0 ]; then echo "[unity.sh] $name FAILED (exit $code). See $log"; exit "$code"; fi
   echo "[unity.sh] $name OK"

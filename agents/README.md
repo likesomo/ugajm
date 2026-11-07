@@ -13,6 +13,7 @@
 | [gameplay-ui.md](gameplay-ui.md) | 게임플레이/UI 프로그래머 | Claude | `feat/view` | Orca 작업 공간 신규 생성 |
 | [art.md](art.md) | 아트/리소스 | **Codex (GPT)** | `feat/art` | **Orca orchestration 워커** (결과를 리드에게 보고) |
 | [level-design.md](level-design.md) | 레벨 디자이너 | Claude | `feat/levels` | Orca 작업 공간 신규 생성 |
+| [backend-analytics.md](backend-analytics.md) | 백엔드/분석 (수집 서버·대시보드) | Claude | `feat/server` | Orca 작업 공간 `server` |
 
 `number-chemical` 에이전트는 종료한다. 작업 공간과 브랜치는 남긴다.
 
@@ -33,7 +34,7 @@
 |---|---|---|
 | 0. v0 완성 | 리드 | `7lucky`에서 탑다운으로 12스테이지 플레이 가능, CompileCheck 통과, 푸시 |
 | 1. 구조 정리 | 아키텍트 (리드는 규칙 확정 병행) | `docs/architecture.md`와 구조 리팩터가 `7lucky`에 합쳐짐. 코어 공개 API와 프리팹 매핑 방식 고정 |
-| 2. 병렬 개발 | 코어, 게임플레이/UI, 아트, 레벨 디자인 | 각자 브랜치에서 작업, 아키텍트 검토 후 리드가 합침 |
+| 2. 병렬 개발 | 코어, 게임플레이/UI, 아트, 레벨 디자인, 백엔드/분석 | 각자 브랜치에서 작업, 아키텍트 검토 후 리드가 합침 |
 | 3. 다듬기 | 전원 | 3D 쿼터뷰 전환, 연출, 13~15스테이지, 사람 플레이테스트, itch.io 업로드 |
 
 1단계 동안 아트 에이전트는 무료 에셋 후보 조사와 GPT 생성 시안 작업만 하고 프로젝트에는 아직 넣지 않는다.
@@ -42,6 +43,10 @@
 ### 새 기믹 흐름
 
 레벨 디자이너가 흥미도 곡선에서 떨어지는 지점을 찾아 기믹 제안 → 리드 승인 → 코어가 규칙 구현(JS + C#, 테스트) → 게임플레이/UI·아트가 표시와 리소스 → 레벨 디자이너가 스테이지 제작.
+
+### 플레이 분석 흐름
+
+백엔드/분석이 이벤트 스키마(`docs/telemetry.md`)를 고정하고 리드·아키텍트에게 알림 → 아키텍트가 Unity 쪽 `ITelemetry` 인터페이스와 서버 주소 설정을 프로그램 기본 틀(Boot→Title→StageSelect→Game→Result, 저장, 설정, 서비스 등록)에 넣음 → 리드가 배분: 게임플레이/UI는 Unity 전송 구현(배치, 재시도, WebGL 페이지 종료 시 `sendBeacon` jslib), 레벨 디자이너는 대시보드 CSV/JSON으로 흥미도 모델 보정. 웹 프로토타입 연동(`telemetry.js`)은 백엔드/분석이 먼저 해서 바로 플레이테스트에 쓴다. 서버의 외부 공개(배포)는 사용자 결정.
 
 ## 파일 소유권 (충돌 방지 규칙)
 
@@ -54,6 +59,7 @@ Unity 씬·프리팹은 git으로 합치기 어렵다. **한 파일은 한 에�
 | `Assets/_Project/Scripts/Runtime/Game/**`, `Assets/_Project/Scenes/**`, `Assets/_Project/UI/**` (UI 프리팹) | 게임플레이/UI |
 | `Assets/Shared/**` (git 밖 공유 폴더, **아트만 추가·수정**), `Assets/_Project/Art/**`, `Assets/_Project/Prefabs/Tiles/**`, `Assets/Settings/*RPAsset*`, `design/art/**` (`design/art/CREDITS.md` 포함) | 아트 |
 | `*.asmdef`, `docs/architecture.md`, 공용 인터페이스(아키텍트가 지정한 파일), `Packages/manifest.json` | 아키텍트 |
+| `server/**`, `docs/telemetry.md`, `prototypes/seven-steps/src/telemetry.js`, `prototypes/seven-steps/src/main.js`의 텔레메트리 훅 부분 (main.js의 나머지는 건드리지 않는다) | 백엔드/분석 |
 | `CLAUDE.md`, `design/**`, `agents/**`, `ProjectSettings/EditorBuildSettings.asset`, `Assets/_Project/Scripts/Editor/BuildTools.cs` | 리드 |
 
 `Prefabs/Generated/**`는 v0에서 리드가 만든 임시 프리팹이다. 최종 타일 프리팹은 아트가 `Prefabs/Tiles/**`에 만들고, 아키텍트의 `TileSet` 매핑으로 교체한다.
