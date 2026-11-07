@@ -36,6 +36,7 @@ namespace SevenSteps.Game
             { GameEventType.Lose, "몸을 모두 잃었다. Z로 되돌리거나 R로 다시 시작." },
             { GameEventType.Undo, "한 걸음 되돌렸다." },
             { GameEventType.Restart, "처음부터." },
+            { GameEventType.Flip, "7번째 걸음으로 레버를 당겼다. 벽이 뒤집혔다." },
         };
 
         const string ChooseNudge = "먼저 고르자: K = KEEP (석상), X = SWITCH (새 출발점).";
@@ -359,7 +360,8 @@ namespace SevenSteps.Game
                     case GameEventType.Bump: Play(assets.sfxBump); break;
                     case GameEventType.Crumble: Play(assets.sfxCrumble); break;
                     case GameEventType.Stone: Play(assets.sfxStone); break;
-                    case GameEventType.Switch: Play(assets.sfxSwitch); break;
+                    case GameEventType.Switch:
+                    case GameEventType.Flip: Play(assets.sfxSwitch); break;
                     case GameEventType.Bridge:
                     case GameEventType.Seal: Play(assets.sfxBridge); break;
                     case GameEventType.Fall: Play(assets.sfxFall); break;

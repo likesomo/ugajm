@@ -185,6 +185,12 @@ namespace SevenSteps.Game
             {
                 if (e.StepIdx == Rules.Steps && e.At >= 0) StartCoroutine(Ring(grid.CellToWorld(e.At)));
                 if (e.Type == GameEventType.Crumble && e.At >= 0) Flash(e.At);
+                if (e.Type == GameEventType.Flip)
+                {
+                    // Lever pulled: every flip wall turns now (TileId.At already gives the new shape), then the rest plays.
+                    FlipWalls(r.State, e.At);
+                    yield return new WaitForSeconds(0.15f / Speed);
+                }
                 if ((e.Type == GameEventType.DoorOpen || e.Type == GameEventType.DoorClose) && e.At >= 0)
                 {
                     // The door changes right after the statue appears; Draw at the end sees it already done.
@@ -232,7 +238,7 @@ namespace SevenSteps.Game
                     c.HasId = true;
                     c.ActiveKnown = false;
                     SetCellLabel(c, id, i, v);
-                    if (pop && c.Go != null && id.Kind == TileKind.Bridge) Tween(c.Go.transform, v.Scale * grid.CellSize);
+                    if (pop && c.Go != null && (id.Kind == TileKind.Bridge || id.Kind == TileKind.FlipWall)) Tween(c.Go.transform, v.Scale * grid.CellSize);
                 }
 
                 bool active = IsActive(s, id, i);
@@ -313,6 +319,31 @@ namespace SevenSteps.Game
             playerLabel.Text.color = choosing || left == 1 ? Ui.Gold : Ui.Ink;
         }
 
+        /// Flip event: rebuild the flip-wall cells whose shape changed and show the lever as pulled.
+        void FlipWalls(State s, int lever)
+        {
+            for (int i = 0; i < cells.Length; i++)
+            {
+                var c = cells[i];
+                var id = TileId.At(s, i);
+                if (id.Kind != TileKind.FlipWall || (c.HasId && c.Id.Equals(id))) continue;
+                var v = set.Get(id);
+                if (c.Go != null) Destroy(c.Go);
+                c.Go = Spawn(v, i, $"{id} {i}");
+                c.Id = id;
+                c.HasId = true;
+                c.ActiveKnown = false;
+                if (c.Go != null) Tween(c.Go.transform, v.Scale * grid.CellSize);
+            }
+            if (lever >= 0 && cells[lever].HasId)
+            {
+                var c = cells[lever];
+                c.Active = s.Flipped;
+                c.ActiveKnown = true;
+                ApplyActive(c.Go, set.Get(c.Id), s.Flipped, true);
+            }
+        }
+
         /// TileVisual "active" (TileVisual.cs): door open, gate passable on the next step, plate pressed, exit on the 7th step.
         /// Answers come from Core queries and State fields; nothing is recomputed here.
         static bool IsActive(State s, TileId id, int i)
@@ -321,6 +352,7 @@ namespace SevenSteps.Game
             {
                 case TileKind.Door: return Rules.DoorOpen(s, (char)('A' + id.Variant));
                 case TileKind.CountDoor: return Rules.DoorOpen(s, 'Q');
+                case TileKind.Lever: return s.Flipped;
                 case TileKind.Gate: return s.Status == Status.Play && id.Variant == s.Used + 1;
                 case TileKind.Plate: return Rules.Contains(s.Statues, i);
                 case TileKind.Exit: return s.Status == Status.Play && s.Used == Rules.Steps - 1;
