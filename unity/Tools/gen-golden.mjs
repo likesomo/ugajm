@@ -64,7 +64,7 @@ function snapshot(s) {
   for (let p = s.prev; p; p = p.prev) undoDepth++;
   return {
     start: s.start, pos: s.pos, used: s.used, bodies: s.bodies, status: s.status,
-    statues: s.statues, bridges: s.bridges, broken: s.broken,
+    statues: s.statues, bridges: s.bridges, broken: s.broken, flipped: s.flipped,
     trail: s.trail.map((f) => ({ i: f.i, n: f.n })),
     undoDepth,
   };
@@ -179,6 +179,22 @@ const EDGE = [
   // KEEP while standing on an open Q: the statue stands on the door cell and that door closes.
   { id: 'edge-count-door-keep-on-door', map: ['##########', '#S......Q#', '##########'], bodies: 3, statueCount: 0,
     cmds: 'RRRRRRRK' + 'RRRRRR' + 'R', expect: 'choose stone doorClose respawn bump' },
+  // Lever L: a 7th step ending on it flips every flip wall (R raised/blocks, r lowered/open).
+  { id: 'edge-lever-pull-then-keep', map: ['##########', '#S......L#', '#R########', '##########'], bodies: 3,
+    cmds: 'D' + 'RRRRRRR' + 'K' + 'RRRRRRR' + 'Z' + 'Z' + 'Z' + 'Z' + 'Z' + 'Z' + 'D', expect: 'bump flip choose stone respawn bump undo step' },
+  { id: 'edge-lever-steps-1-to-6-pass', map: ['##########', '#S..L....#', '#R########', '##########'], bodies: 3,
+    cmds: 'RRRRRRL' + 'K' + 'D' + 'RRRLRLR' + 'K' + 'D', expect: 'choose stone respawn bump flip choose stone respawn step' },
+  // SWITCH onto the lever, then a 7th step back on it (the start) vanishes and does not pull it.
+  { id: 'edge-lever-on-start-vanishes', map: ['############', '#S......L~.#', '#R.........#', '############'], bodies: 3,
+    cmds: 'RRRRRRR' + 'X' + 'DURDLLU', expect: 'flip choose switch respawn vanish respawn' },
+  { id: 'edge-lever-two-levers', map: ['##########', '#S......L#', '#R.....L.#', '##########'], bodies: 3,
+    cmds: 'RRRRRRR' + 'K' + 'DRRRRRR' + 'K' + 'D', expect: 'flip choose stone respawn flip choose stone respawn bump' },
+  // A wall rises under a statue: both block, nothing else changes.
+  { id: 'edge-lever-raises-under-statue', map: ['##########', '#S......L#', '#..r.....#', '##########'], bodies: 3,
+    cmds: 'DRRLRLR' + 'K' + 'RRRRRRR' + 'K', expect: 'choose stone respawn flip choose stone' },
+  { id: 'edge-lever-last-body', map: ['##########', '#S......L#', '##########'], bodies: 1, cmds: 'RRRRRRR', expect: 'flip stone lose' },
+  { id: 'edge-lever-undo', map: ['##########', '#S......L#', '#R########', '##########'], bodies: 3,
+    cmds: 'RRRRRRR' + 'Z' + 'R' + 'K' + 'ZZ' + 'R' + 'X' + '*' + 'D', expect: 'flip choose undo flip choose stone undo undo flip choose switch respawn restart bump' },
   { id: 'edge-win-ends-input', map: ['#########', '#S......E', '#########'], bodies: 3, cmds: 'RRRRRRR' + 'RLKXZR', expect: 'win undo win' },
 ];
 
@@ -199,6 +215,13 @@ const SKETCH = [
   { name: '남기지 말고 옮겨라', statueCount: 1, bodies: 4, map: ['##########', '#a......S#', '#######A##', '#.E..Q...#', '##########'] },
 ];
 
+// Lever sketch stages (design/levels/gimmick-backlog.md 2, experiments/lever/stages.mjs @ feat/levels 9b45886).
+const LEVER_SKETCH = [
+  { name: '내리는 벽', bodies: 3, map: ['#########', '#S....L.#', '#.#######', '#.R...E##', '#########'] },
+  { name: '열면 닫힌다', bodies: 3, map: ['##########', '#S..r..L.#', '#.##R#####', '#...R..E##', '##########'] },
+  { name: '올려서 멈추기', bodies: 3, map: ['##########', '#S....L..#', '#.########', '#.########', '#.~~~~r..#', '#####E####', '##########'] },
+];
+
 const traces = [];
 LEVELS.forEach((def, idx) => {
   const best = minBodies(parseLevel(def));
@@ -215,6 +238,14 @@ SKETCH.forEach((def, idx) => {
     traces.push(trace(`sketch-count-door-${idx + 1}-random-${seed}`, 'random', def, randomCommands(9000 + 10 * idx + seed, 120)));
   }
 });
+LEVER_SKETCH.forEach((def, idx) => {
+  const best = minBodies(parseLevel(def));
+  if (!best) throw new Error(`sketch "${def.name}" has no solution`);
+  traces.push(trace(`sketch-lever-${idx + 1}-solution`, 'solution', def, letters(best.path)));
+  for (const seed of [1, 2]) {
+    traces.push(trace(`sketch-lever-${idx + 1}-random-${seed}`, 'random', def, randomCommands(9500 + 10 * idx + seed, 120)));
+  }
+});
 for (const e of EDGE) {
   const t = trace(e.id, 'edge', { name: e.id, map: e.map, bodies: e.bodies, statueCount: e.statueCount }, e.cmds);
   checkExpect(t, e.expect);
@@ -223,7 +254,7 @@ for (const e of EDGE) {
 
 // Together the traces must produce every event type.
 const seenEvents = new Set(traces.flatMap((t) => t.steps.flatMap((s) => s.events.map((e) => e.type))));
-const allEvents = ['bump', 'step', 'crumble', 'bridge', 'fall', 'win', 'seal', 'vanish', 'choose', 'stone', 'switch', 'respawn', 'lose', 'undo', 'restart', 'slide', 'doorOpen', 'doorClose'];
+const allEvents = ['bump', 'step', 'crumble', 'bridge', 'fall', 'win', 'seal', 'vanish', 'choose', 'stone', 'switch', 'respawn', 'lose', 'undo', 'restart', 'slide', 'doorOpen', 'doorClose', 'flip'];
 const missing = allEvents.filter((t) => !seenEvents.has(t));
 if (missing.length) throw new Error(`golden traces never produce: ${missing.join(', ')}`);
 

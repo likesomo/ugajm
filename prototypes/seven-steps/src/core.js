@@ -4,7 +4,8 @@ export const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 
 // Map legend: # wall, . floor, S start, E exit, o pit, ~ ice, x cracked floor,
 // a-c plate, A-C door (open while a statue stands on the matching plate), 1-7 gate (pass only on that step),
-// Q statue-count door (open while exactly `statueCount` statues stand; bridges and seals are not statues).
+// Q statue-count door (open while exactly `statueCount` statues stand; bridges and seals are not statues),
+// L lever (a 7th step ending on it flips every flip wall), R raised flip wall (blocks), r lowered flip wall (open).
 export function parseLevel(def) {
   const h = def.map.length;
   const w = Math.max(...def.map.map((r) => r.length));
@@ -27,17 +28,22 @@ export function parseLevel(def) {
 export function newState(level) {
   return {
     level, start: level.start, pos: level.start, used: 0, bodies: level.bodies,
-    statues: [], bridges: [], broken: [], trail: [{ i: level.start, n: 0 }],
+    statues: [], bridges: [], broken: [], flipped: false, trail: [{ i: level.start, n: 0 }],
     status: 'play', prev: null,
   };
 }
 
-// Tile as currently seen: bridges (pit filled by a statue) read as '=', broken cracked floor as a pit.
+// Tile as currently seen: bridges (pit filled by a statue) read as '=', broken cracked floor as a pit,
+// flip walls after an odd number of lever pulls swap: 'R' is always "raised now", 'r' "lowered now".
 export function tileAt(s, i) {
   if (s.bridges.includes(i)) return '=';
   if (s.broken.includes(i)) return 'o';
-  return s.level.tiles[i];
+  const t = s.level.tiles[i];
+  if (s.flipped && isFlipWall(t)) return t === 'R' ? 'r' : 'R';
+  return t;
 }
+
+export const isFlipWall = (t) => t === 'R' || t === 'r';
 
 // Statues standing now. Bridges (filled pits, sealed cracked floor) are not statues.
 export const statueCount = (s) => s.statues.length;
@@ -60,7 +66,7 @@ function neighbor(s, i, dir) {
 export function passable(s, i, stepIdx) {
   if (i < 0 || s.statues.includes(i)) return false;
   const t = tileAt(s, i);
-  if (t === '#') return false;
+  if (t === '#' || t === 'R') return false;
   if (isDoor(t)) return doorOpen(s, t);
   if (t >= '1' && t <= '7') return Number(t) === stepIdx;
   return true;
@@ -131,6 +137,12 @@ export function step(s, dir) {
     events.push({ type: 'step', at: pos, stepIdx });
     return { state: next, events };
   }
+  // Lever: the 7th step ending on it flips every flip wall, then the body is spent as usual (choose/stone).
+  // On the start cell the 7th step only vanishes, so the lever there is not pulled.
+  if (t === 'L' && pos !== s.start) {
+    next.flipped = !s.flipped;
+    events.push({ type: 'flip', at: pos });
+  }
   if (t === 'E') {
     events.push({ type: 'win', at: pos });
     return { state: { ...next, status: 'win' }, events };
@@ -194,7 +206,7 @@ export function dispatch(s, cmd) {
   return { state: s, events: [] };
 }
 
-const keyOf = (s) => `${s.start}|${s.pos}|${s.used}|${s.bodies}|${s.statues}|${s.bridges}|${s.broken}|${s.status}`;
+const keyOf = (s) => `${s.start}|${s.pos}|${s.used}|${s.bodies}|${s.statues}|${s.bridges}|${s.broken}|${s.status}|${s.flipped ? 1 : 0}`;
 
 // BFS over actions (moves and KEEP/SWITCH). Returns the shortest winning move list, or null. Used by the solver tool and the hint button.
 export function solve(level, maxBodies = level.bodies, { noSwitch = false, limit = 400000 } = {}) {

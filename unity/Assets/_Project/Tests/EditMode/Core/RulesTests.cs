@@ -38,7 +38,7 @@ namespace SevenSteps.Tests
         public void EventEnumOnlyGrowsAtTheEnd()
         {
             // Values may be saved or logged: never renumber, only append.
-            string[] order = { "Bump", "Step", "Crumble", "Bridge", "Fall", "Win", "Seal", "Vanish", "Choose", "Stone", "Switch", "Respawn", "Lose", "Undo", "Restart", "Slide", "DoorOpen", "DoorClose" };
+            string[] order = { "Bump", "Step", "Crumble", "Bridge", "Fall", "Win", "Seal", "Vanish", "Choose", "Stone", "Switch", "Respawn", "Lose", "Undo", "Restart", "Slide", "DoorOpen", "DoorClose", "Flip" };
             for (int k = 0; k < order.Length; k++) Assert.AreEqual(order[k], ((GameEventType)k).ToString());
             Assert.AreEqual(order.Length, Enum.GetValues(typeof(GameEventType)).Length, "new events go at the end of this list too");
         }
@@ -221,6 +221,60 @@ namespace SevenSteps.Tests
             var crack = Run(Rules.NewState(Map(3, "##########", "#S....x..#", "##########")), "RRRRLRR");
             Assert.AreEqual(1, crack.Bridges.Length);
             Assert.AreEqual(0, Rules.StatueCount(crack));
+        }
+
+        // ---- lever (L) and flip walls (R raised, r lowered) ----------------------------------------------
+
+        [Test]
+        public void FlipEventMatchesTheFlippedField()
+        {
+            int flips = 0;
+            foreach (var (prev, cmd, r, where) in AllResults())
+            {
+                if (cmd == 'Z' || cmd == '*') continue;
+                bool flipped = r.State.Flipped != prev.Flipped;
+                Assert.AreEqual(flipped, r.Has(GameEventType.Flip), $"{where}: Flip event iff Flipped changed");
+                if (!flipped) continue;
+                flips++;
+                var e = r.Events.Find(x => x.Type == GameEventType.Flip);
+                Assert.AreEqual('L', prev.Level.Tile(e.At), $"{where}: Flip.At is the lever");
+                Assert.AreEqual(r.Path[r.Path.Length - 1], e.At, $"{where}: the move ended on the lever");
+                Assert.AreNotEqual(prev.Start, e.At, $"{where}: a lever on the start is never pulled");
+                Assert.AreEqual(Rules.Steps, prev.Used + 1, $"{where}: only the 7th step pulls");
+                Assert.AreEqual(0, e.StepIdx, $"{where}: Flip carries no step number");
+                int k = r.Events.IndexOf(e);
+                var after = r.Events[k + 1].Type;
+                Assert.IsTrue(after == GameEventType.Choose || after == GameEventType.Stone, $"{where}: Flip comes before Choose/Stone ({Golden.Describe(r.Events)})");
+            }
+            Assert.Greater(flips, 0, "golden traces never pull a lever");
+        }
+
+        [Test]
+        public void FlipWallsReadThroughTileAt()
+        {
+            var s = Rules.NewState(Map(3, "##########", "#S......L#", "#Rr######", "##########"));
+            int raised = 21, lowered = 22;
+            Assert.AreEqual('R', Rules.TileAt(s, raised));
+            Assert.AreEqual('r', Rules.TileAt(s, lowered));
+            Assert.IsFalse(Rules.Passable(s, raised, 1));
+            Assert.IsTrue(Rules.Passable(s, lowered, 1));
+            s = Run(s, "RRRRRRR");
+            Assert.IsTrue(s.Flipped);
+            Assert.AreEqual('r', Rules.TileAt(s, raised), "R reads as lowered after a pull");
+            Assert.AreEqual('R', Rules.TileAt(s, lowered), "r reads as raised after a pull");
+            Assert.IsTrue(Rules.Passable(s, raised, 1));
+            Assert.IsFalse(Rules.Passable(s, lowered, 1));
+            Assert.AreEqual('R', s.Level.Tile(raised), "the level itself never changes");
+            Assert.IsTrue(Rules.IsFlipWall('R') && Rules.IsFlipWall('r') && !Rules.IsFlipWall('L'));
+        }
+
+        [Test]
+        public void SolverKeyIncludesFlipped()
+        {
+            var s = Run(Rules.NewState(Map(3, "##########", "#S......L#", "##########")), "RRRRRRRX");
+            var unflipped = Rules.NewState(s.Level);
+            Assert.IsTrue(s.Flipped);
+            Assert.AreNotEqual(Rules.Key(s).Substring(Rules.Key(s).Length - 1), Rules.Key(unflipped).Substring(Rules.Key(unflipped).Length - 1));
         }
 
         [Test]

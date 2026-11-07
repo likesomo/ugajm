@@ -47,7 +47,7 @@ namespace SevenSteps.Tests
             sb.Append($"start={s.Start} pos={s.Pos} used={s.Used} bodies={s.Bodies} status={s.Status.ToString().ToLowerInvariant()}");
             sb.Append($" statues=[{string.Join(",", s.Statues)}] bridges=[{string.Join(",", s.Bridges)}] broken=[{string.Join(",", s.Broken)}] trail=[");
             for (int k = 0; k < s.Trail.Length; k++) sb.Append(k > 0 ? "," : "").Append(s.Trail[k].Cell).Append(':').Append(s.Trail[k].Step);
-            sb.Append($"] undo={depth}");
+            sb.Append($"] flipped={(s.Flipped ? 1 : 0)} undo={depth}");
             return sb.ToString();
         }
 
@@ -57,7 +57,7 @@ namespace SevenSteps.Tests
             sb.Append($"start={g.start} pos={g.pos} used={g.used} bodies={g.bodies} status={g.status}");
             sb.Append($" statues=[{string.Join(",", g.statues)}] bridges=[{string.Join(",", g.bridges)}] broken=[{string.Join(",", g.broken)}] trail=[");
             for (int k = 0; k < g.trail.Length; k++) sb.Append(k > 0 ? "," : "").Append(g.trail[k].i).Append(':').Append(g.trail[k].n);
-            sb.Append($"] undo={g.undoDepth}");
+            sb.Append($"] flipped={(g.flipped ? 1 : 0)} undo={g.undoDepth}");
             return sb.ToString();
         }
 
@@ -128,6 +128,7 @@ namespace SevenSteps.Tests
     {
         public int start, pos, used, bodies, undoDepth;
         public string status;
+        public bool flipped;
         public int[] statues, bridges, broken;
         public GoldenFoot[] trail;
     }
