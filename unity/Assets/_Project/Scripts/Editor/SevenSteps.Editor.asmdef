@@ -3,6 +3,7 @@
     "rootNamespace": "SevenSteps.EditorTools",
     "references": [
         "SevenSteps.Core",
+        "SevenSteps.Contracts",
         "SevenSteps.Game"
     ],
     "includePlatforms": [
