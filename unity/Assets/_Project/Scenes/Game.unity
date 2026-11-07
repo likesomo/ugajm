@@ -338,6 +338,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SevenSteps.Game::SevenSteps.Game.GameController
   assets: {fileID: 11400000, guid: 63b1d826f6401694ebf55634d640094d, type: 2}
+  config: {fileID: 11400000, guid: b3b733326baccb14d9b6b471c464d54a, type: 2}
   startLevel: 1
   replay: 
 --- !u!4 &1922725109
