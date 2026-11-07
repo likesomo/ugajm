@@ -40,6 +40,7 @@ const MESSAGES = {
   lose: '몸을 모두 잃었다. Z로 되돌리거나 R로 다시 시작.',
   undo: '한 걸음 되돌렸다.',
   restart: '처음부터.',
+  flip: '레버를 당겼다. 모든 뒤집힘 벽이 뒤집혔다.',
 };
 
 function loadLevel(idx, via = 'select') {
@@ -62,10 +63,13 @@ function send(cmd) {
   flash = null;
   doorFx = new Set();
   for (const e of r.events) {
-    if (MESSAGES[e.type]) message = MESSAGES[e.type];
+    // A lever pull is followed by choose/stone/respawn messages; keep the pull visible in front of them.
+    if (MESSAGES[e.type]) message = e.type !== 'flip' && r.events.some((x) => x.type === 'flip') ? `${MESSAGES.flip} ${MESSAGES[e.type]}` : MESSAGES[e.type];
+    if (e.type === 'flip') state.level.tiles.forEach((t, i) => { if (t === 'L' || t === 'R' || t === 'r') doorFx.add(i); });
     if (e.type === 'bump') {
       flash = { at: e.at, type: 'bump' };
       if (e.at >= 0 && tileAt(state, e.at) === 'Q') message = qDoorText(state, '이 문은 닫혀 있다.');
+      if (e.at >= 0 && tileAt(state, e.at) === 'R') message = '올라간 벽. 레버(L)를 7번째 걸음으로 밟으면 뒤집힌다.';
     }
     if ((e.type === 'doorOpen' || e.type === 'doorClose') && tileAt(state, e.at) === 'Q') {
       doorFx.add(e.at);
@@ -107,6 +111,10 @@ function cellHtml(i) {
   let label = '';
   if (t >= 'a' && t <= 'c') { cls = `plate p-${t}`; label = t.toUpperCase(); }
   if (t >= 'A' && t <= 'C') { cls = `door p-${t.toLowerCase()} ${doorOpen(s, t) ? 'open' : 'closed'}`; label = t; }
+  // Lever and flip walls: tileAt already reports the current side ('R' raised now, 'r' lowered now).
+  if (t === 'L') { cls = `lever ${s.flipped ? 'pulled' : ''}`; label = s.flipped ? '⇂' : '↾'; }
+  if (t === 'R') cls = 'flipwall raised';
+  if (t === 'r') cls = 'flipwall lowered';
   if (t === 'Q') { cls = `door qdoor ${doorOpen(s, t) ? 'open' : 'closed'}`; label = String(s.level.statueCount); }
   if (t >= '1' && t <= '7') { cls = `gate ${Number(t) === nextStep ? 'go' : ''}`; label = t; }
   if (t === 'E') { label = '出'; if (nextStep === STEPS) cls += ' ready'; }
@@ -195,6 +203,8 @@ function render() {
         <li><span class="cell mini door p-a closed"><span class="label">A</span></span> 문</li>
         <li><span class="cell mini gate"><span class="label">3</span></span> 숫자 문: 3번째 걸음일 때만 통과</li>
         <li><span class="cell mini door qdoor closed"><span class="label">1</span></span> 석상 수 문: 서 있는 석상이 정확히 그 수일 때만 열린다. 구덩이·금 간 바닥의 다리는 세지 않는다 (모서리 숫자 = 지금 석상 수)</li>
+        <li><span class="cell mini lever"><span class="label">↾</span></span> 레버: 7번째 걸음으로 밟으면 모든 뒤집힘 벽이 뒤집힌다 (석상이 서면 다시 못 당긴다, 출발점에서는 안 당겨진다)</li>
+        <li><span class="cell mini flipwall raised"></span><span class="cell mini flipwall lowered"></span> 뒤집힘 벽: 올라간 벽은 막고, 내려간 벽은 지나갈 수 있다</li>
         <li><span class="cell mini pit"></span> 구덩이: 7번째 걸음으로 빠지면 다리가 된다</li>
         <li><span class="cell mini ice"></span> 얼음: 막힐 때까지 미끄러진다. 몇 칸이든 1걸음</li>
         <li><span class="cell mini cracked"></span> 금 간 바닥: 지나가면 무너진다. 7번째 걸음으로 서면 굳는다</li>
