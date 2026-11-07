@@ -54,7 +54,15 @@ restore_urp_settings() {
 
 run_unity() {
   local name="$1" method="$2"
-  (cd "$REPO" && "$U" -batchmode -nographics -projectPath unity -executeMethod "$method" -logFile "unity/Logs/batch-$name.log")
+  # Open the editor on the build's own target. URP's build step picks the pipeline assets for shader stripping
+  # from the active target at startup: a WebGL build started while Standalone is active strips the Mobile
+  # pipeline's shaders and the WebGL player draws the UI but no 3D board (2026-11-07).
+  local target=()
+  case "$name" in
+    build-webgl) target=(-buildTarget WebGL) ;;
+    build-win)   target=(-buildTarget Win64) ;;
+  esac
+  (cd "$REPO" && "$U" -batchmode -nographics -projectPath unity "${target[@]}" -executeMethod "$method" -logFile "unity/Logs/batch-$name.log")
 }
 
 batch() {
