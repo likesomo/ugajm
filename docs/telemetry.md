@@ -47,7 +47,10 @@
 ## 2. 좌표와 공통 값
 
 - 칸 좌표는 `[x, y]` (0부터, 왼쪽 위가 `[0,0]`, 레벨 맵 문자열의 열·행). 맵 밖은 `null`
-- `level`: 1부터 시작하는 스테이지 번호(현재 빌드의 순서). 순서가 바뀔 수 있으므로 `level_start`에 `levelName`도 보낸다
+- `level`: 1부터 시작하는 스테이지 번호(현재 빌드의 순서). 순서가 바뀔 수 있으므로 `level_start`에 `levelName`과 `levelKey`도 보낸다
+- `levelKey`: 스테이지 내용의 해시(8자리 소문자 16진수). 문자열 `<몸 수>
+<행1>
+<행2>…`(각 행은 레벨 폭까지 `#`으로 채우고 출발점은 `S`)의 FNV-1a 32비트. 맵이나 몸 수가 바뀌면 달라지고 순서만 바뀌면 같다. 기준 구현 `telemetry.js` `levelKey()`, 예: 스테이지 1 → 골든 파일 참고
 - `body`: 이번 스테이지에서 몇 번째 몸인지 (1부터). `level.bodies - state.bodies + 1`
 - `step`: 그 이동이 몇 번째 걸음인지 (1~7). `state.used + 1`
 - `tile` 종류: `floor` `exit` `pit` `ice` `cracked` `bridge` `plate` `door` `gate` `wall` `start`(현재 출발점 칸)
@@ -59,7 +62,7 @@
 | type | 언제 | 필드 |
 |---|---|---|
 | `session_start` | 게임을 켰을 때, 숨긴 탭이 다시 보일 때 | `firstTime`(이 기기에서 처음), `cleared`(저장된 클리어 스테이지 수), `resumed`(탭 복귀면 true) |
-| `level_start` | 스테이지 진입·클리어 뒤 재시작 | `level`, `levelName`, `attempt`(이 기기에서 이 스테이지를 시작한 횟수, 1부터), `via`: `boot` \| `url` \| `next` \| `select` \| `again`, `bodies`(몸 수) |
+| `level_start` | 스테이지 진입·클리어 뒤 재시작 | `level`, `levelName`, `levelKey`(선택), `attempt`(이 기기에서 이 스테이지를 시작한 횟수, 1부터), `via`: `boot` \| `url` \| `next` \| `select` \| `again`, `bodies`(몸 수) |
 | `move` | 방향 입력 하나 (막혀도 보낸다) | `level`, `body`, `step`, `dir`: `up` \| `down` \| `left` \| `right`, `from`, `to`(멈춘 칸, 막혔으면 막은 칸), `result`: `moved` \| `blocked` \| `slid` \| `fell` \| `bridged` \| `door` \| `gate`, 선택: `blockedBy`(막은 tile 종류 또는 `statue` `edge`), `crumbled`(지나온 금 간 바닥이 무너졌으면 true) |
 | `seventh_step` | 7번째 걸음이 어딘가에 닿았을 때 (`move` 바로 뒤) | `level`, `body`, `at`, `tile`, `effect`: `win` \| `bridge` \| `seal` \| `vanish` \| `choose` \| `statue`(마지막 몸이라 자동 석상) |
 | `keep` | KEEP 선택 | `level`, `body`, `at` |
@@ -114,3 +117,4 @@
 | 날짜 | 버전 | 내용 |
 |---|---|---|
 | 2026-11-07 | v1 | 최초 확정 |
+| 2026-11-07 | v1 | `level_start.levelKey`(선택) 추가 — 레벨 디자인 요청. 선택 필드라 버전은 그대로 |
