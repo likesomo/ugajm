@@ -9,6 +9,7 @@
 #   compile      (batch) compile check only
 #   test         (batch) EditMode tests -> reports/editmode-results.xml
 #   tileset      (batch) rebuild the placeholder TileSet (Data/TileSets/TopDown_Placeholder.asset)
+#   tileset-validate (batch) check every TileSet against docs/architecture.md 12 (errors -> exit 1)
 #   build-win    (batch) Windows build -> Builds/Windows/Seven Steps.exe
 #   build-webgl  (batch) WebGL build -> Builds/WebGL/
 #   play         run the Windows build
@@ -85,6 +86,7 @@ case "$cmd" in
   verify)      batch verify SevenSteps.EditorTools.LevelVerifier.BatchVerify ;;
   compile)     batch compile BuildTools.CompileCheck ;;
   tileset)     batch tileset SevenSteps.EditorTools.TileSetBuilder.BatchBuild ;;
+  tileset-validate) batch tileset-validate SevenSteps.EditorTools.TileSetValidator.BatchValidate ;;
   test)
     # EditMode tests (Tests/EditMode). Results: reports/editmode-results.xml
     mkdir -p "$REPO/reports" "$PROJ/Logs"
@@ -125,5 +127,5 @@ case "$cmd" in
     "$0" build-win
     "$0" smoke ;;
   *)
-    sed -n '2,25p' "$0" ;;
+    sed -n '2,26p' "$0" ;;
 esac

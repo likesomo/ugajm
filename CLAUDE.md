@@ -50,6 +50,7 @@ unity/Tools/unity.sh sfx          # 임시 효과음 11개 합성 → Assets/Sha
 unity/Tools/unity.sh setup        # 머티리얼·프리팹·GameAssets 생성, Game 씬(없을 때만), 빌드/플레이어 설정
 unity/Tools/unity.sh golden       # 규칙 골든값(core.js → Tests/Golden) + 텔레메트리 골든값(server/fixtures) 다시 생성. core.js 나 스테이지를 바꾸면 실행 후 커밋
 unity/Tools/unity.sh test         # EditMode 테스트 (Tests/EditMode) → reports/editmode-results.xml
+unity/Tools/unity.sh tileset-validate # 모든 TileSet 을 docs/architecture.md 12장 규격으로 검사 (오류면 실패). 아트 TileSet 을 합치기 전 필수
 unity/Tools/unity.sh tileset      # 임시 TileSet 다시 생성 (Data/TileSets/TopDown_Placeholder.asset)
 unity/Tools/unity.sh verify       # C# 규칙이 JS 솔버와 같은 답인지 12스테이지 검사 → reports/seven-steps-unity-verify.json
 unity/Tools/unity.sh build-win    # → Builds/Windows/Seven Steps.exe      (play 로 실행)
