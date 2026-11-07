@@ -19,13 +19,14 @@
 - 입력: Input System (`InputSystem_Actions.inputactions`), UI: uGUI
 
 ## 폴더 규칙
-- 게임 코드/에셋은 `unity/Assets/_Project/` 아래에 둔다: `Scripts/Runtime`, `Scripts/Editor`, `Prefabs`, `Art`, `Audio`, `UI`
-- 외부 에셋 팩은 `unity/Assets/ThirdParty/<팩이름>/`에 두고 라이선스 파일을 함께 커밋한다
+- 게임 코드와 텍스트 자산(스크립트·씬·프리팹·머티리얼·ScriptableObject)은 `unity/Assets/_Project/` 아래에 둔다: `Scripts/Runtime`, `Scripts/Editor`, `Prefabs`, `Art`, `Data`, `Scenes`, `UI`
+- **바이너리 에셋은 git에 넣지 않는다** (모델, 텍스처·이미지, 오디오, 폰트, 외부 패키지). 공유 폴더 `C:/unityjam/shared-assets/seven-steps/Assets/`에 `.meta`와 함께 두고, 작업 공간의 `unity/Assets/Shared`가 정션으로 가리킨다. 무료 에셋만 쓰고, 추가·수정은 아트만 한다. 크레딧은 `design/art/CREDITS.md`. 자세한 규칙은 `agents/README.md` "에셋 규칙"
+- **작업 공간을 처음 받으면** 에디터를 닫고 `powershell -ExecutionPolicy Bypass -File tools/link-shared-assets.ps1` 실행 (정션 생성, 다시 실행해도 안전). 정션이 없으면 글자·효과음이 비고 `setup`이 실패한다
 - 새 파일은 반드시 `.meta`와 함께 커밋한다. `.meta`가 없으면 참조가 깨진다
-- `Library/`, `Temp/`, `Logs/`, `UserSettings/`, `/Builds/`는 커밋하지 않는다 (`.gitignore` 처리됨)
+- `Library/`, `Temp/`, `Logs/`, `UserSettings/`, `/Builds/`, `/reports/`, `unity/Assets/Shared/`(+`Shared.meta`)는 커밋하지 않는다 (`.gitignore` 처리됨)
 
 ## Git
-- 이미지·모델·오디오·폰트는 Git LFS로 관리된다 (`.gitattributes`). 커밋 전에 `git lfs status`로 확인
+- `.gitattributes`의 LFS 규칙은 남아 있지만, 바이너리 에셋은 이제 커밋하지 않는다. 커밋 전에 `git status`에 이미지·오디오·폰트·모델이 없는지 확인
 - 씬/프리팹(YAML) 충돌은 UnityYAMLMerge 드라이버가 처리하도록 로컬 git 설정이 되어 있다
 - 같은 씬 파일을 여러 사람/에이전트가 동시에 고치지 않는다. 작업 단위를 프리팹으로 나눈다
 
@@ -45,7 +46,7 @@ U="/c/Program Files/Unity/Hub/Editor/6000.6.8f1/Editor/Unity.exe"
 위 배치 명령을 감싼 스크립트. 배치 명령은 에디터를 닫고 실행한다. 로그는 `unity/Logs/batch-<명령>.log`.
 ```bash
 unity/Tools/unity.sh levels       # levels.js + JS 솔버 답 → Assets/_Project/Data/levels.json (스테이지를 바꾸면 실행)
-unity/Tools/unity.sh sfx          # 임시 효과음 11개 합성 → Assets/_Project/Audio/*.wav
+unity/Tools/unity.sh sfx          # 임시 효과음 11개 합성 → Assets/Shared/Audio/*.wav (공유 폴더, 아트 담당)
 unity/Tools/unity.sh setup        # 머티리얼·프리팹·GameAssets 생성, Game 씬(없을 때만), 빌드/플레이어 설정
 unity/Tools/unity.sh verify       # C# 규칙이 JS 솔버와 같은 답인지 12스테이지 검사 → reports/seven-steps-unity-verify.json
 unity/Tools/unity.sh build-win    # → Builds/Windows/Seven Steps.exe      (play 로 실행)
@@ -63,4 +64,5 @@ unity/Tools/unity.sh all          # levels + setup + verify + build-win + smoke
 - `Scripts/Runtime/Game` (`SevenSteps.Game`): `GameController`(입력·사운드·저장·흐름), `BoardView`(상태를 읽어 그리드 표시·트윈), `HudView`/`Ui`(uGUI를 코드로 생성), `GameAssets`(모든 에셋 참조 ScriptableObject)
 - `Scripts/Editor` (`SevenSteps.Editor`): `ProjectSetup`(에셋·씬 생성), `LevelVerifier`(C#↔JS 일치 검사), `BuildTools`
 - 에셋: `Art/Materials`·`Prefabs/Generated`는 `ProjectSetup`이 만든 임시 아트(URP 프리미티브). 직접 고치지 말고 `ProjectSetup.cs`를 고친 뒤 `setup`. 실제 아트로 바꿀 때는 `Data/GameAssets.asset`의 프리팹 참조를 교체한다(타일 윗면 y=0, 1칸=1유닛)
-- 폰트: `ThirdParty/Jua` (SIL OFL, 레거시 uGUI Text용 동적 폰트). 효과음은 `unity/Tools/gen-sfx.mjs`로 만든 임시음
+- 폰트: `Assets/Shared/Fonts/Jua-Regular.ttf` (SIL OFL, 레거시 uGUI Text용 동적 폰트). 효과음: `Assets/Shared/Audio/*.wav` (`unity/Tools/gen-sfx.mjs`로 만든 임시음)
+- 빌드 로그에 URP `ScreenSpaceAmbientOcclusion`/`Blitter` 예외가 나오면 `unity/Assets/Settings/UniversalRenderPipelineGlobalSettings.asset`의 렌더 리소스 항목이 빠진 것이다. `git checkout -- <그 파일>` 후 다시 빌드 (`smoke`가 잡아낸다)
