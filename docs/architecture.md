@@ -134,6 +134,7 @@ Restart                   → [Restart]
 - `DoorClose` (At = 문 칸): 열려 있다 닫힌 문 칸마다 하나. 석상 수 문(`Q`, 6.1장)은 석상이 늘면 닫힐 수 있어서 필요하다 (2026-11-07 기믹 승인, 7lucky 37c99f7). 알파벳 문(`A`~`C`)은 석상이 사라지지 않으므로 닫히지 않는다.
 - 순서: `DoorOpen`/`DoorClose`는 `Stone` 직후, 칸 번호 오름차순(열림·닫힘 섞어서 칸 번호 순), `Respawn`/`Lose` 앞. 석상이 생기는 것은 `Stone`뿐이다. `Seal`은 석상을 남기지 않으므로(다리만 생김) 문 상태를 바꾸지 않는다. Undo/Restart는 스냅샷이라 이벤트가 필요 없다.
 - 열린 석상 수 문 칸 위에서 KEEP하면 석상이 문 칸에 서고 그 문이 닫힐 수 있다 (골든 트레이스 `edge-count-door-keep-on-door`: `Stone` → `DoorClose`@문 칸 → `Respawn`). 보드는 닫힌 문과 석상을 같은 칸에 함께 그릴 수 있어야 한다.
+- `Flip`(18, At = 레버 칸, StepIdx 0): 레버를 당긴 7번째 걸음에서 주 이벤트(`Choose`/`Stone`) 바로 앞. 자세한 규칙은 6.2장.
 - 이 규칙은 EditMode 테스트(`Tests/EditMode/Core/RulesTests`)가 모든 골든 트레이스에서 검사한다.
 
 ---
@@ -220,6 +221,21 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
 - 표시: `TileKind.CountDoor`(variant 0), 문 위 숫자 라벨은 `Level.StatueCount`. 활성 = 열림.
 - 담당: 코어(규칙·파서·테스트·JS), 레벨 디자인(`statueCount` 채우기·스테이지), 아키텍트(`TileId`·`TileSet`, 이 문서), 게임플레이/UI(라벨·`DoorClose` 연출), 아트(문 프리팹), 백엔드/분석(텔레메트리 `tile` 값: `door`로 볼지 새 값을 둘지).
 
+### 6.2 레버와 뒤집힘 벽 (`L`, `R`, `r`, 2026-11-07 규칙 확정, 코어 제안 채택)
+
+기준: GDD 75·79행, 레벨 디자이너 실험 `prototypes/seven-steps/experiments/lever/core.js` (feat/levels). 코어가 `core.js`와 C#에 같은 규칙으로 옮긴다.
+
+- 맵 글자: `L` 레버, `R` 올라온 벽(처음 막힘), `r` 내려간 벽(처음 통과). 레벨 필드 추가 없음. (리플레이 글자 `R`=오른쪽과는 별개 범례)
+- 상태: `State.Flipped`(bool, 처음 false, `core.js` `flip`). 레버가 당겨질 때마다 반전. 스냅샷·솔버 `Rules.Key`에 포함. 벽마다 따로 저장하지 않는다(모든 뒤집힘 벽이 함께 뒤집힘).
+- 통과: `R`은 `Flipped`일 때만, `r`은 `!Flipped`일 때만 통과. 1~6번째 걸음으로 `L`을 지나가거나 멈추는 것은 바닥과 같다. 레버는 얼음이 아니므로 미끄러짐은 레버에서 멈춘다.
+- 당김: 7번째 걸음이 `L`에서 끝나고 그 칸이 **현재 출발점이 아닐 때만** `Flipped`가 반전된다(얼음으로 지나가기만 하면 안 당김). KEEP하면 석상이 레버를 막아 다시 못 당긴다. SWITCH하면 레버 칸이 출발점이 되어 그 뒤로는 거기서 7번째를 마쳐도 Vanish만 난다. 출발점이면 기존 규칙대로 `Vanish`만 일어나고 레버는 당겨지지 않는다(출발점 7번째에는 어떤 칸 효과도 없음).
+- 이벤트: `GameEventType` 끝에 `Flip`(18) 하나. At = 레버 칸, StepIdx 0. 벽 칸마다의 이벤트는 없다 — 화면은 `Flip`을 받으면 모든 `FlipWall` 칸을 질의 결과대로 바꾼다.
+- 순서: `[Crumble?] [Slide?] Flip` 다음에 `Choose` 또는 `Stone`(+`DoorOpen`/`DoorClose`*)+`Respawn`|`Lose`. 즉 `Flip`은 주 이벤트 바로 앞이다.
+- Core 질의: `Rules.TileAt`이 `Flipped`일 때 `R`↔`r`을 바꿔 돌려준다 → `'R'` = 지금 올라감(막힘), `'r'` = 지금 내려감(통과). 그래서 `TileId.At`이 그대로 현재 모양을 주고, 화면은 `Flipped`를 몰라도 된다(레버 표시만 `State.Flipped`를 읽음). `Rules.IsFlipWall(char)` 추가.
+- 표시: `TileKind.Lever`(활성 = `Flipped`), `TileKind.FlipWall`(variant 0 = 지금 올라감, 1 = 지금 내려감 — 모양이 바뀌면 `TileId`가 바뀌므로 v0처럼 셀을 다시 만들거나 `Flip` 때 전환 연출). `TileSet.lever`, `TileSet.flipWalls[2]`. 임시 아트는 레버 = 발판 B, 올라감 = 벽, 내려감 = 바닥 프리팹.
+- 경계 사례(코어가 테스트·골든 트레이스로 고정): (1) 벽이 올라올 때 그 칸에 석상이나 출발점이 있어도 그대로 뒤집힌다(실험과 같음, 잼 범위에서 겹침 허용). 화면은 올라온 벽과 석상/출발점 표시를 한 칸에 함께 그릴 수 있어야 한다. (2) 출발점인 레버 칸에서 7번째 → `Vanish`, `Flip` 없음.
+- 텔레메트리 `tile` 값(`lever`, 뒤집힘 벽 이름)과 `flip` 이벤트 여부는 백엔드/분석이 `docs/telemetry.md`에 정한다.
+
 ---
 
 ## 7. 타일 → 프리팹 매핑: `TileSet`
@@ -246,6 +262,8 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 | `Plate` | `a`~`c` | 0~2 |
 | `Door` | `A`~`C` | 0~2 |
 | `CountDoor` | `Q` | 0 (N은 `Level.StatueCount`) |
+| `Lever` | `L` | 0 |
+| `FlipWall` | `R` `r` (`Rules.TileAt` 기준, 뒤집힘 반영) | 0 = 지금 올라감(막힘), 1 = 지금 내려감(통과) |
 
 `ActorKind`: `Player`, `Statue`, `StartMarker`, `OldStartMarker`, `Footprint`, `LuckyRing`.
 
@@ -263,14 +281,14 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 | `appearTrigger`, `vanishTrigger`, `activateTrigger`, `deactivateTrigger` | Animator 트리거 이름. 비우면 보드의 코드 트윈 | 3D 모델 애니메이션 |
 | `labelOffset`, `activeLabelOffset` | 숫자/글자 라벨 위치(셀 단위) | 쿼터뷰에서 기둥 높이가 다를 때 |
 
-**활성(active)의 뜻**: 문·석상 수 문 = 열림(`Rules.DoorOpen`), 게이트 = 다음 걸음에 통과 가능, 발판 = 눌림, 출구 = 다음 걸음이 7번째. 이 값은 보드가 `Rules.DoorOpen`, `state.Used`, `state.Statues`에서 읽는다.
+**활성(active)의 뜻**: 문·석상 수 문 = 열림(`Rules.DoorOpen`), 레버 = 당겨짐(`State.Flipped`), (뒤집힘 벽은 활성 대신 variant가 현재 모양), 게이트 = 다음 걸음에 통과 가능, 발판 = 눌림, 출구 = 다음 걸음이 7번째. 이 값은 보드가 `Rules.DoorOpen`, `state.Used`, `state.Statues`에서 읽는다.
 
 **셀 앵커**: 셀 윗면 중앙 (`BoardGrid.CellToWorld(i)`, y = 0). 인스턴스 배치는
 `position = anchor + offset * cellSize`, `rotation = visual.RotationFor(i)`, `localScale = visual.Scale * cellSize`.
 
 ### 7.3 `TileSet` (ScriptableObject, `Create > Seven Steps > Tile Set`)
 
-- 필드: `projection`(TopDown/Quarter), `cellSize`, `cameraRig`, 타일별 `TileVisual`, `plates[3]`, `doors[3]`, `countDoor`, 액터별 `TileVisual`.
+- 필드: `projection`(TopDown/Quarter), `cellSize`, `cameraRig`, 타일별 `TileVisual`, `plates[3]`, `doors[3]`, `countDoor`, `lever`, `flipWalls[2]`, 액터별 `TileVisual`.
 - `CameraRig`: `orthographic`, `pitch`, `yaw`, `fieldOfView`, `distance`, `padding`(셀). 기본값 `CameraRig.TopDown`(v0와 같은 58°), `CameraRig.Quarter`(35°, yaw 45°).
 - **격자는 투영과 무관하다.** 쿼터뷰 전환 = 다른 `TileSet` 에셋을 지정. 클릭 판정은 `BoardGrid.RayToCell(camera.ScreenPointToRay(p))`라 카메라 각도와 상관없이 맞다.
 - 자산 위치: `Assets/_Project/Data/TileSets/`. 임시 아트 세트 `TopDown_Placeholder.asset`은 `Seven Steps > Architecture > Build Placeholder TileSet`(배치: `SevenSteps.EditorTools.TileSetBuilder.BatchBuild`)이 v0 `GameAssets` 프리팹과 v0 오프셋으로 만든다.
@@ -425,3 +443,4 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 2026-11-07 | 코어 | `GameEventType`에 `Slide`(15), `DoorOpen`(16) 추가(3.3). `core.js`도 `slide`/`doorOpen` 이벤트를 냄. 기존 이벤트·순서·공개 API 형태는 그대로. 게임플레이/UI는 `Path.Length > 1`/`DoorOpen` 비교 대신 이 이벤트를 쓸 수 있음. EditMode 테스트 `Tests/EditMode/Core/` 추가(골든 대조) |
 | 2026-11-07 | 아키텍트 | 텔레메트리를 `docs/telemetry.md` v1에 맞춤: `TelemetryEvent`를 순서 있는 필드 + `WithCell`([x,y]/null) + `Stamp(seq,t)`로 변경, `TelemetryContext`(배치 머리, client 상수, `EventsUrl`), `TelemetryNames`(이벤트·값 상수), `TelemetryJson`(배치 JSON, `LevelKey` FNV-1a), `MemoryTelemetry`. `LaunchOptions.TelemetryUrl`(`telemetry=<url>`), `off` 지원. `ProgressData.starts`/`CountStart`(attempt). 테스트 어셈블리가 `SevenSteps.Game` 참조. 11.4·11.5 갱신(jslib 함수 `TelemetryBeacon`) |
 | 2026-11-07 | 아키텍트 | 석상 수 문 기믹(7lucky 37c99f7) 표기 확정(코어 제안 채택): 맵 글자 `Q`, 레벨 필드 `statueCount`(스테이지당 N 하나), `Rules.DoorOpen(s,'Q')`/`Rules.StatueCount`, 이벤트 `DoorClose` 추가(3.3 순서 규칙 수정), 6.1장. `TileKind.CountDoor`(끝에 추가), `TileId.FromChar('Q')`, `TileSet.countDoor`, 임시 아트는 문 A 프리팹. 코어 구현은 feat/core f6147f1 (`DoorClose`=17, `Level.StatueCount`, `Rules.StatueCount`/`IsDoor`). 7lucky 머지 때 3.3을 코어 문단과 합쳐 정리 |
+| 2026-11-07 | 아키텍트 | 레버 기믹 표기 확정(6.2, 코어 제안 채택): 맵 `L`/`R`/`r`, `State.Flipped`, `Rules.TileAt`이 뒤집힘 반영(R↔r), `Rules.IsFlipWall`, 이벤트 `Flip`(18, 주 이벤트 바로 앞), 출발점 7번째는 Vanish만, 벽·석상 겹침 허용. `TileKind.Lever`/`FlipWall`(끝에 추가), `TileSet.lever`/`flipWalls[2]`, 임시 아트 |
