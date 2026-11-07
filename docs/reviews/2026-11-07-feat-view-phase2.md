@@ -65,3 +65,16 @@
 
 ### 문서 쪽 맞춤 (아키텍트)
 - jslib 함수 이름: 이 브랜치가 telemetry.md 이름(`TelemetryBeacon`, `TelemetryRegisterVisibility`)으로 바꿨다. 11.5를 다시 그 이름으로 고쳤다(내가 직전에 `SevenSteps_*`로 바꾼 것을 되돌림).
+
+---
+
+## 사후 검토: 2a9e801(검토 반영), 43f3f38(레버 표시) — 리드가 c12fd42로 합친 뒤
+
+**결론: 문제 없음.** 남은 권장은 옵트아웃 시 `playerId` 지우기 하나.
+
+- 결과 패널: `GameSession.Presented`에서 `Status.Win && flow.State == Game`일 때만 `Result`로. 걷는 도중 패널이 뜨던 문제 해결. 연출이 Undo/Restart로 취소되면 `Presented`가 없으므로 패널도 안 뜸 — 맞다.
+- `Snap` 정리: 크기 트윈을 목록(`tweens`)에 모아 `StopAnim`에서 멈추고 목표 크기로 맞춘다. "Snap 그림 = State" 지켜짐. 목록은 `Present`마다(`StopAnim`) 비워지므로 계속 늘지 않는다.
+- `Slide`: 첫 칸은 걸음, 나머지는 홉 없이 미끄러짐. `DoorOpen`/`DoorClose`: 이벤트 시점에 그 칸의 활성 상태를 미리 바꾸고, 마지막 `Draw`는 이미 같은 값이라 두 번 재생하지 않는다.
+- 레버: `IsActive`에 `Lever => s.Flipped`(State 필드 읽기, 규칙 계산 아님). `Flip` 이벤트에서 `TileId.At(r.State, i)`로 모양이 바뀐 뒤집힘 벽 칸만 다시 만들고, 마지막 `Draw`는 같은 `TileId`라 다시 만들지 않는다. 메시지·효과음(임시로 switch 소리) 추가. 6.2 계약과 맞다.
+- 사소: 이벤트마다 `new WaitForSeconds`(명령당 몇 개라 무시 가능). 효과음은 아트가 레버 소리를 만들면 `GameAssets`에 필드 추가.
+- jslib 이름은 다시 `SevenSteps_*`로 돌아갔다 → 11.5를 코드 기준으로 확정했다.
