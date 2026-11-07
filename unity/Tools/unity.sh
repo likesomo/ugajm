@@ -2,7 +2,7 @@
 # Seven Steps Unity runner (Git Bash). Run from anywhere:  unity/Tools/unity.sh <command>
 #
 #   levels       export prototypes/seven-steps levels + JS solver answers -> Assets/_Project/Data/levels.json
-#   sfx          synthesize placeholder sound effects -> Assets/_Project/Audio/*.wav
+#   sfx          synthesize placeholder sound effects -> Assets/Shared/Audio/*.wav (git 밖)
 #   setup        (batch) generate materials/prefabs/GameAssets, Game scene if missing, build/player settings
 #   verify       (batch) check C# rules against the JS solver for every stage -> reports/seven-steps-unity-verify.json
 #   compile      (batch) compile check only
