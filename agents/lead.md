@@ -35,4 +35,4 @@
 - [ ] 씬 분리(Boot, Title, Game) 합칠 때 빌드 목록(`EditorBuildSettings`) 갱신
 - [x] 텔레메트리 배분 (게임플레이/UI 전송, 레벨 디자인 보정)
 - [ ] 서버 배포 선택지를 사용자에게 올리기 (백엔드/분석 정리 후)
-- [ ] `feat/core` 합친 뒤 `unity.sh golden` 명령 추가
+- [x] `feat/core` 합친 뒤 `unity.sh golden` 명령 추가
