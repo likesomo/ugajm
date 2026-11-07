@@ -3,6 +3,7 @@
 #
 #   levels       export prototypes/seven-steps levels + JS solver answers -> Assets/_Project/Data/levels.json
 #   sfx          synthesize placeholder sound effects -> Assets/Shared/Audio/*.wav (git 밖)
+#   golden       regenerate rule golden data (core.js -> Tests/Golden) and telemetry golden (server/fixtures)
 #   setup        (batch) generate materials/prefabs/GameAssets, Game scene if missing, build/player settings
 #   verify       (batch) check C# rules against the JS solver for every stage -> reports/seven-steps-unity-verify.json
 #   compile      (batch) compile check only
@@ -75,6 +76,11 @@ cmd="${1:-help}"
 case "$cmd" in
   levels)      node "$HERE/export-levels.mjs" ;;
   sfx)         node "$HERE/gen-sfx.mjs" ;;
+  golden)
+    # Rule golden first: the telemetry golden reads Tests/Golden/traces.golden.json as input.
+    node "$HERE/gen-golden.mjs"
+    node "$REPO/server/tools/telemetry-golden.mjs"
+    (cd "$REPO" && git status --short -- unity/Assets/_Project/Tests/Golden server/fixtures) ;;
   setup)       batch setup SevenSteps.EditorTools.ProjectSetup.BatchSetup ;;
   verify)      batch verify SevenSteps.EditorTools.LevelVerifier.BatchVerify ;;
   compile)     batch compile BuildTools.CompileCheck ;;
@@ -119,5 +125,5 @@ case "$cmd" in
     "$0" build-win
     "$0" smoke ;;
   *)
-    sed -n '2,24p' "$0" ;;
+    sed -n '2,25p' "$0" ;;
 esac

@@ -4,6 +4,7 @@
     "references": [
         "SevenSteps.Core",
         "SevenSteps.Contracts",
+        "SevenSteps.Game",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

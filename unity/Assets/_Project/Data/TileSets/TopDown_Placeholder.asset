@@ -272,6 +272,23 @@ MonoBehaviour:
     deactivateTrigger: 
     labelOffset: {x: 0, y: 0.65, z: 0}
     activeLabelOffset: {x: 0, y: 0.05, z: 0}
+  countDoor:
+    prefab: {fileID: 186495077761425509, guid: e8571cd4a1e45df4989617606e920f91, type: 3}
+    offset: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 1, y: 1, z: 1}
+    randomYaw90: 0
+    activeChild: 
+    inactiveChild: Bars
+    materialTarget: 
+    activeMaterial: {fileID: 0}
+    inactiveMaterial: {fileID: 0}
+    appearTrigger: 
+    vanishTrigger: 
+    activateTrigger: 
+    deactivateTrigger: 
+    labelOffset: {x: 0, y: 0.65, z: 0}
+    activeLabelOffset: {x: 0, y: 0.05, z: 0}
   player:
     prefab: {fileID: 8573702022139044122, guid: 86d978825572f204bba7f7dbf2f8b502, type: 3}
     offset: {x: 0, y: 0, z: 0}

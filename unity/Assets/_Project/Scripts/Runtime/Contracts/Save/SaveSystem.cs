@@ -41,6 +41,15 @@ namespace SevenSteps.Contracts
         public List<int> bestStage = new List<int>();
         public List<int> bestBodies = new List<int>();
         public int lastStage;
+        /// How many times each stage was started on this device (level_start.attempt). Index = stage.
+        public List<int> starts = new List<int>();
+
+        /// Count one more start and return the attempt number (1 = first).
+        public int CountStart(int stage)
+        {
+            while (starts.Count <= stage) starts.Add(0);
+            return ++starts[stage];
+        }
 
         public bool IsCleared(int stage) => cleared.Contains(stage);
 
@@ -63,7 +72,7 @@ namespace SevenSteps.Contracts
         [Range(0, 1)] public float musicVolume = 0.8f;
         /// 0 = not asked yet (use AppConfig.telemetryOnByDefault), 1 = on, 2 = off (opt-out).
         public int telemetryChoice;
-        /// Anonymous random id for telemetry; created on first run, reset when the player opts out.
+        /// Anonymous UUID v4 for telemetry (playerId). Created on first run, cleared when the player opts out.
         public string playerId = "";
         public string language = "ko";
     }
