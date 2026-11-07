@@ -63,7 +63,6 @@ namespace SevenSteps.Tests
             var before = s.State;
 
             s.Send(Command.Move(Dir.Right));
-            s.Send(Command.Move(Dir.Right)); // queued
             var stale = board.Pending;
             Assert.AreEqual(SendOutcome.Applied, s.Send(Command.Undo));
 
@@ -75,6 +74,23 @@ namespace SevenSteps.Tests
 
             stale(); // a cancelled presentation finishing late must not unlock or drain anything
             Assert.AreSame(before, s.State);
+        }
+
+        [Test]
+        public void UndoCancelsNewestQueuedInputFirst()
+        {
+            var board = new FakeBoard();
+            var s = new GameSession(board);
+            s.Load(Corridor());
+            int start = s.State.Pos;
+
+            s.Send(Command.Move(Dir.Right));
+            s.Send(Command.Move(Dir.Right)); // queued
+            Assert.AreEqual(SendOutcome.Applied, s.Send(Command.Undo));
+            Assert.AreEqual(0, s.QueuedCount);
+            Assert.IsTrue(s.IsLocked, "the running presentation continues");
+            board.Finish();
+            Assert.AreEqual(start + 1, s.State.Pos, "R, R, Z = one step");
         }
 
         [Test]

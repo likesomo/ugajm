@@ -17,7 +17,9 @@
 | 레벨 데이터 | `levels.json`(TextAsset) 유지. ScriptableObject로 바꾸지 않는다 |
 | 타일 → 프리팹 | `TileSet` ScriptableObject + `TileVisual` 구조체. 보드 코드는 프리팹을 `TileSet`으로만 얻는다 |
 | 좌표 | `BoardGrid`: 셀 (x, y) → 월드 (x, 0, -y), 보드 중심 원점, 1칸 = `cellSize`(기본 1). 탑다운과 쿼터뷰는 같은 격자, 카메라만 다름 |
-| 씬 | `Boot` → `Title` → `Game`. 세 씬 모두 게임플레이/UI 소유, 빌드 목록은 리드 소유 |
+| 씬·앱 흐름 | 상태 `Boot → Title → StageSelect → Game ⇄ Result` (`AppFlow`), 씬은 `Boot`, `Title`(+StageSelect), `Game`(+Result). 씬은 게임플레이/UI 소유, 빌드 목록은 리드 소유 |
+| 기본 틀 | Boot 부트스트랩이 `Services`에 저장(`SaveSystem`, PlayerPrefs)·설정·`ITelemetry`·`AppFlow`·`LaunchOptions`·`AppConfig`를 등록 (11장) |
+| 텔레메트리 | `ITelemetry` + `NullTelemetry`. Core는 모름. Game 계층이 `GameSession.Updated`를 받아 기록. 스키마는 `docs/telemetry.md`(백엔드/분석)를 따름 |
 
 ---
 
@@ -26,7 +28,7 @@
 ```
 SevenSteps.Core        Scripts/Runtime/Core        noEngineReferences  (코어)
    ▲
-SevenSteps.Contracts   Scripts/Runtime/Contracts   UnityEngine 사용     (아키텍트)  공용 인터페이스·타입
+SevenSteps.Contracts   Scripts/Runtime/Contracts   UnityEngine 사용     (아키텍트)  공용 인터페이스·타입, 앱 기본 틀(App/, Save/, Telemetry/)
    ▲
 SevenSteps.Game        Scripts/Runtime/Game        + InputSystem, uGUI  (게임플레이/UI)  화면·입력·사운드·HUD
    ▲
@@ -147,7 +149,7 @@ session.Replay("LRRRRDDK");                      // ?replay= / -replay
 | 상황 | 이동 / KEEP / SWITCH | Undo / Restart | 스테이지 이동 (`Load`) | 힌트, 메뉴 |
 |---|---|---|---|---|
 | 연출 없음 | 즉시 적용 | 즉시 적용 | 즉시 | 허용 |
-| `Present` 연출 중 (`IsLocked`) | **큐에 넣음** (FIFO, 최대 2개, 넘치면 버림) | **연출을 끊고** 큐를 비우고 즉시 적용 → `Snap` | 연출을 끊고 큐를 비우고 `Rebuild` | 허용 (상태를 안 바꿈) |
+| `Present` 연출 중 (`IsLocked`) | **큐에 넣음** (FIFO, 최대 2개, 넘치면 버림) | Undo: 큐에 입력이 있으면 **가장 최근 큐 입력만 취소**(연출 계속). 큐가 비었으면, 또는 Restart면 **연출을 끊고** 큐를 비우고 즉시 적용 → `Snap` | 연출을 끊고 큐를 비우고 `Rebuild` | 허용 (상태를 안 바꿈) |
 | 규칙이 거부 (`Bump` 등) | `Feedback` 업데이트만, 잠그지 않음 | — | — | — |
 
 - 큐를 쓰는 이유: 걸음 수를 세는 퍼즐이라 빠르게 누른 입력이 사라지면 안 된다. 2개 제한은 연출이 길게 밀리는 것을 막는다.
@@ -265,11 +267,12 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 
 | 씬 | 빌드 인덱스 | 내용 | 소유자 |
 |---|---|---|---|
-| `Scenes/Boot.unity` | 0 | 프레임레이트, 저장 데이터 로드, URL/커맨드라인 인자(`level`, `replay`) 읽기. 인자가 있으면 `Game`, 없으면 `Title`로 이동 | 게임플레이/UI |
-| `Scenes/Title.unity` | 1 | 제목, 스테이지 선택 | 게임플레이/UI |
-| `Scenes/Game.unity` | 2 | 보드, HUD, `GameController` | 게임플레이/UI |
+| `Scenes/Boot.unity` | 0 | `Bootstrap`: 서비스 등록(11장), `LaunchOptions` 읽기. `DirectToGame`이면 `Game`, 아니면 `Title`로. 화면 없음 | 게임플레이/UI |
+| `Scenes/Title.unity` | 1 | 상태 `Title`(제목, 설정 패널), `StageSelect`(스테이지 목록, 클리어 표시). 패널 전환만, 씬 이동 없음 | 게임플레이/UI |
+| `Scenes/Game.unity` | 2 | 상태 `Game`(보드, HUD, `GameController`), `Result`(클리어/실패 패널, 다음·재시도·스테이지 선택). 같은 씬 안 오버레이 | 게임플레이/UI |
 
-- 씬 사이 전달값(시작 스테이지, 리플레이)은 `SevenSteps.Game` 안의 정적 클래스 하나로 넘긴다. 영구 싱글턴(`DontDestroyOnLoad`)은 오디오가 필요할 때만 Boot에서 하나 만든다.
+- 씬 사이 전달값은 `Services`에 등록된 `AppFlow.Stage`(시작 스테이지)와 `LaunchOptions`(리플레이 등)로 넘긴다. 정적 전역 변수를 따로 만들지 않는다. 영구 싱글턴(`DontDestroyOnLoad`)은 Boot가 만든 하나(오디오·텔레메트리 전송용 러너)만 둔다.
+- 에디터에서 `Game.unity`를 바로 Play하면 Boot를 거치지 않는다. 그래서 `Game`의 진입 코드는 `Services.Has<AppFlow>()`가 거짓이면 같은 부트스트랩 함수를 직접 부른다(테스트·디버그 편의, v0의 `startLevel`/`replay` 유지).
 - 씬 안의 오브젝트는 최소로(카메라, 라이트, 루트 하나) 두고 내용은 프리팹으로 나눈다. 한 씬은 한 에이전트만 고친다.
 - 빌드 씬 목록(`ProjectSettings/EditorBuildSettings.asset`)은 리드가 바꾼다. 씬 분리는 2단계 게임플레이/UI 작업이고, 그때까지 v0의 `Game.unity` 하나로 동작한다.
 - 프리팹: 타일·액터 `Prefabs/Tiles/**`(아트), UI 프리팹 `UI/**`(게임플레이/UI), `Prefabs/Generated/**`(v0 임시, 리드의 `ProjectSetup`이 생성).
@@ -295,9 +298,98 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 | 담당 | 할 일 |
 |---|---|
 | 코어 | `Slide`, `DoorOpen` 이벤트 추가(3.3). 공개 API 형태 유지. EditMode 테스트를 `Tests/EditMode/`(Contracts 폴더 제외)에 |
-| 게임플레이/UI | `GameController`가 `GameSession`을 쓰도록 변경(직접 `Rules.Dispatch` 호출 제거). `BoardView`가 `IBoardPresenter` 구현 + `TileSet`/`BoardGrid`/`TileId` 사용(글자 분기 제거). `GameAssets`에 `TileSet` 참조 추가. HUD를 `Game/UI/`로. 씬 분리(8장) |
+| 게임플레이/UI | `GameController`가 `GameSession`을 쓰도록 변경(직접 `Rules.Dispatch` 호출 제거). `BoardView`가 `IBoardPresenter` 구현 + `TileSet`/`BoardGrid`/`TileId` 사용(글자 분기 제거). `GameAssets`에 `TileSet` 참조 추가. HUD를 `Game/UI/`로. 씬 분리와 `Bootstrap`(8장, 11장). 저장을 `SaveSystem`으로 교체(v0 키 자동 이전). 설정 패널(음량, 텔레메트리 동의). `TelemetryRecorder`와 HTTP 전송 `ITelemetry` 구현(11.4) |
 | 아트 | `Data/TileSets/`에 실제 아트 `TileSet` 에셋(탑다운, 쿼터뷰). 프리팹 규격은 7.3 |
-| 리드 | `unity.sh`에 `tileset`(TileSetBuilder.BatchBuild), `test`(EditMode 테스트) 명령 추가 검토. 씬 분리 시 빌드 목록 갱신 |
+| 백엔드/분석 | `docs/telemetry.md`에 이벤트 스키마·전송 형식 고정 후 리드·아키텍트에게 알림 → 아키텍트가 `TelemetryEvent`/`ITelemetry`를 맞춤 |
+| 리드 | `unity.sh`에 `tileset`(TileSetBuilder.BatchBuild), `test`(EditMode 테스트) 명령 추가 검토. 씬 분리 시 빌드 목록 갱신(Boot, Title, Game) |
+
+---
+
+## 11. 프로그램 기본 틀
+
+공용 코드: `Contracts/App/`(`AppFlow`, `AppScenes`, `ISceneLoader`, `Services`, `LaunchOptions`, `AppConfig`), `Contracts/Save/SaveSystem.cs`, `Contracts/Telemetry/ITelemetry.cs`. 테스트: `Tests/EditMode/Contracts/AppFrameworkTests.cs`.
+
+### 11.1 앱 흐름 (`AppFlow`)
+
+```
+Boot ──▶ Title ⇄ StageSelect ──▶ Game ⇄ Result
+  └───────(?level= / -level)──────▶ Game        Game/Result ──▶ StageSelect
+```
+
+- 상태: `AppState { Boot, Title, StageSelect, Game, Result }` (끝에만 추가). 허용 전이는 `AppFlow.CanGo`가 정한다. 허용되지 않은 전이는 예외.
+- 상태 → 씬: `AppScenes.For(state)`. 같은 씬 안의 상태 변경(Title⇄StageSelect, Game⇄Result, Game→Game 스테이지 변경)은 씬을 다시 읽지 않고 `AppFlow.Changed(from, to)`로 패널만 바꾼다.
+- 스테이지 선택: `flow.GoToGame(stage)` (0부터). 클리어 시 `GameController`가 `flow.Go(AppState.Result)`, 결과 패널의 다음/재시도는 `flow.GoToGame(...)`.
+- 씬 로드: `ISceneLoader`를 Game 어셈블리에서 `SceneManager.LoadScene`으로 구현(게임플레이/UI). `AppFlow`는 순수 C#이라 테스트에서 가짜 로더를 쓴다.
+- `GameSession`(보드 안의 입력 락)과 `AppFlow`(화면 흐름)는 별개다. 스테이지 바꾸기 = `flow.GoToGame(k)` → `GameController`가 `session.Load(level)`.
+
+### 11.2 서비스 등록 (`Services` + Boot 부트스트랩)
+
+간단한 서비스 로케이터 하나. **등록은 Boot의 부트스트랩만**(그리고 테스트), 나머지는 `Awake/Start`에서 한 번 꺼내 필드에 둔다(매 프레임 조회 금지).
+
+부트스트랩 순서 (게임플레이/UI가 `SevenSteps.Game`의 `Bootstrap`으로 구현):
+
+```csharp
+Services.Clear();
+var config  = /* Boot 씬이 참조하는 Data/AppConfig.asset */;
+var launch  = LaunchOptions.Parse(Environment.GetCommandLineArgs(), Application.absoluteURL);
+var save    = new SaveSystem(new PlayerPrefsStore());
+ITelemetry telemetry = string.IsNullOrEmpty(config.telemetryEndpoint) || launch.TelemetryOff
+                       ? new NullTelemetry() : new HttpTelemetry(/* Game 어셈블리 */);
+telemetry.SetEnabled(save.TelemetryAllowed(config) && !launch.TelemetryOff);
+var flow    = new AppFlow(new SceneLoader());
+Services.Register(config); Services.Register(launch); Services.Register<ISaveStore>(...); Services.Register(save);
+Services.Register(telemetry); Services.Register(flow);
+flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title);
+```
+
+| 서비스 | 타입 | 수명 |
+|---|---|---|
+| 빌드 설정 | `AppConfig` (ScriptableObject, `Data/AppConfig.asset`) | 앱 전체 |
+| 실행 인자 | `LaunchOptions` | 앱 전체 |
+| 저장소 | `ISaveStore` (`PlayerPrefsStore`, 테스트 `MemoryStore`) | 앱 전체 |
+| 진행·설정 | `SaveSystem` (`Progress`, `Settings`, `SettingsChanged`) | 앱 전체 |
+| 텔레메트리 | `ITelemetry` | 앱 전체 |
+| 앱 흐름 | `AppFlow` | 앱 전체 |
+
+- `GameSession`, `BoardView`, HUD는 서비스가 아니다. Game 씬의 `GameController`가 만들고 소유한다.
+- Core는 `Services`를 모른다 (참조 자체가 불가능).
+
+### 11.3 저장과 설정 (`SaveSystem`)
+
+- 저장소는 모든 플랫폼에서 `PlayerPrefs` (WebGL에서는 브라우저 IndexedDB). 파일 IO 금지(9장).
+- 키 두 개, 값은 `JsonUtility` JSON: `seven-steps.progress` → `ProgressData`, `seven-steps.settings` → `SettingsData`. 각각 `version` 필드가 있어 형식이 바뀌면 읽을 때 이전한다.
+- 값이 없거나 깨졌으면 기본값으로 시작한다(예외로 멈추지 않음). v0 키 `seven-steps-cleared`(쉼표 목록)는 처음 읽을 때 `ProgressData.cleared`로 옮긴다.
+- `ProgressData`: `cleared`(클리어한 스테이지, 0부터), `bestStage`/`bestBodies`(스테이지별 최소 몸 수), `lastStage`. `MarkCleared(stage, bodiesUsed)`.
+- `SettingsData`: `masterVolume`, `sfxVolume`, `musicVolume`(0~1), `telemetryChoice`(0 미선택=기본값 따름, 1 동의, 2 거부), `playerId`(익명 무작위 ID, 거부하면 지움), `language`.
+- 저장 시점: 클리어할 때, 설정 패널을 닫을 때. 매 걸음 저장하지 않는다. `SaveSettings()`는 `SettingsChanged`를 발생시켜 오디오 음량과 텔레메트리 사용 여부를 바로 반영한다.
+
+### 11.4 텔레메트리 (`ITelemetry`)
+
+```csharp
+public interface ITelemetry { bool Enabled { get; } void SetEnabled(bool on); void Track(TelemetryEvent e); void Flush(); }
+public sealed class NullTelemetry : ITelemetry { /* 아무것도 안 함 */ }
+new TelemetryEvent("stage_end").With("stage", 3).With("result", "win")   // 이름·필드는 임시
+```
+
+- **Core는 텔레메트리를 모른다.** Game 어셈블리의 `TelemetryRecorder`(게임플레이/UI)가 `GameSession.Updated`와 `AppFlow.Changed`를 구독해 `Track`한다. 규칙 계산을 다시 하지 않고 이벤트·State 값만 옮긴다.
+- **스키마는 `docs/telemetry.md`(백엔드/분석, `feat/server`)가 정한다.** 지금의 `TelemetryEvent`(이름 + 문자열/숫자 필드)는 임시이고, 그 문서가 나오면 아키텍트가 타입을 맞추고 변경 기록에 적는다. 그 전까지 `TelemetryRecorder`는 이벤트 이름·필드를 한 곳(상수)에 모아 둔다.
+- 서버 주소: `AppConfig.telemetryEndpoint`(빌드 설정). 비어 있으면 `NullTelemetry`. 에디터 기본은 비움.
+- 옵트아웃: 설정의 `telemetryChoice` + URL `?telemetry=0` / 인자 `-telemetry 0`. 꺼져 있으면 `Track`은 버퍼에도 넣지 않는다. 처음 실행 때 기본값은 `AppConfig.telemetryOnByDefault`.
+- 공통 문맥(`TelemetryContext`: playerId, sessionId, 빌드 버전·채널, 플랫폼)은 전송 구현이 붙인다. 호출하는 쪽은 넣지 않는다.
+- 전송 구현(`HttpTelemetry`, 게임플레이/UI): `UnityWebRequest`, 묶어서 보내기, 실패 시 몇 번 재시도 후 버림, `Flush`는 스테이지 끝·`OnApplicationPause`·`OnApplicationQuit`, WebGL 페이지 종료 시 `navigator.sendBeacon` jslib. `Track`은 막지 않고 예외를 던지지 않는다. 스레드 금지(9장).
+
+### 11.5 텔레메트리 구현 파일 위치 (게임플레이/UI 소유)
+
+| 파일 | 위치 | 어셈블리 |
+|---|---|---|
+| `HttpTelemetry : ITelemetry`, `TelemetryRecorder`, `TelemetryRunner`(MonoBehaviour) | `Assets/_Project/Scripts/Runtime/Game/Telemetry/`, 네임스페이스 `SevenSteps.Game.Telemetry` | `SevenSteps.Game` (새 asmdef 만들지 않음) |
+| WebGL 플러그인 `SevenStepsTelemetry.jslib` | `Assets/_Project/Plugins/WebGL/` | 없음. `.jslib`는 asmdef에 속하지 않는 플러그인 에셋이다. 임포트 설정에서 **WebGL 플랫폼만** 켠다 (`.meta`에 기록되므로 함께 커밋) |
+
+- 이 폴더들은 게임플레이/UI 소유다. `Assets/Plugins/`(루트)는 쓰지 않는다. 외부 패키지가 쓰는 자리라 소유권이 섞인다.
+- C# 쪽 연결: `HttpTelemetry` 안에서 `[DllImport("__Internal")]` 선언을 `#if UNITY_WEBGL && !UNITY_EDITOR`로 감싸고, 그 밖의 플랫폼·에디터에서는 `UnityWebRequest`만 쓴다. jslib 함수 이름은 `SevenSteps_` 접두사(예: `SevenSteps_SendBeacon(url, json)`, `SevenSteps_RegisterVisibility(objectName)`).
+- `visibilitychange`(hidden)/`pagehide` → jslib가 `SendMessage("TelemetryRunner", "OnPageHidden")`. 그래서 Boot가 만드는 `DontDestroyOnLoad` 오브젝트 이름을 **`TelemetryRunner`로 고정**한다 (이름을 바꾸면 jslib도 같이 바꾼다). `OnPageHidden`은 버퍼를 sendBeacon으로 보낸다.
+- 빌드 버전: `TelemetryContext.BuildVersion = Application.version`. 빌드 때 `BuildTools`가 `0.1.0+<커밋7자리>[-dirty]`를 넣는다 (리드, 7lucky 895f0f1).
+- 서버 주소는 `AppConfig.telemetryEndpoint`에서만 읽는다. 코드에 주소를 적지 않는다.
 
 ---
 
@@ -306,3 +398,4 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 | 날짜 | 누가 | 내용 |
 |---|---|---|
 | 2026-11-07 | 아키텍트 | 최초 작성. `SevenSteps.Contracts` 어셈블리(`TileId`, `TileVisual`, `TileSet`, `CameraRig`, `BoardGrid`, `IBoardPresenter`, `GameSession`), `SevenSteps.Tests.EditMode` 어셈블리, test-framework 1.8.0 명시, `TileSetBuilder`와 `TopDown_Placeholder.asset`. Core·Game 동작 변경 없음 (v0 그대로) |
+| 2026-11-07 | 아키텍트 | 1단계 범위 확장(사용자 요청): 프로그램 기본 틀 11장. `AppFlow`/`AppState`/`AppScenes`/`ISceneLoader`, `Services`, `LaunchOptions`, `AppConfig`, `SaveSystem`(`ISaveStore`, `PlayerPrefsStore`, `MemoryStore`, `ProgressData`, `SettingsData`), `ITelemetry`/`NullTelemetry`/`TelemetryEvent`(임시)/`TelemetryContext`, 11.5 텔레메트리 구현·jslib 위치. 8장 씬 표를 상태 5개 기준으로 수정. `GameSession`: 연출 중 Undo는 가장 최근 큐 입력을 먼저 취소 |
