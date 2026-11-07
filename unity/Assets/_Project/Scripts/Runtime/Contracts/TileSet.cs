@@ -58,6 +58,8 @@ namespace SevenSteps.Contracts
         public TileVisual[] plates = new TileVisual[3];
         [Tooltip("Index 0/1/2 = door A/B/C.")]
         public TileVisual[] doors = new TileVisual[3];
+        [Tooltip("Statue-count door Q. Active = open. The number N is a world label.")]
+        public TileVisual countDoor;
 
         [Header("Actors and markers")]
         public TileVisual player;
@@ -84,6 +86,7 @@ namespace SevenSteps.Contracts
                 case TileKind.Gate: return gate;
                 case TileKind.Plate: return Pick(plates, id.Variant);
                 case TileKind.Door: return Pick(doors, id.Variant);
+                case TileKind.CountDoor: return countDoor;
                 default: return default;
             }
         }

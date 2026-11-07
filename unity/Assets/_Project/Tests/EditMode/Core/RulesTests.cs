@@ -38,7 +38,7 @@ namespace SevenSteps.Tests
         public void EventEnumOnlyGrowsAtTheEnd()
         {
             // Values may be saved or logged: never renumber, only append.
-            string[] order = { "Bump", "Step", "Crumble", "Bridge", "Fall", "Win", "Seal", "Vanish", "Choose", "Stone", "Switch", "Respawn", "Lose", "Undo", "Restart", "Slide", "DoorOpen" };
+            string[] order = { "Bump", "Step", "Crumble", "Bridge", "Fall", "Win", "Seal", "Vanish", "Choose", "Stone", "Switch", "Respawn", "Lose", "Undo", "Restart", "Slide", "DoorOpen", "DoorClose" };
             for (int k = 0; k < order.Length; k++) Assert.AreEqual(order[k], ((GameEventType)k).ToString());
             Assert.AreEqual(order.Length, Enum.GetValues(typeof(GameEventType)).Length, "new events go at the end of this list too");
         }
@@ -144,38 +144,90 @@ namespace SevenSteps.Tests
                         Assert.AreEqual(r.Path[0], r.Events[k].At, $"{where}: Slide.At is the first ice cell");
                         Assert.AreEqual(0, r.Events[k].StepIdx, $"{where}: Slide carries no step number");
                     }
-                    if (t == GameEventType.DoorOpen)
+                    if (t == GameEventType.DoorOpen || t == GameEventType.DoorClose)
                     {
                         doors++;
                         var before = types[k - 1];
-                        Assert.IsTrue(before == GameEventType.Stone || before == GameEventType.DoorOpen, $"{where}: DoorOpen right after Stone");
-                        Assert.IsTrue(Rules.DoorOpen(r.State, prev.Level.Tile(r.Events[k].At)), $"{where}: door is open");
-                        Assert.IsFalse(Rules.DoorOpen(prev, prev.Level.Tile(r.Events[k].At)), $"{where}: door was shut");
-                        Assert.AreEqual(0, r.Events[k].StepIdx, $"{where}: DoorOpen carries no step number");
+                        Assert.IsTrue(before == GameEventType.Stone || before == GameEventType.DoorOpen || before == GameEventType.DoorClose,
+                            $"{where}: door events right after Stone ({Golden.Describe(r.Events)})");
+                        char door = prev.Level.Tile(r.Events[k].At);
+                        bool opens = t == GameEventType.DoorOpen;
+                        Assert.AreEqual(opens, Rules.DoorOpen(r.State, door), $"{where}: door state after");
+                        Assert.AreEqual(!opens, Rules.DoorOpen(prev, door), $"{where}: door state before");
+                        Assert.AreEqual(0, r.Events[k].StepIdx, $"{where}: door events carry no step number");
                     }
                 }
                 Assert.AreEqual(r.Path.Length > 1, types.Contains(GameEventType.Slide), $"{where}: Slide iff the path is longer than one cell");
             }
             Assert.Greater(slides, 0, "golden traces never slide");
-            Assert.Greater(doors, 0, "golden traces never open a door");
+            Assert.Greater(doors, 0, "golden traces never open or close a door");
         }
 
         [Test]
-        public void EveryDoorThatOpensGetsAnEvent()
+        public void EveryDoorChangeGetsAnEvent()
         {
             foreach (var (prev, _, r, where) in AllResults())
             {
                 if (r.Has(GameEventType.Undo) || r.Has(GameEventType.Restart)) continue;
-                var opened = new List<int>();
+                var changed = new List<string>();
                 for (int i = 0; i < prev.Level.Count; i++)
                 {
                     char t = prev.Level.Tile(i);
-                    if (t >= 'A' && t <= 'C' && !Rules.DoorOpen(prev, t) && Rules.DoorOpen(r.State, t)) opened.Add(i);
+                    if (!Rules.IsDoor(t)) continue;
+                    bool was = Rules.DoorOpen(prev, t), now = Rules.DoorOpen(r.State, t);
+                    if (was != now) changed.Add((now ? "open@" : "close@") + i);
                 }
-                var events = new List<int>();
-                foreach (var e in r.Events) if (e.Type == GameEventType.DoorOpen) events.Add(e.At);
-                CollectionAssert.AreEqual(opened, events, where);
+                var events = new List<string>();
+                foreach (var e in r.Events)
+                {
+                    if (e.Type == GameEventType.DoorOpen) events.Add("open@" + e.At);
+                    if (e.Type == GameEventType.DoorClose) events.Add("close@" + e.At);
+                }
+                CollectionAssert.AreEqual(changed, events, where);
             }
+        }
+
+        // ---- statue-count door (Q) ----------------------------------------------------------------------
+
+        static readonly string[] CountCorridor = { "##########", "#S.......#", "#Q########", "##########" };
+
+        [Test]
+        public void CountDoorOpensOnlyAtTheExactCount()
+        {
+            var s = Rules.NewState(Level.Parse("t", "", 4, CountCorridor));
+            Assert.AreEqual(0, Rules.StatueCount(s));
+            Assert.IsTrue(Rules.DoorOpen(s, 'Q'), "statueCount 0 (the default): open with no statues");
+
+            var l1 = Level.Parse("t", "", 4, CountCorridor, 1);
+            s = Rules.NewState(l1);
+            Assert.AreEqual(1, l1.StatueCount);
+            Assert.IsFalse(Rules.DoorOpen(s, 'Q'));
+            Assert.IsFalse(Rules.Passable(s, 21, 1));
+            s = Run(s, "RRRRRRRK");
+            Assert.AreEqual(1, Rules.StatueCount(s));
+            Assert.IsTrue(Rules.DoorOpen(s, 'Q'));
+            Assert.IsTrue(Rules.Passable(s, 21, 1));
+            s = Run(s, "RRRRRRLK");
+            Assert.AreEqual(2, Rules.StatueCount(s));
+            Assert.IsFalse(Rules.DoorOpen(s, 'Q'), "one statue too many closes it");
+        }
+
+        [Test]
+        public void BridgesAndSealsAreNotStatues()
+        {
+            var pit = Run(Rules.NewState(Map(3, "#########", "#S..o...#", "#########")), "RRLRLRR");
+            Assert.AreEqual(1, pit.Bridges.Length);
+            Assert.AreEqual(0, Rules.StatueCount(pit));
+            var crack = Run(Rules.NewState(Map(3, "##########", "#S....x..#", "##########")), "RRRRLRR");
+            Assert.AreEqual(1, crack.Bridges.Length);
+            Assert.AreEqual(0, Rules.StatueCount(crack));
+        }
+
+        [Test]
+        public void DoorLettersAreRecognised()
+        {
+            foreach (char c in "ABCQ") Assert.IsTrue(Rules.IsDoor(c), c.ToString());
+            foreach (char c in "abc#.SEo~x17=") Assert.IsFalse(Rules.IsDoor(c), c.ToString());
         }
 
         [Test]

@@ -28,7 +28,7 @@ namespace SevenSteps.Contracts
         [Tooltip("Add a deterministic 0/90/180/270 yaw per cell (variation for floors and walls).")]
         public bool randomYaw90;
 
-        [Header("State hooks. Door: active = open. Gate: active = passable on the next step. Plate: active = pressed. Exit: active = next step is the 7th.")]
+        [Header("State hooks. Door/CountDoor: active = open. Gate: active = passable on the next step. Plate: active = pressed. Exit: active = next step is the 7th.")]
         [Tooltip("Child shown only while active (e.g. an open-door mesh). Empty = none.")]
         public string activeChild;
         [Tooltip("Child shown only while inactive (e.g. \"Bars\" of a closed door). Empty = none.")]
