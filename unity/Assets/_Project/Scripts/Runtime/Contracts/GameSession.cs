@@ -63,6 +63,11 @@ namespace SevenSteps.Contracts
         /// Raised after State changes (and for rejected commands). Raised before the board starts animating.
         public event Action<SessionUpdate> Updated;
 
+        /// Raised when a Present animation has finished (before queued commands run), with the state now on screen.
+        /// Use it for things that must wait for the animation, e.g. opening the result panel after the winning step.
+        /// Not raised for cancelled presentations, Snap or Rebuild. Headless sessions (no board) raise it right after Updated.
+        public event Action<State> Presented;
+
         public void Load(Level level)
         {
             Cancel();
@@ -132,6 +137,7 @@ namespace SevenSteps.Contracts
                 int token = ++presentToken;
                 board.Present(prev, r, () => OnPresented(token));
             }
+            else Presented?.Invoke(State);
             return SendOutcome.Applied;
         }
 
@@ -139,6 +145,7 @@ namespace SevenSteps.Contracts
         {
             if (token != presentToken || !IsLocked) return; // stale callback of a cancelled presentation
             IsLocked = false;
+            Presented?.Invoke(State);
             while (!IsLocked && queue.Count > 0)
             {
                 var next = queue[0];

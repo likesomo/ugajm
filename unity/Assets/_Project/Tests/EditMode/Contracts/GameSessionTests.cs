@@ -94,6 +94,27 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void PresentedFiresAfterAnimationNotOnCancel()
+        {
+            var board = new FakeBoard();
+            var s = new GameSession(board);
+            s.Load(Corridor());
+            int fired = 0;
+            s.Presented += _ => fired++;
+
+            s.Send(Command.Move(Dir.Right));
+            Assert.AreEqual(0, fired, "not before the animation ends");
+            board.Finish();
+            Assert.AreEqual(1, fired);
+
+            s.Send(Command.Move(Dir.Right));
+            var stale = board.Pending;
+            s.Send(Command.Restart);
+            stale();
+            Assert.AreEqual(1, fired, "cancelled presentation does not fire");
+        }
+
+        [Test]
         public void BumpIsFeedbackAndDoesNotLock()
         {
             var board = new FakeBoard();

@@ -60,6 +60,10 @@ namespace SevenSteps.Contracts
         public TileVisual[] doors = new TileVisual[3];
         [Tooltip("Statue-count door Q. Active = open. The number N is a world label.")]
         public TileVisual countDoor;
+        [Tooltip("Lever L. Active = pulled (State.Flipped).")]
+        public TileVisual lever;
+        [Tooltip("Index 0 = raised now (blocks), 1 = lowered now (passable). Rules.TileAt gives the current shape.")]
+        public TileVisual[] flipWalls = new TileVisual[2];
 
         [Header("Actors and markers")]
         public TileVisual player;
@@ -87,6 +91,8 @@ namespace SevenSteps.Contracts
                 case TileKind.Plate: return Pick(plates, id.Variant);
                 case TileKind.Door: return Pick(doors, id.Variant);
                 case TileKind.CountDoor: return countDoor;
+                case TileKind.Lever: return lever;
+                case TileKind.FlipWall: return Pick(flipWalls, id.Variant);
                 default: return default;
             }
         }

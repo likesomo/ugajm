@@ -289,6 +289,56 @@ MonoBehaviour:
     deactivateTrigger: 
     labelOffset: {x: 0, y: 0.65, z: 0}
     activeLabelOffset: {x: 0, y: 0.05, z: 0}
+  lever:
+    prefab: {fileID: 8138426147007701381, guid: 522636df4d7c4fc4bb425e44c7afb5d2, type: 3}
+    offset: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 1, y: 1, z: 1}
+    randomYaw90: 0
+    activeChild: 
+    inactiveChild: 
+    materialTarget: 
+    activeMaterial: {fileID: 0}
+    inactiveMaterial: {fileID: 0}
+    appearTrigger: 
+    vanishTrigger: 
+    activateTrigger: 
+    deactivateTrigger: 
+    labelOffset: {x: 0, y: 0.05, z: 0}
+    activeLabelOffset: {x: 0, y: 0, z: 0}
+  flipWalls:
+  - prefab: {fileID: 2169109577177046940, guid: 010af94e047a651429842cbfe1679ae7, type: 3}
+    offset: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 1, y: 1, z: 1}
+    randomYaw90: 0
+    activeChild: 
+    inactiveChild: 
+    materialTarget: 
+    activeMaterial: {fileID: 0}
+    inactiveMaterial: {fileID: 0}
+    appearTrigger: 
+    vanishTrigger: 
+    activateTrigger: 
+    deactivateTrigger: 
+    labelOffset: {x: 0, y: 0, z: 0}
+    activeLabelOffset: {x: 0, y: 0, z: 0}
+  - prefab: {fileID: 7693930314283829219, guid: f307f26bb4981fa408db62d1e669ebfb, type: 3}
+    offset: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 1, y: 1, z: 1}
+    randomYaw90: 0
+    activeChild: 
+    inactiveChild: 
+    materialTarget: 
+    activeMaterial: {fileID: 0}
+    inactiveMaterial: {fileID: 0}
+    appearTrigger: 
+    vanishTrigger: 
+    activateTrigger: 
+    deactivateTrigger: 
+    labelOffset: {x: 0, y: 0, z: 0}
+    activeLabelOffset: {x: 0, y: 0, z: 0}
   player:
     prefab: {fileID: 8573702022139044122, guid: 86d978825572f204bba7f7dbf2f8b502, type: 3}
     offset: {x: 0, y: 0, z: 0}
