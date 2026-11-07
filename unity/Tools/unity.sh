@@ -12,7 +12,7 @@
 #   build-win    (batch) Windows build -> Builds/Windows/Seven Steps.exe
 #   build-webgl  (batch) WebGL build -> Builds/WebGL/
 #   play         run the Windows build
-#   smoke        run the Windows build on 4 replays, save screenshots + logs to reports/smoke/
+#   smoke        run the Windows build on 6 replays, save screenshots + logs to reports/smoke/
 #   serve [port] serve Builds/WebGL on http://localhost:8090 (default)
 #   editor       open the project in the Unity editor
 #   all          levels + setup + verify + build-win + smoke
@@ -104,7 +104,7 @@ case "$cmd" in
   smoke)
     # Runs the Windows build on a few replays, saves screenshots + logs to reports/smoke/, fails on exceptions.
     out="$REPO/reports/smoke"; mkdir -p "$out"; fail=0
-    for spec in "1:R" "3:DURRRRR" "8:LRRRRDDKLLDD" "12:DUDURRRDURRRRRKDDDD"; do
+    for spec in "1:R" "3:DURRRRR" "8:LRRRRDDKLLDD" "11:DUDUDURKDD" "13:RLRRRRRX" "14:DUDURRRDURRRRRKDDDD"; do
       lv="${spec%%:*}"; rp="${spec#*:}"
       winout="$(cygpath -w "$out")"
       "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 \
