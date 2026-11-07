@@ -45,6 +45,7 @@ namespace SevenSteps.EditorTools
             ts.gate.inactiveMaterial = a.gateIdle;
             ts.plates = new[] { V(a.plateA, label: 0.05f), V(a.plateB, label: 0.05f), V(a.plateC, label: 0.05f) };
             ts.doors = new[] { Door(a.doorA), Door(a.doorB), Door(a.doorC) };
+            ts.countDoor = Door(a.doorA); // placeholder until art makes a statue-count door
 
             ts.player = V(a.player, label: 1.4f);
             ts.statue = V(a.statue);

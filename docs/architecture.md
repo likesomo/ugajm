@@ -128,7 +128,10 @@ Restart                   → [Restart]
 
 **코어에 요청 (2단계, 코어 담당)** — 기획의 "미끄러짐", "문 열림"이 아직 이벤트로 없다. 다음을 enum 끝에 추가한다.
 - `Slide` (At = 첫 얼음 칸): `Path.Length > 1`일 때, `Crumble` 뒤·주 이벤트 앞.
-- `DoorOpen` (At = 문 칸, 문마다 하나): `Stone`/`Seal` 직후, `Respawn`/`Lose` 앞. 석상은 사라지지 않으므로 `DoorClose`는 없다 (Undo/Restart는 스냅샷이라 이벤트 불필요).
+- `DoorOpen` (At = 문 칸): 문이 닫힘→열림으로 바뀐 칸마다 하나.
+- `DoorClose` (At = 문 칸): 열림→닫힘으로 바뀐 칸마다 하나. 석상 수 문(`Q`)은 석상이 늘면 닫힐 수 있어서 필요하다 (2026-11-07 기믹 승인, 7lucky 37c99f7).
+- 순서: `DoorOpen`/`DoorClose`는 `Stone` 직후, 칸 번호 오름차순(열림·닫힘 섞어서 칸 번호 순), `Respawn`/`Lose` 앞. 석상이 생기는 것은 `Stone`뿐이므로(다리·봉인은 석상 수에 안 셈) 다른 이벤트 뒤에는 나오지 않는다. Undo/Restart는 스냅샷이라 이벤트 불필요.
+- 열린 석상 수 문 칸 위에서 KEEP하면 석상이 문 칸에 서고 그 문이 닫힐 수 있다. 규칙상 석상 칸은 원래 못 지나가므로 상관없지만, 보드는 닫힌 문과 석상을 같은 칸에 함께 그릴 수 있어야 한다 (코어가 이 경우를 테스트에 넣는다).
 - 추가 전까지 화면은 `Path.Length > 1`과 `Rules.DoorOpen(prev, d) != Rules.DoorOpen(next, d)`로 대신한다. 이것은 Core 질의 결과 비교라 허용한다.
 
 ---
@@ -206,6 +209,15 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
   4. WebGL에서 TextAsset은 빌드에 포함되므로 파일 IO가 필요 없다.
 - 레벨에 기믹 글자를 추가하면: 코어가 `Level.Parse` 범례와 규칙을 고치고, 아키텍트가 `TileKind`/`TileId.FromChar`/`TileSet`에 항목을 추가한다 (enum 끝에 추가).
 
+### 6.1 석상 수 문 (`Q`, 2026-11-07 승인)
+
+- 맵 글자 `Q` = 석상 수 문. 지금 서 있는 석상 수가 레벨의 N과 **같을 때만** 열린다 (다리·봉인은 세지 않음).
+- N은 레벨 필드 `statueCount`(정수, 기본 0) 하나다. 한 스테이지의 모든 `Q`가 같은 N을 쓴다. 문마다 다른 N은 잼 범위 밖.
+- `levels.js` 레벨 객체와 `levels.json` `LevelDto`에 `statueCount` 추가, `Level.StatueCount`. `Q`가 없는 레벨은 필드를 생략해도 된다(0).
+- Core 질의: `Rules.DoorOpen(s, 'Q')`가 석상 수 문도 처리, `Rules.StatueCount(s)`. 화면은 이 질의만 쓴다.
+- 표시: `TileKind.CountDoor`(variant 0), 문 위 숫자 라벨은 `Level.StatueCount`. 활성 = 열림.
+- 담당: 코어(규칙·파서·테스트·JS), 레벨 디자인(`statueCount` 채우기·스테이지), 아키텍트(`TileId`·`TileSet`, 이 문서), 게임플레이/UI(라벨·`DoorClose` 연출), 아트(문 프리팹), 백엔드/분석(텔레메트리 `tile` 값: `door`로 볼지 새 값을 둘지).
+
 ---
 
 ## 7. 타일 → 프리팹 매핑: `TileSet`
@@ -231,6 +243,7 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 | `Gate` | `1`~`7` | 걸음 번호 1~7 |
 | `Plate` | `a`~`c` | 0~2 |
 | `Door` | `A`~`C` | 0~2 |
+| `CountDoor` | `Q` | 0 (N은 `Level.StatueCount`) |
 
 `ActorKind`: `Player`, `Statue`, `StartMarker`, `OldStartMarker`, `Footprint`, `LuckyRing`.
 
@@ -248,14 +261,14 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 | `appearTrigger`, `vanishTrigger`, `activateTrigger`, `deactivateTrigger` | Animator 트리거 이름. 비우면 보드의 코드 트윈 | 3D 모델 애니메이션 |
 | `labelOffset`, `activeLabelOffset` | 숫자/글자 라벨 위치(셀 단위) | 쿼터뷰에서 기둥 높이가 다를 때 |
 
-**활성(active)의 뜻**: 문 = 열림, 게이트 = 다음 걸음에 통과 가능, 발판 = 눌림, 출구 = 다음 걸음이 7번째. 이 값은 보드가 `Rules.DoorOpen`, `state.Used`, `state.Statues`에서 읽는다.
+**활성(active)의 뜻**: 문·석상 수 문 = 열림(`Rules.DoorOpen`), 게이트 = 다음 걸음에 통과 가능, 발판 = 눌림, 출구 = 다음 걸음이 7번째. 이 값은 보드가 `Rules.DoorOpen`, `state.Used`, `state.Statues`에서 읽는다.
 
 **셀 앵커**: 셀 윗면 중앙 (`BoardGrid.CellToWorld(i)`, y = 0). 인스턴스 배치는
 `position = anchor + offset * cellSize`, `rotation = visual.RotationFor(i)`, `localScale = visual.Scale * cellSize`.
 
 ### 7.3 `TileSet` (ScriptableObject, `Create > Seven Steps > Tile Set`)
 
-- 필드: `projection`(TopDown/Quarter), `cellSize`, `cameraRig`, 타일별 `TileVisual`, `plates[3]`, `doors[3]`, 액터별 `TileVisual`.
+- 필드: `projection`(TopDown/Quarter), `cellSize`, `cameraRig`, 타일별 `TileVisual`, `plates[3]`, `doors[3]`, `countDoor`, 액터별 `TileVisual`.
 - `CameraRig`: `orthographic`, `pitch`, `yaw`, `fieldOfView`, `distance`, `padding`(셀). 기본값 `CameraRig.TopDown`(v0와 같은 58°), `CameraRig.Quarter`(35°, yaw 45°).
 - **격자는 투영과 무관하다.** 쿼터뷰 전환 = 다른 `TileSet` 에셋을 지정. 클릭 판정은 `BoardGrid.RayToCell(camera.ScreenPointToRay(p))`라 카메라 각도와 상관없이 맞다.
 - 자산 위치: `Assets/_Project/Data/TileSets/`. 임시 아트 세트 `TopDown_Placeholder.asset`은 `Seven Steps > Architecture > Build Placeholder TileSet`(배치: `SevenSteps.EditorTools.TileSetBuilder.BatchBuild`)이 v0 `GameAssets` 프리팹과 v0 오프셋으로 만든다.
@@ -408,3 +421,4 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 2026-11-07 | 아키텍트 | 최초 작성. `SevenSteps.Contracts` 어셈블리(`TileId`, `TileVisual`, `TileSet`, `CameraRig`, `BoardGrid`, `IBoardPresenter`, `GameSession`), `SevenSteps.Tests.EditMode` 어셈블리, test-framework 1.8.0 명시, `TileSetBuilder`와 `TopDown_Placeholder.asset`. Core·Game 동작 변경 없음 (v0 그대로) |
 | 2026-11-07 | 아키텍트 | 1단계 범위 확장(사용자 요청): 프로그램 기본 틀 11장. `AppFlow`/`AppState`/`AppScenes`/`ISceneLoader`, `Services`, `LaunchOptions`, `AppConfig`, `SaveSystem`(`ISaveStore`, `PlayerPrefsStore`, `MemoryStore`, `ProgressData`, `SettingsData`), `ITelemetry`/`NullTelemetry`/`TelemetryEvent`(임시)/`TelemetryContext`, 11.5 텔레메트리 구현·jslib 위치. 8장 씬 표를 상태 5개 기준으로 수정. `GameSession`: 연출 중 Undo는 가장 최근 큐 입력을 먼저 취소 |
 | 2026-11-07 | 아키텍트 | 텔레메트리를 `docs/telemetry.md` v1에 맞춤: `TelemetryEvent`를 순서 있는 필드 + `WithCell`([x,y]/null) + `Stamp(seq,t)`로 변경, `TelemetryContext`(배치 머리, client 상수, `EventsUrl`), `TelemetryNames`(이벤트·값 상수), `TelemetryJson`(배치 JSON, `LevelKey` FNV-1a), `MemoryTelemetry`. `LaunchOptions.TelemetryUrl`(`telemetry=<url>`), `off` 지원. `ProgressData.starts`/`CountStart`(attempt). 테스트 어셈블리가 `SevenSteps.Game` 참조. 11.4·11.5 갱신(jslib 함수 `TelemetryBeacon`) |
+| 2026-11-07 | 아키텍트 | 석상 수 문 기믹(7lucky 37c99f7) 표기 확정(코어 제안 채택): 맵 글자 `Q`, 레벨 필드 `statueCount`(스테이지당 N 하나), `Rules.DoorOpen(s,'Q')`/`Rules.StatueCount`, 이벤트 `DoorClose` 추가(3.3 순서 규칙 수정), 6.1장. `TileKind.CountDoor`(끝에 추가), `TileId.FromChar('Q')`, `TileSet.countDoor`, 임시 아트는 문 A 프리팹 |
