@@ -6,6 +6,8 @@
 #   setup        (batch) generate materials/prefabs/GameAssets, Game scene if missing, build/player settings
 #   verify       (batch) check C# rules against the JS solver for every stage -> reports/seven-steps-unity-verify.json
 #   compile      (batch) compile check only
+#   test         (batch) EditMode tests -> reports/editmode-results.xml
+#   tileset      (batch) rebuild the placeholder TileSet (Data/TileSets/TopDown_Placeholder.asset)
 #   build-win    (batch) Windows build -> Builds/Windows/Seven Steps.exe
 #   build-webgl  (batch) WebGL build -> Builds/WebGL/
 #   play         run the Windows build
@@ -76,6 +78,20 @@ case "$cmd" in
   setup)       batch setup SevenSteps.EditorTools.ProjectSetup.BatchSetup ;;
   verify)      batch verify SevenSteps.EditorTools.LevelVerifier.BatchVerify ;;
   compile)     batch compile BuildTools.CompileCheck ;;
+  tileset)     batch tileset SevenSteps.EditorTools.TileSetBuilder.BatchBuild ;;
+  test)
+    # EditMode tests (Tests/EditMode). Results: reports/editmode-results.xml
+    mkdir -p "$REPO/reports" "$PROJ/Logs"
+    echo "[unity.sh] test: EditMode (log: unity/Logs/batch-test.log)"
+    code=0
+    (cd "$REPO" && "$U" -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode \
+      -testResults "$(cygpath -w "$REPO/reports/editmode-results.xml")" -logFile unity/Logs/batch-test.log) || code=$?
+    restore_urp_settings || true
+    summary="$(grep -o '<test-run [^>]*' "$REPO/reports/editmode-results.xml" 2>/dev/null | grep -o '\(total\|passed\|failed\|skipped\)="[0-9]*"' | tr '\n' ' ')"
+    echo "[unity.sh] test: ${summary:-no results}"
+    grep -o '<test-case [^>]*result="Failed"[^>]*' "$REPO/reports/editmode-results.xml" 2>/dev/null | grep -o 'fullname="[^"]*"' || true
+    if [ "$code" -ne 0 ]; then echo "[unity.sh] test FAILED (exit $code)"; exit "$code"; fi
+    echo "[unity.sh] test OK" ;;
   build-win)   batch build-win BuildTools.BuildWindows ;;
   build-webgl) batch build-webgl BuildTools.BuildWebGL ;;
   play)        "$REPO/Builds/Windows/Seven Steps.exe" & ;;
@@ -103,5 +119,5 @@ case "$cmd" in
     "$0" build-win
     "$0" smoke ;;
   *)
-    sed -n '2,22p' "$0" ;;
+    sed -n '2,24p' "$0" ;;
 esac

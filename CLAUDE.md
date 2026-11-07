@@ -48,6 +48,8 @@ U="/c/Program Files/Unity/Hub/Editor/6000.6.8f1/Editor/Unity.exe"
 unity/Tools/unity.sh levels       # levels.js + JS 솔버 답 → Assets/_Project/Data/levels.json (스테이지를 바꾸면 실행)
 unity/Tools/unity.sh sfx          # 임시 효과음 11개 합성 → Assets/Shared/Audio/*.wav (공유 폴더, 아트 담당)
 unity/Tools/unity.sh setup        # 머티리얼·프리팹·GameAssets 생성, Game 씬(없을 때만), 빌드/플레이어 설정
+unity/Tools/unity.sh test         # EditMode 테스트 (Tests/EditMode) → reports/editmode-results.xml
+unity/Tools/unity.sh tileset      # 임시 TileSet 다시 생성 (Data/TileSets/TopDown_Placeholder.asset)
 unity/Tools/unity.sh verify       # C# 규칙이 JS 솔버와 같은 답인지 12스테이지 검사 → reports/seven-steps-unity-verify.json
 unity/Tools/unity.sh build-win    # → Builds/Windows/Seven Steps.exe      (play 로 실행)
 unity/Tools/unity.sh smoke        # 윈도우 빌드를 리플레이 4개로 실행, 스크린샷+로그 → reports/smoke/, 예외 있으면 실패
@@ -59,7 +61,10 @@ unity/Tools/unity.sh all          # levels + setup + verify + build-win + smoke
 - 조작: 방향키/WASD/옆 칸 클릭, K KEEP, X SWITCH, Z 되돌리기, R 재시작, H 풀이, `[` `]` 스테이지, Enter 다음
 - Node.js: `C:\Program Files\nodejs` (스크립트가 PATH에 추가함)
 
-## 코드 구조 (v0)
+## 코드 구조
+구조와 공용 API의 기준 문서는 `docs/architecture.md` (아키텍트). 아래는 v0 기준 요약이고, 2단계에서 `SevenSteps.Contracts`(TileSet, GameSession, AppFlow, Services, SaveSystem, ITelemetry)를 쓰도록 바뀐다.
+
+### v0
 - `Scripts/Runtime/Core` (`SevenSteps.Core`, `noEngineReferences`): `Level`, `State`, `Rules`(core.js 이식, `Dispatch` 하나로 상태 변경), `Solver`(BFS). 규칙의 기준은 웹 프로토타입 코드이고, 기획 문서와 다른 점(구덩이·금 간 바닥·발판)은 코드 쪽을 따른다
 - `Scripts/Runtime/Game` (`SevenSteps.Game`): `GameController`(입력·사운드·저장·흐름), `BoardView`(상태를 읽어 그리드 표시·트윈), `HudView`/`Ui`(uGUI를 코드로 생성), `GameAssets`(모든 에셋 참조 ScriptableObject)
 - `Scripts/Editor` (`SevenSteps.Editor`): `ProjectSetup`(에셋·씬 생성), `LevelVerifier`(C#↔JS 일치 검사), `BuildTools`
