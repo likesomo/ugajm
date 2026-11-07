@@ -135,7 +135,9 @@ const EDGE = [
   { id: 'edge-choose-blocks-moves', map: ['##########', '#S.......#', '##########'], bodies: 2, cmds: 'RRRRRRRUDLRZRK', expect: 'choose undo choose stone' },
   { id: 'edge-pit-fall-and-bridge', map: ['#########', '#S..o...E', '#########'], bodies: 3,
     cmds: 'RRR' + 'RRLRLRR' + 'RRRRRRR', expect: 'fall respawn bridge respawn win' },
-  { id: 'edge-ice-slide', map: ['#######', '#S~~~.#', '#.~~~##', '#######'], bodies: 3, cmds: 'RLDRULRDUL', expect: 'step choose' },
+  { id: 'edge-ice-slide', map: ['#######', '#S~~~.#', '#.~~~##', '#######'], bodies: 3, cmds: 'RLDRULRDUL', expect: 'slide step choose' },
+  { id: 'edge-slide-into-pit', map: ['#######', '#S~~o.#', '#######'], bodies: 2, cmds: 'RR', expect: 'slide fall respawn' },
+  { id: 'edge-crumble-then-slide', map: ['#######', '#Sx~~.#', '#######'], bodies: 2, cmds: 'RRL', expect: 'step crumble slide step' },
   { id: 'edge-ice-stops-at-gate', map: ['#########', '#S~~3...#', '#########'], bodies: 2, cmds: 'RRRLRRRR', expect: 'step bump' },
   { id: 'edge-ice-through-gate', map: ['#########', '#S~~1...#', '#########'], bodies: 2, cmds: 'RRRRRR', expect: 'step' },
   { id: 'edge-gates', map: ['###########', '#S1.3...7.#', '###########'], bodies: 3,
@@ -144,10 +146,15 @@ const EDGE = [
   { id: 'edge-cracked-seal', map: ['##########', '#S....x.E', '##########'], bodies: 3,
     cmds: 'RRRRLRR' + 'RRRRRRR' + 'Z' + 'R', expect: 'seal respawn win undo win' },
   { id: 'edge-door-plate', map: ['#########', '#S..a...#', '#.....AE#', '#########'], bodies: 3,
-    cmds: 'DRRRRRR' + '*' + 'RRRLRLR' + 'K' + 'DRRRRRR', expect: 'bump restart stone respawn win' },
+    cmds: 'DRRRRRR' + '*' + 'RRRLRLR' + 'K' + 'DRRRRRR', expect: 'bump restart stone doorOpen respawn win' },
+  { id: 'edge-two-doors-one-plate', map: ['#######', '#S..a.#', '#A##A##', '#######'], bodies: 2, cmds: 'RRRLRLR' + 'K', expect: 'stone doorOpen doorOpen respawn' },
+  { id: 'edge-last-body-opens-door', map: ['######', '#S..a#', '####A#', '######'], bodies: 1, cmds: 'RRRLRLR', expect: 'stone doorOpen lose' },
+  // The second statue on another 'a' plate opens nothing new: no doorOpen event.
+  { id: 'edge-second-plate-no-door-event', map: ['#########', '#a..S..a#', '####A####', '####E####'], bodies: 3,
+    cmds: 'LLLRLRL' + 'K' + 'RRRLRLR' + 'K', expect: 'stone doorOpen respawn choose stone respawn' },
   { id: 'edge-two-plates-one-door', map: ['#########', '#a..S..a#', '####A####', '####E####'], bodies: 3,
     cmds: 'D' + 'LLLRLRL' + 'K' + 'D' + 'ZZZ' + '*' + 'RRRLRLR' + 'K' + 'DD',
-    expect: 'bump stone respawn step undo restart stone respawn step step' },
+    expect: 'bump stone doorOpen respawn step undo restart stone doorOpen respawn step step' },
   { id: 'edge-statue-blocks', map: ['##########', '#S.......#', '##########'], bodies: 3, cmds: 'RRRRRRRK' + 'RRRRRRR', expect: 'stone respawn bump' },
   { id: 'edge-undo-chain-and-restart', map: ['##########', '#S.......#', '##########'], bodies: 3,
     cmds: 'RRZZZ' + 'RRRRRRRK' + 'ZZ' + 'RX' + '*' + 'ZZR', expect: 'undo undo stone undo undo choose switch restart step' },
@@ -180,7 +187,7 @@ for (const e of EDGE) {
 
 // Together the traces must produce every event type.
 const seenEvents = new Set(traces.flatMap((t) => t.steps.flatMap((s) => s.events.map((e) => e.type))));
-const allEvents = ['bump', 'step', 'crumble', 'bridge', 'fall', 'win', 'seal', 'vanish', 'choose', 'stone', 'switch', 'respawn', 'lose', 'undo', 'restart'];
+const allEvents = ['bump', 'step', 'crumble', 'bridge', 'fall', 'win', 'seal', 'vanish', 'choose', 'stone', 'switch', 'respawn', 'lose', 'undo', 'restart', 'slide', 'doorOpen'];
 const missing = allEvents.filter((t) => !seenEvents.has(t));
 if (missing.length) throw new Error(`golden traces never produce: ${missing.join(', ')}`);
 
