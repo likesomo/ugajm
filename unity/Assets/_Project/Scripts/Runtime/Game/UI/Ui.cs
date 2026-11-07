@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace SevenSteps.Game
+namespace SevenSteps.Game.UI
 {
     /// Small helpers for building uGUI from code (legacy Text with the Jua font, so no TMP setup is needed).
     public static class Ui

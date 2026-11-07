@@ -54,7 +54,7 @@ unity/Tools/unity.sh tileset      # 임시 TileSet 다시 생성 (Data/TileSets/
 unity/Tools/unity.sh verify       # C# 규칙이 JS 솔버와 같은 답인지 12스테이지 검사 → reports/seven-steps-unity-verify.json
 unity/Tools/unity.sh build-win    # → Builds/Windows/Seven Steps.exe      (play 로 실행)
 unity/Tools/unity.sh smoke        # 윈도우 빌드를 리플레이 4개로 실행, 스크린샷+로그 → reports/smoke/, 예외 있으면 실패
-unity/Tools/unity.sh build-webgl  # → Builds/WebGL/                         (serve 로 http://localhost:8090)
+unity/Tools/unity.sh build-webgl  # → Builds/WebGL/   (serve [포트] 로 http://localhost:8090, Node 정적 서버 unity/Tools/serve.mjs)
 unity/Tools/unity.sh all          # levels + setup + verify + build-win + smoke
 ```
 - 에디터: `unity/Tools/unity.sh editor` → 메뉴 **Seven Steps > Open Game Scene** → Play. `Game` 오브젝트의 `startLevel`/`replay`로 시작 스테이지 지정

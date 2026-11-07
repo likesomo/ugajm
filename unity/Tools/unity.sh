@@ -116,7 +116,7 @@ case "$cmd" in
   serve)
     port="${2:-8090}"
     echo "[unity.sh] http://localhost:$port  (Ctrl+C to stop)"
-    cd "$REPO/Builds/WebGL" && python -m http.server "$port" ;;
+    node "$HERE/serve.mjs" "$port" "$REPO/Builds/WebGL" ;;
   editor)      "$U" -projectPath "$PROJ" & ;;
   all)
     "$0" levels
