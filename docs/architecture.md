@@ -34,10 +34,10 @@ SevenSteps.Game        Scripts/Runtime/Game        + InputSystem, uGUI  (게임�
    ▲
 SevenSteps.Editor      Scripts/Editor              Editor 전용          (여러 소유자, 파일 단위)
 
-SevenSteps.Tests.EditMode  Tests/EditMode          Editor 전용, UNITY_INCLUDE_TESTS → Core, Contracts
+SevenSteps.Tests.EditMode  Tests/EditMode          Editor 전용, UNITY_INCLUDE_TESTS → Core, Contracts, Game
 ```
 
-- 화살표 방향으로만 참조한다. `Core`는 아무것도 참조하지 않는다. `Contracts`는 `Game`을 모른다.
+- 화살표 방향으로만 참조한다. `Core`는 아무것도 참조하지 않는다. `Contracts`는 `Game`을 모른다. 테스트 어셈블리는 Core·Contracts·Game을 참조할 수 있다(반대 방향 참조는 없음).
 - UI(HUD, 패널)는 별도 어셈블리로 나누지 않고 `SevenSteps.Game` 안의 `Game/UI/` 폴더, 네임스페이스 `SevenSteps.Game.UI`로 둔다. 잼 규모에서는 컴파일 시간 이득이 없고, `GameController` ↔ HUD 순환을 막으려면 어차피 같은 어셈블리여야 한다. HUD는 `GameSession.Updated`와 `State`만 읽는다.
 - 새 asmdef가 필요하면 아키텍트에게 요청한다. asmdef 파일은 아키텍트 소유다 (위치한 폴더의 소유자와 무관).
 - 테스트 프레임워크: `com.unity.test-framework` 1.8.0 (manifest에 명시).
@@ -49,7 +49,8 @@ SevenSteps.Tests.EditMode  Tests/EditMode          Editor 전용, UNITY_INCLUDE_
 | `Assets/_Project/Scripts/Runtime/Contracts/**` | 아키텍트 (공용) |
 | `Assets/_Project/Scripts/Editor/Architecture/**` | 아키텍트 |
 | `Assets/_Project/Tests/EditMode/Contracts/**` | 아키텍트 |
-| `Assets/_Project/Tests/EditMode/**` (위 제외), `Tests/Golden/**` | 코어 |
+| `Assets/_Project/Tests/EditMode/Game/**`, `Assets/_Project/Plugins/WebGL/**` | 게임플레이/UI |
+| `Assets/_Project/Tests/EditMode/**` (위 두 줄 제외), `Tests/Golden/**` | 코어 |
 | `Assets/_Project/Data/TileSets/TopDown_Placeholder.asset` | 아키텍트 (`TileSetBuilder`가 생성) |
 | `Assets/_Project/Data/TileSets/**` (위 제외) | 아트 |
 | `**/*.asmdef`, `Packages/manifest.json`, `Packages/packages-lock.json` | 아키텍트 |
@@ -130,8 +131,13 @@ Restart                   → [Restart]
 **`Slide`·`DoorOpen` (2단계, 코어가 추가함)** — enum 끝(15, 16)에 추가했고 `core.js`도 같은 이벤트(`slide`, `doorOpen`)를 낸다.
 - `Slide` (At = 첫 얼음 칸 = `Path[0]`): `Path.Length > 1`일 때만, `Crumble` 뒤·주 이벤트 앞. `StepIdx`는 0 (행운 연출이 두 번 나지 않도록 주 이벤트만 7을 가짐).
 - `DoorOpen` (At = 문 칸, 닫혀 있다 열린 문 칸마다 하나, 칸 번호 순): `Stone` 직후, `Respawn`/`Lose` 앞. `StepIdx`는 0.
-  `Seal`은 석상을 남기지 않으므로(다리만 생김) 문을 열지 않는다. 석상은 사라지지 않으므로 `DoorClose`는 없다 (Undo/Restart는 스냅샷이라 이벤트 불필요).
+  `Seal`은 석상을 남기지 않으므로(다리만 생김) 문을 열지 않는다. 발판 문(`A`~`C`)은 석상이 사라지지 않으므로 닫히지 않는다. 석상 수 문(`Q`)의 닫힘은 아래 `DoorClose` (Undo/Restart는 스냅샷이라 이벤트 불필요).
 - 이 규칙은 EditMode 테스트(`Tests/EditMode/Core/RulesTests`)가 모든 골든 트레이스에서 검사한다.
+
+**`DoorClose` (석상 수 문, 코어가 구현 예정)** — enum 끝(17)에 추가한다.
+- `DoorClose` (At = 문 칸): 열림→닫힘으로 바뀐 칸마다 하나. 석상 수 문(`Q`)은 석상이 늘면 닫힐 수 있어서 필요하다 (2026-11-07 기믹 승인, 7lucky 37c99f7).
+- 순서: `DoorOpen`/`DoorClose`는 `Stone` 직후, 칸 번호 오름차순(열림·닫힘 섞어서 칸 번호 순), `Respawn`/`Lose` 앞. 석상이 생기는 것은 `Stone`뿐이므로(다리·봉인은 석상 수에 안 셈) 다른 이벤트 뒤에는 나오지 않는다. Undo/Restart는 스냅샷이라 이벤트 불필요.
+- 열린 석상 수 문 칸 위에서 KEEP하면 석상이 문 칸에 서고 그 문이 닫힐 수 있다. 규칙상 석상 칸은 원래 못 지나가므로 상관없지만, 보드는 닫힌 문과 석상을 같은 칸에 함께 그릴 수 있어야 한다 (코어가 이 경우를 테스트에 넣는다).
 
 ---
 
@@ -208,6 +214,15 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
   4. WebGL에서 TextAsset은 빌드에 포함되므로 파일 IO가 필요 없다.
 - 레벨에 기믹 글자를 추가하면: 코어가 `Level.Parse` 범례와 규칙을 고치고, 아키텍트가 `TileKind`/`TileId.FromChar`/`TileSet`에 항목을 추가한다 (enum 끝에 추가).
 
+### 6.1 석상 수 문 (`Q`, 2026-11-07 승인)
+
+- 맵 글자 `Q` = 석상 수 문. 지금 서 있는 석상 수가 레벨의 N과 **같을 때만** 열린다 (다리·봉인은 세지 않음).
+- N은 레벨 필드 `statueCount`(정수, 기본 0) 하나다. 한 스테이지의 모든 `Q`가 같은 N을 쓴다. 문마다 다른 N은 잼 범위 밖.
+- `levels.js` 레벨 객체와 `levels.json` `LevelDto`에 `statueCount` 추가, `Level.StatueCount`. `Q`가 없는 레벨은 필드를 생략해도 된다(0).
+- Core 질의: `Rules.DoorOpen(s, 'Q')`가 석상 수 문도 처리, `Rules.StatueCount(s)`. 화면은 이 질의만 쓴다.
+- 표시: `TileKind.CountDoor`(variant 0), 문 위 숫자 라벨은 `Level.StatueCount`. 활성 = 열림.
+- 담당: 코어(규칙·파서·테스트·JS), 레벨 디자인(`statueCount` 채우기·스테이지), 아키텍트(`TileId`·`TileSet`, 이 문서), 게임플레이/UI(라벨·`DoorClose` 연출), 아트(문 프리팹), 백엔드/분석(텔레메트리 `tile` 값: `door`로 볼지 새 값을 둘지).
+
 ---
 
 ## 7. 타일 → 프리팹 매핑: `TileSet`
@@ -233,6 +248,7 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 | `Gate` | `1`~`7` | 걸음 번호 1~7 |
 | `Plate` | `a`~`c` | 0~2 |
 | `Door` | `A`~`C` | 0~2 |
+| `CountDoor` | `Q` | 0 (N은 `Level.StatueCount`) |
 
 `ActorKind`: `Player`, `Statue`, `StartMarker`, `OldStartMarker`, `Footprint`, `LuckyRing`.
 
@@ -250,14 +266,14 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 | `appearTrigger`, `vanishTrigger`, `activateTrigger`, `deactivateTrigger` | Animator 트리거 이름. 비우면 보드의 코드 트윈 | 3D 모델 애니메이션 |
 | `labelOffset`, `activeLabelOffset` | 숫자/글자 라벨 위치(셀 단위) | 쿼터뷰에서 기둥 높이가 다를 때 |
 
-**활성(active)의 뜻**: 문 = 열림, 게이트 = 다음 걸음에 통과 가능, 발판 = 눌림, 출구 = 다음 걸음이 7번째. 이 값은 보드가 `Rules.DoorOpen`, `state.Used`, `state.Statues`에서 읽는다.
+**활성(active)의 뜻**: 문·석상 수 문 = 열림(`Rules.DoorOpen`), 게이트 = 다음 걸음에 통과 가능, 발판 = 눌림, 출구 = 다음 걸음이 7번째. 이 값은 보드가 `Rules.DoorOpen`, `state.Used`, `state.Statues`에서 읽는다.
 
 **셀 앵커**: 셀 윗면 중앙 (`BoardGrid.CellToWorld(i)`, y = 0). 인스턴스 배치는
 `position = anchor + offset * cellSize`, `rotation = visual.RotationFor(i)`, `localScale = visual.Scale * cellSize`.
 
 ### 7.3 `TileSet` (ScriptableObject, `Create > Seven Steps > Tile Set`)
 
-- 필드: `projection`(TopDown/Quarter), `cellSize`, `cameraRig`, 타일별 `TileVisual`, `plates[3]`, `doors[3]`, 액터별 `TileVisual`.
+- 필드: `projection`(TopDown/Quarter), `cellSize`, `cameraRig`, 타일별 `TileVisual`, `plates[3]`, `doors[3]`, `countDoor`, 액터별 `TileVisual`.
 - `CameraRig`: `orthographic`, `pitch`, `yaw`, `fieldOfView`, `distance`, `padding`(셀). 기본값 `CameraRig.TopDown`(v0와 같은 58°), `CameraRig.Quarter`(35°, yaw 45°).
 - **격자는 투영과 무관하다.** 쿼터뷰 전환 = 다른 `TileSet` 에셋을 지정. 클릭 판정은 `BoardGrid.RayToCell(camera.ScreenPointToRay(p))`라 카메라 각도와 상관없이 맞다.
 - 자산 위치: `Assets/_Project/Data/TileSets/`. 임시 아트 세트 `TopDown_Placeholder.asset`은 `Seven Steps > Architecture > Build Placeholder TileSet`(배치: `SevenSteps.EditorTools.TileSetBuilder.BatchBuild`)이 v0 `GameAssets` 프리팹과 v0 오프셋으로 만든다.
@@ -366,33 +382,40 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 - `SettingsData`: `masterVolume`, `sfxVolume`, `musicVolume`(0~1), `telemetryChoice`(0 미선택=기본값 따름, 1 동의, 2 거부), `playerId`(익명 무작위 ID, 거부하면 지움), `language`.
 - 저장 시점: 클리어할 때, 설정 패널을 닫을 때. 매 걸음 저장하지 않는다. `SaveSettings()`는 `SettingsChanged`를 발생시켜 오디오 음량과 텔레메트리 사용 여부를 바로 반영한다.
 
-### 11.4 텔레메트리 (`ITelemetry`)
+### 11.4 텔레메트리 (`ITelemetry`, 스키마 v1)
 
-```csharp
-public interface ITelemetry { bool Enabled { get; } void SetEnabled(bool on); void Track(TelemetryEvent e); void Flush(); }
-public sealed class NullTelemetry : ITelemetry { /* 아무것도 안 함 */ }
-new TelemetryEvent("stage_end").With("stage", 3).With("result", "win")   // 이름·필드는 임시
-```
+스키마·전송 사양의 기준은 **`docs/telemetry.md` v1**(백엔드/분석)이고, 이벤트 생성 기준 구현은 `prototypes/seven-steps/src/telemetry.js`의 `Tracker`다. Unity는 같은 입력에 같은 이벤트를 낸다. 공용 타입(`Contracts/Telemetry/`):
 
-- **Core는 텔레메트리를 모른다.** Game 어셈블리의 `TelemetryRecorder`(게임플레이/UI)가 `GameSession.Updated`와 `AppFlow.Changed`를 구독해 `Track`한다. 규칙 계산을 다시 하지 않고 이벤트·State 값만 옮긴다.
-- **스키마는 `docs/telemetry.md`(백엔드/분석, `feat/server`)가 정한다.** 지금의 `TelemetryEvent`(이름 + 문자열/숫자 필드)는 임시이고, 그 문서가 나오면 아키텍트가 타입을 맞추고 변경 기록에 적는다. 그 전까지 `TelemetryRecorder`는 이벤트 이름·필드를 한 곳(상수)에 모아 둔다.
-- 서버 주소: `AppConfig.telemetryEndpoint`(빌드 설정). 비어 있으면 `NullTelemetry`. 에디터 기본은 비움.
-- 옵트아웃: 설정의 `telemetryChoice` + URL `?telemetry=0` / 인자 `-telemetry 0`. 꺼져 있으면 `Track`은 버퍼에도 넣지 않는다. 처음 실행 때 기본값은 `AppConfig.telemetryOnByDefault`.
-- 공통 문맥(`TelemetryContext`: playerId, sessionId, 빌드 버전·채널, 플랫폼)은 전송 구현이 붙인다. 호출하는 쪽은 넣지 않는다.
-- 전송 구현(`HttpTelemetry`, 게임플레이/UI): `UnityWebRequest`, 묶어서 보내기, 실패 시 몇 번 재시도 후 버림, `Flush`는 스테이지 끝·`OnApplicationPause`·`OnApplicationQuit`, WebGL 페이지 종료 시 `navigator.sendBeacon` jslib. `Track`은 막지 않고 예외를 던지지 않는다. 스레드 금지(9장).
+| 타입 | 역할 |
+|---|---|
+| `ITelemetry` | `Enabled`, `SetEnabled`, `Track(TelemetryEvent)`, `Flush()`. 막지 않고 예외를 던지지 않는다 |
+| `TelemetryEvent` | `Type` + 순서 있는 필드(`With(key, string/int/long/double/bool)`, `WithCell(key, cell, width)` → `[x,y]` 또는 `null`). `seq`·`t`는 전송 구현이 `Stamp`로 붙인다 |
+| `TelemetryContext` | 배치 머리: `playerId`, `sessionId`, `client`(`unity-webgl`/`unity-desktop`), `build`(≤40자), `Endpoint` → `EventsUrl` = `<Endpoint>/v1/events`. `SchemaVersion = 1` |
+| `TelemetryNames` | 이벤트 이름(`Types.Move` 등)과 값(`Via`, `Dir`, `MoveResult`, `Effect`, `LostReason`, `EndReason`, `Status`, `Tile`), `IdleMs = 30000`. 문자열을 직접 쓰지 않는다 |
+| `TelemetryJson` | 리플렉션 없는 JSON: `WriteEvent`, `Batch(ctx, events, start, count)`, `LevelKey(Level)`(FNV-1a, `telemetry.js`와 같은 값), `Fnv1a` |
+| `NullTelemetry` / `MemoryTelemetry` | 끔 / 테스트용(메모리에 쌓고 seq 부여) |
+
+- **Core는 텔레메트리를 모른다.** 게임플레이/UI가 `SevenSteps.Game`에 `TelemetryTracker`(telemetry.js `Tracker` 이식)를 만든다. `GameSession.Updated`의 `Prev`·`State`·`Result.Events`와 `AppFlow` 전이를 받아 이벤트를 만들고, 규칙은 다시 계산하지 않는다(타일 종류 등은 `Rules.TileAt` 질의). 시계는 주입받는다(테스트에서 0 고정).
+- 이벤트 순서(telemetry.md 3장): `idle` → `move` → `seventh_step` → `body_lost` → `level_fail`/`level_clear`. 리플레이(`GameSession.Replay`)는 기록하지 않는다 — `SessionUpdate.Command`가 기본값이고 `Result`가 null인 `Snap`이 리플레이다.
+- 필요한 저장값: `SettingsData.playerId`(UUID v4, 없으면 생성, 옵트아웃 시 지움), `ProgressData.CountStart(stage)` → `level_start.attempt`, `ProgressData.cleared.Count` → `session_start.cleared`, `firstTime` = 처음 실행(`playerId`를 새로 만든 경우).
+- 서버 주소 우선순위: `LaunchOptions.TelemetryUrl`(`?telemetry=<url>` / `-telemetry <url>`) → `AppConfig.telemetryEndpoint` → 없으면 `NullTelemetry`. 끄기: `?telemetry=off`(또는 `0`), `-telemetry off`, 설정 `telemetryChoice = 2`. 꺼져 있으면 큐도 만들지 않는다.
+- `build` = `Application.version`(BuildTools가 `0.1.0+<커밋>[-dirty]`로 넣음). `client` = WebGL이면 `unity-webgl`, 아니면 `unity-desktop`.
+- 전송 사양은 telemetry.md 4장 그대로: 5초 또는 20건마다, 배치 최대 100건·64KB, 네트워크 오류·429·5xx만 재시도(5s→…→최대 5분, `Retry-After` 우선), 2xx·400·403·413은 큐에서 삭제, 요청 10초 제한, 남은 큐는 종료 때 PlayerPrefs `seven-steps.telemetry-queue`에 최대 1000건.
+- **골든 검증**: `server/fixtures/telemetry.golden.json`(feat/server 134dfbc)을 `Tests/EditMode/Game/`에 복사해 `TelemetryTracker` + `MemoryTelemetry`로 같은 명령을 재생하고 비교한다 (`TelemetryJson.WriteEvent(..., includeTime: false)`). 테스트 어셈블리는 `SevenSteps.Game`을 참조한다.
 
 ### 11.5 텔레메트리 구현 파일 위치 (게임플레이/UI 소유)
 
 | 파일 | 위치 | 어셈블리 |
 |---|---|---|
-| `HttpTelemetry : ITelemetry`, `TelemetryRecorder`, `TelemetryRunner`(MonoBehaviour) | `Assets/_Project/Scripts/Runtime/Game/Telemetry/`, 네임스페이스 `SevenSteps.Game.Telemetry` | `SevenSteps.Game` (새 asmdef 만들지 않음) |
+| `TelemetryTracker`(순수 C#), `HttpTelemetry : ITelemetry`, `TelemetryRunner`(MonoBehaviour) | `Assets/_Project/Scripts/Runtime/Game/Telemetry/`, 네임스페이스 `SevenSteps.Game.Telemetry` | `SevenSteps.Game` (새 asmdef 만들지 않음) |
 | WebGL 플러그인 `SevenStepsTelemetry.jslib` | `Assets/_Project/Plugins/WebGL/` | 없음. `.jslib`는 asmdef에 속하지 않는 플러그인 에셋이다. 임포트 설정에서 **WebGL 플랫폼만** 켠다 (`.meta`에 기록되므로 함께 커밋) |
+| 골든 테스트 | `Assets/_Project/Tests/EditMode/Game/` | `SevenSteps.Tests.EditMode` |
 
-- 이 폴더들은 게임플레이/UI 소유다. `Assets/Plugins/`(루트)는 쓰지 않는다. 외부 패키지가 쓰는 자리라 소유권이 섞인다.
-- C# 쪽 연결: `HttpTelemetry` 안에서 `[DllImport("__Internal")]` 선언을 `#if UNITY_WEBGL && !UNITY_EDITOR`로 감싸고, 그 밖의 플랫폼·에디터에서는 `UnityWebRequest`만 쓴다. jslib 함수 이름은 `SevenSteps_` 접두사(예: `SevenSteps_SendBeacon(url, json)`, `SevenSteps_RegisterVisibility(objectName)`).
-- `visibilitychange`(hidden)/`pagehide` → jslib가 `SendMessage("TelemetryRunner", "OnPageHidden")`. 그래서 Boot가 만드는 `DontDestroyOnLoad` 오브젝트 이름을 **`TelemetryRunner`로 고정**한다 (이름을 바꾸면 jslib도 같이 바꾼다). `OnPageHidden`은 버퍼를 sendBeacon으로 보낸다.
-- 빌드 버전: `TelemetryContext.BuildVersion = Application.version`. 빌드 때 `BuildTools`가 `0.1.0+<커밋7자리>[-dirty]`를 넣는다 (리드, 7lucky 895f0f1).
-- 서버 주소는 `AppConfig.telemetryEndpoint`에서만 읽는다. 코드에 주소를 적지 않는다.
+- 이 폴더들은 게임플레이/UI 소유다. `Assets/Plugins/`(루트)는 쓰지 않는다.
+- jslib 함수는 telemetry.md 4장 이름을 따른다: `TelemetryBeacon(url, json)` → `navigator.sendBeacon(url, new Blob([json], {type:'text/plain'}))`, 그리고 `visibilitychange`(hidden)·`pagehide`를 등록하는 함수 하나. C# 선언은 `[DllImport("__Internal")]`을 `#if UNITY_WEBGL && !UNITY_EDITOR`로 감싸고, 그 밖에서는 `UnityWebRequest`만 쓴다.
+- 페이지 숨김 → jslib가 `SendMessage("TelemetryRunner", "OnPageHidden")`. 그래서 Boot가 만드는 `DontDestroyOnLoad` 오브젝트 이름을 **`TelemetryRunner`로 고정**한다. `OnPageHidden`은 `session_end`(`reason: hidden`)를 넣고 큐를 100건씩 잘라 `TelemetryBeacon`으로 보낸다. 다시 보이면 `session_start`(`resumed: true`), 같은 `sessionId`.
+- 데스크톱 종료: `Application.quitting`에서 `session_end`(`reason: unload`) 후 최대 1초 전송 대기.
+- 서버 주소는 11.4의 우선순위로만 정한다. 코드에 주소를 적지 않는다.
 
 ---
 
@@ -403,3 +426,5 @@ new TelemetryEvent("stage_end").With("stage", 3).With("result", "win")   // 이�
 | 2026-11-07 | 아키텍트 | 최초 작성. `SevenSteps.Contracts` 어셈블리(`TileId`, `TileVisual`, `TileSet`, `CameraRig`, `BoardGrid`, `IBoardPresenter`, `GameSession`), `SevenSteps.Tests.EditMode` 어셈블리, test-framework 1.8.0 명시, `TileSetBuilder`와 `TopDown_Placeholder.asset`. Core·Game 동작 변경 없음 (v0 그대로) |
 | 2026-11-07 | 아키텍트 | 1단계 범위 확장(사용자 요청): 프로그램 기본 틀 11장. `AppFlow`/`AppState`/`AppScenes`/`ISceneLoader`, `Services`, `LaunchOptions`, `AppConfig`, `SaveSystem`(`ISaveStore`, `PlayerPrefsStore`, `MemoryStore`, `ProgressData`, `SettingsData`), `ITelemetry`/`NullTelemetry`/`TelemetryEvent`(임시)/`TelemetryContext`, 11.5 텔레메트리 구현·jslib 위치. 8장 씬 표를 상태 5개 기준으로 수정. `GameSession`: 연출 중 Undo는 가장 최근 큐 입력을 먼저 취소 |
 | 2026-11-07 | 코어 | `GameEventType`에 `Slide`(15), `DoorOpen`(16) 추가(3.3). `core.js`도 `slide`/`doorOpen` 이벤트를 냄. 기존 이벤트·순서·공개 API 형태는 그대로. 게임플레이/UI는 `Path.Length > 1`/`DoorOpen` 비교 대신 이 이벤트를 쓸 수 있음. EditMode 테스트 `Tests/EditMode/Core/` 추가(골든 대조) |
+| 2026-11-07 | 아키텍트 | 텔레메트리를 `docs/telemetry.md` v1에 맞춤: `TelemetryEvent`를 순서 있는 필드 + `WithCell`([x,y]/null) + `Stamp(seq,t)`로 변경, `TelemetryContext`(배치 머리, client 상수, `EventsUrl`), `TelemetryNames`(이벤트·값 상수), `TelemetryJson`(배치 JSON, `LevelKey` FNV-1a), `MemoryTelemetry`. `LaunchOptions.TelemetryUrl`(`telemetry=<url>`), `off` 지원. `ProgressData.starts`/`CountStart`(attempt). 테스트 어셈블리가 `SevenSteps.Game` 참조. 11.4·11.5 갱신(jslib 함수 `TelemetryBeacon`) |
+| 2026-11-07 | 아키텍트 | 석상 수 문 기믹(7lucky 37c99f7) 표기 확정(코어 제안 채택): 맵 글자 `Q`, 레벨 필드 `statueCount`(스테이지당 N 하나), `Rules.DoorOpen(s,'Q')`/`Rules.StatueCount`, 이벤트 `DoorClose` 추가(3.3 순서 규칙 수정), 6.1장. `TileKind.CountDoor`(끝에 추가), `TileId.FromChar('Q')`, `TileSet.countDoor`, 임시 아트는 문 A 프리팹 |
