@@ -40,3 +40,27 @@ U="/c/Program Files/Unity/Hub/Editor/6000.6.8f1/Editor/Unity.exe"
 "$U" -batchmode -nographics -projectPath unity -executeMethod BuildTools.BuildWebGL -logFile -
 ```
 빌드 대상 씬은 Build Settings의 활성 씬 목록을 따른다. 빌드 스크립트: `unity/Assets/_Project/Scripts/Editor/BuildTools.cs`
+
+## 실행 방식 (`unity/Tools/unity.sh`, Git Bash)
+위 배치 명령을 감싼 스크립트. 배치 명령은 에디터를 닫고 실행한다. 로그는 `unity/Logs/batch-<명령>.log`.
+```bash
+unity/Tools/unity.sh levels       # levels.js + JS 솔버 답 → Assets/_Project/Data/levels.json (스테이지를 바꾸면 실행)
+unity/Tools/unity.sh sfx          # 임시 효과음 11개 합성 → Assets/_Project/Audio/*.wav
+unity/Tools/unity.sh setup        # 머티리얼·프리팹·GameAssets 생성, Game 씬(없을 때만), 빌드/플레이어 설정
+unity/Tools/unity.sh verify       # C# 규칙이 JS 솔버와 같은 답인지 12스테이지 검사 → reports/seven-steps-unity-verify.json
+unity/Tools/unity.sh build-win    # → Builds/Windows/Seven Steps.exe      (play 로 실행)
+unity/Tools/unity.sh smoke        # 윈도우 빌드를 리플레이 4개로 실행, 스크린샷+로그 → reports/smoke/, 예외 있으면 실패
+unity/Tools/unity.sh build-webgl  # → Builds/WebGL/                         (serve 로 http://localhost:8090)
+unity/Tools/unity.sh all          # levels + setup + verify + build-win + smoke
+```
+- 에디터: `unity/Tools/unity.sh editor` → 메뉴 **Seven Steps > Open Game Scene** → Play. `Game` 오브젝트의 `startLevel`/`replay`로 시작 스테이지 지정
+- 같은 재현 형식: 데스크톱 `"Seven Steps.exe" -level 8 -replay LRRRRDDK`, WebGL `?level=8&replay=LRRRRDDK` (U D L R 이동, K KEEP, X SWITCH)
+- 조작: 방향키/WASD/옆 칸 클릭, K KEEP, X SWITCH, Z 되돌리기, R 재시작, H 풀이, `[` `]` 스테이지, Enter 다음
+- Node.js: `C:\Program Files\nodejs` (스크립트가 PATH에 추가함)
+
+## 코드 구조 (v0)
+- `Scripts/Runtime/Core` (`SevenSteps.Core`, `noEngineReferences`): `Level`, `State`, `Rules`(core.js 이식, `Dispatch` 하나로 상태 변경), `Solver`(BFS). 규칙의 기준은 웹 프로토타입 코드이고, 기획 문서와 다른 점(구덩이·금 간 바닥·발판)은 코드 쪽을 따른다
+- `Scripts/Runtime/Game` (`SevenSteps.Game`): `GameController`(입력·사운드·저장·흐름), `BoardView`(상태를 읽어 그리드 표시·트윈), `HudView`/`Ui`(uGUI를 코드로 생성), `GameAssets`(모든 에셋 참조 ScriptableObject)
+- `Scripts/Editor` (`SevenSteps.Editor`): `ProjectSetup`(에셋·씬 생성), `LevelVerifier`(C#↔JS 일치 검사), `BuildTools`
+- 에셋: `Art/Materials`·`Prefabs/Generated`는 `ProjectSetup`이 만든 임시 아트(URP 프리미티브). 직접 고치지 말고 `ProjectSetup.cs`를 고친 뒤 `setup`. 실제 아트로 바꿀 때는 `Data/GameAssets.asset`의 프리팹 참조를 교체한다(타일 윗면 y=0, 1칸=1유닛)
+- 폰트: `ThirdParty/Jua` (SIL OFL, 레거시 uGUI Text용 동적 폰트). 효과음은 `unity/Tools/gen-sfx.mjs`로 만든 임시음
