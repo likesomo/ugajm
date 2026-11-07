@@ -39,6 +39,7 @@ namespace SevenSteps.Game
         }
 
         TileSet set;
+        CameraRig? rigOverride;
         RectTransform labelLayer;
         Camera cam;
         float fittedAspect;
@@ -66,11 +67,13 @@ namespace SevenSteps.Game
         public BoardGrid Grid => grid;
         public bool IsAnimating => anim != null;
 
-        public void Init(TileSet tileSet, RectTransform labelLayer, Camera cam)
+        /// <param name="cameraOverride">Camera preset to use instead of tileSet.cameraRig (Game scene setting), or null.</param>
+        public void Init(TileSet tileSet, RectTransform labelLayer, Camera cam, CameraRig? cameraOverride = null)
         {
             set = tileSet;
             this.labelLayer = labelLayer;
             this.cam = cam;
+            rigOverride = cameraOverride;
         }
 
         // ---------- IBoardPresenter ----------
@@ -507,7 +510,7 @@ namespace SevenSteps.Game
         {
             if (cam == null || level == null) return;
             fittedAspect = cam.aspect;
-            var rig = set.cameraRig;
+            var rig = rigOverride ?? set.cameraRig;
             var rot = rig.Rotation;
             cam.transform.rotation = rot;
             cam.orthographic = rig.orthographic;

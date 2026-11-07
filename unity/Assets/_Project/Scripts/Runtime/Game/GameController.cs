@@ -50,6 +50,12 @@ namespace SevenSteps.Game
         [Tooltip("Editor only, when played without Boot: replay letters U D L R K X (like -replay)")]
         public string replay = "";
 
+        [Header("Camera (docs/architecture.md 12.2)")]
+        [Tooltip("Use cameraRig below instead of the TileSet's own preset. Off by default: the placeholder walls are ~1 cell tall and hide the cell behind them at 50 deg (walls must be <= 0.6, 12.3). Turn on to preview plan A.")]
+        public bool overrideCamera = false;
+        [Tooltip("Plan A, front 3/4 view: pitch 50, yaw 0, orthographic. Keep yaw 0: input is not rotated.")]
+        public CameraRig cameraRig = new CameraRig { orthographic = true, pitch = 50f, yaw = 0f, fieldOfView = 30f, distance = 30f, padding = 0.6f };
+
         Level[] levels;
         GameSession session;
         AppFlow flow;
@@ -117,7 +123,7 @@ namespace SevenSteps.Game
             board = gameObject.AddComponent<BoardView>();
             var tiles = cfg.tileSet != null ? cfg.tileSet : assets.tileSet;
             if (tiles == null) throw new InvalidOperationException("[SevenSteps] No TileSet: set AppConfig.tileSet or GameAssets.tileSet");
-            board.Init(tiles, hud.LabelLayer, cam);
+            board.Init(tiles, hud.LabelLayer, cam, overrideCamera ? cameraRig : (CameraRig?)null);
 
             session = new GameSession(board);
             board.Hurry = () => session.QueuedCount > 0;
