@@ -38,3 +38,30 @@
 - jslib 이름은 구현대로 `SevenSteps_SendBeacon`, `SevenSteps_RegisterVisibility`로 11.5를 고쳤다.
 - 데스크톱 종료 때 1초 대기용 `Thread.Sleep` 루프는 telemetry.md 4장 요구라 9장 WebGL 규칙의 예외로 적었다(`#if !UNITY_WEBGL || UNITY_EDITOR` 안에서만).
 - `GameSession.Presented` 추가(3번용).
+
+---
+
+## 재검토: `origin/feat/view` 57907b9 (2026-11-07)
+
+- 기준 `d8195e7`. 현재 `7lucky` cc82b04(레버 13b2d86 포함)와의 합치기를 임시 브랜치에서 실제로 만들어 확인했다.
+- **결론: 합쳐도 된다.**
+
+### 합치기 확인 (7lucky cc82b04 + feat/view 57907b9)
+- 텍스트 충돌 없음 (`git merge-tree` 깨끗, 실제 머지도 충돌 없음).
+- `feat/view` 자체 변경은 소유 범위 안에만 있다: Core·Contracts·asmdef·ProjectSettings·Packages·Golden·`docs/`를 건드리지 않음. 차이 목록에 그 파일들이 보이는 것은 기준이 `7lucky`보다 뒤라서이고, 머지하면 `7lucky` 쪽이 그대로 남는다.
+- EditMode 207/207 (게임플레이/UI 골든 `TelemetryGoldenTests` 포함), Windows 빌드 + smoke 6개(1, 3, 8, 11, 13, 14) 예외 0, WebGL 빌드 성공(14.4MB, 0 errors, jslib 링크 확인).
+- 화면 확인: smoke 11번 스크린샷에서 Q 문이 열린 상태(숫자 금색)로 그려지고 HUD가 "석상 1 / 1 문 열림"을 보인다.
+
+### 필수 2건 → 해결
+1. 텔레메트리가 Contracts v1 타입(`TelemetryEvent`/`TelemetryJson`/`TelemetryNames`/`TelemetryContext`)을 쓴다. `TelemetryRecord` 삭제. 골든 테스트가 서버 골든과 같은 이벤트를 확인한다.
+2. `CreateTelemetry`가 `LaunchOptions.TelemetryUrl`을 먼저 쓰고 없으면 `AppConfig.telemetryEndpoint`. `off`는 `LaunchOptions`가 처리.
+
+### 권장 항목 상태
+- 4번 Q 문: 해결 (`IsActive`에 `Rules.DoorOpen(s,'Q')`, 라벨 `Level.StatueCount`, 석상·플레이어가 서 있어도 숫자 표시).
+- 3번 결과 패널 타이밍: 아직(이 브랜치의 기준에는 `GameSession.Presented`가 없었음). 합친 뒤 `Presented`에서 `Result`로 넘어가게 바꿀 것.
+- 5번 옵트아웃 시 `playerId` 지우기: 아직. 다시 켤 때 새 ID를 만드는 코드는 있으므로 끌 때 지우기만 추가하면 된다.
+- 6·7번(사소): 그대로. 다음 작업 때.
+- 레버(`TileKind.Lever`/`FlipWall`, `Flip` 이벤트): 코어 13b2d86이 이 브랜치보다 나중이라 아직 표시 없음. `TileSet.lever`/`flipWalls`는 이미 있으니 `IsActive`에 `Lever => s.Flipped`만 추가하면 기본 표시는 된다(뒤집힘 벽은 `TileId` variant로 모양이 바뀜). 레버 스테이지가 들어오기 전에 할 것.
+
+### 문서 쪽 맞춤 (아키텍트)
+- jslib 함수 이름: 이 브랜치가 telemetry.md 이름(`TelemetryBeacon`, `TelemetryRegisterVisibility`)으로 바꿨다. 11.5를 다시 그 이름으로 고쳤다(내가 직전에 `SevenSteps_*`로 바꾼 것을 되돌림).
