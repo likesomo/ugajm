@@ -14,6 +14,7 @@
 #   build-webgl  (batch) WebGL build -> Builds/WebGL/
 #   play         run the Windows build
 #   smoke        run the Windows build on 7 replays, save screenshots + logs to reports/smoke/
+#   smoke-webgl  open Builds/WebGL in the Orca browser on 3 replays, fail if the 3D board is missing
 #   serve [port] serve Builds/WebGL on http://localhost:8090 (default)
 #   editor       open the project in the Unity editor
 #   all          levels + setup + verify + build-win + smoke
@@ -115,6 +116,33 @@ case "$cmd" in
       if grep -qE "^[A-Za-z.]*Exception" "$out/level$lv.log"; then grep -E "^[A-Za-z.]*Exception" "$out/level$lv.log"; fail=1; fi
     done
     [ "$fail" -eq 0 ] && echo "[unity.sh] smoke OK -> reports/smoke/" || { echo "[unity.sh] smoke FAILED"; exit 1; } ;;
+  smoke-webgl)
+    # Opens Builds/WebGL in Orca's built-in browser on a few replays, screenshots each and counts board pixels.
+    # Fails when the 3D board is missing (UI only) or the console shows an exception. Needs the `orca` CLI.
+    command -v orca >/dev/null || { echo "[unity.sh] smoke-webgl needs the orca CLI (Orca built-in browser)"; exit 1; }
+    out="$REPO/reports/smoke-webgl"; mkdir -p "$out"; rm -f "$out"/*; fail=0; port=8091
+    node "$HERE/serve.mjs" "$port" "$REPO/Builds/WebGL" > "$out/serve.log" 2>&1 &
+    sleep 2
+    for spec in "1:R" "8:DURRRRRKDDR" "13:DUDUDURKDD"; do
+      lv="${spec%%:*}"; rp="${spec#*:}"
+      page="$(orca tab create --url "http://localhost:$port/?level=$lv&replay=$rp" --json 2>/dev/null | grep -o '"browserPageId": "[^"]*"' | head -1 | cut -d'"' -f4)"
+      [ -z "$page" ] && { echo "[unity.sh] smoke-webgl level $lv: could not open a browser tab"; fail=1; continue; }
+      orca capture start --page "$page" --json > /dev/null 2>&1 || true
+      orca wait --page "$page" --load load --json > /dev/null 2>&1 || true
+      sleep 25
+      shot="$(orca screenshot --page "$page" 2>/dev/null | grep -oE '[A-Za-z]:\\[^ ]+\.png' | head -1)"
+      orca console --page "$page" --limit 400 > "$out/level$lv.console.txt" 2>&1 || true
+      orca tab close --page "$page" --json > /dev/null 2>&1 || true
+      if [ -z "$shot" ]; then echo "[unity.sh] smoke-webgl level $lv: no screenshot"; fail=1; continue; fi
+      cp "$(cygpath -u "$shot")" "$out/level$lv.png"
+      px="$(powershell -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$HERE/board-pixels.ps1")" -Path "$(cygpath -w "$out/level$lv.png")" | tr -d '\r')"
+      errs="$(grep -ciE '^\[error\]|Exception' "$out/level$lv.console.txt" || true)"
+      echo "[unity.sh] smoke-webgl level $lv: board pixels $px, console errors $errs"
+      if [ "${px:-0}" -lt 500 ]; then echo "[unity.sh]   board not drawn (UI only?) -> see $out/level$lv.png"; fail=1; fi
+      if [ "${errs:-0}" -gt 0 ]; then grep -iE '^\[error\]|Exception' "$out/level$lv.console.txt" | head -5; fail=1; fi
+    done
+    for p in $(netstat -ano | grep ":$port .*LISTENING" | awk '{print $5}' | sort -u); do taskkill //PID "$p" //F > /dev/null; done
+    [ "$fail" -eq 0 ] && echo "[unity.sh] smoke-webgl OK -> reports/smoke-webgl/" || { echo "[unity.sh] smoke-webgl FAILED"; exit 1; } ;;
   serve)
     port="${2:-8090}"
     echo "[unity.sh] http://localhost:$port  (Ctrl+C to stop)"
@@ -127,5 +155,5 @@ case "$cmd" in
     "$0" build-win
     "$0" smoke ;;
   *)
-    sed -n '2,26p' "$0" ;;
+    sed -n '2,27p' "$0" ;;
 esac
