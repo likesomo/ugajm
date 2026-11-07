@@ -224,6 +224,8 @@ namespace SevenSteps.Game
                     {
                         case TileKind.Gate: c.Label.Text.color = active ? Ui.Gold : Ui.Ink; c.Label.Text.enabled = true; break;
                         case TileKind.Door: c.Label.Text.color = active ? Ui.Dim : Ui.Ink; c.Label.Text.enabled = !covered; break;
+                        // The count matters even when a statue or the player stands in the doorway (the start can be a Q cell).
+                        case TileKind.CountDoor: c.Label.Text.color = active ? Ui.Gold : Ui.Ink; c.Label.Text.enabled = true; break;
                         case TileKind.Exit: c.Label.Text.color = active ? Ui.Gold : Ui.Ink; c.Label.Text.enabled = !covered; break;
                         default: c.Label.Text.enabled = !covered; break;
                     }
@@ -290,6 +292,7 @@ namespace SevenSteps.Game
             switch (id.Kind)
             {
                 case TileKind.Door: return Rules.DoorOpen(s, (char)('A' + id.Variant));
+                case TileKind.CountDoor: return Rules.DoorOpen(s, 'Q');
                 case TileKind.Gate: return s.Status == Status.Play && id.Variant == s.Used + 1;
                 case TileKind.Plate: return Rules.Contains(s.Statues, i);
                 case TileKind.Exit: return s.Status == Status.Play && s.Used == Rules.Steps - 1;
@@ -322,6 +325,7 @@ namespace SevenSteps.Game
                 TileKind.Plate => ((char)('A' + id.Variant)).ToString(),
                 TileKind.Door => ((char)('A' + id.Variant)).ToString(),
                 TileKind.Exit => "출구",
+                TileKind.CountDoor => level.StatueCount.ToString(),
                 _ => null,
             };
             if (text == null)

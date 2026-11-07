@@ -1,20 +1,20 @@
 using System;
-using System.Collections.Generic;
+using SevenSteps.Contracts;
 using SevenSteps.Core;
+using N = SevenSteps.Contracts.TelemetryNames;
 
 namespace SevenSteps.Game.Telemetry
 {
     /// <summary>
-    /// C# port of prototypes/seven-steps/src/telemetry.js <c>Tracker</c> (docs/telemetry.md v1): turns
-    /// (state before, command, Rules.Dispatch result) into schema events. Pure C#: the clock and the output are injected,
-    /// so the editor verifier can replay server/fixtures/telemetry.golden.json through it.
-    /// Reads Core state and events only; it never re-evaluates rules.
-    /// Keep this file in step with telemetry.js: same events, same field values, same order.
+    /// C# port of prototypes/seven-steps/src/telemetry.js <c>Tracker</c> (docs/telemetry.md v1, docs/architecture.md 11.4):
+    /// turns (state before, command, Rules.Dispatch result) into <see cref="TelemetryEvent"/>s for an <see cref="ITelemetry"/>.
+    /// Pure C#: the clock and the attempt counter are injected, so the golden test replays
+    /// server/fixtures/telemetry.golden.json through it with <see cref="MemoryTelemetry"/>.
+    /// Reads Core state, events and queries only; it never re-evaluates rules. seq/t are stamped by the sender.
+    /// Keep in step with telemetry.js: same events, same field values, same order.
     /// </summary>
     public sealed class TelemetryTracker
     {
-        public const int IdleMs = 30000;
-
         sealed class Run
         {
             public int Level;
@@ -23,52 +23,49 @@ namespace SevenSteps.Game.Telemetry
             public bool Done;
         }
 
-        readonly Action<TelemetryRecord> emit;
+        readonly ITelemetry sink;
         readonly Func<long> now;
+        readonly Func<int, int> nextAttempt;
         readonly long idleMs;
-        /// Level number (1-based) -> times started on this device.
-        public readonly Dictionary<int, int> Attempts;
 
-        long seq;
         long? sessionT;
         long? lastInput;
         Run run;
 
-        public TelemetryTracker(Action<TelemetryRecord> emit, Func<long> now, Dictionary<int, int> attempts = null, long idleMs = IdleMs)
+        /// <param name="nextAttempt">1-based level -> attempt number of this start (ProgressData.CountStart in the game).</param>
+        public TelemetryTracker(ITelemetry sink, Func<long> now, Func<int, int> nextAttempt, long idleMs = N.IdleMs)
         {
-            this.emit = emit;
+            this.sink = sink;
             this.now = now;
+            this.nextAttempt = nextAttempt;
             this.idleMs = idleMs;
-            Attempts = attempts ?? new Dictionary<int, int>();
         }
 
         public bool InLevel => run != null;
-        public bool LevelDone => run != null && run.Done;
 
-        TelemetryRecord New(string type) => new TelemetryRecord(seq++, now(), type);
+        void Emit(TelemetryEvent e) => sink.Track(e);
 
         public void SessionStart(bool firstTime, int cleared, bool resumed = false)
         {
             sessionT ??= now();
             lastInput = now();
-            var e = New("session_start").Set("firstTime", firstTime).Set("cleared", cleared);
-            if (resumed) e.Set("resumed", true);
-            emit(e);
+            var e = new TelemetryEvent(N.Types.SessionStart).With("firstTime", firstTime).With("cleared", cleared);
+            if (resumed) e.With("resumed", true);
+            Emit(e);
         }
 
         public void LevelStart(State state, int level, string levelName, string via)
         {
-            Attempts.TryGetValue(level, out int a);
-            int attempt = a + 1;
-            Attempts[level] = attempt;
+            int attempt = nextAttempt(level);
             run = new Run { Level = level, T0 = now() };
             lastInput = now();
-            emit(New("level_start").Set("level", level).Set("levelName", levelName).Set("levelKey", LevelKey(state.Level))
-                .Set("attempt", attempt).Set("via", via).Set("bodies", state.Level.Bodies));
+            Emit(new TelemetryEvent(N.Types.LevelStart).With("level", level).With("levelName", levelName)
+                .With("levelKey", TelemetryJson.LevelKey(state.Level)).With("attempt", attempt).With("via", via)
+                .With("bodies", state.Level.Bodies));
         }
 
-        TelemetryRecord Where(TelemetryRecord e, State s) =>
-            e.Set("level", run.Level).Set("body", BodyNo(s)).Set("step", s.Used).Set("at", Xy(s, s.Pos));
+        TelemetryEvent Where(TelemetryEvent e, State s) =>
+            e.With("level", run.Level).With("body", BodyNo(s)).With("step", s.Used).WithCell("at", s.Pos, s.Level.W);
 
         /// Every player input, before acting on it. Emits idle if the pause before it was long.
         public void Input(State state)
@@ -76,8 +73,8 @@ namespace SevenSteps.Game.Telemetry
             long t = now();
             if (run != null && lastInput.HasValue && t - lastInput.Value >= idleMs)
             {
-                emit(Where(New("idle"), state).Set("idleMs", t - lastInput.Value).Set("status", StatusName(state.Status))
-                    .Set("bodiesLeft", state.Bodies).Set("statues", state.Statues.Length));
+                Emit(Where(new TelemetryEvent(N.Types.Idle), state).With("idleMs", t - lastInput.Value)
+                    .With("status", StatusName(state.Status)).With("bodiesLeft", state.Bodies).With("statues", state.Statues.Length));
             }
             lastInput = t;
         }
@@ -89,18 +86,19 @@ namespace SevenSteps.Game.Telemetry
             Input(before);
             var after = r.State;
             int L = run.Level;
+            int w = before.Level.W;
 
             if (cmd.Type == CommandType.Restart)
             {
-                if (run.Done) { LevelStart(after, L, before.Level.Name, "again"); return; }
-                emit(Where(New("restart"), before).Set("moves", run.Moves));
+                if (run.Done) { LevelStart(after, L, before.Level.Name, N.Via.Again); return; }
+                Emit(Where(new TelemetryEvent(N.Types.Restart), before).With("moves", run.Moves));
                 run.Restarts++;
                 return;
             }
             if (cmd.Type == CommandType.Undo)
             {
                 if (ReferenceEquals(after, before)) return;
-                emit(Where(New("undo"), before).Set("status", StatusName(before.Status)));
+                Emit(Where(new TelemetryEvent(N.Types.Undo), before).With("status", StatusName(before.Status)));
                 run.Undos++;
                 return;
             }
@@ -115,63 +113,58 @@ namespace SevenSteps.Game.Telemetry
                 if (Has(r, GameEventType.Bump))
                 {
                     int at = EvAt(r, GameEventType.Bump);
-                    string blockedBy = at >= 0 && Rules.Contains(before.Statues, at) ? "statue" : TileKind(before, at);
-                    emit(Base(before, L, step, dir).Set("to", Xy(before, at)).Set("result", "blocked").Set("blockedBy", blockedBy));
+                    string blockedBy = at >= 0 && Rules.Contains(before.Statues, at) ? N.Tile.Statue : TileKind(before, at);
+                    Emit(Base(before, L, step, dir).WithCell("to", at, w).With("result", N.MoveResult.Blocked).With("blockedBy", blockedBy));
                     return;
                 }
                 run.Moves++;
-                land = FirstAt(r, GameEventType.Fall, GameEventType.Bridge, GameEventType.Win, GameEventType.Seal,
-                    GameEventType.Vanish, GameEventType.Choose, GameEventType.Stone, GameEventType.Step);
-                int first = Neighbor(before, cmd.Dir);
+                land = FirstAt(r);
+                int first = Rules.Neighbor(before.Level, before.Pos, cmd.Dir);
                 string firstTile = TileKind(before, first);
-                string result = "moved";
-                if (Has(r, GameEventType.Fall)) result = "fell";
-                else if (Has(r, GameEventType.Bridge)) result = "bridged";
-                else if (land != first) result = "slid";
-                else if (firstTile == "door") result = "door";
-                else if (firstTile == "gate") result = "gate";
-                var ev = Base(before, L, step, dir).Set("to", Xy(before, land)).Set("result", result);
-                if (Has(r, GameEventType.Crumble)) ev.Set("crumbled", true);
-                emit(ev);
+                string result = N.MoveResult.Moved;
+                if (Has(r, GameEventType.Fall)) result = N.MoveResult.Fell;
+                else if (Has(r, GameEventType.Bridge)) result = N.MoveResult.Bridged;
+                else if (land != first) result = N.MoveResult.Slid;
+                else if (firstTile == N.Tile.Door) result = N.MoveResult.Door;
+                else if (firstTile == N.Tile.Gate) result = N.MoveResult.Gate;
+                var ev = Base(before, L, step, dir).WithCell("to", land, w).With("result", result);
+                if (Has(r, GameEventType.Crumble)) ev.With("crumbled", true);
+                Emit(ev);
                 if (step == Rules.Steps && !Has(r, GameEventType.Fall))
                 {
-                    string effect = Has(r, GameEventType.Win) ? "win" : Has(r, GameEventType.Bridge) ? "bridge" : Has(r, GameEventType.Seal) ? "seal"
-                        : Has(r, GameEventType.Vanish) ? "vanish" : Has(r, GameEventType.Choose) ? "choose" : "statue";
-                    emit(New("seventh_step").Set("level", L).Set("body", BodyNo(before)).Set("at", Xy(before, land))
-                        .Set("tile", TileKind(before, land)).Set("effect", effect));
+                    string effect = Has(r, GameEventType.Win) ? N.Effect.Win : Has(r, GameEventType.Bridge) ? N.Effect.Bridge
+                        : Has(r, GameEventType.Seal) ? N.Effect.Seal : Has(r, GameEventType.Vanish) ? N.Effect.Vanish
+                        : Has(r, GameEventType.Choose) ? N.Effect.Choose : N.Effect.Statue;
+                    Emit(new TelemetryEvent(N.Types.SeventhStep).With("level", L).With("body", BodyNo(before)).WithCell("at", land, w)
+                        .With("tile", TileKind(before, land)).With("effect", effect));
                 }
             }
             else if (cmd.Type == CommandType.Keep || cmd.Type == CommandType.Switch)
             {
-                emit(New(cmd.Type == CommandType.Keep ? "keep" : "switch").Set("level", L).Set("body", BodyNo(before)).Set("at", Xy(before, before.Pos)));
+                Emit(new TelemetryEvent(cmd.Type == CommandType.Keep ? N.Types.Keep : N.Types.Switch)
+                    .With("level", L).With("body", BodyNo(before)).WithCell("at", before.Pos, w));
             }
 
             foreach (var e in r.Events)
             {
                 string reason = LostReason(e.Type);
                 if (reason == null) continue;
-                emit(New("body_lost").Set("level", L).Set("body", BodyNo(before)).Set("at", Xy(before, e.At))
-                    .Set("reason", reason).Set("wasted", reason == "fell" || reason == "vanish"));
+                Emit(new TelemetryEvent(N.Types.BodyLost).With("level", L).With("body", BodyNo(before)).WithCell("at", e.At, w)
+                    .With("reason", reason).With("wasted", reason == N.LostReason.Fell || reason == N.LostReason.Vanish));
             }
             if (after.Status == Status.Lose)
             {
                 run.Fails++;
-                emit(New("level_fail").Set("level", L).Set("at", Xy(before, land)).Set("moves", run.Moves).Set("bodiesUsed", before.Level.Bodies));
+                Emit(new TelemetryEvent(N.Types.LevelFail).With("level", L).WithCell("at", land, w).With("moves", run.Moves)
+                    .With("bodiesUsed", before.Level.Bodies));
             }
             if (after.Status == Status.Win && !run.Done)
             {
                 run.Done = true;
-                emit(New("level_clear").Set("level", L).Set("durationMs", now() - run.T0).Set("moves", run.Moves).Set("undos", run.Undos)
-                    .Set("restarts", run.Restarts).Set("hints", run.Hints).Set("fails", run.Fails).Set("bodiesUsed", BodyNo(after)));
+                Emit(new TelemetryEvent(N.Types.LevelClear).With("level", L).With("durationMs", now() - run.T0).With("moves", run.Moves)
+                    .With("undos", run.Undos).With("restarts", run.Restarts).With("hints", run.Hints).With("fails", run.Fails)
+                    .With("bodiesUsed", BodyNo(after)));
             }
-        }
-
-        /// An event outside the schema table (from ITelemetry.Track). Gets the next seq like every other event.
-        public void Custom(string type, Action<TelemetryRecord> fill)
-        {
-            var e = New(type);
-            fill?.Invoke(e);
-            emit(e);
         }
 
         public void Hint(State state)
@@ -179,7 +172,7 @@ namespace SevenSteps.Game.Telemetry
             if (run == null) return;
             Input(state);
             run.Hints++;
-            emit(Where(New("hint"), state));
+            Emit(Where(new TelemetryEvent(N.Types.Hint), state));
         }
 
         /// Leaving the current stage for another one (call before LevelStart of the new one).
@@ -190,8 +183,8 @@ namespace SevenSteps.Game.Telemetry
             var r = run;
             if (!r.Done)
             {
-                emit(Where(New("level_leave"), state).Set("toLevel", toLevel).Set("durationMs", now() - r.T0)
-                    .Set("moves", r.Moves).Set("undos", r.Undos).Set("restarts", r.Restarts).Set("hints", r.Hints).Set("fails", r.Fails));
+                Emit(Where(new TelemetryEvent(N.Types.LevelLeave), state).With("toLevel", toLevel).With("durationMs", now() - r.T0)
+                    .With("moves", r.Moves).With("undos", r.Undos).With("restarts", r.Restarts).With("hints", r.Hints).With("fails", r.Fails));
             }
             run = null;
         }
@@ -205,19 +198,18 @@ namespace SevenSteps.Game.Telemetry
         public void SessionEnd(State state, string reason)
         {
             FlushIdle(state);
-            var e = New("session_end").Set("reason", reason).Set("sessionMs", now() - (sessionT ?? now()));
-            if (run != null && state != null) Where(e, state).Set("cleared", run.Done);
-            emit(e);
+            var e = new TelemetryEvent(N.Types.SessionEnd).With("reason", reason).With("sessionMs", now() - (sessionT ?? now()));
+            if (run != null && state != null) Where(e, state).With("cleared", run.Done);
+            Emit(e);
         }
 
         // ---------- helpers (same as telemetry.js) ----------
 
-        TelemetryRecord Base(State before, int level, int step, string dir) =>
-            New("move").Set("level", level).Set("body", BodyNo(before)).Set("step", step).Set("dir", dir).Set("from", Xy(before, before.Pos));
+        TelemetryEvent Base(State before, int level, int step, string dir) =>
+            new TelemetryEvent(N.Types.Move).With("level", level).With("body", BodyNo(before)).With("step", step).With("dir", dir)
+                .WithCell("from", before.Pos, before.Level.W);
 
         static int BodyNo(State s) => s.Level.Bodies - s.Bodies + 1;
-
-        static object Xy(State s, int i) => i < 0 ? null : (object)new XY(i % s.Level.W, i / s.Level.W);
 
         static bool Has(StepResult r, GameEventType t)
         {
@@ -231,66 +223,51 @@ namespace SevenSteps.Game.Telemetry
             return -1;
         }
 
-        static int FirstAt(StepResult r, params GameEventType[] order)
+        static readonly GameEventType[] LandingOrder =
         {
-            foreach (var t in order) if (Has(r, t)) return EvAt(r, t);
+            GameEventType.Fall, GameEventType.Bridge, GameEventType.Win, GameEventType.Seal, GameEventType.Vanish,
+            GameEventType.Choose, GameEventType.Stone, GameEventType.Step,
+        };
+
+        /// Landing cell (after any ice slide), taken from the rule events in telemetry.js order.
+        static int FirstAt(StepResult r)
+        {
+            foreach (var t in LandingOrder) if (Has(r, t)) return EvAt(r, t);
             return -1;
         }
 
         static string LostReason(GameEventType t) => t switch
         {
-            GameEventType.Fall => "fell",
-            GameEventType.Vanish => "vanish",
-            GameEventType.Stone => "statue",
-            GameEventType.Switch => "switch",
-            GameEventType.Bridge => "bridge",
-            GameEventType.Seal => "seal",
+            GameEventType.Fall => N.LostReason.Fell,
+            GameEventType.Vanish => N.LostReason.Vanish,
+            GameEventType.Stone => N.LostReason.Statue,
+            GameEventType.Switch => N.LostReason.Switch,
+            GameEventType.Bridge => N.LostReason.Bridge,
+            GameEventType.Seal => N.LostReason.Seal,
             _ => null,
         };
 
+        /// telemetry.js tileKind. 'Q' (statue-count door) falls to "floor" there too, until docs/telemetry.md names it.
         public static string TileKind(State s, int i)
         {
-            if (i < 0) return "edge";
-            if (i == s.Start) return "start";
+            if (i < 0) return N.Tile.Edge;
+            if (i == s.Start) return N.Tile.Start;
             char t = Rules.TileAt(s, i);
-            if (t >= 'a' && t <= 'c') return "plate";
-            if (t >= 'A' && t <= 'C') return "door";
-            if (t >= '1' && t <= '7') return "gate";
+            if (t >= 'a' && t <= 'c') return N.Tile.Plate;
+            if (t >= 'A' && t <= 'C') return N.Tile.Door;
+            if (t >= '1' && t <= '7') return N.Tile.Gate;
             return t switch
             {
-                '#' => "wall", '.' => "floor", 'E' => "exit", 'o' => "pit", '~' => "ice", 'x' => "cracked", '=' => "bridge",
-                _ => "floor",
+                '#' => N.Tile.Wall, 'E' => N.Tile.Exit, 'o' => N.Tile.Pit, '~' => N.Tile.Ice, 'x' => N.Tile.Cracked, '=' => N.Tile.Bridge,
+                _ => N.Tile.Floor,
             };
         }
 
-        static int Neighbor(State s, Dir dir)
+        public static string DirName(Dir d) => d switch { Dir.Up => N.Dir.Up, Dir.Down => N.Dir.Down, Dir.Left => N.Dir.Left, _ => N.Dir.Right };
+
+        public static string StatusName(Status s) => s switch
         {
-            int w = s.Level.W, h = s.Level.H;
-            int x = s.Pos % w + (dir == Dir.Left ? -1 : dir == Dir.Right ? 1 : 0);
-            int y = s.Pos / w + (dir == Dir.Up ? -1 : dir == Dir.Down ? 1 : 0);
-            return x < 0 || y < 0 || x >= w || y >= h ? -1 : y * w + x;
-        }
-
-        public static string DirName(Dir d) => d switch { Dir.Up => "up", Dir.Down => "down", Dir.Left => "left", _ => "right" };
-
-        public static string StatusName(Status s) => s switch { Status.Play => "play", Status.Choose => "choose", Status.Win => "win", _ => "lose" };
-
-        /// docs/telemetry.md levelKey: FNV-1a 32 over "bodies\nrow\nrow..." (rows padded with '#', start as 'S'), 8 hex chars.
-        public static string LevelKey(Level level)
-        {
-            uint h = 0x811c9dc5;
-            void Mix(char c) { h ^= c; h = unchecked(h * 0x01000193); }
-            foreach (char c in level.Bodies.ToString()) Mix(c);
-            for (int y = 0; y < level.H; y++)
-            {
-                Mix('\n');
-                for (int x = 0; x < level.W; x++)
-                {
-                    int i = y * level.W + x;
-                    Mix(i == level.Start ? 'S' : level.Tile(i));
-                }
-            }
-            return h.ToString("x8");
-        }
+            Status.Play => N.Status.Play, Status.Choose => N.Status.Choose, Status.Win => N.Status.Win, _ => N.Status.Lose,
+        };
     }
 }

@@ -14,7 +14,9 @@ namespace SevenSteps.Game.UI
     {
         public readonly RectTransform LabelLayer;
 
-        readonly Text stageTitle, nextText, message;
+        readonly Text stageTitle, nextText, message, statueText;
+        Level countLevel;
+        bool levelHasCountDoor;
         readonly Image[] pips = new Image[Rules.Steps];
         readonly Text[] pipTexts = new Text[Rules.Steps];
         readonly RectTransform bodiesRow;
@@ -91,6 +93,10 @@ namespace SevenSteps.Game.UI
             bodiesRow.Place(new Vector2(1, 1), new Vector2(1, 1), new Vector2(-24, -66), new Vector2(300, 36));
             var bodiesLabel = Ui.Label(bodiesRow, "몸", 18, Ui.Dim);
             bodiesLabel.rectTransform.sizeDelta = new Vector2(26, 30);
+
+            // Statue-count door stages: statues standing now / the N that opens the Q doors.
+            statueText = Ui.Label(root, "", 18, Ui.Ink, TextAnchor.MiddleRight, "Statues");
+            statueText.rectTransform.Place(new Vector2(1, 1), new Vector2(1, 1), new Vector2(-24, -100), new Vector2(300, 28));
 
             // Message
             message = Ui.Label(root, "", 20, Ui.Ink, TextAnchor.MiddleCenter, "Message");
@@ -205,6 +211,7 @@ namespace SevenSteps.Game.UI
 
             message.text = msg ?? "";
             choicePanel.SetActive(s.Status == Status.Choose);
+            RefreshStatues(s);
 
             bool last = levelIdx == levelCount - 1;
             bool win = resultShown && s.Status == Status.Win;
@@ -234,6 +241,23 @@ namespace SevenSteps.Game.UI
             }
         }
 
+
+        /// "석상 2 / 3" on stages with statue-count doors (Q). Values come from Rules.StatueCount and Level.StatueCount.
+        void RefreshStatues(State s)
+        {
+            if (!ReferenceEquals(countLevel, s.Level))
+            {
+                countLevel = s.Level;
+                levelHasCountDoor = false;
+                for (int i = 0; i < s.Level.Count && !levelHasCountDoor; i++)
+                    levelHasCountDoor = TileId.At(s, i).Kind == TileKind.CountDoor;
+            }
+            statueText.gameObject.SetActive(levelHasCountDoor);
+            if (!levelHasCountDoor) return;
+            int now = Rules.StatueCount(s), need = s.Level.StatueCount;
+            bool open = Rules.DoorOpen(s, 'Q');
+            statueText.text = $"석상 <color={(open ? "#f2c14e" : "#ece6d6")}>{now}</color> / {need}" + (open ? "  문 열림" : "");
+        }
 
         static RectTransform Row(Transform parent, string name, float spacing, TextAnchor align)
         {

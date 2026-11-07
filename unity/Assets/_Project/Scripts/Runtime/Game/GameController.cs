@@ -75,10 +75,12 @@ namespace SevenSteps.Game
         /// Raised for HUD-only actions that do not touch the session (hint).
         public event Action HintShown;
 
-        string nextVia = "boot";
+        string nextVia = TelemetryNames.Via.Boot;
 
         /// Set by Bootstrap.Run: the next stage entry is the first of this app run (telemetry via = boot/url).
         internal static bool FirstEntryPending;
+        /// Scene played directly in the editor (or a build without Boot): the start level came from startLevel, not the URL.
+        bool levelFromInspector;
 
         void Awake()
         {
@@ -87,7 +89,7 @@ namespace SevenSteps.Game
             {
                 // Played directly in the editor: same bootstrap as the Boot scene, with this object's debug start values.
                 var opts = Bootstrap.ReadLaunchOptions();
-                if (!opts.DirectToGame) opts.Level = Mathf.Max(1, startLevel);
+                if (!opts.DirectToGame) { opts.Level = Mathf.Max(1, startLevel); levelFromInspector = true; }
                 if (string.IsNullOrEmpty(opts.Replay)) opts.Replay = replay ?? "";
                 Bootstrap.Run(config, opts, enterFirstScreen: false);
             }
@@ -128,13 +130,13 @@ namespace SevenSteps.Game
             // Boot -> Game (or editor direct play): enter the game state now that the scene exists.
             if (flow.State == AppState.Boot)
             {
-                nextVia = launch.DirectToGame ? "url" : "boot";
+                nextVia = launch.DirectToGame && !levelFromInspector ? TelemetryNames.Via.Url : TelemetryNames.Via.Boot;
                 flow.GoToGame(Mathf.Clamp(launch.DirectToGame ? launch.Level - 1 : 0, 0, levels.Length - 1));
             }
             else if (flow.State == AppState.Game)
             {
                 // Boot -> Game for ?level= / -level, or StageSelect -> Game.
-                nextVia = FirstEntryPending && launch.DirectToGame ? "url" : FirstEntryPending ? "boot" : "select";
+                nextVia = FirstEntryPending && launch.DirectToGame ? TelemetryNames.Via.Url : FirstEntryPending ? TelemetryNames.Via.Boot : TelemetryNames.Via.Select;
                 EnterStage(flow.Stage);
             }
             FirstEntryPending = false;
@@ -176,28 +178,28 @@ namespace SevenSteps.Game
             session.Load(levels[stage]);
             save.Progress.lastStage = stage;
             StageEntered?.Invoke(stage, nextVia);
-            nextVia = "select";
+            nextVia = TelemetryNames.Via.Select;
         }
 
         /// Stage buttons, [ and ]. Goes through AppFlow (Game -> Game, or Result -> Game).
         public void SelectStage(int idx)
         {
             if (idx < 0 || idx >= levels.Length) return;
-            nextVia = "select";
+            nextVia = TelemetryNames.Via.Select;
             flow.GoToGame(idx);
         }
 
         public void NextLevel()
         {
             if (flow.Stage >= levels.Length - 1) return;
-            nextVia = "next";
+            nextVia = TelemetryNames.Via.Next;
             flow.GoToGame(flow.Stage + 1);
         }
 
         /// Result panel "다시 하기" after a clear: a fresh attempt at the same stage.
         public void Again()
         {
-            nextVia = "again";
+            nextVia = TelemetryNames.Via.Again;
             flow.GoToGame(flow.Stage);
         }
 

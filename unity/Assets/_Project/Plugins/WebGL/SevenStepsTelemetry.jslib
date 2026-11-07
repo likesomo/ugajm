@@ -1,16 +1,16 @@
 // Seven Steps telemetry bridge for WebGL (docs/architecture.md 11.5, docs/telemetry.md 4).
 // C#: SevenSteps.Game.Telemetry.HttpTelemetry / TelemetryRunner. Import settings: WebGL only.
-//   SevenSteps_RegisterVisibility(objectName)  listen to visibilitychange/pagehide and call back into C#:
+//   TelemetryRegisterVisibility(objectName)  listen to visibilitychange/pagehide and call back into C#:
 //     hidden  -> SendMessage(objectName, "OnPageHidden", "hidden")
 //     pagehide (when hidden was missed) -> SendMessage(objectName, "OnPageHidden", "unload")
 //     visible again -> SendMessage(objectName, "OnPageVisible")
-//   SevenSteps_SendBeacon(url, body) -> 1 if the browser queued it (text/plain, so no CORS preflight), else 0.
+//   TelemetryBeacon(url, body) -> 1 if the browser queued it (text/plain, so no CORS preflight), else 0.
 // SendMessage runs C# synchronously, so session_end is queued and beaconed before the page goes away.
 var SevenStepsTelemetryLib = {
   $SevenStepsTelemetryState: { name: null, hidden: false, ended: false },
 
-  SevenSteps_RegisterVisibility__deps: ['$SevenStepsTelemetryState'],
-  SevenSteps_RegisterVisibility: function (namePtr) {
+  TelemetryRegisterVisibility__deps: ['$SevenStepsTelemetryState'],
+  TelemetryRegisterVisibility: function (namePtr) {
     var st = SevenStepsTelemetryState;
     var first = st.name === null;
     st.name = UTF8ToString(namePtr);
@@ -41,7 +41,7 @@ var SevenStepsTelemetryLib = {
     });
   },
 
-  SevenSteps_SendBeacon: function (urlPtr, bodyPtr) {
+  TelemetryBeacon: function (urlPtr, bodyPtr) {
     try {
       if (!navigator.sendBeacon) return 0;
       var ok = navigator.sendBeacon(UTF8ToString(urlPtr), new Blob([UTF8ToString(bodyPtr)], { type: 'text/plain' }));
