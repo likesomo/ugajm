@@ -39,6 +39,15 @@ public static class BuildTools
         if (scenes.Length == 0) throw new Exception("[BuildTools] No enabled scenes in Build Settings.");
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output)) ?? ".");
 
+        // Build on the active target. URP collects the pipeline assets for shader stripping from the active
+        // target; building WebGL while Standalone is active strips the wrong variants (UI drawn, no 3D board).
+        if (EditorUserBuildSettings.activeBuildTarget != target)
+        {
+            Debug.Log($"[BuildTools] switching active build target {EditorUserBuildSettings.activeBuildTarget} -> {target}");
+            if (!EditorUserBuildSettings.SwitchActiveBuildTarget(BuildPipeline.GetBuildTargetGroup(target), target))
+                throw new Exception($"[BuildTools] could not switch the active build target to {target}");
+        }
+
         // Players report Application.version as "<bundleVersion>+<commit>[-dirty]" (telemetry `build` field).
         // The commit is stamped only for the build and the project setting is put back afterwards.
         string baseVersion = PlayerSettings.bundleVersion;
