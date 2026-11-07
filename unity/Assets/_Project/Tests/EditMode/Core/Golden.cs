@@ -26,7 +26,7 @@ namespace SevenSteps.Tests
             return JsonUtility.FromJson<T>(File.ReadAllText(path));
         }
 
-        public static Level ToLevel(GoldenLevelDef d) => Level.Parse(d.name, d.hint, d.bodies, d.map);
+        public static Level ToLevel(GoldenLevelDef d) => Level.Parse(d.name, d.hint, d.bodies, d.map, d.statueCount);
 
         /// Command letters of the traces: U D L R move, K keep, X switch, Z undo, * restart.
         public static Command ToCommand(char c)
@@ -95,7 +95,7 @@ namespace SevenSteps.Tests
     public sealed class GoldenLevel
     {
         public string name, hint, tiles, minPath;
-        public int bodies, w, h, start, minBodies, minMoves;
+        public int bodies, statueCount, w, h, start, minBodies, minMoves;
         public string[] map;
         public bool needsSwitch;
         public GoldenPlate[] plates;
@@ -118,7 +118,7 @@ namespace SevenSteps.Tests
         public override string ToString() => id;
     }
 
-    [Serializable] public sealed class GoldenLevelDef { public string name, hint; public int bodies; public string[] map; }
+    [Serializable] public sealed class GoldenLevelDef { public string name, hint; public int bodies, statueCount; public string[] map; }
     [Serializable] public sealed class GoldenStep { public string cmd; public bool changed; public GoldenEvent[] events; public GoldenState state; }
     [Serializable] public sealed class GoldenEvent { public string type; public int at, stepIdx; }
     [Serializable] public sealed class GoldenFoot { public int i, n; }

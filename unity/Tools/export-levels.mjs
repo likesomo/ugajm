@@ -19,6 +19,7 @@ const levels = LEVELS.map((def) => {
     name: def.name,
     hint: def.hint ?? '',
     bodies: level.bodies,
+    statueCount: level.statueCount,
     map: def.map,
     expected: {
       minBodies: best.bodies,
