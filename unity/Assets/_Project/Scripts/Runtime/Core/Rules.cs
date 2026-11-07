@@ -67,6 +67,19 @@ namespace SevenSteps.Core
             return true;
         }
 
+        /// A new statue may open doors: one DoorOpen per door cell that was shut before. Statues never go away,
+        /// so there is no closing event (undo/restart swap the whole state).
+        static void OpenedDoors(State before, State after, List<GameEvent> events)
+        {
+            var level = after.Level;
+            for (int i = 0; i < level.Count; i++)
+            {
+                char t = level.Tile(i);
+                if (t >= 'A' && t <= 'C' && !DoorOpen(before, t) && DoorOpen(after, t))
+                    events.Add(new GameEvent(GameEventType.DoorOpen, i));
+            }
+        }
+
         static int[] Add(int[] arr, int i)
         {
             if (Contains(arr, i)) return arr;
@@ -136,6 +149,8 @@ namespace SevenSteps.Core
                 next.Broken = Add(next.Broken, s.Pos);
                 events.Add(new GameEvent(GameEventType.Crumble, s.Pos));
             }
+            // Slid on from the first (ice) cell: Slide at that cell, before what happens where the slide ends.
+            if (pos != first) events.Add(new GameEvent(GameEventType.Slide, first));
 
             char t = TileAt(next, pos);
             bool lucky = stepIdx == Steps;
@@ -185,6 +200,7 @@ namespace SevenSteps.Core
             {
                 next.Statues = Add(next.Statues, pos);
                 events.Add(new GameEvent(GameEventType.Stone, pos, stepIdx));
+                OpenedDoors(s, next, events);
             }
             return new StepResult(NextBody(next, events, next.Start), events, pathArr);
         }
@@ -200,6 +216,7 @@ namespace SevenSteps.Core
                 events.Add(new GameEvent(GameEventType.Stone, s.Pos));
                 var withStatue = s.Clone();
                 withStatue.Statues = Add(s.Statues, s.Pos);
+                OpenedDoors(s, withStatue, events);
                 return new StepResult(NextBody(withStatue, events, withStatue.Start), events);
             }
             events.Add(new GameEvent(GameEventType.Switch, s.Pos));

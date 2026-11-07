@@ -60,6 +60,14 @@ export function passable(s, i, stepIdx) {
 
 const add = (arr, i) => (arr.includes(i) ? arr : [...arr, i].sort((a, b) => a - b));
 
+// A new statue may open doors: one 'doorOpen' event per door cell that was shut before. Statues never go away,
+// so there is no closing event (undo/restart swap the whole state).
+function openedDoors(before, after, events) {
+  after.level.tiles.forEach((t, i) => {
+    if (t >= 'A' && t <= 'C' && !doorOpen(before, t) && doorOpen(after, t)) events.push({ type: 'doorOpen', at: i });
+  });
+}
+
 function nextBody(s, events, start = s.start) {
   const bodies = s.bodies - 1;
   if (bodies <= 0) {
@@ -94,6 +102,8 @@ export function step(s, dir) {
     next.broken = add(next.broken, s.pos);
     events.push({ type: 'crumble', at: s.pos });
   }
+  // Slid on from the first (ice) cell: 'slide' at that cell, before what happens where the slide ends.
+  if (pos !== first) events.push({ type: 'slide', at: first });
 
   const t = tileAt(next, pos);
   const lucky = stepIdx === STEPS;
@@ -128,6 +138,7 @@ export function step(s, dir) {
   } else {
     next.statues = add(next.statues, pos);
     events.push({ type: 'stone', at: pos });
+    openedDoors(s, next, events);
   }
   return { state: nextBody(next, events), events };
 }
@@ -139,7 +150,9 @@ export function choose(s, kind) {
   if (s.status !== 'choose') return { state: s, events };
   if (kind === 'keep') {
     events.push({ type: 'stone', at: s.pos });
-    return { state: nextBody({ ...s, statues: add(s.statues, s.pos) }, events), events };
+    const kept = { ...s, statues: add(s.statues, s.pos) };
+    openedDoors(s, kept, events);
+    return { state: nextBody(kept, events), events };
   }
   if (kind === 'switch') {
     events.push({ type: 'switch', at: s.pos });

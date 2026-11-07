@@ -99,13 +99,15 @@ Command.FromAct(Act)        // 리플레이 글자 U D L R K X
 | `Respawn` | 새 출발점 | 0 | 다음 몸이 깨어남 |
 | `Lose` | -1 | 0 | 실패 (몸 없음) |
 | `Undo` / `Restart` | -1 | 0 | 스냅샷 교체 |
+| `Slide` | 첫 얼음 칸 (`Path[0]`) | 0 | 미끄러짐. `Path.Length > 1`일 때만 |
+| `DoorOpen` | 문 칸 (문 칸마다 하나, 칸 번호 순) | 0 | 문 열림 (새 석상이 발판을 누름) |
 
 **순서 규칙** (v0 `Rules.Step`/`Choose` 기준, 바뀌면 안 됨):
 
 ```
 Move  (Status != Play)   → []                                   상태 그대로
 Move  (막힘)              → [Bump]                               상태 그대로
-Move  (통과)              → [Crumble?] + 다음 중 하나
+Move  (통과)              → [Crumble?] + [Slide?] + 다음 중 하나
         1~6번째, 구덩이     → Fall,   Respawn | Lose
         7번째, 구덩이       → Bridge, Respawn | Lose
         1~6번째            → Step
@@ -113,8 +115,8 @@ Move  (통과)              → [Crumble?] + 다음 중 하나
         7번째, 금 간 바닥   → Seal,   Respawn | Lose
         7번째, 출발점       → Vanish, Respawn | Lose
         7번째, 몸 2개 이상  → Choose
-        7번째, 마지막 몸    → Stone,  Lose
-Keep                      → Stone,  Respawn | Lose
+        7번째, 마지막 몸    → Stone,  DoorOpen*, Lose
+Keep                      → Stone,  DoorOpen*, Respawn | Lose
 Switch                    → Switch, Respawn | Lose
 Undo                      → [Undo]  (되돌릴 것이 없으면 [] 이고 상태 그대로)
 Restart                   → [Restart]
@@ -125,10 +127,11 @@ Restart                   → [Restart]
 - `StepIdx == 7`인 이벤트가 행운의 7번째 걸음 연출(링, 효과음)의 기준이다.
 - 이벤트 enum은 **끝에만 추가**한다 (숫자 값이 저장·로그에 쓰일 수 있음).
 
-**코어에 요청 (2단계, 코어 담당)** — 기획의 "미끄러짐", "문 열림"이 아직 이벤트로 없다. 다음을 enum 끝에 추가한다.
-- `Slide` (At = 첫 얼음 칸): `Path.Length > 1`일 때, `Crumble` 뒤·주 이벤트 앞.
-- `DoorOpen` (At = 문 칸, 문마다 하나): `Stone`/`Seal` 직후, `Respawn`/`Lose` 앞. 석상은 사라지지 않으므로 `DoorClose`는 없다 (Undo/Restart는 스냅샷이라 이벤트 불필요).
-- 추가 전까지 화면은 `Path.Length > 1`과 `Rules.DoorOpen(prev, d) != Rules.DoorOpen(next, d)`로 대신한다. 이것은 Core 질의 결과 비교라 허용한다.
+**`Slide`·`DoorOpen` (2단계, 코어가 추가함)** — enum 끝(15, 16)에 추가했고 `core.js`도 같은 이벤트(`slide`, `doorOpen`)를 낸다.
+- `Slide` (At = 첫 얼음 칸 = `Path[0]`): `Path.Length > 1`일 때만, `Crumble` 뒤·주 이벤트 앞. `StepIdx`는 0 (행운 연출이 두 번 나지 않도록 주 이벤트만 7을 가짐).
+- `DoorOpen` (At = 문 칸, 닫혀 있다 열린 문 칸마다 하나, 칸 번호 순): `Stone` 직후, `Respawn`/`Lose` 앞. `StepIdx`는 0.
+  `Seal`은 석상을 남기지 않으므로(다리만 생김) 문을 열지 않는다. 석상은 사라지지 않으므로 `DoorClose`는 없다 (Undo/Restart는 스냅샷이라 이벤트 불필요).
+- 이 규칙은 EditMode 테스트(`Tests/EditMode/Core/RulesTests`)가 모든 골든 트레이스에서 검사한다.
 
 ---
 
@@ -399,3 +402,4 @@ new TelemetryEvent("stage_end").With("stage", 3).With("result", "win")   // 이�
 |---|---|---|
 | 2026-11-07 | 아키텍트 | 최초 작성. `SevenSteps.Contracts` 어셈블리(`TileId`, `TileVisual`, `TileSet`, `CameraRig`, `BoardGrid`, `IBoardPresenter`, `GameSession`), `SevenSteps.Tests.EditMode` 어셈블리, test-framework 1.8.0 명시, `TileSetBuilder`와 `TopDown_Placeholder.asset`. Core·Game 동작 변경 없음 (v0 그대로) |
 | 2026-11-07 | 아키텍트 | 1단계 범위 확장(사용자 요청): 프로그램 기본 틀 11장. `AppFlow`/`AppState`/`AppScenes`/`ISceneLoader`, `Services`, `LaunchOptions`, `AppConfig`, `SaveSystem`(`ISaveStore`, `PlayerPrefsStore`, `MemoryStore`, `ProgressData`, `SettingsData`), `ITelemetry`/`NullTelemetry`/`TelemetryEvent`(임시)/`TelemetryContext`, 11.5 텔레메트리 구현·jslib 위치. 8장 씬 표를 상태 5개 기준으로 수정. `GameSession`: 연출 중 Undo는 가장 최근 큐 입력을 먼저 취소 |
+| 2026-11-07 | 코어 | `GameEventType`에 `Slide`(15), `DoorOpen`(16) 추가(3.3). `core.js`도 `slide`/`doorOpen` 이벤트를 냄. 기존 이벤트·순서·공개 API 형태는 그대로. 게임플레이/UI는 `Path.Length > 1`/`DoorOpen` 비교 대신 이 이벤트를 쓸 수 있음. EditMode 테스트 `Tests/EditMode/Core/` 추가(골든 대조) |
