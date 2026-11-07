@@ -429,7 +429,7 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 골든 테스트 | `Assets/_Project/Tests/EditMode/Game/` | `SevenSteps.Tests.EditMode` |
 
 - 이 폴더들은 게임플레이/UI 소유다. `Assets/Plugins/`(루트)는 쓰지 않는다.
-- jslib 함수 이름은 telemetry.md 4장을 따른다: `TelemetryBeacon(url, body)` → `navigator.sendBeacon(url, new Blob([body], {type:'text/plain'}))`(성공 1/실패 0), `TelemetryRegisterVisibility(objectName)` → `visibilitychange`·`pagehide` 등록. C# 선언은 `[DllImport("__Internal")]`을 `#if UNITY_WEBGL && !UNITY_EDITOR`로 감싸고, 그 밖에서는 `UnityWebRequest`만 쓴다.
+- jslib 함수 이름은 **코드 기준** `SevenSteps_` 접두사(전역 이름 충돌 방지): `SevenSteps_SendBeacon(url, json)` → `navigator.sendBeacon(url, new Blob([body], {type:'text/plain'}))`(성공 1/실패 0), `SevenSteps_RegisterVisibility(objectName)` → `visibilitychange`·`pagehide` 등록. telemetry.md 4장의 `TelemetryBeacon`과 같은 동작이고 이름만 다르다. 이름을 바꾸면 jslib, C# `DllImport`(`HttpTelemetry`, `TelemetryRunner`), 이 줄을 함께 고친다. C# 선언은 `[DllImport("__Internal")]`을 `#if UNITY_WEBGL && !UNITY_EDITOR`로 감싸고, 그 밖에서는 `UnityWebRequest`만 쓴다.
 - 페이지 숨김 → jslib가 `SendMessage("TelemetryRunner", "OnPageHidden")`. 그래서 Boot가 만드는 `DontDestroyOnLoad` 오브젝트 이름을 **`TelemetryRunner`로 고정**한다. `OnPageHidden`은 `session_end`(`reason: hidden`)를 넣고 큐를 100건씩 잘라 `TelemetryBeacon`으로 보낸다. 다시 보이면 `session_start`(`resumed: true`), 같은 `sessionId`.
 - 데스크톱 종료: `Application.quitting`에서 `session_end`(`reason: unload`) 후 최대 1초 전송 대기.
 - 서버 주소는 11.4의 우선순위로만 정한다. 코드에 주소를 적지 않는다.
@@ -448,3 +448,4 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 2026-11-07 | 아키텍트 | 레버 기믹 표기 확정(6.2, 코어 제안 채택): 맵 `L`/`R`/`r`, `State.Flipped`, `Rules.TileAt`이 뒤집힘 반영(R↔r), `Rules.IsFlipWall`, 이벤트 `Flip`(18, 주 이벤트 바로 앞), 출발점 7번째는 Vanish만, 벽·석상 겹침 허용. `TileKind.Lever`/`FlipWall`(끝에 추가), `TileSet.lever`/`flipWalls[2]`, 임시 아트 |
 | 2026-11-07 | 아키텍트 | `GameSession.Presented(State)` 이벤트 추가(4.2, 연출이 끝난 뒤 할 일용). 11.5 jslib 함수 이름을 게임플레이/UI 구현에 맞춤(`SevenSteps_SendBeacon`, `SevenSteps_RegisterVisibility`). 9장 WebGL 규칙에 데스크톱 종료 1초 대기 예외. 검토 기록 `docs/reviews/` 추가 |
 | 2026-11-07 | 아키텍트 | 11.5 jslib 함수 이름을 게임플레이/UI 57907b9 구현에 다시 맞춤(`TelemetryBeacon`, `TelemetryRegisterVisibility`, telemetry.md 이름). feat/view 재검토 기록 |
+| 2026-11-07 | 아키텍트 | 11.5 jslib 이름을 실제 코드(7lucky c12fd42: jslib·`DllImport`)에 맞춰 `SevenSteps_SendBeacon`/`SevenSteps_RegisterVisibility`로 확정(직전 정정 되돌림). 이름을 바꿀 때 함께 고칠 파일 명시. feat/view 2a9e801·43f3f38 사후 검토 기록 |
