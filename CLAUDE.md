@@ -16,7 +16,7 @@
 ## Unity 환경
 - 에디터: **Unity 6000.6.8f1** (`C:\Program Files\Unity\Hub\Editor\6000.6.8f1\Editor\Unity.exe`)
 - 프로젝트 경로: `unity/` (Unity Hub에서 Add → 이 폴더 선택)
-- 설치된 빌드 모듈: Windows Standalone만 있음. **WebGL 모듈은 미설치**이므로 itch.io 웹 빌드 전에 Unity Hub → Installs → 6000.6.8f1 → Add modules → WebGL Build Support를 설치해야 함
+- 설치된 빌드 모듈: Windows Standalone, WebGL. 빈 프로젝트 기준 WebGL 배치 빌드 성공 확인(약 10MB)
 - 입력: Input System (`InputSystem_Actions.inputactions`), UI: uGUI
 
 ## 폴더 규칙
@@ -37,7 +37,7 @@ U="/c/Program Files/Unity/Hub/Editor/6000.6.8f1/Editor/Unity.exe"
 "$U" -batchmode -nographics -projectPath unity -executeMethod BuildTools.CompileCheck -logFile -
 # 윈도우 빌드 → /Builds/Windows/
 "$U" -batchmode -nographics -projectPath unity -executeMethod BuildTools.BuildWindows -logFile -
-# WebGL 빌드 → /Builds/WebGL/ (WebGL 모듈 설치 후)
+# WebGL 빌드 → /Builds/WebGL/
 "$U" -batchmode -nographics -projectPath unity -executeMethod BuildTools.BuildWebGL -logFile -
 ```
 빌드 대상 씬은 Build Settings의 활성 씬 목록을 따른다. 빌드 스크립트: `unity/Assets/_Project/Scripts/Editor/BuildTools.cs`
