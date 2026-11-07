@@ -1,6 +1,7 @@
 // Browser shell: input, rendering, level select. Reads core state, changes it only through dispatch().
 import { STEPS, DIRS, parseLevel, newState, dispatch, tileAt, doorOpen, solve } from './core.js';
 import { LEVELS } from './levels.js';
+import { initTelemetry, fnv1a } from './telemetry.js';
 
 const root = document.getElementById('app');
 const params = new URLSearchParams(location.search);
@@ -11,6 +12,9 @@ let levelIdx = Math.min(Math.max(Number(params.get('level') ?? 1) - 1, 0), LEVEL
 let state = newState(parseLevel(LEVELS[levelIdx]));
 let message = LEVELS[levelIdx].hint;
 let flash = null; // { at, type } for one-shot cell animation
+
+// Telemetry hook (docs/telemetry.md). Build = hash of all stages, so a level change shows up as a new build.
+const tel = initTelemetry({ build: `proto-${fnv1a(JSON.stringify(LEVELS))}`, params, getState: () => state });
 
 // Replay: ?level=8&replay=LRRRRDDKLLDDRDD reproduces an exact screen (U D L R moves, K keep, X switch).
 const LETTER = { U: 'up', D: 'down', L: 'left', R: 'right' };
@@ -37,17 +41,21 @@ const MESSAGES = {
   restart: '처음부터.',
 };
 
-function loadLevel(idx) {
+function loadLevel(idx, via = 'select') {
+  tel.leave(state, idx + 1);
   levelIdx = idx;
   state = newState(parseLevel(LEVELS[idx]));
   message = LEVELS[idx].hint;
   flash = null;
   history.replaceState(null, '', `?level=${idx + 1}`);
+  tel.levelStart(state, idx + 1, LEVELS[idx].name, via);
   render();
 }
 
 function send(cmd) {
+  const before = state;
   const r = dispatch(state, cmd);
+  tel.command(before, cmd, r);
   state = r.state;
   flash = null;
   for (const e of r.events) {
@@ -64,6 +72,7 @@ function send(cmd) {
 }
 
 function hint() {
+  tel.hint(state);
   // The solver starts from a fresh stage, so the hint is the full route from the beginning.
   const r = solve(state.level);
   const glyph = { up: '↑', down: '↓', left: '←', right: '→', keep: ' KEEP ', switch: ' SWITCH ' };
@@ -155,6 +164,7 @@ function render() {
       <button data-act="undo">되돌리기 Z</button>
       <button data-act="restart">재시작 R</button>
       <button data-act="hint">풀이 보기 H</button>
+      <button data-act="telemetry" title="익명 플레이 기록(어디서 막히는지)을 개발팀 서버로 보낸다">기록 전송 ${tel.enabled ? '켬' : '끔'}</button>
       <span class="keys">이동: 방향키 / WASD / 옆 칸 클릭 · 7걸음 후: K KEEP / X SWITCH · 스테이지: [ ]</span>
     </footer>
     <details class="legend"><summary>타일 설명</summary>
@@ -185,15 +195,16 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'h' || e.key === 'H') return hint();
   if (e.key === '[' && levelIdx > 0) return loadLevel(levelIdx - 1);
   if (e.key === ']' && levelIdx < LEVELS.length - 1) return loadLevel(levelIdx + 1);
-  if (e.key === 'Enter' && state.status === 'win' && levelIdx < LEVELS.length - 1) return loadLevel(levelIdx + 1);
+  if (e.key === 'Enter' && state.status === 'win' && levelIdx < LEVELS.length - 1) return loadLevel(levelIdx + 1, 'next');
 });
 
 root.addEventListener('click', (e) => {
   const lv = e.target.closest('[data-level]');
   if (lv) return loadLevel(Number(lv.dataset.level));
   const act = e.target.closest('[data-act]')?.dataset.act;
-  if (act === 'next') return loadLevel(levelIdx + 1);
+  if (act === 'next') return loadLevel(levelIdx + 1, 'next');
   if (act === 'hint') return hint();
+  if (act === 'telemetry') return tel.setEnabled(!tel.enabled);
   if (act) return send({ type: act });
   const cell = e.target.closest('.board .cell');
   if (!cell) return;
@@ -206,3 +217,5 @@ root.addEventListener('click', (e) => {
 });
 
 render();
+tel.sessionStart({ cleared: cleared.size });
+tel.levelStart(state, levelIdx + 1, LEVELS[levelIdx].name, params.has('level') ? 'url' : 'boot');
