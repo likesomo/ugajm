@@ -55,7 +55,7 @@ Unity 씬·프리팹은 git으로 합치기 어렵다. **한 파일은 한 에�
 | 경로 (`unity/` 기준) | 소유자 |
 |---|---|
 | `Assets/_Project/Scripts/Runtime/Core/**`, `Assets/_Project/Tests/**`, `prototypes/seven-steps/src/core.js` | 코어 |
-| `Assets/_Project/Data/levels.json`, `prototypes/seven-steps/src/levels.js`, `design/levels/**`, `prototypes/seven-steps/experiments/**` | 레벨 디자인 |
+| `Assets/_Project/Data/levels.json`, `prototypes/seven-steps/src/levels.js`, `design/levels/**`, `prototypes/seven-steps/experiments/**`, 웹 프로토타입 화면(`prototypes/seven-steps/src/main.js`·`style.css`, 텔레메트리 훅 제외) | 레벨 디자인 |
 | `Assets/_Project/Scripts/Runtime/Game/**`, `Assets/_Project/Scenes/**`, `Assets/_Project/UI/**` (UI 프리팹) | 게임플레이/UI |
 | `Assets/Shared/**` (git 밖 공유 폴더, **아트만 추가·수정**), `Assets/_Project/Art/**`, `Assets/_Project/Prefabs/Tiles/**`, `Assets/Settings/*RPAsset*`, `design/art/**` (`design/art/CREDITS.md` 포함) | 아트 |
 | `*.asmdef`, `docs/architecture.md`, 공용 인터페이스(아키텍트가 지정한 파일), `Packages/manifest.json` | 아키텍트 |

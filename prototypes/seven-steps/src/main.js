@@ -1,5 +1,5 @@
 // Browser shell: input, rendering, level select. Reads core state, changes it only through dispatch().
-import { STEPS, DIRS, parseLevel, newState, dispatch, tileAt, doorOpen, solve } from './core.js';
+import { STEPS, DIRS, parseLevel, newState, dispatch, tileAt, doorOpen, statueCount, solve } from './core.js';
 import { LEVELS } from './levels.js';
 import { initTelemetry, fnv1a } from './telemetry.js';
 
@@ -12,6 +12,7 @@ let levelIdx = Math.min(Math.max(Number(params.get('level') ?? 1) - 1, 0), LEVEL
 let state = newState(parseLevel(LEVELS[levelIdx]));
 let message = LEVELS[levelIdx].hint;
 let flash = null; // { at, type } for one-shot cell animation
+let doorFx = new Set(); // door cells that opened or closed on the last command
 
 // Telemetry hook (docs/telemetry.md). Build = hash of all stages, so a level change shows up as a new build.
 const tel = initTelemetry({ build: `proto-${fnv1a(JSON.stringify(LEVELS))}`, params, getState: () => state });
@@ -47,6 +48,7 @@ function loadLevel(idx, via = 'select') {
   state = newState(parseLevel(LEVELS[idx]));
   message = LEVELS[idx].hint;
   flash = null;
+  doorFx = new Set();
   history.replaceState(null, '', `?level=${idx + 1}`);
   tel.levelStart(state, idx + 1, LEVELS[idx].name, via);
   render();
@@ -58,9 +60,17 @@ function send(cmd) {
   tel.command(before, cmd, r);
   state = r.state;
   flash = null;
+  doorFx = new Set();
   for (const e of r.events) {
     if (MESSAGES[e.type]) message = MESSAGES[e.type];
-    if (e.type === 'bump') flash = { at: e.at, type: 'bump' };
+    if (e.type === 'bump') {
+      flash = { at: e.at, type: 'bump' };
+      if (e.at >= 0 && tileAt(state, e.at) === 'Q') message = qDoorText(state, '이 문은 닫혀 있다.');
+    }
+    if ((e.type === 'doorOpen' || e.type === 'doorClose') && tileAt(state, e.at) === 'Q') {
+      doorFx.add(e.at);
+      message = `${message} ${qDoorText(state, e.type === 'doorOpen' ? '석상 수 문이 열렸다.' : '석상 수 문이 닫혔다.')}`.trim();
+    }
     if (['stone', 'bridge', 'seal', 'fall', 'win', 'choose', 'switch'].includes(e.type)) flash = { at: e.at, type: e.type };
     if (e.type === 'step') message = e.stepIdx === STEPS - 1 ? '다음 걸음이 행운의 7번째 걸음이다.' : '';
   }
@@ -69,6 +79,11 @@ function send(cmd) {
     localStorage.setItem(SAVE_KEY, JSON.stringify([...cleared]));
   }
   render();
+}
+
+// "석상이 정확히 N개일 때만 열린다 (지금 n개)" — the statue-count door explained in numbers.
+function qDoorText(s, lead) {
+  return `${lead} 석상이 정확히 ${s.level.statueCount}개일 때만 열린다 (지금 ${statueCount(s)}개).`;
 }
 
 function hint() {
@@ -92,6 +107,7 @@ function cellHtml(i) {
   let label = '';
   if (t >= 'a' && t <= 'c') { cls = `plate p-${t}`; label = t.toUpperCase(); }
   if (t >= 'A' && t <= 'C') { cls = `door p-${t.toLowerCase()} ${doorOpen(s, t) ? 'open' : 'closed'}`; label = t; }
+  if (t === 'Q') { cls = `door qdoor ${doorOpen(s, t) ? 'open' : 'closed'}`; label = String(s.level.statueCount); }
   if (t >= '1' && t <= '7') { cls = `gate ${Number(t) === nextStep ? 'go' : ''}`; label = t; }
   if (t === 'E') { label = '出'; if (nextStep === STEPS) cls += ' ready'; }
   if (i === s.start) cls += ' start';
@@ -100,6 +116,7 @@ function cellHtml(i) {
   const foot = s.trail.filter((f) => f.i === i && f.n > 0).map((f) => f.n);
   const parts = [];
   if (label) parts.push(`<span class="label">${label}</span>`);
+  if (t === 'Q') parts.push(`<span class="qnow" title="지금 서 있는 석상 수">${statueCount(s)}</span>`);
   if (foot.length && i !== s.pos) parts.push(`<span class="foot">${foot.join('·')}</span>`);
   if (s.statues.includes(i)) parts.push('<span class="statue">7</span>');
   if (s.bridges.includes(i)) parts.push('<span class="bridge-mark">7</span>');
@@ -107,7 +124,7 @@ function cellHtml(i) {
     const c = s.status === 'choose' ? 'choosing' : STEPS - s.used === 1 ? 'last' : '';
     parts.push(`<span class="player ${c}">${STEPS - s.used}</span>`);
   }
-  const fx = flash && flash.at === i ? ` fx-${flash.type}` : '';
+  const fx = (flash && flash.at === i ? ` fx-${flash.type}` : '') + (doorFx.has(i) ? ' fx-door' : '');
   return `<div class="cell ${cls}${fx}" data-i="${i}">${parts.join('')}</div>`;
 }
 
@@ -122,6 +139,11 @@ function render() {
   }).join('');
   const bodies = Array.from({ length: s.level.bodies }, (_, k) =>
     `<span class="body ${k < s.bodies ? '' : 'gone'}"></span>`).join('');
+  // Statue counter, shown only on stages with a statue-count door. Gold when it matches the door.
+  const hasQ = s.level.tiles.includes('Q');
+  const statueHud = hasQ
+    ? `<span class="statues ${doorOpen(s, 'Q') ? 'match' : ''}" title="서 있는 석상 수 / 석상 수 문의 숫자">석상 <b>${statueCount(s)}</b> / ${s.level.statueCount}</span>`
+    : '';
   const cells = [];
   for (let i = 0; i < w * h; i++) cells.push(cellHtml(i));
   const levelBtns = LEVELS.map((_, k) =>
@@ -149,7 +171,7 @@ function render() {
       <div class="title">${levelIdx + 1}. ${s.level.name}</div>
       <div class="pips">${pips}</div>
       <div class="next">${s.status === 'choose' ? '<b>KEEP</b> 또는 <b>SWITCH</b>' : s.status === 'play' ? (nextStep === STEPS ? '다음 걸음이 <b>행운의 7번째</b>' : `다음 걸음: <b>${nextStep}번째</b>`) : '&nbsp;'}</div>
-      <div class="bodies">몸 ${bodies}</div>
+      <div class="bodies">${statueHud}몸 ${bodies}</div>
     </section>
     <main>
       <div class="board" style="grid-template-columns: repeat(${w}, var(--cell)); grid-template-rows: repeat(${h}, var(--cell));">${cells.join('')}</div>
@@ -172,6 +194,7 @@ function render() {
         <li><span class="cell mini plate p-a"><span class="label">A</span></span> 발판: 석상이 올라가 있으면 같은 글자의 문이 열린다</li>
         <li><span class="cell mini door p-a closed"><span class="label">A</span></span> 문</li>
         <li><span class="cell mini gate"><span class="label">3</span></span> 숫자 문: 3번째 걸음일 때만 통과</li>
+        <li><span class="cell mini door qdoor closed"><span class="label">1</span></span> 석상 수 문: 서 있는 석상이 정확히 그 수일 때만 열린다. 구덩이·금 간 바닥의 다리는 세지 않는다 (모서리 숫자 = 지금 석상 수)</li>
         <li><span class="cell mini pit"></span> 구덩이: 7번째 걸음으로 빠지면 다리가 된다</li>
         <li><span class="cell mini ice"></span> 얼음: 막힐 때까지 미끄러진다. 몇 칸이든 1걸음</li>
         <li><span class="cell mini cracked"></span> 금 간 바닥: 지나가면 무너진다. 7번째 걸음으로 서면 굳는다</li>
