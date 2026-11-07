@@ -41,7 +41,9 @@ restore_urp_settings() {
   read -r added deleted _ <<< "$stat"
   local committed; committed="$(mktemp)"
   (cd "$REPO" && git show "HEAD:$URPGS") > "$committed"
-  if { runtime_list_empty "$REPO/$URPGS" && ! runtime_list_empty "$committed"; } || { [ "$added" = "0" ] && [ "$deleted" != "0" ]; }; then
+  URP_EMPTIED=0
+  if runtime_list_empty "$REPO/$URPGS" && ! runtime_list_empty "$committed"; then URP_EMPTIED=1; fi
+  if [ "$URP_EMPTIED" = "1" ] || { [ "$added" = "0" ] && [ "$deleted" != "0" ]; }; then
     rm -f "$committed"
     (cd "$REPO" && git checkout -- "$URPGS")
     echo "[unity.sh] restored $URPGS (Unity emptied/stripped m_RuntimeSettings: +$added -$deleted)"
@@ -71,9 +73,14 @@ batch() {
   mkdir -p "$PROJ/Logs"
   echo "[unity.sh] $name: $method (log: unity/Logs/batch-$name.log)"
   local code=0
+  # Before: never start from a stripped file (a WebGL build legitimately strips the SSAO resources, which
+  # the next Windows build needs). After: put the committed file back. Rebuild only when Unity emptied the
+  # whole m_RuntimeSettings list during this run (cause unknown, so stay conservative).
+  restore_urp_settings > /dev/null || true
   run_unity "$name" "$method" || code=$?
-  if restore_urp_settings && [ "$code" -eq 0 ] && [[ "$name" == build-* ]]; then
-    echo "[unity.sh] $name: rebuilding with the restored URP settings"
+  URP_EMPTIED=0
+  if restore_urp_settings && [ "$URP_EMPTIED" = "1" ] && [ "$code" -eq 0 ] && [[ "$name" == build-* ]]; then
+    echo "[unity.sh] $name: rebuilding (m_RuntimeSettings was emptied during the build)"
     run_unity "$name" "$method" || code=$?
     restore_urp_settings || true
   fi
