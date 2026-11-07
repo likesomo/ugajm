@@ -1,5 +1,5 @@
 // Sketch stages for the lever. 7th step on L flips every R (raised → lowered) and r (lowered → raised).
-// A statue on the lever blocks it; SWITCH there makes it the start, and a 7th step on the start vanishes (but still flips).
+// A statue on the lever blocks it; SWITCH there makes it the start, and a 7th step on the start vanishes and flips nothing.
 export const STAGES = [
   {
     name: '내리는 벽', bodies: 3, gimmickTiles: 'Rr',

@@ -21,7 +21,7 @@ export function parseLevel(def) {
     }
   }
   if (start < 0) throw new Error(`level "${def.name}" has no S`);
-  return { name: def.name, hint: def.hint ?? '', w, h, tiles, plates, start, bodies: def.bodies ?? STEPS, count: def.count ?? 0 }; // EXP count
+  return { name: def.name, hint: def.hint ?? '', w, h, tiles, plates, start, bodies: def.bodies ?? STEPS, statueCount: def.statueCount ?? 0 }; // EXP statueCount
 }
 
 export function newState(level) {
@@ -55,7 +55,7 @@ export function passable(s, i, stepIdx) {
   const t = tileAt(s, i);
   if (t === '#') return false;
   if (t >= 'A' && t <= 'C') return doorOpen(s, t);
-  if (t === 'Q') return s.statues.length === s.level.count; // EXP statue-count door
+  if (t === 'Q') return s.statues.length === s.level.statueCount; // EXP statue-count door
   if (t >= '1' && t <= '7') return Number(t) === stepIdx;
   return true;
 }

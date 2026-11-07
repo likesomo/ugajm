@@ -114,7 +114,7 @@ export function step(s, dir) {
     events.push({ type: 'step', at: pos, stepIdx });
     return { state: next, events };
   }
-  if (t === 'L') { next.flip = !s.flip; events.push({ type: 'flip', at: pos }); } // EXP lever
+  if (t === 'L' && pos !== s.start) { next.flip = !s.flip; events.push({ type: 'flip', at: pos }); } // EXP lever (on the start cell a 7th step vanishes and flips nothing)
   if (t === 'E') {
     events.push({ type: 'win', at: pos });
     return { state: { ...next, status: 'win' }, events };

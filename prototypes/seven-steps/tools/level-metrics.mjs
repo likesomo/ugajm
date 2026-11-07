@@ -2,16 +2,26 @@
 // Usage: node prototypes/seven-steps/tools/level-metrics.mjs
 //   → reports/level-metrics.json (not committed) and design/levels/interest-curve.html (committed)
 // Auto metrics come from the rules in src/core.js; judgement metrics come from design/levels/judgement.json.
+// Proposals (experimental rules / another stage order), paths relative to the repo root:
+//   --core <rules.js> --levels <module exporting LEVELS> --html <out.html> --json <out.json>
+//   --title <text> --compare <earlier level-metrics.json>   (draws that run's D/I faintly, matched by stage name)
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { parseLevel, newState, step, choose, actions, dispatch, minBodies, solve } from '../src/core.js';
-import { LEVELS } from '../src/levels.js';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
-const JUDGEMENT = join(ROOT, 'design', 'levels', 'judgement.json');
-const OUT_JSON = join(ROOT, 'reports', 'level-metrics.json');
-const OUT_HTML = join(ROOT, 'design', 'levels', 'interest-curve.html');
+const argv = process.argv.slice(2);
+const arg = (name, fallback) => { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : fallback; };
+const fromRoot = (p) => resolve(ROOT, p);
+const CORE = fromRoot(arg('core', 'prototypes/seven-steps/src/core.js'));
+const LEVELS_FILE = fromRoot(arg('levels', 'prototypes/seven-steps/src/levels.js'));
+const JUDGEMENT = fromRoot(arg('judgement', 'design/levels/judgement.json'));
+const OUT_JSON = fromRoot(arg('json', 'reports/level-metrics.json'));
+const OUT_HTML = fromRoot(arg('html', 'design/levels/interest-curve.html'));
+const TITLE = arg('title', '');
+const COMPARE = arg('compare') ? JSON.parse(readFileSync(fromRoot(arg('compare')), 'utf8')).rows : null;
+const { parseLevel, newState, step, choose, actions, dispatch, minBodies, solve } = await import(pathToFileURL(CORE));
+const { LEVELS } = await import(pathToFileURL(LEVELS_FILE));
 
 // ---- Model constants (documented in interest-model.md; tune after playtests) ----
 const M = {
@@ -34,7 +44,8 @@ const BASIC = new Set(['walk7']); // tags every stage has; excluded from overlap
 const TAG_KO = {
   walk7: '7걸음', detour: '돌아가기', keep: 'KEEP 석상', plate: '발판·문', switch: 'SWITCH', pit: '구덩이', bridge: '몸 다리',
   gate: '숫자 문', ice: '얼음', parity: '홀짝', statueStopper: '석상 멈춤벽', cracked: '금 간 바닥', seal: '봉인 다리',
-  multiStatue: '석상 여러 개', switchBack: '출발점 되돌리기',
+  multiStatue: '석상 여러 개', switchBack: '출발점 되돌리기', statueDoor: '석상 수 문', statueKey: '열쇠 석상',
+  emptyDoor: '0개 문',
 };
 const ko = (t) => TAG_KO[t] ?? t;
 
@@ -123,6 +134,7 @@ function tagsOf(level, def, best, needsSwitch) {
   if (has(/~/)) tags.add('ice');
   if (has(/x/)) tags.add('cracked');
   if (has(/[1-7]/)) tags.add('gate');
+  if (has(/Q/)) tags.add('statueDoor');
   if (needsSwitch) tags.add('switch');
   const ev = { keep: 0, switch: 0, bridge: 0, seal: 0, crumble: 0, reversals: 0, bodies: best.bodies };
   let s = newState(level);
@@ -173,8 +185,9 @@ for (const [idx, def] of LEVELS.entries()) {
   const needsSwitch = !solve(level, level.bodies, { noSwitch: true });
   const ex = explore(level);
   const { tags, ev } = tagsOf(level, def, best, needsSwitch);
-  const j = judgement.stages.find((x) => x.name === def.name) ?? judgement.stages[idx] ?? {};
-  for (const t of j.tagsAdd ?? []) tags.add(t);
+  const j = judgement.stages.find((x) => x.name === def.name);
+  if (!j) console.warn(`! judgement.json has no entry for "${def.name}" (A = 0)`);
+  for (const t of j?.tagsAdd ?? []) tags.add(t);
   const { D, parts } = difficulty(level, best, ex);
   rows.push({
     idx: idx + 1, name: def.name, limit: level.bodies, size: `${level.w}x${level.h}`,
@@ -183,7 +196,7 @@ for (const [idx, def] of LEVELS.entries()) {
     rarity: r2(ex.rarity), trapRatio: r2(ex.trapRatio), freshBodies: ex.freshBodies,
     deadRatio: r2(ex.deadRatio), events: ev, tags: [...tags].sort(),
     D: r2(D), dParts: Object.fromEntries(Object.entries(parts).map(([k, v]) => [k, r2(v)])),
-    A: j.A ?? 0, aReason: j.reason ?? '', nAdj: j.nAdj ?? 0, note: j.note ?? '',
+    A: j?.A ?? 0, aReason: j?.reason ?? '', nAdj: j?.nAdj ?? 0, note: j?.note ?? '',
   });
 }
 
@@ -263,9 +276,17 @@ function renderHtml(rows) {
   const drops = rows.map((r, i) => (r.drop
     ? `<rect x="${x(i) - half}" y="${T}" width="${half * 2}" height="${H - T - B}" class="drop"><title>${esc(`${r.idx}. ${r.name}: 흥미도 하락 (I=${r.I})`)}</title></rect>` : '')).join('');
   const intros = rows.map((r, i) => (r.newTags.length
-    ? `<line x1="${x(i)}" x2="${x(i)}" y1="${T - 6 - (i % 2) * 16}" y2="${H - B}" class="intro"/><text x="${x(i)}" y="${T - 12 - (i % 2) * 16}" class="introlabel" text-anchor="middle">${esc(r.newTags.map(ko).join('·'))}</text>` : '')).join('');
+    ? `<line x1="${x(i)}" x2="${x(i)}" y1="${T - 6 - (i % 2) * 16}" y2="${H - B}" class="intro"/><text x="${x(i)}" y="${T - 12 - (i % 2) * 16}" class="introlabel" text-anchor="${i === n - 1 ? 'end' : i === 0 ? 'start' : 'middle'}">${esc(r.newTags.map(ko).join('·'))}</text>` : '')).join('');
   const inserts = rows.map((r, i) => (r.insertGimmick
     ? `<g class="insert"><path d="M${x(i)},${H - B + 30} l-7,10 h14 z"/><title>${esc(`${r.idx}. 새 기믹 투입 지점`)}</title></g>` : '')).join('');
+  // Earlier run (--compare): same stage name → plotted at its new position, gaps where a stage is new.
+  const ghost = (key) => {
+    if (!COMPARE) return '';
+    const byName = new Map(COMPARE.map((r) => [r.name, r]));
+    let d = '', pen = 'M';
+    rows.forEach((r, i) => { const o = byName.get(r.name); if (!o) { pen = 'M'; return; } d += `${pen}${x(i).toFixed(1)},${y(o[key]).toFixed(1)} `; pen = 'L'; });
+    return `<path d="${d}" class="ghost${key}"><title>이전 ${key}</title></path>`;
+  };
   const dots = (key, cls) => rows.map((r, i) =>
     `<circle cx="${x(i)}" cy="${y(r[key])}" r="5" class="${cls}"><title>${esc(`${r.idx}. ${r.name}\nD ${r.D}  I ${r.I}\nN ${r.N}  A ${r.A}  C ${r.C}  F ${r.F}\n${r.tags.map(ko).join(', ')}`)}</title></circle>`).join('');
   const xLabels = rows.map((r, i) =>
@@ -275,7 +296,7 @@ function renderHtml(rows) {
   ${grid}${drops}${intros}
   <line x1="${L}" x2="${W - R}" y1="${y(M.baseline)}" y2="${y(M.baseline)}" class="baseline"/>
   <text x="${W - R}" y="${y(M.baseline) - 6}" class="baselabel" text-anchor="end">기준선 ${M.baseline}</text>
-  <path d="${line('D')}" class="lineD"/><path d="${line('I')}" class="lineI"/>
+  ${ghost('D')}${ghost('I')}<path d="${line('D')}" class="lineD"/><path d="${line('I')}" class="lineI"/>
   ${dots('D', 'dotD')}${dots('I', 'dotI')}${xLabels}${inserts}
   <text x="${(L + W - R) / 2}" y="${H - 6}" class="tick" text-anchor="middle">스테이지</text>
 </svg>`;
@@ -300,16 +321,16 @@ main{max-width:1040px;margin:0 auto;padding:24px 16px 48px}h1{font-size:22px;mar
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px}
 svg{width:100%;height:auto;display:block}.grid{stroke:var(--grid)}.grid.zero{stroke:var(--muted);stroke-dasharray:2 3}.tick{fill:var(--muted);font-size:12px}
 .baseline{stroke:var(--base);stroke-width:1.5;stroke-dasharray:6 4}.baselabel{fill:var(--base);font-size:12px}
-.lineD{fill:none;stroke:var(--d);stroke-width:2.5}.lineI{fill:none;stroke:var(--i);stroke-width:3}.dotD{fill:var(--d)}.dotI{fill:var(--i)}
+.lineD{fill:none;stroke:var(--d);stroke-width:2.5}.lineI{fill:none;stroke:var(--i);stroke-width:3}.dotD{fill:var(--d)}.ghostD,.ghostI{fill:none;stroke-width:2;stroke-dasharray:5 4;opacity:.45}.ghostD{stroke:var(--d)}.ghostI{stroke:var(--i)}.dotI{fill:var(--i)}
 .drop{fill:var(--drop)}.intro{stroke:var(--intro);stroke-dasharray:3 3}.introlabel{fill:var(--intro);font-size:11px}.insert path{fill:var(--insert)}
 .tablewrap{overflow-x:auto;margin-top:20px}table{border-collapse:collapse;font-size:13px;min-width:900px;width:100%}
 th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--muted);font-weight:600}
 td:nth-child(2){white-space:nowrap}td.num{text-align:right;font-variant-numeric:tabular-nums}td.strong{font-weight:700}tr.is-drop td{background:var(--drop)}.new{color:var(--intro)}.reason{color:var(--muted);max-width:280px}
 </style></head><body><main>
 <h1>일곱 걸음 — 난이도·흥미도 곡선</h1>
-<p class="sub">${n}개 스테이지. 모델: design/levels/interest-model.md · 생성: tools/level-metrics.mjs</p>
+<p class="sub">${TITLE ? `${esc(TITLE)} · ` : ''}${n}개 스테이지. 모델: design/levels/interest-model.md · 생성: tools/level-metrics.mjs</p>
 <div class="legend"><span><i style="background:var(--d)"></i>난이도 D</span><span><i style="background:var(--i)"></i>흥미도 I</span>
-<span><i style="background:var(--base)"></i>기준선</span><span><i style="background:var(--drop);height:10px"></i>흥미도 하락 구간</span>
+<span><i style="background:var(--base)"></i>기준선</span>${COMPARE ? '<span><i style="background:var(--muted);opacity:.5"></i>점선: 비교 대상(같은 이름 스테이지, 값이 같으면 겹쳐 안 보임)</span>' : ''}<span><i style="background:var(--drop);height:10px"></i>흥미도 하락 구간</span>
 <span><i style="background:var(--intro)"></i>새 요소 등장</span><span><i style="background:var(--insert);height:8px;width:8px"></i>새 기믹 투입 지점</span></div>
 <div class="card">${svg}</div>
 <div class="tablewrap"><table><thead><tr><th>#</th><th>이름</th><th>몸(최소/제한)</th><th>걸음</th><th>탐색 상태</th><th>희소도</th><th>함정 비율</th>
