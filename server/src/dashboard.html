@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seven Steps Analytics</title>
+<style>
+:root {
+  color-scheme: light;
+  --surface-0: #f4f3ef; --surface-1: #fcfcfb; --line: #e2e0d8; --grid: #ecebe5;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #85837d;
+  --s-clear: #1baf7a; --s-leave: #eda100; --s-quit: #e34948; --s-open: #b9b7af; --s-start: #86b6ef; --s-main: #2a78d6;
+  --wall: #3b3a37; --floor: #f1efe8;
+  --seq-0: #cde2fb; --seq-1: #9ec5f4; --seq-2: #6da7ec; --seq-3: #3987e5; --seq-4: #256abf; --seq-5: #184f95; --seq-6: #0d366b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-0: #121211; --surface-1: #1a1a19; --line: #2f2e2b; --grid: #262523;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8d8b83;
+    --s-clear: #199e70; --s-leave: #c98500; --s-quit: #e66767; --s-open: #55534e; --s-start: #1c5cab; --s-main: #3987e5;
+    --wall: #0b0b0a; --floor: #2a2926;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-0: #121211; --surface-1: #1a1a19; --line: #2f2e2b; --grid: #262523;
+  --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8d8b83;
+  --s-clear: #199e70; --s-leave: #c98500; --s-quit: #e66767; --s-open: #55534e; --s-start: #1c5cab; --s-main: #3987e5;
+  --wall: #0b0b0a; --floor: #2a2926;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--surface-0); color: var(--text-primary); font: 14px/1.45 system-ui, 'Malgun Gothic', sans-serif; }
+header { position: sticky; top: 0; z-index: 5; background: var(--surface-0); border-bottom: 1px solid var(--line); padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+header h1 { font-size: 17px; margin: 0 12px 0 0; }
+label { color: var(--text-secondary); font-size: 13px; display: inline-flex; gap: 6px; align-items: center; }
+select, input, button { font: inherit; font-size: 13px; color: var(--text-primary); background: var(--surface-1); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
+button { cursor: pointer; }
+a { color: var(--s-main); }
+main { max-width: 1280px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+section { background: var(--surface-1); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+section h2 { font-size: 15px; margin: 0 0 4px; }
+.sub { color: var(--text-muted); font-size: 12px; margin: 0 0 10px; }
+.tiles { display: flex; gap: 12px; flex-wrap: wrap; }
+.tile { background: var(--surface-1); border: 1px solid var(--line); border-radius: 10px; padding: 10px 16px; min-width: 140px; }
+.tile b { display: block; font-size: 26px; font-variant-numeric: tabular-nums; }
+.tile span { color: var(--text-secondary); font-size: 12px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: 5px 8px; border-bottom: 1px solid var(--grid); text-align: right; white-space: nowrap; }
+th { color: var(--text-secondary); font-weight: 600; font-size: 12px; position: sticky; top: 0; background: var(--surface-1); }
+td.l, th.l { text-align: left; }
+td.name { max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; color: var(--text-secondary); font-size: 12px; margin: 6px 0; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 900px) { .row2 { grid-template-columns: 1fr; } }
+svg text { fill: var(--text-secondary); font-size: 11px; }
+.hm-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.tl-player { display: grid; grid-template-columns: 110px 1fr; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--grid); align-items: start; }
+.tl-player .who { font-family: ui-monospace, monospace; font-size: 12px; color: var(--text-secondary); }
+.tl-sess { display: flex; flex-wrap: wrap; gap: 2px; align-items: center; margin-bottom: 4px; }
+.tl-sess .meta { color: var(--text-muted); font-size: 11px; margin-right: 6px; min-width: 120px; }
+.blk { height: 20px; min-width: 20px; border-radius: 4px; color: #fff; font-size: 11px; display: inline-grid; place-items: center; padding: 0 4px; font-weight: 600; text-shadow: 0 0 2px rgba(0,0,0,.6); }
+.blk.clear { background: var(--s-clear); } .blk.leave { background: var(--s-leave); } .blk.quit { background: var(--s-quit); } .blk.open { background: var(--s-open); }
+.end { color: var(--s-quit); font-size: 11px; margin-left: 4px; }
+#tip { position: fixed; pointer-events: none; z-index: 20; background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.18); display: none; white-space: pre; }
+.err { color: var(--s-quit); }
+.empty { color: var(--text-muted); padding: 12px 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>일곱 걸음 · 플레이 분석</h1>
+  <label>클라이언트 <select id="f-client"><option value="">전체</option><option>web-proto</option><option>unity-webgl</option><option>unity-desktop</option></select></label>
+  <label>빌드 <select id="f-build"><option value="">전체</option></select></label>
+  <label>기간 <select id="f-range"><option value="">전체</option><option value="1">최근 1시간</option><option value="24">최근 24시간</option><option value="168">최근 7일</option></select></label>
+  <button id="refresh">새로고침</button>
+  <span id="exports" style="font-size:12px"></span>
+  <label style="margin-left:auto">토큰 <input id="token" type="password" size="12"></label>
+</header>
+<main>
+  <div id="status"></div>
+  <div class="tiles" id="tiles"></div>
+
+  <div class="row2">
+    <section>
+      <h2>스테이지 퍼널</h2>
+      <p class="sub">스테이지를 시작한 플레이어 수와 그중 클리어한 플레이어 수</p>
+      <div class="legend"><span><i class="sw" style="background:var(--s-start)"></i>시작한 플레이어</span><span><i class="sw" style="background:var(--s-clear)"></i>클리어한 플레이어</span></div>
+      <div id="funnel"></div>
+    </section>
+    <section>
+      <h2>이탈률</h2>
+      <p class="sub">플레이어의 마지막 기록이 이 스테이지(미클리어)인 비율. 그 플레이어가 여기서 그만뒀다는 뜻</p>
+      <div id="dropoff"></div>
+    </section>
+  </div>
+
+  <section>
+    <h2>헤맴 지표</h2>
+    <p class="sub">시도 = 스테이지 시작부터 클리어·다른 스테이지로 이동·30분 무입력(이탈)까지. 세션 종료율 = 이 스테이지를 미클리어로 둔 채 끝난 세션 비율</p>
+    <div class="scroll"><table id="metrics"></table></div>
+  </section>
+
+  <section>
+    <h2>막힘 히트맵</h2>
+    <p class="sub">칸마다 선택한 지표의 횟수(진할수록 많음). 칸에 마우스를 올리면 모든 수치</p>
+    <div class="hm-controls">
+      <label>스테이지 <select id="hm-level"></select></label>
+      <label>지표 <select id="hm-metric">
+        <option value="idleMs">오래 멈춤 (멈춘 시간 합)</option>
+        <option value="idle">오래 멈춤 (횟수)</option>
+        <option value="undo">되돌리기</option>
+        <option value="wasted">몸 낭비 (구덩이·출발점)</option>
+        <option value="lost">몸 사용 전체</option>
+        <option value="left">떠난 위치 (이탈·스테이지 이동)</option>
+        <option value="blocked">막힌 이동</option>
+        <option value="hint">풀이 보기</option>
+        <option value="visit">방문</option>
+      </select></label>
+    </div>
+    <div id="heatmap"></div>
+  </section>
+
+  <section>
+    <h2>세션 타임라인</h2>
+    <p class="sub">최근 플레이어 50명. 블록 하나가 스테이지 시도 하나(숫자 = 스테이지, 너비 = 걸린 시간)</p>
+    <div class="legend"><span><i class="sw" style="background:var(--s-clear)"></i>클리어</span><span><i class="sw" style="background:var(--s-leave)"></i>다른 스테이지로 이동</span><span><i class="sw" style="background:var(--s-quit)"></i>미클리어로 세션 끝</span><span><i class="sw" style="background:var(--s-open)"></i>진행 중</span></div>
+    <div id="timeline"></div>
+  </section>
+</main>
+<div id="tip"></div>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pct = (r) => (r == null ? '–' : `${Math.round(r * 100)}%`);
+const sec = (ms) => (ms == null ? '–' : ms < 60000 ? `${Math.round(ms / 1000)}초` : `${Math.floor(ms / 60000)}분 ${Math.round((ms % 60000) / 1000)}초`);
+const num = (n) => (n == null ? '–' : n);
+const LOST = { fell: '구덩이', vanish: '출발점', statue: '석상', switch: '스위치', bridge: '다리', seal: '굳힘' };
+const OUT = { clear: '클리어', leave: '이동', quit: '이탈', open: '진행 중' };
+
+// Token: #token=... once, then remembered in this browser.
+let token = '';
+try { token = localStorage.getItem('ss-dash-token') ?? ''; } catch {}
+const hm = location.hash.match(/token=([^&]+)/);
+if (hm) { token = decodeURIComponent(hm[1]); try { localStorage.setItem('ss-dash-token', token); } catch {} history.replaceState(null, '', location.pathname); }
+$('token').value = token;
+$('token').addEventListener('change', (e) => { token = e.target.value.trim(); try { localStorage.setItem('ss-dash-token', token); } catch {} load(); });
+
+function query() {
+  const q = new URLSearchParams();
+  if ($('f-client').value) q.set('client', $('f-client').value);
+  if ($('f-build').value) q.set('build', $('f-build').value);
+  if ($('f-range').value) q.set('from', String(Date.now() - Number($('f-range').value) * 3600000));
+  return q;
+}
+async function api(path, extra = {}) {
+  const q = query();
+  for (const [k, v] of Object.entries(extra)) q.set(k, v);
+  const res = await fetch(`${path}?${q}`, { headers: { Authorization: `Bearer ${token}` } });
+  if (res.status === 401) throw new Error('토큰이 틀렸거나 비어 있다. 서버 시작 로그의 dashboard 주소(#token=…)로 열거나 오른쪽 위에 입력.');
+  if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
+  return res.json();
+}
+
+// Tooltip: any element with data-tip.
+const tip = $('tip');
+document.addEventListener('mousemove', (e) => {
+  const el = e.target.closest('[data-tip]');
+  if (!el) { tip.style.display = 'none'; return; }
+  tip.textContent = el.dataset.tip;
+  tip.style.display = 'block';
+  const r = tip.getBoundingClientRect();
+  tip.style.left = `${Math.min(e.clientX + 14, innerWidth - r.width - 8)}px`;
+  tip.style.top = `${Math.min(e.clientY + 14, innerHeight - r.height - 8)}px`;
+});
+
+let LEVELS = [];
+let STATS = [];
+
+function renderTiles(ov, stats) {
+  const t = ov.totals;
+  const cleared = stats.reduce((a, s) => a + s.clears, 0);
+  const attempts = stats.reduce((a, s) => a + s.attempts, 0);
+  $('tiles').innerHTML = [
+    ['플레이어', t.players], ['세션', t.sessions], ['스테이지 시도', attempts], ['클리어', cleared], ['이벤트', t.events],
+  ].map(([k, v]) => `<div class="tile"><b>${v.toLocaleString()}</b><span>${k}</span></div>`).join('');
+}
+
+function renderFunnel(stats) {
+  const rows = stats.filter((s) => s.players || LEVELS.some((l) => l.n === s.level));
+  if (!rows.length) { $('funnel').innerHTML = '<p class="empty">데이터 없음</p>'; return; }
+  const max = Math.max(1, ...rows.map((s) => s.players));
+  const W = 560, rowH = 24, left = 150, right = 70, H = rows.length * rowH + 8;
+  const sx = (v) => (v / max) * (W - left - right);
+  let g = '';
+  rows.forEach((s, i) => {
+    const y = i * rowH + 4;
+    const tipText = `${s.level}. ${s.name}\n시작 ${s.players}명 · 클리어 ${s.clearPlayers}명 (${pct(s.clearRate)})\n시도 ${s.attempts}회`;
+    g += `<g data-tip="${esc(tipText)}">
+      <rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/>
+      <text x="${left - 8}" y="${y + 15}" text-anchor="end">${s.level}. ${esc(s.name.slice(0, 12))}</text>
+      <rect x="${left}" y="${y + 3}" width="${Math.max(sx(s.players), s.players ? 2 : 0)}" height="8" rx="2" fill="var(--s-start)"/>
+      <rect x="${left}" y="${y + 13}" width="${Math.max(sx(s.clearPlayers), s.clearPlayers ? 2 : 0)}" height="8" rx="2" fill="var(--s-clear)"/>
+      <text x="${left + sx(s.players) + 6}" y="${y + 15}" style="fill:var(--text-primary)">${s.clearPlayers}/${s.players} · ${pct(s.clearRate)}</text>
+    </g>`;
+  });
+  $('funnel').innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="스테이지별 시작·클리어 플레이어 수">${g}</svg>`;
+}
+
+function renderDropoff(stats) {
+  const rows = stats.filter((s) => s.players);
+  if (!rows.length) { $('dropoff').innerHTML = '<p class="empty">데이터 없음</p>'; return; }
+  const W = 560, H = 230, top = 16, bottom = 28, left = 36;
+  const max = Math.max(0.1, ...rows.map((s) => s.playerQuitRate ?? 0));
+  const ceil = Math.min(1, Math.ceil(max * 10) / 10);
+  const bw = (W - left) / rows.length;
+  const sy = (v) => top + (1 - v / ceil) * (H - top - bottom);
+  let g = '';
+  const step = ceil <= 0.5 ? 0.1 : 0.2;
+  for (let k = 0; k * step <= ceil + 1e-9; k++) {
+    const v = k * step;
+    g += `<line x1="${left}" x2="${W}" y1="${sy(v)}" y2="${sy(v)}" stroke="var(--grid)"/><text x="${left - 4}" y="${sy(v) + 4}" text-anchor="end">${Math.round(v * 100)}%</text>`;
+  }
+  const worst = [...rows].sort((a, b) => (b.playerQuitRate ?? 0) - (a.playerQuitRate ?? 0)).slice(0, 3).map((s) => s.level);
+  rows.forEach((s, i) => {
+    const v = s.playerQuitRate ?? 0;
+    const x = left + i * bw + bw * 0.2;
+    const w = bw * 0.6;
+    const y = sy(v);
+    const h = H - bottom - y;
+    const tipText = `${s.level}. ${s.name}\n여기서 그만둔 플레이어 ${s.playerQuits}/${s.players} (${pct(s.playerQuitRate)})\n세션 종료율 ${pct(s.sessionEndRate)}`;
+    const path = h > 4 ? `M${x},${H - bottom} V${y + 4} Q${x},${y} ${x + 4},${y} H${x + w - 4} Q${x + w},${y} ${x + w},${y + 4} V${H - bottom} Z` : `M${x},${H - bottom} V${y} H${x + w} V${H - bottom} Z`;
+    g += `<g data-tip="${esc(tipText)}"><rect x="${left + i * bw}" y="${top}" width="${bw}" height="${H - top - bottom}" fill="transparent"/>
+      <path d="${path}" fill="var(--s-quit)" opacity="${worst.includes(s.level) ? 1 : 0.55}"/>
+      ${worst.includes(s.level) && v > 0 ? `<text x="${x + w / 2}" y="${y - 4}" text-anchor="middle" style="fill:var(--text-primary)">${pct(v)}</text>` : ''}
+      <text x="${x + w / 2}" y="${H - bottom + 16}" text-anchor="middle">${s.level}</text></g>`;
+  });
+  $('dropoff').innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="스테이지별 이탈률">${g}<line x1="${left}" x2="${W}" y1="${H - bottom}" y2="${H - bottom}" stroke="var(--text-muted)"/></svg>`;
+}
+
+function renderMetrics(stats) {
+  const head = ['스테이지', '이름', '시작', '클리어율', '이탈률', '세션 종료율', '클리어 시간 중앙', '상위 25%', '클리어 이동 중앙', '시도', '되돌리기/시도', '재시작/시도', '힌트 본 비율', '실패', '몸 낭비', '오래 멈춤', '몸 사용 사유'];
+  const rows = stats.filter((s) => s.attempts).map((s) => `<tr>
+    <td class="l">${s.level}</td><td class="l name" title="${esc(s.namesSeen.join(' / '))}">${esc(s.name)}</td>
+    <td>${s.players}</td><td>${pct(s.clearRate)}</td><td>${pct(s.playerQuitRate)}</td><td>${pct(s.sessionEndRate)}</td>
+    <td>${sec(s.clearMsMedian)}</td><td>${sec(s.clearMsP75)}</td><td>${num(s.clearMovesMedian)}</td>
+    <td>${s.attempts}</td><td>${num(s.undosPerAttempt)}</td><td>${num(s.restartsPerAttempt)}</td><td>${pct(s.hintPlayerRate)}</td>
+    <td>${s.fails}</td><td>${s.wastedBodies}</td><td>${s.idles}회 · ${sec(s.idleMs)}</td>
+    <td class="l">${Object.entries(s.bodyLost).map(([k, v]) => `${LOST[k] ?? k} ${v}`).join(', ')}</td></tr>`).join('');
+  $('metrics').innerHTML = `<thead><tr>${head.map((h, i) => `<th class="${i < 2 || i === 16 ? 'l' : ''}">${h}</th>`).join('')}</tr></thead><tbody>${rows || `<tr><td class="l empty" colspan="${head.length}">데이터 없음</td></tr>`}</tbody>`;
+}
+
+const TILE_FILL = { '#': 'var(--wall)' };
+const TILE_LABEL = { E: '出', o: '○', '~': '≈', x: '×', S: 'S' };
+async function renderHeatmap() {
+  const n = Number($('hm-level').value);
+  const metric = $('hm-metric').value;
+  if (!n) { $('heatmap').innerHTML = '<p class="empty">레벨 데이터 없음</p>'; return; }
+  const { level, cells } = await api('/api/stats/heatmap', { level: n });
+  if (!level) { $('heatmap').innerHTML = '<p class="empty">현재 빌드의 levels.js에 없는 스테이지</p>'; return; }
+  const val = (c) => (metric === 'lost' ? Object.keys(c).filter((k) => k.startsWith('lost_')).reduce((a, k) => a + c[k], 0) : c[metric] ?? 0);
+  const byCell = new Map(cells.map((c) => [`${c.x},${c.y}`, c]));
+  const max = Math.max(0, ...cells.map(val));
+  const S = Math.max(26, Math.min(56, Math.floor(900 / level.w)));
+  let g = '';
+  for (let y = 0; y < level.h; y++) for (let x = 0; x < level.w; x++) {
+    const ch = level.map[y][x];
+    const c = byCell.get(`${x},${y}`);
+    const v = c ? val(c) : 0;
+    let fill = TILE_FILL[ch] ?? 'var(--floor)';
+    if (v > 0 && ch !== '#') fill = `var(--seq-${Math.min(6, Math.floor((v / max) * 6.999))})`;
+    const label = ch >= 'a' && ch <= 'c' ? ch.toUpperCase() + '판' : ch >= 'A' && ch <= 'C' ? ch + '문' : ch >= '1' && ch <= '7' ? ch : TILE_LABEL[ch] ?? '';
+    const dark = v > 0 && v / max > 0.5;
+    const lines = c ? Object.entries(c).filter(([k]) => k !== 'x' && k !== 'y').map(([k, val2]) => `${k.startsWith('lost_') ? '몸 사용(' + (LOST[k.slice(5)] ?? k) + ')' : { idle: '오래 멈춤', idleMs: '멈춘 시간', undo: '되돌리기', restart: '재시작', hint: '풀이 보기', wasted: '몸 낭비', blocked: '막힘', visit: '방문', left: '떠남' }[k] ?? k}: ${k === 'idleMs' ? sec(val2) : val2}`) : [];
+    const tipText = `(${x},${y}) ${ch === '#' ? '벽' : ''}\n${lines.join('\n') || '기록 없음'}`;
+    g += `<g data-tip="${esc(tipText)}"><rect x="${x * S + 1}" y="${y * S + 1}" width="${S - 2}" height="${S - 2}" rx="4" fill="${fill}" stroke="var(--line)" stroke-width="${ch === '#' ? 0 : 1}"/>`;
+    if (label) g += `<text x="${x * S + 4}" y="${y * S + 12}" style="font-size:10px;fill:${dark ? '#fff' : 'var(--text-muted)'}">${esc(label)}</text>`;
+    if (v > 0) g += `<text x="${x * S + S / 2}" y="${y * S + S / 2 + 5}" text-anchor="middle" style="font-size:12px;font-weight:600;fill:${dark ? '#fff' : 'var(--text-primary)'}">${metric === 'idleMs' ? Math.round(v / 1000) + 's' : v}</text>`;
+    g += '</g>';
+  }
+  const legend = `<div class="legend"><span>적음</span>${[0, 1, 2, 3, 4, 5, 6].map((k) => `<i class="sw" style="background:var(--seq-${k});margin:0"></i>`).join('')}<span>많음 (최대 ${metric === 'idleMs' ? sec(max) : max})</span><span>S 원래 출발점 · 出 출구 · ○ 구덩이 · ≈ 얼음 · × 금 간 바닥</span></div>`;
+  $('heatmap').innerHTML = `<div class="scroll"><svg viewBox="0 0 ${level.w * S} ${level.h * S}" width="${level.w * S}" style="max-width:100%" role="img" aria-label="스테이지 ${n} 히트맵">${g}</svg></div>${legend}`;
+}
+
+async function renderTimeline() {
+  const players = await api('/api/stats/timeline', { limit: 50 });
+  if (!players.length) { $('timeline').innerHTML = '<p class="empty">데이터 없음</p>'; return; }
+  const w = (ms) => Math.round(20 + Math.min(140, Math.sqrt(ms / 1000) * 8));
+  $('timeline').innerHTML = players.map((p) => `<div class="tl-player">
+    <div class="who" data-tip="${esc(`player ${p.playerId}\n클리어한 스테이지: ${p.cleared.join(', ') || '없음'}\n마지막: ${p.lastLevel ?? '–'} (${OUT[p.lastOutcome] ?? '–'})`)}">${p.playerId.slice(0, 8)}<br>클리어 ${p.cleared.length}</div>
+    <div>${p.sessions.map((s, si) => `<div class="tl-sess"><span class="meta">${new Date(s.t0).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · ${esc(s.client)}</span>
+      ${s.attempts.map((a) => `<span class="blk ${a.outcome}" style="width:${w(a.durationMs)}px" data-tip="${esc(`스테이지 ${a.level} · ${OUT[a.outcome]}\n${sec(a.durationMs)} · 이동 ${a.moves} · 되돌리기 ${a.undos} · 재시작 ${a.restarts}\n힌트 ${a.hints} · 실패 ${a.fails} · 멈춤 ${sec(a.idleMs)}`)}">${a.level}</span>`).join('')}
+      ${s.attempts.at(-1)?.outcome === 'quit' ? (si === p.sessions.length - 1 ? '<span class="end">← 여기서 그만둠</span>' : '<span class="meta">← 세션 끝, 나중에 돌아옴</span>') : ''}</div>`).join('')}</div></div>`).join('');
+}
+
+async function load() {
+  $('status').innerHTML = '';
+  try {
+    const [ov, stats, levels] = await Promise.all([api('/api/stats/overview'), api('/api/stats/levels'), api('/api/levels')]);
+    LEVELS = levels;
+    STATS = stats;
+    const cur = $('f-build').value;
+    const builds = [...new Set(ov.builds.map((b) => b.build))];
+    $('f-build').innerHTML = '<option value="">전체</option>' + builds.map((b) => `<option ${b === cur ? 'selected' : ''}>${esc(b)}</option>`).join('');
+    const hmCur = $('hm-level').value;
+    const opts = levels.map((l) => `<option value="${l.n}">${l.n}. ${esc(l.name)}</option>`);
+    $('hm-level').innerHTML = opts.join('');
+    if (hmCur) $('hm-level').value = hmCur;
+    else {
+      // Default to the stage with the highest drop-off.
+      const worst = [...stats].sort((a, b) => (b.playerQuitRate ?? 0) - (a.playerQuitRate ?? 0))[0];
+      if (worst && levels.some((l) => l.n === worst.level)) $('hm-level').value = worst.level;
+    }
+    const q = query();
+    q.set('token', token);
+    $('exports').innerHTML = `내보내기: ${['attempts.csv', 'levels.csv', 'events.jsonl', 'levels.json'].map((f) => `<a href="/api/export/${f}?${esc(q)}">${f}</a>`).join(' · ')}`;
+    renderTiles(ov, stats);
+    renderFunnel(stats);
+    renderDropoff(stats);
+    renderMetrics(stats);
+    await Promise.all([renderHeatmap(), renderTimeline()]);
+  } catch (err) {
+    $('status').innerHTML = `<p class="err">${esc(err.message)}</p>`;
+  }
+}
+
+for (const id of ['f-client', 'f-build', 'f-range']) $(id).addEventListener('change', load);
+$('refresh').addEventListener('click', load);
+$('hm-level').addEventListener('change', () => renderHeatmap().catch((e) => ($('status').innerHTML = `<p class="err">${esc(e.message)}</p>`)));
+$('hm-metric').addEventListener('change', () => renderHeatmap().catch((e) => ($('status').innerHTML = `<p class="err">${esc(e.message)}</p>`)));
+load();
+setInterval(() => { if (document.visibilityState === 'visible') load(); }, 60000);
+</script>
+</body>
+</html>
