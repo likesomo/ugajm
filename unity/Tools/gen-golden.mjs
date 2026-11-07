@@ -42,6 +42,7 @@ function levelRecord(def) {
     name: level.name,
     hint: level.hint,
     bodies: level.bodies,
+    statueCount: level.statueCount,
     map: def.map,
     w: level.w,
     h: level.h,
@@ -89,7 +90,7 @@ function trace(id, kind, def, commands, bodies = 0) {
 }
 
 function inlineLevel(def, bodies) {
-  return { name: def.name, hint: def.hint ?? '', bodies: bodies || def.bodies || STEPS, map: def.map };
+  return { name: def.name, hint: def.hint ?? '', bodies: bodies || def.bodies || STEPS, statueCount: def.statueCount ?? 0, map: def.map };
 }
 
 // Small seeded PRNG (mulberry32) so random walks are the same on every run.
@@ -159,6 +160,25 @@ const EDGE = [
   { id: 'edge-undo-chain-and-restart', map: ['##########', '#S.......#', '##########'], bodies: 3,
     cmds: 'RRZZZ' + 'RRRRRRRK' + 'ZZ' + 'RX' + '*' + 'ZZR', expect: 'undo undo stone undo undo choose switch restart step' },
   { id: 'edge-ragged-map', map: ['#####', '#S.', '#..E#', '##'], bodies: 3, cmds: 'RRRDDLURDR', expect: 'bump win' },
+  // Statue-count door Q: open while exactly statueCount statues stand. Bridges and seals do not count.
+  { id: 'edge-count-door-zero-closes', map: ['##########', '#S.......#', '#Q########', '##########'], bodies: 3, statueCount: 0,
+    cmds: 'RRRRRRRK' + 'D', expect: 'stone doorClose respawn bump' },
+  { id: 'edge-count-door-one', map: ['##########', '#S.......#', '#Q########', '##########'], bodies: 4, statueCount: 1,
+    cmds: 'D' + 'RRRRRRRK' + 'DZ' + 'RRRRRRLK' + 'D', expect: 'bump stone doorOpen respawn step undo stone doorClose respawn bump' },
+  { id: 'edge-count-door-bridge-not-counted', map: ['#########', '#S..o...#', '#Q#######', '#########'], bodies: 3, statueCount: 1,
+    cmds: 'RRLRLRR' + 'D', expect: 'bridge respawn bump' },
+  { id: 'edge-count-door-seal-not-counted', map: ['##########', '#S....x..#', '#Q########', '##########'], bodies: 3, statueCount: 1,
+    cmds: 'RRRRLRR' + 'D', expect: 'seal respawn bump' },
+  { id: 'edge-count-door-and-plate-door', map: ['#########', '#S..a...#', '#A#####Q#', '#########'], bodies: 3, statueCount: 1,
+    cmds: 'RRRLRLR' + 'K', expect: 'stone doorOpen doorOpen respawn' },
+  { id: 'edge-count-door-last-body', map: ['##########', '#S.......#', '#Q########', '##########'], bodies: 1, statueCount: 0,
+    cmds: 'RRRRRRR', expect: 'stone doorClose lose' },
+  // SWITCH onto the door, then a statue elsewhere closes it under the next body's feet; stepping off still works.
+  { id: 'edge-count-door-closes-under-start', map: ['##########', '#S......Q#', '#........#', '##########'], bodies: 4, statueCount: 0,
+    cmds: 'RRRRRRR' + 'X' + 'DLLLLLL' + 'K' + 'L' + 'R', expect: 'choose switch respawn choose stone doorClose respawn step bump' },
+  // KEEP while standing on an open Q: the statue stands on the door cell and that door closes.
+  { id: 'edge-count-door-keep-on-door', map: ['##########', '#S......Q#', '##########'], bodies: 3, statueCount: 0,
+    cmds: 'RRRRRRRK' + 'RRRRRR' + 'R', expect: 'choose stone doorClose respawn bump' },
   { id: 'edge-win-ends-input', map: ['#########', '#S......E', '#########'], bodies: 3, cmds: 'RRRRRRR' + 'RLKXZR', expect: 'win undo win' },
 ];
 
@@ -171,6 +191,14 @@ function checkExpect(t, expect) {
   }
 }
 
+// Statue-count door sketch stages (design/levels/gimmick-backlog.md 1, experiments/statue-door/stages.mjs @ feat/levels b72e999).
+// Kept here until they land in levels.js, so the rule has whole-stage coverage now.
+const SKETCH = [
+  { name: '하나만 남겨라', statueCount: 1, bodies: 3, map: ['########', '#S.....#', '#.######', '#..Q..E#', '########'] },
+  { name: '다리는 세지 않는다', statueCount: 1, bodies: 4, map: ['##########', '#S..o...a#', '#.########', '#..A.QE###', '##########'] },
+  { name: '남기지 말고 옮겨라', statueCount: 1, bodies: 4, map: ['##########', '#a......S#', '#######A##', '#.E..Q...#', '##########'] },
+];
+
 const traces = [];
 LEVELS.forEach((def, idx) => {
   const best = minBodies(parseLevel(def));
@@ -179,15 +207,23 @@ LEVELS.forEach((def, idx) => {
     traces.push(trace(`stage-${idx + 1}-random-${seed}`, 'random', def, randomCommands(1000 * (idx + 1) + seed, 120)));
   }
 });
+SKETCH.forEach((def, idx) => {
+  const best = minBodies(parseLevel(def));
+  if (!best) throw new Error(`sketch "${def.name}" has no solution`);
+  traces.push(trace(`sketch-count-door-${idx + 1}-solution`, 'solution', def, letters(best.path)));
+  for (const seed of [1, 2]) {
+    traces.push(trace(`sketch-count-door-${idx + 1}-random-${seed}`, 'random', def, randomCommands(9000 + 10 * idx + seed, 120)));
+  }
+});
 for (const e of EDGE) {
-  const t = trace(e.id, 'edge', { name: e.id, map: e.map, bodies: e.bodies }, e.cmds);
+  const t = trace(e.id, 'edge', { name: e.id, map: e.map, bodies: e.bodies, statueCount: e.statueCount }, e.cmds);
   checkExpect(t, e.expect);
   traces.push(t);
 }
 
 // Together the traces must produce every event type.
 const seenEvents = new Set(traces.flatMap((t) => t.steps.flatMap((s) => s.events.map((e) => e.type))));
-const allEvents = ['bump', 'step', 'crumble', 'bridge', 'fall', 'win', 'seal', 'vanish', 'choose', 'stone', 'switch', 'respawn', 'lose', 'undo', 'restart', 'slide', 'doorOpen'];
+const allEvents = ['bump', 'step', 'crumble', 'bridge', 'fall', 'win', 'seal', 'vanish', 'choose', 'stone', 'switch', 'respawn', 'lose', 'undo', 'restart', 'slide', 'doorOpen', 'doorClose'];
 const missing = allEvents.filter((t) => !seenEvents.has(t));
 if (missing.length) throw new Error(`golden traces never produce: ${missing.join(', ')}`);
 

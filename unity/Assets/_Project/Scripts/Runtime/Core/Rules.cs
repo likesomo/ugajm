@@ -43,8 +43,16 @@ namespace SevenSteps.Core
             return s.Level.Tile(i);
         }
 
+        /// Statues standing now. Bridges (filled pits, sealed cracked floor) are not statues.
+        public static int StatueCount(State s) => s.Statues.Length;
+
+        /// Door letters: A-C (plate doors) and Q (statue-count door).
+        public static bool IsDoor(char t) => (t >= 'A' && t <= 'C') || t == 'Q';
+
+        /// A-C: a statue stands on a matching plate. Q: exactly Level.StatueCount statues stand.
         public static bool DoorOpen(State s, char door)
         {
+            if (door == 'Q') return StatueCount(s) == s.Level.StatueCount;
             foreach (var p in s.Level.PlatesFor(char.ToLowerInvariant(door)))
                 if (Contains(s.Statues, p)) return true;
             return false;
@@ -62,21 +70,23 @@ namespace SevenSteps.Core
             if (i < 0 || Contains(s.Statues, i)) return false;
             char t = TileAt(s, i);
             if (t == '#') return false;
-            if (t >= 'A' && t <= 'C') return DoorOpen(s, t);
+            if (IsDoor(t)) return DoorOpen(s, t);
             if (t >= '1' && t <= '7') return t - '0' == stepIdx;
             return true;
         }
 
-        /// A new statue may open doors: one DoorOpen per door cell that was shut before. Statues never go away,
-        /// so there is no closing event (undo/restart swap the whole state).
-        static void OpenedDoors(State before, State after, List<GameEvent> events)
+        /// A new statue may open doors (plates, or Q reaching its count) or close them (Q passing its count):
+        /// one DoorOpen/DoorClose per door cell that changed, in cell order. Undo/restart swap the whole state instead.
+        static void DoorChanges(State before, State after, List<GameEvent> events)
         {
             var level = after.Level;
             for (int i = 0; i < level.Count; i++)
             {
                 char t = level.Tile(i);
-                if (t >= 'A' && t <= 'C' && !DoorOpen(before, t) && DoorOpen(after, t))
-                    events.Add(new GameEvent(GameEventType.DoorOpen, i));
+                if (!IsDoor(t)) continue;
+                bool was = DoorOpen(before, t);
+                bool now = DoorOpen(after, t);
+                if (was != now) events.Add(new GameEvent(now ? GameEventType.DoorOpen : GameEventType.DoorClose, i));
             }
         }
 
@@ -200,7 +210,7 @@ namespace SevenSteps.Core
             {
                 next.Statues = Add(next.Statues, pos);
                 events.Add(new GameEvent(GameEventType.Stone, pos, stepIdx));
-                OpenedDoors(s, next, events);
+                DoorChanges(s, next, events);
             }
             return new StepResult(NextBody(next, events, next.Start), events, pathArr);
         }
@@ -216,7 +226,7 @@ namespace SevenSteps.Core
                 events.Add(new GameEvent(GameEventType.Stone, s.Pos));
                 var withStatue = s.Clone();
                 withStatue.Statues = Add(s.Statues, s.Pos);
-                OpenedDoors(s, withStatue, events);
+                DoorChanges(s, withStatue, events);
                 return new StepResult(NextBody(withStatue, events, withStatue.Start), events);
             }
             events.Add(new GameEvent(GameEventType.Switch, s.Pos));
