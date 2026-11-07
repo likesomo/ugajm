@@ -50,9 +50,11 @@ unity/Tools/unity.sh sfx          # 임시 효과음 11개 합성 → Assets/Sha
 unity/Tools/unity.sh setup        # 머티리얼·프리팹·GameAssets 생성, Game 씬(없을 때만), 빌드/플레이어 설정
 unity/Tools/unity.sh golden       # 규칙 골든값(core.js → Tests/Golden) + 텔레메트리 골든값(server/fixtures) 다시 생성. core.js 나 스테이지를 바꾸면 실행 후 커밋
 unity/Tools/unity.sh test         # EditMode 테스트 (Tests/EditMode) → reports/editmode-results.xml
+unity/Tools/unity.sh tileset-validate # 모든 TileSet 을 docs/architecture.md 12장 규격으로 검사 (오류면 실패). 아트 TileSet 을 합치기 전 필수
 unity/Tools/unity.sh tileset      # 임시 TileSet 다시 생성 (Data/TileSets/TopDown_Placeholder.asset)
 unity/Tools/unity.sh verify       # C# 규칙이 JS 솔버와 같은 답인지 12스테이지 검사 → reports/seven-steps-unity-verify.json
 unity/Tools/unity.sh build-win    # → Builds/Windows/Seven Steps.exe      (play 로 실행)
+unity/Tools/unity.sh smoke-webgl  # WebGL 빌드를 Orca 브라우저로 3개 스테이지 열어 3D 보드 표시·콘솔 예외 확인 → reports/smoke-webgl/ (약 90초)
 unity/Tools/unity.sh smoke        # 윈도우 빌드를 리플레이 4개로 실행, 스크린샷+로그 → reports/smoke/, 예외 있으면 실패
 unity/Tools/unity.sh build-webgl  # → Builds/WebGL/   (serve [포트] 로 http://localhost:8090, Node 정적 서버 unity/Tools/serve.mjs)
 unity/Tools/unity.sh all          # levels + setup + verify + build-win + smoke
@@ -71,4 +73,5 @@ unity/Tools/unity.sh all          # levels + setup + verify + build-win + smoke
 - `Scripts/Editor` (`SevenSteps.Editor`): `ProjectSetup`(에셋·씬 생성), `LevelVerifier`(C#↔JS 일치 검사), `BuildTools`
 - 에셋: `Art/Materials`·`Prefabs/Generated`는 `ProjectSetup`이 만든 임시 아트(URP 프리미티브). 직접 고치지 말고 `ProjectSetup.cs`를 고친 뒤 `setup`. 실제 아트로 바꿀 때는 `Data/GameAssets.asset`의 프리팹 참조를 교체한다(타일 윗면 y=0, 1칸=1유닛)
 - 폰트: `Assets/Shared/Fonts/Jua-Regular.ttf` (SIL OFL, 레거시 uGUI Text용 동적 폰트). 효과음: `Assets/Shared/Audio/*.wav` (`unity/Tools/gen-sfx.mjs`로 만든 임시음)
+- **WebGL 품질은 PC로 둔다** (`ProjectSettings/QualitySettings.asset`의 WebGL 기본 품질 1). Mobile 품질(`Mobile_RPAsset`)로 빌드하면 브라우저에서 UI만 보이고 3D 보드가 안 그려진다(2026-11-07 확인, 원인 미확정. 아키텍트 추정: Render Scale 0.8의 중간 텍스처 블릿 경로 또는 셰이더 프리필터). Mobile 품질을 다시 쓰려면 먼저 브라우저에서 확인한다. WebGL 빌드는 `unity.sh build-webgl` 후 **`unity.sh smoke-webgl`** 로 확인하고 합친다 ("build-webgl OK"만으로는 3D 보드가 빠진 빌드를 못 거른다. 새 작업 공간의 첫 빌드에서 실제로 일어남). smoke-webgl 은 Orca 내장 브라우저로 3개 스테이지를 열어 보드 픽셀 수(`unity/Tools/board-pixels.ps1`, 정상 ~4000, 보드 없음 ~0, 기준 500)와 콘솔 예외를 본다. 직접 볼 때는 `unity.sh serve`
 - **URP 설정 손상 (Unity 6000.6 알려진 현상)**: 배치 실행(특히 새 작업 공간의 첫 실행)이 `unity/Assets/Settings/UniversalRenderPipelineGlobalSettings.asset`의 `m_RuntimeSettings`를 비우고 SSAO 리소스 id를 새로 만든다. 그 상태로 빌드하면 플레이어에서 `ScreenSpaceAmbientOcclusion`/`Blitter` 예외가 난다. `unity.sh`는 배치 명령 뒤에 이를 감지해 커밋된 파일로 되돌리고, 빌드 명령이면 한 번 더 빌드한다. Unity.exe를 직접 실행했다면 `git checkout -- <그 파일>`. **이 파일의 변경은 커밋하지 않는다** (`smoke`가 예외를 잡아낸다)
