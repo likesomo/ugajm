@@ -35,13 +35,19 @@ namespace SevenSteps.Core
 
         public static bool Contains(int[] arr, int i) => Array.IndexOf(arr, i) >= 0;
 
-        /// Tile as currently seen: bridges (pit filled by a statue) read as '=', broken cracked floor as a pit.
+        /// Tile as currently seen: bridges (pit filled by a statue) read as '=', broken cracked floor as a pit,
+        /// flip walls after an odd number of lever pulls swap: 'R' is always "raised now", 'r' "lowered now".
         public static char TileAt(State s, int i)
         {
             if (Contains(s.Bridges, i)) return '=';
             if (Contains(s.Broken, i)) return 'o';
-            return s.Level.Tile(i);
+            char t = s.Level.Tile(i);
+            if (s.Flipped && IsFlipWall(t)) return t == 'R' ? 'r' : 'R';
+            return t;
         }
+
+        /// Flip wall letters: R raised (blocks), r lowered (open), as seen through TileAt.
+        public static bool IsFlipWall(char t) => t == 'R' || t == 'r';
 
         /// Statues standing now. Bridges (filled pits, sealed cracked floor) are not statues.
         public static int StatueCount(State s) => s.Statues.Length;
@@ -69,7 +75,7 @@ namespace SevenSteps.Core
         {
             if (i < 0 || Contains(s.Statues, i)) return false;
             char t = TileAt(s, i);
-            if (t == '#') return false;
+            if (t == '#' || t == 'R') return false;
             if (IsDoor(t)) return DoorOpen(s, t);
             if (t >= '1' && t <= '7') return t - '0' == stepIdx;
             return true;
@@ -182,6 +188,13 @@ namespace SevenSteps.Core
                 events.Add(new GameEvent(GameEventType.Step, pos, stepIdx));
                 return new StepResult(next, events, pathArr);
             }
+            // Lever: the 7th step ending on it flips every flip wall, then the body is spent as usual (choose/stone).
+            // On the start cell the 7th step only vanishes, so the lever there is not pulled.
+            if (t == 'L' && pos != s.Start)
+            {
+                next.Flipped = !s.Flipped;
+                events.Add(new GameEvent(GameEventType.Flip, pos));
+            }
             if (t == 'E')
             {
                 events.Add(new GameEvent(GameEventType.Win, pos, stepIdx));
@@ -282,7 +295,8 @@ namespace SevenSteps.Core
             AppendList(sb, s.Statues); sb.Append('|');
             AppendList(sb, s.Bridges); sb.Append('|');
             AppendList(sb, s.Broken); sb.Append('|');
-            sb.Append((int)s.Status);
+            sb.Append((int)s.Status).Append('|');
+            sb.Append(s.Flipped ? '1' : '0');
             return sb.ToString();
         }
 

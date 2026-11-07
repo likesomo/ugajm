@@ -10,7 +10,7 @@ namespace SevenSteps.Core
     public enum Status { Play, Choose, Win, Lose }
 
     /// Append only: the numbers may be saved or logged. Order inside a command: docs/architecture.md 3.3.
-    public enum GameEventType { Bump, Step, Crumble, Bridge, Fall, Win, Seal, Vanish, Choose, Stone, Switch, Respawn, Lose, Undo, Restart, Slide, DoorOpen, DoorClose }
+    public enum GameEventType { Bump, Step, Crumble, Bridge, Fall, Win, Seal, Vanish, Choose, Stone, Switch, Respawn, Lose, Undo, Restart, Slide, DoorOpen, DoorClose, Flip }
 
     public readonly struct GameEvent
     {
@@ -65,6 +65,8 @@ namespace SevenSteps.Core
         public int[] Statues { get; internal set; }
         public int[] Bridges { get; internal set; }
         public int[] Broken { get; internal set; }
+        /// The lever has been pulled an odd number of times: every flip wall is the other way up (see Rules.TileAt).
+        public bool Flipped { get; internal set; }
         public Footprint[] Trail { get; internal set; }
         public Status Status { get; internal set; }
         /// Undo chain (set by Rules.Dispatch only).
