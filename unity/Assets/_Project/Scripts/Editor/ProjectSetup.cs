@@ -24,8 +24,8 @@ namespace SevenSteps.EditorTools
         public const string ScenePath = SceneDir + "/Game.unity";
         public const string AssetsPath = DataDir + "/GameAssets.asset";
         public const string LevelsPath = DataDir + "/levels.json";
-        const string FontPath = "Assets/ThirdParty/Jua/Jua-Regular.ttf";
-        const string AudioDir = Root + "/Audio";
+        const string FontPath = "Assets/Shared/Fonts/Jua-Regular.ttf";   // binary assets: git 밖 공유 폴더 (tools/link-shared-assets.ps1)
+        const string AudioDir = "Assets/Shared/Audio";
 
         [MenuItem("Seven Steps/Build Assets and Scene", priority = 1)]
         public static void BuildAll() => Build(forceScene: false);
@@ -313,7 +313,7 @@ namespace SevenSteps.EditorTools
         static T Load<T>(string path) where T : Object
         {
             var a = AssetDatabase.LoadAssetAtPath<T>(path);
-            if (a == null) throw new Exception($"[SevenSteps] Missing asset {path}. Run unity/Tools/unity.sh levels / sfx first.");
+            if (a == null) throw new Exception($"[SevenSteps] Missing asset {path}. Link the shared asset folder (tools/link-shared-assets.ps1), or run unity/Tools/unity.sh levels / sfx.");
             return a;
         }
 
