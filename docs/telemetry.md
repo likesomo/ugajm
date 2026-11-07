@@ -94,7 +94,7 @@
 | 페이지 닫힘 | `visibilitychange`(hidden)·`pagehide`에서 `session_end`를 넣고 `navigator.sendBeacon(url, text/plain)`으로 남은 큐를 보낸다 |
 | 시간 초과 | 요청 10초 |
 | 서버 주소 | 웹 프로토타입: `?telemetry=<url>` → `localStorage` → 페이지가 수집 서버(`/play/`)에서 열렸으면 같은 출처 → `localhost`면 `http://localhost:8787` → 그 외에는 전송 안 함 |
-| 옵트아웃 | `?telemetry=off` 또는 화면 아래 "기록 전송" 토글. `localStorage` `seven-steps-telemetry`=`off`면 큐도 만들지 않는다 |
+| 옵트아웃 | `?telemetry=off` 또는 `?telemetry=0`(Unity와 같음) 또는 화면 아래 "기록 전송" 토글. `localStorage` `seven-steps-telemetry`=`off`면 큐도 만들지 않는다 |
 
 ### Unity 구현 메모 (게임플레이/UI 에이전트용, 인터페이스는 아키텍트가 정함)
 
@@ -104,7 +104,7 @@
 - **WebGL 페이지 닫힘**: `Application.quitting`은 브라우저 탭 닫힘에 불리지 않는다. `sendBeacon`을 부르는 `.jslib`가 필요하다 — `visibilitychange`(hidden) 때 JS 쪽에서 C#의 `OnPageHidden`을 `SendMessage`로 부르고, C#이 `session_end`를 큐에 넣은 뒤 큐 JSON을 jslib 함수 `TelemetryBeacon(url, json)`에 넘겨 `navigator.sendBeacon(url, new Blob([json], {type:'text/plain'}))`로 보낸다. 64KB를 넘으면 앞에서 100건씩 잘라 여러 번 부른다
 - 데스크톱: 종료 시(`Application.quitting`) `session_end` `reason: "unload"`를 보내고 최대 1초 기다린다
 - `build`: `Application.version` + 커밋 해시, `client`: `unity-webgl` / `unity-desktop`
-- 서버 주소: WebGL은 페이지 URL `?telemetry=` → 빌드 설정값, 데스크톱은 `-telemetry <url>` 인자 → 빌드 설정값. `off`면 끈다
+- 서버 주소: WebGL은 페이지 URL `?telemetry=` → 빌드 설정값, 데스크톱은 `-telemetry <url>` 인자 → 빌드 설정값. `off` 또는 `0`이면 끈다 (`docs/architecture.md` 11.4)
 
 ## 5. 개인정보
 

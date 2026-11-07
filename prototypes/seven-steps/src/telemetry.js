@@ -238,7 +238,7 @@ const uuid = () => (globalThis.crypto?.randomUUID?.() ??
 
 function resolveEndpoint(params) {
   const p = params.get('telemetry');
-  if (p === 'off') return null;
+  if (p === 'off' || p === '0') return null;
   if (p && /^https?:\/\//.test(p)) { store.set(KEY_URL, p); return p.replace(/\/$/, ''); }
   const saved = store.get(KEY_URL);
   if (saved) return saved.replace(/\/$/, '');
@@ -249,7 +249,7 @@ function resolveEndpoint(params) {
 
 // Returns a Tracker-like object; all methods are no-ops when telemetry is off. Never throws into the game.
 export function initTelemetry({ build = 'proto-dev', client = 'web-proto', params = new URLSearchParams(location.search), getState = () => null } = {}) {
-  if (params.get('telemetry') === 'off') store.set(KEY_OFF, 'off');
+  if (['off', '0'].includes(params.get('telemetry'))) store.set(KEY_OFF, 'off');
   else if (params.get('telemetry')) store.del(KEY_OFF);
   const enabled = store.get(KEY_OFF) !== 'off';
   const endpoint = resolveEndpoint(params);
