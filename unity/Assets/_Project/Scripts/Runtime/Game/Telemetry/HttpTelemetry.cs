@@ -234,8 +234,8 @@ namespace SevenSteps.Game.Telemetry
         }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
-        [DllImport("__Internal")] static extern int TelemetryBeacon(string url, string json);
-        static bool SendBeacon(string url, string body) => TelemetryBeacon(url, body) != 0;
+        [DllImport("__Internal")] static extern int SevenSteps_SendBeacon(string url, string json);
+        static bool SendBeacon(string url, string body) => SevenSteps_SendBeacon(url, body) != 0;
 #else
         static bool SendBeacon(string url, string body) => false;
 #endif

@@ -121,6 +121,7 @@ namespace SevenSteps.Game
             session = new GameSession(board);
             board.Hurry = () => session.QueuedCount > 0;
             session.Updated += OnSessionUpdated;
+            session.Presented += OnPresented;
             if (Services.Get<ITelemetry>() is HttpTelemetry http) recorder = new TelemetryRecorder(this, session, http);
             flow.Changed += OnFlowChanged;
         }
@@ -329,10 +330,16 @@ namespace SevenSteps.Game
                 save.Progress.MarkCleared(flow.Stage, s.Level.Bodies - s.Bodies + 1);
                 save.SaveProgress();
                 Refresh();
-                flow.Go(AppState.Result);
+                // The Result panel opens in OnPresented, after the walk to the exit has played.
                 return;
             }
             Refresh();
+        }
+
+        /// A presentation finished (docs/architecture.md 4.2). A clear shows the Result panel only now.
+        void OnPresented(State s)
+        {
+            if (s.Status == Status.Win && flow.State == AppState.Game) flow.Go(AppState.Result);
         }
 
         static int FirstAt(StepResult r, GameEventType t)

@@ -21,7 +21,7 @@ namespace SevenSteps.Game.Telemetry
         float saveAt;
 
 #if UNITY_WEBGL && !UNITY_EDITOR
-        [DllImport("__Internal")] static extern void TelemetryRegisterVisibility(string objectName);
+        [DllImport("__Internal")] static extern void SevenSteps_RegisterVisibility(string objectName);
 #endif
 
         /// Bootstrap: the ITelemetry to register (docs/architecture.md 11.4). Endpoint = ?telemetry=<url> / -telemetry <url>,
@@ -30,7 +30,7 @@ namespace SevenSteps.Game.Telemetry
         public static ITelemetry CreateTelemetry(AppConfig config, LaunchOptions launch, SaveSystem save)
         {
             var old = GameObject.Find(ObjectName);
-            if (old != null) Destroy(old);
+            if (old != null) DestroyImmediate(old); // the jslib calls this object by name: never two at once
             string endpoint = !string.IsNullOrEmpty(launch.TelemetryUrl) ? launch.TelemetryUrl : config != null ? config.telemetryEndpoint : "";
             if (string.IsNullOrEmpty(endpoint) || launch.TelemetryOff) return new NullTelemetry();
 
@@ -75,7 +75,7 @@ namespace SevenSteps.Game.Telemetry
                 if (on) t.Tracker.SessionStart(fresh, save.Progress.cleared.Count);
             };
 #if UNITY_WEBGL && !UNITY_EDITOR
-            TelemetryRegisterVisibility(ObjectName);
+            SevenSteps_RegisterVisibility(ObjectName);
 #endif
             return t;
         }

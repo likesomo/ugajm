@@ -140,6 +140,22 @@ namespace SevenSteps.Game
             if (shake != null) { StopCoroutine(shake); shake = null; }
             foreach (var t in transients) if (t != null) Destroy(t);
             transients.Clear();
+            // Settle every scale tween so the picture is exactly the snapshot (Snap = State).
+            foreach (var tw in tweens)
+            {
+                if (tw.Routine != null) StopCoroutine(tw.Routine);
+                if (tw.Target != null) tw.Target.localScale = tw.Scale;
+            }
+            tweens.Clear();
+        }
+
+        struct ScaleTween { public Coroutine Routine; public Transform Target; public Vector3 Scale; }
+        readonly List<ScaleTween> tweens = new List<ScaleTween>();
+
+        void Tween(Transform t, Vector3 scale)
+        {
+            if (t == null) return;
+            tweens.Add(new ScaleTween { Routine = StartCoroutine(Pop(t, scale)), Target = t, Scale = scale });
         }
 
         float Speed => Hurry != null && Hurry() ? 2f : 1f;
@@ -148,14 +164,18 @@ namespace SevenSteps.Game
         {
             var pt = player.transform;
             var lift = set.Get(ActorKind.Player).offset * grid.CellSize;
-            foreach (int cell in r.Path)
+            // Ice (Slide event): the first cell is a step, the rest of the path is a glide without hops.
+            bool slide = r.Has(GameEventType.Slide);
+            for (int p = 0; p < r.Path.Length; p++)
             {
-                Vector3 from = pt.position, to = grid.CellToWorld(cell) + lift;
-                float dur = StepTime / Speed;
+                bool gliding = slide && p > 0;
+                Vector3 from = pt.position, to = grid.CellToWorld(r.Path[p]) + lift;
+                float dur = (gliding ? StepTime * 0.6f : StepTime) / Speed;
+                float hop = gliding ? 0f : 0.12f * grid.CellSize;
                 for (float t = 0; t < dur; t += Time.deltaTime)
                 {
                     float k = t / dur;
-                    pt.position = Vector3.Lerp(from, to, k) + Vector3.up * (Mathf.Sin(k * Mathf.PI) * 0.12f * grid.CellSize);
+                    pt.position = Vector3.Lerp(from, to, k) + Vector3.up * (Mathf.Sin(k * Mathf.PI) * hop);
                     yield return null;
                 }
                 pt.position = to;
@@ -165,6 +185,14 @@ namespace SevenSteps.Game
             {
                 if (e.StepIdx == Rules.Steps && e.At >= 0) StartCoroutine(Ring(grid.CellToWorld(e.At)));
                 if (e.Type == GameEventType.Crumble && e.At >= 0) Flash(e.At);
+                if ((e.Type == GameEventType.DoorOpen || e.Type == GameEventType.DoorClose) && e.At >= 0)
+                {
+                    // The door changes right after the statue appears; Draw at the end sees it already done.
+                    var c = cells[e.At];
+                    bool open = e.Type == GameEventType.DoorOpen;
+                    if (c.HasId) { c.Active = open; c.ActiveKnown = true; ApplyActive(c.Go, set.Get(c.Id), open, true); }
+                    yield return new WaitForSeconds(0.12f / Speed);
+                }
                 if (e.Type == GameEventType.Fall || e.Type == GameEventType.Bridge)
                 {
                     Vector3 from = pt.position;
@@ -180,7 +208,7 @@ namespace SevenSteps.Game
             }
 
             Draw(r.State, true, prev);
-            if (r.Has(GameEventType.Respawn)) StartCoroutine(Pop(player.transform, BaseScale(ActorKind.Player)));
+            if (r.Has(GameEventType.Respawn)) Tween(player.transform, BaseScale(ActorKind.Player));
             anim = null;
             done?.Invoke();
         }
@@ -204,7 +232,7 @@ namespace SevenSteps.Game
                     c.HasId = true;
                     c.ActiveKnown = false;
                     SetCellLabel(c, id, i, v);
-                    if (pop && c.Go != null && id.Kind == TileKind.Bridge) StartCoroutine(Pop(c.Go.transform, c.Go.transform.localScale));
+                    if (pop && c.Go != null && id.Kind == TileKind.Bridge) Tween(c.Go.transform, v.Scale * grid.CellSize);
                 }
 
                 bool active = IsActive(s, id, i);
@@ -242,7 +270,7 @@ namespace SevenSteps.Game
                 if (statues.ContainsKey(i)) continue;
                 var st = Spawn(set.Get(ActorKind.Statue), i, $"Statue {i}");
                 statues[i] = st;
-                if (pop && st != null) StartCoroutine(Pop(st.transform, st.transform.localScale));
+                if (pop && st != null) Tween(st.transform, BaseScale(ActorKind.Statue));
             }
 
             // Start markers
@@ -314,7 +342,7 @@ namespace SevenSteps.Game
             string trigger = active ? v.activateTrigger : v.deactivateTrigger;
             var animator = string.IsNullOrEmpty(trigger) ? null : go.GetComponentInChildren<Animator>();
             if (animator != null) animator.SetTrigger(trigger);
-            else if (animate) StartCoroutine(Pop(go.transform, go.transform.localScale));
+            else if (animate) Tween(go.transform, v.Scale * grid.CellSize);
         }
 
         void SetCellLabel(Cell c, TileId id, int i, TileVisual v)
@@ -410,7 +438,7 @@ namespace SevenSteps.Game
         void Flash(int cell)
         {
             var c = cells[cell];
-            if (c.Go != null) StartCoroutine(Pop(c.Go.transform, c.Go.transform.localScale));
+            if (c.Go != null) Tween(c.Go.transform, set.Get(c.Id).Scale * grid.CellSize);
         }
 
         IEnumerator Ring(Vector3 at)
