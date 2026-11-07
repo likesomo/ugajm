@@ -3,7 +3,8 @@ export const STEPS = 7;
 export const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 
 // Map legend: # wall, . floor, S start, E exit, o pit, ~ ice, x cracked floor,
-// a-c plate, A-C door (open while a statue stands on the matching plate), 1-7 gate (pass only on that step).
+// a-c plate, A-C door (open while a statue stands on the matching plate), 1-7 gate (pass only on that step),
+// Q statue-count door (open while exactly `statueCount` statues stand; bridges and seals are not statues).
 export function parseLevel(def) {
   const h = def.map.length;
   const w = Math.max(...def.map.map((r) => r.length));
@@ -20,7 +21,7 @@ export function parseLevel(def) {
     }
   }
   if (start < 0) throw new Error(`level "${def.name}" has no S`);
-  return { name: def.name, hint: def.hint ?? '', w, h, tiles, plates, start, bodies: def.bodies ?? STEPS };
+  return { name: def.name, hint: def.hint ?? '', w, h, tiles, plates, start, bodies: def.bodies ?? STEPS, statueCount: def.statueCount ?? 0 };
 }
 
 export function newState(level) {
@@ -38,7 +39,14 @@ export function tileAt(s, i) {
   return s.level.tiles[i];
 }
 
+// Statues standing now. Bridges (filled pits, sealed cracked floor) are not statues.
+export const statueCount = (s) => s.statues.length;
+
+export const isDoor = (t) => (t >= 'A' && t <= 'C') || t === 'Q';
+
+// Door letter A-C: a statue stands on a matching plate. Q: exactly level.statueCount statues stand.
 export function doorOpen(s, door) {
+  if (door === 'Q') return statueCount(s) === s.level.statueCount;
   return (s.level.plates[door.toLowerCase()] ?? []).some((p) => s.statues.includes(p));
 }
 
@@ -53,18 +61,21 @@ export function passable(s, i, stepIdx) {
   if (i < 0 || s.statues.includes(i)) return false;
   const t = tileAt(s, i);
   if (t === '#') return false;
-  if (t >= 'A' && t <= 'C') return doorOpen(s, t);
+  if (isDoor(t)) return doorOpen(s, t);
   if (t >= '1' && t <= '7') return Number(t) === stepIdx;
   return true;
 }
 
 const add = (arr, i) => (arr.includes(i) ? arr : [...arr, i].sort((a, b) => a - b));
 
-// A new statue may open doors: one 'doorOpen' event per door cell that was shut before. Statues never go away,
-// so there is no closing event (undo/restart swap the whole state).
-function openedDoors(before, after, events) {
+// A new statue may open doors (plates, or Q reaching its count) or close them (Q passing its count):
+// one 'doorOpen'/'doorClose' event per door cell that changed, in cell order. Undo/restart swap the whole state instead.
+function doorChanges(before, after, events) {
   after.level.tiles.forEach((t, i) => {
-    if (t >= 'A' && t <= 'C' && !doorOpen(before, t) && doorOpen(after, t)) events.push({ type: 'doorOpen', at: i });
+    if (!isDoor(t)) return;
+    const was = doorOpen(before, t);
+    const now = doorOpen(after, t);
+    if (was !== now) events.push({ type: now ? 'doorOpen' : 'doorClose', at: i });
   });
 }
 
@@ -138,7 +149,7 @@ export function step(s, dir) {
   } else {
     next.statues = add(next.statues, pos);
     events.push({ type: 'stone', at: pos });
-    openedDoors(s, next, events);
+    doorChanges(s, next, events);
   }
   return { state: nextBody(next, events), events };
 }
@@ -151,7 +162,7 @@ export function choose(s, kind) {
   if (kind === 'keep') {
     events.push({ type: 'stone', at: s.pos });
     const kept = { ...s, statues: add(s.statues, s.pos) };
-    openedDoors(s, kept, events);
+    doorChanges(s, kept, events);
     return { state: nextBody(kept, events), events };
   }
   if (kind === 'switch') {

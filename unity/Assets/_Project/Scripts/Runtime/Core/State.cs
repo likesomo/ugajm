@@ -10,7 +10,7 @@ namespace SevenSteps.Core
     public enum Status { Play, Choose, Win, Lose }
 
     /// Append only: the numbers may be saved or logged. Order inside a command: docs/architecture.md 3.3.
-    public enum GameEventType { Bump, Step, Crumble, Bridge, Fall, Win, Seal, Vanish, Choose, Stone, Switch, Respawn, Lose, Undo, Restart, Slide, DoorOpen }
+    public enum GameEventType { Bump, Step, Crumble, Bridge, Fall, Win, Seal, Vanish, Choose, Stone, Switch, Respawn, Lose, Undo, Restart, Slide, DoorOpen, DoorClose }
 
     public readonly struct GameEvent
     {

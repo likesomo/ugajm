@@ -20,8 +20,9 @@ namespace SevenSteps.Tests
         [TestCaseSource(nameof(Levels))]
         public void ParseMatchesCoreJs(GoldenLevel g)
         {
-            var l = Level.Parse(g.name, g.hint, g.bodies, g.map);
+            var l = Level.Parse(g.name, g.hint, g.bodies, g.map, g.statueCount);
             Assert.AreEqual(g.w, l.W, "w");
+            Assert.AreEqual(g.statueCount, l.StatueCount, "statueCount");
             Assert.AreEqual(g.h, l.H, "h");
             Assert.AreEqual(g.start, l.Start, "start");
             Assert.AreEqual(g.bodies, l.Bodies, "bodies");
@@ -38,7 +39,7 @@ namespace SevenSteps.Tests
         [TestCaseSource(nameof(Levels))]
         public void SolverMatchesCoreJs(GoldenLevel g)
         {
-            var l = Level.Parse(g.name, g.hint, g.bodies, g.map);
+            var l = Level.Parse(g.name, g.hint, g.bodies, g.map, g.statueCount);
             foreach (var want in g.solves)
             {
                 string where = $"{g.name} bodies={want.bodies} noSwitch={want.noSwitch}";
@@ -53,7 +54,7 @@ namespace SevenSteps.Tests
         [TestCaseSource(nameof(Levels))]
         public void MinPathReplaysToWin(GoldenLevel g)
         {
-            var s = Rules.NewState(Level.Parse(g.name, g.hint, g.bodies, g.map));
+            var s = Rules.NewState(Level.Parse(g.name, g.hint, g.bodies, g.map, g.statueCount));
             foreach (char c in g.minPath) s = Rules.Dispatch(s, Golden.ToCommand(c)).State;
             Assert.AreEqual(Status.Win, s.Status, $"{g.name}: {g.minPath}");
             Assert.AreEqual(g.minBodies, g.bodies - s.Bodies + 1, "bodies used");
@@ -73,6 +74,7 @@ namespace SevenSteps.Tests
                 string where = $"stage {k + 1} '{s.name}'";
                 Assert.AreEqual(g.name, s.name, $"{where}: name. {Golden.Regenerate}");
                 Assert.AreEqual(g.bodies, s.bodies, $"{where}: bodies. {Golden.Regenerate}");
+                Assert.AreEqual(g.statueCount, s.statueCount, $"{where}: statueCount. {Golden.Regenerate}");
                 CollectionAssert.AreEqual(g.map, s.map, $"{where}: map. {Golden.Regenerate}");
                 Assert.AreEqual(g.minBodies, s.expected.minBodies, $"{where}: expected.minBodies");
                 Assert.AreEqual(g.minMoves, s.expected.moves, $"{where}: expected.moves");
