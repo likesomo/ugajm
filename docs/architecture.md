@@ -429,7 +429,7 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 골든 테스트 | `Assets/_Project/Tests/EditMode/Game/` | `SevenSteps.Tests.EditMode` |
 
 - 이 폴더들은 게임플레이/UI 소유다. `Assets/Plugins/`(루트)는 쓰지 않는다.
-- jslib 함수 이름은 전역 충돌을 막으려고 `SevenSteps_` 접두사를 쓴다: `SevenSteps_SendBeacon(url, body)` → `navigator.sendBeacon(url, new Blob([body], {type:'text/plain'}))`(성공 1/실패 0), `SevenSteps_RegisterVisibility(objectName)` → `visibilitychange`·`pagehide` 등록. (telemetry.md 4장의 `TelemetryBeacon`과 같은 동작, 이름만 다름) C# 선언은 `[DllImport("__Internal")]`을 `#if UNITY_WEBGL && !UNITY_EDITOR`로 감싸고, 그 밖에서는 `UnityWebRequest`만 쓴다.
+- jslib 함수 이름은 telemetry.md 4장을 따른다: `TelemetryBeacon(url, body)` → `navigator.sendBeacon(url, new Blob([body], {type:'text/plain'}))`(성공 1/실패 0), `TelemetryRegisterVisibility(objectName)` → `visibilitychange`·`pagehide` 등록. C# 선언은 `[DllImport("__Internal")]`을 `#if UNITY_WEBGL && !UNITY_EDITOR`로 감싸고, 그 밖에서는 `UnityWebRequest`만 쓴다.
 - 페이지 숨김 → jslib가 `SendMessage("TelemetryRunner", "OnPageHidden")`. 그래서 Boot가 만드는 `DontDestroyOnLoad` 오브젝트 이름을 **`TelemetryRunner`로 고정**한다. `OnPageHidden`은 `session_end`(`reason: hidden`)를 넣고 큐를 100건씩 잘라 `TelemetryBeacon`으로 보낸다. 다시 보이면 `session_start`(`resumed: true`), 같은 `sessionId`.
 - 데스크톱 종료: `Application.quitting`에서 `session_end`(`reason: unload`) 후 최대 1초 전송 대기.
 - 서버 주소는 11.4의 우선순위로만 정한다. 코드에 주소를 적지 않는다.
@@ -447,3 +447,4 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 2026-11-07 | 아키텍트 | 석상 수 문 기믹(7lucky 37c99f7) 표기 확정(코어 제안 채택): 맵 글자 `Q`, 레벨 필드 `statueCount`(스테이지당 N 하나), `Rules.DoorOpen(s,'Q')`/`Rules.StatueCount`, 이벤트 `DoorClose` 추가(3.3 순서 규칙 수정), 6.1장. `TileKind.CountDoor`(끝에 추가), `TileId.FromChar('Q')`, `TileSet.countDoor`, 임시 아트는 문 A 프리팹. 코어 구현은 feat/core f6147f1 (`DoorClose`=17, `Level.StatueCount`, `Rules.StatueCount`/`IsDoor`). 7lucky 머지 때 3.3을 코어 문단과 합쳐 정리 |
 | 2026-11-07 | 아키텍트 | 레버 기믹 표기 확정(6.2, 코어 제안 채택): 맵 `L`/`R`/`r`, `State.Flipped`, `Rules.TileAt`이 뒤집힘 반영(R↔r), `Rules.IsFlipWall`, 이벤트 `Flip`(18, 주 이벤트 바로 앞), 출발점 7번째는 Vanish만, 벽·석상 겹침 허용. `TileKind.Lever`/`FlipWall`(끝에 추가), `TileSet.lever`/`flipWalls[2]`, 임시 아트 |
 | 2026-11-07 | 아키텍트 | `GameSession.Presented(State)` 이벤트 추가(4.2, 연출이 끝난 뒤 할 일용). 11.5 jslib 함수 이름을 게임플레이/UI 구현에 맞춤(`SevenSteps_SendBeacon`, `SevenSteps_RegisterVisibility`). 9장 WebGL 규칙에 데스크톱 종료 1초 대기 예외. 검토 기록 `docs/reviews/` 추가 |
+| 2026-11-07 | 아키텍트 | 11.5 jslib 함수 이름을 게임플레이/UI 57907b9 구현에 다시 맞춤(`TelemetryBeacon`, `TelemetryRegisterVisibility`, telemetry.md 이름). feat/view 재검토 기록 |
