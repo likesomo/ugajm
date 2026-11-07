@@ -18,12 +18,17 @@ namespace SevenSteps.Game.UI
         public GameAssets assets;
         [Tooltip("Data/AppConfig.asset. Used when this scene is played without Boot.")]
         public AppConfig config;
+        [Tooltip("UI/Credits.txt, exported from design/art/CREDITS.md before each build (CreditsExport)")]
+        public TextAsset credits;
+        [Tooltip("Full license texts shipped with the assets, e.g. Shared/Fonts/Jua-OFL.txt")]
+        public TextAsset[] licenses;
 
         AppFlow flow;
         SaveSystem save;
         Level[] levels;
         GameObject titlePanel, selectPanel;
         SettingsPanel settings;
+        CreditsPanel creditsPanel;
         Button[] stageButtons;
         Text[] stageTexts;
         Button startButton;
@@ -50,12 +55,13 @@ namespace SevenSteps.Game.UI
         {
             if (flow.State == AppState.Boot) flow.Go(AppState.Title);
             else Show(flow.State);
-            // Smoke test without -level: "-screenshot title.png" shows the stage select when "-stageselect" is also given.
+            // Smoke test without -level: "-screenshot title.png" [-stageselect] [-credits] opens that panel first.
             var launch = Services.Get<LaunchOptions>();
             if (!string.IsNullOrEmpty(launch.Screenshot))
             {
                 if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-stageselect") >= 0 && flow.State == AppState.Title)
                     flow.Go(AppState.StageSelect);
+                if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-credits") >= 0) creditsPanel.Open();
                 StartCoroutine(ScreenshotOnce.Run(launch.Screenshot, () => $"{flow.State}, cleared {save.Progress.cleared.Count}"));
             }
         }
@@ -78,6 +84,11 @@ namespace SevenSteps.Game.UI
         void Update()
         {
             if (settings.IsOpen) return;
+            if (creditsPanel.IsOpen)
+            {
+                if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) creditsPanel.Close();
+                return;
+            }
             var kb = Keyboard.current;
             if (kb == null) return;
             if (flow.State == AppState.Title && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame))
@@ -114,6 +125,8 @@ namespace SevenSteps.Game.UI
             ((RectTransform)startButton.transform).Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(260, 54));
             var set = Ui.MakeButton(t, "설정", 20, () => settings.Open(), out _, "Settings");
             ((RectTransform)set.transform).Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -126), new Vector2(260, 44));
+            var cr = Ui.MakeButton(t, "크레딧", 20, () => creditsPanel.Open(), out _, "Credits");
+            ((RectTransform)cr.transform).Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -182), new Vector2(260, 44));
             var ver = Ui.Label(t, Application.version, 14, Ui.Dim, TextAnchor.LowerRight, "Version");
             ver.rectTransform.Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-16, 12), new Vector2(300, 20));
 
@@ -144,6 +157,7 @@ namespace SevenSteps.Game.UI
             ((RectTransform)set2.transform).Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-110, 40), new Vector2(180, 44));
 
             settings = new SettingsPanel(root, save);
+            creditsPanel = new CreditsPanel(root, credits, licenses);
             titlePanel.SetActive(false);
             selectPanel.SetActive(false);
         }
