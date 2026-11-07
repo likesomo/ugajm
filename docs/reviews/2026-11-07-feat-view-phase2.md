@@ -78,3 +78,11 @@
 - 레버: `IsActive`에 `Lever => s.Flipped`(State 필드 읽기, 규칙 계산 아님). `Flip` 이벤트에서 `TileId.At(r.State, i)`로 모양이 바뀐 뒤집힘 벽 칸만 다시 만들고, 마지막 `Draw`는 같은 `TileId`라 다시 만들지 않는다. 메시지·효과음(임시로 switch 소리) 추가. 6.2 계약과 맞다.
 - 사소: 이벤트마다 `new WaitForSeconds`(명령당 몇 개라 무시 가능). 효과음은 아트가 레버 소리를 만들면 `GameAssets`에 필드 추가.
 - jslib 이름은 다시 `SevenSteps_*`로 돌아갔다 → 11.5를 코드 기준으로 확정했다.
+
+---
+
+## 사후 검토: 27cb609 (카메라 안 A, Game 씬 설정, 기본 꺼짐) — 7lucky 156c054로 합쳐진 뒤
+
+**결론: 문제 없음.** `BoardView.Init`이 선택적 `CameraRig?`를 받아 `TileSet.cameraRig` 대신 쓴다. 꺼져 있으면 v0와 같은 동작. yaw 0이라 입력 회전 불필요(12.2).
+
+- 참고: 카메라의 기준 자리는 `TileSet.cameraRig`다(세트마다 벽 높이·라벨 위치가 다르므로). 아트의 실제 세트가 오면 그 세트의 `cameraRig`에 pitch 50을 넣고, 씬의 `overrideCamera`는 꺼 둔 채 미리 보기용으로만 쓴다.
