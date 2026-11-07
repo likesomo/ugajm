@@ -436,6 +436,49 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 
 ---
 
+## 12. 3단계 준비: 쿼터뷰 전환 계획
+
+목표: 아트의 실제 `TileSet`이 나오면 **에셋 지정만으로** 3D 보드가 뜨게 한다. 코드 변경은 아래 "필요할 때만" 항목으로 한정한다.
+
+### 12.1 이미 되어 있는 것 (2단계 결과)
+- 보드는 `TileSet`/`TileVisual`/`BoardGrid`/`TileId`만 쓴다. 격자는 투영과 무관하고, 클릭은 `BoardGrid.RayToCell`이라 카메라 각도와 상관없이 맞다.
+- `BoardView.FitCamera`가 `TileSet.cameraRig`(pitch, yaw, 직교/원근, 거리, 여백)로 보드 전체를 HUD 빈 띠 안에 맞춘다. 숫자·글자는 화면 라벨(uGUI)이라 각도와 상관없이 보인다.
+- 연출은 Animator 트리거가 있으면 그것을, 없으면 코드 트윈을 쓴다(`TileVisual.*Trigger`).
+- 사용할 세트: `AppConfig.tileSet`(없으면 `GameAssets.tileSet`). 세트 교체 = 이 참조 하나.
+
+### 12.2 카메라 결정 (권장)
+| 안 | pitch / yaw | 장점 | 비용 |
+|---|---|---|---|
+| **A. 정면 3/4 뷰 (권장 기본)** | 45~55° / 0° | 방향키 = 화면 방향 그대로. 입력 코드 변경 없음 | 벽 뒤 칸이 조금 가려짐 → 벽 높이로 해결 |
+| B. 아이소메트릭 | 30~35° / 45° | 전형적인 쿼터뷰 느낌 | 방향키와 화면 방향이 45° 어긋남 → 입력 회전 필요, 튜토리얼 문구 수정 |
+
+- 기본은 **A**. `CameraRig`에 `pitch 50, yaw 0, orthographic`을 넣은 세트로 시작한다. B로 가려면 사용자·리드 결정 후 게임플레이/UI가 `GameController`에서 화면 기준 입력을 지도 방향으로 돌린다(`yaw`를 90° 단위로 반올림해 `Dir`을 회전). `TileSetValidator`가 yaw ≠ 0이면 경고한다.
+- 직교 투영 유지(퍼즐은 칸 수를 세는 게임이라 원근 왜곡이 불리). 원근은 연출용으로만.
+
+### 12.3 프리팹 규격 (아트, 7.3 보강)
+- 1칸 = `cellSize`(기본 1) 유닛, 바닥 윗면 y = 0, 칸 중앙 피벗. 어긋나면 프리팹 대신 `TileVisual.offset/scale`로 맞춘다.
+- **벽 높이 ≤ 0.6칸**(안 A에서 뒤 칸을 가리지 않는 한도). 문·뒤집힘 벽(올라감)도 같은 높이.
+- 상태 표시는 자식 이름 훅으로: 문 창살(`inactiveChild`), 게이트 색(`materialTarget` + 머티리얼 2개), 뒤집힘 벽은 variant 0/1 프리팹 두 개.
+- 바닥 무늬 반복은 `randomYaw90`.
+- 플레이어·석상: 발밑이 y = 0, 높이 1칸 이하. 플레이어 머리 위 숫자는 `player.labelOffset`.
+- 세트 자산: `Data/TileSets/<이름>.asset`(아트 소유). 임시 세트 `TopDown_Placeholder`는 대체될 때까지 남긴다.
+
+### 12.4 받는 절차 (아트 세트가 오면)
+1. 아트: `Data/TileSets/`에 세트를 만들고 `unity.sh` 배치 또는 메뉴 **Seven Steps > Architecture > Validate TileSets**로 검사(오류 0). 검사: 빠진 프리팹(오류), 없는 자식 훅·Animator 트리거(오류), 한 칸보다 큰 크기·중심 어긋남·바닥 윗면 y≠0(경고), 쿼터뷰 yaw(경고). 배치: `-executeMethod SevenSteps.EditorTools.TileSetValidator.BatchValidate`(오류면 exit 1).
+2. 게임플레이/UI: `AppConfig.tileSet`에 지정 → 17스테이지 smoke 스크린샷으로 확인 → WebGL 빌드를 **브라우저에서** 연다(CLAUDE.md 규칙).
+3. 아키텍트: 스크린샷과 검사 결과로 검토. 가림·라벨 위치 문제는 세트 값(`labelOffset`, 벽 높이)으로 먼저 해결한다.
+
+### 12.5 필요할 때만 하는 코드 작업
+| 상황 | 할 일 | 담당 |
+|---|---|---|
+| 안 B(yaw 45°) 채택 | 입력 회전, 안내 문구 | 게임플레이/UI |
+| 벽이 뒤 칸을 가림(높이 줄여도) | 카메라 쪽 벽 반투명(셀 단위 머티리얼 교체, 플레이어보다 앞 행만) | 게임플레이/UI |
+| 탑다운/쿼터뷰 실행 중 전환(디버그) | `BoardView.Init(새 세트)` + `session` 상태로 `Rebuild` | 게임플레이/UI |
+| 그림자·조명 | Game 씬의 방향광(그림자 켬), PC 품질 유지(Mobile은 WebGL에서 3D가 안 그려짐, CLAUDE.md) | 게임플레이/UI(씬), 아트(RPAsset) |
+| 세트 필드 추가(새 기믹) | `TileKind`/`TileSet` 끝에 추가, 검사 목록 갱신 | 아키텍트 |
+
+---
+
 ## 변경 기록
 
 | 날짜 | 누가 | 내용 |
@@ -449,3 +492,4 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 2026-11-07 | 아키텍트 | `GameSession.Presented(State)` 이벤트 추가(4.2, 연출이 끝난 뒤 할 일용). 11.5 jslib 함수 이름을 게임플레이/UI 구현에 맞춤(`SevenSteps_SendBeacon`, `SevenSteps_RegisterVisibility`). 9장 WebGL 규칙에 데스크톱 종료 1초 대기 예외. 검토 기록 `docs/reviews/` 추가 |
 | 2026-11-07 | 아키텍트 | 11.5 jslib 함수 이름을 게임플레이/UI 57907b9 구현에 다시 맞춤(`TelemetryBeacon`, `TelemetryRegisterVisibility`, telemetry.md 이름). feat/view 재검토 기록 |
 | 2026-11-07 | 아키텍트 | 11.5 jslib 이름을 실제 코드(7lucky c12fd42: jslib·`DllImport`)에 맞춰 `SevenSteps_SendBeacon`/`SevenSteps_RegisterVisibility`로 확정(직전 정정 되돌림). 이름을 바꿀 때 함께 고칠 파일 명시. feat/view 2a9e801·43f3f38 사후 검토 기록 |
+| 2026-11-07 | 아키텍트 | 12장 쿼터뷰 전환 계획(카메라 안 A 3/4 뷰 권장, 프리팹 규격 보강, 받는 절차, 필요할 때만 하는 작업). `TileSetValidator`(에디터 메뉴·배치 검사) 추가 |
