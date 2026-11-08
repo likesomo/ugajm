@@ -191,8 +191,10 @@ export function levelStats(rows, levels = [], now = Date.now()) {
 }
 
 // Cell counts for one level. rows: events already filtered to that level.
+// rows: one level, ordered by session and seq (store.query). Idle after level_clear (the clear screen) is not being stuck.
 export function heatmap(rows) {
   const cells = {};
+  const cleared = new Set(); // sessions whose current attempt on this level is cleared
   const bump = (x, y, k, n = 1) => {
     if (x == null || y == null) return;
     const c = (cells[`${x},${y}`] ??= { x, y });
@@ -200,7 +202,12 @@ export function heatmap(rows) {
   };
   for (const r of rows) {
     const d = r.data;
-    if (r.type === 'idle') { bump(r.x, r.y, 'idle'); bump(r.x, r.y, 'idleMs', d.idleMs); }
+    if (r.type === 'level_start') cleared.delete(r.session_id);
+    else if (r.type === 'level_clear') cleared.add(r.session_id);
+    if (r.type === 'idle') {
+      if (cleared.has(r.session_id)) continue;
+      bump(r.x, r.y, 'idle'); bump(r.x, r.y, 'idleMs', d.idleMs);
+    }
     else if (r.type === 'undo') bump(r.x, r.y, 'undo');
     else if (r.type === 'restart') bump(r.x, r.y, 'restart');
     else if (r.type === 'hint') bump(r.x, r.y, 'hint');
