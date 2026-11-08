@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 일곱 걸음 — 리소스 출처 및 채택 상태
 
 갱신: 2026-11-07, Phase 1. **후보와 실제 제작물을 구분**한다. 이번 작업에서는 외부 팩을 다운로드하거나 Unity에 임포트하지 않았다. 무료만 사용하며, CC0/OFL/GPT 생성물까지 모든 바이너리를 git에서 제외한다. 아래는 기존 v0 전체를 감사한 목록이 아니라 이번 아트 작업의 출처 장부다.
@@ -8,6 +7,7 @@
 | 제작물 | 제작 방식·출처 | 저장 위치·상태 |
 |---|---|---|
 | 테스트 7 메달, UI 스킨, 몸·발자국·숫자 문, 행운 도장 | OpenAI GPT 이미지 생성, Codex 내장 image_gen, 2026-11-07. 외부 입력 이미지 없음. CC0/OFL/Asset Store 에셋으로 표시하지 않음 | `C:\unityjam\shared-assets\seven-steps\concepts\`의 PNG 4장. 콘셉트만 생성, 게임 반영 전. 프롬프트는 [README](concepts/README.md) |
+| 문화의 일곱 테마 시안 5종, 추천 2종 HUD, 카메라 3시점 비교 및 보드 수정안 | OpenAI GPT 이미지 생성, Codex 내장 image_gen, 2026-11-08. 자체 생성 보드만 수정 참조로 사용; 외부 게임·문화재 이미지 입력 없음. 생성물을 CC0로 표시하지 않음 | `C:/unityjam/shared-assets/seven-steps/concepts/themes/` 및 `concepts/camera-styles.png`. 게임 미반영. 목록·문헌은 [theme-research.md](theme-research.md), 전체 프롬프트는 공유 폴더 `themes/generation-manifest.json` |
 
 ## 권장 무료 출처 (아직 미채택)
 
@@ -33,8 +33,10 @@ CC0 크레딧은 자발적으로 표시한다. OFL 폰트를 실제로 배포할
 ## 추후 크레딧 화면 문구 초안
 
 실제 채택한 항목만 남긴다: `3D: KayKit by Kay Lousberg (CC0) · UI & SFX: Kenney (CC0) · Fonts: Jua / Pretendard (SIL OFL 1.1) · Concept images: GPT image generation`.
-=======
-# 일곱 걸음 — 에셋 크레딧
+
+---
+
+## 현재 게임에 채택된 에셋 (통합 브랜치 기록)
 
 > 게임에 쓰는 모든 외부·생성 에셋을 여기에 적는다. 파일 자체는 git 밖 공유 폴더(`C:/unityjam/shared-assets/seven-steps/Assets/`, 작업 공간에서는 `unity/Assets/Shared/`)에 있다.
 > 규칙: 무료 에셋만. CC BY-NC 등 비상업 라이선스 금지. CC-BY·OFL은 itch.io 페이지와 게임 크레딧 화면에 표기한다. 자세한 규칙은 `agents/README.md` "에셋 규칙".
@@ -50,4 +52,3 @@ CC0 크레딧은 자발적으로 표시한다. OFL 폰트를 실제로 배포할
 ```
 Font: Jua by The Jua Project Authors (SIL Open Font License 1.1)
 ```
->>>>>>> origin/7lucky
