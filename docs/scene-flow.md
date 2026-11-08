@@ -1,8 +1,8 @@
 # 일곱 걸음 씬 구조와 화면 흐름 — 조사·진단·제안 (1단계)
 
 담당: 씬 플로우 엔지니어 (`feat/scene-flow`). 브리프: `agents/scene-flow.md`.
-상태: **1단계 문서. 아키텍트 검토와 리드 승인 전에는 구현하지 않는다.**
-진단 기준 코드: 로컬 `7lucky` f367750 (5a2180a "Esc closes settings" 포함). 줄 번호는 이 커밋 기준이다.
+상태: **아키텍트 검토 완료(2026-11-08, 방향 승인, S0~S2 조건부 승인, 기록 `docs/reviews/2026-11-08-scene-flow-proposal.md` feat/architecture b3b15ae). 리드 결정안 사용자 승인 대기. 승인 전 구현하지 않는다.** 검토 반영 내용은 8장.
+진단 기준 코드: 로컬 `7lucky` f367750 (feat/view 5a2180a "Esc closes settings" 포함). 줄 번호는 이 커밋 기준이다. 5a2180a는 아직 origin/7lucky(29b1f4a)에 없다. 그래서 지금 브랜치에서는 `GameController.cs` 222줄 이후가 5줄, `TitleScreen.cs` 84줄 이후가 4줄, `HudView.cs`는 약 5줄 앞당겨진다.
 
 ---
 
@@ -36,7 +36,7 @@
 | View | `BoardView`, `HudView`, 각 화면과 패널(Title, StageSelect, Settings, Credits, Result) | 표시만 한다. 사용자 조작은 이벤트(`event Action ...`)로 낸다. Model을 직접 바꾸지 않는다. 흐름·규칙을 판단하지 않는다 |
 | Controller | 보드 진행(`GameController` → 나눔, 게임플레이/UI 소유), 화면 흐름(`TitleFlowController`, `GameFlowController`, `BackNavigator`, 씬 플로우 소유) | View 이벤트와 입력을 받아 Model 명령을 부른다. Model 이벤트를 받아 View를 갱신한다 |
 
-- 의존 방향: View → Controller → Model 한 방향. View는 컨트롤러의 **구체 타입**도 모른다. 이벤트만 낸다(지금 `HudView(GameController game, ...)`는 이 규칙을 어긴다, 3.2).
+- 참조 방향(아키텍트 조정): **Controller → View, Controller → Model, View → Model은 읽기 전용 데이터만.** View는 컨트롤러를 모른다. 조작은 이벤트로만 낸다(지금 `HudView(GameController game, ...)`는 이 규칙을 어긴다, 3.2). Model은 View를 모른다. 허용된 예외는 하나다. `GameSession`(Model)은 Contracts 인터페이스 `IBoardPresenter`로 연출을 부른다(architecture.md 4장 입력 락 계약).
 - 보드 진행 컨트롤러와 화면 흐름 컨트롤러는 다른 클래스다. 보드 컨트롤러는 `AppFlow`를 부르지 않고 "클리어 연출 끝남" 같은 사실만 이벤트로 낸다. 흐름 컨트롤러가 그 이벤트를 받아 `AppFlow.Go(Result)`를 부른다.
 - 아트 테마를 바꾸면 View 프리팹과 `UiTheme` 에셋만 바뀐다. 컨트롤러·모델 코드는 바뀌지 않는다.
 
@@ -45,7 +45,9 @@
 1. **공개 메서드의 전제 조건**: 시작 부분에서 검사하고, 어기면 던진다.
    - 인자가 틀림 → `ArgumentNullException` / `ArgumentOutOfRangeException` / `ArgumentException`
    - 지금 상태에서 할 수 없는 호출 → `InvalidOperationException` (예: 허용되지 않은 `AppFlow` 전이, 로드 중 전이, 이미 등록된 서비스 다시 등록)
-2. **내부 불변식**: `UnityEngine.Assertions.Assert`(Game 어셈블리) 또는 `System.Diagnostics.Debug.Assert`(Core·Contracts). 이 검사는 `UNITY_ASSERTIONS`가 없는 릴리스 빌드에서 빠진다. 그러니 **플레이어에서도 반드시 막아야 하는 것은 1번(예외)으로 쓴다.** Unity 6.6부터 Development Build가 자동으로 Checked 변형을 쓰지 않는다는 점에 주의한다([managed code variants](https://docs.unity3d.com/Manual/managed-code-variants.html)).
+   - **게임 규칙상 안 되는 명령(벽으로 이동, 선택 대기 중 이동 등)은 예외가 아니다.** `Rules.Dispatch`가 결과(`Bump`, `Feedback`)로 처리한다(core.js 골든). 전제 조건 예외를 규칙 코드로 넓히지 않는다.
+   - WebGL 빌드는 `webGLExceptionSupport: 1`(명시적 예외만)이다. `NullReferenceException` 같은 암묵적 예외는 WebGL에서 잡히지 않는다. 그래서 null은 **먼저 검사해서 던진다**.
+2. **내부 불변식**: `UnityEngine.Assertions.Assert`(Game·Contracts 어셈블리). **Core에서는 `Debug.Assert`를 쓰지 않는다.** 플레이어에서 실패해도 아무 일이 없을 수 있기 때문이다. Solver 같은 뜨거운 경로에는 검사를 넣지 않는다. 이 검사는 `UNITY_ASSERTIONS`가 없는 릴리스 빌드에서 빠진다. 그러니 **플레이어에서도 반드시 막아야 하는 것은 1번(예외)으로 쓴다.** Unity 6.6부터 Development Build가 자동으로 Checked 변형을 쓰지 않는다는 점에 주의한다([managed code variants](https://docs.unity3d.com/Manual/managed-code-variants.html)).
 3. **직렬화 참조**: "있어야 하는" 인스펙터 필드는 `Awake`에서 검사하고, 비었으면 어떤 필드가 비었는지 이름을 넣어 예외를 던진다(`MissingReferenceException` 또는 `InvalidOperationException`). 에디터에서는 `OnValidate`에서 `Debug.LogError(..., this)`로 바로 표시한다. null을 보고 조용히 `return`하거나 기본 인스턴스를 만들지 않는다.
 4. **fail fast**: 잘못된 상태를 기본값으로 덮고 진행하지 않는다. 예외는 **외부 입력** 세 가지뿐이고, 이때도 명시적으로 복구하고 로그를 남긴다.
    - 실행 인자·URL(`?level=99` 등): 범위 밖이면 경고 로그를 남기고 가까운 값으로 고친다. 경고 문구에 원래 값을 넣는다.
@@ -54,7 +56,9 @@
    - 사용자 입력(키, 클릭)은 예외가 아니다. 지금 할 수 없는 입력은 컨트롤러가 **명시적으로** 무시한다(`if (!flow.CanGo(...)) return;`처럼 조건이 코드에 드러나게).
 5. **빌드 전 검증**: 씬·프리팹·`AppConfig`·`TileSet`의 필수 연결은 에디터 검증기가 빌드 전에 잡는다. `TileSetValidator`와 같은 형식(메뉴 + 배치 메서드, 오류면 exit 1)으로 `SceneFlowValidator`를 만든다(5장 S0).
 
-### 1.4 `docs/architecture.md` 9장에 넣을 문안 (아키텍트에게 요청)
+### 1.4 `docs/architecture.md` 9장에 넣을 문안 (아키텍트에게 요청 → 조정해서 반영됨)
+
+아키텍트가 아래 문안을 조정해 9장에 넣었다(feat/architecture). **기준은 9장이다.** 조정한 점: 참조 방향(1.2), `IBoardPresenter` 예외, 규칙 거부는 예외가 아님, Core `Debug.Assert` 금지, WebGL 예외 지원, 적용 범위(새 코드와 손대는 코드, 기존 코드는 5장 단계대로). 아래는 제출한 원안이고 기록으로만 남긴다.
 
 > - **구조 원칙(사용자 지시 2026-11-08)**: 객체지향, MVC, 단정적 프로그래밍. 자세한 규칙은 `docs/scene-flow.md` 1장.
 > - **MVC**: Model(Core, `GameSession`, `AppFlow`, `SaveSystem`)은 순수 C#이고 C# 이벤트로 변경을 알린다. View(`MonoBehaviour`, 프리팹)는 표시만 하고 조작은 이벤트로 낸다. Model을 바꾸거나 `Services`를 읽지 않는다. Controller는 View 이벤트를 Model 명령으로 바꾸고 Model 이벤트로 View를 갱신한다. 보드 진행 컨트롤러와 화면 흐름 컨트롤러는 나눈다. 의존은 View → Controller → Model 한 방향.
@@ -252,8 +256,9 @@ DDOL 루트는 `TelemetryRunner` 하나로 유지한다. 페이드 캔버스(S5)
 ### 4.3 클래스 구조 (MVC)
 
 ```
-Model (순수 C#, Contracts 또는 Game/Flow — 위치는 4.5)
-  AppFlow            상태·전이 표·BackTarget·IsLoading·StageCount. Changed(from,to) / Entered(state)
+Model (순수 C#. AppFlow는 Contracts/App, OverlayStack·EntryTracker는 Game/Flow — 4.5)
+  AppFlow            상태·전이 표·TryGetBackTarget/CanBack·IsLoading·StageCount. Changed(from,to)
+                     (Entered 이벤트는 보류: 진입은 루트 Start + Changed 하나로)
   OverlayStack       Push(id)/Pop()/Top/Count, Changed
   EntryTracker       다음 level_start.via 계산(boot/url/next/select/again). FirstEntryPending 대체
   SaveSystem         SetVolume/SetTelemetryChoice 등 명령 메서드(아키텍트에게 요청)
@@ -263,7 +268,7 @@ Controller (순수 C#, MonoBehaviour 아님. 씬 루트가 만들고 Tick/Dispos
   TitleFlowController   TitleView/StageSelectView 이벤트 → AppFlow, AppFlow → 뷰 Show/Hide
   GameFlowController    ResultView·HUD 흐름 이벤트 → AppFlow, AppFlow → session.Load·ResultView,
                         보드 컨트롤러의 StageCleared → 저장 + Go(Result)
-  BackNavigator         Back 입력 → OverlayStack.Pop() 또는 AppFlow.Back()
+  BackNavigator         Back 입력 → OverlayStack.Pop(), 비었으면 flow.TryGetBackTarget(out t) → Go(t)
   BoardController       (게임플레이/UI) 보드 입력 → GameSession.Send, SessionUpdate → HUD/사운드
   GameAudio, MessagePresenter, HintProvider (게임플레이/UI, GameController에서 분리)
 
@@ -285,15 +290,16 @@ Scene root (MonoBehaviour 하나, 조립만)
 ### 4.4 전환 방식
 
 - **씬 진입 경로를 하나로**: 새 씬의 루트는 `Start`에서 `Enter(flow.State)`만 부른다. 같은 씬 안의 전이는 `Changed`로 받는다. 떠나는 씬의 컨트롤러는 자기 씬에 속하지 않는 상태로 가는 `Changed`를 받으면 **아무것도 그리지 않는다**(`AppScenes.For(to) != 내 씬`이면 무시). 그래서 지금처럼 빈 화면이 한 프레임 보이지 않는다.
-- **로드 중 잠금**: `AppFlow.IsLoading`(로더가 완료를 알릴 때까지 참). 이 동안 `Go`는 `InvalidOperationException`을 던진다. 입력 컨트롤러는 `flow.CanGo(to)`(로딩 중이면 거짓)로 먼저 확인한다. 동기 로더에서는 다음 씬 루트의 `Start`에서 완료를 알린다. `ISceneLoader`에 `event Action<string> Loaded`를 추가하는 안이다(계약 변경, 아키텍트).
+- **로드 중 잠금**: `AppFlow.IsLoading`(로더가 완료를 알릴 때까지 참). 이 동안 `Go`는 `InvalidOperationException`을 던진다. 입력 컨트롤러는 `flow.CanGo(to)`(로딩 중이면 거짓)로 먼저 확인한다. 완료 신호는 `ISceneLoader.Loaded`(`event Action<string>`)다. **`SceneLoader` 구현이 `SceneManager.sceneLoaded`로 낸다**(새 씬의 Awake 뒤, Start 전). 씬 루트마다 신호 코드를 넣지 않는다. 같은 씬 안 전이는 로딩이 없다(아키텍트 승인 조건).
+- **진입 이벤트(`Entered`)는 만들지 않는다**(보류). 진입 경로는 "새 씬 = 루트 `Start`의 `Enter(flow.State)`, 같은 씬 = `Changed`" 하나다. S5 페이드에서 꼭 필요해지면 그때 아키텍트에게 요청한다.
 - **페이드(S5)**: `FadeSceneLoader : ISceneLoader`. `LoadSceneAsync(Single)` + 코루틴. DDOL 러너 자식 캔버스로 0.15초 아웃 → 로드 → 인. 같은 씬 안 전이(Title⇄StageSelect, Game→Game)는 페이드하지 않는다.
 
 ### 4.5 폴더·어셈블리 위치
 
 | 무엇 | 위치 | 어셈블리 | 소유 |
 |---|---|---|---|
-| `AppFlow`, `ISceneLoader`, `AppScenes`, `Services`, `LaunchOptions` 변경 | `Scripts/Runtime/Contracts/App/` | `SevenSteps.Contracts` | 아키텍트(내가 변경안 제출) |
-| `OverlayStack`, `EntryTracker` (순수 C#) | `Contracts/App/` (권장: 테스트 어셈블리가 바로 참조, 흐름 Model은 공용) — 아키텍트가 정함 | `SevenSteps.Contracts` | 아키텍트 지정 후 씬 플로우 |
+| `AppFlow`, `ISceneLoader`, `Services`, `LaunchOptions` 변경 (S0~S2) | `Scripts/Runtime/Contracts/App/` | `SevenSteps.Contracts` | 아키텍트 소유. **이 변경에 한해 씬 플로우가 수정**, 커밋마다 아키텍트 검토. 11장·변경 기록은 아키텍트가 씀 |
+| `OverlayStack`, `EntryTracker` (순수 C#, MonoBehaviour 아님) | `Scripts/Runtime/Game/Flow/` (아키텍트 결정: Contracts는 여러 담당이 기대는 안정 API만) | `SevenSteps.Game` | 씬 플로우 |
 | 씬 루트, 흐름 컨트롤러, `BackNavigator`, `AppInput`, `SceneLoader`, `FadeSceneLoader`, `Bootstrap` | `Scripts/Runtime/Game/App/` (지금 폴더 유지) + `Game/Flow/` | `SevenSteps.Game` (새 asmdef 없음) | 씬 플로우 |
 | 화면 뷰 (`TitleView` 등) | `Game/UI/` | `SevenSteps.Game` | 게임플레이/UI(내용), 공개 면(이벤트·Show/Hide)은 씬 플로우와 합의 |
 | UI 프리팹, `UiTheme` | `Assets/_Project/UI/` | — | 게임플레이/UI, 테마 값은 아트 |
@@ -305,7 +311,7 @@ Scene root (MonoBehaviour 하나, 조립만)
 | 그대로 | 바꿈 |
 |---|---|
 | 씬 3개, 빌드 순서, 씬 이름 상수 | 정적 상태 초기화(`SubsystemRegistration`) |
-| `AppState` 5개와 전이 표(추가만) | `AppFlow`: 생성자 null 금지, 스테이지 범위, `Back`, `IsLoading`, 진입 이벤트 |
+| `AppState` 5개와 전이 표(새 전이 추가 없음) | `AppFlow`: 생성자 null 금지, `stageCount >= 1`, 스테이지 범위, `TryGetBackTarget`/`CanBack`, `IsLoading` |
 | `Services` 로케이터(조회는 씬 루트만) | `Services.Register` 중복 등록 예외 |
 | DDOL 루트 하나(`TelemetryRunner`) | `GameController`를 흐름 / 보드 진행 / 오디오 / 문구 / 힌트로 분리 |
 | `GameSession` / `IBoardPresenter` | Esc·뒤로 가기를 `BackNavigator` + `OverlayStack` 하나로 |
@@ -316,19 +322,19 @@ Scene root (MonoBehaviour 하나, 조립만)
 
 ## 5. 단계별 이행 계획
 
-모든 단계 공통 완료 조건: `BuildTools.CompileCheck` 통과, `unity.sh test`(EditMode, 텔레메트리 골든 포함) 통과, `unity.sh build-win` + `smoke`(리플레이 4개) 통과. 표시된 단계는 `build-webgl` + `smoke-webgl`도 통과해야 한다. 커밋은 단계마다 작게 나눈다.
+모든 단계 공통 완료 조건: `BuildTools.CompileCheck` 통과, `unity.sh test`(EditMode, 텔레메트리 골든 포함) 통과, `unity.sh build-win` + `smoke`(리플레이 7개: 스테이지 1, 3, 8, 9, 13, 15, 16) 통과. 표시된 단계는 `build-webgl` + `smoke-webgl`도 통과해야 한다. 커밋은 단계마다 작게 나눈다.
 
 | 단계 | 내용 | 잼 안 | 테스트 | 계약 변경(아키텍트) |
 |---|---|---|---|---|
-| **S0 안전망** | ① 정적 초기화: `Services.ResetForPlay`, `LevelCatalog`, `FirstEntryPending`, `Ui.Font`에 `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]`. 부트스트랩 생략 조건을 "이번 Play에서 부트스트랩이 돌았는가"로 바꾼다. ② 에디터에서 3.3 표를 재현해 기록 ③ `SceneFlowValidator`(메뉴 + 배치): 빌드 목록 = `AppScenes`(Boot 0번, 이름 중복 없음, 경로 규칙), 각 씬에 루트 하나, 루트 필수 참조(`assets`, `config`), `AppConfig.tileSet` | 예 | EditMode: 초기화 메서드를 부른 뒤 `Services.Has` = false. 에디터 Play 두 번 수동 확인(Title, Game). 검증기 배치 실행 | `Services`에 초기화 메서드 추가(또는 Game 쪽에서 `Services.Clear` 호출로 대신) |
-| **S1 단정화** | `Bootstrap`: config null이면 예외. 실행 인자 범위 보정은 경고 로그. `LaunchOptions` 소비형 `TakeReplay()`. `Services.Register` 중복 예외. `TitleScreen`·`GameController`의 조용한 null `return` 제거 | 예 | EditMode: 잘못된 전이·중복 등록·범위 밖 스테이지가 예외인지. 기존 `AppFrameworkTests` 유지 | `LaunchOptions` 캡슐화, `Services` |
-| **S2 `AppFlow` 계약** | `AppFlow(ISceneLoader, int stageCount)`(null 금지), `GoToGame` 범위 검사, `Back()`/`BackTarget`, `IsLoading` + `ISceneLoader.Loaded`, 진입 이벤트. `EntryTracker`(via 계산) | 예 | EditMode: 전이 표 전체(허용·거부), Back 표, 로드 중 전이 거부, 가짜 로더(지연 완료). `EntryTracker`가 지금과 같은 via(boot/url/next/select/again)를 내는지 + 텔레메트리 골든 | 예(API 고지 필요) |
-| **S3 흐름 분리** | `BootSceneRoot`/`TitleSceneRoot`/`GameSceneRoot` + `TitleFlowController`/`GameFlowController`. `GameController`에서 흐름 코드(136-219, 269-278, 340-355)를 옮긴다. `HudView`의 Result 부분을 `ResultView`로 나누고 이벤트로 연결한다. 보드 진행 부분은 게임플레이/UI가 `BoardController`로 정리(리드 배분) | 예 | EditMode: 흐름 컨트롤러를 가짜 뷰(`IScreenView` 구현)로 테스트한다. Boot→Title→StageSelect→Game→Result→다음. PlayMode 스모크는 PlayMode 테스트 asmdef가 필요하다(아키텍트). 없으면 `smoke` + 수동. **build-webgl + smoke-webgl** | 없음(뷰 인터페이스는 Game 어셈블리 안) |
-| **S4 오버레이·뒤로 가기** | `OverlayStack` + `BackNavigator` + `AppInput`. Settings·Credits를 오버레이로 등록한다. Esc 처리 4곳을 하나로 모은다. 오버레이가 열리면 보드 입력을 막는다 | 예 | EditMode: Esc 순서(설정 열림 → 닫힘 → StageSelect), 크레딧 위 Esc, 오버레이 중 보드 입력 무시 | `OverlayStack` 위치(4.5) |
+| **S0 안전망** | ① 정적 초기화: `Services.ResetForPlay`, `LevelCatalog`, `FirstEntryPending`, `Ui.Font`에 `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]`. 부트스트랩 생략 조건을 "이번 Play에서 부트스트랩이 돌았는가"로 바꾼다. ② 에디터에서 3.3 표를 재현해 기록 ③ `SceneFlowValidator`(메뉴 + 배치): 빌드 목록 = `AppScenes`(Boot 0번, 이름 중복 없음, 경로 규칙), 각 씬에 루트 하나, 루트 필수 참조(`assets`, `config`), `AppConfig.tileSet` | 예 | EditMode: 초기화 메서드를 부른 뒤 `Services.Has` = false. 에디터 Play 두 번 수동 확인(Title, Game). 검증기 배치 실행 | 승인: `Services` 안의 `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)] static void ResetForPlay() => map.Clear()`. 부트스트랩 생략 판단은 `Bootstrap`의 "이번 Play에서 돌았는가" 플래그(같은 방식으로 초기화) |
+| **S1 단정화** | `Bootstrap`: config null이면 예외, `LaunchOptions.Warnings`를 로그. `LaunchOptions`: `{ get; private set; }`, 소비형 `TakeReplay()`, 스모크 전용 `-stageselect`/`-credits` 흡수, 파싱 실패는 Contracts에서 로그하지 않고 `Warnings` 목록에 담음, `TelemetryOff`/`TelemetryUrl` 읽기 호환 유지. `Services.Register` 중복 예외(테스트는 `[SetUp]`에서 `Clear`). `TitleScreen`·`GameController`의 조용한 null `return` 제거 | 예 | EditMode: 잘못된 전이·중복 등록·범위 밖 스테이지가 예외인지, `Warnings` 내용. 기존 `AppFrameworkTests` 유지 | 승인(`LaunchOptions`, `Services`) |
+| **S2 `AppFlow` 계약** | `AppFlow(ISceneLoader, int stageCount)`(null 금지, `stageCount >= 1`), `GoToGame` 범위 밖이면 `ArgumentOutOfRangeException`(실행 인자 `-level 99`는 부트스트랩이 경고 + 보정 후 호출), `TryGetBackTarget(out AppState)`/`CanBack`(기존 `CanGo` 표 안에서만), `IsLoading` + `ISceneLoader.Loaded`(`SceneLoader`가 `sceneLoaded`로 냄). `Entered` 이벤트 없음. `EntryTracker`(via 계산, `Game/Flow/`) | 예 | EditMode: 전이 표 전체(허용·거부), Back 표, 로드 중 전이 거부, 가짜 로더(지연 완료). `EntryTracker`가 지금과 같은 via(boot/url/next/select/again)를 내는지 + 텔레메트리 골든 | 예(API 고지 필요) |
+| **S3 흐름 분리** | `BootSceneRoot`/`TitleSceneRoot`/`GameSceneRoot` + `TitleFlowController`/`GameFlowController`. `GameController`에서 흐름 코드(136-219, 269-278, 340-355)를 옮긴다. `HudView`의 Result 부분을 `ResultView`로 나누고 이벤트로 연결한다. 보드 진행 부분은 게임플레이/UI가 `BoardController`로 정리(리드 배분) | 예 | EditMode: 흐름 컨트롤러를 가짜 뷰(`IScreenView` 구현)로 테스트한다. Boot→Title→StageSelect→Game→Result→다음. 씬을 넘는 `level_leave`도 EditMode(가짜 로더)로 고정한다. PlayMode asmdef는 만들지 않는다(아키텍트 결정). EditMode로 못 잡는 회귀가 나오면 그때 아키텍트가 만든다. 그 전까지는 `smoke` + 수동. **build-webgl + smoke-webgl** | 없음(뷰 인터페이스는 Game 어셈블리 안) |
+| **S4 오버레이·뒤로 가기** | `OverlayStack`(`Game/Flow/`) + `BackNavigator` + `AppInput`. Settings·Credits를 오버레이로 등록한다. Esc 처리 4곳을 하나로 모은다. 오버레이가 열리면 보드 입력을 막는다 | 예 | EditMode: Esc 순서(설정 열림 → 닫힘 → StageSelect), 크레딧 위 Esc, 오버레이 중 보드 입력 무시 | 없음(Game 어셈블리) |
 | **S5 페이드 전환** | `FadeSceneLoader`(`LoadSceneAsync` + 코루틴, DDOL 러너 자식 캔버스). 같은 씬 전이는 페이드 없음 | 여유 있으면 | 가짜 로더 지연 테스트(S2) 재사용. 스모크 스크린샷 대기 시간 확인(`ScreenshotOnce` 1.5초). **build-webgl + smoke-webgl**(보드 픽셀 기준 500 이상) | 없음 |
 | **S6 UI 프리팹 + 테마** | 화면별로 코드 생성 → 프리팹(`UI/**`) + 뷰 직렬화 참조(`OnValidate` 검사) + `UiTheme` SO(색·글꼴·스프라이트). 순서: Settings → Result → Title/StageSelect → HUD. `Ui.cs` 정적 색은 `UiTheme` 기본값으로 | 일부(Settings·Result), 나머지는 테마 확정 후 | `SceneFlowValidator`가 프리팹 필수 참조를 검사. 스모크 스크린샷 비교 | 없음 |
 
-**미루는 것(잼 이후)**: Additive 영구 씬, 오디오 매니저·배경음 DDOL, UI Toolkit, TextMeshPro 전환, 로딩 진행률 화면, Addressables, DI 컨테이너, PlayMode 자동 테스트 전체 흐름(테스트 asmdef가 생기면 S3에서 시작).
+**미루는 것(잼 이후)**: Additive 영구 씬, 오디오 매니저·배경음 DDOL, UI Toolkit, TextMeshPro 전환, 로딩 진행률 화면, Addressables, DI 컨테이너, PlayMode 자동 테스트(필요해지면 아키텍트가 `SevenSteps.Tests.PlayMode`를 만든다).
 
 ### 5.1 텔레메트리 시점 보존 (모든 단계)
 
@@ -350,8 +356,8 @@ S2·S3 커밋마다 `unity.sh test`(텔레메트리 골든)를 돌린다. 골든
 
 | 대상 | 요청 |
 |---|---|
-| 아키텍트 | (1) 1.4 문안을 9장에 넣을지 검토 (2) S1·S2 계약 변경(`AppFlow`, `ISceneLoader.Loaded`, `Services` 중복·초기화, `LaunchOptions` 캡슐화) 승인 (3) `OverlayStack`/`EntryTracker` 위치(Contracts vs Game) (4) PlayMode 테스트 asmdef 필요 여부 (5) 8장의 "에디터에서 Game을 바로 Play하면 `Services.Has<AppFlow>()`로 판단" 문장을 "이번 Play에서 부트스트랩이 돌았는지"로 수정 |
-| 리드 | (1) `GameController` 분리 중 보드 진행 부분(입력, 문구, 힌트, 오디오, `BoardController`)과 UI 프리팹화(S6)를 누가 할지 배분 (2) `Tests/EditMode/Flow/**`, `Scripts/Editor/SceneFlow/**` 소유권 표 반영 (3) `SampleScene.unity` 삭제와 `templateDefaultScene` 정리 (4) `unity.sh`에 `scene-validate` 명령 추가(`tileset-validate`와 같은 형식) (5) 도메인 리로드를 끈 설정을 유지할지(유지 권장: S0로 해결) |
+| 아키텍트 | **완료(8장).** (1) 9장 반영 (2) S1·S2 조건부 승인 (3) 위치는 Game/Flow (4) PlayMode asmdef 지금은 없음 (5) 8장 문장 수정 |
+| 리드 | (1) `GameController` 분리 중 보드 진행 부분(입력, 문구, 힌트, 오디오, `BoardController`)과 UI 프리팹화(S6)를 누가 할지 배분. 순서는 아키텍트 권고대로 **흐름 부분을 씬 플로우가 먼저 빼서 합친 뒤 게임플레이/UI가 보드 부분 정리, 동시 작업 금지** (2) 씬 파일(`Scenes/**`) 소유: README 표는 씬 플로우로 바뀜(29b1f4a). `docs/architecture.md` 8장 표의 "게임플레이/UI"와 맞출 것 (3) `Tests/EditMode/Flow/**`, `Scripts/Editor/SceneFlow/**`, `Game/Flow/**` 소유권 표 반영 (4) `SampleScene.unity` 삭제와 `templateDefaultScene` 정리 (5) `unity.sh`에 `scene-validate` 명령 추가(`tileset-validate`와 같은 형식) (6) 도메인 리로드를 끈 설정을 유지할지(유지 권장: S0로 해결) (7) feat/view 5a2180a 합류 시점: S0~S3의 `GameController`/`TitleScreen`/`HudView` 수정과 겹치므로 먼저 합쳐지길 권장 |
 | 게임플레이/UI | 뷰 공개 면(이벤트 이름, `Show/Hide`) 합의. `HudView`에서 `ResultView` 분리 |
 
 ---
@@ -379,8 +385,28 @@ Open Project 1은 미러의 파일 목록과 커밋 메시지만 확인했다(�
 
 ---
 
+## 8. 검토 결과 (아키텍트 2026-11-08)
+
+기록: `docs/reviews/2026-11-08-scene-flow-proposal.md`(feat/architecture b3b15ae). **결론: 방향 승인, S0~S2 조건부 진행 가능.** 리드 결정안의 사용자 승인 전에는 구현하지 않는다. Unity 라이선스가 복구될 때까지 배치 명령도 돌리지 않는다.
+
+| 항목 | 결정 | 문서 반영 |
+|---|---|---|
+| 9장 문안 | 조정해서 반영. 참조 방향은 Controller → View/Model, View → Model은 읽기 전용. `GameSession` → `IBoardPresenter`는 허용 예외. 규칙 거부 명령은 예외 아님. Core `Debug.Assert` 금지. WebGL `webGLExceptionSupport: 1`이라 암묵적 NRE를 못 잡으니 먼저 검사. 적용 범위는 새 코드와 손대는 코드 | 1.2, 1.3, 1.4 |
+| `AppFlow` | 로더 null 금지, `stageCount >= 1`, `GoToGame` 범위(`ArgumentOutOfRangeException`), `TryGetBackTarget`/`CanBack`(새 전이 없음), `IsLoading` + `ISceneLoader.Loaded`(`SceneLoader`가 `sceneLoaded`로) | 4.3, 4.4, 5장 S2 |
+| `Entered` 이벤트 | 보류(진입 경로 하나 유지) | 4.3, 4.4 |
+| `Services` | 중복 등록 예외, `ResetForPlay`(`SubsystemRegistration`)를 `Services` 안에. 부트스트랩 생략은 `Bootstrap` 플래그 | 5장 S0, S1 |
+| `LaunchOptions` | 읽기 전용 속성, `TakeReplay()`, `-stageselect`/`-credits` 흡수, `Warnings` 목록(부트스트랩이 로그), 텔레메트리 필드 읽기 호환 | 5장 S1 |
+| 수정 권한 | 이 변경에 한해 `Contracts/App/`(`AppFlow`, `Services`, `LaunchOptions`)은 씬 플로우가 수정, 커밋마다 아키텍트 검토. 11장·변경 기록은 아키텍트. 리드가 영향받는 담당에게 고지 | 4.5 |
+| `OverlayStack`/`EntryTracker` | `Game/Flow/`(Game 어셈블리) | 4.5 |
+| PlayMode asmdef | 지금은 없음. S3 뒤 EditMode로 못 잡는 회귀가 나오면 | 5장 |
+| 8장 직접 Play 판단 문장 | 아키텍트가 수정함 | — |
+| 기타 | smoke는 리플레이 7개. 씬 파일 소유와 `GameController` 분리 순서(흐름 먼저, 동시 작업 금지)는 리드 결정 | 5장, 6장 |
+
+---
+
 ## 변경 기록
 
 | 날짜 | 내용 |
 |---|---|
 | 2026-11-08 | 1단계 최초 작성(조사·진단·제안). 구현 없음 |
+| 2026-11-08 | 아키텍트 검토 반영(8장): 참조 방향, 규칙 거부는 예외 아님, Core `Debug.Assert` 금지, WebGL 예외 지원, S0~S2 승인 조건, `OverlayStack`/`EntryTracker`는 `Game/Flow/`, `Entered` 보류, PlayMode asmdef 없음, smoke 리플레이 7개. origin/7lucky 29b1f4a 합침 |
