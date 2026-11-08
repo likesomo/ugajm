@@ -1,6 +1,8 @@
-// HTTP handler: event intake, stats API, dashboard, and the web prototype at /play/ (same-origin playtests).
+// HTTP handler: event intake, stats API, dashboard, the web prototype at /play/ and the Unity WebGL build at /webgl/
+// (same-origin playtests).
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
 import { join, normalize, extname, dirname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkEnvelope, checkEvent, MAX_BYTES } from './validate.mjs';
@@ -11,7 +13,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png',
+  '.ico': 'image/x-icon', '.wasm': 'application/wasm', '.data': 'application/octet-stream', '.unityweb': 'application/octet-stream',
 };
+export const WEBGL_DIR = join(here, '../../Builds/WebGL');
 
 const DEFAULT_ORIGINS = [
   /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/,
@@ -70,7 +74,7 @@ function readBody(req, limit) {
 // limits: per client address, requests ({capacity, perSec}) and events ({capacity, perSec}).
 export const DEFAULT_LIMITS = { requests: { capacity: 60, perSec: 2 }, events: { capacity: 3000, perSec: 50 } };
 
-export function createApp({ store, token, levels = [], allowedOrigins = [], trustProxy = false, protoDir = PROTO_DIR, now = () => Date.now(), limits = DEFAULT_LIMITS }) {
+export function createApp({ store, token, levels = [], allowedOrigins = [], trustProxy = false, protoDir = PROTO_DIR, webglDir = WEBGL_DIR, now = () => Date.now(), limits = DEFAULT_LIMITS }) {
   const allowOrigin = originMatcher(allowedOrigins);
   const reqLimit = rateLimiter(limits.requests);
   const eventLimit = rateLimiter(limits.events);
@@ -133,16 +137,24 @@ export function createApp({ store, token, levels = [], allowedOrigins = [], trus
     return send(res, 200, { ...r, rejected }, cors);
   }
 
-  async function serveStatic(res, rel, root) {
+  // Streams a file under root. The Unity build uses gzip with the decompression fallback, so no Content-Encoding.
+  async function serveStatic(req, res, rel, root) {
     const file = normalize(join(root, rel || 'index.html'));
     if (!file.startsWith(normalize(root) + sep) && file !== normalize(root)) return send(res, 404, 'not found');
-    try {
-      const buf = await readFile(file);
-      return send(res, 200, buf, { 'Content-Type': MIME[extname(file)] ?? 'application/octet-stream', 'Cache-Control': 'no-cache' });
-    } catch {
-      return send(res, 404, 'not found');
-    }
+    let st;
+    try { st = await stat(file); } catch { return send(res, 404, 'not found'); }
+    if (st.isDirectory()) return serveStatic(req, res, join(rel, 'index.html'), root);
+    res.writeHead(200, { 'Content-Type': MIME[extname(file)] ?? 'application/octet-stream', 'Content-Length': st.size, 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
+    if (req.method === 'HEAD') return res.end();
+    await new Promise((ok) => createReadStream(file).on('error', () => { res.destroy(); ok(); }).on('end', ok).pipe(res));
   }
+
+  // The origin the browser used to reach us (proxy headers only with trustProxy, e.g. behind a tunnel).
+  const selfOrigin = (req) => {
+    const proto = (trustProxy && req.headers['x-forwarded-proto']?.split(',')[0].trim()) || 'http';
+    const host = (trustProxy && req.headers['x-forwarded-host']?.split(',')[0].trim()) || req.headers.host || 'localhost';
+    return `${proto}://${host}`;
+  };
 
   return async function handle(req, res) {
     const url = new URL(req.url, 'http://local');
@@ -162,7 +174,17 @@ export function createApp({ store, token, levels = [], allowedOrigins = [], trus
       if (path === '/healthz') return send(res, 200, { ok: true });
       if (path === '/') return send(res, 302, '', { Location: '/play/' });
       if (path === '/play') return send(res, 302, '', { Location: '/play/' });
-      if (path.startsWith('/play/')) return await serveStatic(res, decodeURIComponent(path.slice(6)), protoDir);
+      if (path.startsWith('/play/')) return await serveStatic(req, res, decodeURIComponent(path.slice(6)), protoDir);
+      if (path === '/webgl') return send(res, 302, '', { Location: '/webgl/' + url.search });
+      if (path === '/webgl/' || path === '/webgl/index.html') {
+        // The Unity build sends only when told where (AppConfig.telemetryEndpoint is empty): add ?telemetry=<this server>.
+        if (!url.searchParams.has('telemetry')) {
+          url.searchParams.set('telemetry', selfOrigin(req));
+          return send(res, 302, '', { Location: '/webgl/' + url.search });
+        }
+        return await serveStatic(req, res, 'index.html', webglDir);
+      }
+      if (path.startsWith('/webgl/')) return await serveStatic(req, res, decodeURIComponent(path.slice(7)), webglDir);
       if (path === '/dashboard') {
         dashboardHtml ??= await readFile(join(here, 'dashboard.html'));
         return send(res, 200, dashboardHtml, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-cache' });

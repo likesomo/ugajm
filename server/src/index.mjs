@@ -5,7 +5,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openDb } from './db.mjs';
 import { loadLevels } from './levels.mjs';
-import { createApp } from './app.mjs';
+import { createApp, WEBGL_DIR } from './app.mjs';
+import { existsSync } from 'node:fs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const env = process.env;
@@ -20,10 +21,12 @@ if (!token) {
 
 const store = openDb(dbPath);
 const levels = await loadLevels();
+const webglDir = env.WEBGL_DIR ?? WEBGL_DIR;
 const app = createApp({
   store, token, levels,
   allowedOrigins: (env.ALLOWED_ORIGINS ?? '').split(',').map((s) => s.trim()),
   trustProxy: env.TRUST_PROXY === '1',
+  webglDir,
 });
 
 const server = createServer(app);
@@ -31,6 +34,7 @@ server.listen(port, host, () => {
   const base = `http://localhost:${port}`;
   console.log(`[server] db ${dbPath}, ${levels.length} levels`);
   console.log(`[server] play       ${base}/play/`);
+  console.log(`[server] webgl      ${base}/webgl/` + (existsSync(join(webglDir, 'index.html')) ? '' : `   (no build in ${webglDir}; set WEBGL_DIR)`));
   console.log(`[server] dashboard  ${base}/dashboard#token=${token}`);
 });
 
