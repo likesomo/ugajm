@@ -83,7 +83,11 @@ namespace SevenSteps.Game.UI
 
         void Update()
         {
-            if (settings.IsOpen) return;
+            if (settings.IsOpen)
+            {
+                if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) settings.Close();
+                return;
+            }
             if (creditsPanel.IsOpen)
             {
                 if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) creditsPanel.Close();
