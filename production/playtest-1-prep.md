@@ -24,16 +24,16 @@
 - [ ] `STATS_TOKEN=<토큰> node server/src/index.mjs` 로컬 실행, `node --test server/test/` 통과
 - [x] 서버가 Unity WebGL 빌드를 `/webgl/`로 제공하고 `?telemetry=<이 서버>`를 자동으로 붙인다 (feat/server d6296cf). 실제 빌드에서 unity-webgl 이벤트 21건 수신 확인. 당일 절차: `server/README.md` "플레이테스트 날 실행 절차"
 - [ ] 새 WebGL 빌드(라이선스 복구 후)로 `/webgl/` 다시 확인. `unity.sh serve`(8090)로 열 때는 `?telemetry=http://localhost:8787`을 붙여야 기록됨 (`AppConfig.telemetryEndpoint`가 비어 있음)
-- [ ] **사용자 결정**: itch.io 빌드는 iframe이라 `?telemetry=`를 줄 수 없다 → `AppConfig.telemetryEndpoint`에 고정 HTTPS 주소가 필요(trycloudflare 임시 주소는 실행마다 바뀜). 원격 테스터용 Unity는 터널 2개 + `ALLOWED_ORIGINS`
-- [ ] WebGL 빌드에서 이벤트가 실제로 쌓이는지(`level_start` → `level_clear`, 탭 닫을 때 `session_end` beacon) 대시보드로 확인
+- [ ] **사용자 결정**: itch.io 빌드는 iframe이라 `?telemetry=`를 줄 수 없다 → `AppConfig.telemetryEndpoint`에 고정 HTTPS 주소가 필요(trycloudflare 임시 주소는 실행마다 바뀜). 원격 테스터는 서버가 `/webgl/`·`/play/`를 같이 제공하므로 터널 1개(`TRUST_PROXY=1`)로 둘 다 된다(`server/README.md` 절차 3). `ALLOWED_ORIGINS`는 다른 도메인에서 빌드를 열 때만
+- [ ] WebGL 빌드에서 이벤트가 실제로 쌓이는지(`level_start` → `level_clear`, 탭 닫을 때 `session_end` beacon) 대시보드로 확인 — 기존 빌드 ef67c4d로 확인됨(unload·hidden 둘 다). Orca 탭 닫기는 페이지 이벤트가 없어 안 오지만 서버가 30분 무입력을 이탈로 처리
 - [ ] 테스트 전 DB 초기화 방법(가짜 데이터 `fake-data.mjs` 섞이지 않게) 정리
 - [ ] (승인 후에만) 원격 테스터용 Cloudflare Tunnel 주소 → `?telemetry=` 또는 `AppConfig.telemetryEndpoint`
 
 ## D. 진행 안내 (레벨 디자인)
 
 - [x] `design/levels/playtest-guide.md`를 Unity WebGL 겸용으로 갱신, 6 숫자 문·힌트 문구 결정 기준 추가 (feat/levels 76228af) — 주소, 조작(방향키/WASD/클릭, K/X/Z/R/H), 시크릿 창, "기록 전송" 확인 방법
-- [ ] 스테이지별 관찰표(3장)를 인쇄/시트로 준비, 메모 양식
-- [ ] 끝난 뒤 질문(4장) 양식
+- [x] 스테이지별 관찰표(3장), 메모 양식 → `design/levels/playtest/TEMPLATE-notes.md` (feat/levels 7f9e6e0)
+- [x] 끝난 뒤 질문(4장) 양식 (같은 파일)
 - [ ] 테스트 뒤: 대시보드 CSV/JSON으로 흥미도 모델 보정, 8(내리는 벽)·6(숫자 문) 결과에 따라 `proposal-polish.md` 1.1의 후속안 결정
 
 ## E. 게임 화면 (게임플레이/UI)
