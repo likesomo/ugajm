@@ -14,7 +14,7 @@ namespace SevenSteps.Game.UI
     {
         public readonly RectTransform LabelLayer;
 
-        readonly Text stageTitle, nextText, message, statueText;
+        readonly Text stageTitle, stageHint, nextText, message, statueText;
         Level countLevel;
         bool levelHasCountDoor;
         readonly Image[] pips = new Image[Rules.Steps];
@@ -36,6 +36,7 @@ namespace SevenSteps.Game.UI
         ProgressData lastProgress;
 
         public bool SettingsOpen => settings.IsOpen;
+        public void CloseSettings() => settings.Close();
 
         public HudView(GameController game, int levelCount, SaveSystem save)
         {
@@ -75,6 +76,10 @@ namespace SevenSteps.Game.UI
             // Status row
             stageTitle = Ui.Label(root, "", 22, Ui.Ink, TextAnchor.MiddleLeft, "StageTitle");
             stageTitle.rectTransform.Place(new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -64), new Vector2(360, 40));
+            // The stage hint stays under the title for the whole stage (the bottom message changes with every step).
+            stageHint = Ui.Label(root, "", 15, Ui.Dim, TextAnchor.UpperLeft, "StageHint");
+            stageHint.horizontalOverflow = HorizontalWrapMode.Wrap;
+            stageHint.rectTransform.Place(new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -86), new Vector2(400, 60));
 
             var pipRow = Row(root, "Pips", 8, TextAnchor.MiddleCenter);
             pipRow.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -60), new Vector2(Rules.Steps * 48, 42));
@@ -176,6 +181,7 @@ namespace SevenSteps.Game.UI
         {
             lastState = s; lastStage = levelIdx; lastCount = levelCount; lastMsg = msg; lastProgress = progress;
             stageTitle.text = $"{levelIdx + 1}. {s.Level.Name}";
+            stageHint.text = s.Level.Hint; // levels.js hint as written (level design); the solution (H) stays separate
             int next = s.Used + 1;
             for (int k = 0; k < Rules.Steps; k++)
             {
@@ -220,9 +226,12 @@ namespace SevenSteps.Game.UI
             {
                 int used = s.Level.Bodies - s.Bodies + 1;
                 int k = progress.bestStage.IndexOf(levelIdx);
-                string best = k >= 0 ? $" (최고 기록 {progress.bestBodies[k]}개)" : "";
+                // Shown only after a clear: "몸 2개 (최소 1개 · 최고 기록 2개)". Minimum = JS solver's expected.minBodies.
+                int min = LevelCatalog.MinBodies(levelIdx);
+                string detail = min > 0 ? $"최소 {min}개" : "";
+                if (k >= 0) detail += (detail.Length > 0 ? " · " : "") + $"최고 기록 {progress.bestBodies[k]}개";
                 overlayTitle.text = "클리어";
-                overlayBody.text = $"몸 {used}개를 썼다.{best}" + (last ? "\n모든 스테이지를 끝냈다. 고맙습니다!" : "");
+                overlayBody.text = $"몸 {used}개" + (detail.Length > 0 ? $" ({detail})" : "") + (last ? "\n모든 스테이지를 끝냈다. 고맙습니다!" : "");
                 overlayNext.SetActive(!last);
                 overlayAgain.SetActive(true);
                 overlaySelect.SetActive(true);
