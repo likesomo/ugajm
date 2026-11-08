@@ -453,6 +453,7 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | B. 아이소메트릭 | 30~35° / 45° | 전형적인 쿼터뷰 느낌 | 방향키와 화면 방향이 45° 어긋남 → 입력 회전 필요, 튜토리얼 문구 수정 |
 
 - 기본은 **A**. `CameraRig`에 `pitch 50, yaw 0, orthographic`을 넣은 세트로 시작한다. B로 가려면 사용자·리드 결정 후 게임플레이/UI가 `GameController`에서 화면 기준 입력을 지도 방향으로 돌린다(`yaw`를 90° 단위로 반올림해 `Dir`을 회전). `TileSetValidator`가 yaw ≠ 0이면 경고한다.
+- Game 씬 `GameController`의 `overrideCamera`/`cameraRig`(27cb609, 기본 꺼짐, pitch 50)는 **미리 보기용**이다. 기준은 세트의 `cameraRig`이고, 실제 세트를 받을 때 씬 설정은 꺼 둔다(켜져 있으면 세트의 카메라가 무시된다).
 - 직교 투영 유지(퍼즐은 칸 수를 세는 게임이라 원근 왜곡이 불리). 원근은 연출용으로만.
 
 ### 12.3 프리팹 규격 (아트, 7.3 보강)
@@ -461,11 +462,13 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 - 상태 표시는 자식 이름 훅으로: 문 창살(`inactiveChild`), 게이트 색(`materialTarget` + 머티리얼 2개), 뒤집힘 벽은 variant 0/1 프리팹 두 개.
 - 바닥 무늬 반복은 `randomYaw90`.
 - 플레이어·석상: 발밑이 y = 0, 높이 1칸 이하. 플레이어 머리 위 숫자는 `player.labelOffset`.
-- 세트 자산: `Data/TileSets/<이름>.asset`(아트 소유). 임시 세트 `TopDown_Placeholder`는 대체될 때까지 남긴다.
+- 세트 자산: `Data/TileSets/<이름>.asset`(아트 소유, 검사기는 이 폴더만 본다). 임시 세트 `TopDown_Placeholder`는 대체될 때까지 남긴다.
+- 파일 위치: 모델·텍스처는 공유 폴더 `Assets/Shared/**`(git 밖, `.meta` 포함), 프리팹은 `Prefabs/Tiles/**`, 머티리얼은 `Art/**`(둘 다 git). 프리팹·머티리얼이 공유 폴더의 GUID를 참조하므로 공유 폴더 파일을 지우거나 GUID를 바꾸면 모든 작업 공간에서 메시가 빈다.
+- WebGL은 **Mobile 품질(`Mobile_RPAsset`)** 로 돈다. 그림자·포스트 효과·셰이더는 Mobile 렌더러 기준으로 확인한다(Windows의 PC 품질에서만 보면 놓친다).
 
 ### 12.4 받는 절차 (아트 세트가 오면)
-1. 아트: `Data/TileSets/`에 세트를 만들고 `unity.sh` 배치 또는 메뉴 **Seven Steps > Architecture > Validate TileSets**로 검사(오류 0). 검사: 빠진 프리팹(오류), 없는 자식 훅·Animator 트리거(오류), 한 칸보다 큰 크기·중심 어긋남·바닥 윗면 y≠0(경고), 쿼터뷰 yaw(경고). 배치: `-executeMethod SevenSteps.EditorTools.TileSetValidator.BatchValidate`(오류면 exit 1).
-2. 게임플레이/UI: `AppConfig.tileSet`에 지정 → 17스테이지 smoke 스크린샷으로 확인 → WebGL 빌드를 **브라우저에서** 연다(CLAUDE.md 규칙).
+1. 아트: `Data/TileSets/`에 세트를 만들고 `unity.sh` 배치 또는 메뉴 **Seven Steps > Architecture > Validate TileSets**로 검사(오류 0). 검사: 빠진 프리팹(오류), 없는 자식 훅(오류), Animator에 없는 트리거(오류, Animator 자체가 없으면 경고: 코드 트윈 사용), 한 칸보다 큰 크기·중심 어긋남·바닥 윗면 y≠0(경고), 쿼터뷰 yaw(경고). 배치: `-executeMethod SevenSteps.EditorTools.TileSetValidator.BatchValidate`(오류면 exit 1).
+2. 게임플레이/UI: `AppConfig.tileSet`에 지정 → `unity.sh build-win` + `smoke`(리플레이 7개 스크린샷, 17스테이지 전부는 아님. 기믹이 빠진 스테이지는 에디터에서 `[` `]`로 직접 본다) → `unity.sh build-webgl` + **`smoke-webgl`**(보드 픽셀 수·콘솔 예외. 픽셀 기준 500은 임시 아트 색으로 잡은 값이라 실제 세트에서는 다시 잡아야 할 수 있음).
 3. 아키텍트: 스크린샷과 검사 결과로 검토. 가림·라벨 위치 문제는 세트 값(`labelOffset`, 벽 높이)으로 먼저 해결한다.
 
 ### 12.5 필요할 때만 하는 코드 작업
@@ -474,7 +477,7 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 안 B(yaw 45°) 채택 | 입력 회전, 안내 문구 | 게임플레이/UI |
 | 벽이 뒤 칸을 가림(높이 줄여도) | 카메라 쪽 벽 반투명(셀 단위 머티리얼 교체, 플레이어보다 앞 행만) | 게임플레이/UI |
 | 탑다운/쿼터뷰 실행 중 전환(디버그) | `BoardView.Init(새 세트)` + `session` 상태로 `Rebuild` | 게임플레이/UI |
-| 그림자·조명 | Game 씬의 방향광(그림자 켬), PC 품질 유지(Mobile은 WebGL에서 3D가 안 그려짐, CLAUDE.md) | 게임플레이/UI(씬), 아트(RPAsset) |
+| 그림자·조명 | Game 씬의 방향광(그림자 켬), 품질 설정은 그대로(WebGL = Mobile). 그림자는 `Mobile_RPAsset`에서 켠다. 예전의 "PC 품질 유지"는 틀렸다: 보드 누락의 원인은 빌드 시작 때의 활성 타깃이었다(CLAUDE.md) | 게임플레이/UI(씬), 아트(RPAsset) |
 | 세트 필드 추가(새 기믹) | `TileKind`/`TileSet` 끝에 추가, 검사 목록 갱신 | 아키텍트 |
 
 ---
@@ -493,3 +496,4 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 2026-11-07 | 아키텍트 | 11.5 jslib 함수 이름을 게임플레이/UI 57907b9 구현에 다시 맞춤(`TelemetryBeacon`, `TelemetryRegisterVisibility`, telemetry.md 이름). feat/view 재검토 기록 |
 | 2026-11-07 | 아키텍트 | 11.5 jslib 이름을 실제 코드(7lucky c12fd42: jslib·`DllImport`)에 맞춰 `SevenSteps_SendBeacon`/`SevenSteps_RegisterVisibility`로 확정(직전 정정 되돌림). 이름을 바꿀 때 함께 고칠 파일 명시. feat/view 2a9e801·43f3f38 사후 검토 기록 |
 | 2026-11-07 | 아키텍트 | 12장 쿼터뷰 전환 계획(카메라 안 A 3/4 뷰 권장, 프리팹 규격 보강, 받는 절차, 필요할 때만 하는 작업). `TileSetValidator`(에디터 메뉴·배치 검사) 추가 |
+| 2026-11-08 | 아키텍트 | 12장을 현재 코드에 맞춤: 씬 카메라 설정은 미리 보기용(12.2), 파일 위치·공유 폴더 GUID·WebGL=Mobile 품질(12.3), 검사기 트리거 오류 기준, smoke 7개·smoke-webgl 절차(12.4), "PC 품질 유지" 삭제(12.5). API 변경 없음 |
