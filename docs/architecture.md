@@ -309,7 +309,7 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 | `Scenes/Game.unity` | 2 | 상태 `Game`(보드, HUD, `GameController`), `Result`(클리어/실패 패널, 다음·재시도·스테이지 선택). 같은 씬 안 오버레이 | 게임플레이/UI |
 
 - 씬 사이 전달값은 `Services`에 등록된 `AppFlow.Stage`(시작 스테이지)와 `LaunchOptions`(리플레이 등)로 넘긴다. 정적 전역 변수를 따로 만들지 않는다. 영구 싱글턴(`DontDestroyOnLoad`)은 Boot가 만든 하나(오디오·텔레메트리 전송용 러너)만 둔다.
-- 에디터에서 `Game.unity`를 바로 Play하면 Boot를 거치지 않는다. 그래서 `Game`의 진입 코드는 `Services.Has<AppFlow>()`가 거짓이면 같은 부트스트랩 함수를 직접 부른다(테스트·디버그 편의, v0의 `startLevel`/`replay` 유지).
+- 에디터에서 `Game.unity`를 바로 Play하면 Boot를 거치지 않는다. 그래서 각 씬의 진입 코드는 **이번 Play에서 부트스트랩이 돌지 않았으면** 같은 부트스트랩 함수를 직접 부른다(테스트·디버그 편의, v0의 `startLevel`/`replay` 유지). `Services.Has<AppFlow>()`로 판단하지 않는다: 이 프로젝트는 에디터 도메인 리로드가 꺼져 있어(`EditorSettings` `m_EnterPlayModeOptions: 1`) 정적 상태가 Play 사이에 남는다(9장 "정적 가변 상태").
 - 씬 안의 오브젝트는 최소로(카메라, 라이트, 루트 하나) 두고 내용은 프리팹으로 나눈다. 한 씬은 한 에이전트만 고친다.
 - 빌드 씬 목록(`ProjectSettings/EditorBuildSettings.asset`)은 리드가 바꾼다. 씬 분리는 2단계 게임플레이/UI 작업이고, 그때까지 v0의 `Game.unity` 하나로 동작한다.
 - 프리팹: 타일·액터 `Prefabs/Tiles/**`(아트), UI 프리팹 `UI/**`(게임플레이/UI), `Prefabs/Generated/**`(v0 임시, 리드의 `ProjectSetup`이 생성).
@@ -326,6 +326,22 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 - **매 프레임 할당 금지**: `Update`/`LateUpdate`에서 LINQ, `params` 배열, 문자열 결합, 람다 캡처, `GetComponent*` 금지. 문자열은 상태가 바뀔 때만 만든다. (v0 `GameController.Pressed(params ...)`+`Any`는 2단계에서 고칠 것)
 - **입력**: Input System만 쓴다(`Keyboard.current` 또는 `InputSystem_Actions`). 레거시 `Input` 클래스 금지.
 - **에디터 코드**는 `Scripts/Editor`의 `SevenSteps.Editor` 어셈블리에만. 런타임 코드에서 `#if UNITY_EDITOR`는 최소화.
+- **구조 원칙 (사용자 지시 2026-11-08)**: 객체지향, MVC, 단정적 프로그래밍. 근거·사례는 `docs/scene-flow.md` 1장. 새 코드와 이번에 손대는 코드에 적용하고, 기존 코드는 `scene-flow.md` 5장 단계 계획대로 옮긴다(한꺼번에 고치지 않는다).
+- **MVC**:
+  - Model: Core, `GameSession`, `AppFlow`, `SaveSystem`. 순수 C#, 변경은 C# 이벤트로 알린다. View 구체 타입을 모른다. 예외 하나: `GameSession`은 Contracts의 `IBoardPresenter` 인터페이스로 연출을 순서대로 부른다(4장, 입력 락·시퀀싱 계약).
+  - View: 표시 전용 MonoBehaviour·프리팹. 사용자 조작은 `event Action...`으로 낸다. Model을 바꾸지 않고 `Services`를 읽지 않는다. Model 데이터(`State`, `ProgressData` 등)는 읽기 전용으로 받아 그린다.
+  - Controller: 입력·View 이벤트 → Model 명령, Model 이벤트 → View 갱신. 보드 진행 컨트롤러와 화면 흐름 컨트롤러는 다른 클래스다.
+  - 참조 방향: Controller → View, Controller → Model. View → Model은 읽기 전용 데이터만. Model → 아무것도(위 예외 제외).
+- **조립**: 씬마다 루트 `MonoBehaviour` 하나(`*SceneRoot`)가 `Services`에서 한 번 꺼내 컨트롤러·뷰를 생성자(또는 `Bind`)로 연결한다. 그 밖의 클래스는 `Services`를 부르지 않는다.
+- **단정적 프로그래밍(fail fast)**:
+  - 공개 메서드는 인자·상태를 먼저 검사하고 `ArgumentNullException`/`ArgumentOutOfRangeException`/`ArgumentException` 또는 `InvalidOperationException`을 던진다. 메시지에 값과 이유를 넣는다.
+  - **게임 규칙상 안 되는 플레이어 명령은 예외가 아니다.** 벽으로 이동, 쓸 수 없는 KEEP 등은 `Rules.Dispatch`가 지금처럼 결과로 처리한다(`core.js`와 같은 결과, 골든 테스트). 흐름에서 지금 할 수 없는 키 입력도 컨트롤러가 조건을 드러내 무시한다(`if (!flow.CanGo(...)) return;`).
+  - 내부 불변식: Game 어셈블리는 `UnityEngine.Assertions.Assert`(릴리스에서 빠짐). **Core에서는 `Debug.Assert`를 쓰지 않는다**(Unity 플레이어에서 실패해도 아무 일이 없을 수 있다). 꼭 지켜야 하는 것은 예외로 쓰고, `Solver`의 탐색 루프 같은 뜨거운 경로에는 검사를 넣지 않는다. 플레이어에서도 막아야 하는 것은 Assert가 아니라 예외로 쓴다.
+  - 필수 직렬화 참조는 `Awake`에서 검사해 필드 이름을 넣어 예외, 에디터는 `OnValidate`에서 `Debug.LogError(..., this)`. null을 보고 조용히 `return`하거나 기본 인스턴스로 바꾸지 않는다.
+  - 예외(복구 + 경고 로그)는 외부 입력뿐이다: 실행 인자·URL(원래 값을 로그에 넣고 가까운 값으로 고침), 손상된 저장 데이터(기본값), 네트워크(텔레메트리 재시도 규칙, telemetry.md 4장).
+  - WebGL은 `webGLExceptionSupport: 1`(명시적으로 던진 예외만)이다. **NullReferenceException 같은 암묵적 예외는 WebGL에서 잡히지 않고 실행이 멈출 수 있다.** 그래서 null을 그냥 쓰지 말고 먼저 검사해서 던진다.
+- **정적 가변 상태**: 런타임 정적 필드(캐시, `Services`, 플래그)는 `[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]`에서 비운다. 에디터 도메인 리로드가 꺼져 있다. 정적 이벤트도 같다. Core는 정적 가변 상태 금지(위).
+- **빌드 전 검증**: 씬·프리팹·`AppConfig`·`TileSet` 필수 연결은 에디터 검증기(`TileSetValidator`, `SceneFlowValidator`, 메뉴 + 배치, 오류면 exit 1)로 잡는다.
 - **테스트**: Core와 Contracts는 EditMode 테스트로 검증한다. 실행: `Unity.exe -batchmode -projectPath unity -runTests -testPlatform EditMode -testResults reports/tests-editmode.xml -logFile -` (`-quit` 넣지 않음).
 
 ---
@@ -499,3 +515,4 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 2026-11-07 | 아키텍트 | 12장 쿼터뷰 전환 계획(카메라 안 A 3/4 뷰 권장, 프리팹 규격 보강, 받는 절차, 필요할 때만 하는 작업). `TileSetValidator`(에디터 메뉴·배치 검사) 추가 |
 | 2026-11-08 | 아키텍트 | 12장을 현재 코드에 맞춤: 씬 카메라 설정은 미리 보기용(12.2), 파일 위치·공유 폴더 GUID·WebGL=Mobile 품질(12.3), 검사기 트리거 오류 기준, smoke 7개·smoke-webgl 절차(12.4), "PC 품질 유지" 삭제(12.5). API 변경 없음 |
 | 2026-11-08 | 아키텍트 | 6장: `expected.minBodies` 런타임 사용(클리어 화면 최소 몸 수, feat/view 5a2180a) 명시. 형식 변경 없음 |
+| 2026-11-08 | 아키텍트 | 9장에 구조 원칙(OOP·MVC·단정적, 사용자 지시) 추가: scene-flow.md 1.4 문안을 조정해 반영(GameSession→IBoardPresenter 예외, 규칙상 안 되는 명령은 예외 아님, Core에 Debug.Assert 금지, WebGL 예외 설정, 참조 방향 정정). 8장 직접 Play 판단을 "이번 Play에서 부트스트랩이 돌았는가"로 수정 |
