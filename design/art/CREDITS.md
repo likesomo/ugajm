@@ -8,6 +8,7 @@
 |---|---|---|
 | 테스트 7 메달, UI 스킨, 몸·발자국·숫자 문, 행운 도장 | OpenAI GPT 이미지 생성, Codex 내장 image_gen, 2026-11-07. 외부 입력 이미지 없음. CC0/OFL/Asset Store 에셋으로 표시하지 않음 | `C:\unityjam\shared-assets\seven-steps\concepts\`의 PNG 4장. 콘셉트만 생성, 게임 반영 전. 프롬프트는 [README](concepts/README.md) |
 | 문화의 일곱 테마 시안 5종, 추천 2종 HUD, 카메라 3시점 비교 및 보드 수정안 | OpenAI GPT 이미지 생성, Codex 내장 image_gen, 2026-11-08. 자체 생성 보드만 수정 참조로 사용; 외부 게임·문화재 이미지 입력 없음. 생성물을 CC0로 표시하지 않음 | `C:/unityjam/shared-assets/seven-steps/concepts/themes/` 및 `concepts/camera-styles.png`. 게임 미반영. 목록·문헌은 [theme-research.md](theme-research.md), 전체 프롬프트는 공유 폴더 `themes/generation-manifest.json` |
+| 북두칠성 동서양 퓨전 3변형: 보드·일곱째 연출·타이틀 각 1장과 추천안 오브젝트 시트 (최종 10장) | OpenAI GPT 이미지 생성, Codex 내장 image_gen, 2026-11-08. 이번 자체 생성 보드·시트만 수정 참조, 외부 이미지 입력 없음. 별자리 구조는 IAU·홍콩우주박물관·NASA 문헌으로 확인 | `C:/unityjam/shared-assets/seven-steps/concepts/themes/dipper-fusion/`. 게임 미반영. 최종 파일·비율·추천은 [북두칠성 퓨전](theme-research.md#북두칠성-퓨전--사용자-선택-방향의-후속-시안), 전체 프롬프트는 공유 폴더 `dipper-fusion/generation-manifest.json`. SVG 진행 기준은 자체 코드 도식 |
 
 ## 권장 무료 출처 (아직 미채택)
 
