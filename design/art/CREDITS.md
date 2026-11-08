@@ -14,6 +14,10 @@
 
 2026-11-08 Blender 재설계: GPT 3D 보드·키트3쌍, 추천안 턴어라운드·재질 보드의 최종8장은 `C:/unityjam/shared-assets/seven-steps/concepts/themes/dipper-3d/`에 있다. 내장 image_gen으로 생성했고 외부 이미지 입력 없이 이번 자체 생성 키트만 추가 시안의 참조로 사용했다. 실제 Blender 렌더가 아닌 제작 목표 시안이며 CC0라고 표시하지 않는다. [제작 파이프라인](blender-pipeline.md)과 [리서치](theme-research.md)에 분담·예산·설치 미완료로 실렌더를 생략한 상태를 기록했다. Python 생성 스크립트는 자체 제작 텍스트 소스이며 바이너리 에셋을 포함하지 않는다.
 
+## 다수 시안과 실제 Blender 결과
+
+후속 다수 시안(2026-11-08): 사용자 요청으로 서로 다른5개 보드와 상위3개 연출을 최종 선정했다. GPT 이미지8장은 `C:/unityjam/shared-assets/seven-steps/concepts/themes/dipper-3d-variants/<번호-slug>/`에 있다. 자체 고정 SVG/PNG로 정확한 국자 연결을 참조했으며 외부 그림 입력은 없다. Blender5.2.3 LTS의 실제 블록아웃 `.blend`·EEVEE PNG·팔레트·FBX17개는 같은 공유 루트 `blender/`에 있다. Python 소스와 구름문 trim 생성은 자체 제작, Blender 프로그램 및 외부 에셋 바이너리는 커밋하지 않는다. 프롬프트는 공유 `generation-manifest.json`, 제작·검증 근거는 [리서치](theme-research.md)와 [파이프라인](blender-pipeline.md)에 기록했다.
+
 ## 권장 무료 출처 (아직 미채택)
 
 | 제작자 / 팩 | 원문·라이선스 | 용도 |

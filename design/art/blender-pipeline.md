@@ -50,7 +50,7 @@
 
 ## 팔레트 아틀라스·UV·재질
 
-생산 기본은 **공유 팔레트 그라디언트 아틀라스1장, 최대512×512 RGBA**다. 블록아웃 스크립트는256×256 RGB8색 띠만 생성한다. 원본 .blend 안에도 동일 이미지를 연결하고 FBX에는 임베드하지 않는다. 최종 원본 텍스처와 .meta는 공유 폴더에만 둔다.
+생산 기본은 **공유 팔레트 그라디언트 아틀라스1장, 최대512×512 RGBA**다. 블록아웃 스크립트는256×256 RGB8색 띠와 하단32px의 작은 구름문 trim을 한 장에 생성한다. 색 lookup UV는v≥.15, trim은v<.125라 서로 겹치지 않는다. 원본 .blend 안에도 동일 이미지를 연결하고 FBX에는 임베드하지 않는다. 최종 원본 텍스처와 .meta는 공유 폴더에만 둔다.
 
 - UV0는 색 띠를 참조한다. 단색면은 최소4×4px 영역, 띠 경계에서4px 패딩, 미세한 명도 변화는 세로 그라디언트로 해결한다. UV seam은 망토 뒤·바닥 아래·블록 뒤쪽으로 보낸다. 색 lookup 방식에는 ‘미터당 texel’ 개념을 강제하지 않는다.
 - 무늬가 있는 외곽 trim만 **128px/m**를 기준으로 하며1m부품은128px 길이, 허용 오차±10%. 패딩4px·최소 선폭2px. 팔레트와 trim을 한 장에 배치한 생산 아틀라스에서만 적용한다. 바닥 중앙에는 선·섬유 무늬를 넣지 않는다. 보조 UV1은 이 trim/절차노이즈의 일관된 크기 좌표용이며 두 번째 텍스처를 뜻하지 않는다.
@@ -117,9 +117,13 @@ Unity 후속 임포트(이번 미수행): Scale Factor1, Convert Units ON, Norma
 [build_dipper_blockout.py](blender/build_dipper_blockout.py)는 외부 패키지 없이 bpy로17모듈·팔레트1장·6재질·6×6보드·EEVEE 카메라/광원을 만든다. 플레이어/석상은 실제 동일 Mesh datablock이다. 숫자 글자는 PREVIEW 컬렉션의 렌더 보조물이며 FBX 대상에서 제외한다. 캐릭터·문·벽 높이는 스크립트 assert로 확인한다. 결과 JSON에는 모디파이어 적용 후 실제 tris·Bounds·재질 슬롯을 쓴다.
 
 ```powershell
-& 'C:/Program Files/Blender Foundation/Blender <version>/blender.exe' -b -P design/art/blender/build_dipper_blockout.py -- --out C:/unityjam/shared-assets/seven-steps/concepts/themes/dipper-3d/blender --export-fbx
+& 'C:/Program Files/Blender Foundation/Blender 5.2/blender.exe' -b --python-exit-code 1 -P design/art/blender/build_dipper_blockout.py -- --out C:/unityjam/shared-assets/seven-steps/concepts/themes/dipper-3d-variants/blender --export-fbx
 ```
 
 출력은 지정 공유 `dipper-3d/` 아래로 제한된다. `.blend`, `.fbx`, 팔레트png·렌더png·측정JSON은 공유 폴더에만 두며 git에 넣지 않는다. 스크립트는 설치가 끝난 Blender에서 재실행할 수 있다. GPT 보드·키트 이미지는 조형 목표, EEVEE 렌더가 있다면 **실제 생성된 프록시의 증거**이며 둘을 같은 수준의 완성품으로 주장하지 않는다.
 
-이번 실행 상태: 작업 중 및 마무리 전 `C:/Program Files/Blender Foundation/Blender */blender.exe`를 확인했으나 실행 파일이 없었다. winget·msiexec 설치 프로세스는 관찰되었지만 완료로 간주하지 않았다. 사용자 지시의 조건대로 **실제 Blender 실행·EEVEE 렌더·FBX 내보내기는 생략**했다. 스크립트는 준비되었으나 bpy 실행/파일 임포트/실제 삼각형 측정은 미검증이며, `blockout-report.json`이나 `.blend/.fbx`가 생성되었다고 주장하지 않는다. 본 스크립트의6재질에는 PREVIEW/Studio2개가 포함되고, 게임 재질6종의 구성과는 역할 구분이 다르다.
+직전3D 재설계 당시에는 설치가 끝나지 않아 실제 Blender 실행을 생략했다. **후속 다수 시안 작업에서 설치 완료 안내를 받아 Blender5.2.3 LTS로 실제 실행·EEVEE 렌더·FBX17개 내보내기까지 검증했다.** 5.2의 렌더 엔진 enum은 `BLENDER_EEVEE`라 기존 `BLENDER_EEVEE_NEXT`와의 fallback을 추가했다. `--python-exit-code 1`로 Python 오류를 정상 종료와 혼동하지 않게 했다.
+
+실제 결과는 `C:/unityjam/shared-assets/seven-steps/concepts/themes/dipper-3d-variants/blender/`의 `SS_Dipper_Blockout.blend`, `blockout-eevee.png`, `SS_Palette_256.png`, `blockout-report.json`, `fbx/*.fbx`다. 가시 보드4,584tris, 모듈17종, 공유재질6종, 같은 플레이어/석상 Mesh datablock과 문·벽≤.6/몸≤1/바닥윗면0 assert가 통과했다. 바닥44tris·얼음176·문132·레버116·몸100, 몸의 실제 높이.87m다. 고정 별 좌표·연결은 PREVIEW 컬렉션에만 있고 FBX에 넣지 않는다. 공유 재질6종에는 PREVIEW/Studio2개가 포함되어 게임의 최종6종 구성과 역할은 다르다. Unity 임포트·WebGL 플레이 성능은 아직 검증하지 않았다.
+
+출력 경로 가드는 `dipper-3d/` 또는 `dipper-3d-variants/` 공유 하위만 허용한다. 실제 블록아웃에는 두 개의 먹돌 받침과 얇은 구리 띠·같은 아틀라스 하단 trim을 더했지만 GPT 배경·최종 광택·완성게임UI를 재현한 것은 아니다. 여러 기믹을 모은 프리뷰 보드이며 솔버로 검증한 실제 레벨이 아니다.

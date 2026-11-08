@@ -23,17 +23,21 @@ def arguments():
 
 ARGS = arguments()
 OUT = Path(ARGS.out).resolve()
-SAFE_ROOT = Path('C:/unityjam/shared-assets/seven-steps/concepts/themes/dipper-3d').resolve()
-if OUT != SAFE_ROOT and SAFE_ROOT not in OUT.parents:
+SAFE_ROOTS = [Path('C:/unityjam/shared-assets/seven-steps/concepts/themes/' + name).resolve()
+              for name in ('dipper-3d', 'dipper-3d-variants')]
+if not any(OUT == r or r in OUT.parents for r in SAFE_ROOTS):
     raise ValueError('Output must stay inside the named shared dipper-3d folder')
 OUT.mkdir(parents=True, exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
 scene.unit_settings.system = 'METRIC'
 scene.unit_settings.scale_length = 1.0
-scene.render.engine = 'BLENDER_EEVEE_NEXT'
+try:
+    scene.render.engine = 'BLENDER_EEVEE_NEXT'  # Blender 4.x
+except TypeError:
+    scene.render.engine = 'BLENDER_EEVEE'       # Blender 5.2+
 scene.render.resolution_x = 1600
-scene.render.resolution_y = 1100
+scene.render.resolution_y = 1200
 scene.render.resolution_percentage = 100
 scene.render.image_settings.file_format = 'PNG'
 scene.render.film_transparent = False
@@ -73,7 +77,14 @@ pixels = []
 for y in range(256):
     shade = 0.90 + 0.10 * y / 255.0
     for x in range(256):
-        pixels.extend([*(v * shade for v in rgb(PALETTE[x // 32])), 1.0])
+        color = rgb(PALETTE[x // 32])
+        if y < 32:  # Reserved trim strip; palette UV lookup starts above 0.15.
+            u = x % 64
+            outer = ((u - 32) / 22) ** 2 + ((y - 15) / 10) ** 2
+            inner = ((u - 26) / 12) ** 2 + ((y - 15) / 6) ** 2
+            ink = abs(outer - 1) < .20 or abs(inner - 1) < .25
+            color = rgb('263B41' if ink else 'BBA171')
+        pixels.extend([*(v * shade for v in color), 1.0])
 atlas.pixels = pixels
 atlas.filepath_raw = str(OUT / 'SS_Palette_256.png')
 atlas.file_format = 'PNG'
@@ -104,6 +115,15 @@ METAL = material('SS_M_MetalAtlas', 0.4, 0.55)
 GLAZE = material('SS_M_GlazeAtlas', 0.28)
 FROST = material('SS_M_FrostOpaqueAtlas', 0.45)
 LABEL = material('SS_M_PreviewLabel_NO_EXPORT', 1, color='EAE8D8', emission=True)
+label_bsdf = LABEL.node_tree.nodes['Principled BSDF']
+label_info = LABEL.node_tree.nodes.new('ShaderNodeObjectInfo')
+label_tint = LABEL.node_tree.nodes.new('ShaderNodeMixRGB')
+label_tint.blend_type = 'MULTIPLY'
+label_tint.inputs[0].default_value = 1
+label_tint.inputs[1].default_value = label_bsdf.inputs['Base Color'].default_value
+LABEL.node_tree.links.new(label_info.outputs['Color'], label_tint.inputs[2])
+LABEL.node_tree.links.new(label_tint.outputs[0], label_bsdf.inputs['Base Color'])
+LABEL.node_tree.links.new(label_tint.outputs[0], label_bsdf.inputs['Emission Color'])
 STAGE = material('SS_M_Studio_NO_EXPORT', 0.9, color='152239')
 assert len(bpy.data.materials) == 6
 
@@ -235,6 +255,14 @@ def instance(kind, x, y, z=0):
 
 COL = BOARD
 box('BoardPlinth', (6.45, 6.45, .25), (0, 0, -.245), 0, bevel=.06)
+for x in (-2.15, 2.15):
+    box('TransverseStoneFoot', (.65, 5.8, .36), (x, 0, -.55), 0, bevel=.035)
+band = box('FrontBronzeBand', (6.20, .035, .09), (0, -3.25, -.18), 4, METAL, .008)
+for loop in band.data.loops:
+    vertex = band.data.vertices[loop.vertex_index].co
+    band.data.uv_layers.active.data[loop.index].uv = (
+        .02 + (vertex.x + 3.1) / 6.2 * .96,
+        .005 + (vertex.z + .225) / .09 * .115)
 pit_cells = {(1, 3), (2, 3)}
 for row in range(6):
     for col in range(6):
@@ -243,8 +271,8 @@ for row in range(6):
             instance('PitRim' if col == 1 else 'Bridge', x, y)
         else:
             instance('Ice' if col == 3 and row in (1, 2, 3) else 'Cracked' if (col, row) == (0, 4) else 'Floor', x, y)
-instance('Player', -.5, -1.5)
-instance('Statue', -1.5, .5)
+instance('Player', 1.5, -1.5, .08)
+instance('Statue', -.5, .5, .04)
 instance('NumberDoor', 1.5, 1.5)
 instance('CountDoor', -1.5, 1.5)
 instance('Lever', 1.5, -1.5)
@@ -262,7 +290,7 @@ for x in (-3.08, 3.08):
         instance('Border_Corner', x, y)
 
 COL = STUDIO
-box('StudioGround', (200, 200, .1), (0, 0, -.6), 0, STAGE, 0)
+box('StudioGround', (200, 200, .1), (0, 0, -.83), 0, STAGE, 0)
 
 
 def area(name, location, energy, size, color):
@@ -284,12 +312,12 @@ cam = bpy.data.objects.new('SS_Camera', cam_data)
 STUDIO.objects.link(cam)
 angle = math.radians(50)
 cam.location = (0, -12 * math.cos(angle), 12 * math.sin(angle))
-target = Vector((0, .2, .1))
+target = Vector((0, .2, .1)) + Vector((0, math.sin(angle), math.cos(angle))) * .5
 # Aim is exactly 50 degrees down, yaw zero; target accounts only for framing.
 cam.location = target + Vector((0, -12 * math.cos(angle), 12 * math.sin(angle)))
 cam.rotation_euler = (target - cam.location).to_track_quat('-Z', 'Y').to_euler()
 cam_data.type = 'ORTHO'
-cam_data.ortho_scale = 9.2
+cam_data.ortho_scale = 11.5
 scene.camera = cam
 
 
@@ -303,11 +331,39 @@ def preview_text(body, location, size=.22):
     obj.location = location
     obj.rotation_euler = cam.rotation_euler
     curve.materials.append(LABEL)
+    return obj
 
 
 preview_text('3', (1.5, 1.35, .65))
 preview_text('STONE = 1', (-1.5, 1.35, .65), .16)
-preview_text('BLENDER EEVEE BLOCKOUT | 1 CELL = 1 m', (0, 3.15, .6), .20)
+preview_text('BLENDER EEVEE BLOCKOUT | 1 CELL = 1 m', (0, -3.65, .05), .18)
+# Fixed seven-node diagram in camera space. PREVIEW only, never in FBX meshes.
+frame_center = target
+right = cam.rotation_euler.to_quaternion() @ Vector((1, 0, 0))
+up = cam.rotation_euler.to_quaternion() @ Vector((0, 1, 0))
+points = [(100, 60), (90, 220), (400, 270), (500, 150), (720, 180), (910, 220), (1130, 340)]
+hud = [frame_center + right * (-3.5 + x * 7 / 1280) + up * (4.0 - y * 7 / 1280)
+       for x, y in points]
+for a, b in [(1, 2), (2, 3), (3, 4), (4, 1), (4, 5), (5, 6), (6, 7)]:
+    curve = bpy.data.curves.new('PREVIEW_DipperEdge', 'CURVE')
+    curve.dimensions = '3D'
+    curve.bevel_depth = .008
+    curve.bevel_resolution = 0
+    spline = curve.splines.new('POLY')
+    spline.points.add(1)
+    for p, xyz in zip(spline.points, (hud[a-1], hud[b-1])):
+        p.co = (*xyz, 1)
+    obj = bpy.data.objects.new('PREVIEW_Edge_%d_%d' % (a, b), curve)
+    PREVIEW.objects.link(obj)
+    curve.materials.append(LABEL)
+    if (a, b) == (6, 7):
+        obj.color = (1, .24, .10, 1)
+for i, point in enumerate(hud, 1):
+    star = preview_text('+', point - up * .045, .16)
+    number = preview_text(str(i), point + right * .12 + up * .11, .17)
+    if i == 7:
+        star.color = number.color = (1, .24, .10, 1)
+preview_text('7', (1.5, -1.85, .1), .20).color = (1, .24, .10, 1)
 stats = {}
 for key, r in modules.items():
     triangles = 0
@@ -330,6 +386,15 @@ report = {'blender_version': bpy.app.version_string, 'engine': scene.render.engi
           'camera_pitch': 50, 'camera_yaw': 0, 'shared_material_count': len(bpy.data.materials),
           'module_count': len(modules), 'modules': stats, 'preview_labels_exported': False,
           'statue_shared_mesh': True, 'unity_import_tested': False}
+report['hud_nodes'] = points
+report['hud_edges'] = [[1, 2], [2, 3], [3, 4], [4, 1], [4, 5], [5, 6], [6, 7]]
+board_triangles = 0
+for obj in BOARD.objects:
+    if obj.type == 'MESH':
+        obj.data.calc_loop_triangles()
+        board_triangles += len(obj.data.loop_triangles)
+report['visible_board_triangles'] = board_triangles
+assert board_triangles < 50000
 (OUT / 'blockout-report.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
 if ARGS.export_fbx:
     exports = OUT / 'fbx'
