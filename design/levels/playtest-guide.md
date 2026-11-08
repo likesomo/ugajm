@@ -1,7 +1,7 @@
 # 사람 플레이테스트 안내 (17스테이지, Unity WebGL / 웹 프로토타입)
 
 목적: 흥미도 모델(`interest-model.md`)이 예측한 막힘·지루함 지점이 실제와 맞는지 확인하고, 가중치를 보정할 기록(`telemetry-mapping.md`)을 모은다. 그리고 6 숫자 문 보강과 힌트 문구 변경을 할지 7장 기준으로 결정한다.
-대상: `7lucky` 3a37d11 기준 17스테이지 (석상 수 문 3개, 레버 2개 포함). 스테이지 맵은 b03a654 이후 바뀌지 않았다. 번호는 바뀔 수 있으니 분석은 스테이지 이름으로 한다.
+대상: `7lucky` 29b1f4a 기준 (테스트에 쓸 빌드 커밋은 리드가 `production/playtest-1-prep.md` A에 정하면 여기에도 적는다) 17스테이지 (석상 수 문 3개, 레버 2개 포함). 스테이지 맵은 b03a654 이후 바뀌지 않았다. 번호는 바뀔 수 있으니 분석은 스테이지 이름으로 한다.
 
 두 빌드는 같은 `levels.js`(Unity는 export한 `levels.json`)와 같은 규칙(C# 이식, `verify`·골든 테스트로 일치 확인)을 쓰고, 같은 스키마로 같은 서버에 기록을 보낸다. 대시보드에서는 **클라이언트 필터**로 나눠 본다.
 
@@ -12,7 +12,8 @@
 | 화면 | 3D 보드, 이동·미끄러짐 트윈 | 2D 격자, 즉시 반영 |
 | 시작 | 타이틀 → 스테이지 선택 (`?level=1`이면 바로 1번) | 바로 1번 |
 | 기록 끄기 | 설정 → "플레이 기록 보내기" (기본 켬) | 화면 아래 "기록 전송 켬/끔" |
-| 서버 주소 | **빌드에 없음** (`AppConfig.telemetryEndpoint` 비어 있음) → URL에 `?telemetry=` 필수 | `localhost`면 자동으로 8787 |
+| 서버 주소 | 빌드에는 없음(`AppConfig.telemetryEndpoint` 비어 있음). 서버의 `/webgl/`로 열면 자동으로 붙음 | `localhost`면 자동으로 8787 |
+| 힌트 문구 | feat/view 5a2180a부터 스테이지 내내 제목 아래에 **상시 표시** | 시작 때 메시지 줄에 나오고, 다른 메시지가 나오면 사라짐 |
 
 조작은 같다: 방향키/WASD/옆 칸 클릭, K KEEP, X SWITCH, Z 되돌리기, R 재시작, H 풀이 보기, `[` `]` 스테이지, Enter 다음. Unity만 Esc = 스테이지 선택.
 
@@ -22,28 +23,32 @@
 
 ### 1.1 기록 서버 (공통)
 
+자세한 당일 절차(토큰 만들기, 날짜별 DB)는 `server/README.md` "플레이테스트 날 실행 절차"를 따른다. 요약:
+
 ```bash
 export PATH="/c/Program Files/nodejs:$PATH"
-STATS_TOKEN=<아무 문자열> node server/src/index.mjs
+STATS_TOKEN=<토큰> DB_PATH=server/data/playtest-$(date +%F).sqlite node server/src/index.mjs
 #   대시보드      http://localhost:8787/dashboard#token=<토큰>
-#   웹 프로토타입  http://localhost:8787/play/        ← 같은 출처라 기록이 자동으로 쌓인다
+#   웹 프로토타입  http://localhost:8787/play/
+#   Unity WebGL   http://localhost:8787/webgl/     ← Builds/WebGL 을 제공하고 ?telemetry= 를 자동으로 붙인다
 ```
+- 날짜별 DB를 쓰면 가짜 데이터(`fake-data.mjs`)가 섞이지 않는다
 
 ### 1.2 Unity WebGL
 
 ```bash
-unity/Tools/unity.sh build-webgl     # 에디터를 닫고. → Builds/WebGL/
+unity/Tools/unity.sh build-webgl     # 에디터를 닫고 (Unity 라이선스 필요). → Builds/WebGL/
 unity/Tools/unity.sh smoke-webgl     # 보드가 그려지는지 확인 (build-webgl OK만으로는 못 거른다)
-unity/Tools/unity.sh serve           # http://localhost:8090
-#   테스터 주소   http://localhost:8090/?telemetry=http://localhost:8787
+#   테스터 주소   http://localhost:8787/webgl/    (다른 작업 공간의 빌드면 서버를 WEBGL_DIR=<폴더> 로 실행)
 ```
-- 시작 전에 진행자가 한 번 열어 1스테이지에서 몇 걸음 움직이고, 대시보드의 클라이언트 목록에 `unity-webgl`이 생기는지 확인한다. 안 생기면 주소의 `?telemetry=` 를 빠뜨린 것이다
+- `unity.sh serve`(8090)로 열 때는 `?telemetry=http://localhost:8787`을 직접 붙여야 기록된다. 테스트에는 `/webgl/`을 쓴다
+- 시작 전에 진행자가 한 번 열어 1스테이지에서 몇 걸음 움직이고, 대시보드의 클라이언트 목록에 `unity-webgl`이 생기는지 확인한다
 - 설정의 "플레이 기록 보내기"가 켬인지 확인 (예전에 끈 브라우저면 꺼져 있다)
 
 ### 1.3 공통 주의
 
 - 진행 상황(클리어 기록)과 플레이어 ID는 브라우저 저장소에 남는다 → 사람마다 **시크릿 창**을 새로 연다
-- 다른 PC의 테스터: `cloudflared tunnel --url http://localhost:8787`(서버). Unity는 게임 페이지용 터널을 하나 더(`--url http://localhost:8090`) 열고, 서버를 `ALLOWED_ORIGINS='*.trycloudflare.com'`로 실행한 뒤 `https://<게임 터널>/?telemetry=https://<서버 터널>`을 준다 (자세한 것은 `server/README.md`)
+- 같은 와이파이의 다른 기기는 `http://<이 PC IP>:8787/webgl/`(또는 `/play/`). 원격 테스터는 서버 외부 공개(터널)가 필요하므로 **사용자 승인 후**에만, `https://<터널 주소>/webgl/` (자세한 것은 `server/README.md`)
 - 웹 프로토타입만 따로 띄울 때 `python -m http.server 8777`은 이 PC에서 8777 포트가 이미 쓰이고 있을 수 있다. 기록이 필요하면 항상 `/play/`를 쓴다
 - 테스트 기간에는 스테이지와 빌드를 바꾸지 않는다. 바꾸면 `build` 값이 달라지므로 빌드 필터로 나눠 본다
 
@@ -60,7 +65,7 @@ unity/Tools/unity.sh serve           # http://localhost:8090
 
 ## 3. 스테이지별로 볼 것
 
-예측 흥미도 I와 모델이 의심하는 점이다. 진행자는 해당 스테이지에서 아래 질문의 답을 메모한다(시각, 한 줄). 특히 **힌트 문구를 읽은 직후 바로 풀었는지**(★)를 적는다. 7장 힌트 문구 결정에 쓴다.
+예측 흥미도 I와 모델이 의심하는 점이다. 진행자는 해당 스테이지에서 아래 질문의 답을 메모한다(시각, 한 줄). 특히 **힌트 문구를 읽은 직후 바로 풀었는지**(★)를 적는다. 7장 힌트 문구 결정에 쓴다. Unity는 문구가 상시 표시라 기록으로는 언제 읽었는지 알 수 없다. 문구를 소리 내어 읽거나 눈길이 가는 순간을 시각과 함께 적는다. 양식: `design/levels/playtest/TEMPLATE-notes.md`
 
 | # | 이름 | 예측 I | 확인할 것 | 실측 신호 (대시보드) |
 |---|---|---|---|---|
@@ -94,7 +99,7 @@ Unity에서만 볼 것: 3D 보드에서 숫자 문 숫자, 석상 수 문, 레�
 4. 규칙 중 끝까지 헷갈린 것
 5. 6번(숫자 문)에서 문의 숫자를 셌는가, 그냥 지나갔는가
 
-답은 `design/levels/playtest/<날짜>-notes.md`에 사람별로 적는다(이름 대신 P1, P2…, 빌드 종류 표시). 대시보드의 플레이어 ID와 연결하려면 시작 시각을 함께 적는다.
+답은 `design/levels/playtest/TEMPLATE-notes.md`를 복사해 `design/levels/playtest/<날짜>-notes.md`에 사람별로 적는다(이름 대신 P1, P2…, 빌드 종류 표시). 대시보드의 플레이어 ID와 연결하려면 시작 시각을 함께 적는다.
 
 ## 5. 기록 넘기기
 
@@ -126,7 +131,7 @@ done
 | 6이 너무 쉬움 | 표 "클리어 시간 중앙", "클리어 이동 중앙" / `attempts.csv`의 `activeMs`, `moves`, `minMoves` | 테스터별로 activeMs < 20초 **그리고** moves ≤ 1.3×minMoves 인 사람 수 = **"쉬움 n"** |
 | 6에서 문을 시험해 봄 | 히트맵 스테이지 6, 지표 "막힌 이동" | 숫자 문 칸의 막힘 횟수 (0이면 아무도 문 규칙을 건드리지 않음) |
 | 8이 실제 급상승 | 표 "클리어 시간 중앙", "재시작/시도", "힌트 본 비율", "이탈률" | 8의 클리어 시간 중앙값 ÷ 7과 9 중 큰 값 = **"8 배율"**, 8에서 풀이 보기·이탈한 사람 수 |
-| 힌트 문구가 답을 줌 | 4장 메모 ★ + `attempts.csv`의 `idleCount`, `activeMs` | 문구를 읽은 직후 idle 없이(`idleCount = 0`) 30초 안에 푼 사람 수 = **"즉답 n"** |
+| 힌트 문구가 답을 줌 | 4장 메모 ★ + `attempts.csv`의 `idleCount`, `activeMs` | 문구를 읽은 직후(메모 시각) 30초 안에, 그 사이 idle 없이 푼 사람 수 = **"즉답 n"**. 시각은 메모, idle은 `events.jsonl`의 `idle.t`로 확인 |
 | 힌트 문구가 모자람 | 표 "힌트 본 비율", "몸 낭비", "몸 사용 사유" / 히트맵 "몸 낭비" | 풀이 보기·이탈한 사람 수 = **"막힘 n"**, 규칙 오해 흔적(`fell`·`vanish`·`crumble` 뒤 재시작) |
 
 ### 7.2 6 숫자 문
