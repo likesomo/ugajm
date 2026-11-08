@@ -212,6 +212,7 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
   2. 텍스트라 git diff와 리뷰가 쉽고, `expected`(JS 솔버 답)를 함께 실어 `LevelVerifier`가 C#과 JS를 비교할 수 있다.
   3. `Core`가 엔진을 모르므로 SO를 읽을 수 없다. JSON은 Core 테스트에서 그대로 쓸 수 있다.
   4. WebGL에서 TextAsset은 빌드에 포함되므로 파일 IO가 필요 없다.
+- `expected`의 런타임 사용: 클리어 화면이 `expected.minBodies`를 `LevelCatalog.MinBodies(stage)`로 읽어 "최소 N개"로 보여 준다(feat/view 5a2180a). 0(없음)이면 표시하지 않는다. 그래서 스테이지를 바꾸면 반드시 `unity.sh levels`로 다시 내보낸다(손으로 고친 `levels.json`은 최소 수가 틀릴 수 있다). `expected.path`는 런타임에서 쓰지 않는다(H 풀이는 C# `Solver`가 계산).
 - 레벨에 기믹 글자를 추가하면: 코어가 `Level.Parse` 범례와 규칙을 고치고, 아키텍트가 `TileKind`/`TileId.FromChar`/`TileSet`에 항목을 추가한다 (enum 끝에 추가).
 
 ### 6.1 석상 수 문 (`Q`, 2026-11-07 승인)
@@ -497,3 +498,4 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 2026-11-07 | 아키텍트 | 11.5 jslib 이름을 실제 코드(7lucky c12fd42: jslib·`DllImport`)에 맞춰 `SevenSteps_SendBeacon`/`SevenSteps_RegisterVisibility`로 확정(직전 정정 되돌림). 이름을 바꿀 때 함께 고칠 파일 명시. feat/view 2a9e801·43f3f38 사후 검토 기록 |
 | 2026-11-07 | 아키텍트 | 12장 쿼터뷰 전환 계획(카메라 안 A 3/4 뷰 권장, 프리팹 규격 보강, 받는 절차, 필요할 때만 하는 작업). `TileSetValidator`(에디터 메뉴·배치 검사) 추가 |
 | 2026-11-08 | 아키텍트 | 12장을 현재 코드에 맞춤: 씬 카메라 설정은 미리 보기용(12.2), 파일 위치·공유 폴더 GUID·WebGL=Mobile 품질(12.3), 검사기 트리거 오류 기준, smoke 7개·smoke-webgl 절차(12.4), "PC 품질 유지" 삭제(12.5). API 변경 없음 |
+| 2026-11-08 | 아키텍트 | 6장: `expected.minBodies` 런타임 사용(클리어 화면 최소 몸 수, feat/view 5a2180a) 명시. 형식 변경 없음 |
