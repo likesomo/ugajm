@@ -4,16 +4,19 @@
 이벤트 스키마: [`docs/telemetry.md`](../docs/telemetry.md) (v1). 소유: 백엔드/분석 (`feat/server`).
 
 - Node.js 26 기본 모듈만 사용 (`node:http`, `node:sqlite`). 외부 패키지 없음, `npm install` 불필요
-- 같은 서버가 웹 프로토타입도 `/play/`로 제공한다 → 같은 출처라 설정 없이 플레이테스트 기록이 쌓인다
+- 같은 서버가 웹 프로토타입(`/play/`)과 Unity WebGL 빌드(`/webgl/`)도 제공한다 → 서버 하나, 주소 하나로 플레이테스트를 돌린다
 
 ## 바로 플레이테스트
 
 ```bash
 export PATH="/c/Program Files/nodejs:$PATH"
 STATS_TOKEN=secret node server/src/index.mjs
-#   play       http://localhost:8787/play/          ← 테스터에게 이 주소
+#   play       http://localhost:8787/play/          ← 웹 프로토타입
+#   webgl      http://localhost:8787/webgl/         ← Unity WebGL (Builds/WebGL)
 #   dashboard  http://localhost:8787/dashboard#token=secret
 ```
+
+`/webgl/`은 주소에 `telemetry`가 없으면 `?telemetry=<이 서버 주소>`를 붙여 다시 보낸다 (Unity 빌드의 `AppConfig.telemetryEndpoint`가 비어 있어서 주소를 알려 줘야 보낸다). `level`·`replay` 같은 다른 파라미터는 유지된다.
 
 다른 서버(`python -m http.server 8777` 등)로 프로토타입을 열어도 `localhost`면 자동으로 `http://localhost:8787`로 보낸다.
 다른 주소는 `?telemetry=https://…`(브라우저에 기억됨), 끄기는 `?telemetry=off`(또는 `0`)나 게임 화면 아래 "기록 전송" 버튼.
@@ -27,6 +30,64 @@ node server/tools/fake-data.mjs --players 80 --url http://localhost:8787        
 
 가짜 플레이어는 실제 규칙(`core.js`)과 실제 `Tracker`(`telemetry.js`)로 플레이하므로 이벤트 모양이 진짜와 같다. 8·12스테이지는 일부러 더 어렵게 시뮬레이션한다.
 
+## 플레이테스트 날 실행 절차
+
+Git Bash, 저장소 루트에서. 확인 기록: 2026-11-08 Unity WebGL 빌드(`0.1.0+ef67c4d`)와 웹 프로토타입이 이 절차로 이벤트를 보내 대시보드에 나오는 것을 확인했다 (가짜 데이터 아님).
+
+**1. 빌드 준비** (전날)
+- Unity WebGL: `unity/Tools/unity.sh build-webgl` → `unity/Tools/unity.sh smoke-webgl` (보드가 보이는지). 결과는 `Builds/WebGL/`. 다른 작업 공간의 빌드를 쓰려면 서버를 띄울 때 `WEBGL_DIR=<그 폴더>`
+- 빌드 번호는 `Application.version`(예: `0.1.0+ef67c4d`)으로 이벤트에 들어간다. 대시보드 "빌드" 필터로 나눠 본다. `-dirty`가 붙으면 커밋 안 된 변경이 있는 빌드다
+
+**2. 서버 시작** (테스트 내내 켜 둔다, 이 터미널을 닫지 않는다)
+
+```bash
+export PATH="/c/Program Files/nodejs:$PATH"
+export STATS_TOKEN=$(node -e "console.log(require('crypto').randomBytes(12).toString('base64url'))")
+echo "token: $STATS_TOKEN"                       # 적어 둔다. 대시보드·내보내기에 필요
+DB_PATH=server/data/playtest-$(date +%F).sqlite node server/src/index.mjs
+```
+
+- 토큰은 실행할 때마다 정한다. 지정하지 않으면 실행마다 랜덤 토큰이 로그에 찍힌다(재시작하면 바뀜)
+- `DB_PATH`를 날짜별로 두면 그날 데이터만 따로 모인다. 한 파일에 계속 쌓아도 대시보드 "기간" 필터·API `since`로 나눌 수 있다
+- 서버를 다시 켜도 DB 파일의 데이터는 남는다. 끄는 동안 게임이 보낸 이벤트는 게임 쪽 큐에 남았다가 다시 보낸다 (웹: `localStorage`, Unity: PlayerPrefs, 최대 1000건)
+
+**3. 테스터에게 줄 주소**
+
+| 상황 | 웹 프로토타입 | Unity WebGL |
+|---|---|---|
+| 이 PC에서 직접 | `http://localhost:8787/play/` | `http://localhost:8787/webgl/` |
+| 같은 와이파이의 다른 기기 | `http://<이 PC IP>:8787/play/` | `http://<이 PC IP>:8787/webgl/` (아래 주의) |
+| 원격 테스터 (터널, **사용자 승인 후**) | `https://<터널 주소>/play/` | `https://<터널 주소>/webgl/` |
+
+- `/webgl/`이 `?telemetry=`를 자동으로 붙이므로 주소를 그대로 주면 된다. 특정 스테이지부터: `/webgl/?level=8`, 웹은 `/play/?level=8`
+- 다른 서버에서 연 빌드는 직접 붙인다: WebGL `?telemetry=http://localhost:8787`, 데스크톱 `"Seven Steps.exe" -telemetry http://localhost:8787`, 웹 프로토타입 `?telemetry=http://localhost:8787`(브라우저에 기억됨)
+- 끄기: `?telemetry=off` (Unity는 설정 화면의 동의 항목, 웹은 화면 아래 "기록 전송")
+- 같은 와이파이: 서버는 모든 주소(`HOST=0.0.0.0`)에서 받는다. Windows 방화벽이 8787 포트를 물어보면 "개인 네트워크"만 허용. 다른 기기에서 Unity WebGL은 아직 확인하지 않았다(휴대폰은 조작이 맞지 않을 수 있음)
+- 원격 테스터용 임시 터널(계정 없이, 실행마다 주소가 바뀜): 서버를 `TRUST_PROXY=1`로 띄우고 다른 터미널에서 `cloudflared tunnel --url http://localhost:8787` → 출력된 `https://….trycloudflare.com`. `TRUST_PROXY=1`이어야 `/webgl/`이 `https://` 주소를 붙인다. **외부 공개라 사용자 승인 후에만** 한다 (아래 "배포 선택지")
+
+**4. 시작 전 확인** (2분)
+1. `curl http://localhost:8787/healthz` → `{"ok":true}`
+2. 대시보드 `http://localhost:8787/dashboard#token=<토큰>`를 연다
+3. 테스터에게 줄 주소로 직접 들어가 1스테이지를 깨고, 5~10초 뒤 대시보드 "새로고침" → 이벤트 수가 늘고 "빌드" 목록에 새 빌드·클라이언트(`unity-webgl`/`web-proto`)가 보이면 된다
+4. 확인용 기록을 빼고 보려면 대시보드 "기간"을 테스트 시작 시각 뒤로 두거나, 확인 뒤 서버를 끄고 날짜별 DB 파일을 지운 다음 다시 켠다
+
+**5. 테스트 중**
+- 대시보드는 자동 갱신되지 않는다. "새로고침"을 누른다
+- 둘 다 5초 또는 20건마다 보낸다. 탭을 닫거나 숨기면 `sendBeacon`으로 남은 것을 보낸다
+
+**6. 끝난 뒤**
+- 서버를 `Ctrl+C`로 끈다 (DB가 닫힌다). DB 파일(`server/data/playtest-<날짜>.sqlite`)을 보관한다. git에는 넣지 않는다
+- 레벨 디자이너용 내보내기:
+  ```bash
+  T=<토큰>; B=http://localhost:8787/api/export
+  curl -H "Authorization: Bearer $T" "$B/attempts.csv?since=2026-11-08" -o attempts.csv
+  curl -H "Authorization: Bearer $T" "$B/levels.csv?since=2026-11-08" -o levels.csv
+  curl -H "Authorization: Bearer $T" "$B/events.jsonl?since=2026-11-08" -o events.jsonl
+  ```
+  대시보드 위쪽 "내보내기" 링크도 같은 파일을 준다 (현재 필터 적용)
+
+**itch.io에 올린 빌드**는 iframe 안에서 열리므로 테스터가 주소에 `?telemetry=`를 붙일 수 없다. itch 빌드에서 받으려면 고정된 HTTPS 서버 주소를 `unity/Assets/_Project/Data/AppConfig.asset`의 `telemetryEndpoint`에 넣고 빌드해야 한다 → 실행마다 바뀌는 임시 터널로는 안 되고, 고정 주소(이름 있는 Cloudflare 터널 또는 아래 B~E)가 필요하다. 사용자 결정 사항.
+
 ## 설정 (환경 변수)
 
 | 변수 | 기본값 | 설명 |
@@ -36,8 +97,9 @@ node server/tools/fake-data.mjs --players 80 --url http://localhost:8787        
 | `DB_PATH` | `server/data/telemetry.sqlite` | SQLite 파일 (git 제외). WAL 모드 |
 | `STATS_TOKEN` | 실행마다 랜덤(로그에 출력) | 통계 API·내보내기 토큰. 배포 때는 반드시 지정 |
 | `ALLOWED_ORIGINS` | (없음) | 추가 허용 Origin, 쉼표 구분. `https://example.com` 또는 `*.example.com` |
-| `TRUST_PROXY` | `0` | `1`이면 속도 제한에 `X-Forwarded-For` 사용 (프록시 뒤에서) |
+| `TRUST_PROXY` | `0` | `1`이면 속도 제한에 `X-Forwarded-For`, `/webgl/` 주소에 `X-Forwarded-Proto`·`X-Forwarded-Host` 사용 (터널·프록시 뒤에서) |
 | `PROTO_DIR` / `LEVELS_JS` | `prototypes/seven-steps` | `/play/`와 레벨 맵·최단 해 출처 |
+| `WEBGL_DIR` | `Builds/WebGL` | `/webgl/`로 제공할 Unity WebGL 빌드 폴더 |
 
 기본 허용 Origin: `localhost`·`127.0.0.1`(모든 포트), `https://*.itch.io`, `https://*.itch.zone`, `https://*.hwcdn.net`(itch HTML5 CDN). Origin이 없는 요청(데스크톱 빌드, curl)은 받는다.
 
@@ -48,6 +110,7 @@ node server/tools/fake-data.mjs --players 80 --url http://localhost:8787        
 | `POST /v1/events` | 없음 | 배치 수신. `application/json` 또는 `text/plain`(sendBeacon). 최대 100건·64KB. `(sessionId, seq)` 중복은 무시 |
 | `GET /healthz` | 없음 | `{"ok":true}` |
 | `GET /play/` | 없음 | 웹 프로토타입 |
+| `GET /webgl/` | 없음 | Unity WebGL 빌드 (`WEBGL_DIR`). `telemetry` 파라미터가 없으면 이 서버 주소를 붙여 302 |
 | `GET /dashboard` | 페이지는 공개, 데이터는 토큰 | 대시보드 (`#token=…`로 한 번 열면 브라우저에 기억) |
 | `GET /api/levels` | 토큰 | 현재 빌드 레벨 맵, `levelKey`, 최단 이동 수 |
 | `GET /api/stats/overview` | 토큰 | 합계, 빌드·클라이언트 목록 |

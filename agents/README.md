@@ -13,6 +13,7 @@
 | [gameplay-ui.md](gameplay-ui.md) | 게임플레이/UI 프로그래머 | Claude | `feat/view` | Orca 작업 공간 신규 생성 |
 | [art.md](art.md) | 아트/리소스 | **Codex (GPT)** | `feat/art` | **Orca orchestration 워커** (결과를 리드에게 보고) |
 | [level-design.md](level-design.md) | 레벨 디자이너 | Claude | `feat/levels` | Orca 작업 공간 신규 생성 |
+| [scene-flow.md](scene-flow.md) | 씬 플로우 엔지니어 (씬 구조·화면 흐름) | Claude | `feat/scene-flow` | Orca 작업 공간 `scene-flow` (2026-11-08 추가) |
 | [backend-analytics.md](backend-analytics.md) | 백엔드/분석 (수집 서버·대시보드) | Claude | `feat/server` | Orca 작업 공간 `server` |
 
 `number-chemical` 에이전트는 종료한다. 작업 공간과 브랜치는 남긴다.
@@ -56,7 +57,8 @@ Unity 씬·프리팹은 git으로 합치기 어렵다. **한 파일은 한 에�
 |---|---|
 | `Assets/_Project/Scripts/Runtime/Core/**`, `Assets/_Project/Tests/**`, `prototypes/seven-steps/src/core.js` | 코어 |
 | `Assets/_Project/Data/levels.json`, `prototypes/seven-steps/src/levels.js`, `design/levels/**`, `prototypes/seven-steps/experiments/**`, 웹 프로토타입 화면(`prototypes/seven-steps/src/main.js`·`style.css`, 텔레메트리 훅 제외) | 레벨 디자인 |
-| `Assets/_Project/Scripts/Runtime/Game/**`, `Assets/_Project/Scenes/**`, `Assets/_Project/UI/**` (UI 프리팹) | 게임플레이/UI |
+| `Assets/_Project/Scripts/Runtime/Game/**` (아래 씬 플로우 영역 제외. 화면 내용 `BoardView`·`HudView`·패널 요소는 게임플레이/UI), `Assets/_Project/UI/**` (UI 프리팹) | 게임플레이/UI |
+| `Assets/_Project/Scenes/**`, `Assets/_Project/Scripts/Runtime/Game/App/**`, 새 흐름·전환 코드, `docs/scene-flow.md` (2026-11-08부터) | 씬 플로우 |
 | `Assets/Shared/**` (git 밖 공유 폴더, **아트만 추가·수정**), `Assets/_Project/Art/**`, `Assets/_Project/Prefabs/Tiles/**`, `Assets/Settings/*RPAsset*`, `design/art/**` (`design/art/CREDITS.md` 포함) | 아트 |
 | `*.asmdef`, `docs/architecture.md`, 공용 인터페이스(아키텍트가 지정한 파일), `Packages/manifest.json` | 아키텍트 |
 | `server/**`, `docs/telemetry.md`, `prototypes/seven-steps/src/telemetry.js`, `prototypes/seven-steps/src/main.js`의 텔레메트리 훅 부분 (main.js의 나머지는 건드리지 않는다) | 백엔드/분석 |
