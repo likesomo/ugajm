@@ -1,5 +1,7 @@
 # Seven Steps — Blender 제작·Unity 전달 규격
 
+> 현행 확정 방향은 [아트 바이블](art-bible.md)과 이 문서 마지막 ‘현행 유적×선돌 키트 전달’이다. 아래 초기 Dipper 추천은 보존된 탐색 기록이다.
+
 2026-11-08. 북두칠성 퓨전 세 안을 실제 메시 키트로 만들기 위한 설계다. **추천은 먹돌 관측대(기존 slug `dipper-ink-engraving`)**이며, 청자 기하 관측대와 별지도 책의 무대도 같은 모듈 규격을 쓴다. 이번에는 Unity 프로젝트를 변경하지 않는다.
 
 ## 형태와 작업 분담
@@ -129,7 +131,7 @@ Unity 후속 임포트(이번 미수행): Scale Factor1, Convert Units ON, Norma
 출력 경로 가드는 `dipper-3d/` 또는 `dipper-3d-variants/` 공유 하위만 허용한다. 실제 블록아웃에는 두 개의 먹돌 받침과 얇은 구리 띠·같은 아틀라스 하단 trim을 더했지만 GPT 배경·최종 광택·완성게임UI를 재현한 것은 아니다. 여러 기믹을 모은 프리뷰 보드이며 솔버로 검증한 실제 레벨이 아니다.
 # 현행 유적×선돌 키트 전달 — Blender5.2.3
 
-현행 미술 기준: [아트 바이블](art-bible.md). 아래 기존 Dipper 제작 기록과 구분한다. 새 제작은 Unity 프로젝트를 변경하지 않았다.
+현행 미술 기준: [아트 바이블](art-bible.md). 위의 기존 Dipper 제작 기록과 구분한다. 새 제작은 Unity 프로젝트를 변경하지 않았다.
 
 공유 자산 `C:/unityjam/shared-assets/seven-steps/Assets/Art/RuinsHenge/` → Unity 링크 `Assets/Shared/Art/RuinsHenge/`. Models에21 FBX와 SS_RuinsHenge_Chapter01.blend, Textures/RH_Atlas512.png, Reports/production-report.json 및 fbx-roundtrip.json. 렌더는 `concepts/themes/ruins-henge/blender/`.
 
