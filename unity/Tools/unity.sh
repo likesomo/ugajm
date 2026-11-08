@@ -9,10 +9,12 @@
 #   compile      (batch) compile check only
 #   test         (batch) EditMode tests -> reports/editmode-results.xml
 #   tileset      (batch) rebuild the placeholder TileSet (Data/TileSets/TopDown_Placeholder.asset)
+#   tileset-validate (batch) check every TileSet against docs/architecture.md 12 (errors -> exit 1)
 #   build-win    (batch) Windows build -> Builds/Windows/Seven Steps.exe
 #   build-webgl  (batch) WebGL build -> Builds/WebGL/
 #   play         run the Windows build
 #   smoke        run the Windows build on 7 replays, save screenshots + logs to reports/smoke/
+#   smoke-webgl  open Builds/WebGL in the Orca browser on 3 replays, fail if the 3D board is missing
 #   serve [port] serve Builds/WebGL on http://localhost:8090 (default)
 #   editor       open the project in the Unity editor
 #   all          levels + setup + verify + build-win + smoke
@@ -39,7 +41,9 @@ restore_urp_settings() {
   read -r added deleted _ <<< "$stat"
   local committed; committed="$(mktemp)"
   (cd "$REPO" && git show "HEAD:$URPGS") > "$committed"
-  if { runtime_list_empty "$REPO/$URPGS" && ! runtime_list_empty "$committed"; } || { [ "$added" = "0" ] && [ "$deleted" != "0" ]; }; then
+  URP_EMPTIED=0
+  if runtime_list_empty "$REPO/$URPGS" && ! runtime_list_empty "$committed"; then URP_EMPTIED=1; fi
+  if [ "$URP_EMPTIED" = "1" ] || { [ "$added" = "0" ] && [ "$deleted" != "0" ]; }; then
     rm -f "$committed"
     (cd "$REPO" && git checkout -- "$URPGS")
     echo "[unity.sh] restored $URPGS (Unity emptied/stripped m_RuntimeSettings: +$added -$deleted)"
@@ -52,7 +56,15 @@ restore_urp_settings() {
 
 run_unity() {
   local name="$1" method="$2"
-  (cd "$REPO" && "$U" -batchmode -nographics -projectPath unity -executeMethod "$method" -logFile "unity/Logs/batch-$name.log")
+  # Open the editor on the build's own target. URP's build step picks the pipeline assets for shader stripping
+  # from the active target at startup: a WebGL build started while Standalone is active strips the Mobile
+  # pipeline's shaders and the WebGL player draws the UI but no 3D board (2026-11-07).
+  local target=()
+  case "$name" in
+    build-webgl) target=(-buildTarget WebGL) ;;
+    build-win)   target=(-buildTarget Win64) ;;
+  esac
+  (cd "$REPO" && "$U" -batchmode -nographics -projectPath unity "${target[@]}" -executeMethod "$method" -logFile "unity/Logs/batch-$name.log")
 }
 
 batch() {
@@ -61,9 +73,14 @@ batch() {
   mkdir -p "$PROJ/Logs"
   echo "[unity.sh] $name: $method (log: unity/Logs/batch-$name.log)"
   local code=0
+  # Before: never start from a stripped file (a WebGL build legitimately strips the SSAO resources, which
+  # the next Windows build needs). After: put the committed file back. Rebuild only when Unity emptied the
+  # whole m_RuntimeSettings list during this run (cause unknown, so stay conservative).
+  restore_urp_settings > /dev/null || true
   run_unity "$name" "$method" || code=$?
-  if restore_urp_settings && [ "$code" -eq 0 ] && [[ "$name" == build-* ]]; then
-    echo "[unity.sh] $name: rebuilding with the restored URP settings"
+  URP_EMPTIED=0
+  if restore_urp_settings && [ "$URP_EMPTIED" = "1" ] && [ "$code" -eq 0 ] && [[ "$name" == build-* ]]; then
+    echo "[unity.sh] $name: rebuilding (m_RuntimeSettings was emptied during the build)"
     run_unity "$name" "$method" || code=$?
     restore_urp_settings || true
   fi
@@ -85,6 +102,7 @@ case "$cmd" in
   verify)      batch verify SevenSteps.EditorTools.LevelVerifier.BatchVerify ;;
   compile)     batch compile BuildTools.CompileCheck ;;
   tileset)     batch tileset SevenSteps.EditorTools.TileSetBuilder.BatchBuild ;;
+  tileset-validate) batch tileset-validate SevenSteps.EditorTools.TileSetValidator.BatchValidate ;;
   test)
     # EditMode tests (Tests/EditMode). Results: reports/editmode-results.xml
     mkdir -p "$REPO/reports" "$PROJ/Logs"
@@ -113,6 +131,33 @@ case "$cmd" in
       if grep -qE "^[A-Za-z.]*Exception" "$out/level$lv.log"; then grep -E "^[A-Za-z.]*Exception" "$out/level$lv.log"; fail=1; fi
     done
     [ "$fail" -eq 0 ] && echo "[unity.sh] smoke OK -> reports/smoke/" || { echo "[unity.sh] smoke FAILED"; exit 1; } ;;
+  smoke-webgl)
+    # Opens Builds/WebGL in Orca's built-in browser on a few replays, screenshots each and counts board pixels.
+    # Fails when the 3D board is missing (UI only) or the console shows an exception. Needs the `orca` CLI.
+    command -v orca >/dev/null || { echo "[unity.sh] smoke-webgl needs the orca CLI (Orca built-in browser)"; exit 1; }
+    out="$REPO/reports/smoke-webgl"; mkdir -p "$out"; rm -f "$out"/*; fail=0; port=8091
+    node "$HERE/serve.mjs" "$port" "$REPO/Builds/WebGL" > "$out/serve.log" 2>&1 &
+    sleep 2
+    for spec in "1:R" "8:DURRRRRKDDR" "13:DUDUDURKDD"; do
+      lv="${spec%%:*}"; rp="${spec#*:}"
+      page="$(orca tab create --url "http://localhost:$port/?level=$lv&replay=$rp" --json 2>/dev/null | grep -o '"browserPageId": "[^"]*"' | head -1 | cut -d'"' -f4)"
+      [ -z "$page" ] && { echo "[unity.sh] smoke-webgl level $lv: could not open a browser tab"; fail=1; continue; }
+      orca capture start --page "$page" --json > /dev/null 2>&1 || true
+      orca wait --page "$page" --load load --json > /dev/null 2>&1 || true
+      sleep 25
+      shot="$(orca screenshot --page "$page" 2>/dev/null | grep -oE '[A-Za-z]:\\[^ ]+\.png' | head -1)"
+      orca console --page "$page" --limit 400 > "$out/level$lv.console.txt" 2>&1 || true
+      orca tab close --page "$page" --json > /dev/null 2>&1 || true
+      if [ -z "$shot" ]; then echo "[unity.sh] smoke-webgl level $lv: no screenshot"; fail=1; continue; fi
+      cp "$(cygpath -u "$shot")" "$out/level$lv.png"
+      px="$(powershell -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$HERE/board-pixels.ps1")" -Path "$(cygpath -w "$out/level$lv.png")" | tr -d '\r')"
+      errs="$(grep -ciE '^\[error\]|Exception' "$out/level$lv.console.txt" || true)"
+      echo "[unity.sh] smoke-webgl level $lv: board pixels $px, console errors $errs"
+      if [ "${px:-0}" -lt 500 ]; then echo "[unity.sh]   board not drawn (UI only?) -> see $out/level$lv.png"; fail=1; fi
+      if [ "${errs:-0}" -gt 0 ]; then grep -iE '^\[error\]|Exception' "$out/level$lv.console.txt" | head -5; fail=1; fi
+    done
+    for p in $(netstat -ano | grep ":$port .*LISTENING" | awk '{print $5}' | sort -u); do taskkill //PID "$p" //F > /dev/null; done
+    [ "$fail" -eq 0 ] && echo "[unity.sh] smoke-webgl OK -> reports/smoke-webgl/" || { echo "[unity.sh] smoke-webgl FAILED"; exit 1; } ;;
   serve)
     port="${2:-8090}"
     echo "[unity.sh] http://localhost:$port  (Ctrl+C to stop)"
@@ -125,5 +170,5 @@ case "$cmd" in
     "$0" build-win
     "$0" smoke ;;
   *)
-    sed -n '2,25p' "$0" ;;
+    sed -n '2,27p' "$0" ;;
 esac

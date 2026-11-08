@@ -25,6 +25,7 @@ namespace SevenSteps.EditorTools
         public const string GamePath = SceneDir + "/Game.unity";
         public const string ConfigPath = "Assets/_Project/Data/AppConfig.asset";
         const string GameAssetsPath = "Assets/_Project/Data/GameAssets.asset";
+        const string JuaLicensePath = "Assets/Shared/Fonts/Jua-OFL.txt"; // shared asset folder, read-only
         const string TileSetPath = "Assets/_Project/Data/TileSets/TopDown_Placeholder.asset";
 
         [MenuItem("Seven Steps/Gameplay/Build Scenes (Boot, Title, Game wiring)", priority = 30)]
@@ -46,6 +47,9 @@ namespace SevenSteps.EditorTools
             var t = new GameObject("Title").AddComponent<TitleScreen>();
             t.assets = assets;
             t.config = config;
+            CreditsExport.Export();
+            t.credits = AssetDatabase.LoadAssetAtPath<TextAsset>(CreditsExport.OutPath);
+            t.licenses = new[] { AssetDatabase.LoadAssetAtPath<TextAsset>(JuaLicensePath) };
             EditorSceneManager.SaveScene(title, TitlePath);
 
             // Game: patch the existing scene (made by ProjectSetup) so GameController knows the config.
