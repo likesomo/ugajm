@@ -69,6 +69,29 @@ main { position: relative; margin-top: 6px; }
 .cell.door.closed.p-b { background: repeating-linear-gradient(90deg, var(--b) 0 6px, #2b2838 6px 12px); }
 .cell.door.closed.p-c { background: repeating-linear-gradient(90deg, var(--c) 0 6px, #2b2838 6px 12px); }
 .cell.door.open { opacity: .75; box-shadow: inset 0 0 0 2px #4a4460; }
+/* Lever (L) and flip walls (R raised / r lowered). Teal so they never read as plate/door colours. */
+.cell.lever { background: #1f2a2c; box-shadow: inset 0 0 0 3px #3fa7a0; }
+.cell.lever .label { font-size: 26px; font-weight: bold; color: #3fa7a0; }
+.cell.lever.pulled { background: #213634; }
+.cell.flipwall.raised { background: #3fa7a0; box-shadow: inset 0 -6px 0 #2a706b, inset 0 0 0 2px #1d4f4b; }
+.cell.flipwall.lowered { background: #2b2838; box-shadow: inset 0 0 0 2px #3fa7a0; background-image: repeating-linear-gradient(0deg, transparent 0 10px, #3fa7a033 10px 12px); }
+.cell.mini.flipwall + .cell.mini.flipwall { margin-left: -4px; }
+/* Statue-count door (Q): stone-coloured bars while closed, the door's number in the middle, current statue count in the corner. */
+.cell.qdoor .label { font-size: 24px; font-weight: bold; color: var(--ink); text-shadow: 0 1px 2px #000; }
+.cell.qdoor.closed { background: repeating-linear-gradient(90deg, var(--stone) 0 6px, #2b2838 6px 12px); }
+.cell.qdoor.open { background: #2b2838; box-shadow: inset 0 0 0 3px var(--stone); opacity: 1; }
+.cell.qdoor.open .label { color: var(--stone); }
+.qnow {
+  position: absolute; top: 2px; right: 3px; min-width: 16px; height: 16px; padding: 0 3px; border-radius: 8px;
+  background: #15131c; color: var(--ink); font-size: 11px; font-weight: bold; display: grid; place-items: center;
+}
+.cell.qdoor.open .qnow { background: var(--gold); color: #222; }
+.cell.mini .qnow { display: none; }
+.statues { margin-right: 10px; padding: 2px 8px; border-radius: 10px; border: 1px solid #4a4460; font-size: 14px; }
+.statues b { color: var(--ink); }
+.statues.match { border-color: var(--gold); color: var(--gold); }
+.statues.match b { color: var(--gold); }
+.fx-door { animation: stamp .5s; }
 .cell.gate { background: #241f30; box-shadow: inset 0 0 0 2px #4a4460; }
 .cell.gate .label { font-size: 26px; color: #5f5878; font-weight: bold; }
 .cell.gate.go { box-shadow: inset 0 0 0 2px var(--gold); }

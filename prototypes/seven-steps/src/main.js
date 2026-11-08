@@ -1,6 +1,7 @@
 // Browser shell: input, rendering, level select. Reads core state, changes it only through dispatch().
-import { STEPS, DIRS, parseLevel, newState, dispatch, tileAt, doorOpen, solve } from './core.js';
+import { STEPS, DIRS, parseLevel, newState, dispatch, tileAt, doorOpen, statueCount, solve } from './core.js';
 import { LEVELS } from './levels.js';
+import { initTelemetry, fnv1a } from './telemetry.js';
 
 const root = document.getElementById('app');
 const params = new URLSearchParams(location.search);
@@ -11,6 +12,10 @@ let levelIdx = Math.min(Math.max(Number(params.get('level') ?? 1) - 1, 0), LEVEL
 let state = newState(parseLevel(LEVELS[levelIdx]));
 let message = LEVELS[levelIdx].hint;
 let flash = null; // { at, type } for one-shot cell animation
+let doorFx = new Set(); // door cells that opened or closed on the last command
+
+// Telemetry hook (docs/telemetry.md). Build = hash of all stages, so a level change shows up as a new build.
+const tel = initTelemetry({ build: `proto-${fnv1a(JSON.stringify(LEVELS))}`, params, getState: () => state });
 
 // Replay: ?level=8&replay=LRRRRDDKLLDDRDD reproduces an exact screen (U D L R moves, K keep, X switch).
 const LETTER = { U: 'up', D: 'down', L: 'left', R: 'right' };
@@ -35,24 +40,41 @@ const MESSAGES = {
   lose: '몸을 모두 잃었다. Z로 되돌리거나 R로 다시 시작.',
   undo: '한 걸음 되돌렸다.',
   restart: '처음부터.',
+  flip: '레버를 당겼다. 모든 뒤집힘 벽이 뒤집혔다.',
 };
 
-function loadLevel(idx) {
+function loadLevel(idx, via = 'select') {
+  tel.leave(state, idx + 1);
   levelIdx = idx;
   state = newState(parseLevel(LEVELS[idx]));
   message = LEVELS[idx].hint;
   flash = null;
+  doorFx = new Set();
   history.replaceState(null, '', `?level=${idx + 1}`);
+  tel.levelStart(state, idx + 1, LEVELS[idx].name, via);
   render();
 }
 
 function send(cmd) {
+  const before = state;
   const r = dispatch(state, cmd);
+  tel.command(before, cmd, r);
   state = r.state;
   flash = null;
+  doorFx = new Set();
   for (const e of r.events) {
-    if (MESSAGES[e.type]) message = MESSAGES[e.type];
-    if (e.type === 'bump') flash = { at: e.at, type: 'bump' };
+    // A lever pull is followed by choose/stone/respawn messages; keep the pull visible in front of them.
+    if (MESSAGES[e.type]) message = e.type !== 'flip' && r.events.some((x) => x.type === 'flip') ? `${MESSAGES.flip} ${MESSAGES[e.type]}` : MESSAGES[e.type];
+    if (e.type === 'flip') state.level.tiles.forEach((t, i) => { if (t === 'L' || t === 'R' || t === 'r') doorFx.add(i); });
+    if (e.type === 'bump') {
+      flash = { at: e.at, type: 'bump' };
+      if (e.at >= 0 && tileAt(state, e.at) === 'Q') message = qDoorText(state, '이 문은 닫혀 있다.');
+      if (e.at >= 0 && tileAt(state, e.at) === 'R') message = '올라간 벽. 레버(L)를 7번째 걸음으로 밟으면 뒤집힌다.';
+    }
+    if ((e.type === 'doorOpen' || e.type === 'doorClose') && tileAt(state, e.at) === 'Q') {
+      doorFx.add(e.at);
+      message = `${message} ${qDoorText(state, e.type === 'doorOpen' ? '석상 수 문이 열렸다.' : '석상 수 문이 닫혔다.')}`.trim();
+    }
     if (['stone', 'bridge', 'seal', 'fall', 'win', 'choose', 'switch'].includes(e.type)) flash = { at: e.at, type: e.type };
     if (e.type === 'step') message = e.stepIdx === STEPS - 1 ? '다음 걸음이 행운의 7번째 걸음이다.' : '';
   }
@@ -63,7 +85,13 @@ function send(cmd) {
   render();
 }
 
+// "석상이 정확히 N개일 때만 열린다 (지금 n개)" — the statue-count door explained in numbers.
+function qDoorText(s, lead) {
+  return `${lead} 석상이 정확히 ${s.level.statueCount}개일 때만 열린다 (지금 ${statueCount(s)}개).`;
+}
+
 function hint() {
+  tel.hint(state);
   // The solver starts from a fresh stage, so the hint is the full route from the beginning.
   const r = solve(state.level);
   const glyph = { up: '↑', down: '↓', left: '←', right: '→', keep: ' KEEP ', switch: ' SWITCH ' };
@@ -83,6 +111,11 @@ function cellHtml(i) {
   let label = '';
   if (t >= 'a' && t <= 'c') { cls = `plate p-${t}`; label = t.toUpperCase(); }
   if (t >= 'A' && t <= 'C') { cls = `door p-${t.toLowerCase()} ${doorOpen(s, t) ? 'open' : 'closed'}`; label = t; }
+  // Lever and flip walls: tileAt already reports the current side ('R' raised now, 'r' lowered now).
+  if (t === 'L') { cls = `lever ${s.flipped ? 'pulled' : ''}`; label = s.flipped ? '⇂' : '↾'; }
+  if (t === 'R') cls = 'flipwall raised';
+  if (t === 'r') cls = 'flipwall lowered';
+  if (t === 'Q') { cls = `door qdoor ${doorOpen(s, t) ? 'open' : 'closed'}`; label = String(s.level.statueCount); }
   if (t >= '1' && t <= '7') { cls = `gate ${Number(t) === nextStep ? 'go' : ''}`; label = t; }
   if (t === 'E') { label = '出'; if (nextStep === STEPS) cls += ' ready'; }
   if (i === s.start) cls += ' start';
@@ -91,6 +124,7 @@ function cellHtml(i) {
   const foot = s.trail.filter((f) => f.i === i && f.n > 0).map((f) => f.n);
   const parts = [];
   if (label) parts.push(`<span class="label">${label}</span>`);
+  if (t === 'Q') parts.push(`<span class="qnow" title="지금 서 있는 석상 수">${statueCount(s)}</span>`);
   if (foot.length && i !== s.pos) parts.push(`<span class="foot">${foot.join('·')}</span>`);
   if (s.statues.includes(i)) parts.push('<span class="statue">7</span>');
   if (s.bridges.includes(i)) parts.push('<span class="bridge-mark">7</span>');
@@ -98,7 +132,7 @@ function cellHtml(i) {
     const c = s.status === 'choose' ? 'choosing' : STEPS - s.used === 1 ? 'last' : '';
     parts.push(`<span class="player ${c}">${STEPS - s.used}</span>`);
   }
-  const fx = flash && flash.at === i ? ` fx-${flash.type}` : '';
+  const fx = (flash && flash.at === i ? ` fx-${flash.type}` : '') + (doorFx.has(i) ? ' fx-door' : '');
   return `<div class="cell ${cls}${fx}" data-i="${i}">${parts.join('')}</div>`;
 }
 
@@ -113,6 +147,11 @@ function render() {
   }).join('');
   const bodies = Array.from({ length: s.level.bodies }, (_, k) =>
     `<span class="body ${k < s.bodies ? '' : 'gone'}"></span>`).join('');
+  // Statue counter, shown only on stages with a statue-count door. Gold when it matches the door.
+  const hasQ = s.level.tiles.includes('Q');
+  const statueHud = hasQ
+    ? `<span class="statues ${doorOpen(s, 'Q') ? 'match' : ''}" title="서 있는 석상 수 / 석상 수 문의 숫자">석상 <b>${statueCount(s)}</b> / ${s.level.statueCount}</span>`
+    : '';
   const cells = [];
   for (let i = 0; i < w * h; i++) cells.push(cellHtml(i));
   const levelBtns = LEVELS.map((_, k) =>
@@ -140,7 +179,7 @@ function render() {
       <div class="title">${levelIdx + 1}. ${s.level.name}</div>
       <div class="pips">${pips}</div>
       <div class="next">${s.status === 'choose' ? '<b>KEEP</b> 또는 <b>SWITCH</b>' : s.status === 'play' ? (nextStep === STEPS ? '다음 걸음이 <b>행운의 7번째</b>' : `다음 걸음: <b>${nextStep}번째</b>`) : '&nbsp;'}</div>
-      <div class="bodies">몸 ${bodies}</div>
+      <div class="bodies">${statueHud}몸 ${bodies}</div>
     </section>
     <main>
       <div class="board" style="grid-template-columns: repeat(${w}, var(--cell)); grid-template-rows: repeat(${h}, var(--cell));">${cells.join('')}</div>
@@ -155,6 +194,7 @@ function render() {
       <button data-act="undo">되돌리기 Z</button>
       <button data-act="restart">재시작 R</button>
       <button data-act="hint">풀이 보기 H</button>
+      <button data-act="telemetry" title="익명 플레이 기록(어디서 막히는지)을 개발팀 서버로 보낸다">기록 전송 ${tel.enabled ? '켬' : '끔'}</button>
       <span class="keys">이동: 방향키 / WASD / 옆 칸 클릭 · 7걸음 후: K KEEP / X SWITCH · 스테이지: [ ]</span>
     </footer>
     <details class="legend"><summary>타일 설명</summary>
@@ -162,6 +202,9 @@ function render() {
         <li><span class="cell mini plate p-a"><span class="label">A</span></span> 발판: 석상이 올라가 있으면 같은 글자의 문이 열린다</li>
         <li><span class="cell mini door p-a closed"><span class="label">A</span></span> 문</li>
         <li><span class="cell mini gate"><span class="label">3</span></span> 숫자 문: 3번째 걸음일 때만 통과</li>
+        <li><span class="cell mini door qdoor closed"><span class="label">1</span></span> 석상 수 문: 서 있는 석상이 정확히 그 수일 때만 열린다. 구덩이·금 간 바닥의 다리는 세지 않는다 (모서리 숫자 = 지금 석상 수)</li>
+        <li><span class="cell mini lever"><span class="label">↾</span></span> 레버: 7번째 걸음으로 밟으면 모든 뒤집힘 벽이 뒤집힌다 (석상이 서면 다시 못 당긴다, 출발점에서는 안 당겨진다)</li>
+        <li><span class="cell mini flipwall raised"></span><span class="cell mini flipwall lowered"></span> 뒤집힘 벽: 올라간 벽은 막고, 내려간 벽은 지나갈 수 있다</li>
         <li><span class="cell mini pit"></span> 구덩이: 7번째 걸음으로 빠지면 다리가 된다</li>
         <li><span class="cell mini ice"></span> 얼음: 막힐 때까지 미끄러진다. 몇 칸이든 1걸음</li>
         <li><span class="cell mini cracked"></span> 금 간 바닥: 지나가면 무너진다. 7번째 걸음으로 서면 굳는다</li>
@@ -185,15 +228,16 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'h' || e.key === 'H') return hint();
   if (e.key === '[' && levelIdx > 0) return loadLevel(levelIdx - 1);
   if (e.key === ']' && levelIdx < LEVELS.length - 1) return loadLevel(levelIdx + 1);
-  if (e.key === 'Enter' && state.status === 'win' && levelIdx < LEVELS.length - 1) return loadLevel(levelIdx + 1);
+  if (e.key === 'Enter' && state.status === 'win' && levelIdx < LEVELS.length - 1) return loadLevel(levelIdx + 1, 'next');
 });
 
 root.addEventListener('click', (e) => {
   const lv = e.target.closest('[data-level]');
   if (lv) return loadLevel(Number(lv.dataset.level));
   const act = e.target.closest('[data-act]')?.dataset.act;
-  if (act === 'next') return loadLevel(levelIdx + 1);
+  if (act === 'next') return loadLevel(levelIdx + 1, 'next');
   if (act === 'hint') return hint();
+  if (act === 'telemetry') return tel.setEnabled(!tel.enabled);
   if (act) return send({ type: act });
   const cell = e.target.closest('.board .cell');
   if (!cell) return;
@@ -206,3 +250,5 @@ root.addEventListener('click', (e) => {
 });
 
 render();
+tel.sessionStart({ cleared: cleared.size });
+tel.levelStart(state, levelIdx + 1, LEVELS[levelIdx].name, params.has('level') ? 'url' : 'boot');

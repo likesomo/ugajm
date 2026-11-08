@@ -3,7 +3,9 @@ export const STEPS = 7;
 export const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 
 // Map legend: # wall, . floor, S start, E exit, o pit, ~ ice, x cracked floor,
-// a-c plate, A-C door (open while a statue stands on the matching plate), 1-7 gate (pass only on that step).
+// a-c plate, A-C door (open while a statue stands on the matching plate), 1-7 gate (pass only on that step),
+// Q statue-count door (open while exactly `statueCount` statues stand; bridges and seals are not statues),
+// L lever (a 7th step ending on it flips every flip wall), R raised flip wall (blocks), r lowered flip wall (open).
 export function parseLevel(def) {
   const h = def.map.length;
   const w = Math.max(...def.map.map((r) => r.length));
@@ -20,25 +22,37 @@ export function parseLevel(def) {
     }
   }
   if (start < 0) throw new Error(`level "${def.name}" has no S`);
-  return { name: def.name, hint: def.hint ?? '', w, h, tiles, plates, start, bodies: def.bodies ?? STEPS };
+  return { name: def.name, hint: def.hint ?? '', w, h, tiles, plates, start, bodies: def.bodies ?? STEPS, statueCount: def.statueCount ?? 0 };
 }
 
 export function newState(level) {
   return {
     level, start: level.start, pos: level.start, used: 0, bodies: level.bodies,
-    statues: [], bridges: [], broken: [], trail: [{ i: level.start, n: 0 }],
+    statues: [], bridges: [], broken: [], flipped: false, trail: [{ i: level.start, n: 0 }],
     status: 'play', prev: null,
   };
 }
 
-// Tile as currently seen: bridges (pit filled by a statue) read as '=', broken cracked floor as a pit.
+// Tile as currently seen: bridges (pit filled by a statue) read as '=', broken cracked floor as a pit,
+// flip walls after an odd number of lever pulls swap: 'R' is always "raised now", 'r' "lowered now".
 export function tileAt(s, i) {
   if (s.bridges.includes(i)) return '=';
   if (s.broken.includes(i)) return 'o';
-  return s.level.tiles[i];
+  const t = s.level.tiles[i];
+  if (s.flipped && isFlipWall(t)) return t === 'R' ? 'r' : 'R';
+  return t;
 }
 
+export const isFlipWall = (t) => t === 'R' || t === 'r';
+
+// Statues standing now. Bridges (filled pits, sealed cracked floor) are not statues.
+export const statueCount = (s) => s.statues.length;
+
+export const isDoor = (t) => (t >= 'A' && t <= 'C') || t === 'Q';
+
+// Door letter A-C: a statue stands on a matching plate. Q: exactly level.statueCount statues stand.
 export function doorOpen(s, door) {
+  if (door === 'Q') return statueCount(s) === s.level.statueCount;
   return (s.level.plates[door.toLowerCase()] ?? []).some((p) => s.statues.includes(p));
 }
 
@@ -52,13 +66,24 @@ function neighbor(s, i, dir) {
 export function passable(s, i, stepIdx) {
   if (i < 0 || s.statues.includes(i)) return false;
   const t = tileAt(s, i);
-  if (t === '#') return false;
-  if (t >= 'A' && t <= 'C') return doorOpen(s, t);
+  if (t === '#' || t === 'R') return false;
+  if (isDoor(t)) return doorOpen(s, t);
   if (t >= '1' && t <= '7') return Number(t) === stepIdx;
   return true;
 }
 
 const add = (arr, i) => (arr.includes(i) ? arr : [...arr, i].sort((a, b) => a - b));
+
+// A new statue may open doors (plates, or Q reaching its count) or close them (Q passing its count):
+// one 'doorOpen'/'doorClose' event per door cell that changed, in cell order. Undo/restart swap the whole state instead.
+function doorChanges(before, after, events) {
+  after.level.tiles.forEach((t, i) => {
+    if (!isDoor(t)) return;
+    const was = doorOpen(before, t);
+    const now = doorOpen(after, t);
+    if (was !== now) events.push({ type: now ? 'doorOpen' : 'doorClose', at: i });
+  });
+}
 
 function nextBody(s, events, start = s.start) {
   const bodies = s.bodies - 1;
@@ -94,6 +119,8 @@ export function step(s, dir) {
     next.broken = add(next.broken, s.pos);
     events.push({ type: 'crumble', at: s.pos });
   }
+  // Slid on from the first (ice) cell: 'slide' at that cell, before what happens where the slide ends.
+  if (pos !== first) events.push({ type: 'slide', at: first });
 
   const t = tileAt(next, pos);
   const lucky = stepIdx === STEPS;
@@ -109,6 +136,12 @@ export function step(s, dir) {
   if (!lucky) {
     events.push({ type: 'step', at: pos, stepIdx });
     return { state: next, events };
+  }
+  // Lever: the 7th step ending on it flips every flip wall, then the body is spent as usual (choose/stone).
+  // On the start cell the 7th step only vanishes, so the lever there is not pulled.
+  if (t === 'L' && pos !== s.start) {
+    next.flipped = !s.flipped;
+    events.push({ type: 'flip', at: pos });
   }
   if (t === 'E') {
     events.push({ type: 'win', at: pos });
@@ -128,6 +161,7 @@ export function step(s, dir) {
   } else {
     next.statues = add(next.statues, pos);
     events.push({ type: 'stone', at: pos });
+    doorChanges(s, next, events);
   }
   return { state: nextBody(next, events), events };
 }
@@ -139,7 +173,9 @@ export function choose(s, kind) {
   if (s.status !== 'choose') return { state: s, events };
   if (kind === 'keep') {
     events.push({ type: 'stone', at: s.pos });
-    return { state: nextBody({ ...s, statues: add(s.statues, s.pos) }, events), events };
+    const kept = { ...s, statues: add(s.statues, s.pos) };
+    doorChanges(s, kept, events);
+    return { state: nextBody(kept, events), events };
   }
   if (kind === 'switch') {
     events.push({ type: 'switch', at: s.pos });
@@ -170,7 +206,7 @@ export function dispatch(s, cmd) {
   return { state: s, events: [] };
 }
 
-const keyOf = (s) => `${s.start}|${s.pos}|${s.used}|${s.bodies}|${s.statues}|${s.bridges}|${s.broken}|${s.status}`;
+const keyOf = (s) => `${s.start}|${s.pos}|${s.used}|${s.bodies}|${s.statues}|${s.bridges}|${s.broken}|${s.status}|${s.flipped ? 1 : 0}`;
 
 // BFS over actions (moves and KEEP/SWITCH). Returns the shortest winning move list, or null. Used by the solver tool and the hint button.
 export function solve(level, maxBodies = level.bodies, { noSwitch = false, limit = 400000 } = {}) {

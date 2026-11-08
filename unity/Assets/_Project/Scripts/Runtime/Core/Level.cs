@@ -6,7 +6,9 @@ namespace SevenSteps.Core
     /// <summary>
     /// A parsed stage. Same legend as prototypes/seven-steps/src/core.js parseLevel():
     /// # wall, . floor, S start, E exit, o pit, ~ ice, x cracked floor,
-    /// a-c plate, A-C door (open while a statue stands on the matching plate), 1-7 gate (pass only on that step).
+    /// a-c plate, A-C door (open while a statue stands on the matching plate), 1-7 gate (pass only on that step),
+    /// Q statue-count door (open while exactly <see cref="StatueCount"/> statues stand; bridges and seals are not statues),
+    /// L lever (a 7th step ending on it flips every flip wall), R raised flip wall (blocks), r lowered flip wall (open).
     /// </summary>
     public sealed class Level
     {
@@ -18,12 +20,15 @@ namespace SevenSteps.Core
         public readonly int H;
         public readonly int Start;
         public readonly int Bodies;
+        /// N of the statue-count doors (Q): they are open while exactly this many statues stand. One N per stage.
+        public readonly int StatueCount;
         readonly char[] tiles;
         readonly Dictionary<char, int[]> plates;
 
-        Level(string name, string hint, int w, int h, char[] tiles, Dictionary<char, int[]> plates, int start, int bodies)
+        Level(string name, string hint, int w, int h, char[] tiles, Dictionary<char, int[]> plates, int start, int bodies, int statueCount)
         {
             Name = name; Hint = hint; W = w; H = h; this.tiles = tiles; this.plates = plates; Start = start; Bodies = bodies;
+            StatueCount = statueCount;
         }
 
         public char Tile(int i) => tiles[i];
@@ -34,7 +39,7 @@ namespace SevenSteps.Core
         /// Plate cells for a lowercase plate letter (a-c).
         public int[] PlatesFor(char plate) => plates.TryGetValue(plate, out var cells) ? cells : NoCells;
 
-        public static Level Parse(string name, string hint, int bodies, string[] map)
+        public static Level Parse(string name, string hint, int bodies, string[] map, int statueCount = 0)
         {
             if (map == null || map.Length == 0) throw new ArgumentException($"level \"{name}\" has no map");
             int h = map.Length;
@@ -61,7 +66,7 @@ namespace SevenSteps.Core
             if (start < 0) throw new ArgumentException($"level \"{name}\" has no S");
             var plates = new Dictionary<char, int[]>();
             foreach (var kv in plateLists) plates[kv.Key] = kv.Value.ToArray();
-            return new Level(name, hint ?? "", w, h, tiles, plates, start, bodies > 0 ? bodies : Rules.Steps);
+            return new Level(name, hint ?? "", w, h, tiles, plates, start, bodies > 0 ? bodies : Rules.Steps, statueCount);
         }
     }
 
@@ -79,10 +84,12 @@ namespace SevenSteps.Core
         public string name;
         public string hint;
         public int bodies;
+        /// N of the statue-count doors (Q). 0 when the stage has none (missing in older files reads as 0).
+        public int statueCount;
         public string[] map;
         public ExpectedDto expected;
 
-        public Level ToLevel() => Level.Parse(name, hint, bodies, map);
+        public Level ToLevel() => Level.Parse(name, hint, bodies, map, statueCount);
     }
 
     /// What the JS solver found; LevelVerifier checks the C# port gives the same answer.

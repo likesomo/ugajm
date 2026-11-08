@@ -1,4 +1,4 @@
-// Synthesizes the placeholder sound effects into unity/Assets/_Project/Audio/*.wav (16-bit mono, 44.1 kHz).
+// Synthesizes the placeholder sound effects into unity/Assets/Shared/Audio/*.wav (shared folder outside git) (16-bit mono, 44.1 kHz).
 // Deterministic (seeded noise), so re-running gives identical files. Swap for recorded/CC0 sounds later by
 // replacing the WAVs with the same names.
 // Usage (repo root): node unity/Tools/gen-sfx.mjs
@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const RATE = 44100;
-const outDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'Assets', '_Project', 'Audio');
+const outDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'Assets', 'Shared', 'Audio');
 
 let seed = 7;
 const noise = () => {
