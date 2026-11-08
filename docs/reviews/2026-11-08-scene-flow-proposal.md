@@ -4,7 +4,7 @@
 `EditorSettings` `m_EnterPlayModeOptions: 1`(도메인 리로드 꺼짐), `RuntimeInitializeOnLoadMethod` 0건, `AppFlow` 생성자 null 허용·`GoToGame` 범위 검사 없음,
 `Changed`가 로드 요청 직후 발생, `Services.Register` 덮어쓰기, `LaunchOptions` 공개 필드(`GameController.cs:155`가 `Replay = ""`로 고침).
 
-**결론: 방향 승인. S0~S2 진행 가능(아래 조건 반영).** S0(정적 초기화)는 실제 버그라 가장 먼저 한다.
+**결론: 아키텍트 관점에서 방향 승인, S0~S2 계약 변경은 아래 조건으로 승인.** 구현 착수는 사용자 결정 후(리드). 착수하면 S0(정적 초기화)가 실제 버그라 가장 먼저 한다.
 
 ## (1) 1.4 문안 → 9장: 조정해서 반영함 (feat/architecture)
 고친 점:
@@ -40,6 +40,6 @@ EditMode + 가짜 로더 + `smoke`/`smoke-webgl`로 S0~S4를 덮을 수 있다. 
 
 ## 기타
 - 5장 공통 완료 조건의 "smoke(리플레이 4개)"는 실제 7개다.
-- 8장 씬 소유자는 지금 게임플레이/UI다. 씬 루트·흐름 컨트롤러를 씬 플로우가 맡으면 씬 파일 소유도 정해야 한다(리드). 한 씬 파일은 한 명만.
+- 씬 소유: 7lucky 29b1f4a README 소유권 표에서 `Scenes/**`·`Game/App/**`가 씬 플로우로 정해졌다. 아키텍처 8장 표의 소유자 열은 아키텍트가 이에 맞춰 고쳤다.
 - S3의 `GameController` 분리는 두 담당이 같은 파일을 고치게 된다. 먼저 씬 플로우가 흐름 부분을 빼는 커밋을 합치고, 그 뒤 게임플레이/UI가 보드 부분을 정리하는 순서로(동시 작업 금지).
 - 텔레메트리 시점 보존(5.1) 좋다. `level_start.via` 골든 외에 씬을 넘는 `level_leave`는 S3 EditMode 테스트로 고정하는 안 그대로 진행.

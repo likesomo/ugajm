@@ -304,9 +304,9 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 
 | 씬 | 빌드 인덱스 | 내용 | 소유자 |
 |---|---|---|---|
-| `Scenes/Boot.unity` | 0 | `Bootstrap`: 서비스 등록(11장), `LaunchOptions` 읽기. `DirectToGame`이면 `Game`, 아니면 `Title`로. 화면 없음 | 게임플레이/UI |
-| `Scenes/Title.unity` | 1 | 상태 `Title`(제목, 설정 패널), `StageSelect`(스테이지 목록, 클리어 표시). 패널 전환만, 씬 이동 없음 | 게임플레이/UI |
-| `Scenes/Game.unity` | 2 | 상태 `Game`(보드, HUD, `GameController`), `Result`(클리어/실패 패널, 다음·재시도·스테이지 선택). 같은 씬 안 오버레이 | 게임플레이/UI |
+| `Scenes/Boot.unity` | 0 | `Bootstrap`: 서비스 등록(11장), `LaunchOptions` 읽기. `DirectToGame`이면 `Game`, 아니면 `Title`로. 화면 없음 | 씬 플로우 |
+| `Scenes/Title.unity` | 1 | 상태 `Title`(제목, 설정 패널), `StageSelect`(스테이지 목록, 클리어 표시). 패널 전환만, 씬 이동 없음 | 씬 플로우 |
+| `Scenes/Game.unity` | 2 | 상태 `Game`(보드, HUD, `GameController`), `Result`(클리어/실패 패널, 다음·재시도·스테이지 선택). 같은 씬 안 오버레이 | 씬 플로우 (화면 내용은 게임플레이/UI) |
 
 - 씬 사이 전달값은 `Services`에 등록된 `AppFlow.Stage`(시작 스테이지)와 `LaunchOptions`(리플레이 등)로 넘긴다. 정적 전역 변수를 따로 만들지 않는다. 영구 싱글턴(`DontDestroyOnLoad`)은 Boot가 만든 하나(오디오·텔레메트리 전송용 러너)만 둔다.
 - 에디터에서 `Game.unity`를 바로 Play하면 Boot를 거치지 않는다. 그래서 각 씬의 진입 코드는 **이번 Play에서 부트스트랩이 돌지 않았으면** 같은 부트스트랩 함수를 직접 부른다(테스트·디버그 편의, v0의 `startLevel`/`replay` 유지). `Services.Has<AppFlow>()`로 판단하지 않는다: 이 프로젝트는 에디터 도메인 리로드가 꺼져 있어(`EditorSettings` `m_EnterPlayModeOptions: 1`) 정적 상태가 Play 사이에 남는다(9장 "정적 가변 상태").
@@ -516,3 +516,4 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 2026-11-08 | 아키텍트 | 12장을 현재 코드에 맞춤: 씬 카메라 설정은 미리 보기용(12.2), 파일 위치·공유 폴더 GUID·WebGL=Mobile 품질(12.3), 검사기 트리거 오류 기준, smoke 7개·smoke-webgl 절차(12.4), "PC 품질 유지" 삭제(12.5). API 변경 없음 |
 | 2026-11-08 | 아키텍트 | 6장: `expected.minBodies` 런타임 사용(클리어 화면 최소 몸 수, feat/view 5a2180a) 명시. 형식 변경 없음 |
 | 2026-11-08 | 아키텍트 | 9장에 구조 원칙(OOP·MVC·단정적, 사용자 지시) 추가: scene-flow.md 1.4 문안을 조정해 반영(GameSession→IBoardPresenter 예외, 규칙상 안 되는 명령은 예외 아님, Core에 Debug.Assert 금지, WebGL 예외 설정, 참조 방향 정정). 8장 직접 Play 판단을 "이번 Play에서 부트스트랩이 돌았는가"로 수정 |
+| 2026-11-08 | 아키텍트 | 8장 씬 소유자를 README(7lucky 29b1f4a)에 맞춰 씬 플로우로 변경 |
