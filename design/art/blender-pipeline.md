@@ -1,5 +1,20 @@
 # Seven Steps — Blender 제작·Unity 전달 규격
 
+## 현행 추가: 세쌍둥이·작은 행성 블록아웃
+
+세계·배경·캐릭터 기준은 [아트 바이블](art-bible.md)의 세쌍둥이/행성 절을 따른다. 기존23종 키트는 유지하고 신규5개 FBX 후보를 추가했다: `SS_Actor_Triplet_A`, `_B`, `_C`, `_Identical`, `_Menhir`(각각전체접두어,Models/*.fbx). 같은 몸 메시·0.88m·160tris/변형, 후드의 어두운 면·짧은 망토·작은 발·몸에 붙인 머플러·잠금쇠를 사용한다. 리그 없음, A/B/C는 액세서리 UV색만 다르고 Identical은 셋이 같은 파일을 사용한다. Menhir는 같은 실루엣의 돌 재질이다. 색 구분 채택은 레벨 디자이너 결정 전 미정이다.
+
+```powershell
+& 'C:/Program Files/Blender Foundation/Blender 5.2/blender.exe' -b --python-exit-code 1 -P design/art/blender/build_ruins_planets.py
+& 'C:/Program Files/Blender Foundation/Blender 5.2/blender.exe' -b --python-exit-code 1 -P design/art/blender/verify_ruins_planets.py
+```
+
+첫 명령은 기반 `Source/Blender/SS_RuinsHenge_Chapter01.blend`가 필요하다. 새 원본은 `Source/Blender/SS_RuinsHenge_Planets.blend`, 보고서는 `Source/Blender/RuinsHengeReports/planets-report.json`와 `planets-roundtrip.json`, 실제 렌더는 `concepts/themes/ruins-henge-planets/blender/triplets-planet-eevee.png`다. Blender 원본·백업은 계속 Assets 밖에 둔다. 기존 FBX/PNG의 .meta를 건드리지 않는다.
+
+블록아웃에는 곡면 모행성1+멀리 있는 저폴리 행성2, 남청 우주와7별 도식이 있다. 그리드는 휘지 않고 지면0의 평면이다. 배경은 미리보기 전용으로 FBX에 포함하지 않았다. 실제 씬에는 두 천 형제와 한 KEEP 선돌로 세 형제를 표시하며 보드 밖 큰 선돌은 환경 소품이다. 기존 땅/산 배경은 새 행성 시안의 제작 기준이 아니다.
+
+6재질을 유지하며5 FBX 재수입 후 UV/버텍스 컬러/원점/동일 몸 좌표 해시를 확인한다. 이번 렌더는 블록아웃이며 GPT의 성운·풀 밀도·최종 재질 완성도를 재현한 것으로 보지 않는다. 실제 URP 연결은 다음 작업이다. 별·숫자는 미리보기 또는 Unity 라벨로 분리하며 스카이박스/HDRI를 다운로드하지 않았다.
+
 ## 유적 키트 품질 보강·임포트 경로 정리 (2026-11-08 후속)
 
 **Assets에는 FBX·PNG와 해당 Unity .meta만 둔다.** Blender 원본·백업·관련 .meta는 `C:/unityjam/shared-assets/seven-steps/Source/Blender/`, 생산·검사 JSON은 그 아래 `RuinsHengeReports/`에 둔다. 이전 Models의 .blend/.blend1을 옮겼고 생성 스크립트도 새 경로만 사용한다. Unity가 Blender를 호출하는 직접 .blend 임포트를 피한다. 기존 FBX/PNG의 .meta는 유지한다.
