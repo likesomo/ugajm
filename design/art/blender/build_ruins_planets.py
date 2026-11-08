@@ -32,10 +32,37 @@ cloth=bpy.data.materials['SS_RH_M_PlayerAtlas']
 stone=bpy.data.materials['SS_RH_M_MenhirAtlas']
 mark=bpy.data.materials['SS_RH_M_MarkUnlit']
 
+# Approved A palette in small, padded atlas patches; no new material per brother.
+approved={'A':'568C88','B':'B99A57','C':'B96C59'}
+def linear(v):return v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4
+atlas=bpy.data.images['RH_Atlas512'].copy()
+atlas.name='RH_Atlas512_Triplets'
+pixels=list(atlas.pixels[:])
+for band,hexcolor in [(0,'B9BFC0'),(6,approved['A']),(7,approved['B']),(4,approved['C'])]:
+    rgb=[linear(int(hexcolor[i:i+2],16)/255) for i in (0,2,4)]
+    for y in range(488,512):
+        for x in range(band*64+4,(band+1)*64-4):
+            offset=(y*512+x)*4
+            pixels[offset:offset+4]=rgb+[1]
+atlas.pixels=pixels
+atlas.filepath_raw=str(assets/'Textures/RH_Atlas512_Triplets.png')
+atlas.file_format='PNG';atlas.save()
+for material in bpy.data.materials:
+    for node in material.node_tree.nodes:
+        if node.type=='TEX_IMAGE':node.image=atlas
+stone_bs=stone.node_tree.nodes['Principled BSDF']
+for link in list(stone_bs.inputs['Base Color'].links):stone.node_tree.links.remove(link)
+granite=tuple(linear(v/255) for v in (185,191,192))+(1,)
+stone_bs.inputs['Base Color'].default_value=granite
+stone_bs.inputs['Roughness'].default_value=.9
+stone.diffuse_color=granite
+
 def finish(obj,name,swatch=0,material=base):
     obj.name=name
     for col in list(obj.users_collection): col.objects.unlink(obj)
     collection.objects.link(obj)
+    bpy.ops.object.select_all(action='DESELECT')
+    obj.select_set(True)
     bpy.context.view_layer.objects.active=obj
     bpy.ops.object.transform_apply(location=True,rotation=True,scale=True)
     obj.data.materials.clear()
@@ -92,10 +119,12 @@ for node in cloth.node_tree.nodes:
 
 def accent_mesh(swatch):
     # Flat scarf + short fitted tail; contour stays within .48m footprint.
-    parts=[box('ScarfWrap',(.25,.16,.055),(0,-.005,.64),swatch),
-           box('ScarfTail',(.055,.025,.18),(-.07,-.14,.55),swatch),
-           box('HemTrim',(.30,.02,.028),(0,-.15,.13),swatch),
-           box('SmallTravelClasp',(.035,.025,.035),(.05,-.10,.65),7)]
+    parts=[box('ScarfWrap',(.32,.24,.06),(0,-.04,.61),swatch),
+           box('ScarfTail',(.055,.025,.18),(-.07,-.18,.52),swatch),
+           box('HemTrim',(.34,.035,.032),(0,-.221,.13),swatch),
+           box('SmallTravelClasp',(.035,.025,.035),(.05,-.165,.61),7)]
+    for part in parts[:3]:
+        for uv in part.data.uv_layers.active.data:uv.uv=((swatch+.5)/8,.977)
     bpy.ops.object.select_all(action='DESELECT')
     for p in parts:p.select_set(True)
     bpy.context.view_layer.objects.active=parts[0]
@@ -106,7 +135,7 @@ def accent_mesh(swatch):
 
 records={}
 roots={}
-for name,swatch,is_stone in [('A',6,False),('B',7,False),('C',4,False),('Identical',7,False),('Menhir',0,True)]:
+for name,swatch,is_stone in [('A',6,False),('B',7,False),('C',4,False),('Menhir',0,True),('Menhir_A',6,True),('Menhir_B',7,True),('Menhir_C',4,True)]:
     root=bpy.data.objects.new('SS_Actor_Triplet_'+name,None)
     actors.objects.link(root)
     body=bpy.data.objects.new(root.name+'__Body',body_mesh)
@@ -120,7 +149,13 @@ for name,swatch,is_stone in [('A',6,False),('B',7,False),('C',4,False),('Identic
     accent.parent=root
     if is_stone:
         accent.material_slots[0].link='OBJECT'
-        accent.material_slots[0].material=stone
+        accent.material_slots[0].material=stone if name=='Menhir' else base
+        if name!='Menhir':
+            for polygon in accent.data.polygons:
+                positions=[accent.data.vertices[accent.data.loops[i].vertex_index].co for i in polygon.loop_indices]
+                trace=all(p.z>.635 and abs(p.x)<=.161 and abs(p.y)<=.161 for p in positions)
+                for i in polygon.loop_indices:
+                    accent.data.uv_layers.active.data[i].uv=(((swatch if trace else 0)+.5)/8,.977)
     tris=0
     for o in root.children:
         o.data.calc_loop_triangles()
@@ -135,7 +170,7 @@ for name,swatch,is_stone in [('A',6,False),('B',7,False),('C',4,False),('Identic
     bpy.ops.export_scene.fbx(filepath=str(path),use_selection=True,object_types={'MESH','EMPTY'},
         global_scale=1,apply_unit_scale=True,apply_scale_options='FBX_SCALE_UNITS',axis_forward='-Z',axis_up='Y',
         bake_space_transform=True,add_leaf_bones=False,bake_anim=False,path_mode='RELATIVE',embed_textures=False)
-    records[root.name]={'triangles':tris,'height':.88,'fbx':str(path),'accent_swatch':swatch,'rig':'none'}
+    records[root.name]={'triangles':tris,'height':.88,'fbx':str(path),'accent_swatch':swatch,'rig':'none','approved_hex':approved.get(name),'keep_trace':name.startswith('Menhir_')}
     roots[name]=root
 actors.hide_render=True
 
@@ -153,14 +188,52 @@ def instance(root,x,y,z=0):
 for y in range(5):
     for x in range(5):
         instance(bpy.data.objects['SS_Tile_Floor_Moss' if (x+y)%2 else 'SS_Tile_Floor_Clean'],x-2,y-2)
-for name,x,y in [('A',-1.4,-1.3),('B',0,-1.3),('Menhir',1.4,-1.3)]: instance(roots[name],x,y)
+for name,x,y in [('A',-1.4,-1.3),('B',0,-1.3),('Menhir_C',1.4,-1.3)]: instance(roots[name],x,y)
 for name,x,y in [('SS_Tile_NumberDoor',1,1),('SS_Block_Wood',-2,1),('SS_Tile_Lever',0,1),('SS_Block_Stone',2,2)]:
     instance(bpy.data.objects[name],x,y)
-sphere('HomePlanet_CurvedHorizon',3.65,(0,0,-3.90),2,3)
+# Flat summit is a single closed planet mesh; board underside z=-.12 rests on it.
+segments=64
+rings=[(-.12,3.65),(-.35,3.92),(-1.0,4.15),(-2.0,4.05),(-3.2,3.65),(-4.3,2.8),(-5.25,1.5),(-5.65,.01)]
+verts=[(0,0,-.12)]
+for z,radius in rings:
+    verts.extend((math.cos(i*2*math.pi/segments)*radius,math.sin(i*2*math.pi/segments)*radius,z) for i in range(segments))
+faces=[(0,1+i,1+(i+1)%segments) for i in range(segments)]
+for ring in range(len(rings)-1):
+    for i in range(segments):
+        j=(i+1)%segments
+        faces.append((1+ring*segments+i,1+(ring+1)*segments+i,1+(ring+1)*segments+j,1+ring*segments+j))
+faces.append(tuple(reversed(range(1+(len(rings)-1)*segments,1+len(rings)*segments))))
+mesh=bpy.data.meshes.new('Planet_FlatSummit_Mesh');mesh.from_pydata(verts,[],faces);mesh.update()
+planet=bpy.data.objects.new('HomePlanet_FlatSummit',mesh);collection.objects.link(planet)
+finish(planet,'HomePlanet_FlatSummit',2)
+assert all(abs(v.co.z+.12)<.00001 for v in planet.data.vertices[:65])
+# Moss border, painted stone caps, timber repairs and small outside-grid props.
+for side in (-1,1):
+    for j in range(5):
+        instance(bpy.data.objects['SS_Border_Straight'],j-2,side*2.58)
+        border=instance(bpy.data.objects['SS_Border_Straight'],side*2.58,j-2)
+        border.rotation_euler.z=math.pi/2
+for j in range(24):
+    angle=j*2*math.pi/24
+    x,y=3.05*math.cos(angle),3.05*math.sin(angle)
+    patch=sphere('MossRim',.31,(x,y,-.10),2,1)
+    # Scale the already baked mesh around its local patch center.
+    for v in patch.data.vertices:v.co.z=-.10+(v.co.z+.10)*.25
+for x in (-2.15,2.15):
+    instance(bpy.data.objects['SS_Block_Stone'],x,2.72,-.12)
+    instance(bpy.data.objects['SS_Block_Wood'],x,-2.78,-.12)
+    box('PaintedTimberTrim',(.72,.08,.075),(x,-2.995,.15),6)
+for j in range(70):
+    angle=j*2*math.pi/70
+    x,y=3.36*math.cos(angle),3.36*math.sin(angle)
+    blade_mesh=bpy.data.meshes.new('RimGrassMesh')
+    blade_mesh.from_pydata([(x-.045,y,-.12),(x+.045,y,-.12),(x+.035,y+.03,.08+.035*(j%3))],[],[(0,1,2)])
+    blade=bpy.data.objects.new('RimGrass',blade_mesh);collection.objects.link(blade)
+    finish(blade,'RimGrass',2)
 sphere('DistantPlanet_Celadon',.72,(-4.2,2.5,.8),5,2)
 sphere('DistantPlanet_Ochre',.48,(4.1,2.5,1.2),7,2)
-for x,y in [(-2.8,2.2),(2.7,2.1),(-2.4,2.7)]:
-    r=instance(bpy.data.objects['SS_Actor_Menhir'],x,y,-.2)
+for x,y in [(-2.65,2.35),(2.65,2.35),(-1.5,3.0)]:
+    r=instance(bpy.data.objects['SS_Actor_Menhir'],x,y,-.12)
     r.scale=(1.3,1.3,1.6)
 
 scene.world.use_nodes=True
@@ -199,7 +272,28 @@ assert preview_triangles<50000
 scene.render.filepath=str(output/'triplets-planet-eevee.png')
 bpy.ops.wm.save_as_mainfile(filepath=str(source/'SS_RuinsHenge_Planets.blend'))
 bpy.ops.render.render(write_still=True)
+target=Vector((0,.4,-.75))
+cam.location=target+Vector((0,-14*math.cos(angle),14*math.sin(angle)))
+cam.rotation_euler=(target-cam.location).to_track_quat('-Z','Y').to_euler()
+cam_data.ortho_scale=10
+scene.render.filepath=str(output/'chapter01-summit-close.png')
+bpy.ops.render.render(write_still=True)
+# Inspect all approved colors and KEEP trace alternatives at a useful scale.
+for obj in collection.objects:
+    if obj.type in ('MESH','CURVE','FONT'):obj.hide_render=True
+portrait=bpy.data.collections.new('TRIPLET_COLOR_COMPARISON_NO_EXPORT')
+scene.collection.children.link(portrait)
+collection=portrait
+for name,x,y in [('A',-1.35,0),('B',0,0),('C',1.35,0),('Menhir',-2.0,1.65),('Menhir_A',-.67,1.65),('Menhir_B',.67,1.65),('Menhir_C',2,1.65)]:
+    instance(roots[name],x,y)
+target=Vector((0,.7,.35))
+cam.location=target+Vector((0,-7,6))
+cam.rotation_euler=(target-cam.location).to_track_quat('-Z','Y').to_euler()
+cam_data.ortho_scale=6
+scene.render.filepath=str(output/'triplets-approved-colors-keep.png')
+bpy.ops.render.render(write_still=True)
 report={'blender_version':bpy.app.version_string,'material_count':6,'height':.88,'body_mesh_shared':True,
+        'approved_palette':approved,'atlas':str(assets/'Textures/RH_Atlas512_Triplets.png'),'summit_z':-.12,'board_underside_z':-.12,'summit_radius':3.65,
         'preview_triangles':preview_triangles,'planet_count':3,'camera_pitch':50,'camera_yaw':0,
         'source':str(source/'SS_RuinsHenge_Planets.blend'),'models':records,'unity_import_tested':False,
         'preview':'three siblings; two cloth and one KEEP stone; background non-exported'}

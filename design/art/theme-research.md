@@ -1,5 +1,7 @@
 # 일곱 걸음 — 문화의 일곱을 재료로 만든 아트 테마
 
+> 2026-11-09 결정: **세쌍둥이 A안 색 구분 확정**, B안 동일 외형은 기록만 유지. 현재5행성은 유지하고50스테이지/6–8행성 계획 확정 후 별도 갱신한다. Blender 보드를 평탄 정상부에 접지하고 이끼 테두리·트림·소품을 더했다. 현행 판단은 [아트 바이블](art-bible.md), 전후 렌더는 `ruins-henge-planets/blender/chapter01-before-grounding.png`와 `triplets-planet-eevee.png`, 승인색/KEEP 흔적 비교는 `triplets-approved-colors-keep.png`다. 아래 미정 문구는 당시 탐색 기록이다.
+
 > 최신 사용자 방향: **선돌 원형 제단을 찾아가는 세쌍둥이 방랑자 × 챕터별 작은 행성**. 배경의 실제 들판·산 원경을 폐기하고 우주와 행성 곡률로 전환한다. 캐릭터 구분 여부와 챕터 경계는 레벨 디자이너 결정 전 미정이다. 현행 제작 기준은 [아트 바이블](art-bible.md), 최신 이미지는 `C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge-planets/`에 있다.
 
 ## 현행 추가 — 세쌍둥이와 다섯 행성
