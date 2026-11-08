@@ -127,3 +127,23 @@ Unity 후속 임포트(이번 미수행): Scale Factor1, Convert Units ON, Norma
 실제 결과는 `C:/unityjam/shared-assets/seven-steps/concepts/themes/dipper-3d-variants/blender/`의 `SS_Dipper_Blockout.blend`, `blockout-eevee.png`, `SS_Palette_256.png`, `blockout-report.json`, `fbx/*.fbx`다. 가시 보드4,584tris, 모듈17종, 공유재질6종, 같은 플레이어/석상 Mesh datablock과 문·벽≤.6/몸≤1/바닥윗면0 assert가 통과했다. 바닥44tris·얼음176·문132·레버116·몸100, 몸의 실제 높이.87m다. 고정 별 좌표·연결은 PREVIEW 컬렉션에만 있고 FBX에 넣지 않는다. 공유 재질6종에는 PREVIEW/Studio2개가 포함되어 게임의 최종6종 구성과 역할은 다르다. Unity 임포트·WebGL 플레이 성능은 아직 검증하지 않았다.
 
 출력 경로 가드는 `dipper-3d/` 또는 `dipper-3d-variants/` 공유 하위만 허용한다. 실제 블록아웃에는 두 개의 먹돌 받침과 얇은 구리 띠·같은 아틀라스 하단 trim을 더했지만 GPT 배경·최종 광택·완성게임UI를 재현한 것은 아니다. 여러 기믹을 모은 프리뷰 보드이며 솔버로 검증한 실제 레벨이 아니다.
+# 현행 유적×선돌 키트 전달 — Blender5.2.3
+
+현행 미술 기준: [아트 바이블](art-bible.md). 아래 기존 Dipper 제작 기록과 구분한다. 새 제작은 Unity 프로젝트를 변경하지 않았다.
+
+공유 자산 `C:/unityjam/shared-assets/seven-steps/Assets/Art/RuinsHenge/` → Unity 링크 `Assets/Shared/Art/RuinsHenge/`. Models에21 FBX와 SS_RuinsHenge_Chapter01.blend, Textures/RH_Atlas512.png, Reports/production-report.json 및 fbx-roundtrip.json. 렌더는 `concepts/themes/ruins-henge/blender/`.
+
+```powershell
+& 'C:/Program Files/Blender Foundation/Blender 5.2/blender.exe' -b --python-exit-code 1 -P design/art/blender/build_ruins_henge.py -- --out C:/unityjam/shared-assets/seven-steps/Assets/Art/RuinsHenge --renders C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/blender
+& 'C:/Program Files/Blender Foundation/Blender 5.2/blender.exe' -b --python-exit-code 1 -P design/art/blender/verify_ruins_henge_fbx.py
+```
+
+Metric/scale1, Blender Z-up→FBX -Z Forward/Y Up, Apply Transform/Scale, Selected Objects=MESH+EMPTY, Animation off, Add Leaf Bones off, 텍스처 상대 경로·임베드 끔.
+
+컬렉션: 01_EXPORT_LIBRARY(모듈원점0),02_KIT_PREVIEW,03_BOARD_PREVIEW,90/91_*_LABELS_NO_EXPORT,99_STUDIO_NO_EXPORT. 모델별 루트 Empty와 하위 메시/훅만 선택 내보낸다. 숫자·프리뷰 라벨·조명·카메라는 제외한다. LOD/리그 없음,1단 베벨 적용 후 내보내기. 각 모델 피벗=칸 중앙 지면,바닥윗면 Blender z0→Unity y0.
+
+공유 UV0 아틀라스와 버텍스 컬러 `MossMask.R` 유지. Blender 노드는 URP로 자동 전송되지 않으며 외부 텍스처 경로가 있어도 Unity 머티리얼을 따로 만든다. URP BaseAtlas는 Atlas×컬러에 VertexColor.R×노이즈(.7–1)를 사용해 이끼색을 혼합한다. 모든 모델 UV/컬러는 Blender FBX 재수입 확인, Unity 실제 임포트 검사는 다음 단계다.
+
+문 훅 `SS_Tile_NumberDoor__GatePanel`, `SS_Tile_CountDoor__GatePanel`을 inactiveChild로 연결하고, 레버 `SS_Tile_Lever__HandlePivot`에 트윈 회전을 연결한다. 뒤집힘 벽은 Up/Down 두 프리팹, 바닥 변형에만 randomYaw90. 숫자/석상 수/별은 별도 화면 라벨, 몸 발밑과 labelOffset은 카메라50°에서 확인한다. 출구·얼음·구덩이도 TileId→TileSet 필드에 맵핑한다.
+
+TileSet은 기존 규격대로 Prefabs/Tiles와 Data/TileSets에서 구성해야 하나 **이번에는 생성하지 않는다**. 다음 디스패치에6 URP재질→프리팹/TileVisual→TileSet→TileSetValidator→17스테이지 smoke→WebGL 브라우저 검수 순으로 진행한다. 챕터별 TileSet 대 공유세트 재질오버라이드 및 조명/하늘 ScriptableObject는 아키텍트·게임플레이가 경계를 정한다.

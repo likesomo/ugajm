@@ -1,6 +1,6 @@
 # 일곱 걸음 — 문화의 일곱을 재료로 만든 아트 테마
 
-> 후속 사용자 결정: **북두칠성의 일곱 별 + 서양과 어울리는 오리엔탈 풍**, **Blender로 제작 가능한 3D**, 그리고 **서로 다른 다수 시안**. 현재 비교는 문서 끝의 ‘3D 다수 시안’ 장, 제작 규격은 [파이프라인](blender-pipeline.md)을 기준으로 본다. 앞의 문화권·일러스트·초기3D 비교는 탐색 기록으로 보존한다.
+> 현행 사용자 확정: **이끼·잔디 유적 × 선돌 서사 × 동양 석재·목재 × 챕터별 환경**. 모든 에이전트의 제작 기준은 [아트 바이블](art-bible.md)이며, 이 문서 끝의 ‘유적×선돌×오리엔탈’이 최신 시안이다. 앞의 테마 비교는 탐색 기록으로 보존한다.
 
 ## 7을 길하게 여기는 문화권 조사 요약
 
@@ -383,3 +383,77 @@ Blender 설치 경로를 작업 중과 마무리 전에 확인했지만 실행 �
 GPT 목표와 실제 렌더는 갤러리에서 나란히 비교한다. 실렌더는 **형태·규격·공유메시·단일 아틀라스의 가능성**을 검증하며 최종 광택·밤안개·정교한 UI·플레이 가능한 레벨을 완성한 것은 아니다. Unity FBX 임포트·GUID 연결·WebGL 성능은 후속 검증이다. GPT5보드와3연출은 모두 HUD7개·그릇1–2–3–4–1·4에서 시작하는 손잡이4–5–6–7을 눈으로 확인했다. 다만01 보드의 로마숫자처럼 보이는 문 표시는 연출 시안에서3/1로 정리했고, 모든 최종 구현에는 발자국/석상 배지를 붙인다.01의L자 얼음 선은 자동으로 방향을 꺾는 규칙이 아니며 생산 재질에서는 기존의 평행 홈으로 단순화한다. 생성 그림의 부품·경로 위치를 실제 정답 레벨로 사용하지 않는다.
 
 최종 검증: 신규 GPT PNG8개(보드5+연출3), 실제 렌더·팔레트·.blend 존재, FBX17개의 binary 시그니처, 측정 JSON의17모듈/6재질/4,584tris/동일액터메시/높이 제한과 고정7연결이 통과했다. 갤러리 로컬 링크96개·JavaScript 구문·‘다수 시안’ 최상단/기본 필터5개를 확인했고 Chrome headless 실제 표시도 눈으로 확인했다. 공유 파일은 git에 넣지 않으며, 본 작업은 Unity 프로젝트를 변경하지 않았다.
+
+## 유적×선돌×오리엔탈
+
+2026-11-08 사용자 확정 방향. 제작 규격과 최종 우선순위는 [아트 바이블](art-bible.md)을 따른다. **추천: 일곱 별은 카운트, 해의 정렬은 장소의 축**. 남긴 몸은 다음 몸을 돕는 선돌, 7번째는 하늘의 때와 유적이 잠깐 맞물리는 순간이다. 낮은 다듬은 돌과 목재 보수 블록, 모서리 이끼와 외곽 풀, 절제된 청록/적갈 기하 트림을 공통 언어로 쓴다.
+
+### 근거와 창작 설정
+
+스톤헨지의 큰 사암 배치는 태양의 계절적 이동과 연결되며 여름 일출·겨울 일몰 축으로 설명된다. 여기서는 ‘돌을 세워 해의 때와 맞춘다’는 공간 원리만 추상화한다. 실제 상인방 고리나 배치를 재현하지 않는다. [English Heritage: Understanding Stonehenge](https://www.english-heritage.org.uk/visit/places/stonehenge/history-and-stories/understanding-stonehenge/)
+
+달과의 관련은 현재 연구 대상인 가설로 다루며 확정된 해의 축과 같은 수준으로 서술하지 않는다. [English Heritage: Major Lunar Standstill](https://www.english-heritage.org.uk/visit/places/stonehenge/things-to-do/major-lunar-standstill/), [Historic England: Astronomical Research](https://historicengland.org.uk/whats-new/research/back-issues/astronomical-research-at-stonehenge/)
+
+동양 재료는 석재 마감과 목재 끝단의 절제된 색칠로 표현한다. 단청은 목조 표면의 색채·장식 언어를 참고하되 특정 사찰 문양·기물을 복제하지 않는다. [Durham Oriental Museum 한국관 가이드](https://www.durham.ac.uk/things-to-do/media/things-to-do/oriental-museum/visit/access/downloadable-gallery-guides-/Rutt-Gallery-of-Korea---Large-Print-Guide.pdf)
+
+| 방식 | 규칙 연결·장점 | 한계 | 판단 |
+|---|---|---|---|
+| 북두칠성 HUD+태양 축 | 정확히7개의 불과 남은 걸음, 몸=선돌, 챕터 시간 변화가 함께 읽힘 | 별 정렬은 창작임을 구분해야 함 | **추천** |
+| 해·달만으로 카운트 | 유적의 계절·시간 이미지는 강함 | 7과 즉시 연결되지 않아 UI 학습 추가 | 배경 보조 |
+| 달 정렬을 역사적 주제로 전면화 | 밤 조명·정렬 서사의 가능성 | 역사적 근거 확정성 낮고 스테이지별 판독성 저하 | 주서사로 채택하지 않음 |
+
+HUD 국자는1–2–3–4–1, 손잡이는4–5–6–7이다. 주간에도 표시하는 추상 UI이며 실제 낮 하늘에서 일곱 별이 보인다는 뜻이 아니다.
+
+### 챕터 제안과 팔레트
+
+범위는 [17스테이지 플레이테스트 가이드](../levels/playtest-guide.md)의 등장 순서를 따른 **잠정 경계**이며 레벨 디자이너가 난이도·챕터 길이를 검토한다. 같은 기믹 세트를 모든 초기 장면에 강제로 넣지 않고 해당 장에서 배운 기믹을 보여 준다.
+
+| 챕터·장소 | 스테이지 | 시간대 | HEX |
+|---|---|---|---|
+| 1 이끼의 첫걸음 | 1–4 | 이른 아침 | #D5D9C8 #707D63 #6F8B4E #6D5140 #9C7560 #A4BDC1 |
+| 2 돌과 나무의 건넘 | 5–6 | 낮의 옅은 안개 | #CCD2C7 #76847A #668249 #846147 #B29768 #8FAAB0 |
+| 3 서리 걸린 별길 | 7–10 | 푸른 해질녘 | #D8E4DE #66828D #536D55 #715B4F #9CBAC5 #B49A6C |
+| 4 기억을 받치는 회랑 | 11–15 | 저녁 등잔빛 | #D1D2BE #5E7760 #8B6548 #344C4B #A95F4D #C2A270 |
+| 5 하늘의 때를 세우는 마당 | 16–17 | 밤 끝의 박명 | #D9DEC8 #607568 #324C60 #78604A #C5AE78 #BD7257 |
+
+1장은7/KEEP·발판/SWITCH, 2장은몸 다리·숫자 문, 3장은얼음·레버·석상 정지·뒤집힘 벽, 4장은금 간 바닥·두 문·정확한 석상 수, 5장은기존 규칙 통합과 떠나온 자리이다. 석재/목재/기타 비중은 차례로70/20/10,60/30/10,55/25/20(서리),40/50/10,70/20/10이다. 시간·소품·빛 상세는 바이블 표를 따른다.
+
+### 시안과 실제 제작 구분
+
+모든 경로의 루트: `C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/`.
+
+| 파일 | 내용 |
+|---|---|
+| [01-meadow/board.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/01-meadow/board.png) | 아침 초원 유적 |
+| [02-stone-crossing/board.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/02-stone-crossing/board.png) | 낮의 돌·목재 건널목 |
+| [03-frost-gorge/board.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/03-frost-gorge/board.png) | 해질녘 서리 협곡 |
+| [04-timber-court/board.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/04-timber-court/board.png) | 등잔빛 목조 회랑 |
+| [05-summit/board.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/05-summit/board.png) | 정상 원형 외곽 마당 |
+| [seventh.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/seventh.png) | 일곱 별 완성·선돌 정렬 |
+| [title.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/title.png) | 타이틀 키아트 |
+| [chapter-strip.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/chapter-strip.png) | 5챕터 진행 스트립 |
+| [module-kit.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/module-kit.png) | 제작 방향 모듈 시트 |
+| [blender/modules-eevee.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/blender/modules-eevee.png) | 실제 Blender5.2.3 이끼 타일·돌·나무·선돌 렌더 |
+| [blender/chapter01-kit-board-eevee.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/blender/chapter01-kit-board-eevee.png) | 실제21종 기반 조립 보드 렌더 |
+
+[갤러리](C:/unityjam/shared-assets/seven-steps/concepts/themes/index.html) 맨 위에 나란히 배치했다. GPT 시안은 분위기·소품 참고이며 실제 1m 크기·폴리 수는 Blender 생산 보고서가 기준이다. 일부 시안의 문 라벨/기믹 모양은 생산 키트와 차이가 있어 그대로 복제하지 않는다. 숫자 문과 석상 수 문을 같은 실루엣+별도 UI로 고정한다. 바닥 별자리 배관은 채택하지 않고 별은 HUD에 둔다. 키트 이미지의 바닥 두께0.20m 표기는 비구속 시안이며 실제 모델은0.12m이다.
+
+### 공유 키트·제작량
+
+Chapter01 **21종 FBX 제작 완료**, 6머티리얼·공유512² 아틀라스, MossMask.R 버텍스 이끼, 잔디 외곽 삼각형. 실제 플레이어/선돌은 동일 메시를 다른 재질로 쓴다. 숫자/별은 내보내지 않았다. Blender5.2.3에서21 FBX 재수입으로 UV·버텍스 컬러·원점·tris 확인, 예제 보드7,974 tris, 목표50k 이하다.
+
+자산 루트는 `C:/unityjam/shared-assets/seven-steps/Assets/Art/RuinsHenge/`: Models에21 FBX와.blend, Textures에자체 생성 RH_Atlas512.png, Reports에생산/재수입 JSON. **Unity 연결 준비 완료(모델 전달 단계)**이며 URP 셰이더·프리팹·TileSet 연결과17스테이지/WebGL 검수는 다음 디스패치다. Unity 파일은 변경하지 않았다.
+
+메시 공유, 챕터별 팔레트/트림·소품·빛·하늘만 교체한다. 추가4장 환경 프리셋은 미제작이다. 전체 예상3.75–5.5인일: 공통키트 정교화1.5–2, URP/프리팹0.75–1, 챕터소품·빛1–1.5, 검수0.5–1. 장마다 새 메시 세트를 만들면 비용이 크게 늘므로 금지한다.
+
+### 무료 텍스처 후보 — 미다운로드
+
+| 대상 | 후보·라이선스 | 사용 판단 |
+|---|---|---|
+| 이끼·거친 돌 | [Poly Haven Mossy Rock](https://polyhaven.com/a/mossy_rock), CC0 | 사진 색은 약화하고 마스크/러프니스 원재료로 축소 |
+| 잔디 | [Poly Haven Leafy Grass](https://polyhaven.com/a/leafy_grass), CC0 | 중앙 바닥 대신 외곽 마스크에만 |
+| 석재 | [Poly Haven Stone Floor](https://polyhaven.com/a/stone_floor), CC0 | 세부 돌 줄눈은 게임 격자와 경쟁하므로 제거/약화 |
+| 목재 | [Poly Haven Weathered Brown Planks](https://polyhaven.com/a/weathered_brown_planks), CC0 | 옹이·이음새 대비를 낮춰 공통 아틀라스에 편입 |
+| 보조 목재 | [ambientCG WoodFloor051](https://ambientcg.com/view?id=WoodFloor051), CC0 | 매끈한 실내 마루라 우선순위 낮음 |
+
+[Poly Haven 라이선스](https://polyhaven.com/license), [ambientCG 라이선스](https://docs.ambientcg.com/license/)에서 상업 사용 가능한 CC0를 확인했다. 이번 산출에는 다운로드하지 않았고 자체 절차 아틀라스만 사용했다. 모델·이미지·텍스처는 공유 폴더에만 저장하고 텍스트·스크립트만 커밋한다.
