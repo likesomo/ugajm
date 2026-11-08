@@ -121,3 +121,37 @@ test('fake playtest: posts through HTTP and aggregates', async () => {
     assert.equal(future.length, 0);
   } finally { await s.close(); }
 });
+
+test('WebGL build at /webgl/: adds ?telemetry=<this server>, streams the files', async () => {
+  const { mkdtempSync, mkdirSync, writeFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const dir = mkdtempSync(join(tmpdir(), 'webgl-'));
+  mkdirSync(join(dir, 'Build'));
+  writeFileSync(join(dir, 'index.html'), '<title>Seven Steps</title>');
+  writeFileSync(join(dir, 'Build', 'WebGL.wasm.unityweb'), Buffer.alloc(1000, 7));
+  const w = await startServer({ webglDir: dir });
+  const proxied = await startServer({ webglDir: dir, trustProxy: true });
+  try {
+    const r = await fetch(`${w.url}/webgl/?level=8`, { redirect: 'manual' });
+    assert.equal(r.status, 302);
+    const loc = new URL(r.headers.get('location'), w.url);
+    assert.equal(loc.searchParams.get('level'), '8');
+    assert.equal(loc.searchParams.get('telemetry'), w.url);
+    assert.equal(new URL((await fetch(`${w.url}/webgl`, { redirect: 'manual' })).headers.get('location'), w.url).pathname, '/webgl/');
+    // Behind a tunnel the browser's origin comes from the proxy headers.
+    const t = await fetch(`${proxied.url}/webgl/`, { redirect: 'manual', headers: { 'X-Forwarded-Proto': 'https', 'X-Forwarded-Host': 'x.trycloudflare.com' } });
+    assert.equal(new URL(t.headers.get('location'), proxied.url).searchParams.get('telemetry'), 'https://x.trycloudflare.com');
+    // An explicit telemetry=off (or another server) is kept.
+    const off = await fetch(`${w.url}/webgl/?telemetry=off`);
+    assert.equal(off.status, 200);
+    assert.match(await off.text(), /Seven Steps/);
+    const b = await fetch(`${w.url}/webgl/Build/WebGL.wasm.unityweb`);
+    assert.equal(b.headers.get('content-length'), '1000');
+    assert.equal((await b.arrayBuffer()).byteLength, 1000);
+    assert.equal((await fetch(`${w.url}/webgl/..%2F..%2Fsecret`)).status, 404);
+  } finally {
+    await w.close();
+    await proxied.close();
+  }
+});

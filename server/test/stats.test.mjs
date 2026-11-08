@@ -106,6 +106,8 @@ test('heatmap groups by cell', () => {
     [2, 'undo', { level: 1, at: [3, 1] }],
     [3, 'body_lost', { level: 1, at: [4, 1], reason: 'fell', wasted: true }],
     [4, 'move', { ...mv(1, [5, 1], 'blocked'), from: [4, 1] }],
+    [5, 'level_clear', { level: 1, at: [8, 1] }],
+    [6, 'idle', { level: 1, idleMs: 56000, at: [8, 1] }], // waiting on the clear screen
   ]);
   const cells = Object.fromEntries(heatmap(r).map((c) => [`${c.x},${c.y}`, c]));
   assert.equal(cells['2,1'].idle, 2);
@@ -113,6 +115,7 @@ test('heatmap groups by cell', () => {
   assert.equal(cells['3,1'].undo, 1);
   assert.equal(cells['4,1'].lost_fell, 1);
   assert.equal(cells['4,1'].blocked, 1);
+  assert.equal(cells['8,1'], undefined);
 });
 
 test('helpers: quantile and CSV escaping', () => {
