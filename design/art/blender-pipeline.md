@@ -1,5 +1,15 @@
 # Seven Steps — Blender 제작·Unity 전달 규격
 
+## 유적 키트 품질 보강·임포트 경로 정리 (2026-11-08 후속)
+
+**Assets에는 FBX·PNG와 해당 Unity .meta만 둔다.** Blender 원본·백업·관련 .meta는 `C:/unityjam/shared-assets/seven-steps/Source/Blender/`, 생산·검사 JSON은 그 아래 `RuinsHengeReports/`에 둔다. 이전 Models의 .blend/.blend1을 옮겼고 생성 스크립트도 새 경로만 사용한다. Unity가 Blender를 호출하는 직접 .blend 임포트를 피한다. 기존 FBX/PNG의 .meta는 유지한다.
+
+공유 키트는 기존21종에 Stone_V2/V3 두 변형을 더한23종이다. 석재는2단 줄눈·2/3분할 교차·1단 넓은 베벨, 바닥은 불규칙 가장자리·가벼운 아틀라스 입자, 이끼는 중앙0/줄눈·외곽 집중 버텍스 마스크, 잔디는 외곽 삼각 카드이다. 목재는3판재+놋쇠 띠+기하 트림, 몸/선돌은 비대칭으로 깎은 동일 메시232tris다. 숫자·별은 계속 별도 라벨이다.
+
+재질6개·512² 공유 아틀라스를 유지한다. 이끼 바닥638tris/잔디 바닥656tris, 돌220/264/264tris, 나무264tris, 몸232tris. 배경 언덕·선돌·외곽 풀까지 합친 조립 보드20,202tris로50k 예산 안이다. 배경은 보드 밖이고 모듈 FBX로 내보내지 않는다. 팔레트는 바닥 #DEDAC8, 보조돌 #A7AD98, 목재 #846147로 밝기를 보강했다. 태양광+아침 키+푸른 필을 사용한다.
+
+전후는 같은 pitch50/yaw0/직교9.6·같은 보드 배치로 비교한다. 추가 context 렌더만 직교12로 넓혔다. 공유 `concepts/themes/ruins-henge/blender/chapter01-before.png`와 `chapter01-kit-board-eevee.png`, 추가 `chapter01-context-eevee.png`. GPT/전/후를 `concepts/themes/ruins-henge/blender/comparison.html`에 나란히 둔다. 기존 GPT 배경의 완성도·세부 조형까지 동일하다는 뜻은 아니며 Unity URP 대응은 별도 작업이다.
+
 > 현행 확정 방향은 [아트 바이블](art-bible.md)과 이 문서 마지막 ‘현행 유적×선돌 키트 전달’이다. 아래 초기 Dipper 추천은 보존된 탐색 기록이다.
 
 2026-11-08. 북두칠성 퓨전 세 안을 실제 메시 키트로 만들기 위한 설계다. **추천은 먹돌 관측대(기존 slug `dipper-ink-engraving`)**이며, 청자 기하 관측대와 별지도 책의 무대도 같은 모듈 규격을 쓴다. 이번에는 Unity 프로젝트를 변경하지 않는다.
@@ -133,7 +143,7 @@ Unity 후속 임포트(이번 미수행): Scale Factor1, Convert Units ON, Norma
 
 현행 미술 기준: [아트 바이블](art-bible.md). 위의 기존 Dipper 제작 기록과 구분한다. 새 제작은 Unity 프로젝트를 변경하지 않았다.
 
-공유 자산 `C:/unityjam/shared-assets/seven-steps/Assets/Art/RuinsHenge/` → Unity 링크 `Assets/Shared/Art/RuinsHenge/`. Models에21 FBX와 SS_RuinsHenge_Chapter01.blend, Textures/RH_Atlas512.png, Reports/production-report.json 및 fbx-roundtrip.json. 렌더는 `concepts/themes/ruins-henge/blender/`.
+공유 자산 `C:/unityjam/shared-assets/seven-steps/Assets/Art/RuinsHenge/` → Unity 링크 `Assets/Shared/Art/RuinsHenge/`. Models에23 FBX, Blender 원본은 Assets 밖 Source/Blender에 저장, Textures/RH_Atlas512.png, C:/unityjam/shared-assets/seven-steps/Source/Blender/RuinsHengeReports/production-report.json 및 fbx-roundtrip.json. 렌더는 `concepts/themes/ruins-henge/blender/`.
 
 ```powershell
 & 'C:/Program Files/Blender Foundation/Blender 5.2/blender.exe' -b --python-exit-code 1 -P design/art/blender/build_ruins_henge.py -- --out C:/unityjam/shared-assets/seven-steps/Assets/Art/RuinsHenge --renders C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/blender

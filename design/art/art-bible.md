@@ -1,6 +1,8 @@
 # Seven Steps 아트 바이블 — 유적×선돌×오리엔탈
 
-2026-11-08 사용자 확정 방향. **모든 에이전트의 현행 아트 기준**이다. 과거 테마 시안은 탐색 기록이며 이 문서와 충돌하면 이 문서를 따른다. 기술 규격은 [architecture 12장](../../docs/architecture.md#12-3단계-준비-쿼터뷰-전환-계획), 실제 수치는 공유 폴더의 `Reports/production-report.json`을 따른다.
+> 품질 보강 후 현행값:23종(석재 블록 V2/V3 추가), 배경 포함20,202tris,6재질. Blender 원본·백업과 보고서는 Assets 밖 `C:/unityjam/shared-assets/seven-steps/Source/Blender/`에 둔다. Assets에는 FBX·PNG만(관련 .meta 포함). Chapter01 제작 팔레트의 밝은 바닥 #DEDAC8/보조돌 #A7AD98/목재 #846147을 사용하며 아래 장별 팔레트는 분위기 목표다. 세부 내역·전후 비교는 [파이프라인](blender-pipeline.md) 첫 장을 따른다.
+
+2026-11-08 사용자 확정 방향. **모든 에이전트의 현행 아트 기준**이다. 과거 테마 시안은 탐색 기록이며 이 문서와 충돌하면 이 문서를 따른다. 기술 규격은 [architecture 12장](../../docs/architecture.md#12-3단계-준비-쿼터뷰-전환-계획), 실제 수치는 공유 폴더의 `C:/unityjam/shared-assets/seven-steps/Source/Blender/RuinsHengeReports/production-report.json`을 따른다.
 
 ## 세계와 감정
 
@@ -41,20 +43,20 @@
 
 ## 공유 키트와 제작 예산
 
-챕터마다 새 메시 세트를 만들지 않는다. 같은 21종 메시 + 팔레트/트림 + 작은 환경 소품 + 조명/하늘 프리셋으로 차별화한다. 모서리 랜덤90도 회전은 바닥에만, 레버·방향 홈·라벨에 적용하지 않는다.
+챕터마다 새 메시 세트를 만들지 않는다. 같은 23종 메시 + 팔레트/트림 + 작은 환경 소품 + 조명/하늘 프리셋으로 차별화한다. 모서리 랜덤90도 회전은 바닥에만, 레버·방향 홈·라벨에 적용하지 않는다.
 
 | 묶음 | 완성된 Chapter01 FBX | 목표·상태 |
 |---|---|---|
 | 바닥 | Floor_Clean / Floor_Moss / Floor_GrassEdge | 3변형, 윗면 z=0, 모서리 버텍스 마스크 |
-| 환경 | Block_Stone / Block_Wood / Tile_Wall / Border_Straight / Border_Corner | 1단 베벨, 목재 끝단 트림 |
+| 환경 | Block_Stone / Block_Stone_V2 / Block_Stone_V3 / Block_Wood / Tile_Wall / Border_Straight / Border_Corner | 1단 베벨, 교차 줄눈, 목재 끝단 트림 |
 | 몸·목표 | Actor_Player / Actor_Menhir / Tile_Exit | 몸 공유 메시, 출구 낮은 윤곽 |
 | 기믹 | Tile_NumberDoor / Tile_CountDoor / Tile_Lever / Tile_FlipWall_Up / Tile_FlipWall_Down / Tile_Plate / Tile_Ice / Tile_PitRim / Tile_Bridge / Tile_Cracked | 기믹 형태 10종, 별도 UI 숫자, 트윈·상태 교체 훅 |
 
 표의 모든 이름 앞에 `SS_`를 붙인다. 피트는 림만 있어 바닥이 없고, 다리는 독립 평평한 슬래브다. Cracked는 분할 돌 조각이며 코어 파괴 시 숨김/아래 이동으로 처리한다.
 
-WebGL 목표: 동시 보드 **50,000 tris 이하**, 환경·효과 포함 권장80,000 이하(기기 실측 전 예산). 현 6×6 조립 예시는7,974 tris. 개별 바닥44–272, 단순 블록40–200, 문/레버100–400, 몸100–300 tris를 우선한다. 실제 종별 수는 생산 보고서가 권위값이다. LOD는 작은 고정 직교 보드에서 불필요하며 배경 오브젝트는 별도 저해상 메시/거리 컷을 쓴다.
+WebGL 목표: 동시 보드 **50,000 tris 이하**, 환경·효과 포함 권장80,000 이하(기기 실측 전 예산). 현 6×6 조립 예시는20,202 tris. 개별 바닥44–656, 단순 블록88–264, 문/레버100–400, 몸100–300 tris를 우선한다. 실제 종별 수는 생산 보고서가 권위값이다. LOD는 작은 고정 직교 보드에서 불필요하며 배경 오브젝트는 별도 저해상 메시/거리 컷을 쓴다.
 
-공유 `RH_Atlas512.png` 1장, 8색 그라디언트 스트립+하단64px 기하 트림. UV0로 색 띠를 샘플하며 색 면은 단색 스와치이므로 면적별 텍셀 밀도 강제는 의미 없다. 트림·추후 마스크는 **256px/m**, 최종 아틀라스 최대1024² 목표. 개체별 고유1K/4K 맵을 만들지 않는다.
+공유 `RH_Atlas512.png` 1장, 8색 그라디언트·약한 석재 입자/목재 결+하단64px 기하 트림. UV0는 색 띠 안으로 제한해 넓은 배경에서도 이웃 팔레트가 번지지 않게 한다. 현재 색 띠는1m 폭 약55px로 디테일을 절제하며 트림·추후 마스크 목표는 **256px/m**, 최종 아틀라스 최대1024²다. 개체별 고유1K/4K 맵을 만들지 않는다.
 
 머티리얼은 챕터당 **최대6개**: BaseAtlas(석재·목재·이끼), PlayerAtlas, MenhirAtlas, MetalAtlas, FrostOpaque, MarkUnlit(UI/프리뷰 표시). 객체당 최대2종. 얼음은 불투명, 잔디는 외곽의 작은 불투명 삼각형이다. 블룸·굴절·투명 겹침에 기대지 않는다. 같은 머티리얼은 인스턴싱/배칭을 유지하며 공유 아틀라스 하나가 draw call 하나를 보장한다고 가정하지 않는다.
 
@@ -64,10 +66,10 @@ WebGL 목표: 동시 보드 **50,000 tris 이하**, 환경·효과 포함 권장
 
 ## 전달 상태와 다음 연결 작업
 
-**Unity 연결 준비 완료(모델/아틀라스 전달 단계).** Blender 5.2.3 실제 생성,21 FBX 재수입으로 UV·버텍스 컬러·원점·트라이앵글 수 확인. Unity 임포트/URP/프리팹/TileSet 검사는 아직 하지 않았고 Unity 파일은 변경하지 않았다.
+**Unity 연결 준비 완료(모델/아틀라스 전달 단계).** Blender 5.2.3 실제 생성,23 FBX 재수입으로 UV·버텍스 컬러·원점·트라이앵글 수 확인. Unity 임포트/URP/프리팹/TileSet 검사는 아직 하지 않았고 Unity 파일은 변경하지 않았다.
 
 - 자산: `C:/unityjam/shared-assets/seven-steps/Assets/Art/RuinsHenge/` → 기존 링크 시 `Assets/Shared/Art/RuinsHenge/`.
-- 원본·FBX: `Models/SS_RuinsHenge_Chapter01.blend`, `Models/SS_*.fbx`(21개). 텍스처: `Textures/RH_Atlas512.png`.
+- 원본·FBX: `C:/unityjam/shared-assets/seven-steps/Source/Blender/SS_RuinsHenge_Chapter01.blend`, `Models/SS_*.fbx`(23개). 텍스처: `Textures/RH_Atlas512.png`.
 - 스크립트: [생성](blender/build_ruins_henge.py), [FBX 재수입 검사](blender/verify_ruins_henge_fbx.py). 재현 명령과 훅은 [파이프라인](blender-pipeline.md).
 - 아키텍트/게임플레이 요청: 챕터별 TileSet 또는 공유 TileSet+머티리얼 오버라이드, 조명·하늘 프리셋 ScriptableObject 경계를 정한다. 이 요청은 새 코드 구현이 아니다.
 - 다음 아트 연결 작업: URP6재질, 프리팹/TileVisual 자식 훅·라벨 위치, TileSetValidator 오류0 → 17스테이지 smoke → 브라우저 WebGL 성능/판독성 확인. 챕터2–5 환경 소품·프리셋은 미제작이다.

@@ -1,4 +1,4 @@
-"""Chapter 01 production source: 21 reusable modules, atlas, vertex moss, FBX.
+"""Chapter 01 production source: 23 reusable modules, atlas, vertex moss, FBX.
 
 Blender 5.2.3: -b --python-exit-code 1 -P build_ruins_henge.py -- --out <shared Assets/Art/RuinsHenge> --renders <shared concepts/themes/ruins-henge/blender>
 No third-party downloads. No Unity project writes. All labels are preview-only.
@@ -6,6 +6,7 @@ No third-party downloads. No Unity project writes. All labels are preview-only.
 import argparse
 import json
 import math
+import random
 import sys
 from pathlib import Path
 
@@ -20,9 +21,13 @@ out = Path(args.out).resolve()
 renders = Path(args.renders).resolve()
 asset_root = Path('C:/unityjam/shared-assets/seven-steps/Assets/Art/RuinsHenge').resolve()
 concept_root = Path('C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge').resolve()
+source_root = Path('C:/unityjam/shared-assets/seven-steps/Source/Blender').resolve()
+source_root.mkdir(parents=True, exist_ok=True)
+report_root = source_root/'RuinsHengeReports'
+report_root.mkdir(parents=True, exist_ok=True)
 assert out == asset_root or asset_root in out.parents
 assert renders == concept_root or concept_root in renders.parents
-for p in (out / 'Models', out / 'Textures', out / 'Reports', renders):
+for p in (out / 'Models', out / 'Textures', renders):
     p.mkdir(parents=True, exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -37,11 +42,12 @@ scene.render.resolution_y = 1200
 scene.render.resolution_percentage = 100
 scene.render.image_settings.file_format = 'PNG'
 scene.view_settings.view_transform = 'Standard'
+scene.view_settings.look = 'Medium High Contrast'
 world = bpy.data.worlds.new('RH_World')
 scene.world = world
 world.use_nodes = True
-world.node_tree.nodes['Background'].inputs[0].default_value = (.055, .075, .065, 1)
-world.node_tree.nodes['Background'].inputs[1].default_value = .5
+world.node_tree.nodes['Background'].inputs[0].default_value = (.40, .63, .80, 1)
+world.node_tree.nodes['Background'].inputs[1].default_value = .35
 
 
 def coll(name):
@@ -70,13 +76,17 @@ def color(h):
     return tuple(lin(int(h[i:i+2], 16) / 255) for i in (0, 2, 4))
 
 
-palette = ['D5D9C8', '707D63', '6F8B4E', '6D5140', '9C7560', 'A4BDC1', '344C4B', 'B29768']
+palette = ['DEDAC8', 'A7AD98', '6F8B4E', '846147', '9C7560', 'A4BDC1', '344C4B', 'B29768']
 atlas = bpy.data.images.new('RH_Atlas512', width=512, height=512, alpha=False)
 pixels = []
 for y in range(512):
     for x in range(512):
         c = color(palette[x // 64])
-        shade = .92 + .08 * y / 511
+        band = x // 64
+        grain = math.sin(x*12.9898+y*78.233)*43758.5453 % 1
+        shade = .91 + .07 * y / 511 + .055*(grain-.5)
+        if band == 3:
+            shade += .08*math.sin(y*.23+math.sin(x*.18)*2)+.025*math.sin(y*1.9+x*.09)
         if y < 64:
             # Desaturated geometric painted timber trim, never writing/sacred marks.
             q = x % 64
@@ -138,8 +148,8 @@ def mat(name, rough=.8, metallic=0, tint=None, moss=False, unlit=False):
 
 
 base = mat('SS_RH_M_BaseAtlas', moss=True)
-player_mat = mat('SS_RH_M_PlayerAtlas', tint='8CA9A1')
-menhir_mat = mat('SS_RH_M_MenhirAtlas', tint='6B786C')
+player_mat = mat('SS_RH_M_PlayerAtlas', tint='C1A179')
+menhir_mat = mat('SS_RH_M_MenhirAtlas', tint='BFC3AA')
 metal = mat('SS_RH_M_MetalAtlas', .4, .45)
 frost = mat('SS_RH_M_FrostOpaque', .4)
 mark = mat('SS_RH_M_MarkUnlit', unlit=True)
@@ -172,9 +182,10 @@ def finish(obj, name, swatch=0, material=base, bevel=.018, moss_strength=0):
     mesh.color_attributes.active_color_index = 0
     for loop in mesh.loops:
         p = mesh.vertices[loop.vertex_index].co
-        uv.data[loop.index].uv = ((swatch + .5) / 8, min(.90, max(.18, .28 + p.z * .5)))
-        distance = min(math.hypot(p.x - .48, p.y - .48), math.hypot(p.x + .48, p.y + .48))
-        mask = min(1, max(0, 1 - distance / .43) * 1.8) * moss_strength if p.z >= -.005 else 0
+        uv.data[loop.index].uv = ((swatch + .5 + max(-.43,min(.43,.85*p.x))) / 8, min(.94, max(.18, .50 + .40*p.y + .22*p.z)))
+        distance = min(abs(.48-abs(p.x)),abs(.48-abs(p.y)))
+        irregular = .065 + .025*math.sin(p.x*24+p.y*17)
+        mask = max(0,min(1,(irregular-distance)/.035)) * moss_strength if p.z >= -.025 else 0
         attribute.data[loop.index].color = (mask, 0, 0, 1)
     obj.select_set(False)
     return obj
@@ -203,8 +214,12 @@ def mesh_obj(name, verts, faces, swatch=0, moss_strength=0):
 
 def moss_floor():
     # A top grid supports a true vertex-color corner mask, not green floating blobs.
-    n = 6
+    n = 12
     verts = [(x / n * .96 - .48, y / n * .96 - .48, 0) for y in range(n+1) for x in range(n+1)]
+    for i,(x,y,z) in enumerate(verts):
+        if abs(x)>.479: x-=math.copysign(.006+.012*(.5+.5*math.sin(i*4)),x)
+        if abs(y)>.479: y-=math.copysign(.006+.012*(.5+.5*math.cos(i*3)),y)
+        verts[i]=(x,y,z)
     faces = []
     for y in range(n):
         for x in range(n):
@@ -247,27 +262,50 @@ blades_v, blades_f = [], []
 for j, x in enumerate((-.36,-.22,-.08,.08,.22,.36)):
     for k in range(3):
         xx = x + (k-1)*.025
-        yy = -.43 + (k%2)*.025
-        h = .055 + .012*((j+k)%3)
+        yy = -.46 + (k%2)*.025
+        h = .18 + .025*((j+k)%3)
         i = len(blades_v)
-        blades_v += [(xx-.015,yy,0),(xx+.015,yy,0),(xx+.02*(k-1),yy+.01,h)]
+        blades_v += [(xx-.026,yy,0),(xx+.026,yy,0),(xx+.045*(k-1),yy+.025,h)]
         blades_f.append((i,i+1,i+2))
 blades = mesh_obj('ShortGrassEdges', blades_v, blades_f, 2)
 register('Floor_GrassEdge', 'SS_Tile_Floor_GrassEdge', [grass_base, blades])
-register('StoneBlock', 'SS_Block_Stone', [box('WorkedStoneBlock', (.88,.44,.40), (0,0,.20), 1), box('StoneCap', (.92,.48,.07), (0,0,.435), 0)])
-wood = box('TimberBlock', (.88,.40,.34), (0,0,.17), 3)
+for variant in range(3):
+    pieces=[]
+    for row in range(2):
+        columns=3 if variant and row==variant-1 else 2
+        width=.88/columns
+        for column in range(columns):
+            x=(column-(columns-1)*.5)*width
+            pieces.append(box('StoneCourse',(width-.012,.44,.185),(x,0,.10+row*.195),0 if (row+column+variant)%3 else 1,bevel=.028))
+    pieces.append(box('ChamferedCap',(.94,.49,.08),(0,0,.435),0,bevel=.032))
+    key='StoneBlock' if variant==0 else 'StoneBlock_V'+str(variant+1)
+    register(key,'SS_Block_Stone'+('' if variant==0 else '_V'+str(variant+1)),pieces)
+wood_parts=[box('TimberPlank',(.88,.124,.34),(0,y,.17),3,bevel=.016) for y in (-.136,0,.136)]
+wood_parts += [box('IronBand',(.07,.423,.35),(x,0,.175),7,metal,.008) for x in (-.30,.30)]
+wood=wood_parts[0]
 trim = box('PaintedEndTrim', (.035,.41,.10), (.448,0,.24), 6)
 for loop in trim.data.loops:
     p = trim.data.vertices[loop.vertex_index].co
     trim.data.uv_layers.active.data[loop.index].uv = (.02+(p.y+.205)/.41*.96, .005+(p.z-.19)/.10*.115)
-register('WoodBlock', 'SS_Block_Wood', [wood, trim])
-register('Wall', 'SS_Tile_Wall', [box('WallBody', (.90,.88,.48), (0,0,.24), 1), box('WallCap', (.94,.92,.07), (0,0,.515), 0)])
-body_parts = [cone('CloakBody', .20,.115,.54,(0,0,.37)), cone('FeaturelessHead',.10,.10,.17,(0,0,.795)), box('Feet',(.24,.22,.10),(0,-.01,.05),bevel=.01)]
+register('WoodBlock', 'SS_Block_Wood', wood_parts+[trim])
+register('Wall', 'SS_Tile_Wall', [box('WallCourse',(.44,.88,.225),(x,0,z),0 if x<0 else 1,bevel=.025) for z in (.1125,.3525) for x in (-.23,.23)]+[box('WallCap',(.96,.94,.06),(0,0,.515),0,bevel=.028)])
+# The same faceted, asymmetrically cut silhouette reads as cloak or standing stone.
+verts=[]
+for ring,(z,rx,ry,dx) in enumerate([(0,.22,.19,0),(.12,.24,.18,-.015),(.51,.17,.135,.01),(.68,.13,.11,-.025),(.84,.09,.075,-.045),(.89,.025,.035,-.025)]):
+    for i in range(8):
+        a=2*math.pi*i/8
+        verts.append((math.cos(a)*rx+dx,math.sin(a)*ry,z))
+faces=[tuple(reversed(range(8)))]
+for ring in range(5):
+    for i in range(8): faces.append((ring*8+i,ring*8+(i+1)%8,(ring+1)*8+(i+1)%8,(ring+1)*8+i))
+faces.append(tuple(range(40,48)))
+body_parts = [mesh_obj('CarvedCloakMenhir',verts,faces)]
 bpy.ops.object.select_all(action='DESELECT')
 for p in body_parts:
     p.select_set(True)
 bpy.context.view_layer.objects.active = body_parts[0]
-bpy.ops.object.join()
+if len(body_parts)>1:
+    bpy.ops.object.join()
 body = bpy.context.object
 body.name = 'RH_CloakSharedMesh'
 body.select_set(False)
@@ -282,7 +320,7 @@ menhir.material_slots[0].link = 'OBJECT'
 menhir.material_slots[0].material = menhir_mat
 register('Menhir','SS_Actor_Menhir',[menhir])
 register('Exit','SS_Tile_Exit',[box('ExitStone',(.76,.76,.045),(0,0,.0225),0),box('ExitInset',(.54,.54,.008),(0,0,.049),7,metal,.005)])
-register('Border_Straight','SS_Border_Straight',[box('RimStraight',(1,.16,.18),(0,0,.03),1)])
+register('Border_Straight','SS_Border_Straight',[box('RimStraight',(1,.16,.18),(0,0,.03),1)]+[box('RimCap',(.48,.19,.065),(x,0,.135),0,bevel=.02) for x in (-.25,.25)])
 register('Border_Corner','SS_Border_Corner',[box('RimCornerX',(.30,.16,.18),(.07,0,.03),1),box('RimCornerY',(.16,.30,.18),(0,.07,.03),1)])
 for key in ('NumberDoor','CountDoor'):
     name = 'SS_Tile_'+key
@@ -313,7 +351,7 @@ pit += [box('PitEnd',(.76,.10,.12),(0,y,-.06),1) for y in (-.43,.43)]
 register('Pit','SS_Tile_PitRim',pit)
 register('Bridge','SS_Tile_Bridge',[box('BridgeTimber',(.27,.96,.10),(x,0,-.05),3) for x in (-.30,0,.30)])
 register('Cracked','SS_Tile_Cracked',[box('CrackedHalf',(.455,.96,.12),(x,0,-.06),0) for x in (-.2525,.2525)])
-assert len(modules)==21
+assert len(modules)==23
 assert modules['Player'].children[0].data == modules['Menhir'].children[0].data
 
 
@@ -336,7 +374,7 @@ def instance(key,x,y,z=0,target=kit):
 for key,x,y in [('Floor_Clean',-2,1),('Floor_Moss',0,1),('Floor_GrassEdge',2,1),('StoneBlock',-2,-1),('WoodBlock',0,-1),('Menhir',2,-1)]:
     instance(key,x,y)
 current=studio
-box('StudioGround',(200,200,.1),(0,0,-.28),6,base,0)
+box('StudioGround',(200,200,.1),(0,0,-.37),2,base,0)
 current=board
 box('RuinsFoundation',(6.4,6.4,.18),(0,0,-.22),1)
 for y in range(6):
@@ -355,6 +393,30 @@ for x in (-3.08,3.08):
     for y in (-3.08,3.08):
         instance('Border_Corner',x,y,target=board)
 
+# Background geometry is outside the board and never included in module FBX.
+random.seed(71)
+for j in range(13):
+    x=-8+j*1.3
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2,radius=1,location=(x,7+random.random()*2,-.30))
+    hill=bpy.context.object
+    hill.scale=(2.8,2.5,.65+random.random()*.5)
+    finish(hill,'BackgroundHill',5 if j%3==0 else 2,base,0)
+for x,y in [(-4.5,4.4),(4.9,5.3),(-6,6.0)]:
+    r=instance('Menhir',x,y,0,board)
+    r.scale=(1.6,1.5,2.5)
+for j in range(7):
+    instance('StoneBlock'+('' if j%3==0 else '_V'+str(j%3+1)),j-3,3.5,target=board)
+grass_vertices,grass_faces=[],[]
+for j in range(200):
+    side=-1 if j%2 else 1
+    x=side*(3.28+random.random()*.65)
+    y=-3.3+random.random()*7.4
+    h=random.uniform(.12,.30)
+    i=len(grass_vertices)
+    grass_vertices.extend([(x-.035,y,-.23),(x+.035,y,-.23),(x+random.uniform(-.09,.09),y+.03,h-.23)])
+    grass_faces.append((i,i+1,i+2))
+mesh_obj('BackgroundGrassCards_NO_EXPORT',grass_vertices,grass_faces,2)
+
 
 def light(name,position,power,size,tint):
     d=bpy.data.lights.new(name,'AREA')
@@ -368,8 +430,15 @@ def light(name,position,power,size,tint):
     o.rotation_euler=(Vector((0,0,0))-o.location).to_track_quat('-Z','Y').to_euler()
 
 
-light('MorningKey',(-4,-3,7),1050,6,(1,.91,.75))
-light('SkyFill',(4,3,6),750,7,(.78,.9,1))
+light('MorningKey',(-5,-4,6),500,2.5,(1,.83,.58))
+light('SkyFill',(4,3,6),700,7,(.67,.83,1))
+sun_data=bpy.data.lights.new('MorningSun','SUN')
+sun_data.energy=1.6
+sun_data.angle=math.radians(8)
+sun_data.color=(1,.87,.68)
+sun=bpy.data.objects.new('MorningSun',sun_data)
+studio.objects.link(sun)
+sun.rotation_euler=(math.radians(28),math.radians(-30),math.radians(-38))
 cam_data=bpy.data.cameras.new('RH_Camera')
 cam=bpy.data.objects.new('RH_Camera',cam_data)
 studio.objects.link(cam)
@@ -447,9 +516,9 @@ for o in board.objects:
         board_triangles+=len(o.data.loop_triangles)
 assert board_triangles<50000
 report={'blender_version':bpy.app.version_string,'engine':scene.render.engine,'module_count':len(records),'material_count':len(bpy.data.materials),'shared_atlas':'Textures/RH_Atlas512.png','moss_attribute':'MossMask.R','player_menhir_shared_mesh':body.data==menhir.data,'visible_board_triangles':board_triangles,'camera_pitch':50,'camera_yaw':0,'preview_labels_exported':False,'unity_import_tested':False,'modules':records,'hooks':{'NumberDoor':'SS_Tile_NumberDoor__GatePanel','CountDoor':'SS_Tile_CountDoor__GatePanel','Lever':'SS_Tile_Lever__HandlePivot'}}
-(out/'Reports/production-report.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
+(report_root/'production-report.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
 (renders/'production-report.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
-bpy.ops.wm.save_as_mainfile(filepath=str(out/'Models/SS_RuinsHenge_Chapter01.blend'))
+bpy.ops.wm.save_as_mainfile(filepath=str(source_root/'SS_RuinsHenge_Chapter01.blend'))
 scene.render.filepath=str(renders/'modules-eevee.png')
 bpy.ops.render.render(write_still=True)
 kit.hide_render=True
@@ -458,5 +527,11 @@ board.hide_render=False
 board_labels.hide_render=False
 cam_data.ortho_scale=9.6
 scene.render.filepath=str(renders/'chapter01-kit-board-eevee.png')
+bpy.ops.render.render(write_still=True)
+cam_data.ortho_scale=12
+target=Vector((0,1,.15))
+cam.location=target+Vector((0,-12*math.cos(angle),12*math.sin(angle)))
+cam.rotation_euler=(target-cam.location).to_track_quat('-Z','Y').to_euler()
+scene.render.filepath=str(renders/'chapter01-context-eevee.png')
 bpy.ops.render.render(write_still=True)
 print('RUINS_HENGE_READY '+str(out))

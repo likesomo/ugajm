@@ -4,7 +4,10 @@ import json
 from pathlib import Path
 
 root = Path('C:/unityjam/shared-assets/seven-steps/Assets/Art/RuinsHenge')
-report = json.loads((root/'Reports/production-report.json').read_text(encoding='utf-8'))
+assert not list(root.rglob('*.blend*')), 'Blender source/backup/meta must stay outside Assets'
+assert all(p.suffix.lower() in ('.fbx','.png','.meta') for p in root.rglob('*') if p.is_file()), 'Only runtime asset files belong in Assets'
+reports = Path('C:/unityjam/shared-assets/seven-steps/Source/Blender/RuinsHengeReports')
+report = json.loads((reports/'production-report.json').read_text(encoding='utf-8'))
 results = {}
 for name, expected in report['modules'].items():
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -23,5 +26,5 @@ for name, expected in report['modules'].items():
     results[name] = {'triangles': triangles, 'uv_and_vertex_color': True, 'origin': [0,0,0]}
 output = {'blender_version': bpy.app.version_string, 'files_verified': len(results),
           'unity_import_tested': False, 'modules': results}
-(root/'Reports/fbx-roundtrip.json').write_text(json.dumps(output, indent=2), encoding='utf-8')
+(reports/'fbx-roundtrip.json').write_text(json.dumps(output, indent=2), encoding='utf-8')
 print('FBX_ROUNDTRIP_OK', len(results))

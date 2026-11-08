@@ -386,6 +386,8 @@ GPT 목표와 실제 렌더는 갤러리에서 나란히 비교한다. 실렌더
 
 ## 유적×선돌×오리엔탈
 
+후속 품질 보강: Blender 원본/.blend1과 관련 .meta를 Assets 밖 `C:/unityjam/shared-assets/seven-steps/Source/Blender/`로 옮겼다. Assets에는23 FBX와 공유PNG만 남기며 생산 JSON은 Source/Blender/RuinsHengeReports에 둔다. 분할 석재3변형·베벨·줄눈 이끼·외곽 풀·판재/놋쇠·깎인 선돌·아침빛을 실제 모델과 렌더에 반영했다. 전후 같은 카메라 비교는 [comparison.html](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/blender/comparison.html), 전은 `blender/chapter01-before.png`, 후는 `blender/chapter01-kit-board-eevee.png`다. 후는 배경까지20,202tris/6재질로50k 예산을 지킨다.
+
 2026-11-08 사용자 확정 방향. 제작 규격과 최종 우선순위는 [아트 바이블](art-bible.md)을 따른다. **추천: 일곱 별은 카운트, 해의 정렬은 장소의 축**. 남긴 몸은 다음 몸을 돕는 선돌, 7번째는 하늘의 때와 유적이 잠깐 맞물리는 순간이다. 낮은 다듬은 돌과 목재 보수 블록, 모서리 이끼와 외곽 풀, 절제된 청록/적갈 기하 트림을 공통 언어로 쓴다.
 
 ### 근거와 창작 설정
@@ -434,15 +436,15 @@ HUD 국자는1–2–3–4–1, 손잡이는4–5–6–7이다. 주간에도 �
 | [chapter-strip.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/chapter-strip.png) | 5챕터 진행 스트립 |
 | [module-kit.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/module-kit.png) | 제작 방향 모듈 시트 |
 | [blender/modules-eevee.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/blender/modules-eevee.png) | 실제 Blender5.2.3 이끼 타일·돌·나무·선돌 렌더 |
-| [blender/chapter01-kit-board-eevee.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/blender/chapter01-kit-board-eevee.png) | 실제21종 기반 조립 보드 렌더 |
+| [blender/chapter01-kit-board-eevee.png](C:/unityjam/shared-assets/seven-steps/concepts/themes/ruins-henge/blender/chapter01-kit-board-eevee.png) | 실제23종 기반 조립 보드 렌더 |
 
 [갤러리](C:/unityjam/shared-assets/seven-steps/concepts/themes/index.html) 맨 위에 나란히 배치했다. GPT 시안은 분위기·소품 참고이며 실제 1m 크기·폴리 수는 Blender 생산 보고서가 기준이다. 일부 시안의 문 라벨/기믹 모양은 생산 키트와 차이가 있어 그대로 복제하지 않는다. 숫자 문과 석상 수 문을 같은 실루엣+별도 UI로 고정한다. 바닥 별자리 배관은 채택하지 않고 별은 HUD에 둔다. 키트 이미지의 바닥 두께0.20m 표기는 비구속 시안이며 실제 모델은0.12m이다.
 
 ### 공유 키트·제작량
 
-Chapter01 **21종 FBX 제작 완료**, 6머티리얼·공유512² 아틀라스, MossMask.R 버텍스 이끼, 잔디 외곽 삼각형. 실제 플레이어/선돌은 동일 메시를 다른 재질로 쓴다. 숫자/별은 내보내지 않았다. Blender5.2.3에서21 FBX 재수입으로 UV·버텍스 컬러·원점·tris 확인, 예제 보드7,974 tris, 목표50k 이하다.
+Chapter01 **23종 FBX 제작 완료**, 6머티리얼·공유512² 아틀라스, MossMask.R 버텍스 이끼, 잔디 외곽 삼각형. 실제 플레이어/선돌은 동일 메시를 다른 재질로 쓴다. 숫자/별은 내보내지 않았다. Blender5.2.3에서23 FBX 재수입으로 UV·버텍스 컬러·원점·tris 확인, 예제 보드20,202 tris, 목표50k 이하다.
 
-자산 루트는 `C:/unityjam/shared-assets/seven-steps/Assets/Art/RuinsHenge/`: Models에21 FBX와.blend, Textures에자체 생성 RH_Atlas512.png, Reports에생산/재수입 JSON. **Unity 연결 준비 완료(모델 전달 단계)**이며 URP 셰이더·프리팹·TileSet 연결과17스테이지/WebGL 검수는 다음 디스패치다. Unity 파일은 변경하지 않았다.
+자산 루트는 `C:/unityjam/shared-assets/seven-steps/Assets/Art/RuinsHenge/`: Models에23 FBX, Assets 밖 Source/Blender에.blend, Textures에자체 생성 RH_Atlas512.png, Assets 밖 Source/Blender/RuinsHengeReports에생산/재수입 JSON. **Unity 연결 준비 완료(모델 전달 단계)**이며 URP 셰이더·프리팹·TileSet 연결과17스테이지/WebGL 검수는 다음 디스패치다. Unity 파일은 변경하지 않았다.
 
 메시 공유, 챕터별 팔레트/트림·소품·빛·하늘만 교체한다. 추가4장 환경 프리셋은 미제작이다. 전체 예상3.75–5.5인일: 공통키트 정교화1.5–2, URP/프리팹0.75–1, 챕터소품·빛1–1.5, 검수0.5–1. 장마다 새 메시 세트를 만들면 비용이 크게 늘므로 금지한다.
 
