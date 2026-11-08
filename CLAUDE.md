@@ -52,10 +52,10 @@ unity/Tools/unity.sh golden       # 규칙 골든값(core.js → Tests/Golden) +
 unity/Tools/unity.sh test         # EditMode 테스트 (Tests/EditMode) → reports/editmode-results.xml
 unity/Tools/unity.sh tileset-validate # 모든 TileSet 을 docs/architecture.md 12장 규격으로 검사 (오류면 실패). 아트 TileSet 을 합치기 전 필수
 unity/Tools/unity.sh tileset      # 임시 TileSet 다시 생성 (Data/TileSets/TopDown_Placeholder.asset)
-unity/Tools/unity.sh verify       # C# 규칙이 JS 솔버와 같은 답인지 12스테이지 검사 → reports/seven-steps-unity-verify.json
+unity/Tools/unity.sh verify       # C# 규칙이 JS 솔버와 같은 답인지 전 스테이지(17) 검사 → reports/seven-steps-unity-verify.json
 unity/Tools/unity.sh build-win    # → Builds/Windows/Seven Steps.exe      (play 로 실행)
 unity/Tools/unity.sh smoke-webgl  # WebGL 빌드를 Orca 브라우저로 3개 스테이지 열어 3D 보드 표시·콘솔 예외 확인 → reports/smoke-webgl/ (약 90초)
-unity/Tools/unity.sh smoke        # 윈도우 빌드를 리플레이 4개로 실행, 스크린샷+로그 → reports/smoke/, 예외 있으면 실패
+unity/Tools/unity.sh smoke        # 윈도우 빌드를 리플레이 7개(스테이지 1,3,8,9,13,15,16)로 실행, 스크린샷+로그 → reports/smoke/, 예외 있으면 실패
 unity/Tools/unity.sh build-webgl  # → Builds/WebGL/   (serve [포트] 로 http://localhost:8090, Node 정적 서버 unity/Tools/serve.mjs)
 unity/Tools/unity.sh all          # levels + setup + verify + build-win + smoke
 ```

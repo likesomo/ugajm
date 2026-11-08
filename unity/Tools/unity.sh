@@ -107,6 +107,7 @@ case "$cmd" in
     # EditMode tests (Tests/EditMode). Results: reports/editmode-results.xml
     mkdir -p "$REPO/reports" "$PROJ/Logs"
     echo "[unity.sh] test: EditMode (log: unity/Logs/batch-test.log)"
+    rm -f "$REPO/reports/editmode-results.xml"   # never report a previous run's results
     code=0
     (cd "$REPO" && "$U" -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode \
       -testResults "$(cygpath -w "$REPO/reports/editmode-results.xml")" -logFile unity/Logs/batch-test.log) || code=$?
