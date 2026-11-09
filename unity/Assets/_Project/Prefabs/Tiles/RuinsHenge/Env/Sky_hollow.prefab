@@ -45,4 +45,6 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.RuinsHengeSky
   space: {fileID: 2100000, guid: e6ffd8589b79ac145a2f66b46406ffda, type: 2}
-  nebulaTint: {r: 0.19215687, g: 0.35686275, b: 0.40392157, a: 1}
+  nebulaTint: {r: 0.57254905, g: 0.32156864, b: 0.76862746, a: 1}
+  backgroundTint: {r: 0.12941177, g: 0.05490196, b: 0.23529412, a: 1}
+  secondaryTint: {r: 0.78039217, g: 0.58431375, b: 1, a: 1}

@@ -1,5 +1,7 @@
 ﻿# Seven planet / menhir UI delivery — 2026-11-10
 
+> Superseded visual blockouts: see [distinct seven-planet revision](seven-planets-distinct-2026-11-10.md) for current images, materials and board-clearance evidence.
+
 Current art branch merges `origin/7lucky` at `aba812c`. All geometry and images in this update are generated locally; no paid or external assets were added. Binaries remain in the shared asset folder.
 
 ## UI source and before/after
