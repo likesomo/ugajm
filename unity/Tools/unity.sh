@@ -10,6 +10,7 @@
 #   test         (batch) EditMode tests -> reports/editmode-results.xml
 #   tileset      (batch) rebuild the placeholder TileSet (Data/TileSets/TopDown_Placeholder.asset)
 #   tileset-validate (batch) check every TileSet against docs/architecture.md 12 (errors -> exit 1)
+#   scene-validate (batch) check build list = AppScenes, scene roots and their references (errors -> exit 1)
 #   build-win    (batch) Windows build -> Builds/Windows/Seven Steps.exe
 #   build-webgl  (batch) WebGL build -> Builds/WebGL/
 #   play         run the Windows build
@@ -103,6 +104,7 @@ case "$cmd" in
   compile)     batch compile BuildTools.CompileCheck ;;
   tileset)     batch tileset SevenSteps.EditorTools.TileSetBuilder.BatchBuild ;;
   tileset-validate) batch tileset-validate SevenSteps.EditorTools.TileSetValidator.BatchValidate ;;
+  scene-validate) batch scene-validate SevenSteps.EditorTools.SceneFlowValidator.BatchValidate ;;
   test)
     # EditMode tests (Tests/EditMode). Results: reports/editmode-results.xml
     mkdir -p "$REPO/reports" "$PROJ/Logs"

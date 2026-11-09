@@ -86,13 +86,16 @@ namespace SevenSteps.Game
 
         /// Set by Bootstrap.Run: the next stage entry is the first of this app run (telemetry via = boot/url).
         internal static bool FirstEntryPending;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsForPlay() => FirstEntryPending = false;
         /// Scene played directly in the editor (or a build without Boot): the start level came from startLevel, not the URL.
         bool levelFromInspector;
 
         void Awake()
         {
             Application.targetFrameRate = 60;
-            if (!Services.Has<AppFlow>())
+            if (!Bootstrap.HasRunThisPlay)
             {
                 // Played directly in the editor: same bootstrap as the Boot scene, with this object's debug start values.
                 var opts = Bootstrap.ReadLaunchOptions();

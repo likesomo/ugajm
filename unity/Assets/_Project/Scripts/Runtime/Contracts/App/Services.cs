@@ -30,7 +30,12 @@ namespace SevenSteps.Contracts
 
         public static bool Has<T>() where T : class => map.ContainsKey(typeof(T));
 
-        /// Tests, and the editor when entering play mode with domain reload disabled.
+        /// Tests. Play-mode entry uses ResetForPlay.
         public static void Clear() => map.Clear();
+
+        /// Domain reload is disabled in the editor (Enter Play Mode Options), so this static map would keep the previous
+        /// Play's services. Unity calls this before the first scene loads, on every Play and at player start (docs/scene-flow.md S0).
+        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void ResetForPlay() => map.Clear();
     }
 }
