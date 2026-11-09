@@ -51,7 +51,7 @@ function loadLevel(idx, via = 'select') {
   flash = null;
   doorFx = new Set();
   history.replaceState(null, '', `?level=${idx + 1}`);
-  tel.levelStart(state, idx + 1, LEVELS[idx].name, via);
+  tel.levelStart(state, idx + 1, LEVELS[idx].name, via, LEVELS[idx].chapter);
   render();
 }
 
@@ -251,4 +251,4 @@ root.addEventListener('click', (e) => {
 
 render();
 tel.sessionStart({ cleared: cleared.size });
-tel.levelStart(state, levelIdx + 1, LEVELS[levelIdx].name, params.has('level') ? 'url' : 'boot');
+tel.levelStart(state, levelIdx + 1, LEVELS[levelIdx].name, params.has('level') ? 'url' : 'boot', LEVELS[levelIdx].chapter);

@@ -3,7 +3,7 @@ using SevenSteps.Core;
 namespace SevenSteps.Contracts
 {
     /// <summary>Visual category of a board cell. Append-only: TileSet assets and saved data depend on the order.</summary>
-    public enum TileKind { Floor, Wall, Pit, Ice, Cracked, Bridge, Exit, Gate, Plate, Door, CountDoor, Lever, FlipWall }
+    public enum TileKind { Floor, Wall, Pit, Ice, Cracked, Bridge, Exit, Gate, Plate, Door, CountDoor, Lever, FlipWall, Mud }
 
     /// <summary>Things drawn on top of tiles. Append-only.</summary>
     public enum ActorKind { Player, Statue, StartMarker, OldStartMarker, Footprint, LuckyRing }
@@ -14,6 +14,7 @@ namespace SevenSteps.Contracts
     /// CountDoor (Q, opens only while the statue count equals the level's N): variant 0; the view reads N from the level.
     /// Lever (L): variant 0. FlipWall: variant 0 = raised now (blocks), 1 = lowered now (passable). Rules.TileAt already
     /// swaps R/r while the lever is pulled, so the variant is the current shape and views never read State.Flipped.
+    /// Mud (m, 2 steps to enter; docs/architecture.md 6.3): variant 0.
     /// This is the only place that turns legend characters into visuals. Views do not switch on chars themselves.
     /// </summary>
     public readonly struct TileId
@@ -40,6 +41,7 @@ namespace SevenSteps.Contracts
                 case 'L': return new TileId(TileKind.Lever);
                 case 'R': return new TileId(TileKind.FlipWall, 0);
                 case 'r': return new TileId(TileKind.FlipWall, 1);
+                case 'm': return new TileId(TileKind.Mud);
                 default: return new TileId(TileKind.Floor, (x + y) & 1);
             }
         }

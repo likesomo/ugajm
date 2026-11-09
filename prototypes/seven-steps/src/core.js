@@ -5,7 +5,8 @@ export const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 // Map legend: # wall, . floor, S start, E exit, o pit, ~ ice, x cracked floor,
 // a-c plate, A-C door (open while a statue stands on the matching plate), 1-7 gate (pass only on that step),
 // Q statue-count door (open while exactly `statueCount` statues stand; bridges and seals are not statues),
-// L lever (a 7th step ending on it flips every flip wall), R raised flip wall (blocks), r lowered flip wall (open).
+// L lever (a 7th step ending on it flips every flip wall), R raised flip wall (blocks), r lowered flip wall (open),
+// m mud (stepping into it costs 2 steps, so it blocks with one step left; an ice slide stops on it at no extra cost).
 export function parseLevel(def) {
   const h = def.map.length;
   const w = Math.max(...def.map.map((r) => r.length));
@@ -99,13 +100,15 @@ function nextBody(s, events, start = s.start) {
 export function step(s, dir) {
   const events = [];
   if (s.status !== 'play' || !DIRS[dir]) return { state: s, events };
-  const stepIdx = s.used + 1;
   const first = neighbor(s, s.pos, dir);
-  if (!passable(s, first, stepIdx)) return { state: s, events: [{ type: 'bump', at: first }] };
+  // Mud: stepping into it costs 2 steps; with only one step left it blocks like a wall.
+  const stepIdx = s.used + (first >= 0 && tileAt(s, first) === 'm' ? 2 : 1);
+  if (stepIdx > STEPS || !passable(s, first, stepIdx)) return { state: s, events: [{ type: 'bump', at: first }] };
 
   let pos = first;
   const trail = [...s.trail, { i: pos, n: stepIdx }];
   // Ice: keep sliding while standing on ice and the next cell is open. The slide is still one step.
+  // Sliding into mud stops there (mud is not ice) and adds no step.
   while (tileAt(s, pos) === '~') {
     const n = neighbor(s, pos, dir);
     if (!passable(s, n, stepIdx)) break;

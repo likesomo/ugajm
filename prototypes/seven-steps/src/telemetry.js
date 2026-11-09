@@ -70,12 +70,13 @@ export class Tracker {
     this.send('session_start', fields);
   }
 
-  levelStart(state, level, levelName, via) {
+  // chapter: the stage's chapter id from levels.js (optional, sent only when the stage has one).
+  levelStart(state, level, levelName, via, chapter) {
     const attempt = (this.attempts.get(level) ?? 0) + 1;
     this.attempts.set(level, attempt);
     this.run = { level, t0: this.now(), moves: 0, undos: 0, restarts: 0, hints: 0, fails: 0, done: false };
     this.lastInput = this.now();
-    this.send('level_start', { level, levelName, levelKey: levelKey(state.level), attempt, via, bodies: state.level.bodies });
+    this.send('level_start', { level, levelName, levelKey: levelKey(state.level), ...(chapter ? { chapter } : {}), attempt, via, bodies: state.level.bodies });
   }
 
   where(s) {

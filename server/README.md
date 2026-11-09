@@ -115,7 +115,8 @@ DB_PATH=server/data/playtest-$(date +%F).sqlite node server/src/index.mjs
 | `GET /api/levels` | 토큰 | 현재 빌드 레벨 맵, `levelKey`, 최단 이동 수 |
 | `GET /api/stats/overview` | 토큰 | 합계, 빌드·클라이언트 목록 |
 | `GET /api/stats/levels` | 토큰 | 스테이지별 퍼널·이탈·헤맴 지표 |
-| `GET /api/stats/heatmap?level=N` | 토큰 | 칸별 idle·undo·몸 사용·막힘·방문·떠난 위치 |
+| `GET /api/stats/heatmap?level=N` | 토큰 | 현재 빌드 스테이지 N의 칸별 idle·undo·몸 사용·막힘·방문·떠난 위치. 맵이 지금과 같은 시도만(`otherMapAttempts`에 뺀 수) |
+| `GET /api/stats/chapters` | 토큰 | 챕터별 시작·끝 스테이지 도달·전부 클리어·그만둔 플레이어 (현재 빌드 스테이지만) |
 | `GET /api/stats/timeline?limit=50` | 토큰 | 최근 플레이어의 세션별 시도 목록 |
 | `GET /api/export/attempts.csv` · `attempts.json` | 토큰 | 시도당 한 줄 (`design/levels/telemetry-mapping.md` 4.1 열) |
 | `GET /api/export/events.jsonl` · `events.json` | 토큰 | 원본 이벤트 + 배치 머리 + `attemptId` |
@@ -128,6 +129,9 @@ curl -H "Authorization: Bearer $STATS_TOKEN" "http://localhost:8787/api/export/a
 ```
 
 ### 지표 정의
+
+- **스테이지 맞추기**: 스테이지는 현재 빌드(`levels.js`) 순서로 보인다. 예전 빌드의 시도는 `levelKey`(맵 해시) → 스테이지 이름 → (둘 다 없으면) 번호 순으로 지금 스테이지를 찾는다. 그래서 스테이지를 끼워 넣거나 순서를 바꿔도 섞이지 않는다. 이름은 같고 맵만 고친 경우는 같은 스테이지로 세고(히트맵은 지금 맵만), 지금 빌드에 없는 맵은 "이전 맵"으로 따로 센다. `attempts.csv`의 `stageNow`(지금 번호, 이전 맵은 빈칸)·`stageMatch`(`key`/`name`/`number`/`old`)·`chapter` 열
+- **챕터**: 현재 빌드 레벨 데이터의 `chapter` 기준(없으면 이벤트의 `chapter`). 레벨에 챕터가 하나라도 있으면 대시보드에 챕터 칸·필터·묶음이 나온다. 챕터의 "그만둠" = 플레이어의 마지막 시도가 이 챕터의 미클리어 스테이지
 
 - **시도**: `level_start`부터 `level_clear`(clear) / `level_leave`·다른 `level_start`(leave) / 세션이 30분 넘게 조용함(quit)까지. 아직 30분이 안 됐으면 open
 - **클리어율**: 그 스테이지를 시작한 플레이어 중 클리어한 플레이어 비율

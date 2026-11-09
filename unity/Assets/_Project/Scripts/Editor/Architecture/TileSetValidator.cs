@@ -113,6 +113,8 @@ namespace SevenSteps.EditorTools
             Check("lever", ts.lever, true, false, true);
             Check("flipWalls[0]", At(ts.flipWalls, 0), true, false, true, wallHeight: true);
             Check("flipWalls[1]", At(ts.flipWalls, 1), true, false, true);
+            if (!ts.mud.HasPrefab) issues.Add("WARN mud: no prefab, mud cells are drawn as floor (docs 6.3)");
+            Check("mud", ts.mud, false, true, true);
             Check("player", ts.player, true, false, true);
             Check("statue", ts.statue, true, false, true);
             Check("startMarker", ts.startMarker, true, false, false);

@@ -82,3 +82,15 @@ test('golden file is up to date with telemetry.js', () => {
   const afterText = readFileSync(path, 'utf8').replace(/\r\n/g, '\n');
   assert.equal(afterText, beforeText, 'run node server/tools/telemetry-golden.mjs and commit the result');
 });
+
+test('level_start carries the chapter id only when the stage has one', () => {
+  const ev = [];
+  const tr = new Tracker({ emit: (e) => ev.push(e), now: () => 1_762_500_000_000 });
+  const s = newState(parseLevel(LEVELS[0]));
+  tr.levelStart(s, 1, LEVELS[0].name, 'boot');
+  tr.levelStart(s, 1, LEVELS[0].name, 'again', 'moss-ruins');
+  assert.equal('chapter' in ev[0], false);
+  assert.equal(ev[1].chapter, 'moss-ruins');
+  for (const e of ev) assert.equal(checkEvent(e), null);
+  assert.match(checkEvent({ ...ev[1], chapter: 'x'.repeat(41) }), /chapter is invalid/);
+});
