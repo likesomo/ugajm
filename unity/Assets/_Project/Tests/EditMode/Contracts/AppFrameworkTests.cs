@@ -11,14 +11,15 @@ namespace SevenSteps.Tests
         {
             public string Current { get; set; } = AppScenes.Boot;
             public int Loads;
-            public void Load(string sceneName) { Current = sceneName; Loads++; }
+            public void Load(string sceneName) { Current = sceneName; Loads++; Loaded?.Invoke(sceneName); }
+            public event Action<string> Loaded;
         }
 
         [Test]
         public void FlowLoadsSceneOnlyWhenItChanges()
         {
             var scenes = new FakeScenes();
-            var flow = new AppFlow(scenes);
+            var flow = new AppFlow(scenes, 17);
             flow.Go(AppState.Title);
             flow.Go(AppState.StageSelect);
             Assert.AreEqual(1, scenes.Loads, "Title and StageSelect share a scene");
