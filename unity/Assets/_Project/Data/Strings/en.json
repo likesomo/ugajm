@@ -1,5 +1,17 @@
 {
   "entries": [
+    { "key": "title.name", "text": "Seven Steps" },
+    { "key": "title.subtitle", "text": "A puzzle of lucky sevens" },
+    { "key": "title.tagline", "text": "Seven steps for each body. The seventh step is lucky." },
+    { "key": "title.start", "text": "Start (Enter)" },
+    { "key": "title.settings", "text": "Settings" },
+    { "key": "title.credits", "text": "Credits" },
+    { "key": "stageselect.head", "text": "Select Stage" },
+    { "key": "stageselect.back", "text": "Back (Esc)" },
+    { "key": "stageselect.settings", "text": "Settings" },
+    { "key": "stageselect.cleared", "text": "Cleared" },
+    { "key": "stageselect.best_bodies", "text": ", {0} brothers" },
+
     { "key": "hud.stage", "text": "Stage {0:00}" },
     { "key": "hud.traveller_1", "text": "Teal traveller" },
     { "key": "hud.traveller_2", "text": "Ochre traveller" },
