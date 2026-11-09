@@ -239,13 +239,13 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
 - 경계 사례(코어가 테스트·골든 트레이스로 고정): (1) 벽이 올라올 때 그 칸에 석상이나 출발점이 있어도 그대로 뒤집힌다(실험과 같음, 잼 범위에서 겹침 허용). 화면은 올라온 벽과 석상/출발점 표시를 한 칸에 함께 그릴 수 있어야 한다. (2) 출발점인 레버 칸에서 7번째 → `Vanish`, `Flip` 없음.
 - 텔레메트리 `tile` 값(`lever`, 뒤집힘 벽 이름)과 `flip` 이벤트 여부는 백엔드/분석이 `docs/telemetry.md`에 정한다.
 
-### 6.3 진흙 (`m`, 2026-11-09 승인, 코어 구현 중)
+### 6.3 진흙 (`m`, 2026-11-09 승인, 코어 구현 feat/core 6ae58e2)
 
 레벨 디자인 제안(`design/levels/stage-plan-50.md` 5장, 실험 `prototypes/seven-steps/experiments/mud/`). 7장(원형 제단)의 새 기믹.
 
 - 맵 글자 `m`. 레벨 필드 추가 없음. 리플레이 글자와 겹치지 않음.
-- 규칙(실험 `core.js` 기준, 코어가 `core.js`·C#·골든으로 고정): 진흙 칸에 **들어가는 걸음이 2걸음**이다(`stepIdx = used + 2`). 남은 걸음이 1이면(6걸음 쓴 뒤) 들어갈 수 없다 → `Bump`. 얼음에서 미끄러지다 진흙에 닿으면 거기서 멈춘다(추가 걸음 없음). 7번째 걸음이 진흙 위에서 끝나면 보통 바닥과 같다(`Choose`/`Stone`/`Vanish`). 숫자 문(`1`~`7`)은 그 걸음의 `stepIdx`로 판단하므로 진흙을 지나면 숫자 하나를 건너뛴다.
-- 이벤트: 새 종류 없음(실험과 같음). 진흙으로 들어간 걸음은 `Step`(또는 마지막 칸 이벤트)의 `StepIdx`가 2 오른다. 화면은 `StepIdx`로 걸음 표시를 2칸 채우고, 칸이 진흙인지는 `TileId.At`으로 안다. 코어가 별도 이벤트(`Mud` 등)를 넣고 싶으면 `GameEventType` 끝에 추가하고 이 절을 고친다.
+- 규칙(실험 `core.js` 기준, 코어가 `core.js`·C#·골든으로 고정): 진흙 칸에 **들어가는 걸음이 2걸음**이다(`stepIdx = used + 2`). 남은 걸음이 1이면(6걸음 쓴 뒤) 들어갈 수 없다 → `Bump`. 얼음에서 미끄러지다 진흙에 닿으면 거기서 멈춘다(추가 걸음 없음). 7번째 걸음이 진흙 위에서 끝나면 보통 바닥과 같다(`Choose`/`Stone`/`Vanish`, 석상 가능). SWITCH로 진흙 칸이 출발점이 될 수 있다. Core 질의 `Rules.IsMud(char)`(공개 API 추가는 이것 하나). 숫자 문(`1`~`7`)은 그 걸음의 `stepIdx`로 판단하므로 진흙을 지나면 숫자 하나를 건너뛴다.
+- 이벤트: 새 종류 없음(실험과 같음, 코어 구현도 같음). 막힐 때는 `Bump`(At = 진흙 칸). 진흙으로 들어간 걸음은 `Step`(또는 마지막 칸 이벤트)의 `StepIdx`가 2 오른다. 화면은 `StepIdx`로 걸음 표시를 2칸 채우고, 칸이 진흙인지는 `TileId.At`으로 안다. 진흙 진입 전용 이벤트(`Mud` = 19)는 넣지 않는다(코어 제안 보류): 화면이 `TileId`로 알 수 있다. 연출에 꼭 필요하면 게임플레이/UI가 요청한다.
 - 표시: `TileKind.Mud`(끝에 추가, variant 0), `TileId.FromChar('m')`, `TileSet.mud`(바닥처럼 윗면 y = 0). 프리팹이 없으면 바닥으로 그린다(검사기 경고). 아트: 이끼 늪 진흙 바닥 1종.
 - 담당: 코어(규칙·파서·`Rules.Key` 영향 없음 확인·테스트·JS), 레벨 디자인(43~50 스테이지), 아키텍트(`TileKind`/`TileId`/`TileSet`/검사기, 이 절), 게임플레이/UI(걸음 표시 2칸, 진흙 연출), 아트(진흙 프리팹), 백엔드/분석(텔레메트리 `tile` 값 `mud`).
 
@@ -615,3 +615,4 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 2026-11-09 | 아키텍트 | 12.6 몸 수 상한 3(사용자 결정), `TileSet.bodyColors[3]`/`BodyColor(k)`(HUD 몸 아이콘, 머플러 3색), `BodyIndexTests`. 12.7 `Art/Test/Game.unity` 별칭은 빌드 목록 밖 조건으로 허용. 12.8 챕터 프리셋 타입 추가: `ChapterPreset`(`materialOverrides`), `LightingPreset`(`LightRig`), `SkyPreset`, `IStageEnvironment.Fit(BoardGrid)`, `AppConfig.chapters`/`Chapter(id)`, 세트 결정 순서, 검사기 챕터 검사. 12.9 리드 구현. 적용은 게임플레이/UI |
 | 2026-11-09 | 아키텍트 | 11.2 씬 플로우 S0·S1 반영(feat/scene-flow 5fdaf49·923a1a6, 아키텍트 검토 승인): `Services.ResetForPlay`(SubsystemRegistration), `Register` 중복 예외, `Bootstrap.Run` config null·두 번째 실행 예외·`HasRunThisPlay`. **`LaunchOptions` 공개 필드 → 읽기 전용 속성**(읽기 호환), `TakeReplay()`, `UseEditorStart(level, replay)`, `OpenStageSelect`/`OpenCredits`, `Warnings`. 필드에 값을 대입하던 코드는 컴파일 오류가 나므로 두 메서드로 바꿀 것 |
 | 2026-11-09 | 아키텍트 | 6.3 진흙 `m`(2걸음, 남은 1걸음이면 막힘, 얼음 미끄러짐 멈춤, 새 이벤트 없음) 고지, `TileKind.Mud`(끝에 추가)·`TileId.FromChar('m')`·`TileSet.mud`(없으면 바닥, 검사기 경고). 6.4 `chapter` = 문자열 id + `chapters.json`(`id`, `planet`, `concept`, `intro`, `artPreset`), `story`, export 검증은 첫 묶음부터, `ChapterInfo`/`ChapterFileDto`(Contracts). 12.8 표 갱신 |
+| 2026-11-09 | 코어·아키텍트 | 6.3 진흙 코어 구현(feat/core 6ae58e2): `Rules.IsMud(char)`, SWITCH 출발점 가능, 막히면 `Bump`(진흙 칸). `Mud` 이벤트는 넣지 않음. 골든 트레이스 id가 스테이지 이름 기준으로 바뀜(`server/fixtures` 재생성) |
