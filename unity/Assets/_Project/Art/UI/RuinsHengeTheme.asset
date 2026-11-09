@@ -22,9 +22,10 @@ MonoBehaviour:
   plateA: {r: 0.90588236, g: 0.43529412, b: 0.31764707, a: 1}
   plateB: {r: 0.16470589, g: 0.6156863, b: 0.56078434, a: 1}
   plateC: {r: 0.5568628, g: 0.49019608, b: 0.74509805, a: 1}
-  settingsPanel: {fileID: 735352942397860819, guid: 32d6c408d3abcbf42b220771e9f919bd, type: 3}
-  resultPanel: {fileID: 5186985129672267715, guid: 5ee130465858b2147b36bb973a61f4ef, type: 3}
+  settingsPanel: {fileID: 7983296655425069715, guid: 32d6c408d3abcbf42b220771e9f919bd, type: 3}
+  resultPanel: {fileID: 4349651440837657301, guid: 5ee130465858b2147b36bb973a61f4ef, type: 3}
   hud: {fileID: 3232867761573120493, guid: d7ddcdf0dc12d0f4d92abe5380b8892c, type: 3}
+  chapterCard: {fileID: 0}
   languages:
   - language: 0
     title: {fileID: 12800000, guid: d9e4e5c79f0b73a4184ffc9d2e8fdc0f, type: 3}
