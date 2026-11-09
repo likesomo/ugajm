@@ -93,6 +93,13 @@ namespace SevenSteps.Contracts
             else warnings.Add($"{source}: loadDelay \"{v}\" is not 0..10 seconds; ignored");
         }
 
+        void SetFlowCheck(string source, string v)
+        {
+            if (v == "1" || v == "true") FlowCheck = true;
+            else if (v == "0" || v == "false") FlowCheck = false;
+            else warnings.Add($"{source}: flowcheck \"{v}\" is not 1/true or 0/false; ignored");
+        }
+
         void SetTelemetry(string source, string v)
         {
             if (v == "off" || v == "0") TelemetryOff = true;
@@ -148,7 +155,7 @@ namespace SevenSteps.Contracts
                     case "lang": o.SetLanguage("url", v); break;
                     case "smoke": o.SetSmoke("url", v); break;
                     case "loadDelay": o.SetLoadDelay("url", v); break;
-                    case "flowcheck": o.FlowCheck = v == "1" || v == "true"; break;
+                    case "flowcheck": o.SetFlowCheck("url", v); break;
                     case "newplayer":
                         if (v == "1" || v == "true") o.NewPlayer = true;
                         else if (v != "0" && v != "false") o.warnings.Add($"url: newplayer \"{v}\" is not 1 or 0; ignored");

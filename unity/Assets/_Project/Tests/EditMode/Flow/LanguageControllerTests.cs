@@ -85,5 +85,16 @@ namespace SevenSteps.Tests
             Assert.AreEqual(0f, bad.LoadDelay);
             Assert.AreEqual(1, bad.Warnings.Count);
         }
+
+        [Test]
+        public void FlowCheckParses()
+        {
+            Assert.IsTrue(LaunchOptions.Parse(new[] { "x.exe", "-flowcheck" }, "").FlowCheck);
+            Assert.IsTrue(LaunchOptions.Parse(null, "http://h/?flowcheck=true").FlowCheck);
+            Assert.IsFalse(LaunchOptions.Parse(null, "http://h/?flowcheck=0").FlowCheck);
+            var bad = LaunchOptions.Parse(null, "http://h/?flowcheck=yes");
+            Assert.IsFalse(bad.FlowCheck);
+            Assert.AreEqual(1, bad.Warnings.Count, "anything else is reported, not silently off");
+        }
     }
 }
