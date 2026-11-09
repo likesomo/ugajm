@@ -221,7 +221,12 @@ namespace SevenSteps.Game
 
         void Update()
         {
-            if (hud.SettingsOpen) return;
+            if (hud.SettingsOpen)
+            {
+                // Esc closes the settings panel (and saves it), it does not leave the stage.
+                if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) hud.CloseSettings();
+                return;
+            }
             var kb = Keyboard.current;
             if (kb != null)
             {

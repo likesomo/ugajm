@@ -42,7 +42,7 @@ namespace SevenSteps.Game.UI
             telemetryNote = Ui.Label(panel.transform, "", 14, Ui.Dim, TextAnchor.MiddleCenter, "TelemetryNote");
             telemetryNote.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -256), new Vector2(480, 40));
 
-            var close = Ui.MakeButton(panel.transform, "닫기", 20, Close, out _, "Close");
+            var close = Ui.MakeButton(panel.transform, "닫기 (Esc)", 20, Close, out _, "Close");
             ((RectTransform)close.transform).Place(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 24), new Vector2(200, 44));
 
             root.SetActive(false);
