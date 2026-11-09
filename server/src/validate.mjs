@@ -5,7 +5,9 @@ export const MAX_BYTES = 64 * 1024;
 export const CLIENTS = ['web-proto', 'unity-webgl', 'unity-desktop'];
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const TILES = ['floor', 'exit', 'pit', 'ice', 'cracked', 'bridge', 'plate', 'door', 'gate', 'wall', 'start', 'edge', 'statue'];
+// Tile names (docs/telemetry.md 2): floor exit pit ice cracked bridge plate door gate wall start edge statue mud lever
+// flip_up flip_down. New mechanics add names, so any short lowercase name is accepted rather than a fixed list.
+const tile = (v) => typeof v === 'string' && /^[a-z_]{1,20}$/.test(v);
 
 const int = (min = 0, max = 1e12) => (v) => Number.isInteger(v) && v >= min && v <= max;
 const bool = (v) => typeof v === 'boolean';
@@ -24,8 +26,8 @@ export const EVENTS = {
   move: [{
     ...LEVEL, body: int(1, 99), step: int(1, 7), dir: oneOf('up', 'down', 'left', 'right'), from: xy, to: xy,
     result: oneOf('moved', 'blocked', 'slid', 'fell', 'bridged', 'door', 'gate'),
-  }, { blockedBy: oneOf(...TILES), crumbled: bool }],
-  seventh_step: [{ ...AT, tile: oneOf(...TILES), effect: oneOf('win', 'bridge', 'seal', 'vanish', 'choose', 'statue') }, {}],
+  }, { blockedBy: tile, crumbled: bool }],
+  seventh_step: [{ ...AT, tile, effect: oneOf('win', 'bridge', 'seal', 'vanish', 'choose', 'statue') }, { flipped: bool }],
   keep: [AT, {}],
   switch: [AT, {}],
   undo: [WHERE, { status: oneOf('play', 'choose', 'lose', 'win') }],
