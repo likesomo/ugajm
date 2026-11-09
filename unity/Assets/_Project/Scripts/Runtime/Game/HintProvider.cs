@@ -35,9 +35,13 @@ namespace SevenSteps.Game
 
         static string Describe(List<Act> path)
         {
+            // Words, not arrow symbols: Jua (the only UI font, no fallback in WebGL) has no U+2190-2193, so arrows drew nothing.
             var sb = new StringBuilder(Prefix);
-            foreach (var a in path)
-                sb.Append(a switch { Act.Up => "↑", Act.Down => "↓", Act.Left => "←", Act.Right => "→", Act.Keep => " KEEP ", _ => " SWITCH " });
+            for (int i = 0; i < path.Count; i++)
+            {
+                if (i > 0) sb.Append(' ');
+                sb.Append(path[i] switch { Act.Up => "상", Act.Down => "하", Act.Left => "좌", Act.Right => "우", Act.Keep => "KEEP", _ => "SWITCH" });
+            }
             return sb.ToString();
         }
     }
