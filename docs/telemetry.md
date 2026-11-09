@@ -70,7 +70,7 @@
 | `keep` | KEEP 선택 | `level`, `body`, `at` |
 | `switch` | SWITCH 선택 | `level`, `body`, `at` |
 | `undo` | 되돌리기 (되돌릴 게 있을 때만) | `level`, `body`, `step`(되돌리기 전 쓴 걸음 수), `at`(되돌리기 전 위치), `status`(되돌리기 전 `play` \| `choose` \| `lose` \| `win`) |
-| `restart` | 재시작 | `level`, `body`, `step`, `at`, `moves`(이번 시도의 이동 수) |
+| `restart` | 재시작 (시작 상태가 아닐 때만: 아무것도 안 했거나 되돌려 시작 상태로 온 뒤의 R은 보내지 않는다, architecture 6.5) | `level`, `body`, `step`, `at`, `moves`(이번 시도의 이동 수) |
 | `hint` | 풀이 보기 | `level`, `body`, `step`, `at` |
 | `body_lost` | 몸 하나를 썼을 때 | `level`, `body`(잃은 몸 번호), `at`, `reason`: `fell`(7번째가 아닌 걸음에 구덩이) \| `vanish`(출발점에서 7번째) \| `statue`(KEEP·자동 석상) \| `switch` \| `bridge` \| `seal`, `wasted`(`fell`·`vanish`면 true) |
 | `level_fail` | 몸을 모두 잃음 | `level`, `at`, `moves`, `bodiesUsed` |
@@ -119,7 +119,7 @@
 `design/levels/stars.md` B안. 한 시도(`level_start`부터 클리어까지, 재시작 포함) 기준:
 - ★1: 클리어
 - ★2: 풀이 보기(`hints`) 0이고 `bodiesUsed == minBodies`(그 맵을 깰 수 있는 가장 적은 몸 수, 솔버 `minBodies` = `levels.json` `expected.minBodies`)
-- ★3: ★2이고 `undos` 0, `restarts` 0
+- ★3: ★2이고 `undos` 0, `restarts` 0 (`undos`는 실제로 되돌린 Undo, `restarts`는 시작 상태가 아닐 때의 R만 센다 — 위 `undo`·`restart` 이벤트 수와 같다)
 
 판정 함수는 코어 `core.js` `stars()`(C# `Stars.Of`, 골든 `Tests/Golden/stars.golden.json`). `telemetry.js`는 이것을 `starsFor`로 다시 내보낸다. 최소 몸 수를 모르면 보내지 않는다. 서버는 `stars`가 없는 옛 기록도 `level_clear`의 `bodiesUsed`·`hints`·`undos`·`restarts`와 현재 맵(같은 `levelKey`)의 최소 몸 수로 다시 계산한다.
 
@@ -129,6 +129,7 @@
 |---|---|---|
 | 2026-11-07 | v1 | 최초 확정 |
 | 2026-11-07 | v1 | `level_start.levelKey`(선택) 추가 — 레벨 디자인 요청. 선택 필드라 버전은 그대로 |
+| 2026-11-10 | v1 | 재시작 셈을 게임 규칙(architecture 6.5)에 맞춤: 시작 상태에서 누른 R은 `restart` 이벤트도 `restarts` 셈도 없음(`level_clear.restarts`, ★3에 영향). Undo는 원래 실제로 되돌린 것만 셈. 골든 재생성(재시작 이벤트 32건 빠짐). Unity `TelemetryTracker`도 같은 조건(직전 상태의 `Prev`가 없으면 무시) |
 | 2026-11-09 | v1 | `session_start.lang`·`level_start.lang`(선택) 추가 — 다국어(architecture 13장). 웹 `Tracker({ lang })`·`setLang`, `initTelemetry({ lang })`(기본 `ko`). Unity는 `Localizer` 현재 언어를 `level_start` 끝(`bodies` 다음)과 `session_start` 끝에. 골든에는 넣지 않음(변화 없음) |
 | 2026-11-09 | v1 | `level_clear.stars`(선택, 1~3) 추가 — 3별 B안("별" 절). 골든 재생성(클리어 이벤트마다 `stars`). Unity `TelemetryTracker`도 같은 판정으로 넣어야 골든 테스트가 통과한다 |
 | 2026-11-09 | v1 | 진흙·레버 반영(코어 6ae58e2 뒤): 진흙에 들어가는 `move.step`은 `used + 2`, 진흙으로 7걸음이 되면 `seventh_step`. `tile`에 `mud` `lever` `flip_up` `flip_down`, `Q` 문은 `door`(그래서 Q 문을 지나는 `move.result`도 `door`). `seventh_step.flipped`(선택). 서버는 칸 이름을 형식으로 검사. 골든 재생성(125개 중 44개 트레이스 변경). Unity `TelemetryTracker`도 같은 규칙으로 맞춰야 골든 테스트가 통과한다 |
