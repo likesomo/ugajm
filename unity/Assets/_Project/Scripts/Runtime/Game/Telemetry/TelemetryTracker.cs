@@ -63,12 +63,21 @@ namespace SevenSteps.Game.Telemetry
 
         void Emit(TelemetryEvent e) => sink.Track(e);
 
+        /// UI language ("ko", "en") sent at the end of session_start and level_start; null = not sent (telemetry.js Tracker lang).
+        public string Lang { get; private set; }
+
+        /// The player switched language (Settings): later session_start / level_start carry it (telemetry.js setLang).
+        public void SetLang(string lang) => Lang = string.IsNullOrEmpty(lang) ? null : lang;
+
+        TelemetryEvent WithLang(TelemetryEvent e) => Lang != null ? e.With("lang", Lang) : e;
+
         public void SessionStart(bool firstTime, int cleared, bool resumed = false)
         {
             sessionT ??= now();
             lastInput = now();
             var e = new TelemetryEvent(N.Types.SessionStart).With("firstTime", firstTime).With("cleared", cleared);
             if (resumed) e.With("resumed", true);
+            WithLang(e); // last, as telemetry.js session_start
             Emit(e);
         }
 
@@ -81,7 +90,7 @@ namespace SevenSteps.Game.Telemetry
             var e = new TelemetryEvent(N.Types.LevelStart).With("level", level).With("levelName", levelName)
                 .With("levelKey", TelemetryJson.LevelKey(state.Level));
             if (!string.IsNullOrEmpty(chapter)) e.With("chapter", chapter); // same place as telemetry.js: right after levelKey
-            Emit(e.With("attempt", attempt).With("via", via).With("bodies", state.Level.Bodies));
+            Emit(WithLang(e.With("attempt", attempt).With("via", via).With("bodies", state.Level.Bodies))); // lang last, as telemetry.js
         }
 
         TelemetryEvent Where(TelemetryEvent e, State s) =>

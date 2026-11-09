@@ -68,12 +68,14 @@ namespace SevenSteps.Game.Telemetry
             var go = new GameObject(ObjectName);
             DontDestroyOnLoad(go);
             go.AddComponent<TelemetryRunner>().telemetry = t;
+            t.Tracker.SetLang(save.Settings.language); // docs/architecture.md 13.3, default "ko"
             t.SetEnabled(allowed);
             if (allowed) t.Tracker.SessionStart(firstTime, save.Progress.ClearedCount);
 
             // Consent changes in Settings apply right away (11.3). Opting in again starts a session with a fresh id.
             save.SettingsChanged += s =>
             {
+                t.Tracker.SetLang(s.language); // a language switch applies to the next session_start / level_start
                 bool on = save.TelemetryAllowed(config);
                 if (on == t.Enabled) return;
                 bool fresh = on && string.IsNullOrEmpty(s.playerId);
