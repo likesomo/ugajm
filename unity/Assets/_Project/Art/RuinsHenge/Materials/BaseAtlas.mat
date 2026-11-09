@@ -29,6 +29,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AmbientFloor: 0.3
     - _Unlit: 0
     - _UseAtlas: 1
     - _UseMoss: 1

@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 335c5f12218d0544e8e008d8ca4eeeac, type: 3}
+  m_Name: GameAssets
+  m_EditorClassIdentifier: SevenSteps.Game::SevenSteps.Game.GameAssets
+  levelsJson: {fileID: 4900000, guid: 33033d08c982fa7439594f8738882a8f, type: 3}
+  font: {fileID: 12800000, guid: 6726afba0e987134bb60bf8a871ea91c, type: 3}
+  uiTheme: {fileID: 11400000, guid: 5fb5bfb0b12b0b541b9acd8cfff3f58e, type: 2}
+  tileSet: {fileID: 0}
+  floorA: {fileID: 2274785795445805196, guid: df5ad39cdfe78e04fa18683379439cad, type: 3}
+  floorB: {fileID: 7693930314283829219, guid: f307f26bb4981fa408db62d1e669ebfb, type: 3}
+  wall: {fileID: 2169109577177046940, guid: 010af94e047a651429842cbfe1679ae7, type: 3}
+  pit: {fileID: 2361583500115829183, guid: 2c1a1ee8014d364438f9b317abe9b1d5, type: 3}
+  ice: {fileID: 6109561115041941815, guid: 1795ddb7f4510bb44865807a2742bf4f, type: 3}
+  cracked: {fileID: 7670286638499060021, guid: 87ea9775aac255949b74e5de30f6cec0, type: 3}
+  bridge: {fileID: 7079587661642090003, guid: 7afcbc30cf7fa884685f5630675f3ec8, type: 3}
+  exit: {fileID: 3104743902021330026, guid: c781ec34c657abd488ca78773fcfa3f4, type: 3}
+  gate: {fileID: 2023593573513529659, guid: 8d2d96978b3051e458cc386d622291dc, type: 3}
+  plateA: {fileID: 7459466853171578852, guid: 94b0bba52379f894892637efadce5cee, type: 3}
+  plateB: {fileID: 8138426147007701381, guid: 522636df4d7c4fc4bb425e44c7afb5d2, type: 3}
+  plateC: {fileID: 6424549551550554426, guid: d6131733a04dfc94bb75db278fbfe248, type: 3}
+  doorA: {fileID: 186495077761425509, guid: e8571cd4a1e45df4989617606e920f91, type: 3}
+  doorB: {fileID: 1801399336819504284, guid: 2cb83aa7c22f7d14e80d197c3a5644a4, type: 3}
+  doorC: {fileID: 4199653603338234968, guid: 68ffc8dd15302764eab22a1bbb960504, type: 3}
+  player: {fileID: 8573702022139044122, guid: 86d978825572f204bba7f7dbf2f8b502, type: 3}
+  statue: {fileID: 4897322356577972701, guid: af4e7a241791ea6489e7de0f953dc007, type: 3}
+  startMarker: {fileID: 4967963531124298511, guid: 01d8a461b6af8f848b016f4afce79231, type: 3}
+  oldStartMarker: {fileID: 5400982211686733635, guid: 81cfc0c3a39b97a489eeb4e3173ac32c, type: 3}
+  footprint: {fileID: 2926334507901585306, guid: 5bdaf9860dafcc24d9871d2428d091d6, type: 3}
+  luckyRing: {fileID: 2334395372329292409, guid: ddf1d89e8001a1246970ae0812f88ef0, type: 3}
+  gateIdle: {fileID: 2100000, guid: f0948f1d62677374e852e161a721ca42, type: 2}
+  gateGo: {fileID: 2100000, guid: 966577f328823cf48b3303e555702072, type: 2}
+  sfxStep: {fileID: 8300000, guid: 2dcc3472b42d32b4ca71e83c7af01d1e, type: 3}
+  sfxLucky: {fileID: 8300000, guid: 6bac9a9189d6dd14192ecba2541d9bc7, type: 3}
+  sfxStone: {fileID: 8300000, guid: 5a8f532a33a9d7e4b88ef2b513745996, type: 3}
+  sfxSwitch: {fileID: 8300000, guid: c743cbdcda1c2064f820348b58076b5a, type: 3}
+  sfxFall: {fileID: 8300000, guid: bed3db9d30c745f49a3b9e92bb2e23b5, type: 3}
+  sfxBump: {fileID: 8300000, guid: a543a56b772f5b54ba2c671b91d6e7bb, type: 3}
+  sfxBridge: {fileID: 8300000, guid: 41a533f52a9dd254b952b1c17122b861, type: 3}
+  sfxCrumble: {fileID: 8300000, guid: 3d516be46718f6f41843fdca30ecbacc, type: 3}
+  sfxUndo: {fileID: 8300000, guid: ee4df510a0713f74b91b43b5df132ed8, type: 3}
+  sfxWin: {fileID: 8300000, guid: e2b6942a8a39a654a868087e241da974, type: 3}
+  sfxLose: {fileID: 8300000, guid: e5c62d9eb3c45a849b659491440fc020, type: 3}
+  background: {r: 0.08235294, g: 0.07450981, b: 0.10980392, a: 1}
