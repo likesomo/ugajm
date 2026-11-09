@@ -133,7 +133,8 @@ namespace SevenSteps.EditorTools
                 {
                     int cp = char.ConvertToUtf32(text, i);
                     if (char.IsSurrogatePair(text, i)) i++;
-                    if (cp < 0x20 || set.Contains(cp) || GlyphCheck.Allowed.Contains(cp)) continue;
+                    // GlyphCheck.Allowed (U+00B7) was seen drawn with Jua only: other fonts must have it in their cmap.
+                    if (cp < 0x20 || set.Contains(cp) || (font.name.StartsWith("Jua", StringComparison.Ordinal) && GlyphCheck.Allowed.Contains(cp))) continue;
                     string line = $"ERROR glyph U+{cp:X4} '{char.ConvertFromUtf32(cp)}' is not in {font.name}: {where}";
                     if (reported.Add(line)) issues.Add(line);
                 }
