@@ -64,7 +64,7 @@ namespace SevenSteps.Contracts
 
         readonly ISaveStore store;
         /// The stored progress is from a newer build: keep it, do not write over it.
-        readonly bool progressReadOnly;
+        bool progressReadOnly; // set on load; StartNewPlayer clears it
 
         public ProgressData Progress { get; private set; }
         public SettingsData Settings { get; private set; }
@@ -89,6 +89,18 @@ namespace SevenSteps.Contracts
             if (progressReadOnly) return; // a newer build's save stays as it is (warned on load)
             store.Set(ProgressKey, JsonUtility.ToJson(Progress));
             store.Flush();
+        }
+
+        /// Playtest facilitator: the next tester starts fresh (-newplayer / ?newplayer=1, LaunchOptions.NewPlayer).
+        /// Empty progress (cleared stages, best bodies and stars, attempt counts) and no playerId (telemetry makes a new
+        /// one); volumes, consent and language stay. Overrides a newer build's read-only progress: this is deliberate.
+        public void StartNewPlayer()
+        {
+            Progress = new ProgressData();
+            progressReadOnly = false;
+            SaveProgress();
+            Settings.playerId = "";
+            SaveSettings();
         }
 
         public void SaveSettings()

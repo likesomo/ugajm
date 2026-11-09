@@ -5,8 +5,8 @@ namespace SevenSteps.Contracts
 {
     /// <summary>
     /// Start options from the command line (desktop) or the page URL (WebGL). Same format as the web prototype:
-    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-lang en] [-smoke board|empty]
-    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board   (docs/telemetry.md section 4)
+    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-lang en] [-smoke board|empty] [-newplayer]
+    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1   (docs/telemetry.md section 4)
     /// Pure parsing: the caller passes Environment.GetCommandLineArgs() and Application.absoluteURL.
     /// Bad values are not exceptions (external input): they are skipped and described in <see cref="Warnings"/>,
     /// which the bootstrap logs (Contracts does not log). Read-only after parsing, except the two editor/once-only changes below.
@@ -25,6 +25,11 @@ namespace SevenSteps.Contracts
         /// Smoke tests with -screenshot and no -level: open Stage Select / Credits on the title screen first.
         public bool OpenStageSelect { get; private set; }
         public bool OpenCredits { get; private set; }
+        /// Playtest facilitator link (-newplayer / ?newplayer=1): the bootstrap really erases this browser's saved progress
+        /// (cleared stages, best bodies, stars, attempt counts) and the anonymous playerId, so telemetry starts a new
+        /// player with session_start firstTime. Volumes, consent and language are kept. WebGL removes the parameter from
+        /// the address bar so a reload does not start yet another player.
+        public bool NewPlayer { get; private set; }
         /// UI language for this run only (-lang en / ?lang=en, docs 13.3; not saved). Null = the saved setting.
         public Language? Language { get; private set; }
         /// Smoke check view (-smoke board|empty / ?smoke=): draws differently, plays the same (no change to state, replay or
@@ -92,6 +97,7 @@ namespace SevenSteps.Contracts
                     {
                         case "-stageselect": o.OpenStageSelect = true; continue;
                         case "-credits": o.OpenCredits = true; continue;
+                        case "-newplayer": o.NewPlayer = true; continue;
                         case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": break;
                         default: continue;
                     }
@@ -126,6 +132,10 @@ namespace SevenSteps.Contracts
                     case "telemetry": o.SetTelemetry("url", v); break;
                     case "lang": o.SetLanguage("url", v); break;
                     case "smoke": o.SetSmoke("url", v); break;
+                    case "newplayer":
+                        if (v == "1" || v == "true") o.NewPlayer = true;
+                        else if (v != "0" && v != "false") o.warnings.Add($"url: newplayer \"{v}\" is not 1 or 0; ignored");
+                        break;
                 }
             }
             return o;

@@ -5,6 +5,7 @@
 //     pagehide (when hidden was missed) -> SendMessage(objectName, "OnPageHidden", "unload")
 //     visible again -> SendMessage(objectName, "OnPageVisible")
 //   SevenSteps_SendBeacon(url, body) -> 1 if the browser queued it (text/plain, so no CORS preflight), else 0.
+//   SevenSteps_RemoveUrlParam(name) -> drops ?name= from the address bar (history.replaceState), for one-time links (?newplayer=1).
 // SendMessage runs C# synchronously, so session_end is queued and beaconed before the page goes away.
 var SevenStepsTelemetryLib = {
   $SevenStepsTelemetryState: { name: null, hidden: false, ended: false },
@@ -46,6 +47,17 @@ var SevenStepsTelemetryLib = {
       if (!navigator.sendBeacon) return 0;
       var ok = navigator.sendBeacon(UTF8ToString(urlPtr), new Blob([UTF8ToString(bodyPtr)], { type: 'text/plain' }));
       return ok ? 1 : 0;
+    } catch (e) { return 0; }
+  },
+
+  // Removes one query parameter from the address bar without reloading (history.replaceState): -newplayer is a
+  // one-time facilitator link, so a reload must not start yet another player. 1 = removed or absent, 0 = failed.
+  SevenSteps_RemoveUrlParam: function (namePtr) {
+    try {
+      var url = new URL(window.location.href);
+      url.searchParams.delete(UTF8ToString(namePtr));
+      window.history.replaceState(window.history.state, '', url.toString());
+      return 1;
     } catch (e) { return 0; }
   },
 };
