@@ -379,12 +379,18 @@ Boot ──▶ Title ⇄ StageSelect ──▶ Game ⇄ Result
 
 간단한 서비스 로케이터 하나. **등록은 Boot의 부트스트랩만**(그리고 테스트), 나머지는 `Awake/Start`에서 한 번 꺼내 필드에 둔다(매 프레임 조회 금지).
 
+- 같은 타입을 두 번 `Register`하면 `InvalidOperationException`(조용히 덮어쓰지 않는다). 테스트는 `[SetUp]`에서 `Services.Clear()`.
+- `Services.ResetForPlay()`가 `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]`로 Play마다(플레이어 시작 때도) 비운다(도메인 리로드 꺼짐, 9장).
+- `Bootstrap.Run`: `config`가 null이면 `ArgumentNullException`, 같은 Play에서 두 번째 호출이면 `InvalidOperationException`. 직접 Play 판단은 `Bootstrap.HasRunThisPlay`(8장). `launch.Warnings`를 `Debug.LogWarning`으로 남긴다.
+
 부트스트랩 순서 (게임플레이/UI가 `SevenSteps.Game`의 `Bootstrap`으로 구현):
 
 ```csharp
-Services.Clear();
-var config  = /* Boot 씬이 참조하는 Data/AppConfig.asset */;
+if (config == null) throw new ArgumentNullException(nameof(config));   // Boot 씬이 참조하는 Data/AppConfig.asset
+if (HasRunThisPlay) throw new InvalidOperationException(...);
 var launch  = LaunchOptions.Parse(Environment.GetCommandLineArgs(), Application.absoluteURL);
+foreach (var w in launch.Warnings) Debug.LogWarning("[SevenSteps] Launch option " + w);
+Services.Clear();
 var save    = new SaveSystem(new PlayerPrefsStore());
 ITelemetry telemetry = string.IsNullOrEmpty(config.telemetryEndpoint) || launch.TelemetryOff
                        ? new NullTelemetry() : new HttpTelemetry(/* Game 어셈블리 */);
@@ -403,6 +409,10 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 진행·설정 | `SaveSystem` (`Progress`, `Settings`, `SettingsChanged`) | 앱 전체 |
 | 텔레메트리 | `ITelemetry` | 앱 전체 |
 | 앱 흐름 | `AppFlow` | 앱 전체 |
+
+**`LaunchOptions` (2026-11-09 캡슐화)**: 읽기 전용 속성 `Level`(1부터, 0 = 없음), `Replay`, `Screenshot`, `TelemetryOff`, `TelemetryUrl`, `DirectToGame`, `OpenStageSelect`(`-stageselect`), `OpenCredits`(`-credits`), `Warnings`.
+- 바꿀 수 있는 곳은 두 메서드뿐: `TakeReplay()`(리플레이를 한 번만 꺼내고 비움), `UseEditorStart(level, replay)`(에디터에서 Game 씬 직접 Play: 실행 인자·URL이 없을 때만 인스펙터 값을 씀, 인스펙터 레벨을 썼으면 true, `level < 1`이면 예외).
+- 잘못된 값은 외부 입력이라 예외가 아니다: 숫자가 아니거나 1 미만인 `level`, 값이 없는 플래그, `off`/`0`/http(s)가 아닌 `telemetry`는 버리고 `Warnings`에 한 줄씩 남긴다. Contracts는 로그하지 않고 `Bootstrap`이 로그한다. 알 수 없는 인자·URL 키는 조용히 무시한다(Unity 자체 인자, `artfx` 등). 스테이지 수를 넘는 `level`은 S2에서 부트스트랩이 경고 후 보정한다.
 
 - `GameSession`, `BoardView`, HUD는 서비스가 아니다. Game 씬의 `GameController`가 만들고 소유한다.
 - Core는 `Services`를 모른다 (참조 자체가 불가능).
@@ -576,3 +586,4 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 2026-11-08 | 아키텍트 | 8장 씬 소유자를 README(7lucky 29b1f4a)에 맞춰 씬 플로우로 변경 |
 | 2026-11-09 | 아키텍트 | 12.6 몸별 외형 계약: `BodyIndex.Current`/`OfStatue`(Contracts, Undo 사슬에서 계산, Core 변경 없음), `TileSet.playerBodies[]`/`statueBodies[]`(끝에 추가)·`PlayerFor`/`StatueFor`(비면 기존 필드, 인덱스 순환). 12.7 TileSet 정식 위치 `Art/<세트>/`, 검사기 범위 `Assets/_Project`·메시/머티리얼 누락 오류·벽 높이 경고. 12.8 챕터 프리셋 설계(`ChapterPreset`, `IStageEnvironment`, `AppConfig.chapters`, `levels.json` `chapter`). 12.9 smoke-webgl 팔레트 무관 판정 제안. 게임플레이/UI가 보드에 적용 |
 | 2026-11-09 | 아키텍트 | 12.6 몸 수 상한 3(사용자 결정), `TileSet.bodyColors[3]`/`BodyColor(k)`(HUD 몸 아이콘, 머플러 3색), `BodyIndexTests`. 12.7 `Art/Test/Game.unity` 별칭은 빌드 목록 밖 조건으로 허용. 12.8 챕터 프리셋 타입 추가: `ChapterPreset`(`materialOverrides`), `LightingPreset`(`LightRig`), `SkyPreset`, `IStageEnvironment.Fit(BoardGrid)`, `AppConfig.chapters`/`Chapter(id)`, 세트 결정 순서, 검사기 챕터 검사. 12.9 리드 구현. 적용은 게임플레이/UI |
+| 2026-11-09 | 아키텍트 | 11.2 씬 플로우 S0·S1 반영(feat/scene-flow 5fdaf49·923a1a6, 아키텍트 검토 승인): `Services.ResetForPlay`(SubsystemRegistration), `Register` 중복 예외, `Bootstrap.Run` config null·두 번째 실행 예외·`HasRunThisPlay`. **`LaunchOptions` 공개 필드 → 읽기 전용 속성**(읽기 호환), `TakeReplay()`, `UseEditorStart(level, replay)`, `OpenStageSelect`/`OpenCredits`, `Warnings`. 필드에 값을 대입하던 코드는 컴파일 오류가 나므로 두 메서드로 바꿀 것 |
