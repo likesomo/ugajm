@@ -35,7 +35,7 @@ namespace SevenSteps.Game.UI
 
         void Awake()
         {
-            if (!Services.Has<AppFlow>()) Bootstrap.Run(config, null, enterFirstScreen: false);
+            if (!Bootstrap.HasRunThisPlay) Bootstrap.Run(config, null, enterFirstScreen: false);
             flow = Services.Get<AppFlow>();
             save = Services.Get<SaveSystem>();
             Ui.Font = assets.font;

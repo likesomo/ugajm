@@ -11,6 +11,15 @@ namespace SevenSteps.Game
         static TextAsset source;
         static int[] minBodies;
 
+        /// Domain reload is disabled in the editor: parse levels.json again on every Play so edits to it show up.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        internal static void ResetForPlay()
+        {
+            cached = null;
+            source = null;
+            minBodies = null;
+        }
+
         public static Level[] Load(GameAssets assets)
         {
             if (cached != null && source == assets.levelsJson) return cached;

@@ -11,6 +11,13 @@ namespace SevenSteps.Game
     /// </summary>
     public static class Bootstrap
     {
+        /// True once Run has finished in this Play (or player run). A scene played directly in the editor bootstraps when it is false.
+        /// Not Services.Has: with domain reload disabled that could see the previous Play's services (docs/scene-flow.md 3.1).
+        public static bool HasRunThisPlay { get; private set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        internal static void ResetForPlay() => HasRunThisPlay = false;
+
         public static LaunchOptions ReadLaunchOptions() =>
             LaunchOptions.Parse(Environment.GetCommandLineArgs(), Application.absoluteURL);
 
@@ -37,6 +44,7 @@ namespace SevenSteps.Game
             Services.Register(telemetry);
             Services.Register(flow);
             GameController.FirstEntryPending = true;
+            HasRunThisPlay = true;
 
             if (!enterFirstScreen) return;
             if (launch.DirectToGame) flow.GoToGame(Mathf.Max(0, launch.Level - 1));
