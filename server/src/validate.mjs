@@ -20,7 +20,7 @@ const WHERE = { ...AT, step: int(0, 7) };
 // type -> [required, optional]
 export const EVENTS = {
   session_start: [{}, { firstTime: bool, cleared: int(0, 999), resumed: bool }],
-  level_start: [{ ...LEVEL, attempt: int(1, 1e6) }, { levelName: str(80), levelKey: (v) => typeof v === 'string' && /^[0-9a-f]{8}$/.test(v), via: oneOf('boot', 'url', 'next', 'select', 'again'), bodies: int(1, 99) }],
+  level_start: [{ ...LEVEL, attempt: int(1, 1e6) }, { levelName: str(80), chapter: str(40), levelKey: (v) => typeof v === 'string' && /^[0-9a-f]{8}$/.test(v), via: oneOf('boot', 'url', 'next', 'select', 'again'), bodies: int(1, 99) }],
   move: [{
     ...LEVEL, body: int(1, 99), step: int(1, 7), dir: oneOf('up', 'down', 'left', 'right'), from: xy, to: xy,
     result: oneOf('moved', 'blocked', 'slid', 'fell', 'bridged', 'door', 'gate'),

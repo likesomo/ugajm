@@ -6,7 +6,7 @@ import { createReadStream } from 'node:fs';
 import { join, normalize, extname, dirname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkEnvelope, checkEvent, MAX_BYTES } from './validate.mjs';
-import { levelStats, heatmap, timelines, toCsv, attemptRows, eventsJsonl, ATTEMPT_COLUMNS } from './stats.mjs';
+import { levelStats, chapterStats, stageHeatmap, timelines, toCsv, attemptRows, eventsJsonl, ATTEMPT_COLUMNS } from './stats.mjs';
 import { PROTO_DIR, minMovesLookup } from './levels.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -197,21 +197,22 @@ export function createApp({ store, token, levels = [], allowedOrigins = [], trus
           case '/api/levels': return send(res, 200, levels);
           case '/api/stats/overview': return send(res, 200, store.facets());
           case '/api/stats/levels': return send(res, 200, levelStats(store.query(f), levels, t));
+          case '/api/stats/chapters': return send(res, 200, chapterStats(store.query(f), levels, t));
           case '/api/stats/heatmap': {
             const n = Number(url.searchParams.get('level'));
             if (!n) return send(res, 400, { error: 'level required' });
-            return send(res, 200, { level: levels.find((l) => l.n === n) ?? null, cells: heatmap(store.query({ ...f, level: n })) });
+            return send(res, 200, stageHeatmap(store.query(f), levels, n, t));
           }
           case '/api/stats/timeline':
             return send(res, 200, timelines(store.query(f), { limit: Number(url.searchParams.get('limit')) || 50, now: t }));
           case '/api/export/attempts.csv':
-            return send(res, 200, toCsv(attemptRows(store.query(f), t, minMovesFor), ATTEMPT_COLUMNS), { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="attempts.csv"' });
+            return send(res, 200, toCsv(attemptRows(store.query(f), t, minMovesFor, levels), ATTEMPT_COLUMNS), { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="attempts.csv"' });
           case '/api/export/levels.csv':
             return send(res, 200, toCsv(levelStats(store.query(f), levels, t).map(({ namesSeen, ...r }) => r)), { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="levels.csv"' });
           case '/api/export/levels.json':
             return send(res, 200, levelStats(store.query(f), levels, t), { 'Content-Disposition': 'attachment; filename="levels.json"' });
           case '/api/export/attempts.json':
-            return send(res, 200, attemptRows(store.query(f), t, minMovesFor), { 'Content-Disposition': 'attachment; filename="attempts.json"' });
+            return send(res, 200, attemptRows(store.query(f), t, minMovesFor, levels), { 'Content-Disposition': 'attachment; filename="attempts.json"' });
           case '/api/export/events.jsonl':
             return send(res, 200, eventsJsonl(store.query(f), t), { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Content-Disposition': 'attachment; filename="events.jsonl"' });
           case '/api/export/events.json':

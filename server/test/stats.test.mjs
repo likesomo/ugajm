@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildAttempts, attemptRows, levelStats, heatmap, quantile, toCsv, QUIT_AFTER_MS } from '../src/stats.mjs';
+import { buildAttempts, attemptRows, levelStats, chapterStats, stageHeatmap, heatmap, quantile, toCsv, QUIT_AFTER_MS } from '../src/stats.mjs';
 import { PID, SID, T0 } from './helpers.mjs';
 
 // Builds db-like rows for one session.
@@ -123,4 +123,63 @@ test('helpers: quantile and CSV escaping', () => {
   assert.equal(quantile([1, 2, 3, 4], 0.5), 3);
   assert.equal(quantile([10, 20, 30, 40, 50], 0.75), 40);
   assert.equal(toCsv([{ a: '한글, "따옴표"', b: { x: 1 }, c: null }]), 'a,b,c\n"한글, ""따옴표""","{""x"":1}",\n');
+});
+
+// Build A had stages [one, two]; build B inserted "new" before "two" and edited one's map (key a1 -> a2).
+const LV_B = [
+  { n: 1, name: 'one', key: 'aaaaaaa2', chapter: 'moss' },
+  { n: 2, name: 'new', key: 'cccccccc', chapter: 'moss' },
+  { n: 3, name: 'two', key: 'bbbbbbbb', chapter: 'sand' },
+];
+const P2 = { sid: '66666666-6666-4666-8666-666666666666', pid: '77777777-7777-4777-8777-777777777777' };
+const P3 = { sid: '88888888-8888-4888-8888-888888888888', pid: '99999999-9999-4999-8999-999999999999' };
+const buildA = rows([
+  [0, 'level_start', { level: 1, levelName: 'one', levelKey: 'aaaaaaa1', attempt: 1 }],
+  [5, 'idle', { level: 1, idleMs: 40000, at: [2, 1] }],
+  [10, 'level_clear', { level: 1, durationMs: 10, moves: 7 }],
+  [20, 'level_start', { level: 2, levelName: 'two', levelKey: 'bbbbbbbb', attempt: 1 }],
+  [30, 'level_clear', { level: 2, durationMs: 10, moves: 9 }],
+  [40, 'level_start', { level: 3, levelName: 'gone', levelKey: 'dddddddd', attempt: 1 }],
+]);
+const buildB = rows([
+  [0, 'level_start', { level: 1, levelName: 'one', levelKey: 'aaaaaaa2', chapter: 'moss', attempt: 1 }],
+  [5, 'idle', { level: 1, idleMs: 35000, at: [3, 1] }],
+  [10, 'level_clear', { level: 1, durationMs: 10, moves: 7 }],
+  [20, 'level_start', { level: 2, levelName: 'new', levelKey: 'cccccccc', chapter: 'moss', attempt: 1 }],
+], P2);
+const buildB2 = rows([[0, 'level_start', { level: 1, levelName: 'one', levelKey: 'aaaaaaa2', chapter: 'moss', attempt: 1 }]], P3);
+
+test('stages are matched across builds by levelKey, then name; unknown maps stay apart', () => {
+  const s = levelStats([...buildA, ...buildB, ...buildB2], LV_B, NOW);
+  assert.deepEqual(s.map((x) => [x.level, x.name, x.old]), [[1, 'one', false], [2, 'new', false], [3, 'two', false], [null, 'gone', true]]);
+  assert.equal(s[0].players, 3); // build A's "one" (old map, same name) + build B
+  assert.equal(s[2].players, 1); // build A's stage 2 is build B's stage 3
+  assert.equal(s[2].clearPlayers, 1);
+  assert.equal(s[2].chapter, 'sand');
+  assert.equal(s[3].playerQuits, 1);
+  const rowsOut = Object.fromEntries(attemptRows([...buildA], NOW, undefined, LV_B).map((r) => [r.levelName, r]));
+  assert.equal(rowsOut.one.stageNow, 1); assert.equal(rowsOut.one.stageMatch, 'name');
+  assert.equal(rowsOut.two.stageNow, 3); assert.equal(rowsOut.two.stageMatch, 'key');
+  assert.equal(rowsOut.gone.stageNow, ''); assert.equal(rowsOut.gone.stageMatch, 'old');
+});
+
+test('chapter summary: players, last stage reached, cleared all, quits', () => {
+  const c = chapterStats([...buildA, ...buildB, ...buildB2], LV_B, NOW);
+  assert.deepEqual(c.map((x) => x.chapter), ['moss', 'sand']);
+  const [moss, sand] = c;
+  assert.equal(moss.players, 3);
+  assert.equal(moss.playerShare, 1);
+  assert.equal(moss.reachedLast, 1); // only build B's player started "new"
+  assert.equal(moss.clearedAll, 0);
+  assert.equal(moss.quitPlayers, 2); // P2 on "new", P3 on "one"
+  assert.equal(sand.players, 1);
+  assert.equal(sand.clearedAll, 1);
+  assert.equal(sand.firstLevel, 3);
+});
+
+test('stage heatmap uses only attempts on the current map', () => {
+  const h = stageHeatmap([...buildA, ...buildB], LV_B, 1, NOW);
+  assert.equal(h.otherMapAttempts, 1);
+  assert.deepEqual(h.cells.map((c) => [c.x, c.y, c.idleMs]), [[3, 1, 35000]]);
+  assert.equal(stageHeatmap(buildA, LV_B, 3, NOW).cells.length, 0); // no cell events, but the attempt is found
 });

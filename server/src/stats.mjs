@@ -51,7 +51,7 @@ export function buildAttempts(rows, now = Date.now(), minMovesFor = () => null) 
         cur = {
           id: `${r.session_id}:${r.seq}`,
           playerId: r.player_id, sessionId: r.session_id, client: r.client, build: r.build, sessionFirstTime: sess.firstTime,
-          level: d.level, levelName: d.levelName ?? '', levelKey: d.levelKey ?? '', attempt: d.attempt, via: d.via ?? '',
+          level: d.level, levelName: d.levelName ?? '', levelKey: d.levelKey ?? '', chapter: d.chapter ?? '', attempt: d.attempt, via: d.via ?? '',
           bodies: d.bodies ?? null, t0: r.t, tEnd: null,
           outcome: 'open', durationMs: 0, moves: 0, blocked: 0, undos: 0, restarts: 0, hints: 0, fails: 0,
           idles: 0, idleMs: 0, idleMsMax: 0, firstHintMs: null, wasted: 0, lost: {}, keeps: 0, switches: 0,
@@ -117,25 +117,50 @@ export function quantile(xs, q) {
   return Math.round(s[lo] + (s[hi] - s[lo]) * (pos - lo));
 }
 
-// Per-level funnel and struggle metrics. levels: [{ n, name }] from the current build (optional).
-export function levelStats(rows, levels = [], now = Date.now()) {
+// Which stage of the current build an attempt belongs to. Stage numbers shift when stages are inserted or reordered,
+// so match by levelKey (map hash) first, then by name (then by number when the event has neither); no match = a map this build no longer has (an "old" stage).
+// Without level data (levels = []) the event's stage number is used as is.
+export function stageResolver(levels = []) {
+  const byKey = new Map(levels.filter((l) => l.key).map((l) => [l.key, l]));
+  const byName = new Map(levels.filter((l) => l.name).map((l) => [l.name, l]));
+  const cache = new Map();
+  return (a) => {
+    const ck = `${a.level}|${a.levelKey}|${a.levelName}|${a.chapter}`;
+    if (cache.has(ck)) return cache.get(ck);
+    let r;
+    const byNumber = !a.levelKey && !a.levelName ? levels.find((l) => l.n === a.level) : null; // nothing else to go on
+    const hit = levels.length ? (a.levelKey && byKey.get(a.levelKey)) || (a.levelName && byName.get(a.levelName)) || byNumber || null : null;
+    if (!levels.length) r = { slot: `n:${a.level}`, n: a.level, name: a.levelName, key: a.levelKey, chapter: a.chapter ?? '', match: 'number' };
+    else if (hit) r = { slot: `n:${hit.n}`, n: hit.n, name: hit.name, key: hit.key, chapter: hit.chapter || a.chapter || '', match: a.levelKey && a.levelKey === hit.key ? 'key' : a.levelName ? 'name' : 'number' };
+    else {
+      const id = a.levelKey || a.levelName || `#${a.level}`;
+      r = { slot: `old:${id}`, n: null, name: a.levelName || `#${a.level}`, key: a.levelKey, chapter: a.chapter ?? '', match: 'old' };
+    }
+    cache.set(ck, r);
+    return r;
+  };
+}
+
+function aggregate(rows, levels, now) {
   const { attempts, sessions } = buildAttempts(rows, now);
+  const resolve = stageResolver(levels);
   const by = new Map();
-  const get = (n) => {
-    if (!by.has(n)) {
-      by.set(n, {
-        level: n, name: levels.find((l) => l.n === n)?.name ?? '', names: new Set(),
+  const get = (st) => {
+    if (!by.has(st.slot)) {
+      by.set(st.slot, {
+        slot: st.slot, level: st.n, old: st.n == null, name: st.name ?? '', key: st.key ?? '', chapter: st.chapter ?? '', names: new Set(),
         attempts: 0, players: new Set(), clearPlayers: new Set(), clears: 0, leaves: 0, quits: 0, open: 0,
         clearMs: [], allMs: [], clearMoves: [], undos: 0, restarts: 0, hints: 0, fails: 0, blocked: 0,
         idles: 0, idleMs: 0, wasted: 0, lost: {}, sessions: new Set(), sessionEnds: 0, playerQuits: 0, hintPlayers: new Set(),
       });
     }
-    return by.get(n);
+    return by.get(st.slot);
   };
-  for (const l of levels) get(l.n);
+  for (const l of levels) get({ slot: `n:${l.n}`, n: l.n, name: l.name, key: l.key, chapter: l.chapter });
 
   for (const a of attempts) {
-    const s = get(a.level);
+    a.stage = resolve(a);
+    const s = get(a.stage);
     if (a.levelName) s.names.add(a.levelName);
     s.attempts++;
     s.players.add(a.playerId);
@@ -150,26 +175,39 @@ export function levelStats(rows, levels = [], now = Date.now()) {
     if (a.hints) s.hintPlayers.add(a.playerId);
     for (const [k, v] of Object.entries(a.lost)) s.lost[k] = (s.lost[k] ?? 0) + v;
   }
-  // Drop-off: the session's last attempt was this level and it was not cleared.
+  // Drop-off: the session's last attempt was this stage and it was not cleared.
   for (const sess of sessions) {
     const last = sess.attempts.at(-1);
-    if (last && last.outcome !== 'clear' && last.outcome !== 'open') get(last.level).sessionEnds++;
+    if (last && last.outcome !== 'clear' && last.outcome !== 'open') get(last.stage).sessionEnds++;
   }
-  // Player quit: the player's latest attempt overall is this level, uncleared, and stale.
+  // Player quit: the player's latest attempt overall is this stage, uncleared, and stale.
   const lastByPlayer = new Map();
   for (const a of attempts) {
     const p = lastByPlayer.get(a.playerId);
     if (!p || a.t0 >= p.t0) lastByPlayer.set(a.playerId, a);
   }
   for (const a of lastByPlayer.values()) {
-    if (a.outcome === 'quit' || a.outcome === 'leave') get(a.level).playerQuits++;
+    if (a.outcome === 'quit' || a.outcome === 'leave') get(a.stage).playerQuits++;
   }
+  // Current stages in play order, then maps from older builds (most played first).
+  const list = [...by.values()];
+  const cur = list.filter((s) => !s.old).sort((x, y) => x.level - y.level);
+  const old = list.filter((s) => s.old).sort((x, y) => y.attempts - x.attempts);
+  return { stages: [...cur, ...old], attempts, sessions };
+}
 
-  const rate = (a, b) => (b ? Math.round((a / b) * 1000) / 1000 : null);
-  const per = (a, b) => (b ? Math.round((a / b) * 100) / 100 : null);
-  return [...by.values()].sort((a, b) => a.level - b.level).map((s) => ({
+const rate = (a, b) => (b ? Math.round((a / b) * 1000) / 1000 : null);
+const per = (a, b) => (b ? Math.round((a / b) * 100) / 100 : null);
+
+// Per-stage funnel and struggle metrics. levels: [{ n, name, key, chapter }] from the current build (optional).
+// level = stage number in the current build; null for a map the build no longer has (old = true).
+export function levelStats(rows, levels = [], now = Date.now()) {
+  return aggregate(rows, levels, now).stages.map((s) => ({
     level: s.level,
     name: s.name || [...s.names][0] || '',
+    chapter: s.chapter,
+    levelKey: s.key,
+    old: s.old,
     namesSeen: [...s.names],
     attempts: s.attempts,
     players: s.players.size,
@@ -188,6 +226,52 @@ export function levelStats(rows, levels = [], now = Date.now()) {
     hintPlayerRate: rate(s.hintPlayers.size, s.players.size),
     idles: s.idles, idleMs: s.idleMs, wastedBodies: s.wasted, bodyLost: s.lost,
   }));
+}
+
+// Per-chapter summary over the current build's stages (old maps left out), in play order.
+// players: started any stage of the chapter; playerShare: of all players in the data. reachedLast: started its last
+// stage. clearedAll: cleared every stage of it. quitPlayers: latest attempt overall is an uncleared stage here.
+export function chapterStats(rows, levels = [], now = Date.now()) {
+  const { stages } = aggregate(rows, levels, now);
+  const all = new Set();
+  for (const s of stages) for (const p of s.players) all.add(p);
+  const chapters = new Map();
+  for (const s of stages) {
+    if (s.old) continue;
+    const c = chapters.get(s.chapter) ?? { chapter: s.chapter, stages: [], players: new Set(), quitPlayers: 0 };
+    c.stages.push(s);
+    for (const p of s.players) c.players.add(p);
+    c.quitPlayers += s.playerQuits;
+    chapters.set(s.chapter, c);
+  }
+  return [...chapters.values()].map((c) => {
+    const last = c.stages.at(-1);
+    const clearedAll = [...c.players].filter((p) => c.stages.every((s) => s.clearPlayers.has(p))).length;
+    return {
+      chapter: c.chapter,
+      firstLevel: c.stages[0].level, lastLevel: last.level, stages: c.stages.length,
+      players: c.players.size, playerShare: rate(c.players.size, all.size),
+      reachedLast: last.players.size, clearedAll, clearedAllRate: rate(clearedAll, c.players.size),
+      quitPlayers: c.quitPlayers, quitRate: rate(c.quitPlayers, c.players.size),
+      attempts: c.stages.reduce((n, s) => n + s.attempts, 0),
+    };
+  });
+}
+
+// Heatmap for stage n of the current build: attempts on its current map only (same levelKey, or none sent),
+// wherever the stage sat in older builds. rows: all events with the dashboard filters (store.query).
+export function stageHeatmap(rows, levels, n, now = Date.now()) {
+  const level = levels.find((l) => l.n === n) ?? null;
+  const { attempts } = buildAttempts(rows, now);
+  const resolve = stageResolver(levels);
+  const keep = new Set();
+  let otherMaps = 0;
+  for (const a of attempts) {
+    if (resolve(a).n !== n) continue;
+    if (level?.key && a.levelKey && a.levelKey !== level.key) { otherMaps++; continue; }
+    keep.add(a.id);
+  }
+  return { level, otherMapAttempts: otherMaps, cells: heatmap(rows.filter((r) => r.attemptId && keep.has(r.attemptId))) };
 }
 
 // Cell counts for one level. rows: events already filtered to that level.
@@ -256,16 +340,21 @@ export function toCsv(objs, cols = objs.length ? Object.keys(objs[0]) : []) {
   return [cols.join(','), ...objs.map((o) => cols.map((c) => CSV_ESC(o[c])).join(','))].join('\n') + '\n';
 }
 
+const stageColumns = (st) => ({ chapter: st.chapter, stageNow: st.n ?? '', stageMatch: st.match });
+
 // One row per attempt; columns follow design/levels/telemetry-mapping.md section 4.1 (feat/levels).
 export const ATTEMPT_COLUMNS = [
   'attemptId', 'playerId', 'sessionId', 'build', 'client', 'level', 'levelName', 'levelKey', 'attempt', 'via', 'bodies',
   'sessionFirstTime', 'startT', 'endT', 'outcome', 'durationMs', 'activeMs', 'moves', 'blocked', 'undos', 'restarts',
   'hints', 'fails', 'bodiesUsed', 'minMoves', 'idleCount', 'idleMsTotal', 'idleMsMax', 'firstHintMs', 'bodiesWasted',
   'lostFell', 'lostVanish', 'lostStatue', 'lostSwitch', 'lostBridge', 'lostSeal', 'keeps', 'switches',
-  'lastStuckToClearMoves', 'lastStuckToClearMs', 'nextLevelStarted',
+  'lastStuckToClearMoves', 'lastStuckToClearMs', 'nextLevelStarted', 'chapter', 'stageNow', 'stageMatch',
 ];
 
-export function attemptRows(rows, now = Date.now(), minMovesFor) {
+// levels (optional): adds chapter, stageNow (stage number in the current build, '' for an old map) and
+// stageMatch (key | name | old | number), see stageResolver.
+export function attemptRows(rows, now = Date.now(), minMovesFor, levels = []) {
+  const resolve = stageResolver(levels);
   return buildAttempts(rows, now, minMovesFor).attempts.map((a) => ({
     attemptId: a.id, playerId: a.playerId, sessionId: a.sessionId, build: a.build, client: a.client,
     level: a.level, levelName: a.levelName, levelKey: a.levelKey, attempt: a.attempt, via: a.via, bodies: a.bodies,
@@ -276,6 +365,7 @@ export function attemptRows(rows, now = Date.now(), minMovesFor) {
     lostFell: a.lost.fell ?? 0, lostVanish: a.lost.vanish ?? 0, lostStatue: a.lost.statue ?? 0, lostSwitch: a.lost.switch ?? 0,
     lostBridge: a.lost.bridge ?? 0, lostSeal: a.lost.seal ?? 0, keeps: a.keeps, switches: a.switches,
     lastStuckToClearMoves: a.lastStuckToClearMoves, lastStuckToClearMs: a.lastStuckToClearMs, nextLevelStarted: a.nextLevelStarted,
+    ...stageColumns(resolve(a)),
   }));
 }
 
