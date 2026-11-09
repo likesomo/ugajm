@@ -131,7 +131,8 @@ curl -H "Authorization: Bearer $STATS_TOKEN" "http://localhost:8787/api/export/a
 ### 지표 정의
 
 - **스테이지 맞추기**: 스테이지는 현재 빌드(`levels.js`) 순서로 보인다. 예전 빌드의 시도는 `levelKey`(맵 해시) → 스테이지 이름 → (둘 다 없으면) 번호 순으로 지금 스테이지를 찾는다. 그래서 스테이지를 끼워 넣거나 순서를 바꿔도 섞이지 않는다. 이름은 같고 맵만 고친 경우는 같은 스테이지로 세고(히트맵은 지금 맵만), 지금 빌드에 없는 맵은 "이전 맵"으로 따로 센다. `attempts.csv`의 `stageNow`(지금 번호, 이전 맵은 빈칸)·`stageMatch`(`key`/`name`/`number`/`old`)·`chapter` 열
-- **챕터**: 현재 빌드 레벨 데이터의 `chapter` 기준(없으면 이벤트의 `chapter`). 레벨에 챕터가 하나라도 있으면 대시보드에 챕터 칸·필터·묶음이 나온다. 챕터의 "그만둠" = 플레이어의 마지막 시도가 이 챕터의 미클리어 스테이지
+- **챕터**: 현재 빌드 레벨 데이터의 `chapter` 기준(없으면 이벤트의 `chapter`). 레벨에 챕터가 하나라도 있으면 대시보드에 챕터 칸·필터·묶음이 나온다. 챕터의 "그만둠" = 플레이어의 마지막 시도가 이 챕터의 미클리어 스테이지. 행성 이름(`planet`)은 `design/levels/chapters.json`(`CHAPTERS_JSON`로 바꿈)에서 읽어 대시보드 챕터 이름, `/api/levels`·`/api/stats/levels`·`/api/stats/chapters`, `attempts`·`levels` 내보내기에 넣는다
+- **언어**: `attempts`의 `lang` 열 = 그 시도의 `level_start` 때 UI 언어(없으면 세션의 직전 값)
 
 - **시도**: `level_start`부터 `level_clear`(clear) / `level_leave`·다른 `level_start`(leave) / 세션이 30분 넘게 조용함(quit)까지. 아직 30분이 안 됐으면 open
 - **클리어율**: 그 스테이지를 시작한 플레이어 중 클리어한 플레이어 비율

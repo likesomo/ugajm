@@ -35,7 +35,8 @@ function plans() {
     const sol = solve(level);
     const path = sol ? sol.path : [];
     // Difficulty grows with solution length and late-game mechanics; 8 and 12 are made extra sticky on purpose.
-    const diff = Math.min(1, path.length / 45 + i * 0.03 + (i === 7 || i === 11 ? 0.25 : 0));
+    // Scaled by the stage count so a 50-stage build still has a few players in the last chapter.
+    const diff = Math.min(1, path.length / 60 + (i / LEVELS.length) * 0.35 + (i === 7 || i === 11 ? 0.25 : 0));
     return { level, path, diff, name: def.name, chapter: def.chapter };
   });
   return PLANS;
