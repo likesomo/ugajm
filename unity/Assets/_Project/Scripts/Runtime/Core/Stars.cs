@@ -1,3 +1,5 @@
+using System;
+
 namespace SevenSteps.Core
 {
     /// <summary>
@@ -13,8 +15,13 @@ namespace SevenSteps.Core
         /// 3 = also no undo and no restart in the attempt.
         /// <paramref name="minBodies"/> is levels.json expected.minBodies (the solver's fewest bodies).
         /// Returns 0 when minBodies is unknown (&lt;= 0), where core.js returns null.
+        /// Throws ArgumentOutOfRangeException when bodiesUsed &lt; 1 or a count is negative (caller bug; core.js does not check).
         public static int Of(int bodiesUsed, int minBodies, int hints, int undos, int restarts)
         {
+            if (bodiesUsed < 1) throw new ArgumentOutOfRangeException(nameof(bodiesUsed), bodiesUsed, "a clear uses at least one body");
+            if (hints < 0) throw new ArgumentOutOfRangeException(nameof(hints), hints, "count");
+            if (undos < 0) throw new ArgumentOutOfRangeException(nameof(undos), undos, "count");
+            if (restarts < 0) throw new ArgumentOutOfRangeException(nameof(restarts), restarts, "count");
             if (minBodies <= 0) return 0;
             if (hints > 0 || bodiesUsed > minBodies) return 1;
             return undos == 0 && restarts == 0 ? 3 : 2;
