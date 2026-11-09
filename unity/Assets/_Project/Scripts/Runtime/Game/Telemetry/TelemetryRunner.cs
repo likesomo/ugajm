@@ -68,14 +68,18 @@ namespace SevenSteps.Game.Telemetry
             var go = new GameObject(ObjectName);
             DontDestroyOnLoad(go);
             go.AddComponent<TelemetryRunner>().telemetry = t;
-            t.Tracker.SetLang(save.Settings.language); // docs/architecture.md 13.3, default "ko"
+            // lang = the screen language (lead 2026-11-10): Localizer.Current and its Changed event. Until the bootstrap
+            // registers the Localizer (scene-flow 8481e5c), the same rule it uses: -lang / ?lang override, else the setting.
+            bool localized = Services.TryGet<Localizer>(out var loc);
+            t.Tracker.SetLang(Languages.Code(localized ? loc.Current : launch.Language ?? save.Language));
+            if (localized) loc.Changed += lang => t.Tracker.SetLang(Languages.Code(lang));
             t.SetEnabled(allowed);
             if (allowed) t.Tracker.SessionStart(firstTime, save.Progress.ClearedCount);
 
             // Consent changes in Settings apply right away (11.3). Opting in again starts a session with a fresh id.
             save.SettingsChanged += s =>
             {
-                t.Tracker.SetLang(s.language); // a language switch applies to the next session_start / level_start
+                if (!localized) t.Tracker.SetLang(Languages.Code(launch.Language ?? save.Language)); // else Localizer.Changed
                 bool on = save.TelemetryAllowed(config);
                 if (on == t.Enabled) return;
                 bool fresh = on && string.IsNullOrEmpty(s.playerId);
