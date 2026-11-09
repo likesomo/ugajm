@@ -1,5 +1,34 @@
 # 유적·행성 UI 테마 — 2026-11-09
 
+## EN/KO 손글씨 방향 추가
+
+최신 사용자 방향은 [fonts.md](fonts.md)와 `concepts/ui/en/`, `concepts/ui/ko/`의 실제 TTF 렌더다. 기존9-slice 패널·목재/석재 트림·버튼4상태는 그대로 쓰고 텍스트만 EN 제목 Kaushan Script, EN 본문 Patrick Hand, KO 제목/본문 Gaegu, 공통 숫자 Jua로 바꾼다. 이전 GPT 이미지의 서체 모사는 현재 폰트 선택의 근거가 아니다.
+
+**씬 플로우/아키텍트에 요청하는 필드안**(타입은 수정하지 않음):
+
+```csharp
+// UiTheme에 추가할 값의 제안이며 구현된 API가 아니다.
+LocalizedFontSet[] fontSets; // locale="en" / "ko"
+// LocalizedFontSet: locale, titleFont, bodyFont, numberFont,
+// titleSizeScale, bodySizeScale, bodyLineSpacing, symbolFallbackFont
+// 권장 조회: FontFor(locale, role), 유효하지 않은 locale은 명시적 기본 locale로.
+```
+
+| locale | titleFont | bodyFont | numberFont | body line spacing(프리뷰) |
+|---|---|---|---|---:|
+| en | KaushanScript-Regular | PatrickHand-Regular | Jua-Regular |0.90|
+| ko | Gaegu-Regular | Gaegu-Regular | Jua-Regular |1.10|
+
+기존 `UiTheme.font`는 구형 View의 안전한 기본값으로 유지하고 새 role별 참조로 한 화면씩 전환한다. 공용 타입을 아트에서 변경하지 않는다. 아트 전용 `HandwrittenUiPreview`의 폰트 참조는 실제 렌더/용량 비교용이며 정식 언어 서비스가 아니다.
+
+레이아웃 기준: 제목48–70px, 본문/버튼25–28px, 숫자27–34px. 버튼은 같은370px 슬롯에서 영문 Begin the Journey와 한글 시작을 비교하며 텍스트가 긴 경우 슬롯 확장/줄바꿈을 우선하고 숫자는 축소하지 않는다. HUD 힌트는1160×76px의2줄 영역으로 분리해 언어별 줄높이를 흡수한다. 스테이지 제목/행성 이름은 고정 단어 수가 아니라 PreferredHeight에 맞춰2줄까지 확장할 자리를 둔다. Latin 본문의 line gap이 한글보다 커질 수 있으므로 글자 수만으로 높이를 계산하지 않는다.
+
+첫 실행 언어 선택과 설정 양쪽에 English/한국어를 보여 준다. 자기 언어 이름은 현재 UI 언어와 무관하게 해당 폰트로 그려야 한다(영문 Patrick Hand로 한국어를 그리지 않는다). 선택 언어 저장·재시작·씬 전환 유지와 번역 테이블 연결은 씬 플로우 소유다. 현재 언어 선택 시안의 버튼은 조판 예시이며 실제 저장 동작을 구현하지 않는다.
+
+숫자 문·석상 수·걸음은 별도의 Text(role=number)를 쓴다. legacy uGUI의 한 Text에 폰트를 섞는다고 가정하지 않는다. symbolFallback은 검사된 기호만을 위한 필드이며 Jua가 모든 한글을 커버한다고 간주하지 않는다. GlyphCheck는 locale 번역 테이블 + role별 cmap를 검사하도록 확장 요청한다. 현재 KO Gaegu의 공용 Check와 EN role의 cmap 검증은 모두 통과했다.
+
+스테이지 선택의 현재 시안은 **7행성 moss/hollow/carved/frost/joinery/crumble/altar·잠금 없음**이다. 각 스테이지 별3개와 챕터 별 합계를 병기하며 이전5행성·잠금 표시는 탐색 기록이다.3별 기준 자체는 여전히 기획 검토안이다.
+
 시안과 적용 후보를 분리했다. 시안은 `C:/unityjam/shared-assets/seven-steps/concepts/ui/`, 갤러리는 해당 폴더 `index.html`이다. 기준 화면은1280×720, 세로는 참고용이며 아직 정식 모바일 레이아웃 결정이 아니다. 실제 Unity 적용은 아트 소유 테마/패널/리소스 후보까지만 만들고 공용 씬·UI 컨트롤러는 바꾸지 않았다.
 
 ## 화면과 정보 순서
@@ -41,7 +70,7 @@
 
 S6 UiTheme에 sprite 필드는 아직 없다. 따라서 코어 계약을 임의로 늘리지 않고 `RuinsHengeResources`로 전달했다. UI 담당이 이 리소스를 읽거나 UiTheme의 필드를 확장하면 된다. 문서의 색과 실제 UiTheme 필드는 ink/dim/gold/stone/buttonBg/panelBg/font/settingsPanel/resultPanel이며, plateA/B/C는 퍼즐 채널색이므로 형제색으로 덮어쓰지 않는다.
 
-폰트: 적용은 기존 `Shared/Fonts/Jua-Regular.ttf`를 재사용하며 중복 복사하지 않는다. 제목 Jua, 본문 Pretendard 계열을 제안하지만 Pretendard는 다운로드/추가하지 않았다. Jua는 공유 `Jua-OFL.txt`(Copyright2018 The Jua Project Authors), Pretendard는 [공식 OFL1.1](https://github.com/orioncactus/pretendard/blob/main/LICENSE)을 따른다. 본문 전환 시 한글/기호 글리프와 legacy Text/TMP 비용을 UI 담당이 검사한다.
+이전 UI1차는 `Shared/Fonts/Jua-Regular.ttf`를 사용했고 Pretendard를 본문 후보로만 검토했다(미다운로드). 현재 추천은 위 EN/KO 손글씨 세트와 [fonts.md](fonts.md)이며 Jua는 숫자/구형 View 기본값으로 남는다. Jua의 공유 `Jua-OFL.txt`와 새 폰트별 OFL 파일을 보존한다. 정식 언어별 전환 시 UI 담당이 role별 글리프와 legacy Text/TMP 비용을 검사한다.
 
 ## 게임 씬 연결과 품질 보완
 
