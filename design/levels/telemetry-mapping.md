@@ -7,7 +7,9 @@
 
 - **단위 = 시도(attempt)**: `level_start`부터 `level_clear` / `level_leave` / `session_end` / 다음 `level_start`까지. 시도 중 `restart`는 같은 시도
 - **스테이지 식별**: `level` 번호는 순서가 바뀌면 달라지므로 **`levelName` + `build`**로 묶는다. 같은 이름이라도 맵을 바꾼 빌드는 따로 본다
-- **첫 시도만**: 기본 집계는 플레이어별 그 스테이지의 첫 시도(`attempt = 1`, `via ≠ again`). 다시 하기·스테이지 선택으로 돌아온 시도는 별도 열로 본다
+- **첫 시도만**: 기본 집계는 플레이어별 그 스테이지의 첫 시도(`attempt = 1`, `via ≠ again`). 다시 하기나 이미 해 본 스테이지로 돌아온 시도(`attempt > 1`)는 별도 열로 본다. `via = select`만으로는 거르지 않는다(아래)
+- **`via` 뜻** (2026-11-10 리드 결정): `select` = 지도·목록에서 고른 진입. **앱 첫 진입이어도 `select`**. `boot` = 실행 인자 없이 자동 이어가기로 들어간 경우만, `url` = `?level=`·`-level`, `next` = 클리어 뒤 다음, `again` = 클리어 뒤 다시 하기. 그래서 1차에서는 테스터의 첫 스테이지(1번)와 세션 2 이어 하기도 대부분 `select`이고, `via = select` ≠ 건너뜀
+- **건너뛴 시도** (`skipped`, 보정 스크립트가 계산): 플레이어가 **앞 행성의 피날레(마지막 스테이지)를 깨기 전에** 시작한 그 행성의 시도 전부. 1장(이끼 행성)은 해당 없음. `attempts.csv`의 `playerId`·`level`·`outcome`·`startT`(+ `chapters.json`의 행성 범위)로만 정하고 `via`는 보지 않는다. 회전 배치(`playtest-1-prep-draft.md` 1.2)로 뒤 행성에 들어온 기록이 여기에 들어가며, 보정에서는 따로 본다(첫 스테이지 난이도가 부풀려짐)
 - **결과 분류**:
   | 결과 | 조건 |
   |---|---|
@@ -76,7 +78,7 @@
 
 ### 4.3 공통
 
-- `?build=…&client=…&since=…` 필터를 attempts·events 둘 다에 적용
+- `?build=…&client=…&since=…` 필터를 attempts·events 둘 다에 적용. `since`에 날짜(`YYYY-MM-DD`)만 주면 **서버 PC 로컬 시간 그날 0시**부터(server가 로컬 시간대로 고치는 중, 2026-11-10). 플레이테스트 당일이면 `since=$(date +%F)`
 - CSV는 UTF-8(BOM 없음), 쉼표 구분, 헤더 한 줄. 스테이지 이름이 한글이므로 인코딩 고정
 - 토큰 인증 그대로 사용 가능 (`curl -H "Authorization: Bearer …"`로 받을 수 있으면 됨)
 

@@ -65,7 +65,7 @@ unity/Tools/unity.sh smoke-webgl     # 보드가 그려지는지 확인 (build-w
 - "풀이 보기"(H)는 힌트가 아니라 **처음부터의 최단 풀이 전체**를 보여 준다. 대시보드의 "힌트 본 비율"은 이 버튼이다. 힌트 문구를 읽었는지는 기록되지 않으므로 진행자 메모로만 안다
 - 막혀도 도와주지 않는다. 테스터가 물으면 "풀이 보기를 써도 돼요"까지만
 - 50스테이지는 한 번에 끝내기 어렵다(예상 2~3시간). **한 세션 50~60분**, 끝난 지점을 메모하고 다음 세션은 그 다음 스테이지부터 이어서 한다. 이어서 하려면 1.3처럼 `newplayer` 없는 주소로 같은 브라우저 프로필에서 연다
-- 한 세션만 할 수 있는 테스터는 1~2장(1~14)까지가 기본. 뒤 장(4~7장) 관찰이 필요하면 다른 테스터는 1~14 뒤 스테이지 선택에서 행성 첫 스테이지(15, 22, 29, 36, 43)를 고르게 하되(회전 배치 `playtest-1-prep-draft.md` 1.2), 건너뛴 기록은 `via=select`로 나뉘므로 보정에서는 따로 본다
+- 한 세션만 할 수 있는 테스터는 1~2장(1~14)까지가 기본. 뒤 장(4~7장) 관찰이 필요하면 다른 테스터는 1~14 뒤 스테이지 선택에서 행성 첫 스테이지(15, 22, 29, 36, 43)를 고르게 하되(회전 배치 `playtest-1-prep-draft.md` 1.2), 건너뛴 기록은 보정에서 따로 본다. 기록에서 고르는 기준은 `via`가 아니라 "앞 행성 피날레를 깨기 전에 들어왔는가"다(`telemetry-mapping.md` 1장). 지도·목록에서 고른 진입은 첫 스테이지든 이어 하기든 건너뛰기든 모두 `via=select`라서 `via`로는 가를 수 없다. 진행자는 노트에 건너뛴 행성과 시각을 적는다
 - 시간 제한을 말하지 않는다
 - 목표 인원: **5명 이상** (5명 미만인 스테이지는 보정에 쓰지 않는다)
 
@@ -144,12 +144,14 @@ Unity에서만 볼 것: 3D 보드에서 숫자 문 숫자, 석상 수 문, 레�
 ## 5. 기록 넘기기
 
 ```bash
-T=<토큰>; mkdir -p reports/telemetry
+T=<토큰>; D=$(date +%F)   # 테스트 당일. 다른 날이면 D=2026-11-12 처럼 직접
+mkdir -p reports/telemetry
 for C in unity-webgl web-proto; do
-  curl -H "Authorization: Bearer $T" "http://localhost:8787/api/export/attempts.csv?client=$C&since=<날짜>" -o reports/telemetry/attempts-$C.csv
-  curl -H "Authorization: Bearer $T" "http://localhost:8787/api/export/events.jsonl?client=$C&since=<날짜>" -o reports/telemetry/events-$C.jsonl
+  curl -H "Authorization: Bearer $T" "http://localhost:8787/api/export/attempts.csv?client=$C&since=$D" -o reports/telemetry/attempts-$C.csv
+  curl -H "Authorization: Bearer $T" "http://localhost:8787/api/export/events.jsonl?client=$C&since=$D" -o reports/telemetry/events-$C.jsonl
 done
 ```
+- `since=<날짜>`는 서버 PC 로컬 시간 그날 0시부터다(server 수정, 2026-11-10). 시작 전 확인 기록을 빼려면 `since`에 확인을 마친 시각(epoch ms)을 준다
 - `reports/`는 커밋하지 않는다. 레벨 디자인이 보정 스크립트로 읽어 `interest-curve.html`에 실측 I를 겹쳐 그린다
 - 두 클라이언트는 같은 스테이지 이름으로 합쳐 본다. 단, 한 스테이지에서 둘의 클리어 시간 중앙값이 2배 넘게 차이 나면 합치지 않고 원인(표시·조작)을 먼저 본다
 
