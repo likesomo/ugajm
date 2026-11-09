@@ -9,13 +9,16 @@
 ## A. 빌드 (리드)
 
 - [x] Unity 라이선스 복구 (2026-11-10)
-- [ ] 7lucky에서 `compile` · `test` · `verify`(50/50) · `scene-validate` 통과
-- [ ] `build-webgl` → `smoke-webgl`(1, 29, 50) 통과. 로그의 "1 URP assets included in build" 다음 줄이 Mobile_RPAsset인지 확인
-- [ ] `build-win` → `smoke` 통과 (진행자 PC 예비)
+- [x] 7lucky에서 `compile` · `test`(769/769) · `verify`(50/50) · `scene-validate`(0/0) · `tileset-validate` 통과 — 후보 빌드 `e6dda07` (2026-11-10)
+- [x] `build-webgl` → `smoke-webgl`(1, 29, 50) 통과: board 28738/25992/22581, empty 대조 0, 콘솔 예외 0, Mobile_RPAsset 확인 (`e6dda07`)
+- [x] `build-win` → `smoke` 통과: 리플레이 7/7, 행성 경계 흐름 9/9(별 3), 타이틀 경로 3/3(시작→1 select, 지도→8 select, 이어하기→8 boot) (`e6dda07`)
 - [ ] 테스트 빌드 커밋 해시를 이 문서와 `design/levels/playtest-guide.md`에 적는다
-- [ ] 7행성 피날레 확인: `stage-report.md`의 리플레이로 7, 14, 21, 28, 35, 42, 50을 `?level=N&replay=…`로 돌려 결과 화면에 ★3이 나오는지. 8·15·22·29·36·43(행성 첫 스테이지)에서 챕터 카드가 나오는지
-- [ ] 한국어·영어 각 1회: `?lang=en`으로 타이틀 → 행성 선택 → 1번 → 결과 화면까지 한국어가 섞이지 않는지 (아래 E-2가 끝나야 통과)
-- [ ] 별 저장: ★1로 깬 뒤 ★3으로 다시 깨면 ★3, 반대 순서면 ★3 유지
+- [x] 7행성 피날레 확인(smoke 흐름 단계가 자동으로 함: 7·14·…·50 ★3, 결과 문구, 챕터 카드, 프리셋 교체): `stage-report.md`의 리플레이로 7, 14, 21, 28, 35, 42, 50을 `?level=N&replay=…`로 돌려 결과 화면에 ★3이 나오는지. 8·15·22·29·36·43(행성 첫 스테이지)에서 챕터 카드가 나오는지
+- [x] 한국어·영어 각 1회 (scene-flow 리허설, 영어 이름·챕터 카드·설정 스크린샷): `?lang=en`으로 타이틀 → 행성 선택 → 1번 → 결과 화면까지 한국어가 섞이지 않는지 (아래 E-2가 끝나야 통과)
+- [x] 별 저장 (WebGL 새로고침 후 유지, `?newplayer=1` 초기화 확인): ★1로 깬 뒤 ★3으로 다시 깨면 ★3, 반대 순서면 ★3 유지
+
+- [x] 리허설(scene-flow, 2026-11-10): 테스터 2명 흉내로 서버→/webgl/?newplayer=1→대시보드→내보내기까지. 발견한 타이틀 '시작' 먹통(19554a3), via 규칙, since 시간대, 기간 필터 버그(e953eb0), 첫 방향키(365d5bb) 모두 수정·병합
+- [ ] 테스트 빌드 해시를 `design/levels/playtest-guide.md`에 적기 (테스트 직전 최종 7lucky로)
 
 ## B. 테스트 대상 결정 (사용자)
 
