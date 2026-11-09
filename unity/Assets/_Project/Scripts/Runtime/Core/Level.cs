@@ -8,7 +8,8 @@ namespace SevenSteps.Core
     /// # wall, . floor, S start, E exit, o pit, ~ ice, x cracked floor,
     /// a-c plate, A-C door (open while a statue stands on the matching plate), 1-7 gate (pass only on that step),
     /// Q statue-count door (open while exactly <see cref="StatueCount"/> statues stand; bridges and seals are not statues),
-    /// L lever (a 7th step ending on it flips every flip wall), R raised flip wall (blocks), r lowered flip wall (open).
+    /// L lever (a 7th step ending on it flips every flip wall), R raised flip wall (blocks), r lowered flip wall (open),
+    /// m mud (stepping into it costs 2 steps, blocks with one step left; an ice slide stops on it at no extra cost).
     /// </summary>
     public sealed class Level
     {
