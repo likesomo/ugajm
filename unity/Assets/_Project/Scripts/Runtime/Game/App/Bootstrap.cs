@@ -40,6 +40,7 @@ namespace SevenSteps.Game
 
             var store = new PlayerPrefsStore();
             var save = new SaveSystem(store);
+            NewPlayerLink.Apply(launch, save); // -newplayer / ?newplayer=1: fresh progress and playerId before telemetry starts
             // UI language for this run (docs/architecture.md 13.3): -lang / ?lang= wins over the saved setting, and is not saved.
             // Registered before telemetry: TelemetryRunner reports Localizer.Current as lang and follows Localizer.Changed.
             Services.Register(Localizer.FromAssets(assets.strings, launch.Language ?? save.Language));

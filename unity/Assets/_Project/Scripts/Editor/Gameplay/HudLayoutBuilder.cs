@@ -76,6 +76,14 @@ namespace SevenSteps.EditorTools
                 Style(hud.stageHint, 18, Ui.Ink, TextAnchor.LowerLeft);
                 hud.stageHint.horizontalOverflow = HorizontalWrapMode.Wrap;
                 hud.stageHint.verticalOverflow = VerticalWrapMode.Truncate;
+                // E-4: longer text shrinks to fit instead of being cut (hint 23: ko 56 / en 97 characters fit at full size today)
+                BestFit(story, 16, 24);
+                BestFit(hud.stageHint, 13, 18);
+                // The message line also carries the H solution (long routes in en: "Up Down ..."): wrap and shrink.
+                hud.message.horizontalOverflow = HorizontalWrapMode.Wrap;
+                hud.message.verticalOverflow = VerticalWrapMode.Truncate;
+                hud.message.rectTransform.sizeDelta = new Vector2(1200, 48);
+                BestFit(hud.message, 12, 20);
                 // The 2026-11-10 planets reach under the left column: a soft outline keeps the text readable on them.
                 foreach (var t in new[] { story, hud.stageHint, hud.stageName, hud.stageNumber, hud.nextStep })
                     (t.GetComponent<Outline>() ?? t.gameObject.AddComponent<Outline>()).effectColor = new Color(0, 0, 0, .55f);
@@ -124,6 +132,13 @@ namespace SevenSteps.EditorTools
             r.pivot = pivot;
             r.anchoredPosition = pos;
             r.sizeDelta = size;
+        }
+
+        static void BestFit(Text t, int min, int max)
+        {
+            t.resizeTextForBestFit = true;
+            t.resizeTextMinSize = min;
+            t.resizeTextMaxSize = max;
         }
 
         static void Style(Text t, int size, Color color, TextAnchor align)

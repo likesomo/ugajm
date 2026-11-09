@@ -76,7 +76,36 @@ namespace SevenSteps.Game.UI
             telemetryToggle.onClick.AddListener(() => TelemetryToggled?.Invoke());
             if (languageToggle != null) languageToggle.onClick.AddListener(() => LanguageToggled?.Invoke());
             close.onClick.AddListener(() => CloseRequested?.Invoke());
+            // Facilitator line under the consent note (playtest-1-prep E): a copy of the note, one line lower.
+            var copy = Instantiate(telemetryNote.gameObject, telemetryNote.transform.parent, false);
+            copy.name = "TelemetryStatus";
+            telemetryStatus = copy.GetComponent<Text>();
+            var r = telemetryStatus.rectTransform;
+            r.anchoredPosition -= new Vector2(0, telemetryNote.rectTransform.rect.height + 2);
+            telemetryStatus.text = "";
             wired = true;
+        }
+
+        Text telemetryStatus;
+        float statusAt;
+
+        /// While open: the sending status once a second (events sent and waiting, last reply, short player id).
+        void Update()
+        {
+            if (localizer == null || save == null || Time.unscaledTime < statusAt) return;
+            statusAt = Time.unscaledTime + 1f;
+            telemetryStatus.text = StatusLine(localizer, Services.TryGet<ITelemetry>(out var t) ? t as Telemetry.HttpTelemetry : null);
+            telemetryStatus.font = Ui.Theme.FontFor(localizer.Current, FontRole.Body);
+        }
+
+        /// "Sent 12, waiting 0, last reply 200, ID 3f2a9c1e" or "Not sending" (settings.status*).
+        public static string StatusLine(Localizer loc, Telemetry.HttpTelemetry t)
+        {
+            if (loc == null) throw new ArgumentNullException(nameof(loc));
+            if (t == null || !t.Enabled) return loc.Get("settings.status_off");
+            string reply = t.LastStatus < 0 ? "-" : t.LastStatus == 0 ? loc.Get("settings.status_no_connection") : t.LastStatus.ToString();
+            string id = t.Context.PlayerId ?? "";
+            return loc.Format("settings.status", t.SentEvents, t.PendingEvents, reply, id.Length > 8 ? id.Substring(0, 8) : id);
         }
 
         /// Called once by the scene root right after Instantiate. <paramref name="telemetryOnByDefault"/> = AppConfig.telemetryOnByDefault.
