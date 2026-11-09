@@ -15,4 +15,12 @@ MonoBehaviour:
   telemetryEndpoint: 
   telemetryOnByDefault: 1
   buildChannel: dev
-  tileSet: {fileID: 11400000, guid: d5840d2071f7eb24f85c080dffcfcb06, type: 2}
+  tileSet: {fileID: 0}
+  chapters:
+  - {fileID: 11400000, guid: 5c9b82ef6a3bacb4ca29a8f536749e7c, type: 2}
+  - {fileID: 11400000, guid: b288f2aafc80d8e45b5be597dd361b84, type: 2}
+  - {fileID: 11400000, guid: dabaa688d67293549b0ddfe37afd3d96, type: 2}
+  - {fileID: 11400000, guid: ae58b36f5817c5e46839c1463c7a5acd, type: 2}
+  - {fileID: 11400000, guid: 329e8e1892db0cc41beab3edc51ed813, type: 2}
+  - {fileID: 11400000, guid: ef32180268af0204a98bbd60765f7302, type: 2}
+  - {fileID: 11400000, guid: 972293da18d44ac41a8748d36f931cf8, type: 2}
