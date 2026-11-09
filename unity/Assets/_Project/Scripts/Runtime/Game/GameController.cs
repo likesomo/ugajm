@@ -38,6 +38,9 @@ namespace SevenSteps.Game
         BoardController board;
         HudView hud;
         GameFlowController flowController;
+        SettingsController settingsController;
+        OverlayStack overlays;
+        BackNavigator back;
 
         /// The board controller (tests, tools).
         public BoardController Board => board;
@@ -76,17 +79,22 @@ namespace SevenSteps.Game
 
             // Views
             board = gameObject.AddComponent<BoardController>();
-            hud = new HudView(board, tiles, levels.Length, save);
+            hud = new HudView(board, tiles, levels.Length);
             var result = new ResultView();
+            var settings = new SettingsPanel(OverlayCanvas(), save, cfg.telemetryOnByDefault);
+            settingsController = new SettingsController(save, settings, cfg.telemetryOnByDefault);
+            overlays = new OverlayStack();
 
             // Board controller, then the flow controller on top of it
             board.Init(assets, levels, save, hud, cam, tiles, overrideCamera ? cameraRig : (CameraRig?)null, Services.Get<ITelemetry>());
-            flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, result, LevelCatalog.MinBodies);
-            board.InputBlocked = () => flow.IsLoading || hud.SettingsOpen;
+            flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, result, LevelCatalog.MinBodies, LevelCatalog.ChapterIdOf);
+            back = new BackNavigator(overlays, flowController.Back);
+            board.InputBlocked = () => flow.IsLoading || overlays.Count > 0;
             board.FlowTakes = flowController.TakesCommand;
 
             hud.StageClicked += flowController.SelectStage;
             hud.StageSelectRequested += flowController.OpenStageSelect;
+            hud.SettingsRequested += () => { if (!overlays.Contains(settings)) overlays.Push(settings); };
             result.NextRequested += flowController.Next;
             result.RetryRequested += flowController.Again;
             result.StageSelectRequested += flowController.OpenStageSelect;
@@ -109,23 +117,39 @@ namespace SevenSteps.Game
                 }));
         }
 
-        void OnDestroy() => flowController?.Dispose();
+        void OnDestroy()
+        {
+            flowController?.Dispose();
+            settingsController?.Dispose();
+        }
 
-        /// Flow keys. Board keys are read by the board controller (blocked while settings are open or a scene loads).
+        /// Flow keys. Board keys are read by the board controller (blocked while an overlay is open or a scene loads).
         void Update()
         {
             var kb = Keyboard.current;
             if (kb == null || flow.IsLoading) return;
-            if (hud.SettingsOpen)
-            {
-                // Esc closes the settings panel (and saves it), it does not leave the stage. S4: OverlayStack + BackNavigator.
-                if (kb.escapeKey.wasPressedThisFrame) hud.CloseSettings();
-                return;
-            }
+            // Esc in one place: the top overlay closes first, otherwise AppFlow's back target (BackNavigator).
+            if (kb.escapeKey.wasPressedThisFrame) { back.Back(); return; }
+            if (overlays.Count > 0) return;
             if (kb.leftBracketKey.wasPressedThisFrame) flowController.SelectStage(flow.Stage - 1);
             else if (kb.rightBracketKey.wasPressedThisFrame) flowController.SelectStage(flow.Stage + 1);
             else if ((kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) && flow.State == AppState.Result) flowController.Next();
-            else if (kb.escapeKey.wasPressedThisFrame) flowController.Back();
+        }
+
+        /// Canvas for overlays above the HUD (0) and the result panel (5).
+        static Transform OverlayCanvas()
+        {
+            var canvasGo = new GameObject("Overlays", typeof(RectTransform));
+            canvasGo.layer = 5;
+            var canvas = canvasGo.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 10;
+            var scaler = canvasGo.AddComponent<UnityEngine.UI.CanvasScaler>();
+            scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1280, 720);
+            scaler.matchWidthOrHeight = 0.5f;
+            canvasGo.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+            return canvasGo.transform;
         }
     }
 }

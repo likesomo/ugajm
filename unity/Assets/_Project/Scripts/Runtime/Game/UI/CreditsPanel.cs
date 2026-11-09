@@ -8,12 +8,13 @@ namespace SevenSteps.Game.UI
     /// Credits overlay on the Title scene. Shows the credit lines (Credits.txt, exported from design/art/CREDITS.md before
     /// every build) and, below them in a scroll view, the full license texts that must ship with the assets (Jua: SIL OFL 1.1).
     /// </summary>
-    public sealed class CreditsPanel
+    public sealed class CreditsPanel : SevenSteps.Game.Flow.IOverlay
     {
         readonly GameObject root;
         readonly ScrollRect scroll;
 
-        public bool IsOpen => root.activeSelf;
+        /// The close button. The OverlayStack closes the panel (docs/scene-flow.md S4).
+        public event System.Action CloseRequested;
 
         public CreditsPanel(Transform parent, TextAsset credits, TextAsset[] licenses)
         {
@@ -67,18 +68,18 @@ namespace SevenSteps.Game.UI
             scroll.movementType = ScrollRect.MovementType.Clamped;
             scroll.scrollSensitivity = 30f;
 
-            var close = Ui.MakeButton(panel.transform, "닫기 (Esc)", 20, Close, out _, "Close");
+            var close = Ui.MakeButton(panel.transform, "닫기 (Esc)", 20, () => CloseRequested?.Invoke(), out _, "Close");
             ((RectTransform)close.transform).Place(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 22), new Vector2(200, 44));
             root.SetActive(false);
         }
 
-        public void Open()
+        public void Show()
         {
             root.transform.SetAsLastSibling();
             root.SetActive(true);
             scroll.verticalNormalizedPosition = 1f;
         }
 
-        public void Close() => root.SetActive(false);
+        public void Hide() => root.SetActive(false);
     }
 }

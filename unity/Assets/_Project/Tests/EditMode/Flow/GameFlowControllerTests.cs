@@ -64,7 +64,7 @@ namespace SevenSteps.Tests
             board = new Board();
             panel = new Panel();
             save = new SaveSystem(new MemoryStore());
-            ctl = new GameFlowController(flow, EntryTracker.ForLaunch(levelFromLaunch), save, board, panel, stage => stage == 0 ? 1 : 0);
+            ctl = new GameFlowController(flow, EntryTracker.ForLaunch(levelFromLaunch), save, board, panel, stage => stage == 0 ? 1 : 0, stage => stage < 2 ? "" : "moss");
         }
 
         [TearDown] public void TearDown() => ctl?.Dispose();
@@ -140,6 +140,18 @@ namespace SevenSteps.Tests
             Assert.IsFalse(ctl.TakesCommand(Command.Undo), "undo still reaches the board after a loss");
             board.Recover();
             Assert.IsNull(panel.Shown);
+        }
+
+        [Test]
+        public void ChapterHookFiresOnFirstEntryAndOnChapterChange()
+        {
+            Make(3, false);            // stages 0-1 chapter "", stage 2 "moss"
+            var seen = new List<(string, string, int)>();
+            ctl.ChapterEntering += (from, to, stage) => seen.Add((from, to, stage));
+            ctl.Start(0);
+            ctl.SelectStage(1);
+            ctl.SelectStage(2);
+            CollectionAssert.AreEqual(new[] { ((string)null, "", 0), ("", "moss", 2) }, seen);
         }
 
         [Test]
