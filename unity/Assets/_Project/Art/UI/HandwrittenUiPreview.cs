@@ -84,15 +84,23 @@ namespace SevenSteps.Art
         void SelectScreen()
         {
             Header(L("Choose a planet","행성 고르기"),L("All seven worlds are open. Stars record your journey.","일곱 행성은 모두 열려 있습니다. 별은 여정의 기록입니다."));
+            Vector2 P(int i)=>new Vector2(60+kit.dipper[i].x*1140,190+kit.dipper[i].y*650);
+            foreach(var edge in new[]{(0,1),(1,2),(2,3),(3,0),(3,4),(4,5),(5,6)})
+            {
+                var start=P(edge.Item1);var end=P(edge.Item2);var line=Rect("PlanetConnection",start.x,start.y,Vector2.Distance(start,end),2);
+                line.pivot=new Vector2(0,.5f);line.localRotation=Quaternion.Euler(0,0,-Mathf.Atan2(end.y-start.y,end.x-start.x)*Mathf.Rad2Deg);line.gameObject.AddComponent<Image>().color=dim;
+            }
             for(int i=0;i<7;i++)
             {
-                float x=40,y=158+i*64;Image("PlanetCard_"+ids[i],x,y,310,58,kit.panelWood,i==0?gold:Color.white);
-                Text((ko?koNames:enNames)[i],x+14,y+9,284,43,27,Body,ink);
-                float sx=393+(i%3)*276,sy=209+(i/3)*132;Image("Stage",sx,sy,250,115,kit.panelStone,Color.white);
-                Text(L("Stage","스테이지"),sx+16,sy+12,150,38,27);Text((i+1).ToString("00"),sx+177,sy+14,55,38,27,numbers,gold);
-                Stars(i<4?3:i<6?2:2,sx+17,sy+64,27);
+                var p=P(i);Image("PlanetCard_"+ids[i],p.x-65,p.y-24,130,48,kit.panelWood,i==0?gold:Color.white);
+                Text((i+1).ToString(),p.x-14,p.y-18,28,36,25,numbers,gold,TextAnchor.MiddleCenter);
+                Text((ko?koNames:enNames)[i],p.x-90,p.y+31,180,66,23,Body,ink,TextAnchor.UpperCenter);
+                Stars(i<4?3:2,p.x-38,p.y+95,20);
             }
-            Text(L("Moss Orbit  |  Chapter stars:","이끼의 궤도  |  챕터 별:"),392,161,615,40,30,Body,gold);Text("18 / 21",1010,166,210,38,27,numbers,gold);
+            var summary=Text(L("Chapter stars:","\uCC55\uD130 \uBCC4:"),440,582,400,40,30,Body,gold);
+            summary.horizontalOverflow=HorizontalWrapMode.Overflow;summary.alignment=TextAnchor.MiddleLeft;float labelWidth=summary.preferredWidth;
+            summary.rectTransform.sizeDelta=new Vector2(labelWidth+2,40);
+            Text("18 / 21",440+labelWidth+12,582,160,40,27,numbers,gold,TextAnchor.MiddleLeft);
             Button(L("Back","뒤로"),40,624,230);Text(L("No locks. Replay any chapter.","잠금 없이 어느 챕터든 다시 도전할 수 있습니다."),310,636,850,35,24);
         }
         void Dipper(float x,float y,int lit)

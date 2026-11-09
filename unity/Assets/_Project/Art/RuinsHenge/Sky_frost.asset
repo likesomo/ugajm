@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1e045bfebbc4947bb857f650805529c, type: 3}
+  m_Name: Sky_frost
+  m_EditorClassIdentifier: SevenSteps.Contracts::SevenSteps.Contracts.SkyPreset
+  background: {r: 0.0627451, g: 0.10980392, b: 0.19607843, a: 1}
+  skyPrefab: {fileID: 7152193508508650641, guid: a9bc8163354da674db4c2fa0e0c7400f, type: 3}
+  planetPrefab: {fileID: 1197290073064724128, guid: 50b4e5833ed4ca64bb947156a6c68769, type: 3}
