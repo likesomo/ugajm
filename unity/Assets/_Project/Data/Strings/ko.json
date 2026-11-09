@@ -1,6 +1,6 @@
 {
   "entries": [
-    { "key": "hud.stage", "text": "스테이지 {0:00}" },
+    { "key": "hud.stage", "text": "{0:00}" },
     { "key": "hud.traveller_1", "text": "청록 여행자" },
     { "key": "hud.traveller_2", "text": "황토 여행자" },
     { "key": "hud.traveller_3", "text": "적갈 여행자" },

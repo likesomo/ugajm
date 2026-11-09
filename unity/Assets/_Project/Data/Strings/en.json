@@ -1,6 +1,6 @@
 {
   "entries": [
-    { "key": "hud.stage", "text": "Stage {0:00}" },
+    { "key": "hud.stage", "text": "{0:00}" },
     { "key": "hud.traveller_1", "text": "Teal traveller" },
     { "key": "hud.traveller_2", "text": "Ochre traveller" },
     { "key": "hud.traveller_3", "text": "Russet traveller" },
