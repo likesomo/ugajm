@@ -34,10 +34,13 @@ namespace SevenSteps.Game
         Camera cam;
         int loadedStage = -1;
         bool lost;
+        AttemptCounts attempt; // this attempt since LoadStage (docs 6.5)
         TelemetryRecorder recorder;
 
         public GameSession Session => session;
         public State State => session?.State;
+        /// IStageBoard: hints / real undos / restarts after moving, since the last LoadStage (docs/architecture.md 6.5).
+        public AttemptCounts Attempt => attempt;
         /// 0-based stage on the board (-1 before the first LoadStage).
         public int LevelIndex => loadedStage;
         public int LevelCount => levels.Length;
@@ -140,6 +143,7 @@ namespace SevenSteps.Game
             StageLeaving?.Invoke(stage);
             loadedStage = stage;
             lost = false;
+            attempt = default; // a new attempt: select, next, again, [ ]
             EnterChapter(stage);
             session.Load(levels[stage]); // Rebuild runs inside Load
             chapters?.Fit(board.Grid);
@@ -202,6 +206,7 @@ namespace SevenSteps.Game
         public void ShowHint()
         {
             if (session.Level == null) return;
+            attempt = attempt.WithHint();
             messages.Show(hints.For(loadedStage));
             HintShown?.Invoke();
             Refresh();
@@ -212,6 +217,7 @@ namespace SevenSteps.Game
         void OnSessionUpdated(SessionUpdate u)
         {
             messages.Apply(u);
+            CountAttempt(u);
             if (u.Kind == SessionUpdateKind.Feedback)
             {
                 if (u.Result != null && u.Result.Has(GameEventType.Bump))
@@ -231,6 +237,15 @@ namespace SevenSteps.Game
             else if (s.Status != Status.Lose && lost) { lost = false; Recovered?.Invoke(); }
         }
 
+        /// docs 6.5: an Undo counts when the core went back a state (its Undo event; also after Lose). A Restart counts when
+        /// the state before it was not the stage start (the start state has no Prev: NewState, or undone back to it).
+        void CountAttempt(SessionUpdate u)
+        {
+            if (u.Result == null) return;
+            if (u.Result.Has(GameEventType.Undo)) attempt = attempt.WithUndo();
+            if (u.Result.Has(GameEventType.Restart) && u.Prev != null && u.Prev.Prev != null) attempt = attempt.WithRestart();
+        }
+
         /// A presentation finished (docs/architecture.md 4.2). A clear shows the Result panel only now.
         void OnPresented(State s)
         {
@@ -243,6 +258,6 @@ namespace SevenSteps.Game
             return -1;
         }
 
-        void Refresh() => hud.Refresh(session.State, loadedStage, levels.Length, messages.Current, save.Progress);
+        void Refresh() => hud.Refresh(session.State, loadedStage, messages.Current);
     }
 }

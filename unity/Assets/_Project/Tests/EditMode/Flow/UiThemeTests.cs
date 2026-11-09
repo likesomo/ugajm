@@ -17,7 +17,7 @@ namespace SevenSteps.Tests
             {
                 var issues = new List<string>();
                 theme.Validate(issues);
-                Assert.AreEqual(3, issues.Count, string.Join("\n", issues)); // font, settingsPanel, resultPanel
+                Assert.AreEqual(4, issues.Count, string.Join("\n", issues)); // font, settingsPanel, resultPanel, hud
                 Assert.Throws<System.InvalidOperationException>(() => Ui.Theme = theme);
             }
             finally { Object.DestroyImmediate(theme); }

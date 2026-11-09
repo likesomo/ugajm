@@ -73,7 +73,7 @@
 | `hint` | 풀이 보기 | `level`, `body`, `step`, `at` |
 | `body_lost` | 몸 하나를 썼을 때 | `level`, `body`(잃은 몸 번호), `at`, `reason`: `fell`(7번째가 아닌 걸음에 구덩이) \| `vanish`(출발점에서 7번째) \| `statue`(KEEP·자동 석상) \| `switch` \| `bridge` \| `seal`, `wasted`(`fell`·`vanish`면 true) |
 | `level_fail` | 몸을 모두 잃음 | `level`, `at`, `moves`, `bodiesUsed` |
-| `level_clear` | 출구 도착 | `level`, `durationMs`(이번 시도 시작부터), `moves`, `undos`, `restarts`, `hints`, `fails`, `bodiesUsed`, `minMoves`(선택, 솔버 최단 이동 수) |
+| `level_clear` | 출구 도착 | `level`, `durationMs`(이번 시도 시작부터), `moves`, `undos`, `restarts`, `hints`, `fails`, `bodiesUsed`, `minMoves`(선택, 솔버 최단 이동 수), `stars`(선택, 1~3, 아래 "별") |
 | `level_leave` | 클리어하지 않고 다른 스테이지로 감 | `level`, `toLevel`, `durationMs`, `moves`, `undos`, `restarts`, `hints`, `fails`, `body`, `step`, `at` |
 | `idle` | 입력 없이 30초 이상 지나고, 다음 입력·스테이지 이동·탭 숨김으로 그 멈춤이 끝났을 때 | `level`, `idleMs`(실제 멈춘 시간, 탭이 숨겨진 시간 제외), `body`, `step`, `at`, `status`, `bodiesLeft`, `statues`(석상 수) |
 | `session_end` | 탭 숨김·닫힘 | `reason`: `hidden` \| `unload`, `level`(그때의 스테이지, 없으면 생략), `cleared`(그 스테이지 클리어 상태였는지), `body`, `step`, `at`, `sessionMs` |
@@ -113,11 +113,21 @@
 - 이름·이메일·계정 등 사람을 식별하는 값은 보내지 않는다. 자유 입력 텍스트 필드가 없다
 - 플레이어는 언제든 끌 수 있다(옵트아웃). 외부 분석 서비스는 쓰지 않는다
 
+## 별 (`level_clear.stars`)
+
+`design/levels/stars.md` B안. 한 시도(`level_start`부터 클리어까지, 재시작 포함) 기준:
+- ★1: 클리어
+- ★2: 풀이 보기(`hints`) 0이고 `bodiesUsed == minBodies`(그 맵을 깰 수 있는 가장 적은 몸 수, 솔버 `minBodies` = `levels.json` `expected.minBodies`)
+- ★3: ★2이고 `undos` 0, `restarts` 0
+
+기준 구현 `telemetry.js` `starsFor`(코어가 공식 함수를 만들면 그것을 쓴다). 최소 몸 수를 모르면 보내지 않는다. 서버는 `stars`가 없는 옛 기록도 `level_clear`의 `bodiesUsed`·`hints`·`undos`·`restarts`와 현재 맵(같은 `levelKey`)의 최소 몸 수로 다시 계산한다.
+
 ## 변경 기록
 
 | 날짜 | 버전 | 내용 |
 |---|---|---|
 | 2026-11-07 | v1 | 최초 확정 |
 | 2026-11-07 | v1 | `level_start.levelKey`(선택) 추가 — 레벨 디자인 요청. 선택 필드라 버전은 그대로 |
+| 2026-11-09 | v1 | `level_clear.stars`(선택, 1~3) 추가 — 3별 B안("별" 절). 골든 재생성(클리어 이벤트마다 `stars`). Unity `TelemetryTracker`도 같은 판정으로 넣어야 골든 테스트가 통과한다 |
 | 2026-11-09 | v1 | 진흙·레버 반영(코어 6ae58e2 뒤): 진흙에 들어가는 `move.step`은 `used + 2`, 진흙으로 7걸음이 되면 `seventh_step`. `tile`에 `mud` `lever` `flip_up` `flip_down`, `Q` 문은 `door`(그래서 Q 문을 지나는 `move.result`도 `door`). `seventh_step.flipped`(선택). 서버는 칸 이름을 형식으로 검사. 골든 재생성(125개 중 44개 트레이스 변경). Unity `TelemetryTracker`도 같은 규칙으로 맞춰야 골든 테스트가 통과한다 |
 | 2026-11-09 | v1 | `level_start.chapter`(선택) 추가 — 50스테이지·챕터 대비. 선택 필드라 버전은 그대로. 웹 `Tracker.levelStart(state, level, name, via, chapter)`. Unity `TelemetryTracker`는 `LevelCatalog.ChapterOf`가 생기면 같은 자리(`levelKey` 다음)에 넣는다. 챕터 없는 지금 스테이지에서는 이벤트가 같으므로 골든 변화 없음 |

@@ -24,3 +24,4 @@ MonoBehaviour:
   plateC: {r: 0.5568628, g: 0.49019608, b: 0.74509805, a: 1}
   settingsPanel: {fileID: 735352942397860819, guid: 32d6c408d3abcbf42b220771e9f919bd, type: 3}
   resultPanel: {fileID: 5186985129672267715, guid: 5ee130465858b2147b36bb973a61f4ef, type: 3}
+  hud: {fileID: 3232867761573120493, guid: d7ddcdf0dc12d0f4d92abe5380b8892c, type: 3}

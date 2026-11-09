@@ -88,7 +88,7 @@ namespace SevenSteps.Game
 
             // Views
             board = gameObject.AddComponent<BoardController>();
-            hud = new HudView(board, tiles, levels);
+            hud = HudView.Create(tiles); // theme prefab with its own canvas; LabelLayer is valid for board.Init below
             var result = ResultView.Create();
             var overlayCanvas = OverlayCanvas();
             var settings = SettingsPanel.Create(overlayCanvas, save, cfg.telemetryOnByDefault);
@@ -106,7 +106,6 @@ namespace SevenSteps.Game
             board.InputBlocked = () => flow.IsLoading || overlays.Count > 0;
             board.FlowTakes = flowController.TakesCommand;
 
-            hud.StageClicked += flowController.SelectStage;
             hud.StageSelectRequested += flowController.OpenStageSelect;
             hud.SettingsRequested += () => { if (!overlays.Contains(settings)) overlays.Push(settings); };
             result.NextRequested += flowController.Next;

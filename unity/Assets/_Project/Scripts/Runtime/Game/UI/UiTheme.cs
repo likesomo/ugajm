@@ -32,6 +32,8 @@ namespace SevenSteps.Game.UI
         public SettingsPanel settingsPanel;
         [Tooltip("Clear / loss panel with its own canvas (sorting 5)")]
         public ResultView resultPanel;
+        [Tooltip("Game HUD with its own canvas (UI/Prefabs/Hud.prefab, first built by Seven Steps > Gameplay > Build HUD)")]
+        public HudView hud;
         [Tooltip("Optional: chapter card shown when a new chapter starts (gameplay/UI prefab). Empty = no card.")]
         public ChapterCardView chapterCard;
 
@@ -43,6 +45,8 @@ namespace SevenSteps.Game.UI
             else settingsPanel.Validate(issues);
             if (resultPanel == null) issues.Add($"UiTheme {name}: resultPanel prefab is not set");
             else resultPanel.Validate(issues);
+            if (hud == null) issues.Add($"UiTheme {name}: hud prefab is not set");
+            else hud.Validate(issues);
             if (chapterCard != null) chapterCard.Validate(issues);
         }
     }

@@ -14,9 +14,10 @@ export async function loadLevels(protoDir = PROTO_DIR, levelsPath = process.env.
     return LEVELS.map((d, i) => {
       const parsed = core.parseLevel(d);
       const sol = core.solve(parsed);
+      const fewest = core.minBodies(parsed);
       return {
         n: i + 1, name: d.name, chapter: d.chapter ?? '', bodies: parsed.bodies, w: parsed.w, h: parsed.h,
-        map: d.map.map((r) => r.padEnd(parsed.w, '#')), key: levelKey(parsed), minMoves: sol ? sol.path.length : null,
+        map: d.map.map((r) => r.padEnd(parsed.w, '#')), key: levelKey(parsed), minMoves: sol ? sol.path.length : null, minBodies: fewest?.bodies ?? null,
       };
     });
   } catch (err) {
