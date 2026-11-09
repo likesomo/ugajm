@@ -5,7 +5,9 @@
 //   node server/tools/fake-data.mjs --players 5 --out fake.json                       (dump batches)
 import { writeFileSync } from 'node:fs';
 import { parseLevel, newState, dispatch, solve, DIRS } from '../../prototypes/seven-steps/src/core.js';
-import { LEVELS } from '../../prototypes/seven-steps/src/levels.js';
+import { pathToFileURL } from 'node:url';
+// LEVELS_JS (same variable as the server) plays another levels file, e.g. a copy with chapter ids.
+const { LEVELS } = await import(process.env.LEVELS_JS ? pathToFileURL(process.env.LEVELS_JS).href : '../../prototypes/seven-steps/src/levels.js');
 import { Tracker, SCHEMA_VERSION } from '../../prototypes/seven-steps/src/telemetry.js';
 
 function rng(seed) {
@@ -34,7 +36,7 @@ function plans() {
     const path = sol ? sol.path : [];
     // Difficulty grows with solution length and late-game mechanics; 8 and 12 are made extra sticky on purpose.
     const diff = Math.min(1, path.length / 45 + i * 0.03 + (i === 7 || i === 11 ? 0.25 : 0));
-    return { level, path, diff, name: def.name };
+    return { level, path, diff, name: def.name, chapter: def.chapter };
   });
   return PLANS;
 }
@@ -68,7 +70,7 @@ export function simulatePlayer(r, { startT, build = 'proto-fake', client = 'web-
     while (idx < P.length) {
       const plan = P[idx];
       state = newState(plan.level);
-      tr.levelStart(state, idx + 1, plan.name, via);
+      tr.levelStart(state, idx + 1, plan.name, via, plan.chapter);
       let pi = 0; // next index into the solution path while on track
       let off = 0; // moves made off the solution path
       let frustration = 0;
