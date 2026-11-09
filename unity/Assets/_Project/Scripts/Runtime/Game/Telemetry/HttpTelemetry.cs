@@ -51,11 +51,12 @@ namespace SevenSteps.Game.Telemetry
         /// Last state of a Game scene left for the stage select; closes that attempt at the next stage start.
         public State PendingLeaveState;
 
-        public HttpTelemetry(TelemetryContext context, ISaveStore store, Func<int, int> nextAttempt)
+        /// <param name="minBodies">(1-based level, level) -> fewest bodies for level_clear.stars; null = the solver (TelemetryTracker).</param>
+        public HttpTelemetry(TelemetryContext context, ISaveStore store, Func<int, int> nextAttempt, Func<int, Level, int> minBodies = null)
         {
             Context = context;
             this.store = store;
-            Tracker = new TelemetryTracker(this, NowMs, nextAttempt);
+            Tracker = new TelemetryTracker(this, NowMs, nextAttempt, minBodies: minBodies);
             LoadQueue();
         }
 

@@ -13,8 +13,10 @@ namespace SevenSteps.Game.Flow
     {
         /// Current board state, null before the first LoadStage.
         State State { get; }
-        /// Load a stage (0-based). <paramref name="via"/> = telemetry level_start.via for this entry.
+        /// Load a stage (0-based). <paramref name="via"/> = telemetry level_start.via for this entry. Starts a new attempt.
         void LoadStage(int stage, string via);
+        /// This attempt's hints / undos / restarts since the last LoadStage (docs/architecture.md 6.5); read it on Won.
+        AttemptCounts Attempt { get; }
 
         /// The 7th step reached the exit (rules state is Win). Raised before the board redraws its HUD, so progress saved
         /// in the handler shows at once.

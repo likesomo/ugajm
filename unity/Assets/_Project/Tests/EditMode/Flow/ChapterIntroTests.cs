@@ -90,6 +90,7 @@ namespace SevenSteps.Tests
         {
             public State State { get; private set; }
             public void LoadStage(int stage, string via) => State = Rules.NewState(Level.Parse("s", "", 3, new[] { "#####", "#S.E#", "#####" }));
+            public AttemptCounts Attempt => default;
             public event Action<State> Won { add { } remove { } }
             public event Action<State> WinPresented { add { } remove { } }
             public event Action<State> Lost { add { } remove { } }
