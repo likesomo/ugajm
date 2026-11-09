@@ -35,11 +35,16 @@ namespace SevenSteps.EditorTools
             }
             string full = Path.Combine(Path.GetDirectoryName(Application.dataPath), OutPath);
             Directory.CreateDirectory(Path.GetDirectoryName(full));
-            if (File.Exists(full) && File.ReadAllText(full, Encoding.UTF8) == text) return;
+            // Same text, whatever the line endings: a Windows checkout has CRLF (git autocrlf) and rewriting it as LF left a
+            // diff after every build, so the build version read "-dirty" (lead 2026-11-10).
+            if (File.Exists(full) && Normalize(File.ReadAllText(full, Encoding.UTF8)) == Normalize(text)) return;
             File.WriteAllText(full, text, new UTF8Encoding(false));
             AssetDatabase.ImportAsset(OutPath);
             Debug.Log($"[SevenSteps] Credits exported to {OutPath}");
         }
+
+        /// Text without line-ending or BOM differences (only content changes count).
+        internal static string Normalize(string s) => s.TrimStart('﻿').Replace("\r\n", "\n");
 
         public static void BatchExport()
         {
