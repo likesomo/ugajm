@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace SevenSteps.Tests
 {
-    /// Stage names per language through LevelCatalog.NameOf (docs/architecture.md 13.5): ko = levels.json name (the save
+    /// Stage names per language through LevelCatalog.TextOf (docs/architecture.md 13.5): ko = levels.json name (the save
     /// key), other languages = the "text" entry; a missing translation throws.
     public sealed class LevelCatalogTextTests
     {
@@ -39,14 +39,14 @@ namespace SevenSteps.Tests
         [Test]
         public void NameIsInTheAskedLanguage()
         {
-            Assert.Throws<InvalidOperationException>(() => LevelCatalog.NameOf(0, Language.En));
+            Assert.Throws<InvalidOperationException>(() => LevelCatalog.TextOf(0, Language.En));
             var levels = LevelCatalog.Load(assets);
-            Assert.AreEqual("첫 걸음", LevelCatalog.NameOf(0, Language.Ko));
+            Assert.AreEqual("첫 걸음", LevelCatalog.TextOf(0, Language.Ko).name);
             Assert.AreEqual("첫 걸음", levels[0].Name, "the save key stays the ko name");
-            Assert.AreEqual("First Step", LevelCatalog.NameOf(0, Language.En));
+            Assert.AreEqual("First Step", LevelCatalog.TextOf(0, Language.En).name);
             Assert.AreEqual("Hint", LevelCatalog.TextOf(0, Language.En).hint);
-            Assert.Throws<KeyNotFoundException>(() => LevelCatalog.NameOf(1, Language.En));
-            Assert.Throws<ArgumentOutOfRangeException>(() => LevelCatalog.NameOf(2, Language.Ko));
+            Assert.Throws<KeyNotFoundException>(() => LevelCatalog.TextOf(1, Language.En));
+            Assert.Throws<ArgumentOutOfRangeException>(() => LevelCatalog.TextOf(2, Language.Ko));
         }
 
         [Test]
@@ -56,7 +56,7 @@ namespace SevenSteps.Tests
             Assert.IsNotNull(real, "Data/GameAssets.asset");
             int n = LevelCatalog.Load(real).Length;
             foreach (var lang in Languages.All)
-                for (int k = 0; k < n; k++) Assert.IsNotEmpty(LevelCatalog.NameOf(k, lang), $"stage {k + 1} {Languages.Code(lang)}");
+                for (int k = 0; k < n; k++) Assert.IsNotEmpty(LevelCatalog.TextOf(k, lang).name, $"stage {k + 1} {Languages.Code(lang)}");
         }
     }
 }

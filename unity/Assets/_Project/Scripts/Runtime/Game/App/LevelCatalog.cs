@@ -66,9 +66,6 @@ namespace SevenSteps.Game
             return dtos[stage].TextFor(Languages.Code(lang));
         }
 
-        /// A stage name in a language (Stage Select, chapter lists). Not the save key: that is always Level.Name (11.3.1).
-        public static string NameOf(int stage, Language lang) => TextOf(stage, lang).name;
-
         /// The stage at a 0-based index. Call after Load; a stage outside levels.json throws.
         public static Level At(int stage)
         {

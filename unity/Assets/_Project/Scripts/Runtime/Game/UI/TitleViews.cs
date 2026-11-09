@@ -59,7 +59,7 @@ namespace SevenSteps.Game.UI
     /// <summary>
     /// Stage select panel (view only): stage grid with clear marks and best bodies, back / settings buttons.
     /// Text from the string table (keys stageselect.*), role fonts of the current language; stage names in the current
-    /// language from LevelCatalog.NameOf (levels.json text, 13.5): never a ko name in an en font (no Hangul there).
+    /// language from LevelCatalog.TextOf (levels.json text, 13.5): never a ko name in an en font (no Hangul there).
     /// </summary>
     public sealed class StageSelectView
     {
@@ -154,7 +154,7 @@ namespace SevenSteps.Game.UI
                 bool done = progress.IsCleared(levels[k]);
                 int b = progress.BestBodies(levels[k]);
                 string mark = done ? loc.Get("stageselect.cleared") + (b > 0 ? loc.Format("stageselect.best_bodies", b) : "") : "";
-                stageTexts[k].text = $"{k + 1}. {LevelCatalog.NameOf(k, loc.Current)}\n<size=14>{mark}</size>";
+                stageTexts[k].text = $"{k + 1}. {LevelCatalog.TextOf(k, loc.Current).name}\n<size=14>{mark}</size>";
                 stageTexts[k].color = done ? Ui.Gold : Ui.Ink;
                 if (k == last) stageButtons[k].Select();
             }
