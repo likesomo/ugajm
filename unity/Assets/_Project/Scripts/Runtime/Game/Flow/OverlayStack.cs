@@ -54,12 +54,14 @@ namespace SevenSteps.Game.Flow
             return true;
         }
 
-        /// Closes an open overlay; only the top one can close (it covers the others, so a lower close button cannot be hit).
+        /// Closes an open overlay. Usually the top one (it covers the others), but one below may close itself too
+        /// (the chapter card's timer while settings is open). Closing one that is not open is a caller bug.
         public void Close(IOverlay overlay)
         {
             if (overlay == null) throw new ArgumentNullException(nameof(overlay));
-            if (!ReferenceEquals(Top, overlay)) throw new InvalidOperationException($"{overlay.GetType().Name} is not the top overlay");
-            open.RemoveAt(open.Count - 1);
+            int at = open.IndexOf(overlay);
+            if (at < 0) throw new InvalidOperationException($"{overlay.GetType().Name} is not open");
+            open.RemoveAt(at);
             overlay.CloseRequested -= closeHandlers[overlay];
             closeHandlers.Remove(overlay);
             overlay.Hide();
