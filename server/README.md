@@ -138,6 +138,7 @@ curl -H "Authorization: Bearer $STATS_TOKEN" "http://localhost:8787/api/export/a
 - **이탈률**: 플레이어의 마지막 시도가 이 스테이지이고 클리어하지 못한 비율 = 여기서 그만둔 플레이어
 - **세션 종료율**: 이 스테이지를 미클리어로 둔 채 끝난 세션 비율 (나중에 돌아왔어도 센다)
 - **activeMs** = `durationMs − idle 합`. **lastStuckToClear**: 마지막 막힘(30초 이상 idle, 또는 연속 undo 5회)이 끝난 뒤 클리어까지의 이동 수·시간
+- **별**: 클리어 시도마다 `level_clear.stars`, 없으면 서버가 B안으로 계산(`docs/telemetry.md` "별"). 대시보드는 플레이어마다 그 스테이지의 최고 별로 ★1·★2·★3 분포와 ★3 비율을 보인다. 맵이 바뀐 예전 기록은 최소 몸 수를 몰라 "별을 모르는 클리어"로 뺀다. `attempts.csv`의 `stars`, `starsSource`(`client`/`server`/빈칸), `levels.csv`의 `stars1~3`, `star3Rate`, `minBodies`
 - **몸 낭비**: `body_lost`의 `fell`(7번째가 아닌 걸음에 구덩이) + `vanish`(출발점에서 7번째)
 
 ## 테스트
