@@ -710,7 +710,7 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 - 줄 높이·레이아웃: 문자 수로 높이를 계산하지 않고 `preferredHeight`, 제목·행성 이름은 2줄까지(아트 `ui-theme.md` 레이아웃 기준).
 
 ### 13.5 레벨·챕터 텍스트
-- `levels.js`/`levels.json`: 기존 `name`/`hint`/`story`는 **ko 그대로**(그리고 `name`은 저장 키, 11.3.1 — 번역해도 키는 ko 이름). 번역은 `text` 배열: `"text": [ { "lang": "en", "name": "...", "hint": "...", "story": "..." } ]`. `LevelDto.text`(코어), `LevelCatalog.NameOf(stage, lang)` 등(게임플레이/UI·씬 플로우).
+- `levels.js`/`levels.json`: 기존 `name`/`hint`/`story`는 **ko 그대로**(그리고 `name`은 저장 키, 11.3.1 — 번역해도 키는 ko 이름). 번역은 `text` 배열: `"text": [ { "lang": "en", "name": "...", "hint": "...", "story": "..." } ]`. `LevelDto.text`(`LevelTextDto[]`)·`LevelDto.TextFor(code)`(코어 구현 feat/core 6398ca5: ko는 기본 필드, 번역 없으면 `KeyNotFoundException`. Core는 Contracts를 모르므로 언어는 코드 문자열 — 호출부가 `Languages.Code(lang)`로 바꿔 넘긴다). `LevelCatalog`의 언어별 조회는 게임플레이/UI·씬 플로우. export가 `chapters.json`의 `text`도 `Data/chapters.json`으로 옮긴다.
 - `chapters.json`: 같은 방식 `"text": [ { "lang": "en", "planet": "...", "concept": "...", "intro": "..." } ]`. `ChapterInfo.text`(`ChapterText[]`), `Planet(lang)`/`Concept(lang)`/`Intro(lang)`(ko는 기본 필드, 다른 언어 번역이 없으면 `KeyNotFoundException` — 검사가 빌드 전에 잡는다). 구현됨.
 - 텔레메트리는 ko 이름(키)을 그대로 보낸다(분석이 이름으로 묶음). `session_start`에 `lang`을 실을지는 백엔드.
 
@@ -764,3 +764,4 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 | 2026-11-09 | 코어·아키텍트 | 6.5 판정 API를 코어 구현에 맞춤: `Scoring.Stars(AttemptStats)` 대신 `SevenSteps.Core.Stars.Of(bodiesUsed, minBodies, hints, undos, restarts)`(0 = 판정 불가), `Stars.Max`, `Stars.BodiesUsed(State)`. 의미는 같음(★2는 최소 몸 이하·힌트 0, ★3은 Z·R 0) |
 | 2026-11-09 | 아키텍트 | 13.4 UiTheme 글꼴을 아트 제안(fonts.md, ui-theme.md)과 맞춤: `LanguageFonts{language, title, body, 크기·줄간격}` + 테마 공통 `number`, `FontFor(lang, role)`, `symbolFallbackFont` 없음(레거시 Text는 에셋 간 대체 불가). 6.4 `artPreset` ↔ `AppConfig.chapters` 검사 켬 |
 | 2026-11-10 | 아키텍트 | 13장 1번 구현: `Language`/`Languages`(93347db), `StringTable`/`StringTableAsset`/`Localizer`, `SaveSystem.Language`/`SetLanguage`·첫 실행 시스템 언어, `LaunchOptions.Language`(`-lang`/`?lang`), `ChapterInfo.text`/`ChapterText`, `GameAssets.strings` + `Data/Strings/ko.json`·`en.json` 빈 틀. EditMode `LocalizationContractTests` |
+| 2026-11-10 | 코어·아키텍트 | 6.5 `Stars.Of` 전제 조건 예외(bodiesUsed<1, 음수 카운트; feat/core a332e43). 13.5 `LevelDto.text`/`TextFor(code)`(6398ca5), export가 chapters.json text 보존 |
