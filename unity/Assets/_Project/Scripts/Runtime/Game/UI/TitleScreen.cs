@@ -56,7 +56,7 @@ namespace SevenSteps.Game.UI
             titleView = new TitleView(root);
             stageSelectView = new StageSelectView(root, levels);
             bool telemetryDefault = Services.Get<AppConfig>().telemetryOnByDefault;
-            settings = new SettingsPanel(root, save, telemetryDefault);
+            settings = SettingsPanel.Create(root, save, telemetryDefault);
             settingsController = new SettingsController(save, settings, telemetryDefault);
             creditsPanel = new CreditsPanel(root, credits, licenses);
             overlays = new OverlayStack();

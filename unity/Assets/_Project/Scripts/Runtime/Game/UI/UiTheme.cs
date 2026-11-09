@@ -28,10 +28,19 @@ namespace SevenSteps.Game.UI
         public Color plateB = new Color32(0x2a, 0x9d, 0x8f, 0xff);
         public Color plateC = new Color32(0x8e, 0x7d, 0xbe, 0xff);
 
+        [Header("Panel prefabs (UI/Prefabs, first built by UiBuilder; edit the prefab, not code)")]
+        public SettingsPanel settingsPanel;
+        [Tooltip("Clear / loss panel with its own canvas (sorting 5)")]
+        public ResultView resultPanel;
+
         /// Missing required parts, one line each (SceneFlowValidator, and Ui.Theme at runtime).
         public void Validate(List<string> issues)
         {
             if (font == null) issues.Add($"UiTheme {name}: font is not set");
+            if (settingsPanel == null) issues.Add($"UiTheme {name}: settingsPanel prefab is not set");
+            else settingsPanel.Validate(issues);
+            if (resultPanel == null) issues.Add($"UiTheme {name}: resultPanel prefab is not set");
+            else resultPanel.Validate(issues);
         }
     }
 
@@ -46,9 +55,8 @@ namespace SevenSteps.Game.UI
             set
             {
                 if (value == null) throw new System.ArgumentNullException(nameof(value), "[SevenSteps] GameAssets.uiTheme is not set (unity.sh scene-validate)");
-                var issues = new List<string>();
-                value.Validate(issues);
-                if (issues.Count > 0) throw new System.InvalidOperationException("[SevenSteps] " + string.Join("; ", issues));
+                // Text needs the font at once; panel prefabs are checked when a view is created (and by SceneFlowValidator).
+                if (value.font == null) throw new System.InvalidOperationException($"[SevenSteps] UiTheme {value.name}: font is not set");
                 theme = value;
             }
         }

@@ -35,8 +35,8 @@ namespace SevenSteps.Tests
         public void ViewShowsTheRightButtonsAndRaisesEvents()
         {
             TestTheme.Use();
-            var view = new ResultView();
-            var canvas = UnityEngine.GameObject.Find("Result");
+            var view = ResultView.Create(); // the theme's prefab (UI/Prefabs/ResultPanel.prefab)
+            var canvas = view.gameObject;
             try
             {
                 Assert.IsFalse(view.IsShown);

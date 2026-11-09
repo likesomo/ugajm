@@ -22,3 +22,5 @@ MonoBehaviour:
   plateA: {r: 0.90588236, g: 0.43529412, b: 0.31764707, a: 1}
   plateB: {r: 0.16470589, g: 0.6156863, b: 0.56078434, a: 1}
   plateC: {r: 0.5568628, g: 0.49019608, b: 0.74509805, a: 1}
+  settingsPanel: {fileID: 9153486854460177132, guid: 573575d1c4a20bd489d8ee4601ce1d62, type: 3}
+  resultPanel: {fileID: 6795175099716122875, guid: a4e2484cd6b105a4fbc01ee89c97ffa4, type: 3}
