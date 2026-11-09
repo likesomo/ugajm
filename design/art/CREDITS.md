@@ -69,6 +69,8 @@ Font: Jua by The Jua Project Authors (SIL Open Font License 1.1)
 ```
 # 유적×선돌×오리엔탈 — 2026-11-08
 
+손글씨 EN/KO(2026-11-09): `Shared/Fonts/KaushanScript-Regular.ttf` — Copyright2011 Pablo Impallari 및 Igino Marini, [OFL1.1](https://github.com/google/fonts/blob/main/ofl/kaushanscript/OFL.txt); `PatrickHand-Regular.ttf` — Copyright2010–2012 Patrick Wagesreiter, [OFL1.1](https://github.com/google/fonts/blob/main/ofl/patrickhand/OFL.txt); `Gaegu-Regular.ttf` — Copyright2018 The Gaegu Project Authors, [OFL1.1](https://github.com/google/fonts/blob/main/ofl/gaegu/OFL.txt). 원본 TTF를 수정하지 않았고 각 `<Family>-OFL.txt`를 같은 공유 폴더에 둔다. 기존 Jua는 숫자용으로 재사용한다. 비교 후보 `GamjaFlower-Regular.ttf` 및 `HiMelody-Regular.ttf`는 YoonDesign Inc., 각 [Gamja Flower OFL](https://github.com/google/fonts/blob/main/ofl/gamjaflower/OFL.txt)·[Hi Melody OFL](https://github.com/google/fonts/blob/main/ofl/himelody/OFL.txt)를 보존하며 빌드에서는 참조하지 않는다. `Handwritten_Background.png`는 GPT 생성 배경이고 UI 글자는 Unity가 실제 TTF로 렌더한다.
+
 UI 작업(2026-11-09): GPT 생성 화면9종 및 타이틀/HUD 교정v2는 시안 전용이다. 실제 `RH_UI_Atlas.png`의 프레임·아이콘은 `build-ui-atlas.ps1`로 자체 제작했다. UI 폰트는 기존 Jua(OFL1.1, Copyright2018 The Jua Project Authors)를 재사용한다. Pretendard는 [공식 OFL](https://github.com/orioncactus/pretendard/blob/main/LICENSE) 확인한 본문 후보이며 다운로드/사용하지 않았다. 환경 프리팹·머리 보정·벽 변형은 기존 자체 제작 메시를 사용하며 추가 외부 에셋은 없다.
 
 Unity2차(2026-11-09)의 행성 외피·풀 카드·돌·원경 행성·성운·별은 `RuinsHengeEnvironment.cs`가 절차적으로 만든 메시/버텍스 색이다. 벽 스타일 Mesh와 확대 링도 자체 생성이며 추가 외부 에셋·텍스처는 사용하지 않았다.
