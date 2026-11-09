@@ -245,7 +245,7 @@
     {"name":"미끄러운 첫걸음","minBodies":1,"path":"RDDLLLL","bodiesUsed":1,"stars":3},
     {"name":"홀수의 저주","minBodies":1,"path":"DUDURDD","bodiesUsed":1,"stars":3},
     {"name":"얼음 위의 숫자","minBodies":2,"path":"DUDUDUDXLULULLU","bodiesUsed":2,"stars":3},
-    {"name":"멈춰 세우는 석상","minBodies":2,"path":"LRRRRDDKLLDDRDD","bodiesUsed":2,"stars":3},
+    {"name":"멈춰 세우는 선돌","minBodies":2,"path":"LRRRRDDKLLDDRDD","bodiesUsed":2,"stars":3},
     {"name":"미끄럼을 막는 형제","minBodies":2,"path":"RUUUDLLKRUULLUU","bodiesUsed":2,"stars":3},
     {"name":"얼음 끝의 구멍","minBodies":2,"path":"UDDLLULDLLULUU","bodiesUsed":2,"stars":3},
     {"name":"서리의 길목","minBodies":2,"path":"DUDUDRUKRDLDDRR","bodiesUsed":2,"stars":3},

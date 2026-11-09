@@ -1,5 +1,5 @@
 // Writes prototypes/seven-steps/src/levels.js from the batch candidates (design/levels/rollout-50.md).
-// chapter and story come from design/levels/story-50.json, matched by stage number and checked by name.
+// chapter, story and (optional) a Korean hint override come from design/levels/story-50.json, matched by stage number and checked by name.
 // English text (name, hint, story) comes from design/levels/i18n/en.json the same way and goes into "text" (docs/architecture.md 13.5).
 // Usage (repo root): node prototypes/seven-steps/tools/write-levels.mjs <count>     e.g. 20 for R1
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -28,7 +28,7 @@ CANDIDATES.slice(0, count).forEach((d, i) => {
   out += `    name: ${q(d.name)},\n`;
   out += `    chapter: ${q(s.chapter)},\n`;
   out += `    story: ${q(s.story)},\n`;
-  out += `    hint: ${q(d.hint ?? '')},\n`;
+  out += `    hint: ${q(s.hint ?? d.hint ?? '')},\n`;
   out += `    bodies: ${d.bodies ?? 3},\n`;
   out += `    text: [{ lang: 'en', name: ${q(e.name)}, hint: ${q(e.hint)}, story: ${q(e.story)} }],
 `;

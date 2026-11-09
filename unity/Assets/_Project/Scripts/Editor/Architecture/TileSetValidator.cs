@@ -129,6 +129,16 @@ namespace SevenSteps.EditorTools
                 if (arr.Length != 3) issues.Add($"WARN {label}: {arr.Length} entries, triplets use 3 (index cycles)");
                 for (int k = 0; k < arr.Length; k++) Check($"{label}[{k}]", arr[k], true, false, true);
             }
+            // Triplets look different (art bible A); the KEEP menhir is neutral unless the set opts into sibling traces.
+            if (ts.playerBodies != null && ts.playerBodies.Length > 1 && DistinctPrefabs(ts.playerBodies) < ts.playerBodies.Length)
+                issues.Add("WARN playerBodies: several bodies share a prefab (triplets A/B/C should differ, docs 12.6)");
+            if (ts.keepLook == KeepLook.SiblingTrace)
+            {
+                if (ts.statueBodies == null || ts.statueBodies.Length == 0)
+                { issues.Add("ERROR keepLook SiblingTrace: statueBodies is empty (docs 12.6)"); errors++; }
+                else if (ts.statueBodies.Length > 1 && DistinctPrefabs(ts.statueBodies) < ts.statueBodies.Length)
+                    issues.Add("WARN keepLook SiblingTrace: several statueBodies share a prefab (Neutral draws one plain menhir)");
+            }
             if (ts.bodyColors == null || ts.bodyColors.Length != 3)
                 issues.Add($"WARN bodyColors: {(ts.bodyColors == null ? 0 : ts.bodyColors.Length)} entries, triplets use 3 (HUD body icons)");
 
@@ -213,6 +223,13 @@ namespace SevenSteps.EditorTools
         }
 
         static TileVisual At(TileVisual[] arr, int k) => arr != null && k < arr.Length ? arr[k] : default;
+
+        static int DistinctPrefabs(TileVisual[] arr)
+        {
+            var seen = new HashSet<GameObject>();
+            foreach (var v in arr) if (v.prefab != null) seen.Add(v.prefab);
+            return seen.Count;
+        }
 
         /// Renderer bounds of the prefab placed at a cell anchor at the origin, with the TileVisual transform applied.
         static bool Bounds(TileVisual v, float cs, out Bounds b)

@@ -64,6 +64,10 @@
 | `keeps`, `switches` | `keep`, `switch` 수 |
 | **`lastStuckToClearMoves`, `lastStuckToClearMs`** | 마지막 막힘(30초 이상 idle 또는 연속 Undo 5회 이상)이 끝난 뒤 클리어까지의 이동 수·시간. 깨달음 A_obs용. 어렵다면 4.2 원본만 있어도 내가 계산함 |
 | **`nextLevelStarted`** | 이 시도 뒤 같은 세션에서 다른 스테이지 `level_start`가 있었는지 (`toLevel` 포함) |
+| `lang` (끝에서 둘째 열, server 725dac2) | 그 시도의 UI 언어(`level_start.lang`, 없으면 같은 세션의 직전 값). 보정은 언어별로 나눠 먼저 보고, 같은 스테이지에서 `ko`·`en` 활동 시간 중앙값이 2배 넘게 차이 나지 않으면 합친다(차이 나면 문구 문제로 따로 기록). 1차는 대부분 `ko` |
+| `planet` (마지막 열, server 725dac2) | 그 스테이지 챕터의 행성 이름(ko, `chapters.json`). 행성별 집계(톱니 곡선, 행성별 ★3 비율 `playtest-1-prep-draft.md` 6장)의 묶음 키. 보정 스크립트는 열 이름으로 읽는다(열 위치에 기대지 않음) |
+
+`levels` 내보내기에도 `planet` 열이 있다(기존 열 순서 그대로). 로컬 플레이테스트 서버·대시보드·내보내기 절차는 `docs/telemetry.md` 6장.
 
 ### 4.2 `events.jsonl` — 원본 이벤트 한 줄씩
 
