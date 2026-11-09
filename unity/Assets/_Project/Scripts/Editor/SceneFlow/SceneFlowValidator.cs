@@ -95,7 +95,11 @@ namespace SevenSteps.EditorTools
             // Every character the UI can show must be in the UI font (missing glyphs draw nothing in WebGL).
             var gameAssets = AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset");
             if (gameAssets == null) issues.Add("ERROR Assets/_Project/Data/GameAssets.asset missing");
-            else ValidateThemes(gameAssets, issues);
+            else
+            {
+                ValidateThemes(gameAssets, issues);
+                LocalizationCheck.Check(gameAssets, issues); // 13.6: tables, keys in code, glyphs per language
+            }
 
             int errors = issues.Count(i => i.StartsWith("ERROR", StringComparison.Ordinal));
             var sb = new StringBuilder();

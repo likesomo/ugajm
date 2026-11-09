@@ -94,14 +94,15 @@ namespace SevenSteps.Game
         /// levels.json value when there is no chapters.json. Used by GameFlowController.ChapterEntering.
         public static string ChapterKeyOf(int stage) => ChapterOf(stage)?.id ?? ChapterIdOf(stage);
 
-        /// What the chapter card shows for a chapter key; null when there is no chapters.json or no planet name.
-        public static Flow.ChapterCardModel ChapterCard(string chapterKey)
+        /// What the chapter card shows for a chapter key, in a language (ChapterInfo.Planet/Intro(lang), 13.5); null when there
+        /// is no chapters.json or no planet name. A missing translation throws (export and LocalizationCheck catch it).
+        public static Flow.ChapterCardModel ChapterCard(string chapterKey, Language lang)
         {
             if (chapters == null) return null;
             var info = chapters.Get(chapterKey);
             if (info == null || string.IsNullOrEmpty(info.planet)) return null;
             int number = Array.IndexOf(chapters.chapters, info) + 1;
-            return new Flow.ChapterCardModel(info.id, number, info.planet, info.intro);
+            return new Flow.ChapterCardModel(info.id, number, info.Planet(lang), info.Intro(lang));
         }
     }
 }

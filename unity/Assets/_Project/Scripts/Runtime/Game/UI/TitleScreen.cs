@@ -60,6 +60,11 @@ namespace SevenSteps.Game.UI
             settings = SettingsPanel.Create(root, save, telemetryDefault, localizer);
             settingsController = new SettingsController(save, settings, telemetryDefault, localizer);
             creditsPanel = new CreditsPanel(root, credits, licenses);
+            // Text in the current language; redraw when the settings toggle changes it (docs/architecture.md 13.3).
+            this.localizer = localizer;
+            titleView.Apply(localizer);
+            stageSelectView.Apply(localizer);
+            localizer.Changed += OnLanguageChanged;
             overlays = new OverlayStack();
 
             flowController = new TitleFlowController(flow, save, this, levels);
@@ -90,10 +95,19 @@ namespace SevenSteps.Game.UI
             }
         }
 
+        Localizer localizer;
+
+        void OnLanguageChanged(Language lang)
+        {
+            titleView.Apply(localizer);
+            stageSelectView.Apply(localizer);
+        }
+
         void OnDestroy()
         {
             flowController?.Dispose();
             settingsController?.Dispose();
+            if (localizer != null) localizer.Changed -= OnLanguageChanged;
         }
 
         /// ITitlePanels: the flow controller shows the panel for the state.

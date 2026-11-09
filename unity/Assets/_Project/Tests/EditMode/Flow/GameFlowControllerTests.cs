@@ -65,7 +65,8 @@ namespace SevenSteps.Tests
             board = new Board();
             panel = new Panel();
             save = new SaveSystem(new MemoryStore());
-            ctl = new GameFlowController(flow, EntryTracker.ForLaunch(levelFromLaunch), save, board, panel, stage => stage == 0 ? 1 : 0, stage => stage < 2 ? "" : "moss");
+            ctl = new GameFlowController(flow, EntryTracker.ForLaunch(levelFromLaunch), save, board, panel, stage => stage == 0 ? 1 : 0, stage => stage < 2 ? "" : "moss",
+                stage => new ChapterInfo { id = stage < 2 ? "ruins" : "moss", planet = stage < 2 ? "폐허" : "이끼" });
         }
 
         [TearDown] public void TearDown() => ctl?.Dispose();
@@ -114,6 +115,21 @@ namespace SevenSteps.Tests
             Assert.AreEqual((1, TelemetryNames.Via.Next), board.Loads[board.Loads.Count - 1]);
             Assert.AreEqual(AppState.Game, flow.State);
             Assert.IsFalse(ctl.TakesCommand(Command.Undo), "in Game the board takes commands");
+        }
+
+        [Test]
+        public void ClearingThePlanetsLastStageNamesThePlanet()
+        {
+            Make(3, false);            // chapters: stages 0-1 "", stage 2 "moss"
+            ctl.Start(0);
+            board.Win();
+            Assert.IsNull(panel.Shown.FinishedChapter, "stage 1 of 2 in its chapter");
+            ctl.Next();
+            board.Win();
+            Assert.AreEqual("ruins", panel.Shown.FinishedChapter?.id, "next stage is in another chapter");
+            ctl.Next();
+            board.Win();
+            Assert.AreEqual("moss", panel.Shown.FinishedChapter?.id, "the last stage of all");
         }
 
         [Test]

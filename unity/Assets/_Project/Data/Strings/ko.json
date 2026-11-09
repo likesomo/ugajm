@@ -1,5 +1,17 @@
 {
   "entries": [
+    { "key": "title.name", "text": "일곱 걸음" },
+    { "key": "title.subtitle", "text": "Seven Steps" },
+    { "key": "title.tagline", "text": "한 몸에 딱 일곱 걸음. 일곱 번째 걸음은 행운이다." },
+    { "key": "title.start", "text": "시작 (Enter)" },
+    { "key": "title.settings", "text": "설정" },
+    { "key": "title.credits", "text": "크레딧" },
+    { "key": "stageselect.head", "text": "스테이지 선택" },
+    { "key": "stageselect.back", "text": "뒤로 (Esc)" },
+    { "key": "stageselect.settings", "text": "설정" },
+    { "key": "stageselect.cleared", "text": "클리어" },
+    { "key": "stageselect.best_bodies", "text": ", 형제 {0}명" },
+
     { "key": "hud.stage", "text": "{0:00}" },
     { "key": "hud.traveller_1", "text": "청록 여행자" },
     { "key": "hud.traveller_2", "text": "황토 여행자" },
