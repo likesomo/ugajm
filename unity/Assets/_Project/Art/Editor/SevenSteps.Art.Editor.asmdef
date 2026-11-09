@@ -1,0 +1,25 @@
+{
+    "name": "SevenSteps.Art.Editor",
+    "rootNamespace": "SevenSteps.Art",
+    "references": [
+        "SevenSteps.Art",
+        "SevenSteps.Core",
+        "SevenSteps.Contracts",
+        "SevenSteps.Game",
+        "SevenSteps.Editor",
+        "UnityEngine.UI",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
