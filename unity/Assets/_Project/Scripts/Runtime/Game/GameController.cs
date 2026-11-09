@@ -118,7 +118,14 @@ namespace SevenSteps.Game
             // -smoke board|empty (smoke-webgl): no sky/planet and a magenta clear; empty also hides the board (negative control).
             board.UseChapters(new ChapterStage(cam, keyLight, fillLight, rimLight, transform, launch.SmokeView), ChapterPresetFor(cfg), cfg.tileSet);
             if (launch.SmokeView == SmokeView.Empty) board.HideBoardForSmoke();
-            if (launch.SmokeView != SmokeView.None) cam.backgroundColor = ChapterStage.SmokeClear;
+            if (launch.SmokeView != SmokeView.None)
+            {
+                cam.backgroundColor = ChapterStage.SmokeClear;
+                // Screen UI off (core request): only the 3D board and its world labels (on the HUD's label layer) draw.
+                hud.HideForSmoke();
+                foreach (var c in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+                    if (c.isRootCanvas && c.gameObject != hud.gameObject) c.enabled = false;
+            }
             flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, result, LevelCatalog.MinBodies, LevelCatalog.ChapterKeyOf, LevelCatalog.ChapterOf);
             back = new BackNavigator(overlays, flowController.Back);
             chapterIntro = new ChapterIntroController(flowController, overlays, chapterCard, key => LevelCatalog.ChapterCard(key, localizer.Current));
