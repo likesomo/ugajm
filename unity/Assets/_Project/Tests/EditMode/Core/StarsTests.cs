@@ -47,5 +47,16 @@ namespace SevenSteps.Tests
             Assert.AreEqual(3, Stars.Of(2, 2, 0, 0, 0), "one go");
             Assert.AreEqual(Stars.Max, 3);
         }
+
+        [Test]
+        public void BadInputsThrow()
+        {
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => Stars.Of(0, 2, 0, 0, 0), "bodiesUsed 0");
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => Stars.Of(1, 2, -1, 0, 0), "hints");
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => Stars.Of(1, 2, 0, -1, 0), "undos");
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => Stars.Of(1, 2, 0, 0, -1), "restarts");
+            Assert.AreEqual(0, Stars.Of(1, -1, 0, 0, 0), "minBodies <= 0 is 'unknown', not an error");
+            Assert.AreEqual(3, Stars.Of(1, 1, 0, 0, 0), "smallest valid input");
+        }
     }
 }

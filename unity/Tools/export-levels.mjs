@@ -26,6 +26,8 @@ const fail = (msg) => problems.push(msg);
 const chapterFile = JSON.parse(readFileSync(chaptersSrc, 'utf8'));
 const chapters = (chapterFile.chapters ?? []).map((c) => ({
   id: c.id, planet: c.planet ?? '', concept: c.concept ?? '', intro: c.intro ?? '', artPreset: c.artPreset ?? '',
+  // docs/architecture.md 13: translations (ChapterInfo.text), copied only when present.
+  ...(c.text?.length ? { text: c.text.map((t) => ({ lang: t.lang, planet: t.planet ?? '', concept: t.concept ?? '', intro: t.intro ?? '' })) } : {}),
 }));
 const order = new Map();
 chapters.forEach((c, i) => {
@@ -64,6 +66,8 @@ const levels = LEVELS.map((def, i) => {
     // docs/architecture.md 6.4: chapter id and one-line story.
     ...(def.chapter ? { chapter: def.chapter } : {}),
     ...(def.story ? { story: def.story } : {}),
+    // docs/architecture.md 13: translations other than ko (name stays the ko save key), written only when present.
+    ...(def.text?.length ? { text: def.text.map((t) => ({ lang: t.lang, name: t.name ?? '', hint: t.hint ?? '', story: t.story ?? '' })) } : {}),
     map: def.map,
     expected: {
       minBodies: best.bodies,

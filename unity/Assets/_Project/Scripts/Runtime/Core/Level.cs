@@ -92,10 +92,35 @@ namespace SevenSteps.Core
         public string chapter;
         /// One-line story (the triplets' view), separate from the hint. Optional; empty or null = none.
         public string story;
+        /// Translations (docs/architecture.md 13): one entry per language other than ko. ko lives in name/hint/story,
+        /// and name stays the save key (11.3.1) whatever the language. Empty when the stage has no translations.
+        public LevelTextDto[] text = new LevelTextDto[0];
         public string[] map;
         public ExpectedDto expected;
 
         public Level ToLevel() => Level.Parse(name, hint, bodies, map, statueCount);
+
+        /// Name, hint and story in a language code ("ko", "en"). ko reads the base fields. Another language without an
+        /// entry throws KeyNotFoundException (the export check catches it before a build), like ChapterInfo.
+        public LevelTextDto TextFor(string lang)
+        {
+            if (string.IsNullOrEmpty(lang)) throw new ArgumentException("language code is empty", nameof(lang));
+            if (lang == "ko") return new LevelTextDto { lang = "ko", name = name ?? "", hint = hint ?? "", story = story ?? "" };
+            if (text != null)
+                foreach (var t in text)
+                    if (t != null && t.lang == lang) return t;
+            throw new KeyNotFoundException($"stage \"{name}\" has no \"{lang}\" text");
+        }
+    }
+
+    /// One translation of a stage's texts (levels.json "text": [{ "lang": "en", "name", "hint", "story" }]).
+    [Serializable]
+    public sealed class LevelTextDto
+    {
+        public string lang = "";
+        public string name = "";
+        public string hint = "";
+        public string story = "";
     }
 
     /// What the JS solver found; LevelVerifier checks the C# port gives the same answer.
