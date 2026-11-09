@@ -96,6 +96,39 @@ namespace SevenSteps.Game
         {
             recorder?.Dispose();
             audio?.Dispose();
+            chapters?.Dispose();
+        }
+
+        ChapterStage chapters;
+        Func<int, ChapterPreset> chapterFor;
+        TileSet tileSetOverride;
+
+        /// Chapters (docs/architecture.md 12.8), set once by the scene root after Init. Without this call the board keeps
+        /// the Init tile set for every stage (today's behaviour).
+        /// <param name="chapterFor">Chapter preset of a 0-based stage (LevelCatalog id → ChapterInfo → AppConfig.Chapter), null = none.</param>
+        /// <param name="tileSetOverride">AppConfig.tileSet: when set, every chapter draws with it (debug / transition).</param>
+        public void UseChapters(ChapterStage stage, Func<int, ChapterPreset> chapterFor, TileSet tileSetOverride)
+        {
+            if (session == null) throw new InvalidOperationException("BoardController.UseChapters before Init");
+            if (chapters != null) throw new InvalidOperationException("BoardController.UseChapters twice");
+            chapters = stage ?? throw new ArgumentNullException(nameof(stage));
+            this.chapterFor = chapterFor ?? throw new ArgumentNullException(nameof(chapterFor));
+            this.tileSetOverride = tileSetOverride;
+        }
+
+        /// 12.8 order: AppConfig.tileSet override → the chapter's tileSet → GameAssets.tileSet.
+        public static TileSet TileSetFor(TileSet tileSetOverride, ChapterPreset chapter, TileSet fallback)
+        {
+            var t = tileSetOverride != null ? tileSetOverride : chapter != null && chapter.tileSet != null ? chapter.tileSet : fallback;
+            return t != null ? t : throw new InvalidOperationException("[SevenSteps] No TileSet for this chapter: set ChapterPreset.tileSet, AppConfig.tileSet or GameAssets.tileSet");
+        }
+
+        /// Before the stage's Rebuild: a new chapter swaps sky, planet, lights and the board's tile set and materials.
+        void EnterChapter(int stage)
+        {
+            if (chapters == null) return;
+            var c = chapterFor(stage);
+            if (chapters.Enter(c)) board.UseChapter(TileSetFor(tileSetOverride, c, assets.tileSet), c);
         }
 
         /// IStageBoard: load a stage the flow chose.
@@ -107,7 +140,9 @@ namespace SevenSteps.Game
             StageLeaving?.Invoke(stage);
             loadedStage = stage;
             lost = false;
-            session.Load(levels[stage]);
+            EnterChapter(stage);
+            session.Load(levels[stage]); // Rebuild runs inside Load
+            chapters?.Fit(board.Grid);
             StageEntered?.Invoke(stage, via);
         }
 

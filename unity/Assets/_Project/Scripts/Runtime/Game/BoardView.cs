@@ -39,6 +39,7 @@ namespace SevenSteps.Game
         }
 
         TileSet set;
+        ChapterPreset chapter; // material overrides for the stage being drawn; null = none (12.8)
         CameraRig? rigOverride;
         RectTransform labelLayer;
         Camera cam;
@@ -82,6 +83,14 @@ namespace SevenSteps.Game
             this.labelLayer = labelLayer;
             this.cam = cam;
             rigOverride = cameraOverride;
+        }
+
+        /// Chapter change (12.8): the next Rebuild draws with <paramref name="tileSet"/> and swaps materials through
+        /// <paramref name="chapterPreset"/> (null = no overrides). Call before the stage loads, not mid-stage.
+        public void UseChapter(TileSet tileSet, ChapterPreset chapterPreset)
+        {
+            set = tileSet != null ? tileSet : throw new ArgumentNullException(nameof(tileSet));
+            chapter = chapterPreset;
         }
 
         // ---------- IBoardPresenter ----------
@@ -394,7 +403,7 @@ namespace SevenSteps.Game
             if (go == null) return;
             if (!string.IsNullOrEmpty(v.activeChild)) { var t = go.transform.Find(v.activeChild); if (t != null) t.gameObject.SetActive(active); }
             if (!string.IsNullOrEmpty(v.inactiveChild)) { var t = go.transform.Find(v.inactiveChild); if (t != null) t.gameObject.SetActive(!active); }
-            var mat = active ? v.activeMaterial : v.inactiveMaterial;
+            var mat = Chapter(active ? v.activeMaterial : v.inactiveMaterial);
             if (mat != null)
             {
                 var target = string.IsNullOrEmpty(v.materialTarget) ? go.transform : go.transform.Find(v.materialTarget);
@@ -444,9 +453,30 @@ namespace SevenSteps.Game
             if (!v.HasPrefab) return null;
             var go = Instantiate(v.prefab, root);
             go.name = name;
+            OverrideMaterials(go);
             Place(go, v, cell);
             go.transform.localScale = v.Scale * grid.CellSize;
             return go;
+        }
+
+        Material Chapter(Material m) => chapter != null ? chapter.Override(m) : m;
+
+        /// Chapter material swap, once per spawned prefab: sharedMaterials replaced by array (no per-frame work, no
+        /// renderer.material instance copies; 12.8).
+        void OverrideMaterials(GameObject go)
+        {
+            if (chapter == null || !chapter.HasOverrides) return;
+            foreach (var rend in go.GetComponentsInChildren<Renderer>(true))
+            {
+                var mats = rend.sharedMaterials;
+                bool changed = false;
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    var to = chapter.Override(mats[i]);
+                    if (to != mats[i]) { mats[i] = to; changed = true; }
+                }
+                if (changed) rend.sharedMaterials = mats;
+            }
         }
 
         /// Replaces the player instance with body <paramref name="body"/>'s prefab (TileSet.PlayerFor) and moves the step label onto it.
