@@ -125,7 +125,7 @@ case "$cmd" in
   smoke)
     # Runs the Windows build on a few replays, saves screenshots + logs to reports/smoke/, fails on exceptions.
     out="$REPO/reports/smoke"; mkdir -p "$out"; fail=0
-    for spec in "1:R" "3:DURRRRR" "8:DURRRRRKDDR" "9:LRRRRDDKLLDD" "13:DUDUDURKDD" "15:RLRRRRRX" "16:DUDURRRDURRRRRKDDDD"; do
+    for spec in "1:R" "4:DURRRRRK" "8:RRRRRRDX" "10:RLRLRRR" "22:RDDLLLL" "29:DURRRRRKDDR" "43:RRRRRR"; do
       lv="${spec%%:*}"; rp="${spec#*:}"
       winout="$(cygpath -w "$out")"
       "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 \
@@ -151,7 +151,7 @@ case "$cmd" in
     sleep 2
     kill -0 "$srv" 2>/dev/null || { echo "[unity.sh] smoke-webgl: server did not start on port $port:"; tail -5 "$out/serve.log"; exit 1; }
     echo "[unity.sh] smoke-webgl: serving Builds/WebGL on port $port"
-    for spec in "1:R" "8:DURRRRRKDDR" "13:DUDUDURKDD"; do
+    for spec in "1:R" "29:DURRRRRKDDR" "50:UUUDURUK"; do
       lv="${spec%%:*}"; rp="${spec#*:}"
       page="$(orca tab create --url "http://localhost:$port/?level=$lv&replay=$rp" --json 2>/dev/null | grep -o '"browserPageId": "[^"]*"' | head -1 | cut -d'"' -f4 || true)"
       [ -z "$page" ] && { echo "[unity.sh] smoke-webgl level $lv: could not open a browser tab (orca tab create failed or timed out)"; fail=1; continue; }
