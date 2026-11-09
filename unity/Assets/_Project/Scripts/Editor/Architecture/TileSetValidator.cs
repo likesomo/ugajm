@@ -53,6 +53,7 @@ namespace SevenSteps.EditorTools
                 sb.AppendLine($"[SevenSteps] TileSet {path}: {(e > 0 ? "FAIL" : "OK")} ({e} errors, {issues.Count - e} warnings)");
                 foreach (var i in issues) sb.AppendLine("  " + i);
             }
+            errors += ValidateChapters(sb);
             report = sb.ToString();
             return errors;
         }
@@ -125,9 +126,40 @@ namespace SevenSteps.EditorTools
                 if (arr.Length != 3) issues.Add($"WARN {label}: {arr.Length} entries, triplets use 3 (index cycles)");
                 for (int k = 0; k < arr.Length; k++) Check($"{label}[{k}]", arr[k], true, false, true);
             }
+            if (ts.bodyColors == null || ts.bodyColors.Length != 3)
+                issues.Add($"WARN bodyColors: {(ts.bodyColors == null ? 0 : ts.bodyColors.Length)} entries, triplets use 3 (HUD body icons)");
 
             if (ts.projection == BoardProjection.Quarter && Mathf.Abs(ts.cameraRig.yaw) > 0.01f)
                 issues.Add($"WARN camera yaw {ts.cameraRig.yaw}: arrow keys are map directions; GameController must rotate input (docs 12.2)");
+            return errors;
+        }
+
+        /// ChapterPreset assets (docs 12.8): unique non-empty id, a TileSet, lighting and sky. Their TileSets are checked above.
+        static int ValidateChapters(StringBuilder sb)
+        {
+            int errors = 0;
+            var ids = new HashSet<string>();
+            foreach (var guid in AssetDatabase.FindAssets("t:ChapterPreset", Roots))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var c = AssetDatabase.LoadAssetAtPath<ChapterPreset>(path);
+                var issues = new List<string>();
+                int e = 0;
+                if (string.IsNullOrEmpty(c.id)) { issues.Add("ERROR id is empty"); e++; }
+                else if (!ids.Add(c.id)) { issues.Add($"ERROR id \"{c.id}\" used by another chapter"); e++; }
+                if (c.tileSet == null) { issues.Add("ERROR no tileSet"); e++; }
+                if (c.lighting == null) issues.Add("WARN no lighting (scene keeps its current lights)");
+                if (c.sky == null) issues.Add("WARN no sky");
+                if (c.materialOverrides != null)
+                    for (int k = 0; k < c.materialOverrides.Length; k++)
+                        if (c.materialOverrides[k].from == null || c.materialOverrides[k].to == null)
+                        { issues.Add($"ERROR materialOverrides[{k}] has an empty material"); e++; }
+                if (c.sky != null && c.sky.planetPrefab != null && c.sky.planetPrefab.GetComponent<IStageEnvironment>() == null)
+                    issues.Add("WARN sky.planetPrefab has no IStageEnvironment on its root (not fitted to the stage size)");
+                errors += e;
+                sb.AppendLine($"[SevenSteps] Chapter {path}: {(e > 0 ? "FAIL" : "OK")} ({e} errors, {issues.Count - e} warnings)");
+                foreach (var i in issues) sb.AppendLine("  " + i);
+            }
             return errors;
         }
 

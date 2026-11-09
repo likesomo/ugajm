@@ -79,6 +79,17 @@ namespace SevenSteps.Contracts
         public TileVisual[] playerBodies = new TileVisual[0];
         [Tooltip("Statue left by KEEP (or by the last body), per body index: stone with that sibling's trace. Cycles like playerBodies. Empty or no prefab = statue.")]
         public TileVisual[] statueBodies = new TileVisual[0];
+        [Tooltip("HUD body icon color per body index (A teal #568C88, B ochre #B99A57, C rust #B96C59; docs 12.6). Cycles like playerBodies.")]
+        public Color[] bodyColors =
+        {
+            new Color(0x56 / 255f, 0x8C / 255f, 0x88 / 255f),
+            new Color(0xB9 / 255f, 0x9A / 255f, 0x57 / 255f),
+            new Color(0xB9 / 255f, 0x6C / 255f, 0x59 / 255f),
+        };
+
+        /// HUD icon color for a body index. White when no colors are set.
+        public Color BodyColor(int bodyIndex) =>
+            bodyColors == null || bodyColors.Length == 0 || bodyIndex < 0 ? Color.white : bodyColors[bodyIndex % bodyColors.Length];
 
         /// Player look for a body index (<see cref="BodyIndex.Current"/>). Falls back to <see cref="player"/>.
         public TileVisual PlayerFor(int bodyIndex) => Cycle(playerBodies, bodyIndex, player);
