@@ -37,14 +37,17 @@ namespace SevenSteps.Tests
             TestTheme.Use();
             var view = ResultView.Create(); // the theme's prefab (UI/Prefabs/ResultPanel.prefab)
             var canvas = view.gameObject;
+            var loc = GameStrings();
             try
             {
+                Assert.Throws<InvalidOperationException>(() => view.Show(ResultModel.Loss(0, 3, false)), "words before Show");
+                view.Apply(loc);
                 Assert.IsFalse(view.IsShown);
                 view.Show(ResultModel.Clear(0, 3, 2, 1, 2, isLast: false));
                 Assert.IsTrue(view.IsShown);
                 Assert.IsTrue(Button(canvas, "다음 스테이지 (Enter)").activeSelf);
                 Assert.IsFalse(Button(canvas, "한 걸음 되돌리기 (Z)").activeSelf);
-                StringAssert.Contains("몸 2개 (최소 1개 · 최고 기록 2개)", Text(canvas, "Body"));
+                StringAssert.Contains("형제 2명 (최소 1명, 최고 기록 2명)", Text(canvas, "Body"));
 
                 int next = 0;
                 view.NextRequested += () => next++;
@@ -59,12 +62,39 @@ namespace SevenSteps.Tests
                 Assert.IsFalse(Button(canvas, "다시 하기 (R)").activeSelf);
                 Assert.IsTrue(Button(canvas, "한 걸음 되돌리기 (Z)").activeSelf);
                 Assert.IsTrue(Button(canvas, "다시 시작 (R)").activeSelf);
-                Assert.AreEqual("몸을 모두 잃었다", Text(canvas, "Title"));
+                Assert.AreEqual("형제를 모두 잃었다", Text(canvas, "Title"));
+
+                // Star criteria under the stars: shown with the stars, the minimum in ★2, hidden for a loss.
+                view.Show(ResultModel.Clear(0, 3, 1, 1, 0, isLast: false, stars: 2, bestStars: 2));
+                Assert.AreEqual("풀이를 보지 않고 형제 1명으로", Text(canvas, "Label 2"));
+                Assert.IsTrue(view.starLabels[0].transform.parent.gameObject.activeSelf);
+                view.Show(ResultModel.Loss(4, 3, isLast: false));
+                Assert.IsFalse(view.starLabels[0].transform.parent.gameObject.activeSelf);
+
+                // Language switch while open: the panel rewords itself (docs/architecture.md 13.3).
+                loc.Set(SevenSteps.Contracts.Language.En);
+                view.Apply(loc);
+                Assert.AreEqual("Every brother is lost", Text(canvas, "Title"));
+                Assert.AreEqual("Restart (R)", Button(canvas, "다시 시작 (R)").GetComponentInChildren<UnityEngine.UI.Text>().text);
 
                 view.Hide();
                 Assert.IsFalse(view.IsShown);
             }
             finally { UnityEngine.Object.DestroyImmediate(canvas); }
+        }
+
+        /// The game's tables (GameAssets.strings files), ko first.
+        static SevenSteps.Contracts.Localizer GameStrings()
+        {
+            SevenSteps.Contracts.StringTable Load(SevenSteps.Contracts.Language lang)
+            {
+                string path = $"Assets/_Project/Data/Strings/{SevenSteps.Contracts.Languages.Code(lang)}.json";
+                var json = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.TextAsset>(path);
+                Assert.IsNotNull(json, path);
+                return SevenSteps.Contracts.StringTable.FromJson(lang, json.text);
+            }
+            return new SevenSteps.Contracts.Localizer(new[] { Load(SevenSteps.Contracts.Language.Ko), Load(SevenSteps.Contracts.Language.En) },
+                SevenSteps.Contracts.Language.Ko);
         }
 
         static UnityEngine.GameObject Button(UnityEngine.GameObject canvas, string name)

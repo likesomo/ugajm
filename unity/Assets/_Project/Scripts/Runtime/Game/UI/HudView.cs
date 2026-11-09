@@ -14,8 +14,9 @@ namespace SevenSteps.Game.UI
     /// UiTheme.hud; first built by Seven Steps > Gameplay > Build HUD (HudBuilder), then edited as a prefab.
     /// Layout follows the art UI kit (design/art/ui-theme.md, game-hud-v2): stage box and hint top left, the Big Dipper step
     /// counter top centre (stars 1-6 light up; the lines turn gold only when the 7th step completes), the three travellers
-    /// top right (state written out: 사용 중 / 남음 / 선돌, not by colour alone), message, KEEP/SWITCH and the footer.
-    /// Reads State only; raises button events, controllers decide.
+    /// top right (state written out: walking / waiting / stone, not by colour alone), message, KEEP/SWITCH and the footer.
+    /// Reads State only; raises button events, controllers decide. Every word comes from the string table (hud.*,
+    /// docs/architecture.md 13.2) in the role fonts of the current language (13.4); <see cref="Apply"/> redraws on a switch.
     /// </summary>
     public sealed class HudView : MonoBehaviour
     {
@@ -35,6 +36,8 @@ namespace SevenSteps.Game.UI
         public Color lineDim = new Color(0.79f, 0.67f, 0.42f, 0.35f);
         public Color lineGold = new Color(0.95f, 0.78f, 0.36f, 1f);
         public Text nextStep;
+        [Tooltip("The box around nextStep, hidden while it has nothing to say (after a clear or a loss)")]
+        public GameObject nextStepBox;
 
         [Header("Travellers (one slot per body; extra bodies clone the first slot)")]
         public BodySlot[] bodySlots = new BodySlot[3];
@@ -47,21 +50,30 @@ namespace SevenSteps.Game.UI
         public Text message;
         public RectTransform choice;
         public Button keep, switchBody;
+        [Tooltip("Two-line explanations under the KEEP / SWITCH buttons")]
+        public Text keepDesc, switchDesc;
 
         [Header("Footer")]
         public Button undo;
         public Button restart, hint, stageSelect, settings;
+        [Tooltip("Controls line at the bottom")]
+        public Text keys;
 
         // View events (docs/scene-flow.md 4.7): the HUD only reports; controllers decide.
-        /// Footer "스테이지" button. Flow controller.
+        /// Footer stage select button. Flow controller.
         public event Action StageSelectRequested;
-        /// Footer "설정" button. Scene root (opens the settings overlay).
+        /// Footer settings button. Scene root (opens the settings overlay).
         public event Action SettingsRequested;
         /// Board actions. Board controller.
         public event Action UndoRequested, RestartRequested, HintRequested, KeepRequested, SwitchRequested;
 
-        static readonly string[] TravellerNames = { "청록 여행자", "황토 여행자", "적갈 여행자" };
-        const string Playing = "사용 중", Waiting = "남음", Stone = "선돌", Spent = "다 씀";
+        /// Traveller names per body (hud.traveller_1..3, the muffler colours, docs 12.6); more bodies cycle.
+        static readonly string[] TravellerKeys = { "hud.traveller_1", "hud.traveller_2", "hud.traveller_3" };
+
+        Localizer loc;
+        State shownState;
+        int shownStage;
+        string shownName = "", shownHint = "", shownMessage = "";
 
         /// Body colors (TileSet.BodyColor, docs 12.6); the same three in every chapter set, so the one from Create is enough.
         TileSet bodyLook;
@@ -81,16 +93,19 @@ namespace SevenSteps.Game.UI
             public Image stateBg;
         }
 
-        /// Places the theme's HUD prefab (its own canvas) in the current scene. LabelLayer is valid on return.
-        public static HudView Create(TileSet bodyLook)
+        /// Places the theme's HUD prefab (its own canvas) in the current scene, worded in <paramref name="loc"/>'s current
+        /// language. LabelLayer is valid on return. Call <see cref="Apply"/> again on Localizer.Changed.
+        public static HudView Create(TileSet bodyLook, Localizer loc)
         {
             if (bodyLook == null) throw new ArgumentNullException(nameof(bodyLook));
+            if (loc == null) throw new ArgumentNullException(nameof(loc));
             var prefab = Ui.Theme.hud != null ? Ui.Theme.hud
                 : throw new MissingReferenceException($"[SevenSteps] UiTheme {Ui.Theme.name}: hud is not set (Seven Steps > Gameplay > Build HUD)");
             var view = Instantiate(prefab);
             view.name = prefab.name;
             view.bodyLook = bodyLook;
             view.Wire();
+            view.Apply(loc);
             return view;
         }
 
@@ -107,6 +122,7 @@ namespace SevenSteps.Game.UI
             if (lines == null || lines.Length != Rules.Steps) issues.Add($"HudView {name}: lines needs {Rules.Steps} entries (1-2, 2-3, 3-4, 4-1, 4-5, 5-6, 6-7)");
             else for (int k = 0; k < Rules.Steps; k++) Need(lines[k], $"lines[{k}]");
             Need(starEmpty, nameof(starEmpty)); Need(starFilled, nameof(starFilled)); Need(nextStep, nameof(nextStep));
+            Need(nextStepBox, nameof(nextStepBox));
             if (bodySlots == null || bodySlots.Length == 0) issues.Add($"HudView {name}: bodySlots needs at least one slot");
             else for (int k = 0; k < bodySlots.Length; k++)
             {
@@ -120,6 +136,7 @@ namespace SevenSteps.Game.UI
             Need(bodyStone, nameof(bodyStone));
             Need(statues, nameof(statues)); Need(message, nameof(message)); Need(choice, nameof(choice));
             Need(keep, nameof(keep)); Need(switchBody, nameof(switchBody));
+            Need(keepDesc, nameof(keepDesc)); Need(switchDesc, nameof(switchDesc)); Need(keys, nameof(keys));
             Need(undo, nameof(undo)); Need(restart, nameof(restart)); Need(hint, nameof(hint));
             Need(stageSelect, nameof(stageSelect)); Need(settings, nameof(settings));
         }
@@ -151,23 +168,58 @@ namespace SevenSteps.Game.UI
             wired = true;
         }
 
+        /// Fixed words and fonts in the current language (Create, then on Localizer.Changed); redraws the last state.
+        public void Apply(Localizer localizer)
+        {
+            loc = localizer ?? throw new ArgumentNullException(nameof(localizer));
+            Set(Label(undo), "hud.undo", FontRole.Body);
+            Set(Label(restart), "hud.restart", FontRole.Body);
+            Set(Label(hint), "hud.hint", FontRole.Body);
+            Set(Label(stageSelect), "hud.stage_select", FontRole.Body);
+            Set(Label(settings), "hud.settings", FontRole.Body);
+            Set(keepDesc, "hud.keep_desc", FontRole.Body);
+            Set(switchDesc, "hud.switch_desc", FontRole.Body);
+            Set(keys, "hud.keys", FontRole.Body);
+            Font body = Ui.Theme.FontFor(loc.Current, FontRole.Body);
+            stageNumber.font = body;
+            stageName.font = Ui.Theme.FontFor(loc.Current, FontRole.Title);
+            foreach (var t in new[] { stageHint, nextStep, statues, message }) t.font = body;
+            foreach (var slot in slots) { slot.name.font = body; slot.state.font = body; }
+            if (shownState != null) Refresh(shownState, shownStage, shownName, shownHint, shownMessage);
+        }
+
+        void Set(Text text, string key, FontRole role)
+        {
+            text.text = loc.Get(key);
+            text.font = Ui.Theme.FontFor(loc.Current, role);
+        }
+
+        static Text Label(Button b) =>
+            b.GetComponentInChildren<Text>(true) ?? throw new MissingReferenceException($"[SevenSteps] HudView: button {b.name} has no Text label");
+
         /// A move was pressed while KEEP/SWITCH is pending: shake the choice buttons.
         public void NudgeChoice()
         {
             if (choice.gameObject.activeInHierarchy) StartCoroutine(Shake(choice));
         }
 
-        /// Redraws from the state. <paramref name="msg"/> is the message line ("" = empty, MessagePresenter).
-        public void Refresh(State s, int levelIdx, string msg)
+        /// Redraws from the state. <paramref name="name"/>/<paramref name="hintText"/> are the stage texts in the current
+        /// language (LevelCatalog.TextOf), <paramref name="msg"/> the message line ("" = empty, MessagePresenter).
+        public void Refresh(State s, int levelIdx, string name, string hintText, string msg)
         {
             if (s == null) throw new ArgumentNullException(nameof(s));
-            if (bodyLook == null) throw new InvalidOperationException("HudView.Refresh before Create");
-            stageNumber.text = $"스테이지 {levelIdx + 1:00}";
-            stageName.text = s.Level.Name;
-            stageHint.text = s.Level.Hint; // levels.js hint as written (level design); the solution (H) is the message line
+            if (bodyLook == null || loc == null) throw new InvalidOperationException("HudView.Refresh before Create");
+            shownState = s;
+            shownStage = levelIdx;
+            shownName = name ?? throw new ArgumentNullException(nameof(name));
+            shownHint = hintText ?? throw new ArgumentNullException(nameof(hintText));
+            shownMessage = msg ?? throw new ArgumentNullException(nameof(msg));
+            stageNumber.text = loc.Format("hud.stage", levelIdx + 1);
+            stageName.text = name;
+            stageHint.text = hintText; // levels.js hint as written (level design); the solution (H) is the message line
             RefreshDipper(s);
             RefreshBodies(s);
-            message.text = msg ?? throw new ArgumentNullException(nameof(msg));
+            message.text = msg;
             choice.gameObject.SetActive(s.Status == Status.Choose);
             RefreshStatues(s);
         }
@@ -190,14 +242,14 @@ namespace SevenSteps.Game.UI
             if (complete && !dipperComplete && isActiveAndEnabled) StartCoroutine(Flash());
             dipperComplete = complete;
 
-            nextStep.text = s.Status == Status.Choose ? "KEEP 또는 SWITCH"
-                : s.Status == Status.Play ? (next == Rules.Steps ? "다음 걸음 7 · 행운" : $"다음 걸음 {next}")
+            nextStep.text = s.Status == Status.Choose ? loc.Get("hud.next_choose")
+                : s.Status == Status.Play ? (next == Rules.Steps ? loc.Get("hud.next_lucky") : loc.Format("hud.next_step", next))
                 : "";
             // Its box only while there is something to say (empty after a clear or a loss).
-            nextStep.transform.parent.gameObject.SetActive(nextStep.text.Length > 0);
+            nextStepBox.SetActive(nextStep.text.Length > 0);
         }
 
-        /// One slot per body in play order (A, B, C). State in words, portrait in the body's look, KEEP statues as 선돌.
+        /// One slot per body in play order (A, B, C). State in words, portrait in the body's look, KEEP statues as stones.
         void RefreshBodies(State s)
         {
             int count = s.Level.Bodies;
@@ -214,10 +266,10 @@ namespace SevenSteps.Game.UI
                 slot.root.SetActive(k < count);
                 if (k >= count) continue;
                 var color = bodyLook.BodyColor(k);
-                slot.name.text = TravellerNames[k % TravellerNames.Length];
+                slot.name.text = loc.Get(TravellerKeys[k % TravellerKeys.Length]);
                 bool current = k == playing && s.Status != Status.Lose;
                 bool stone = k < playing && statueOwners.Contains(k);
-                slot.state.text = current ? Playing : k > playing ? Waiting : stone ? Stone : Spent;
+                slot.state.text = loc.Get(current ? "hud.body_playing" : k > playing ? "hud.body_waiting" : stone ? "hud.body_stone" : "hud.body_spent");
                 slot.portrait.sprite = stone ? bodyStone : bodySprites[k % bodySprites.Length];
                 slot.portrait.color = k < playing && !stone ? new Color(1, 1, 1, 0.35f) : Color.white;
                 slot.stateBg.color = current ? color : new Color(color.r, color.g, color.b, 0.25f);
@@ -249,7 +301,7 @@ namespace SevenSteps.Game.UI
             return path;
         }
 
-        /// "석상 2 / 3" on stages with statue-count doors (Q). Values come from Rules.StatueCount and Level.StatueCount.
+        /// "Statues 2 / 3" on stages with statue-count doors (Q). Values come from Rules.StatueCount and Level.StatueCount.
         void RefreshStatues(State s)
         {
             if (!ReferenceEquals(countLevel, s.Level))
@@ -263,7 +315,7 @@ namespace SevenSteps.Game.UI
             if (!levelHasCountDoor) return;
             int now = Rules.StatueCount(s), need = s.Level.StatueCount;
             bool open = Rules.DoorOpen(s, 'Q');
-            statues.text = $"석상 <color={(open ? "#f2c14e" : "#ece6d6")}>{now}</color> / {need}" + (open ? "  문 열림" : "");
+            statues.text = loc.Format(open ? "hud.statues_open" : "hud.statues", $"<color={(open ? "#f2c14e" : "#ece6d6")}>{now}</color>", need);
         }
 
         /// 7th step: the lines and the 7th star pop once.

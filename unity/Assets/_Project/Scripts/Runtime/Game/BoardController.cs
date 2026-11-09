@@ -26,8 +26,9 @@ namespace SevenSteps.Game
         GameSession session;
         SaveSystem save;
         GameAssets assets;
-        readonly MessagePresenter messages = new MessagePresenter();
+        MessagePresenter messages;
         HintProvider hints;
+        Localizer loc;
         HudView hud;
         BoardView board;
         GameAudio audio;
@@ -65,8 +66,11 @@ namespace SevenSteps.Game
         public Func<Command, bool> FlowTakes = _ => false;
 
         /// Called once by GameController.Awake (the scene root) after the bootstrap. The board side: session, board view, HUD, sound, telemetry.
-        public void Init(GameAssets assets, Level[] levels, SaveSystem save, HudView hud, Camera cam, TileSet tiles, CameraRig? cameraOverride, ITelemetry telemetry)
+        /// <paramref name="loc"/>: the UI language (messages, hint, stage texts, board exit label); a switch redraws them.
+        public void Init(GameAssets assets, Level[] levels, SaveSystem save, HudView hud, Camera cam, TileSet tiles, CameraRig? cameraOverride, ITelemetry telemetry,
+            Localizer loc)
         {
+            this.loc = loc ?? throw new ArgumentNullException(nameof(loc));
             if (session != null) throw new InvalidOperationException("BoardController.Init twice");
             this.assets = assets ?? throw new ArgumentNullException(nameof(assets));
             this.levels = levels ?? throw new ArgumentNullException(nameof(levels));
@@ -77,7 +81,8 @@ namespace SevenSteps.Game
             if (telemetry == null) throw new ArgumentNullException(nameof(telemetry));
 
             audio = new GameAudio(gameObject, assets, save);
-            hints = new HintProvider(levels);
+            messages = new MessagePresenter(loc);
+            hints = new HintProvider(levels, loc);
 
             hud.UndoRequested += () => Send(Command.Undo);
             hud.RestartRequested += Restart;
@@ -87,6 +92,8 @@ namespace SevenSteps.Game
 
             board = gameObject.AddComponent<BoardView>();
             board.Init(tiles, hud.LabelLayer, cam, cameraOverride);
+            board.ExitLabel = loc.Get("board.exit");
+            loc.Changed += OnLanguageChanged;
 
             session = new GameSession(board);
             board.Hurry = () => session.QueuedCount > 0;
@@ -95,8 +102,18 @@ namespace SevenSteps.Game
             if (telemetry is HttpTelemetry http) recorder = new TelemetryRecorder(this, session, http);
         }
 
+        /// Settings language toggle (docs/architecture.md 13.3): HUD words and fonts, the message line, the exit label.
+        void OnLanguageChanged(Language lang)
+        {
+            hud.Apply(loc);
+            board.ExitLabel = loc.Get("board.exit");
+            if (session.State != null && !board.IsAnimating) board.Snap(session.State); // else the next draw picks it up
+            if (session.State != null) Refresh();
+        }
+
         void OnDestroy()
         {
+            if (loc != null) loc.Changed -= OnLanguageChanged;
             recorder?.Dispose();
             audio?.Dispose();
             chapters?.Dispose();
@@ -207,7 +224,8 @@ namespace SevenSteps.Game
         {
             if (session.Level == null) return;
             attempt = attempt.WithHint();
-            messages.Show(hints.For(loadedStage));
+            int stage = loadedStage;
+            messages.Show(() => hints.For(stage));
             HintShown?.Invoke();
             Refresh();
         }
@@ -258,6 +276,10 @@ namespace SevenSteps.Game
             return -1;
         }
 
-        void Refresh() => hud.Refresh(session.State, loadedStage, messages.Current);
+        void Refresh()
+        {
+            var text = LevelCatalog.TextOf(loadedStage, loc.Current); // stage name and hint in the UI language (13.5)
+            hud.Refresh(session.State, loadedStage, text.name ?? "", text.hint ?? "", messages.Current);
+        }
     }
 }
