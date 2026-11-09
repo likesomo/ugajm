@@ -209,7 +209,8 @@ export function dispatch(s, cmd) {
   return { state: s, events: [] };
 }
 
-const keyOf = (s) => `${s.start}|${s.pos}|${s.used}|${s.bodies}|${s.statues}|${s.bridges}|${s.broken}|${s.status}|${s.flipped ? 1 : 0}`;
+// State identity for BFS (solver, unity/Tools/stage-report.mjs). C# counterpart: Rules.Key.
+export const keyOf = (s) => `${s.start}|${s.pos}|${s.used}|${s.bodies}|${s.statues}|${s.bridges}|${s.broken}|${s.status}|${s.flipped ? 1 : 0}`;
 
 // BFS over actions (moves and KEEP/SWITCH). Returns the shortest winning move list, or null. Used by the solver tool and the hint button.
 export function solve(level, maxBodies = level.bodies, { noSwitch = false, limit = 400000 } = {}) {

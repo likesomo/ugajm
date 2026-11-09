@@ -114,6 +114,13 @@ test('fake playtest: posts through HTTP and aggregates', async () => {
     assert.match(head, /^attemptId,playerId,sessionId,build,client,level,levelName/);
     assert.ok(lines.length > 0);
     assert.ok(lines.every((l) => l.includes(',web-proto,')));
+    assert.match(head, /,stars,starsSource,lang,planet$/, 'lang and planet are the last columns');
+    const enRows = (await (await get(s.url, '/api/export/attempts.json?lang=en')).json());
+    assert.ok(enRows.length > 0 && enRows.every((r) => r.lang === 'en'), 'lang filter and column agree');
+    assert.ok(enRows.every((r) => !r.chapter || r.planet), 'every stage with a chapter has its planet name');
+    const chapters = await (await get(s.url, '/api/stats/chapters')).json();
+    assert.equal(chapters.length, new Set(s.levels.map((l) => l.chapter)).size);
+    assert.ok(chapters.every((c) => c.planet), 'chapters carry planet names from design/levels/chapters.json');
     const jsonl = (await (await get(s.url, '/api/export/events.jsonl')).text()).trim().split('\n').map((l) => JSON.parse(l));
     assert.equal(jsonl.length, accepted);
     assert.ok(jsonl.filter((e) => e.type === 'move').every((e) => e.attemptId));

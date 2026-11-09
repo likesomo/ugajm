@@ -123,11 +123,55 @@
 
 판정 함수는 코어 `core.js` `stars()`(C# `Stars.Of`, 골든 `Tests/Golden/stars.golden.json`). `telemetry.js`는 이것을 `starsFor`로 다시 내보낸다. 최소 몸 수를 모르면 보내지 않는다. 서버는 `stars`가 없는 옛 기록도 `level_clear`의 `bodiesUsed`·`hints`·`undos`·`restarts`와 현재 맵(같은 `levelKey`)의 최소 몸 수로 다시 계산한다.
 
+## 6. 로컬 플레이테스트 한 페이지 (서버 + 대시보드)
+
+이 PC에서 서버를 띄우고, 테스터가 플레이하는 동안 대시보드로 보고, 끝나면 레벨 디자인용 파일을 내보낸다. Git Bash, 저장소 루트 기준. 자세한 설명과 옵션은 [`server/README.md`](../server/README.md) "플레이테스트 날 실행 절차".
+
+**준비** (전날): Node 26(`export PATH="/c/Program Files/nodejs:$PATH"`, `npm install` 없음). Unity WebGL은 `unity/Tools/unity.sh build-webgl` → `unity/Tools/unity.sh smoke-webgl` 통과한 `Builds/WebGL/`. 서버 확인은 `node --test server/test/`.
+
+**1. 서버 켜기** (테스트 내내 이 터미널을 열어 둔다)
+```bash
+export PATH="/c/Program Files/nodejs:$PATH"
+export STATS_TOKEN=$(node -e "console.log(require('crypto').randomBytes(12).toString('base64url'))"); echo "token: $STATS_TOKEN"
+DB_PATH=server/data/playtest-$(date +%F).sqlite node server/src/index.mjs
+```
+
+**2. 주소**
+| 용도 | 주소 |
+|---|---|
+| Unity WebGL (테스터) | `http://localhost:8787/webgl/` (전송 주소 `?telemetry=`를 서버가 자동으로 붙인다. 스테이지 지정 `?level=29`, 영어 `?lang=en`) |
+| 웹 프로토타입 (테스터) | `http://localhost:8787/play/` |
+| 대시보드 (진행자) | `http://localhost:8787/dashboard#token=<토큰>` |
+| 같은 와이파이의 다른 PC | `localhost` 대신 이 PC의 IP. 방화벽은 "개인 네트워크"만 허용 |
+
+**3. 시작 전 확인** (2분): `curl http://localhost:8787/healthz` → `{"ok":true}`. 테스터 주소로 1스테이지를 깨고 5~10초 뒤 대시보드 "새로고침" → 빌드 목록에 새 빌드(`0.1.0+<커밋>`)와 `unity-webgl`이 보이면 된다. 확인 기록은 "기간" 필터로 빼거나, 서버를 끄고 그날 DB 파일을 지운 뒤 다시 켠다.
+
+**4. 대시보드에서 보는 것** (자동 갱신 없음, "새로고침")
+- 필터: 클라이언트, 빌드, 언어(`ko`/`en`, `lang`), 기간, 챕터(행성 7개)
+- 챕터: 행성별 시작·끝 스테이지 도달·전부 클리어·그만둠. 행성 이름은 `design/levels/chapters.json`
+- 스테이지 퍼널·이탈률(50스테이지, 행성별 묶음), 표: 클리어 시간 중앙·상위 25%, Undo·재시작·힌트, 몸 손실, ★1~★3 분포와 ★3 비율
+- 막힘 히트맵(스테이지 선택: 오래 멈춘 칸·Undo·몸 사용), 세션 타임라인
+
+**5. 끝난 뒤**: 서버 `Ctrl+C`. DB 파일은 보관(git 제외). 레벨 디자인용 내보내기(대시보드 위쪽 링크도 같음, 현재 필터 적용):
+```bash
+T=<토큰>; B=http://localhost:8787/api/export; D=$(date +%F)
+for f in attempts.csv levels.csv events.jsonl; do curl -sH "Authorization: Bearer $T" "$B/$f?since=$D" -o "$f"; done
+```
+- `attempts.csv`/`.json`: 시도 한 줄. 열은 `design/levels/telemetry-mapping.md` 4.1 + 끝에 `chapter, stageNow, stageMatch, stars, starsSource, lang, planet`
+- `levels.csv`/`.json`: 스테이지 집계(`chapter`, `planet`, 퍼널, 헤맴, `stars1~3`, `star3Rate`, `minBodies`)
+- `events.jsonl`/`.json`: 원본 이벤트 + `attemptId`
+- 모든 내보내기는 `client`, `build`, `lang`, `since`, `to` 필터를 받는다. CSV는 UTF-8(BOM 없음). 엑셀에서 열 때는 "데이터 > 텍스트/CSV"로 UTF-8 지정
+
+**가짜 데이터로 미리 보기**: 서버를 끈 상태에서 `node server/tools/fake-data.mjs --players 120 --db server/data/fake.sqlite` 후 `DB_PATH=server/data/fake.sqlite`로 켠다(7개 행성 모두에 플레이어가 있다. `lang`은 4명 중 1명 `en`).
+
+**원격 테스터 (사용자 승인 전, 준비만)**: 외부 공개라 사용자 승인 없이 하지 않는다. 승인되면 서버를 `TRUST_PROXY=1`로 켜고 다른 터미널에서 `cloudflared tunnel --url http://localhost:8787` → 출력된 `https://….trycloudflare.com/webgl/`을 테스터에게 준다(실행마다 주소가 바뀜). `cloudflared`는 아직 설치하지 않았다. itch.io 빌드에서 받으려면 고정 HTTPS 주소가 필요하다 → `server/README.md` "배포 선택지".
+
 ## 변경 기록
 
 | 날짜 | 버전 | 내용 |
 |---|---|---|
 | 2026-11-07 | v1 | 최초 확정 |
+| 2026-11-10 | v1 | 이벤트 변화 없음. 6장 로컬 플레이테스트 절차 추가. 서버 내보내기: `attempts`에 `lang`·`planet` 열(끝에 추가), `levels`·`chapters`에 `planet`(design/levels/chapters.json). 대시보드 챕터 이름을 행성 이름으로 |
 | 2026-11-07 | v1 | `level_start.levelKey`(선택) 추가 — 레벨 디자인 요청. 선택 필드라 버전은 그대로 |
 | 2026-11-10 | v1 | 재시작 셈을 게임 규칙(architecture 6.5)에 맞춤: 시작 상태에서 누른 R은 `restart` 이벤트도 `restarts` 셈도 없음(`level_clear.restarts`, ★3에 영향). Undo는 원래 실제로 되돌린 것만 셈. 골든 재생성(재시작 이벤트 32건 빠짐). Unity `TelemetryTracker`도 같은 조건(직전 상태의 `Prev`가 없으면 무시) |
 | 2026-11-09 | v1 | `session_start.lang`·`level_start.lang`(선택) 추가 — 다국어(architecture 13장). 웹 `Tracker({ lang })`·`setLang`, `initTelemetry({ lang })`(기본 `ko`). Unity는 `Localizer` 현재 언어를 `level_start` 끝(`bodies` 다음)과 `session_start` 끝에. 골든에는 넣지 않음(변화 없음) |

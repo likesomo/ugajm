@@ -79,7 +79,7 @@ export function openDb(path) {
     if (f.level) { where.push('level = ?'); args.push(Number(f.level)); }
     if (f.types) { where.push(`type IN (${f.types.map(() => '?').join(',')})`); args.push(...f.types); }
     if (extraWhere) where.push(extraWhere);
-    const sql = `SELECT player_id, session_id, seq, t, received_at, type, client, build, level, x, y, data FROM events
+    const sql = `SELECT player_id, session_id, seq, t, received_at, type, client, build, level, x, y, data, lang FROM events
       ${where.length ? `WHERE ${where.join(' AND ')}` : ''} ORDER BY player_id, session_id, seq`;
     return db.prepare(sql).all(...args).map((r) => ({ ...r, data: JSON.parse(r.data) }));
   }
