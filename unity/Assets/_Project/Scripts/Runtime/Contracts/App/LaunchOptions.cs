@@ -5,8 +5,8 @@ namespace SevenSteps.Contracts
 {
     /// <summary>
     /// Start options from the command line (desktop) or the page URL (WebGL). Same format as the web prototype:
-    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits]
-    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off   (docs/telemetry.md section 4)
+    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-lang en] [-smoke board|empty]
+    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board   (docs/telemetry.md section 4)
     /// Pure parsing: the caller passes Environment.GetCommandLineArgs() and Application.absoluteURL.
     /// Bad values are not exceptions (external input): they are skipped and described in <see cref="Warnings"/>,
     /// which the bootstrap logs (Contracts does not log). Read-only after parsing, except the two editor/once-only changes below.
@@ -27,6 +27,9 @@ namespace SevenSteps.Contracts
         public bool OpenCredits { get; private set; }
         /// UI language for this run only (-lang en / ?lang=en, docs 13.3; not saved). Null = the saved setting.
         public Language? Language { get; private set; }
+        /// Smoke check view (-smoke board|empty / ?smoke=): draws differently, plays the same (no change to state, replay or
+        /// telemetry). See <see cref="Contracts.SmokeView"/>.
+        public SmokeView SmokeView { get; private set; }
 
         readonly List<string> warnings = new List<string>();
         /// What was ignored while parsing, one line each. Empty when everything parsed.
@@ -65,6 +68,13 @@ namespace SevenSteps.Contracts
             else warnings.Add($"{source}: lang \"{v}\" is not ko or en; ignored");
         }
 
+        void SetSmoke(string source, string v)
+        {
+            if (v == "board") SmokeView = SmokeView.Board;
+            else if (v == "empty") SmokeView = SmokeView.Empty;
+            else warnings.Add($"{source}: smoke \"{v}\" is not board or empty; ignored");
+        }
+
         void SetTelemetry(string source, string v)
         {
             if (v == "off" || v == "0") TelemetryOff = true;
@@ -82,7 +92,7 @@ namespace SevenSteps.Contracts
                     {
                         case "-stageselect": o.OpenStageSelect = true; continue;
                         case "-credits": o.OpenCredits = true; continue;
-                        case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": break;
+                        case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": break;
                         default: continue;
                     }
                     if (k + 1 >= args.Length || args[k + 1].StartsWith("-", StringComparison.Ordinal))
@@ -98,6 +108,7 @@ namespace SevenSteps.Contracts
                         case "-screenshot": o.Screenshot = v; break;
                         case "-telemetry": o.SetTelemetry("command line", v); break;
                         case "-lang": o.SetLanguage("command line", v); break;
+                        case "-smoke": o.SetSmoke("command line", v); break;
                     }
                 }
 
@@ -114,9 +125,24 @@ namespace SevenSteps.Contracts
                     case "replay": o.Replay = v; break;
                     case "telemetry": o.SetTelemetry("url", v); break;
                     case "lang": o.SetLanguage("url", v); break;
+                    case "smoke": o.SetSmoke("url", v); break;
                 }
             }
             return o;
         }
+    }
+
+    /// <summary>
+    /// What the smoke checks draw (unity.sh smoke-webgl, board-pixels.ps1): the board is measured against a magenta clear
+    /// colour, so the chapter sky and planet (which fill the measured area) are left out. Game state is the same as usual.
+    /// </summary>
+    public enum SmokeView
+    {
+        /// As usual.
+        None,
+        /// No sky or planet (no IStageEnvironment.Fit), camera clear #FF00FF; lights, board, player, statues and HUD as usual.
+        Board,
+        /// As Board, and every board renderer and world label hidden: the negative control (about 0 board pixels).
+        Empty,
     }
 }
