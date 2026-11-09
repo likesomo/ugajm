@@ -343,7 +343,7 @@ Scene root (MonoBehaviour 하나, 조립만)
 | **S2 `AppFlow` 계약** | `AppFlow(ISceneLoader, int stageCount)`(null 금지, `stageCount >= 1`), `GoToGame` 범위 밖이면 `ArgumentOutOfRangeException`(실행 인자 `-level 99`는 부트스트랩이 경고 + 보정 후 호출), `TryGetBackTarget(out AppState)`/`CanBack`(기존 `CanGo` 표 안에서만), `IsLoading` + `ISceneLoader.Loaded`(`SceneLoader`가 `sceneLoaded`로 냄). `Entered` 이벤트 없음. `EntryTracker`(via 계산, `Game/Flow/`) | 예 | EditMode: 전이 표 전체(허용·거부), Back 표, 로드 중 전이 거부, 가짜 로더(지연 완료). `EntryTracker`가 지금과 같은 via(boot/url/next/select/again)를 내는지 + 텔레메트리 골든 | 예(API 고지 필요) |
 | **S3 흐름 분리** | `BootSceneRoot`/`TitleSceneRoot`/`GameSceneRoot` + `TitleFlowController`/`GameFlowController`. `GameController`에서 흐름 코드(136-219, 269-278, 340-355)를 옮긴다. `HudView`의 Result 부분을 `ResultView`로 나누고 이벤트로 연결한다. 보드 진행 부분은 게임플레이/UI가 `BoardController`로 정리(리드 배분) | 예 | EditMode: 흐름 컨트롤러를 가짜 뷰(`IScreenView` 구현)로 테스트한다. Boot→Title→StageSelect→Game→Result→다음. 씬을 넘는 `level_leave`도 EditMode(가짜 로더)로 고정한다. PlayMode asmdef는 만들지 않는다(아키텍트 결정). EditMode로 못 잡는 회귀가 나오면 그때 아키텍트가 만든다. 그 전까지는 `smoke` + 수동. **build-webgl + smoke-webgl** | 없음(뷰 인터페이스는 Game 어셈블리 안) |
 | **S4 오버레이·뒤로 가기** | `OverlayStack`(`Game/Flow/`) + `BackNavigator` + `AppInput`. Settings·Credits를 오버레이로 등록한다. Esc 처리 4곳을 하나로 모은다. 오버레이가 열리면 보드 입력을 막는다 | 예 | EditMode: Esc 순서(설정 열림 → 닫힘 → StageSelect), 크레딧 위 Esc, 오버레이 중 보드 입력 무시 | 없음(Game 어셈블리) |
-| **S5 페이드 전환** | `FadeSceneLoader`(`LoadSceneAsync` + 코루틴, DDOL 러너 자식 캔버스). 같은 씬 전이는 페이드 없음 | 여유 있으면 | 가짜 로더 지연 테스트(S2) 재사용. 스모크 스크린샷 대기 시간 확인(`ScreenshotOnce` 1.5초). **build-webgl + smoke-webgl**(보드 픽셀 기준 500 이상) | 없음 |
+| **S5 페이드 전환** | `FadeSceneLoader`(`LoadSceneAsync` + 코루틴, DDOL 러너 자식 캔버스). 같은 씬 전이는 페이드 없음. **실패 경로에서도 `Loaded`를 못 내는 일이 없게 한다**(`IsLoading`이 참으로 남으면 흐름이 멈춤, 아키텍트 S2 메모): 로드 실패는 예외나 명시적 복구 | 여유 있으면 | 가짜 로더 지연 테스트(S2) 재사용. 스모크 스크린샷 대기 시간 확인(`ScreenshotOnce` 1.5초). **build-webgl + smoke-webgl**(보드 픽셀 기준 500 이상) | 없음 |
 | **S6 UI 프리팹 + 테마** | 화면별로 코드 생성 → 프리팹(`UI/**`) + 뷰 직렬화 참조(`OnValidate` 검사) + `UiTheme` SO(색·글꼴·스프라이트). 순서: Settings → Result → Title/StageSelect → HUD. `Ui.cs` 정적 색은 `UiTheme` 기본값으로 | 일부(Settings·Result), 나머지는 테마 확정 후 | `SceneFlowValidator`가 프리팹 필수 참조를 검사. 스모크 스크린샷 비교 | 없음 |
 
 ### 5.1 텔레메트리 시점 보존 (모든 단계)
@@ -374,7 +374,7 @@ S2·S3 커밋마다 `unity.sh test`(텔레메트리 골든)를 돌린다. 골든
 | S0 ② 에디터 Play 두 번 재현(3.3 표) | — | 배치로는 Play 모드를 재현할 수 없어 미실시. 정적 초기화 자체는 `PlayResetTests`가 고정한다 | 에디터에서 Title·Game을 두 번씩 Play해 확인(사용자 또는 리드, 수동) |
 | S1 단정화 | 923a1a6 | compile OK, test 230/230(+6), build-win + smoke 7/7 OK, 타이틀 스모크(`-screenshot -stageselect -credits`) OK, 잘못된 `-level abc`는 경고 로그 | 아키텍트 승인(2026-11-09, 11.2 반영 feat/architecture 8914e53) |
 | (배정) `AppConfig.tileSet` → RuinsHenge_Chapter01 | 7300d9d | tileset-validate(2세트 0오류), scene-validate, test 232/232, build-win + smoke 7/7, build-webgl + smoke-webgl 1/8/13 OK. 방향광 조정 없음 | — |
-| S2 `AppFlow` 계약 + `EntryTracker` | f08f4d6 | compile OK, test 242/242(+10), scene-validate OK, build-win + smoke 7/7, 타이틀 스모크(Boot→Title 로드 후 StageSelect 전이로 `Loaded` 해제 확인), `-level 99`는 경고 후 17 | 아키텍트 검토(API 고지). Title→Game·Game→StageSelect 실제 씬 전환은 입력이 필요해서 수동 확인(S0 ②와 함께) |
+| S2 `AppFlow` 계약 + `EntryTracker` | f08f4d6 | compile OK, test 242/242(+10), scene-validate OK, build-win + smoke 7/7, 타이틀 스모크(Boot→Title 로드 후 StageSelect 전이로 `Loaded` 해제 확인), `-level 99`는 경고 후 17 | 아키텍트 승인(2026-11-09, 11.1·11.2 반영 feat/architecture 332b634). Title→Game·Game→StageSelect 실제 씬 전환은 입력이 필요해서 수동 확인(S0 ②와 함께) |
 
 챕터 방향(2026-11-08 사용자): 챕터 = 우주 속 행성, 주인공 세쌍둥이. S4에서 `GameFlowController`에 챕터 전환 연출 자리(다음 스테이지의 chapter가 바뀌면 전환 오버레이), S6에서 `UiTheme`·조명·하늘을 챕터별 프리셋으로 고를 자리를 남긴다. 레벨 데이터 chapter 필드는 레벨 담당이 추가한다.
 
@@ -445,3 +445,4 @@ Open Project 1은 미러의 파일 목록과 커밋 메시지만 확인했다(�
 | 2026-11-09 | S1 커밋 923a1a6, 5.2 갱신 |
 | 2026-11-09 | 4.7: HudView에 TileSet 주입(S3). AppConfig.tileSet RuinsHenge_Chapter01. origin/7lucky 6cf3de4 합침 |
 | 2026-11-09 | S2 커밋 f08f4d6, 4.7 확정안, 5.2 갱신 |
+| 2026-11-09 | S2 아키텍트 승인, S5에 로드 실패 경로 조건 추가. origin/7lucky 0ca8ae6 합침 |
