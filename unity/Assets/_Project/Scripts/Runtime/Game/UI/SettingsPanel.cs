@@ -153,7 +153,7 @@ namespace SevenSteps.Game.UI
         /// The SaveSystem command already saved and raised SettingsChanged (audio and telemetry react).
         void Saved()
         {
-            AudioListener.volume = save.Settings.masterVolume; // live preview in scenes without an audio controller (Title)
+            GameAudio.ApplyMaster(save.Settings); // live preview in scenes without a GameAudio instance (Title)
             view.Redraw();
         }
     }

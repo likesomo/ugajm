@@ -48,7 +48,7 @@ namespace SevenSteps.Game.UI
 
             var cam = Camera.main;
             if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = assets.background; }
-            AudioListener.volume = save.Settings.masterVolume;
+            GameAudio.ApplyMaster(save.Settings); // the Title scene has no GameAudio instance: master volume only
             if (FindAnyObjectByType<EventSystem>() == null)
                 new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
