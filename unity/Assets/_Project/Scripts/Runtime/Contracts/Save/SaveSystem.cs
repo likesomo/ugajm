@@ -44,6 +44,9 @@ namespace SevenSteps.Contracts
         /// Anonymous UUID v4 for telemetry (playerId). Created on first run, cleared when the player opts out.
         public string playerId = "";
         public string language = "ko";
+        /// The player picked the language (first-run picker or the settings toggle), not only the system default (13.3).
+        /// Saves from before this field read as false: the picker shows once for them too.
+        public bool languageChosen;
     }
 
     /// <summary>
@@ -115,10 +118,16 @@ namespace SevenSteps.Contracts
         /// UI language from the settings. A value this build does not know (newer save, hand edit) reads as the base language.
         public Language Language => Languages.TryParse(Settings.language, out var lang) ? lang : Languages.Base;
 
-        /// Language toggle in settings (13.3). Saves and raises SettingsChanged (views redraw through the Localizer).
+        /// The player has picked a language (13.3). False on a first run and for older saves: Title shows the language
+        /// picker first, unless this run has a -lang / ?lang= override (LaunchOptions.Language).
+        public bool LanguageChosen => Settings.languageChosen;
+
+        /// The player's language choice (first-run picker or settings toggle, 13.3): sets <see cref="LanguageChosen"/>,
+        /// saves and raises SettingsChanged (views redraw through the Localizer). The system default never goes through here.
         public void SetLanguage(Language language)
         {
             Settings.language = Languages.Code(language);
+            Settings.languageChosen = true;
             SaveSettings();
         }
 

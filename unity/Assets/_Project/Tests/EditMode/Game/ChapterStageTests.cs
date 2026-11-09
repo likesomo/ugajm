@@ -92,6 +92,74 @@ namespace SevenSteps.Tests
             stage.Dispose();
         }
 
+        /// Builds a child renderer with the shared base material on Fit, like the planet summit rebuilds its meshes.
+        sealed class RebuildOnFit : MonoBehaviour, IStageEnvironment
+        {
+            public Material surface;
+            public void Fit(BoardGrid grid)
+            {
+                var child = new GameObject("Summit", typeof(MeshRenderer));
+                child.transform.SetParent(transform, false);
+                child.GetComponent<MeshRenderer>().sharedMaterial = surface;
+            }
+        }
+
+        [Test]
+        public void MaterialOverridesReachSkyAndPlanetAlsoAfterFit()
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            var baseMat = Make(new Material(shader) { name = "Base" });
+            var frostMat = Make(new Material(shader) { name = "Frost" });
+            var preset = Preset("frost", Color.white, Color.black);
+            preset.materialOverrides = new[] { new MaterialOverride { from = baseMat, to = frostMat } };
+            preset.sky.skyPrefab.AddComponent<MeshRenderer>().sharedMaterial = baseMat;
+            Object.DestroyImmediate(preset.sky.planetPrefab.GetComponent<FitProbe>());
+            preset.sky.planetPrefab.AddComponent<MeshRenderer>().sharedMaterial = baseMat;
+            preset.sky.planetPrefab.AddComponent<RebuildOnFit>().surface = baseMat;
+
+            var cam = Make(new GameObject("Camera")).AddComponent<Camera>();
+            Light L(string n) => Make(new GameObject(n)).AddComponent<Light>();
+            var root = Make(new GameObject("Root")).transform;
+            var stage = new ChapterStage(cam, L("Key"), L("Fill"), L("Rim"), root);
+            stage.Enter(preset);
+            Assert.AreSame(frostMat, cam.transform.GetChild(0).GetComponent<MeshRenderer>().sharedMaterial, "sky");
+            var planet = root.GetChild(0);
+            Assert.AreSame(frostMat, planet.GetComponent<MeshRenderer>().sharedMaterial, "planet");
+            stage.Fit(new BoardGrid(4, 4));
+            Assert.AreSame(frostMat, planet.Find("Summit").GetComponent<MeshRenderer>().sharedMaterial, "meshes built in Fit");
+            stage.Dispose();
+        }
+
+        [Test]
+        public void SmokeOptionParsesFromCommandLineAndUrl()
+        {
+            Assert.AreEqual(SmokeView.Board, LaunchOptions.Parse(new[] { "x.exe", "-smoke", "board" }, "").SmokeView);
+            Assert.AreEqual(SmokeView.Empty, LaunchOptions.Parse(new string[0], "http://h/?level=1&smoke=empty").SmokeView);
+            var bad = LaunchOptions.Parse(new[] { "x.exe", "-smoke", "sky" }, "");
+            Assert.AreEqual(SmokeView.None, bad.SmokeView);
+            Assert.AreEqual(1, bad.Warnings.Count);
+            Assert.AreEqual(SmokeView.None, LaunchOptions.Parse(new string[0], "").SmokeView);
+        }
+
+        [Test]
+        public void SmokeBoardSkipsSkyAndPlanetClearsMagentaKeepsLights()
+        {
+            FitProbe.Fits.Clear();
+            var cam = Make(new GameObject("Camera")).AddComponent<Camera>();
+            Light L(string n) => Make(new GameObject(n)).AddComponent<Light>();
+            Light key = L("Key");
+            var root = Make(new GameObject("Root")).transform;
+            var stage = new ChapterStage(cam, key, L("Fill"), L("Rim"), root, SmokeView.Board);
+            Assert.IsTrue(stage.Enter(Preset("moss", Color.green, Color.black)));
+            Assert.AreEqual(ChapterStage.SmokeClear, cam.backgroundColor);
+            Assert.AreEqual(Color.green, key.color, "chapter lights as usual");
+            Assert.AreEqual(0, cam.transform.childCount, "no sky");
+            Assert.AreEqual(0, root.childCount, "no planet");
+            stage.Fit(new BoardGrid(5, 5));
+            Assert.AreEqual(0, FitProbe.Fits.Count, "no Fit without a planet");
+            stage.Dispose();
+        }
+
         [Test]
         public void TileSetOrderIsOverrideThenChapterThenAssets()
         {

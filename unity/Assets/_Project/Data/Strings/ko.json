@@ -1,6 +1,19 @@
 {
   "entries": [
-    { "key": "hud.stage", "text": "스테이지 {0:00}" },
+    { "key": "title.name", "text": "일곱 걸음" },
+    { "key": "title.subtitle", "text": "Seven Steps" },
+    { "key": "title.tagline", "text": "한 몸에 딱 일곱 걸음. 일곱 번째 걸음은 행운이다." },
+    { "key": "title.start", "text": "시작 (Enter)" },
+    { "key": "title.settings", "text": "설정" },
+    { "key": "title.credits", "text": "크레딧" },
+
+    { "key": "stageselect.head", "text": "스테이지 선택" },
+    { "key": "stageselect.back", "text": "뒤로 (Esc)" },
+    { "key": "stageselect.settings", "text": "설정" },
+    { "key": "stageselect.cleared", "text": "클리어" },
+    { "key": "stageselect.best_bodies", "text": ", 형제 {0}명" },
+
+    { "key": "hud.stage", "text": "{0:00}" },
     { "key": "hud.traveller_1", "text": "청록 여행자" },
     { "key": "hud.traveller_2", "text": "황토 여행자" },
     { "key": "hud.traveller_3", "text": "적갈 여행자" },
@@ -65,6 +78,19 @@
     { "key": "result.chapter_done", "text": "{0}\n다음 행성으로" },
     { "key": "result.journey_done", "text": "세 형제가 원형 제단에 닿았다" },
 
-    { "key": "board.exit", "text": "출구" }
+    { "key": "board.exit", "text": "출구" },
+
+    { "key": "settings.title", "text": "설정" },
+    { "key": "settings.master", "text": "전체 음량" },
+    { "key": "settings.sfx", "text": "효과음" },
+    { "key": "settings.telemetry", "text": "플레이 기록 보내기" },
+    { "key": "settings.telemetry_note", "text": "익명 플레이 기록(이동, 클리어)만 보냅니다. 이름이나 계정은 보내지 않습니다." },
+    { "key": "settings.on", "text": "켜짐" },
+    { "key": "settings.off", "text": "꺼짐" },
+    { "key": "settings.close", "text": "닫기 (Esc)" },
+
+    { "key": "credits.title", "text": "크레딧" },
+    { "key": "credits.game", "text": "일곱 걸음 (Seven Steps)" },
+    { "key": "credits.close", "text": "닫기 (Esc)" }
   ]
 }

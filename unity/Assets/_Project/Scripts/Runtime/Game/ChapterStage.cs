@@ -22,10 +22,16 @@ namespace SevenSteps.Game
 
         public ChapterPreset Current { get; private set; }
 
+        /// Smoke check camera clear (LaunchOptions.SmokeView): a colour no palette uses, measured against by board-pixels.ps1.
+        public static readonly Color SmokeClear = new Color(1f, 0f, 1f, 1f);
+        readonly SmokeView smoke;
+
         /// <param name="key">Key light (the only one with shadows, WebGL Mobile budget).</param>
         /// <param name="parent">Where the planet instance goes (the Game scene root). The sky goes under the camera.</param>
-        public ChapterStage(Camera cam, Light key, Light fill, Light rim, Transform parent)
+        /// <param name="smoke">Board / Empty: no sky or planet (so no Fit) and a #FF00FF clear; lights as the chapter says.</param>
+        public ChapterStage(Camera cam, Light key, Light fill, Light rim, Transform parent, SmokeView smoke = SmokeView.None)
         {
+            this.smoke = smoke;
             this.cam = cam != null ? cam : throw new ArgumentNullException(nameof(cam));
             this.key = key != null ? key : throw new ArgumentNullException(nameof(key));
             this.fill = fill != null ? fill : throw new ArgumentNullException(nameof(fill));
@@ -40,17 +46,23 @@ namespace SevenSteps.Game
             entered = true;
             Current = chapter;
             DestroyInstances();
+            if (smoke != SmokeView.None) cam.backgroundColor = SmokeClear;
             if (chapter == null) return true;
 
             if (chapter.lighting != null) ApplyLighting(chapter.lighting);
-            if (chapter.sky != null)
+            if (chapter.sky != null && smoke == SmokeView.None)
             {
                 cam.backgroundColor = chapter.sky.background;
                 // The sky follows the camera (12.8 contract): a camera child, local pose from the prefab.
-                if (chapter.sky.skyPrefab != null) sky = Object.Instantiate(chapter.sky.skyPrefab, cam.transform, false);
+                if (chapter.sky.skyPrefab != null)
+                {
+                    sky = Object.Instantiate(chapter.sky.skyPrefab, cam.transform, false);
+                    ChapterMaterials.Apply(sky, chapter);
+                }
                 if (chapter.sky.planetPrefab != null)
                 {
                     planet = Object.Instantiate(chapter.sky.planetPrefab, parent);
+                    ChapterMaterials.Apply(planet, chapter);
                     environment = planet.GetComponent<IStageEnvironment>(); // optional: TileSetValidator warns when missing
                 }
             }
@@ -60,7 +72,9 @@ namespace SevenSteps.Game
         /// After the board is built for a stage: fit the planet summit to W x H (same chapter or new one).
         public void Fit(BoardGrid grid)
         {
-            environment?.Fit(grid);
+            if (environment == null) return;
+            environment.Fit(grid);
+            ChapterMaterials.Apply(planet, Current); // Fit rebuilds the summit meshes: same overrides on the new renderers
         }
 
         public void Dispose() => DestroyInstances();

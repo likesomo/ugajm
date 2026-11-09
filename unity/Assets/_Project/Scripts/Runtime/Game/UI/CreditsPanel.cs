@@ -1,4 +1,5 @@
 using System.Text;
+using SevenSteps.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,6 +13,8 @@ namespace SevenSteps.Game.UI
     {
         readonly GameObject root;
         readonly ScrollRect scroll;
+        readonly Text title, lines, closeLabel;
+        readonly string creditLines;
 
         /// The close button. The OverlayStack closes the panel (docs/scene-flow.md S4).
         public event System.Action CloseRequested;
@@ -26,10 +29,11 @@ namespace SevenSteps.Game.UI
             var opaque = Ui.PanelBg; opaque.a = 1f; // the Title text behind must not show through
             var panel = Ui.MakeImage(dim.transform, opaque, null, "Panel");
             panel.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900, 600));
-            var title = Ui.Label(panel.transform, "크레딧", 34, Ui.Gold, TextAnchor.MiddleCenter, "Title");
+            title = Ui.Label(panel.transform, "", 34, Ui.Gold, TextAnchor.MiddleCenter, "Title");
             title.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -24), new Vector2(860, 44));
 
-            var lines = Ui.Label(panel.transform, "일곱 걸음 (Seven Steps)\n\n" + (credits != null ? credits.text.Trim() : ""), 18, Ui.Ink,
+            creditLines = credits != null ? credits.text.Trim() : "";
+            lines = Ui.Label(panel.transform, "", 18, Ui.Ink,
                 TextAnchor.UpperCenter, "Lines");
             lines.horizontalOverflow = HorizontalWrapMode.Wrap;
             lines.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -80), new Vector2(840, 140));
@@ -69,9 +73,23 @@ namespace SevenSteps.Game.UI
             scroll.movementType = ScrollRect.MovementType.Clamped;
             scroll.scrollSensitivity = 30f;
 
-            var close = Ui.MakeButton(panel.transform, "닫기 (Esc)", 20, () => CloseRequested?.Invoke(), out _, "Close");
+            var close = Ui.MakeButton(panel.transform, "", 20, () => CloseRequested?.Invoke(), out closeLabel, "Close");
             ((RectTransform)close.transform).Place(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 22), new Vector2(200, 44));
             root.SetActive(false);
+        }
+
+        /// Title, game name and close button in the current language (credits.*, 13.2), role fonts (13.4). Call once, then
+        /// on Localizer.Changed. The credit lines and license texts stay as written (names, URLs, license terms).
+        public void Apply(Localizer loc)
+        {
+            if (loc == null) throw new System.ArgumentNullException(nameof(loc));
+            var body = Ui.Theme.FontFor(loc.Current, FontRole.Body);
+            title.text = loc.Get("credits.title");
+            title.font = Ui.Theme.FontFor(loc.Current, FontRole.Title);
+            lines.text = loc.Get("credits.game") + "\n\n" + creditLines;
+            lines.font = body;
+            closeLabel.text = loc.Get("credits.close");
+            closeLabel.font = body;
         }
 
         public void Show()

@@ -1,6 +1,19 @@
 {
   "entries": [
-    { "key": "hud.stage", "text": "Stage {0:00}" },
+    { "key": "title.name", "text": "Seven Steps" },
+    { "key": "title.subtitle", "text": "A puzzle of lucky sevens" },
+    { "key": "title.tagline", "text": "Seven steps for each body. The seventh step is lucky." },
+    { "key": "title.start", "text": "Start (Enter)" },
+    { "key": "title.settings", "text": "Settings" },
+    { "key": "title.credits", "text": "Credits" },
+
+    { "key": "stageselect.head", "text": "Select Stage" },
+    { "key": "stageselect.back", "text": "Back (Esc)" },
+    { "key": "stageselect.settings", "text": "Settings" },
+    { "key": "stageselect.cleared", "text": "Cleared" },
+    { "key": "stageselect.best_bodies", "text": ", {0} brothers" },
+
+    { "key": "hud.stage", "text": "{0:00}" },
     { "key": "hud.traveller_1", "text": "Teal traveller" },
     { "key": "hud.traveller_2", "text": "Ochre traveller" },
     { "key": "hud.traveller_3", "text": "Russet traveller" },
@@ -65,6 +78,19 @@
     { "key": "result.chapter_done", "text": "Leaving {0}" },
     { "key": "result.journey_done", "text": "The three brothers reached the stone circle" },
 
-    { "key": "board.exit", "text": "EXIT" }
+    { "key": "board.exit", "text": "EXIT" },
+
+    { "key": "settings.title", "text": "Settings" },
+    { "key": "settings.master", "text": "Master volume" },
+    { "key": "settings.sfx", "text": "Sound effects" },
+    { "key": "settings.telemetry", "text": "Send play data" },
+    { "key": "settings.telemetry_note", "text": "Only anonymous play data (moves, clears) is sent. No names or accounts." },
+    { "key": "settings.on", "text": "On" },
+    { "key": "settings.off", "text": "Off" },
+    { "key": "settings.close", "text": "Close (Esc)" },
+
+    { "key": "credits.title", "text": "Credits" },
+    { "key": "credits.game", "text": "Seven Steps" },
+    { "key": "credits.close", "text": "Close (Esc)" }
   ]
 }

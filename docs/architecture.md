@@ -474,7 +474,7 @@ else flow.Go(AppState.Title);
 | 앱 흐름 | `AppFlow` | 앱 전체 |
 | 진입 경로 | `EntryTracker` (Game 어셈블리) | 앱 전체 |
 
-**`LaunchOptions` (2026-11-09 캡슐화)**: 읽기 전용 속성 `Level`(1부터, 0 = 없음), `Replay`, `Screenshot`, `TelemetryOff`, `TelemetryUrl`, `DirectToGame`, `OpenStageSelect`(`-stageselect`), `OpenCredits`(`-credits`), `Warnings`.
+**`LaunchOptions` (2026-11-09 캡슐화)**: 읽기 전용 속성 `Level`(1부터, 0 = 없음), `Replay`, `Screenshot`, `TelemetryOff`, `TelemetryUrl`, `DirectToGame`, `OpenStageSelect`(`-stageselect`), `OpenCredits`(`-credits`), `Language`(`-lang`, 13.3), `SmokeView`(`-smoke board|empty` / `?smoke=`, 2026-11-10 feat/view 26d60dc: `Board` = 하늘·행성 없이 카메라 #FF00FF로 지움(board-pixels.ps1 측정용), `Empty` = 보드도 숨긴 음성 대조. 상태·리플레이·텔레메트리는 그대로, 잘못된 값은 `Warnings`), `Warnings`.
 - 바꿀 수 있는 곳은 두 메서드뿐: `TakeReplay()`(리플레이를 한 번만 꺼내고 비움), `UseEditorStart(level, replay)`(에디터에서 Game 씬 직접 Play: 실행 인자·URL이 없을 때만 인스펙터 값을 씀, 인스펙터 레벨을 썼으면 true, `level < 1`이면 예외).
 - 잘못된 값은 외부 입력이라 예외가 아니다: 숫자가 아니거나 1 미만인 `level`, 값이 없는 플래그, `off`/`0`/http(s)가 아닌 `telemetry`는 버리고 `Warnings`에 한 줄씩 남긴다. Contracts는 로그하지 않고 `Bootstrap`이 로그한다. 알 수 없는 인자·URL 키는 조용히 무시한다(Unity 자체 인자, `artfx` 등). 스테이지 수를 넘는 `level`은 S2에서 부트스트랩이 경고 후 보정한다.
 
@@ -649,6 +649,8 @@ else flow.Go(AppState.Title);
 
 **아트 프리뷰 이전**: `RuinsHengeEnvironment`(지금 `FindFirstObjectByType<GameController>` + `LateUpdate` 폴링 + 명령줄 직접 파싱 + 하늘을 카메라에 맞춰 매 프레임 크기 조정)를 `SkyPreset.skyPrefab`과 `planetPrefab`(`IStageEnvironment.Fit`)으로 나눈다. `artfx=off`/`-artfxoff`는 `LaunchOptions`가 흡수(씬 플로우 S1). 프리뷰 조명 값(키 `#FFE2B9` 2.0, 필 `#A8CFFA` 0.55, 림 `#E4CEFF` 0.28)은 `LightingPreset` 에셋으로.
 
+**머티리얼 교체(feat/view cfde7f2)**: `ChapterMaterials.Apply(root, chapter)`가 `materialOverrides`를 보드 조각·하늘·행성 인스턴스에 한 번씩 적용하고, 행성은 `Fit` 뒤 다시 적용한다. 그래서 **환경 프리팹(`planetPrefab`)은 렌더러를 `Fit` 안에서만 만든다**(`Start`/`Awake`/`Update`에서 만들면 교체를 비켜 간다). 하늘(`RuinsHengeSky`)은 메시를 `Start`에서 카메라 밑에 만들어 교체가 닿지 않는다 — 하늘 색은 하늘 프리팹 필드로 바꾼다.
+
 **검사**: `TileSetValidator`가 `ChapterPreset`도 본다: id 비었거나 중복이면 오류, `tileSet` 없으면 오류, 빈 머티리얼 교체 오류, `lighting`·`sky` 없음 경고, `planetPrefab` 루트에 `IStageEnvironment` 없으면 경고. `levels.json` `chapter` id가 `AppConfig.chapters`에 다 있는지는 필드가 생기면 추가.
 
 **WebGL 예산**: 챕터 에셋은 `AppConfig.chapters` 참조로 모두 빌드에 들어간다(Addressables 안 씀). 행성을 늘리면 빌드 크기를 잰다. 1280×720 draw call 400 안팎(유적 레벨 8: 403). 바닥·벽은 SRP Batcher, 하늘·장식은 결합 메시. 후처리는 Bloom·톤매핑까지(Mobile 렌더러).
@@ -687,6 +689,7 @@ else flow.Go(AppState.Title);
 
 ### 13.3 언어 설정
 - `SettingsData.language` 값은 `"ko"`/`"en"`. **첫 실행**(설정 저장 없음): `SaveSystem`이 `Application.systemLanguage`로 정한다(Korean → ko, 그 밖 en). 읽기는 `SaveSystem.Language`(모르는 값이면 ko), 바꾸기는 `SaveSystem.SetLanguage(lang)`(바로 저장 + `SettingsChanged`). 구현됨.
+- **언어를 고른 적 있음**(2026-11-10, 씬 플로우 요청, 첫 실행 언어 선택 화면): `SettingsData.languageChosen`(bool, 기본 false), 읽기 `SaveSystem.LanguageChosen`. `SetLanguage`만 true로 만든다(설정 토글·선택 화면 모두 `SetLanguage`). 시스템 언어 기본값·다른 설정 저장은 바꾸지 않는다. 이 필드 이전의 저장은 false로 읽혀 기존 플레이어에게도 선택 화면이 한 번 나온다(의도: 아직 고른 적이 없음). Title은 `!LanguageChosen && launch.Language == null`일 때 선택 화면을 먼저 띄운다(`-lang`/`?lang=` 실행은 띄우지 않고 저장도 하지 않는다). 선택 화면의 "계속"은 바꾸지 않았어도 지금 보이는 언어로 `SetLanguage`를 부른다(그래야 다음 실행에 다시 안 나온다), 그다음 `Localizer.Set`.
 - 실행 인자 `-lang en`/URL `?lang=en`(플레이테스트·스모크용, `LaunchOptions.Language`(`Language?`, null = 저장된 설정), 저장하지 않음, 잘못된 값은 `Warnings`). 구현됨. 이번 실행의 언어 = `launch.Language ?? save.Language`.
 - 바꾸면 즉시 반영: `Localizer.Changed` → 뷰가 다시 그린다(코드 생성 UI는 `Refresh`, 프리팹 뷰는 텍스트 갱신 메서드). 씬 다시 읽기 없음.
 
@@ -774,3 +777,5 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 | 2026-11-10 | 아키텍트 | 6.4·13.5 `chapters.json` `tagline`(행성 선택 한 줄, 리드 요청): `ChapterInfo.tagline`/`ChapterText.tagline`/`Tagline(lang)`(ko가 비면 모든 언어 `""`). export: 한 챕터라도 ko tagline이 있으면 모든 챕터 ko + 모든 번역 tagline 필수, 없으면 경고. `Data/chapters.json`에 빈 `tagline` 필드가 생김. 영향: 레벨 디자인(`design/levels/chapters.json` 값 채움, ko·en 함께), 씬 플로우(행성 선택 표시, `LocalizationCheck` 글꼴 검사에 tagline 추가), 게임플레이/UI 없음. EditMode `ChapterTaglineIsOptionalUntilFilled` |
 | 2026-11-10 | 아키텍트 | 12.8 챕터 프리셋 적용 반영(feat/view 5e0a1cb 검토 승인): `AppConfig.chapters` 7개 + `AppConfig.tileSet` 비움, 첫 세트 `TileSetFor`, 검증기 조건. 공용 API 변경 없음 |
 | 2026-11-10 | 아키텍트 | 2장 `SevenSteps.Art.Preview`(`Art/Test/`, defineConstraints UNITY_EDITOR 또는 SEVENSTEPS_ART_PREVIEW) 추가, `SevenSteps.Art.Editor`가 참조. 정식 Windows 빌드 Managed에 Preview dll 없음 확인. 영향: 아트(프리뷰 플레이어 빌드 두 곳에 `extraScriptingDefines` 한 줄 필요) |
+| 2026-11-10 | 아키텍트 | 13.3 `SettingsData.languageChosen`·`SaveSystem.LanguageChosen`(씬 플로우 요청, 첫 실행 언어 선택 화면). `SetLanguage`가 true로 저장, 이전 저장은 false. 영향: 씬 플로우(Title 선택 화면), 게임플레이/UI 없음(설정 토글은 이미 `SetLanguage`). EditMode `LanguageChosenOnlyBySetLanguage` |
+| 2026-11-10 | 게임플레이/UI·아키텍트 | 11장 `LaunchOptions.SmokeView`(Contracts enum `SmokeView` None/Board/Empty, `-smoke`/`?smoke=`; feat/view 26d60dc, 코어 합의, 아키텍트 검토 승인). 스모크 전용, 일반 실행 동작 변경 없음 |
