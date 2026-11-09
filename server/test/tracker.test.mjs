@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseLevel, newState, dispatch } from '../../prototypes/seven-steps/src/core.js';
@@ -84,11 +84,9 @@ test('levelKey is stable and matches the golden file', () => {
 });
 
 test('golden file is up to date with telemetry.js', () => {
-  const path = join(here, '../fixtures/telemetry.golden.json');
-  const beforeText = readFileSync(path, 'utf8').replace(/\r\n/g, '\n');
-  execFileSync(process.execPath, [join(here, '../tools/telemetry-golden.mjs')], { cwd: join(here, '../..') });
-  const afterText = readFileSync(path, 'utf8').replace(/\r\n/g, '\n');
-  assert.equal(afterText, beforeText, 'run node server/tools/telemetry-golden.mjs and commit the result');
+  // --check compares without writing, so the test leaves the checkout (CRLF on Windows) untouched.
+  const r = spawnSync(process.execPath, [join(here, '../tools/telemetry-golden.mjs'), '--check'], { cwd: join(here, '../..'), encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr || 'run node server/tools/telemetry-golden.mjs and commit the result');
 });
 
 test('level_start carries the chapter id only when the stage has one', () => {
