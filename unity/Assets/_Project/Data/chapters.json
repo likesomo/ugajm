@@ -5,49 +5,105 @@
       "planet": "이끼의 궤도",
       "concept": "고향. 잘린 석주와 이끼 덮인 작은 관측 유적",
       "intro": "하늘 지도의 맨 끝에 원형 제단이 그려져 있었다. 셋은 고향 행성을 떠난다.",
-      "artPreset": "moss"
+      "artPreset": "moss",
+      "text": [
+        {
+          "lang": "en",
+          "planet": "Mossy Orbit",
+          "concept": "Home: broken pillars and a small moss-covered observatory ruin",
+          "intro": "At the very edge of the sky map, someone drew a ring of stones. The three leave home."
+        }
+      ]
     },
     {
       "id": "hollow",
       "planet": "별구멍 달",
       "concept": "표면 곳곳이 뚫려 아래로 별이 보이는 달",
       "intro": "발밑으로 별이 보이는 달. 길이 끊긴 곳에서는 형제가 길이 된다.",
-      "artPreset": "hollow"
+      "artPreset": "hollow",
+      "text": [
+        {
+          "lang": "en",
+          "planet": "Starhole Moon",
+          "concept": "A moon full of holes with stars showing through",
+          "intro": "Stars show through the ground here. Where the path breaks, a brother becomes the path."
+        }
+      ]
     },
     {
       "id": "carved",
       "planet": "새김돌 행성",
       "concept": "기둥마다 숫자가 새겨진 계산의 행성",
       "intro": "옛 관측자들은 돌에 숫자를 새겼다. 몇 번째 걸음에 지나가야 하는지.",
-      "artPreset": "carved"
+      "artPreset": "carved",
+      "text": [
+        {
+          "lang": "en",
+          "planet": "Carved Stone World",
+          "concept": "A planet of counting, numbers carved into every pillar",
+          "intro": "The old watchers carved numbers into the stones: which step lets you through."
+        }
+      ]
     },
     {
       "id": "frost",
       "planet": "서리 위성",
       "concept": "얼어붙은 위성, 목재 난간과 서리 낀 석재",
       "intro": "얼어붙은 위성. 한 번 미끄러지면 벽에 닿을 때까지 멈추지 않는다.",
-      "artPreset": "frost"
+      "artPreset": "frost",
+      "text": [
+        {
+          "lang": "en",
+          "planet": "Frost Moon",
+          "concept": "A frozen moon, wooden rails and frosted stone",
+          "intro": "A frozen moon. Once you slide, you do not stop until something stops you."
+        }
+      ]
     },
     {
       "id": "joinery",
       "planet": "결구의 행성",
       "concept": "나무 결구와 놋쇠 레버로 움직이는 벽의 행성",
       "intro": "나무와 놋쇠로 짜인 행성. 일곱 번째 걸음이 장치를 돌린다.",
-      "artPreset": "joinery"
+      "artPreset": "joinery",
+      "text": [
+        {
+          "lang": "en",
+          "planet": "Joinery World",
+          "concept": "Walls that move on wooden joints and brass levers",
+          "intro": "A world of timber and brass. The seventh step turns the machinery."
+        }
+      ]
     },
     {
       "id": "crumble",
       "planet": "무너지는 행성",
       "concept": "금 간 바닥과 선돌 수를 세는 문이 있는 부서지는 행성",
       "intro": "발자국마다 바닥이 갈라진다. 문은 서 있는 선돌의 수를 센다.",
-      "artPreset": "crumble"
+      "artPreset": "crumble",
+      "text": [
+        {
+          "lang": "en",
+          "planet": "Crumbling World",
+          "concept": "Cracked floors and gates that count the standing stones",
+          "intro": "The floor cracks under every footstep. The gates count the stones left standing."
+        }
+      ]
     },
     {
       "id": "altar",
       "planet": "원형 제단",
       "concept": "선돌 원형 제단과 이끼 늪이 있는 마지막 행성",
       "intro": "지도의 끝. 늪 너머에 선돌들이 원을 그리고 서 있다.",
-      "artPreset": "altar"
+      "artPreset": "altar",
+      "text": [
+        {
+          "lang": "en",
+          "planet": "The Stone Circle",
+          "concept": "The last planet: a ring of standing stones beyond a mossy bog",
+          "intro": "The end of the map. Beyond the bog, standing stones form a circle."
+        }
+      ]
     }
   ]
 }

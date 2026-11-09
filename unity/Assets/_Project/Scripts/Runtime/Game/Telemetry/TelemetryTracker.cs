@@ -47,6 +47,10 @@ namespace SevenSteps.Game.Telemetry
 
         static readonly System.Collections.Generic.Dictionary<string, int> SolvedByMap = new System.Collections.Generic.Dictionary<string, int>();
 
+        /// Domain reload off (Enter Play Mode options): start each play session with an empty solver cache.
+        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => SolvedByMap.Clear();
+
         /// telemetry.js minBodiesOf: the solver's fewest bodies, cached by levelKey; 0 when the level has no solution.
         static int SolvedMinBodies(int levelNumber, Level level)
         {
@@ -120,6 +124,9 @@ namespace SevenSteps.Game.Telemetry
             if (cmd.Type == CommandType.Restart)
             {
                 if (run.Done) { LevelStart(after, L, before.Level.Name, N.Via.Again); return; }
+                // A restart at the stage start (no Prev: fresh, or undone back to it) changes nothing: no event, not counted
+                // (docs/architecture.md 6.5, telemetry.js; the board counts restarts the same way).
+                if (before.Prev == null) return;
                 Emit(Where(new TelemetryEvent(N.Types.Restart), before).With("moves", run.Moves));
                 run.Restarts++;
                 return;
