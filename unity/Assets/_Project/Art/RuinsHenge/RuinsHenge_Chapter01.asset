@@ -339,6 +339,23 @@ MonoBehaviour:
     deactivateTrigger: 
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+  mud:
+    prefab: {fileID: 0}
+    offset: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 0, y: 0, z: 0}
+    randomYaw90: 0
+    activeChild: 
+    inactiveChild: 
+    materialTarget: 
+    activeMaterial: {fileID: 0}
+    inactiveMaterial: {fileID: 0}
+    appearTrigger: 
+    vanishTrigger: 
+    activateTrigger: 
+    deactivateTrigger: 
+    labelOffset: {x: 0, y: 0, z: 0}
+    activeLabelOffset: {x: 0, y: 0, z: 0}
   player:
     prefab: {fileID: 7492479727465727844, guid: 904b9ce5725326b44b8d9ff428e54d7e, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -441,3 +458,105 @@ MonoBehaviour:
     deactivateTrigger: 
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+  playerBodies:
+  - prefab: {fileID: 7492479727465727844, guid: 904b9ce5725326b44b8d9ff428e54d7e, type: 3}
+    offset: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 1, y: 1, z: 1}
+    randomYaw90: 0
+    activeChild: 
+    inactiveChild: 
+    materialTarget: 
+    activeMaterial: {fileID: 0}
+    inactiveMaterial: {fileID: 0}
+    appearTrigger: 
+    vanishTrigger: 
+    activateTrigger: 
+    deactivateTrigger: 
+    labelOffset: {x: 0, y: 1.04, z: 0}
+    activeLabelOffset: {x: 0, y: 0, z: 0}
+  - prefab: {fileID: 4785607976043798300, guid: cc24480b19c697749b73f5d48da2499b, type: 3}
+    offset: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 1, y: 1, z: 1}
+    randomYaw90: 0
+    activeChild: 
+    inactiveChild: 
+    materialTarget: 
+    activeMaterial: {fileID: 0}
+    inactiveMaterial: {fileID: 0}
+    appearTrigger: 
+    vanishTrigger: 
+    activateTrigger: 
+    deactivateTrigger: 
+    labelOffset: {x: 0, y: 1.04, z: 0}
+    activeLabelOffset: {x: 0, y: 0, z: 0}
+  - prefab: {fileID: 6758376875444796199, guid: 0d2b6d6f7bc6a514ebf5cbe0de340ba4, type: 3}
+    offset: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 1, y: 1, z: 1}
+    randomYaw90: 0
+    activeChild: 
+    inactiveChild: 
+    materialTarget: 
+    activeMaterial: {fileID: 0}
+    inactiveMaterial: {fileID: 0}
+    appearTrigger: 
+    vanishTrigger: 
+    activateTrigger: 
+    deactivateTrigger: 
+    labelOffset: {x: 0, y: 1.04, z: 0}
+    activeLabelOffset: {x: 0, y: 0, z: 0}
+  statueBodies:
+  - prefab: {fileID: 1447245662685483513, guid: e31e5d2a20f82124f91cfbefb1bb045f, type: 3}
+    offset: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 1, y: 1, z: 1}
+    randomYaw90: 0
+    activeChild: 
+    inactiveChild: 
+    materialTarget: 
+    activeMaterial: {fileID: 0}
+    inactiveMaterial: {fileID: 0}
+    appearTrigger: 
+    vanishTrigger: 
+    activateTrigger: 
+    deactivateTrigger: 
+    labelOffset: {x: 0, y: 0, z: 0}
+    activeLabelOffset: {x: 0, y: 0, z: 0}
+  - prefab: {fileID: 1447245662685483513, guid: e31e5d2a20f82124f91cfbefb1bb045f, type: 3}
+    offset: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 1, y: 1, z: 1}
+    randomYaw90: 0
+    activeChild: 
+    inactiveChild: 
+    materialTarget: 
+    activeMaterial: {fileID: 0}
+    inactiveMaterial: {fileID: 0}
+    appearTrigger: 
+    vanishTrigger: 
+    activateTrigger: 
+    deactivateTrigger: 
+    labelOffset: {x: 0, y: 0, z: 0}
+    activeLabelOffset: {x: 0, y: 0, z: 0}
+  - prefab: {fileID: 1447245662685483513, guid: e31e5d2a20f82124f91cfbefb1bb045f, type: 3}
+    offset: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 1, y: 1, z: 1}
+    randomYaw90: 0
+    activeChild: 
+    inactiveChild: 
+    materialTarget: 
+    activeMaterial: {fileID: 0}
+    inactiveMaterial: {fileID: 0}
+    appearTrigger: 
+    vanishTrigger: 
+    activateTrigger: 
+    deactivateTrigger: 
+    labelOffset: {x: 0, y: 0, z: 0}
+    activeLabelOffset: {x: 0, y: 0, z: 0}
+  bodyColors:
+  - {r: 0.3372549, g: 0.54901963, b: 0.53333336, a: 1}
+  - {r: 0.7254902, g: 0.6039216, b: 0.34117648, a: 1}
+  - {r: 0.7254902, g: 0.42352942, b: 0.34901962, a: 1}

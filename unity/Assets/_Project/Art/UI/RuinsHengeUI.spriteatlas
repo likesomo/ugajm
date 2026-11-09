@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: RuinsHengeUI
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings: []
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 0
+      enableTightPacking: 0
+      enableAlphaDilation: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: -8619288524255508097, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: -7786063599247119672, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: -5730984250091439851, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: -8833158543952631988, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: 3912379694211042956, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: 3802091392676919337, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: -1599458904988553923, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: 5123317806511552220, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: 3475012551155145360, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: 4230216764240656230, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: 6493222095853719535, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: -877065831318381754, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: -4650518636092720140, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: 8184383529751792328, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: 425597936212420307, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: 2208648326410687911, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    - {fileID: -4730573424505813790, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+    packedSpriteRenderDataKeys: []
+  m_MasterAtlas: {fileID: 0}
+  m_RenderDataMap: {}
+  m_Tag: RuinsHengeUI
+  m_IsVariant: 0
+  m_Guid: 00000000000000000000000000000000

@@ -31,37 +31,6 @@ namespace SevenSteps.Contracts
         public void Flush() { }
     }
 
-    /// Stage progress. Index = 0-based stage in levels.json order.
-    [Serializable]
-    public sealed class ProgressData
-    {
-        public int version = 1;
-        public List<int> cleared = new List<int>();
-        /// Fewest bodies used to clear each stage; parallel to bestStage.
-        public List<int> bestStage = new List<int>();
-        public List<int> bestBodies = new List<int>();
-        public int lastStage;
-        /// How many times each stage was started on this device (level_start.attempt). Index = stage.
-        public List<int> starts = new List<int>();
-
-        /// Count one more start and return the attempt number (1 = first).
-        public int CountStart(int stage)
-        {
-            while (starts.Count <= stage) starts.Add(0);
-            return ++starts[stage];
-        }
-
-        public bool IsCleared(int stage) => cleared.Contains(stage);
-
-        public void MarkCleared(int stage, int bodiesUsed)
-        {
-            if (!cleared.Contains(stage)) { cleared.Add(stage); cleared.Sort(); }
-            int k = bestStage.IndexOf(stage);
-            if (k < 0) { bestStage.Add(stage); bestBodies.Add(bodiesUsed); }
-            else if (bodiesUsed < bestBodies[k]) bestBodies[k] = bodiesUsed;
-        }
-    }
-
     /// User settings.
     [Serializable]
     public sealed class SettingsData
@@ -79,15 +48,20 @@ namespace SevenSteps.Contracts
 
     /// <summary>
     /// Progress and settings as JSON in two PlayerPrefs keys. Both survive a missing or broken value (defaults).
-    /// v0 save key "seven-steps-cleared" (comma list) is migrated on first load.
+    /// Progress v0 (key "seven-steps-cleared") and v1 (stage numbers) are migrated to v2 (stage names) on load and saved
+    /// at once; the original is kept under <see cref="ProgressBackupKey"/> (docs/architecture.md 11.3.1). A progress
+    /// save from a newer build is not overwritten: this run starts from defaults and does not save progress.
     /// </summary>
     public sealed class SaveSystem
     {
         public const string ProgressKey = "seven-steps.progress";
         public const string SettingsKey = "seven-steps.settings";
+        public const string ProgressBackupKey = "seven-steps.progress.v1";
         const string LegacyClearedKey = "seven-steps-cleared";
 
         readonly ISaveStore store;
+        /// The stored progress is from a newer build: keep it, do not write over it.
+        readonly bool progressReadOnly;
 
         public ProgressData Progress { get; private set; }
         public SettingsData Settings { get; private set; }
@@ -98,11 +72,16 @@ namespace SevenSteps.Contracts
         public SaveSystem(ISaveStore store)
         {
             this.store = store ?? throw new ArgumentNullException(nameof(store));
-            Progress = Read<ProgressData>(ProgressKey) ?? MigrateLegacy();
+            Progress = LoadProgress(out progressReadOnly);
             Settings = Read<SettingsData>(SettingsKey) ?? new SettingsData();
         }
 
-        public void SaveProgress() { store.Set(ProgressKey, JsonUtility.ToJson(Progress)); store.Flush(); }
+        public void SaveProgress()
+        {
+            if (progressReadOnly) return; // a newer build's save stays as it is (warned on load)
+            store.Set(ProgressKey, JsonUtility.ToJson(Progress));
+            store.Flush();
+        }
 
         public void SaveSettings()
         {
@@ -149,12 +128,44 @@ namespace SevenSteps.Contracts
             catch (ArgumentException) { return null; }
         }
 
-        ProgressData MigrateLegacy()
+        [Serializable]
+        sealed class VersionProbe { public int version; }
+
+        ProgressData LoadProgress(out bool readOnly)
         {
-            var p = new ProgressData();
-            foreach (var part in store.Get(LegacyClearedKey).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
-                if (int.TryParse(part, out int k) && !p.cleared.Contains(k)) p.cleared.Add(k);
-            p.cleared.Sort();
+            readOnly = false;
+            string json = store.Get(ProgressKey);
+            if (string.IsNullOrEmpty(json))
+            {
+                string v0 = store.Get(LegacyClearedKey);
+                if (string.IsNullOrEmpty(v0)) return new ProgressData();
+                return Migrated(ProgressMigration.FromV0(v0), v0);
+            }
+            VersionProbe probe;
+            try { probe = JsonUtility.FromJson<VersionProbe>(json); }
+            catch (ArgumentException) { probe = null; }
+            if (probe == null)
+            {
+                Debug.LogWarning("[SevenSteps] Progress save is not valid JSON: starting from no progress");
+                return new ProgressData();
+            }
+            if (probe.version == ProgressData.Version) return Read<ProgressData>(ProgressKey) ?? new ProgressData();
+            if (probe.version > ProgressData.Version)
+            {
+                Debug.LogWarning($"[SevenSteps] Progress save version {probe.version} is newer than this build ({ProgressData.Version}): not loaded, not overwritten");
+                readOnly = true;
+                return new ProgressData();
+            }
+            var v1 = Read<ProgressMigration.V1>(ProgressKey);
+            return v1 == null ? new ProgressData() : Migrated(ProgressMigration.FromV1(v1), json);
+        }
+
+        /// Keep the original, write v2 now.
+        ProgressData Migrated(ProgressData p, string original)
+        {
+            store.Set(ProgressBackupKey, original);
+            store.Set(ProgressKey, JsonUtility.ToJson(p));
+            store.Flush();
             return p;
         }
     }

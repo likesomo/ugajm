@@ -1,6 +1,7 @@
 using System;
 using NUnit.Framework;
 using SevenSteps.Contracts;
+using SevenSteps.Core;
 
 namespace SevenSteps.Tests
 {
@@ -37,17 +38,18 @@ namespace SevenSteps.Tests
             var store = new MemoryStore();
             store.Set("seven-steps-cleared", "0,2");
             var save = new SaveSystem(store);
-            CollectionAssert.AreEqual(new[] { 0, 2 }, save.Progress.cleared);
+            Assert.AreEqual(2, save.Progress.ClearedCount, "v0 list migrated by the frozen 17-stage names (11.3.1)");
+            var five = Level.Parse(ProgressMigration.V1StageNames[5], "", 3, new[] { "#####", "#S.E#", "#####" });
 
-            save.Progress.MarkCleared(5, 3);
-            save.Progress.MarkCleared(5, 2);
+            save.Progress.MarkCleared(five, 3);
+            save.Progress.MarkCleared(five, 2);
             save.Settings.sfxVolume = 0.25f;
             save.SaveProgress();
             save.SaveSettings();
 
             var again = new SaveSystem(store);
-            Assert.IsTrue(again.Progress.IsCleared(5));
-            Assert.AreEqual(2, again.Progress.bestBodies[again.Progress.bestStage.IndexOf(5)]);
+            Assert.IsTrue(again.Progress.IsCleared(five));
+            Assert.AreEqual(2, again.Progress.BestBodies(five));
             Assert.AreEqual(0.25f, again.Settings.sfxVolume);
         }
 

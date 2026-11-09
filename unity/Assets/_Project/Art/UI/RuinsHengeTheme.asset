@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1092f91d2e0d6e14ca88dd49c0901eef, type: 3}
+  m_Name: RuinsHengeTheme
+  m_EditorClassIdentifier: SevenSteps.Game::SevenSteps.Game.UI.UiTheme
+  font: {fileID: 12800000, guid: 6726afba0e987134bb60bf8a871ea91c, type: 3}
+  ink: {r: 0.93333334, g: 0.9019608, b: 0.83137256, a: 1}
+  dim: {r: 0.627451, g: 0.6901961, b: 0.7294118, a: 1}
+  gold: {r: 0.7882353, g: 0.67058825, b: 0.41960785, a: 1}
+  stone: {r: 0.7254902, g: 0.7490196, b: 0.7529412, a: 1}
+  buttonBg: {r: 0.14901961, g: 0.23137255, b: 0.28235295, a: 1}
+  panelBg: {r: 0.078431375, g: 0.13333334, b: 0.21960784, a: 1}
+  plateA: {r: 0.90588236, g: 0.43529412, b: 0.31764707, a: 1}
+  plateB: {r: 0.16470589, g: 0.6156863, b: 0.56078434, a: 1}
+  plateC: {r: 0.5568628, g: 0.49019608, b: 0.74509805, a: 1}
+  settingsPanel: {fileID: 735352942397860819, guid: 32d6c408d3abcbf42b220771e9f919bd, type: 3}
+  resultPanel: {fileID: 5186985129672267715, guid: 5ee130465858b2147b36bb973a61f4ef, type: 3}
