@@ -6,6 +6,13 @@ namespace SevenSteps.Contracts
     public enum BoardProjection { TopDown, Quarter }
 
     /// <summary>
+    /// How a statue left by KEEP (or by the last body) looks (docs/architecture.md 12.6, art bible "KEEP menhir").
+    /// Neutral: one plain granite menhir (<see cref="TileSet.statue"/>) for every body, the art bible default.
+    /// SiblingTrace: per body index from <see cref="TileSet.statueBodies"/> (a thin trace in that sibling's color).
+    /// </summary>
+    public enum KeepLook { Neutral, SiblingTrace }
+
+    /// <summary>
     /// Camera preset of an art set. The board grid is the same in every projection; only the camera and the prefabs change.
     /// The view frames the whole board inside the HUD-free band using these values.
     /// </summary>
@@ -79,7 +86,7 @@ namespace SevenSteps.Contracts
         [Header("Per body (triplets, docs/architecture.md 12.6)")]
         [Tooltip("Player look per body index: 0 = first body (A), 1 = B, 2 = C. Cycles when a stage has more bodies. Empty or no prefab = player.")]
         public TileVisual[] playerBodies = new TileVisual[0];
-        [Tooltip("Statue left by KEEP (or by the last body), per body index: stone with that sibling's trace. Cycles like playerBodies. Empty or no prefab = statue.")]
+        [Tooltip("Statue left by KEEP (or by the last body), per body index: stone with that sibling's trace. Used only when keepLook = SiblingTrace. Cycles like playerBodies. Empty or no prefab = statue.")]
         public TileVisual[] statueBodies = new TileVisual[0];
         [Tooltip("HUD body icon color per body index (A teal #568C88, B ochre #B99A57, C rust #B96C59; docs 12.6). Cycles like playerBodies.")]
         public Color[] bodyColors =
@@ -88,6 +95,8 @@ namespace SevenSteps.Contracts
             new Color(0xB9 / 255f, 0x9A / 255f, 0x57 / 255f),
             new Color(0xB9 / 255f, 0x6C / 255f, 0x59 / 255f),
         };
+        [Tooltip("KEEP menhir look: Neutral = statue for every body (art bible default), SiblingTrace = statueBodies per body (docs 12.6).")]
+        public KeepLook keepLook = KeepLook.Neutral;
 
         /// HUD icon color for a body index. White when no colors are set.
         public Color BodyColor(int bodyIndex) =>
@@ -96,8 +105,10 @@ namespace SevenSteps.Contracts
         /// Player look for a body index (<see cref="BodyIndex.Current"/>). Falls back to <see cref="player"/>.
         public TileVisual PlayerFor(int bodyIndex) => Cycle(playerBodies, bodyIndex, player);
 
-        /// Statue look for the body that left it (<see cref="BodyIndex.OfStatue"/>). Falls back to <see cref="statue"/>.
-        public TileVisual StatueFor(int bodyIndex) => Cycle(statueBodies, bodyIndex, statue);
+        /// Statue look for the body that left it (<see cref="BodyIndex.OfStatue"/>): <see cref="statue"/> when
+        /// <see cref="keepLook"/> is Neutral, else <see cref="statueBodies"/> by body index (falls back to statue).
+        public TileVisual StatueFor(int bodyIndex) =>
+            keepLook == KeepLook.SiblingTrace ? Cycle(statueBodies, bodyIndex, statue) : statue;
 
         static TileVisual Cycle(TileVisual[] arr, int k, TileVisual fallback)
         {
