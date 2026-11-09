@@ -1,7 +1,7 @@
 # 일곱 걸음 씬 구조와 화면 흐름 — 조사·진단·제안 (1단계)
 
 담당: 씬 플로우 엔지니어 (`feat/scene-flow`). 브리프: `agents/scene-flow.md`.
-상태: **아키텍트 검토 완료(2026-11-08, 방향 승인, S0~S2 조건부 승인, 기록 `docs/reviews/2026-11-08-scene-flow-proposal.md` feat/architecture b3b15ae). 리드 결정안 사용자 승인 대기. 승인 전 구현하지 않는다.** 검토 반영 내용은 8장.
+상태: **사용자 승인(2026-11-08), 2단계 구현 중. 진행 상태는 5.2.** 아키텍트 검토(방향 승인, S0~S2 조건부 승인, 기록 `docs/reviews/2026-11-08-scene-flow-proposal.md`) 반영 내용은 8장.
 진단 기준 코드: 로컬 `7lucky` f367750 (feat/view 5a2180a "Esc closes settings" 포함). 줄 번호는 이 커밋 기준이다. 5a2180a는 아직 origin/7lucky(29b1f4a)에 없다. 그래서 지금 브랜치에서는 `GameController.cs` 222줄 이후가 5줄, `TitleScreen.cs` 84줄 이후가 4줄, `HudView.cs`는 약 5줄 앞당겨진다.
 
 ---
@@ -334,6 +334,19 @@ Scene root (MonoBehaviour 하나, 조립만)
 | **S5 페이드 전환** | `FadeSceneLoader`(`LoadSceneAsync` + 코루틴, DDOL 러너 자식 캔버스). 같은 씬 전이는 페이드 없음 | 여유 있으면 | 가짜 로더 지연 테스트(S2) 재사용. 스모크 스크린샷 대기 시간 확인(`ScreenshotOnce` 1.5초). **build-webgl + smoke-webgl**(보드 픽셀 기준 500 이상) | 없음 |
 | **S6 UI 프리팹 + 테마** | 화면별로 코드 생성 → 프리팹(`UI/**`) + 뷰 직렬화 참조(`OnValidate` 검사) + `UiTheme` SO(색·글꼴·스프라이트). 순서: Settings → Result → Title/StageSelect → HUD. `Ui.cs` 정적 색은 `UiTheme` 기본값으로 | 일부(Settings·Result), 나머지는 테마 확정 후 | `SceneFlowValidator`가 프리팹 필수 참조를 검사. 스모크 스크린샷 비교 | 없음 |
 
+### 5.2 진행 상태 (2단계 구현)
+
+사용자 승인(2026-11-08, 코디네이터). 기준: origin/7lucky 80b74cd(feat/view 5a2180a 합류 후).
+
+| 단계 | 커밋 | 결과 | 남은 것 |
+|---|---|---|---|
+| S0 ① 정적 초기화 | 5fdaf49 | compile OK, test 224/224(+3), build-win + smoke 7/7 OK | 아키텍트 검토(`Services.ResetForPlay`) |
+| S0 ③ `SceneFlowValidator` + `unity.sh scene-validate` | 971ae2f | scene-validate OK(0 오류). 첫 실행에서 `GameAssets.font` 누락을 잡음: 이 작업 공간에 `Assets/Shared` 정션이 없었다(`tools/link-shared-assets.ps1`로 해결). 즉 정션 없는 작업 공간의 빌드는 글자가 빠진 채 smoke를 통과한다 | 리드 검토(`unity.sh` 줄). `BuildTools` 빌드 전에 검증기 호출은 제안만(소유자 결정) |
+| S0 ④ `SampleScene` 삭제, `templateDefaultScene` → Boot | feb8fcb | 정션 연결 후 다시 compile·test 224/224·build-win·smoke 7/7 OK, 스크린샷에 글자 표시 확인 | `CLAUDE.md` "시작 씬" 줄 정리(리드) |
+| S0 ② 에디터 Play 두 번 재현(3.3 표) | — | 배치로는 Play 모드를 재현할 수 없어 미실시. 정적 초기화 자체는 `PlayResetTests`가 고정한다 | 에디터에서 Title·Game을 두 번씩 Play해 확인(사용자 또는 리드, 수동) |
+
+챕터 방향(2026-11-08 사용자): 챕터 = 우주 속 행성, 주인공 세쌍둥이. S4에서 `GameFlowController`에 챕터 전환 연출 자리(다음 스테이지의 chapter가 바뀌면 전환 오버레이), S6에서 `UiTheme`·조명·하늘을 챕터별 프리셋으로 고를 자리를 남긴다. 레벨 데이터 chapter 필드는 레벨 담당이 추가한다.
+
 **미루는 것(잼 이후)**: Additive 영구 씬, 오디오 매니저·배경음 DDOL, UI Toolkit, TextMeshPro 전환, 로딩 진행률 화면, Addressables, DI 컨테이너, PlayMode 자동 테스트(필요해지면 아키텍트가 `SevenSteps.Tests.PlayMode`를 만든다).
 
 ### 5.1 텔레메트리 시점 보존 (모든 단계)
@@ -410,3 +423,4 @@ Open Project 1은 미러의 파일 목록과 커밋 메시지만 확인했다(�
 |---|---|
 | 2026-11-08 | 1단계 최초 작성(조사·진단·제안). 구현 없음 |
 | 2026-11-08 | 아키텍트 검토 반영(8장): 참조 방향, 규칙 거부는 예외 아님, Core `Debug.Assert` 금지, WebGL 예외 지원, S0~S2 승인 조건, `OverlayStack`/`EntryTracker`는 `Game/Flow/`, `Entered` 보류, PlayMode asmdef 없음, smoke 리플레이 7개. origin/7lucky 29b1f4a 합침 |
+| 2026-11-09 | 구현 시작(사용자 승인). S0 ①③④ 커밋(5fdaf49, 971ae2f, feb8fcb), 진행 상태 5.2 추가. origin/7lucky 80b74cd 합침 |
