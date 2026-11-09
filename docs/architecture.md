@@ -649,6 +649,8 @@ else flow.Go(AppState.Title);
 
 **아트 프리뷰 이전**: `RuinsHengeEnvironment`(지금 `FindFirstObjectByType<GameController>` + `LateUpdate` 폴링 + 명령줄 직접 파싱 + 하늘을 카메라에 맞춰 매 프레임 크기 조정)를 `SkyPreset.skyPrefab`과 `planetPrefab`(`IStageEnvironment.Fit`)으로 나눈다. `artfx=off`/`-artfxoff`는 `LaunchOptions`가 흡수(씬 플로우 S1). 프리뷰 조명 값(키 `#FFE2B9` 2.0, 필 `#A8CFFA` 0.55, 림 `#E4CEFF` 0.28)은 `LightingPreset` 에셋으로.
 
+**머티리얼 교체(feat/view cfde7f2)**: `ChapterMaterials.Apply(root, chapter)`가 `materialOverrides`를 보드 조각·하늘·행성 인스턴스에 한 번씩 적용하고, 행성은 `Fit` 뒤 다시 적용한다. 그래서 **환경 프리팹(`planetPrefab`)은 렌더러를 `Fit` 안에서만 만든다**(`Start`/`Awake`/`Update`에서 만들면 교체를 비켜 간다). 하늘(`RuinsHengeSky`)은 메시를 `Start`에서 카메라 밑에 만들어 교체가 닿지 않는다 — 하늘 색은 하늘 프리팹 필드로 바꾼다.
+
 **검사**: `TileSetValidator`가 `ChapterPreset`도 본다: id 비었거나 중복이면 오류, `tileSet` 없으면 오류, 빈 머티리얼 교체 오류, `lighting`·`sky` 없음 경고, `planetPrefab` 루트에 `IStageEnvironment` 없으면 경고. `levels.json` `chapter` id가 `AppConfig.chapters`에 다 있는지는 필드가 생기면 추가.
 
 **WebGL 예산**: 챕터 에셋은 `AppConfig.chapters` 참조로 모두 빌드에 들어간다(Addressables 안 씀). 행성을 늘리면 빌드 크기를 잰다. 1280×720 draw call 400 안팎(유적 레벨 8: 403). 바닥·벽은 SRP Batcher, 하늘·장식은 결합 메시. 후처리는 Bloom·톤매핑까지(Mobile 렌더러).
