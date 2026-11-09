@@ -124,6 +124,9 @@ export class Tracker {
     const L = run.level;
     if (cmd.type === 'restart') {
       if (run.done) return this.levelStart(after, L, before.level.name, 'again');
+      // A restart at the stage start (no previous state: fresh, or undone back to it) changes nothing: not recorded or
+      // counted, like an undo with nothing to undo (docs/architecture.md 6.5).
+      if (!before.prev) return;
       this.send('restart', { ...this.where(before), moves: run.moves });
       run.restarts++;
       return;
