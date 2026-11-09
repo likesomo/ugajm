@@ -11,6 +11,7 @@ using UnityEditor.SceneManagement;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace SevenSteps.Art
 {
@@ -51,6 +52,7 @@ namespace SevenSteps.Art
                 m.SetTexture("_BaseMap",atlas);m.SetColor("_BaseColor",Color.white);
                 m.SetFloat("_UseAtlas",1);m.SetFloat("_UseMoss",role=="BaseAtlas"?1:0);
                 m.SetColor("_MossColor",Hex("6F8B4E"));m.SetFloat("_UseVertexColor",0);m.SetFloat("_Unlit",0);
+                if(role=="BaseAtlas")m.SetColor("_WallColor",Hex("60778A"));
                 if(role=="PlayerAtlas")m.SetColor("_BaseColor",Hex("DDD4BD"));
                 if(role=="MenhirAtlas"){m.SetFloat("_UseAtlas",0);m.SetTexture("_BaseMap",null);m.SetColor("_BaseColor",Hex("B9BFC0"));}
                 if(role=="MarkUnlit"){m.SetFloat("_UseAtlas",0);m.SetFloat("_UseVertexColor",1);m.SetFloat("_Unlit",1);}
@@ -62,7 +64,7 @@ namespace SevenSteps.Art
                 importer.globalScale=1;importer.useFileScale=true;importer.bakeAxisConversion=true;
                 importer.animationType=ModelImporterAnimationType.None;importer.importAnimation=false;
                 importer.importCameras=false;importer.importLights=false;importer.importBlendShapes=false;
-                importer.importNormals=ModelImporterNormals.Import;importer.isReadable=false;
+                importer.importNormals=ModelImporterNormals.Import;importer.isReadable=path.EndsWith("SS_Tile_Wall.fbx");
                 importer.materialImportMode=ModelImporterMaterialImportMode.ImportStandard;
                 foreach(var role in Roles)importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material),"SS_RH_M_"+role),Mats[role]);
                 importer.SaveAndReimport();
@@ -104,13 +106,22 @@ namespace SevenSteps.Art
                 model.GetComponentsInChildren<MeshFilter>(true).First(f=>f.name.EndsWith("__Body")).sharedMesh=original.sharedMesh;
             }
             var bounds=BoundsOf(root);
-            if(key=="Wall")model.transform.localScale=Vector3.Scale(model.transform.localScale,new Vector3(1,.65f,1));
+            if(key=="Wall")
+            {
+                model.transform.localScale=Vector3.Scale(model.transform.localScale,new Vector3(1,.75f,1));
+                foreach(var filter in model.GetComponentsInChildren<MeshFilter>())
+                {
+                    var mesh=UnityEngine.Object.Instantiate(filter.sharedMesh);var vertices=mesh.vertices;
+                    mesh.uv2=vertices.Select(v=>new Vector2(1,Mathf.Clamp01(v.y/.55f))).ToArray();
+                    filter.sharedMesh=StoreMesh(mesh,"WallSlate_"+filter.name);
+                }
+            }
             if(key.StartsWith("Player")||key=="Statue")model.transform.localScale*=.88f/bounds.size.y;
             else if(bounds.size.x>2||bounds.size.z>2)model.transform.localScale*=.96f/Mathf.Max(bounds.size.x,bounds.size.z);
             bounds=BoundsOf(root);
             bool flat=new[]{"Floor","FloorAlt","Ice","Cracked","Bridge"}.Contains(key);
             model.transform.localPosition+=new Vector3(-bounds.center.x,flat?-bounds.max.y:((key.StartsWith("Player")||key=="Statue")?-bounds.min.y:0),-bounds.center.z);
-            if(key.StartsWith("Player"))Ring(root.transform,"IdentityRing",key=="PlayerA"?Hex("568C88"):key=="PlayerB"?Hex("B99A57"):Hex("B96C59"),.30f,.028f);
+            if(key.StartsWith("Player"))Ring(root.transform,"IdentityRing",key=="PlayerA"?Hex("568C88"):key=="PlayerB"?Hex("B99A57"):Hex("B96C59"),.34f,.075f);
             if(key=="Pit"){var q=GameObject.CreatePrimitive(PrimitiveType.Cube);q.name="SpaceCavity";q.transform.SetParent(root.transform,false);q.transform.localPosition=new Vector3(0,-.09f,0);q.transform.localScale=new Vector3(.76f,.01f,.76f);UnityEngine.Object.DestroyImmediate(q.GetComponent<Collider>());q.GetComponent<Renderer>().sharedMaterial=Mats["MenhirAtlas"];}
             if(key=="Lever")
             {
@@ -154,18 +165,33 @@ namespace SevenSteps.Art
             if(cfg==null){cfg=ScriptableObject.CreateInstance<AppConfig>();AssetDatabase.CreateAsset(cfg,configPath);}
             cfg.tileSet=set;cfg.telemetryEndpoint="";cfg.telemetryOnByDefault=false;EditorUtility.SetDirty(cfg);
             var controller=UnityEngine.Object.FindFirstObjectByType<GameController>();controller.config=cfg;controller.overrideCamera=false;controller.startLevel=1;
-            RenderSettings.ambientMode=AmbientMode.Trilight;RenderSettings.ambientSkyColor=new Color(.35f,.45f,.62f);RenderSettings.ambientEquatorColor=new Color(.24f,.27f,.32f);RenderSettings.ambientGroundColor=new Color(.18f,.18f,.2f);RenderSettings.skybox=null;
+            RenderSettings.ambientMode=AmbientMode.Trilight;RenderSettings.ambientSkyColor=Hex("AFC9E7");RenderSettings.ambientEquatorColor=Hex("8A9CAF");RenderSettings.ambientGroundColor=Hex("67758A");RenderSettings.skybox=null;
             var cam=UnityEngine.Object.FindFirstObjectByType<Camera>();cam.backgroundColor=Hex("0C1735");cam.clearFlags=CameraClearFlags.SolidColor;
-            foreach(var light in UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None)){light.color=Hex("FFE1AF");light.intensity=1.4f;light.shadows=LightShadows.Soft;light.transform.rotation=Quaternion.Euler(45,-35,0);}
+            foreach(var light in UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None)){light.color=Hex("FFE2B9");light.intensity=2f;light.shadows=LightShadows.Soft;light.shadowStrength=.65f;light.transform.rotation=Quaternion.Euler(48,-35,0);}
+            AddLight("SpaceFill",Hex("A8CFFA"),.55f,new Vector3(32,135,0));AddLight("StarRim",Hex("E4CEFF"),.28f,new Vector3(20,175,0));
+            var cameraData=cam.GetUniversalAdditionalCameraData();cameraData.renderPostProcessing=true;cam.allowHDR=true;
+            PostProcess();
             // Decorative sibling gallery, outside the playable grid. Game actor remains owned by BoardView.
-            for(int i=-1;i<=1;i++)Spawn("Floor",new Vector3(i,0,-2.5f));
-            Spawn("PlayerB",new Vector3(-1,0,-2.5f));Spawn("PlayerC",new Vector3(0,0,-2.5f));Spawn("Statue",new Vector3(1,0,-2.5f));
+            var gallery=new GameObject("TripletShowcase").transform;
+            for(int i=-1;i<=1;i++)Spawn("Floor",new Vector3(i,0,0)).transform.SetParent(gallery,false);
+            Spawn("PlayerB",new Vector3(-1,0,0)).transform.SetParent(gallery,false);Spawn("PlayerC",new Vector3(0,0,0)).transform.SetParent(gallery,false);Spawn("Statue",new Vector3(1,0,0)).transform.SetParent(gallery,false);
+            gallery.position=new Vector3(0,0,-2.3f);
             controller.gameObject.AddComponent<RuinsHengeProbe>();
-            Planet();
-            for(int i=0;i<2;i++){var moon=GameObject.CreatePrimitive(PrimitiveType.Sphere);moon.name="DistantPlanet";moon.transform.position=new Vector3(i==0?-5.4f:5.4f,.8f,2.8f);moon.transform.localScale=Vector3.one*(i==0?1.2f:.8f);UnityEngine.Object.DestroyImmediate(moon.GetComponent<Collider>());moon.GetComponent<Renderer>().sharedMaterial=Mats[i==0?"FrostOpaque":"MetalAtlas"];UniformUV(moon,"Moon"+i,i==0?5:7);}
+            var env=new GameObject("RuinsHengeAtmosphere").AddComponent<RuinsHengeEnvironment>();env.surface=Mats["BaseAtlas"];env.space=Mats["MarkUnlit"];env.gallery=gallery;
             EditorSceneManager.SaveScene(scene,ScenePath);
             // SceneLoader uses the name Game. An art-owned alias avoids changing its common routing.
             EditorSceneManager.SaveScene(scene,"Assets/_Project/Art/Test/Game.unity",true);
+        }
+        static void AddLight(string name,Color color,float intensity,Vector3 rotation){var l=new GameObject(name,typeof(Light)).GetComponent<Light>();l.type=LightType.Directional;l.color=color;l.intensity=intensity;l.shadows=LightShadows.None;l.transform.rotation=Quaternion.Euler(rotation);}
+        static void PostProcess()
+        {
+            var path=Art+"/PreviewPostFX.asset";var profile=AssetDatabase.LoadAssetAtPath<VolumeProfile>(path);
+            if(profile==null){profile=ScriptableObject.CreateInstance<VolumeProfile>();AssetDatabase.CreateAsset(profile,path);}
+            T Get<T>() where T:VolumeComponent {if(profile.TryGet<T>(out var c))return c;c=profile.Add<T>(true);AssetDatabase.AddObjectToAsset(c,profile);return c;}
+            var bloom=Get<Bloom>();bloom.intensity.Override(.08f);bloom.threshold.Override(1.25f);bloom.scatter.Override(.4f);bloom.maxIterations.Override(2);bloom.downscale.Override(BloomDownscaleMode.Quarter);bloom.highQualityFiltering.Override(false);
+            var tone=Get<Tonemapping>();tone.mode.Override(TonemappingMode.Neutral);
+            var grade=Get<ColorAdjustments>();grade.postExposure.Override(.15f);grade.contrast.Override(5);grade.saturation.Override(8);
+            EditorUtility.SetDirty(profile);var volume=new GameObject("RuinsPreviewPostFX",typeof(Volume)).GetComponent<Volume>();volume.isGlobal=true;volume.priority=10;volume.sharedProfile=profile;
         }
         static Mesh StoreMesh(Mesh mesh,string name){var path=Art+"/Meshes/"+name+".asset";var old=AssetDatabase.LoadAssetAtPath<Mesh>(path);if(old==null){AssetDatabase.CreateAsset(mesh,path);return mesh;}EditorUtility.CopySerialized(mesh,old);UnityEngine.Object.DestroyImmediate(mesh);return old;}
         static void UniformUV(GameObject go,string name,int band){var mesh=UnityEngine.Object.Instantiate(go.GetComponent<MeshFilter>().sharedMesh);mesh.uv=Enumerable.Repeat(new Vector2((band+.5f)/8,.5f),mesh.vertexCount).ToArray();mesh.colors=Enumerable.Repeat(Color.black,mesh.vertexCount).ToArray();go.GetComponent<MeshFilter>().sharedMesh=StoreMesh(mesh,name);}

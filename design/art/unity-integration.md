@@ -1,5 +1,7 @@
 # RuinsHenge Unity 연결·테스트
 
+> 아래는1차 연결 기록이다. 최신 조명·벽 높이·색 링·행성 환경과 재검증 결과는 [2차 다듬기](unity-phase2.md)를 따른다.
+
 작업:2026-11-09, Unity6000.6.8f1. 아트 전용 생성기 `Assets/_Project/Art/Editor/RuinsHengeBuilder.cs`를 사용한다. 공용 AppConfig/씬/게임플레이 계약은 수정하지 않는다. 기본 Game 씬을 읽어 아트 소유 `Assets/_Project/Art/Test/RuinsHenge_Preview.unity`로 저장하고 별도 `Art/RuinsHenge/PreviewConfig.asset`을 연결한다.
 
 ## 재실행

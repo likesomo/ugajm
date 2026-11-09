@@ -69,6 +69,8 @@ Font: Jua by The Jua Project Authors (SIL Open Font License 1.1)
 ```
 # 유적×선돌×오리엔탈 — 2026-11-08
 
+Unity2차(2026-11-09)의 행성 외피·풀 카드·돌·원경 행성·성운·별은 `RuinsHengeEnvironment.cs`가 절차적으로 만든 메시/버텍스 색이다. 벽 스타일 Mesh와 확대 링도 자체 생성이며 추가 외부 에셋·텍스처는 사용하지 않았다.
+
 이번 제작의23모듈(초기21종+석재V2/V3)·RH_Atlas512.png는 `design/art/blender/build_ruins_henge.py`로 자체 생성했다. GPT 시안9종은 제작 참고이며 외부 CC0 에셋으로 분류하지 않는다. 외부 텍스처·모델 다운로드와 사용은 없었다.
 
 후보(미사용): [Mossy Rock](https://polyhaven.com/a/mossy_rock), [Leafy Grass](https://polyhaven.com/a/leafy_grass), [Stone Floor](https://polyhaven.com/a/stone_floor), [Weathered Brown Planks](https://polyhaven.com/a/weathered_brown_planks)는 [Poly Haven CC0](https://polyhaven.com/license), [WoodFloor051](https://ambientcg.com/view?id=WoodFloor051)은 [ambientCG CC0](https://docs.ambientcg.com/license/)이다. 상업 사용 가능하고 출처 표시 의무는 없으나 실제 사용 시 파일명·가공·다운로드 날짜를 이 문서에 추가한다.
