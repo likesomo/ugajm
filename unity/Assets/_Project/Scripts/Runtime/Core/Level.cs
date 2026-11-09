@@ -87,6 +87,11 @@ namespace SevenSteps.Core
         public int bodies;
         /// N of the statue-count doors (Q). 0 when the stage has none (missing in older files reads as 0).
         public int statueCount;
+        /// Chapter id from Data/chapters.json (docs/architecture.md 6.4), e.g. "moss". Empty or null = none yet
+        /// (runtime treats it as the first chapter). Not a rule: Core Level does not carry it.
+        public string chapter;
+        /// One-line story (the triplets' view), separate from the hint. Optional; empty or null = none.
+        public string story;
         public string[] map;
         public ExpectedDto expected;
 
