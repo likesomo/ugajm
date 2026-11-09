@@ -10,7 +10,7 @@
 
 ## 프로젝트 템플릿
 - URP 3D (Universal 3D blank). 렌더 파이프라인 에셋: `unity/Assets/Settings/PC_RPAsset.asset`, `Mobile_RPAsset.asset`
-- 시작 씬: `unity/Assets/Scenes/SampleScene.unity`
+- 씬: `unity/Assets/_Project/Scenes/` Boot(0) → Title → Game (`docs/scene-flow.md`). 템플릿 SampleScene은 삭제됨
 
 ## Unity 환경
 - 에디터: **Unity 6000.6.8f1** (`C:\Program Files\Unity\Hub\Editor\6000.6.8f1\Editor\Unity.exe`)
@@ -50,6 +50,7 @@ unity/Tools/unity.sh sfx          # 임시 효과음 11개 합성 → Assets/Sha
 unity/Tools/unity.sh setup        # 머티리얼·프리팹·GameAssets 생성, Game 씬(없을 때만), 빌드/플레이어 설정
 unity/Tools/unity.sh golden       # 규칙 골든값(core.js → Tests/Golden) + 텔레메트리 골든값(server/fixtures) 다시 생성. core.js 나 스테이지를 바꾸면 실행 후 커밋
 unity/Tools/unity.sh test         # EditMode 테스트 (Tests/EditMode) → reports/editmode-results.xml
+unity/Tools/unity.sh scene-validate   # 빌드 목록 = AppScenes, 씬 루트·필수 참조(폰트 등 공유 에셋 포함) 검사. build-win/build-webgl 도 빌드 전에 같은 검사를 하고 오류면 빌드하지 않는다
 unity/Tools/unity.sh tileset-validate # 모든 TileSet 을 docs/architecture.md 12장 규격으로 검사 (오류면 실패). 아트 TileSet 을 합치기 전 필수
 unity/Tools/unity.sh tileset      # 임시 TileSet 다시 생성 (Data/TileSets/TopDown_Placeholder.asset)
 unity/Tools/unity.sh verify       # C# 규칙이 JS 솔버와 같은 답인지 전 스테이지(17) 검사 → reports/seven-steps-unity-verify.json
