@@ -155,3 +155,49 @@ test('WebGL build at /webgl/: adds ?telemetry=<this server>, streams the files',
     await proxied.close();
   }
 });
+
+test('language: carried forward within a session across batches, filterable, listed in the overview', async () => {
+  const w = await startServer();
+  try {
+    const sid = '33333333-3333-4333-8333-3333333333a1';
+    const first = [
+      { seq: 0, t: T0, type: 'session_start', firstTime: true, cleared: 0, lang: 'en' },
+      { seq: 1, t: T0 + 10, type: 'level_start', level: 1, levelName: '일곱 걸음', attempt: 1, via: 'boot', bodies: 3, lang: 'en' },
+    ];
+    const later = [{ seq: 2, t: T0 + 20, type: 'move', level: 1, body: 1, step: 1, dir: 'right', from: [1, 1], to: [2, 1], result: 'moved' }];
+    assert.equal((await post(w.url, envelope(first, { sessionId: sid }))).status, 200);
+    assert.equal((await post(w.url, envelope(later, { sessionId: sid }))).status, 200);
+    assert.equal((await post(w.url, envelope([{ seq: 0, t: T0, type: 'session_start', lang: 'ko' }]))).status, 200);
+    const bad = await (await post(w.url, envelope([{ seq: 0, t: T0, type: 'session_start', lang: 'English!' }], { sessionId: '33333333-3333-4333-8333-3333333333a2' }))).json();
+    assert.equal(bad.rejected[0].error, 'session_start.lang is invalid');
+    const ov = await (await get(w.url, '/api/stats/overview')).json();
+    assert.deepEqual(ov.langs.map((l) => l.lang).sort(), ['en', 'ko']);
+    const en = await (await get(w.url, '/api/export/events.json?lang=en')).json();
+    assert.deepEqual(en.map((e) => e.type), ['session_start', 'level_start', 'move']);
+  } finally {
+    await w.close();
+  }
+});
+
+test('an events table from before the lang column gets it on open', async () => {
+  const { DatabaseSync } = await import('node:sqlite');
+  const { mkdtempSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { openDb } = await import('../src/db.mjs');
+  const file = join(mkdtempSync(join(tmpdir(), 'olddb-')), 'old.sqlite');
+  const old = new DatabaseSync(file);
+  old.exec(`CREATE TABLE events (id INTEGER PRIMARY KEY, received_at INTEGER NOT NULL, v INTEGER NOT NULL, player_id TEXT NOT NULL,
+    session_id TEXT NOT NULL, seq INTEGER NOT NULL, t INTEGER NOT NULL, type TEXT NOT NULL, client TEXT NOT NULL, build TEXT NOT NULL,
+    level INTEGER, x INTEGER, y INTEGER, data TEXT NOT NULL, UNIQUE (session_id, seq))`);
+  old.exec(`INSERT INTO events (received_at, v, player_id, session_id, seq, t, type, client, build, data) VALUES (1, 1, 'p', 's', 0, ${T0}, 'session_start', 'web-proto', 'b', '{}')`);
+  old.close();
+  const store = openDb(file);
+  try {
+    assert.equal(store.query().length, 1);
+    assert.equal(store.insertBatch(envelope([{ seq: 0, t: T0, type: 'session_start', lang: 'en' }]), [{ seq: 0, t: T0, type: 'session_start', lang: 'en' }]).accepted, 1);
+    assert.equal(store.query({ lang: 'en' }).length, 1);
+  } finally {
+    store.close();
+  }
+});

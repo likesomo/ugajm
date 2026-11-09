@@ -113,7 +113,7 @@ DB_PATH=server/data/playtest-$(date +%F).sqlite node server/src/index.mjs
 | `GET /webgl/` | 없음 | Unity WebGL 빌드 (`WEBGL_DIR`). `telemetry` 파라미터가 없으면 이 서버 주소를 붙여 302 |
 | `GET /dashboard` | 페이지는 공개, 데이터는 토큰 | 대시보드 (`#token=…`로 한 번 열면 브라우저에 기억) |
 | `GET /api/levels` | 토큰 | 현재 빌드 레벨 맵, `levelKey`, 최단 이동 수 |
-| `GET /api/stats/overview` | 토큰 | 합계, 빌드·클라이언트 목록 |
+| `GET /api/stats/overview` | 토큰 | 합계, 빌드·클라이언트 목록, 언어별 세션 수(`langs`) |
 | `GET /api/stats/levels` | 토큰 | 스테이지별 퍼널·이탈·헤맴 지표 |
 | `GET /api/stats/heatmap?level=N` | 토큰 | 현재 빌드 스테이지 N의 칸별 idle·undo·몸 사용·막힘·방문·떠난 위치. 맵이 지금과 같은 시도만(`otherMapAttempts`에 뺀 수) |
 | `GET /api/stats/chapters` | 토큰 | 챕터별 시작·끝 스테이지 도달·전부 클리어·그만둔 플레이어 (현재 빌드 스테이지만) |
@@ -122,7 +122,7 @@ DB_PATH=server/data/playtest-$(date +%F).sqlite node server/src/index.mjs
 | `GET /api/export/events.jsonl` · `events.json` | 토큰 | 원본 이벤트 + 배치 머리 + `attemptId` |
 | `GET /api/export/levels.csv` · `levels.json` | 토큰 | 스테이지별 집계 |
 
-토큰: `Authorization: Bearer <token>` 또는 `?token=<token>`. 모든 `/api/*`는 필터 `client`, `build`, `since`(=`from`), `to`를 받는다 (ms 또는 ISO 날짜, 서버 수신 시각 기준).
+토큰: `Authorization: Bearer <token>` 또는 `?token=<token>`. 모든 `/api/*`는 필터 `client`, `build`, `lang`(UI 언어, 이벤트에 없으면 세션의 직전 값; 언어를 보내지 않은 옛 기록은 언어 필터에서 빠진다), `since`(=`from`), `to`를 받는다 (ms 또는 ISO 날짜, 서버 수신 시각 기준).
 
 ```bash
 curl -H "Authorization: Bearer $STATS_TOKEN" "http://localhost:8787/api/export/attempts.csv?client=web-proto&since=2026-11-07" -o attempts.csv
