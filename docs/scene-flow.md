@@ -387,7 +387,7 @@ S2·S3 커밋마다 `unity.sh test`(텔레메트리 골든)를 돌린다. 골든
 | (후속) 음량을 `GameAudio.ApplyMaster`로 | 899f8c8 | test 262, build-win + smoke 7/7 | — |
 | S5 페이드 전환 | 1f9f462 | test 263, build-win + smoke 7/7, 타이틀 스모크, build-webgl + smoke-webgl OK. `SceneLoader`가 LoadSceneAsync + 페이드(0.15초), DDOL `SceneFader`. 로드 실패는 Load에서 예외, `AppFlow`가 상태를 되돌림 | 아키텍트 승인(2026-11-09, DDOL 8장 문구·11.1 반영). 메모: LoadSceneAsync null 경로는 State와 씬이 어긋나지만 사전 검사 뒤라 둠, 씬 경계 level_leave가 0.15초 늦어짐(순서·값 동일). WebGL 페이드 체감은 리드가 합칠 때 확인 |
 
-**대기 중: 12.8 챕터 연결(게임플레이/UI 요청, feat/view 6aac6e5, 2026-11-09)**. 시기는 레벨 묶음(chapters.json) 반영 때, 리드와 맞춘다. Game 씬 루트에서 할 일: (1) Game 씬에 방향광 3개(키·필·림, 그림자는 키만) (2) `GameController.Awake`에서 `board.Init` 뒤 `board.UseChapters(new ChapterStage(cam, key, fill, rim, transform), stage => 챕터 프리셋, cfg.tileSet)`. 프리셋은 `LevelCatalog.ChapterIdOf` → chapters.json `ChapterInfo.ArtPreset` → `AppConfig.Chapter`, 챕터가 없으면 null (3) `ChapterEntering`의 id를 `ChapterFileDto.Get(id).id`로 정규화 (4) S5 페이드가 생기면 `LoadStage`를 페이드 뒤에 둔다(챕터 교체가 가려짐).
+**대기 중: 12.8 챕터 연결(게임플레이/UI 요청, feat/view 6aac6e5, 2026-11-09)**. 시기는 레벨 묶음(chapters.json) 반영 때, 리드와 맞춘다. Game 씬 루트에서 할 일: (1) Game 씬에 방향광 3개(키·필·림, 그림자는 키만) (2) `GameController.Awake`에서 `board.Init` 뒤 `board.UseChapters(new ChapterStage(cam, key, fill, rim, transform), stage => 챕터 프리셋, cfg.tileSet)`. 프리셋은 `LevelCatalog.ChapterIdOf` → chapters.json `ChapterInfo.ArtPreset` → `AppConfig.Chapter`, 챕터가 없으면 null (3) `ChapterEntering`의 id를 `ChapterFileDto.Get(id).id`로 정규화 (4) S5 페이드가 생기면 `LoadStage`를 페이드 뒤에 둔다(챕터 교체가 가려짐) (5) R1(스테이지 1-20, chapters.json) 반영 때 함께: `GlyphCheck`에 levels.json `story`와 chapters.json 문구(planet·concept·intro) 추가. smoke 리플레이 목록은 리드가 rollout-50.md 5장 기준으로 갱신. 아트 RuinsHengeTheme(UiTheme)·행성 환경 프리팹은 코디네이터 경유로 받는다.
 
 챕터 방향(2026-11-08 사용자): 챕터 = 우주 속 행성, 주인공 세쌍둥이. S4에서 `GameFlowController`에 챕터 전환 연출 자리(다음 스테이지의 chapter가 바뀌면 전환 오버레이), S6에서 `UiTheme`·조명·하늘을 챕터별 프리셋으로 고를 자리를 남긴다. 레벨 데이터 chapter 필드는 레벨 담당이 추가한다.
 
@@ -467,3 +467,4 @@ Open Project 1은 미러의 파일 목록과 커밋 메시지만 확인했다(�
 | 2026-11-09 | 12.8 챕터 연결 요청(게임플레이/UI)을 대기 항목으로 기록 |
 | 2026-11-09 | S5 페이드, GameAudio 음량, 5.2 갱신. origin/7lucky 0c62e54 합침 |
 | 2026-11-09 | S5 아키텍트 승인. 씬 플로우 S0~S6 완료, 12.8 챕터 연결 대기 |
+| 2026-11-09 | 진행 기록 v2(아키텍트 5065603) 검토 OK, R1 대기 항목 추가 |
