@@ -1,8 +1,8 @@
-# 50스테이지 계획 (초안, 리드 승인 대기)
+# 50스테이지 계획 (리드 승인 2026-11-09, 7lucky 6cf3de4)
 
 사용자 결정(2026-11-08~09): 몸 상한 3(세쌍둥이, 머플러 청록·황토·적갈은 형제 식별만 뜻함), 전체 50스테이지, 6~8챕터(행성), 챕터당 5~8스테이지.
 데이터: `stage-plan-50.json` (스테이지별 목표 D, 계획 태그, 깨달음 A). 곡선: **`stage-plan-50.html`** (`node prototypes/seven-steps/tools/plan-curve.mjs`로 다시 그림).
-**승인 전에는 `levels.js`·`levels.json`을 바꾸지 않는다.** 이 문서의 맵은 아직 없다(스케치·후보 단계).
+리드 승인: 7행성×7+1, 예산 3 통일, 기존 17 유지 11·수정 4·재설계 2, 진흙 기믹(코어 구현 요청됨). 색 퍼즐은 제안으로만 유지. `levels.js`·`levels.json` 반영은 플레이테스트 1차 뒤 10스테이지 묶음 단위(7장).
 
 ## 1. 요약
 
@@ -205,14 +205,15 @@
   5. 41~50 (6장 피날레, 7장 — 진흙 승인·구현이 필요. 승인 전에는 46~50부터)
 - 반영: 계획 승인 후 묶음 단위로 `levels.js`에 넣고 `unity.sh levels`로 `levels.json`을 만든다. **텔레메트리 골든(`server/fixtures`), 코어 골든 트레이스(`Tests/Golden`), Unity `verify`/smoke 리플레이**가 스테이지 번호·맵에 의존하므로 묶음마다 코어·백엔드·리드와 맞춘다(`unity.sh golden`). 플레이테스트 1차(Unity WebGL, 지금 17스테이지)가 끝날 때까지는 `levels.js`를 바꾸지 않는다
 
-## 7. 레벨 데이터 형식 제안 (아키텍트 고지 필요, 리드를 통해 요청)
+## 7. 레벨 데이터 형식 (리드 결정 2026-11-09, 세부는 아키텍트와 맞춰 `docs/architecture.md` 6장 고지 후 반영)
 
-- 스테이지에 `chapter`(정수, 1부터) 필드를 추가한다. 서사 문구는 `story`(한 줄, 세쌍둥이 시점, 힌트와 별개) 필드
-- 챕터 메타데이터는 별도 파일 `design/levels/chapters.json` → export가 `Data/chapters.json`으로 복사: `{ id, key, planet, concept, intro(진입 문구), artPreset(아트 프리셋 키) }`. 행성 이름·문구를 스테이지마다 반복하지 않고, 아트 프리셋 키를 한곳에서 관리한다
+- 스테이지에 **`chapter`: 문자열 id** (`architecture.md` 12.8. 예: `"moss"`, `"hollow"`, `"carved"`, `"frost"`, `"joinery"`, `"crumble"`, `"altar"` — 3.2 표 순서). `LevelDto`에만 두고 Core `Level`은 모른다. 없으면 첫 챕터. 조회는 `LevelCatalog.ChapterOf(stage)`
+- 챕터 메타데이터는 **`chapters.json`**: `{ id, order, planet, intro, story, artPreset }`. `artPreset` = `ChapterPreset` id(아트가 만드는 SO, 12.8). 원본은 `design/levels/chapters.json`(레벨 디자인), export가 `Data/chapters.json`으로 낸다(위치는 아키텍트와 확정)
+- 스테이지별 서사 한 줄(`story`)을 `chapters.json`이 아니라 스테이지에 둘지도 아키텍트와 정한다(제안: 스테이지 `story`, 챕터 `intro`·`story`는 행성 진입 문구)
 - export 단정 검증(`unity/Tools/export-levels.mjs`, 실패하면 파일을 쓰지 않고 exit 1):
-  - 모든 스테이지에 `chapter`가 있고 `chapters.json`에 있는 id다
-  - 챕터 번호가 1부터 빠짐없이, 스테이지 순서대로 줄지 않고 이어진다(1,1,…,2,2,…)
+  - 모든 스테이지의 `chapter`가 `chapters.json`에 있다
+  - 같은 챕터 스테이지가 이어져 있고, 챕터 등장 순서가 `order`와 같다
   - 모든 스테이지의 몸 예산(`bodies`) ≤ 3
-  - 모든 스테이지가 솔버로 풀리고, 최소 몸 수 ≤ 3
+  - 모든 스테이지가 솔버로 풀린다
   - 스테이지 이름이 겹치지 않는다(텔레메트리 분석이 이름으로 묶음)
-- `chapter`가 없는 지금 17스테이지 데이터는 이 검증을 통과하지 못하므로, 형식 도입과 첫 묶음 반영을 같은 커밋으로 한다
+- 반영 시점: 플레이테스트 1차(지금 17스테이지) 뒤, 10스테이지 묶음 단위. 형식 도입과 첫 묶음 반영을 같은 커밋으로 하고, 묶음마다 코어(골든 트레이스)·백엔드(텔레메트리 골든)와 맞춘다
