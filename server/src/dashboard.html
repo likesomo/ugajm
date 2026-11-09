@@ -302,7 +302,7 @@ function renderMetrics(stats) {
 }
 
 const TILE_FILL = { '#': 'var(--wall)' };
-const TILE_LABEL = { E: '出', o: '○', '~': '≈', x: '×', S: 'S' };
+const TILE_LABEL = { E: '出', o: '○', '~': '≈', x: '×', S: 'S', m: '泥', L: '레버', R: '벽↑', r: '벽↓', Q: 'Q문' };
 async function renderHeatmap() {
   const n = Number($('hm-level').value);
   const metric = $('hm-metric').value;
@@ -329,7 +329,7 @@ async function renderHeatmap() {
     if (v > 0) g += `<text x="${x * S + S / 2}" y="${y * S + S / 2 + 5}" text-anchor="middle" style="font-size:12px;font-weight:600;fill:${dark ? '#fff' : 'var(--text-primary)'}">${metric === 'idleMs' ? Math.round(v / 1000) + 's' : v}</text>`;
     g += '</g>';
   }
-  const legend = `<div class="legend"><span>적음</span>${[0, 1, 2, 3, 4, 5, 6].map((k) => `<i class="sw" style="background:var(--seq-${k});margin:0"></i>`).join('')}<span>많음 (최대 ${metric === 'idleMs' ? sec(max) : max})</span><span>S 원래 출발점 · 出 출구 · ○ 구덩이 · ≈ 얼음 · × 금 간 바닥</span>${otherMapAttempts ? `<span>맵이 지금과 달랐던 예전 시도 ${otherMapAttempts}회는 뺐다</span>` : ''}</div>`;
+  const legend = `<div class="legend"><span>적음</span>${[0, 1, 2, 3, 4, 5, 6].map((k) => `<i class="sw" style="background:var(--seq-${k});margin:0"></i>`).join('')}<span>많음 (최대 ${metric === 'idleMs' ? sec(max) : max})</span><span>S 원래 출발점 · 出 출구 · ○ 구덩이 · ≈ 얼음 · × 금 간 바닥 · 泥 진흙</span>${otherMapAttempts ? `<span>맵이 지금과 달랐던 예전 시도 ${otherMapAttempts}회는 뺐다</span>` : ''}</div>`;
   $('heatmap').innerHTML = `<div class="scroll"><svg viewBox="0 0 ${level.w * S} ${level.h * S}" width="${level.w * S}" style="max-width:100%" role="img" aria-label="스테이지 ${n} 히트맵">${g}</svg></div>${legend}`;
 }
 

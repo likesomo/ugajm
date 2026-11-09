@@ -109,6 +109,10 @@ namespace SevenSteps.Game
             startMarker = Spawn(set.Get(ActorKind.StartMarker), s.Start, "Start");
             oldStartMarker = Spawn(set.Get(ActorKind.OldStartMarker), level.Start, "Old Start");
             playerLabel = AddLabel("7", Vector3.zero, 0.42f, Ui.Ink);
+            // Steps-left number stands on the label anchor (bottom edge there) so it never covers the head:
+            // TileVisual.labelOffset = top of the model. A centered label put half of it over the RuinsHenge player.
+            playerLabel.Text.rectTransform.pivot = new Vector2(0.5f, 0f);
+            playerLabel.Text.alignment = TextAnchor.LowerCenter;
             player = null; // destroyed with the old root
             SpawnPlayer(BodyIndex.Current(s), s.Pos);
 
@@ -307,12 +311,17 @@ namespace SevenSteps.Game
             // Footprints: step numbers on every cell this body walked through (not under the player).
             for (int i = 0; i < n; i++) if (footLabels[i] != null) footLabels[i].Text.text = "";
             var marked = ListPool.Ints;
+            int prevStep = 0;
             foreach (var f in s.Trail)
             {
+                // Entering mud costs 2 steps (docs 6.3): the footprint jumps by 2, so that cell shows both numbers ("2·3").
+                bool mudEntry = f.Step - prevStep == 2;
+                prevStep = f.Step;
                 if (f.Step <= 0 || f.Cell == s.Pos) continue;
                 EnsureFoot(f.Cell);
                 var t = footLabels[f.Cell].Text;
-                t.text = t.text.Length == 0 ? f.Step.ToString() : t.text + "·" + f.Step;
+                string steps = mudEntry ? (f.Step - 1) + "·" + f.Step : f.Step.ToString();
+                t.text = t.text.Length == 0 ? steps : t.text + "·" + steps;
                 if (!marked.Contains(f.Cell)) marked.Add(f.Cell);
             }
             for (int i = 0; i < n; i++)

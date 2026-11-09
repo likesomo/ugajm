@@ -6,7 +6,11 @@ import { STEPS, tileAt } from './core.js';
 export const SCHEMA_VERSION = 1;
 export const IDLE_MS = 30000;
 
-const TILE_KIND = { '#': 'wall', '.': 'floor', E: 'exit', o: 'pit', '~': 'ice', x: 'cracked', '=': 'bridge' };
+// R/r are read through tileAt, so a flipped wall reports its current state (flip_up blocks, flip_down is open).
+const TILE_KIND = {
+  '#': 'wall', '.': 'floor', E: 'exit', o: 'pit', '~': 'ice', x: 'cracked', '=': 'bridge', m: 'mud',
+  Q: 'door', L: 'lever', R: 'flip_up', r: 'flip_down',
+};
 
 export function tileKind(s, i) {
   if (i < 0) return 'edge';
@@ -121,9 +125,12 @@ export class Tracker {
     let land = before.pos;
 
     if (cmd.type === 'move') {
-      const step = before.used + 1;
+      const first = neighborOf(before, cmd.dir);
+      const blocked = types.includes('bump');
+      // step = the step count after this move: entering mud costs 2 (core.js step). A blocked move reports used + 1.
+      const step = before.used + (!blocked && first >= 0 && tileAt(before, first) === 'm' ? 2 : 1);
       const base = { level: L, body: bodyNo(before), step, dir: cmd.dir, from: xy(before, before.pos) };
-      if (types.includes('bump')) {
+      if (blocked) {
         const at = evAt('bump');
         const blockedBy = at >= 0 && before.statues.includes(at) ? 'statue' : tileKind(before, at);
         this.send('move', { ...base, to: xy(before, at), result: 'blocked', blockedBy });
@@ -133,7 +140,6 @@ export class Tracker {
       // Landing cell (after any ice slide), taken from the rule events.
       land = evAt('fall') ?? evAt('bridge') ?? evAt('win') ?? evAt('seal') ?? evAt('vanish') ??
         evAt('choose') ?? evAt('stone') ?? evAt('step');
-      const first = neighborOf(before, cmd.dir);
       const firstTile = tileKind(before, first);
       let result = 'moved';
       if (types.includes('fall')) result = 'fell';
@@ -147,7 +153,8 @@ export class Tracker {
       if (step === STEPS && !types.includes('fall')) {
         const effect = types.includes('win') ? 'win' : types.includes('bridge') ? 'bridge' : types.includes('seal') ? 'seal'
           : types.includes('vanish') ? 'vanish' : types.includes('choose') ? 'choose' : 'statue';
-        this.send('seventh_step', { level: L, body: bodyNo(before), at: xy(before, land), tile: tileKind(before, land), effect });
+        // tile is the landing cell before the step (a lever, not the walls it flips); flipped: the lever flipped the walls.
+        this.send('seventh_step', { level: L, body: bodyNo(before), at: xy(before, land), tile: tileKind(before, land), effect, ...(types.includes('flip') ? { flipped: true } : {}) });
       }
     } else if (cmd.type === 'keep' || cmd.type === 'switch') {
       this.send(cmd.type, { level: L, body: bodyNo(before), at: xy(before, before.pos) });
