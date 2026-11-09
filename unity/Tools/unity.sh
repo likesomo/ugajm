@@ -165,10 +165,16 @@ case "$cmd" in
       orca capture start --page "$page" --json > /dev/null 2>&1 || true
       orca wait --page "$page" --load load --json > /dev/null 2>&1 || true
       sleep 25
-      shot="$(orca screenshot --page "$page" 2>/dev/null | grep -oE '[A-Za-z]:\[^ ]+\.png' | head -1 || true)"
+      sout="$(orca screenshot --page "$page" 2>&1 || true)"
+      shot="$(printf '%s\n' "$sout" | grep -oE '[A-Za-z]:\\[^ ]+\.png' | head -1 || true)"
       orca console --page "$page" --limit 400 > "$out/$name.console.txt" 2>&1 || true
       orca tab close --page "$page" --json > /dev/null 2>&1 || true; page=""
-      if [ -z "$shot" ]; then echo "[unity.sh] smoke-webgl $name: no screenshot"; fail=1; return 1; fi
+      if [ -z "$shot" ]; then
+        echo "[unity.sh] smoke-webgl $name: no screenshot: $(printf '%s\n' "$sout" | head -1)"
+        # The Orca window is minimized or shows another workspace: this workspace's tab never paints a frame.
+        if printf '%s' "$sout" | grep -q "draw a frame"; then echo "[unity.sh]   show the Orca window on this workspace (not minimized) and run again"; fi
+        fail=1; return 1
+      fi
       cp "$(cygpath -u "$shot")" "$out/$name.png"
       px="$(powershell -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$HERE/board-pixels.ps1")" -Path "$(cygpath -w "$out/$name.png")" -Background "$SMOKE_BG" | tr -d '\r')"
       errs="$(grep -ciE '^\[error\]|Exception' "$out/$name.console.txt" || true)"
