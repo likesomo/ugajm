@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1e045bfebbc4947bb857f650805529c, type: 3}
   m_Name: Sky_joinery
   m_EditorClassIdentifier: SevenSteps.Contracts::SevenSteps.Contracts.SkyPreset
-  background: {r: 0.0627451, g: 0.10980392, b: 0.19607843, a: 1}
+  background: {r: 0.19607843, g: 0.07450981, b: 0.09411765, a: 1}
   skyPrefab: {fileID: 7373658477137934815, guid: 6b28336ad129a8948b73a2fa4220471c, type: 3}
   planetPrefab: {fileID: 3336129799048614229, guid: a33dab175e9ce96449736d2d7f9ef8ab, type: 3}

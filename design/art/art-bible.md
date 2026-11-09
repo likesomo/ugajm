@@ -1,5 +1,7 @@
 # Seven Steps 아트 바이블 — 유적×선돌×오리엔탈
 
+> 2026-11-10 revision: [distinct seven-planet silhouettes, palettes and one-cell decoration clearance](seven-planets-distinct-2026-11-10.md) supersedes the initial seven similar blockouts; frost has no moss.
+
 > 2026-11-10 current scope: seven confirmed planets `moss`, `hollow`, `carved`, `frost`, `joinery`, `crumble`, `altar`; chapters.json is authoritative. Earlier five-planet limits below are historical. UI architecture now uses independent menhirs with one straight weathered timber beam, exposed tenons and wedges; paired curved lintels and red lacquer gateways are forbidden. See [seven-planet delivery](seven-planets-2026-11-10.md).
 
 > EN/KO 손글씨 UI 방향: [fonts.md](fonts.md). EN 제목 Kaushan Script·본문 Patrick Hand, KO Gaegu, 수량/걸음 숫자 Jua를 추천한다. 기존 패널/트림은 유지한다.7행성의 열린 선택 화면과 실제 TTF 렌더는 공유 `concepts/ui/en/`·`ko/`를 따른다. 언어별 UiTheme 필드는 요청안이며 타입을 변경하지 않았다.

@@ -15,6 +15,8 @@ MonoBehaviour:
   id: crumble
   displayName: Crumbling World
   tileSet: {fileID: 11400000, guid: d5840d2071f7eb24f85c080dffcfcb06, type: 2}
-  materialOverrides: []
+  materialOverrides:
+  - from: {fileID: 2100000, guid: c38ccdba49b258446a7b458cfb37786b, type: 2}
+    to: {fileID: 2100000, guid: eaddc396ec4cc024aa8570bb790a51e2, type: 2}
   lighting: {fileID: 11400000, guid: 4cb9f9246e952a74ba287a095af07f74, type: 2}
   sky: {fileID: 11400000, guid: 0cd56a4f8a8832849a37d6a4b0659794, type: 2}

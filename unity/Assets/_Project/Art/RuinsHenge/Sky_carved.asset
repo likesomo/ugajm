@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1e045bfebbc4947bb857f650805529c, type: 3}
   m_Name: Sky_carved
   m_EditorClassIdentifier: SevenSteps.Contracts::SevenSteps.Contracts.SkyPreset
-  background: {r: 0.0627451, g: 0.10980392, b: 0.19607843, a: 1}
+  background: {r: 0.21960784, g: 0.14117648, b: 0.07058824, a: 1}
   skyPrefab: {fileID: 9076153803962262253, guid: 66089728cc22af64f80c2607eb35a522, type: 3}
   planetPrefab: {fileID: 363070711591453628, guid: c30d046d2cc5f384b8cff2b0667c2cc5, type: 3}
