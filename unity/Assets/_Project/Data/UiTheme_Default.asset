@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1092f91d2e0d6e14ca88dd49c0901eef, type: 3}
+  m_Name: UiTheme_Default
+  m_EditorClassIdentifier: SevenSteps.Game::SevenSteps.Game.UI.UiTheme
+  font: {fileID: 12800000, guid: 6726afba0e987134bb60bf8a871ea91c, type: 3}
+  ink: {r: 0.9254902, g: 0.9019608, b: 0.8392157, a: 1}
+  dim: {r: 0.49019608, g: 0.4627451, b: 0.5647059, a: 1}
+  gold: {r: 0.9490196, g: 0.75686276, b: 0.30588236, a: 1}
+  stone: {r: 0.6039216, g: 0.5803922, b: 0.5411765, a: 1}
+  buttonBg: {r: 0.16470589, g: 0.14901961, b: 0.20784314, a: 1}
+  panelBg: {r: 0.12156863, g: 0.10980392, b: 0.16470589, a: 0.9490196}
+  plateA: {r: 0.90588236, g: 0.43529412, b: 0.31764707, a: 1}
+  plateB: {r: 0.16470589, g: 0.6156863, b: 0.56078434, a: 1}
+  plateC: {r: 0.5568628, g: 0.49019608, b: 0.74509805, a: 1}

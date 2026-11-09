@@ -34,6 +34,7 @@ namespace SevenSteps.Tests
         [Test]
         public void ViewShowsTheRightButtonsAndRaisesEvents()
         {
+            TestTheme.Use();
             var view = new ResultView();
             var canvas = UnityEngine.GameObject.Find("Result");
             try

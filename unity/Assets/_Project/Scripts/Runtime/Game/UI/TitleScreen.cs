@@ -43,7 +43,7 @@ namespace SevenSteps.Game.UI
             if (!Bootstrap.HasRunThisPlay) Bootstrap.Run(config, assets, null, enterFirstScreen: false);
             flow = Services.Get<AppFlow>();
             save = Services.Get<SaveSystem>();
-            Ui.Font = assets.font;
+            Ui.Theme = assets.uiTheme;
             var levels = LevelCatalog.Load(assets);
 
             var cam = Camera.main;

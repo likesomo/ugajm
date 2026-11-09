@@ -96,6 +96,7 @@ namespace SevenSteps.Tests
             var save = new SaveSystem(store);
             int changed = 0;
             save.SettingsChanged += _ => changed++;
+            TestTheme.Use();
             var canvas = new UnityEngine.GameObject("canvas", typeof(UnityEngine.RectTransform));
             try
             {
