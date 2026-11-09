@@ -199,6 +199,15 @@ namespace SevenSteps.Game
 
         // ---------- Input (board keys; flow keys are read by GameController, the scene root) ----------
 
+        /// A board key went down this frame (the keys Update reads). The scene root closes the chapter card on one, so the
+        /// key both dismisses the card and plays (playtest rehearsal 2026-11-10: the first arrow after entering a planet
+        /// was swallowed by the card).
+        public static bool AnyBoardKeyPressed(Keyboard kb) =>
+            kb != null && (kb.upArrowKey.wasPressedThisFrame || kb.downArrowKey.wasPressedThisFrame || kb.leftArrowKey.wasPressedThisFrame
+                || kb.rightArrowKey.wasPressedThisFrame || kb.wKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame
+                || kb.dKey.wasPressedThisFrame || kb.kKey.wasPressedThisFrame || kb.xKey.wasPressedThisFrame || kb.zKey.wasPressedThisFrame
+                || kb.backspaceKey.wasPressedThisFrame || kb.rKey.wasPressedThisFrame || kb.hKey.wasPressedThisFrame);
+
         void Update()
         {
             if (session == null || InputBlocked()) return;
