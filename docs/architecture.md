@@ -270,6 +270,25 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
 - Unity 검사: `TileSetValidator`가 `Data/chapters.json`의 `artPreset`이 모두 `AppConfig.chapters`에 있는지 본다(파일과 챕터 에셋이 생기면 아키텍트가 켬).
 - 담당: 레벨 디자인(`chapters.json`, `chapter`/`story` 채우기, export 검증), 코어(`LevelDto` 필드), 아키텍트(`ChapterInfo`, 이 절, 검사기), 게임플레이/UI(`LevelCatalog`·진입 문구 표시), 씬 플로우(챕터가 바뀔 때의 흐름·`ResultModel.nextChapterChanges`), 백엔드/분석(이벤트에 챕터 id를 실을지).
 
+### 6.5 3별 (2026-11-09 사용자 결정 B안, 50스테이지 반영 다음 순서)
+
+- 규칙: ★1 = 클리어. ★2 = ★1 + 이번 시도에서 풀이 보기(H)를 쓰지 않음 + 쓴 몸 수 ≤ 최소 몸 수(`levels.json` `expected.minBodies`, JS 솔버). ★3 = ★2 + 이번 시도에서 되돌리기·재시작 없음(한 번에). 잠금 없음(별은 진행을 막지 않는다).
+- **시도(attempt)** = 스테이지에 들어온 때(`LoadStage`: 선택·다음·다시 하기·`[` `]`)부터 클리어까지. 결과 화면의 "다시 하기"는 새 시도다. 시도 안의 재시작(R)은 시도를 끝내지 않는다(★3만 잃음).
+- 셈: `undos` = 실제로 상태를 되돌린 Undo(`Undo` 이벤트가 난 것). `restarts` = 시작 상태가 아닐 때의 Restart(움직인 뒤 처음부터). `hintUsed` = 이번 시도에서 H를 한 번이라도. 실패(`Lose`) 뒤의 Undo도 센다.
+- **판정 함수(코어 구현 feat/core b41948d, Core 어셈블리, 엔진 없음, `core.js` `stars()` 이식)**: `SevenSteps.Core.Stars`
+  ```csharp
+  public static class Stars {
+      public const int Max = 3;
+      public static int Of(int bodiesUsed, int minBodies, int hints, int undos, int restarts); // 0 = 판정 불가, 1..3
+      public static int BodiesUsed(State s);   // Level.Bodies - Bodies + 1 (클리어 상태면 쓴 몸 수)
+  }
+  ```
+  ★1 클리어, ★2 = `hints == 0 && bodiesUsed <= minBodies`, ★3 = ★2 `&& undos == 0 && restarts == 0`. `minBodies <= 0`(데이터에 최소 몸 수가 없음)이면 **0 = 판정 불가**(core.js는 null): 이때는 별 없이 `MarkCleared(level, bodies)`. levels.json export가 모든 스테이지에 `minBodies`를 채우므로 정상 빌드에서는 나오지 않는다. 클리어 안 한 시도에는 부르지 않는다. `GameFlowController.BodiesUsed`·`TelemetryTracker`의 같은 식은 `Stars.BodiesUsed`로 바꿀 수 있다.
+- **셈(게임플레이/UI)**: `BoardController`가 시도마다 센다(`LoadStage`에서 0으로, `ShowHint`·`Undo`/`Restart` 결과에서 증가). `IStageBoard`에 시도 셈(`Hints`, `Undos`, `Restarts`)을 내는 읽기 전용 속성을 추가(씬 플로우 인터페이스, 씬 플로우가 모양 결정).
+- **저장(씬 플로우)**: `GameFlowController.OnWon`에서 `stars = Stars.Of(...)`, 0이 아니면 → `save.Progress.MarkCleared(level, bodiesUsed, stars)`(Contracts, 구현됨: 최소 몸·최다 별 유지, 맵이 바뀌면 별도 0부터). 표시용 `save.Progress.BestStars(level)`(0 = 없음). `ProgressData.MaxStars == Stars.Max`(= 3).
+- **표시(게임플레이/UI·아트)**: 결과 화면 이번 별 + 최고 별, 스테이지 선택의 별. 행성(챕터)마다 7스테이지 = 북두칠성 7별, 별 수 = 밝기, 50번(원형 제단) = 북극성. 아트 `RuinsHengeUiResources.starEmpty/starFilled`.
+- 텔레메트리 `level_clear`에 `stars`를 실을지는 백엔드/분석이 `docs/telemetry.md`에 정한다(규칙 변경이 아니라 필드 추가).
+
 ---
 
 ## 7. 타일 → 프리팹 매핑: `TileSet`
@@ -486,7 +505,7 @@ else flow.Go(AppState.Title);
 { "version": 2, "lastStage": "새 출발점",
   "stages": [ { "name": "일곱 걸음", "levelKey": "a1b2c3d4", "cleared": true, "bestBodies": 1, "starts": 3 } ] }
 ```
-- `StageRecord { name, levelKey, cleared, bestBodies(0 = 없음), starts, bestStars(0 = 없음, 3별 B안 대비 자리만 — 계산·기록 없음, 결정되면 규칙과 함께 채움) }`, `ProgressData { version, stages, lastStage(이름, "" = 없음) }`.
+- `StageRecord { name, levelKey, cleared, bestBodies(0 = 없음), starts, bestStars(0 = 없음, 6.5: `MarkCleared(level, bodies, stars)`가 최다 별 유지, 맵이 바뀌면 0, 조회 `BestStars(level)`) }`, `ProgressData { version, stages, lastStage(이름, "" = 없음) }`.
 - 질의·명령(Contracts, `Level`을 받음): `IsCleared(level)`, `BestBodies(level)`(기록 없음·`levelKey` 다름·몸 수 초과면 0), `MarkCleared(level, bodiesUsed)`(기록 갱신, `levelKey` 갱신), `CountStart(level)`(텔레메트리 `attempt`), `ClearedCount`, `LastStage`(이름)와 `LastStageIndex(levels)`(없거나 지금 목록에 없으면 0).
 - 지금 목록에 없는 이름의 기록은 지우지 않는다(나중에 다시 들어올 수 있음, 크기 작음).
 
@@ -639,6 +658,55 @@ else flow.Go(AppState.Title);
 - 안 B: 스크린샷만으로 판정. 게임이 보드 화면 영역을 콘솔에 남기고, 검사기는 그 영역의 색 다양성(서로 다른 색 수·표준편차)을 본다. 게임 코드가 덜 들지만, 행성·하늘 배경이 영역 안에 들어오면 보드가 없어도 통과할 수 있다.
 - 전환 기간: 유적 세트로 바꾸는 합류 한 번은 아트의 `design/art/check-ruins-pixels.ps1` 결과 + 스크린샷 3장 + 콘솔 예외 0으로 대신 확인한다(리드 판단).
 
+## 13. 다국어 (ko/en) 설계 (2026-11-09, 사용자 지시, 구현은 50스테이지·3별 다음)
+
+### 13.1 결정: 자체 경량 문자열 테이블 (Unity Localization 패키지 안 씀)
+
+| | Unity Localization (`com.unity.localization`) | 자체 경량 테이블 (채택) |
+|---|---|---|
+| WebGL 용량 | 패키지 + 필수 의존 Addressables 런타임 코드가 들어간다(수 MB 단위 증가 예상, 지금 빌드 ~14MB). 문자열 테이블이 에셋 번들·카탈로그로 빌드된다 | JSON 텍스트 두 개(수십 KB) + 클래스 몇 개 |
+| 초기화 | 로케일·테이블 비동기 로드(`LocalizationSettings.InitializationOperation`), WebGL에서 첫 화면 전에 기다려야 함 | `TextAsset` 동기 파싱(levels.json과 같은 방식) |
+| 병합·리뷰 | 테이블이 ScriptableObject YAML(키 id·공유 데이터 분리) → git 충돌·리뷰 어려움, 에이전트가 텍스트로 고치기 어려움 | 키 = 값 JSON, 줄 단위 diff |
+| 우리 데이터 | `levels.json`(이름·힌트·스토리)·`chapters.json`은 어차피 JSON이라 패키지 테이블과 이중 관리 | 같은 JSON 방식으로 통일 |
+| 기능 | Smart String, 복수형, 에디터 도구, 이미지·오디오 현지화 | `{0}` 치환만(두 언어·잼 범위에 충분) |
+| 일정 | 설정·Addressables 빌드 단계 추가, 팀 경험 없음 | 하루 안 |
+
+언어가 늘거나 음성·이미지 현지화가 필요해지면 다시 검토한다.
+
+### 13.2 문자열 테이블
+- 파일: `Assets/_Project/Data/Strings/ko.json`, `en.json`(텍스트, 커밋). 형식 `{ "entries": [ { "key": "hud.undo", "text": "되돌리기 Z" }, ... ] }`(JsonUtility가 딕셔너리를 못 읽으므로 배열). 키: 소문자·점 구분(`화면.요소`), 바꾸지 않는다.
+- 기준 언어 = ko. 모든 키가 ko에 있어야 하고, en에 없는 키는 **빌드 전 검증 오류**(13.6).
+- 런타임(Contracts, 아키텍트): `Language` enum(`Ko`, `En`, 끝에 추가), `StringTable`(키→문자열, `Get(key)` 없으면 예외, `Format(key, args)`), `Localizer`(현재 언어, `Changed` 이벤트). 코드에서 UI 문구 리터럴을 쓰지 않고 `loc.Get("hud.undo")`. 문구 표(`MessagePresenter` 등)는 키 표가 된다.
+- 동적 문구(`몸 {0}개`)는 `{0}` 치환. 조사(을/를 등)는 문장을 키마다 통째로 둬서 피한다.
+
+### 13.3 언어 설정
+- `SettingsData.language`(이미 있음, 기본 "ko") → 값은 `"ko"`/`"en"`. **첫 실행**(저장 없음): `Application.systemLanguage`가 Korean이면 ko, 그 밖은 en. 설정 패널에 언어 토글(`SaveSystem.SetLanguage(lang)` 명령 추가, 바로 저장 + `SettingsChanged`).
+- 실행 인자 `-lang en`/URL `?lang=en`(플레이테스트·스모크용, `LaunchOptions.Language`, 저장하지 않음).
+- 바꾸면 즉시 반영: `Localizer.Changed` → 뷰가 다시 그린다(코드 생성 UI는 `Refresh`, 프리팹 뷰는 텍스트 갱신 메서드). 씬 다시 읽기 없음.
+
+### 13.4 글꼴 (UiTheme 언어별 세트)
+- `UiTheme`에 언어별 글꼴: `[Serializable] struct LanguageFont { Language language; Font font; float sizeScale; }`, `fonts[]`. ko = Jua(지금), en = 필기체(아트 선택, OFL 등 무료, 크레딧). 글꼴 크기 비율(`sizeScale`)로 필기체의 작은 x-height를 보정한다.
+- `Ui.Font`는 현재 언어의 글꼴. 언어가 바뀌면 `Text.font`를 바꾼다.
+- 보드 위 숫자 라벨(걸음 수, 숫자 문)은 언어와 무관하게 숫자 글꼴 하나(가독성).
+
+### 13.5 레벨·챕터 텍스트
+- `levels.js`/`levels.json`: 기존 `name`/`hint`/`story`는 **ko 그대로**(그리고 `name`은 저장 키, 11.3.1 — 번역해도 키는 ko 이름). 번역은 `text` 배열: `"text": [ { "lang": "en", "name": "...", "hint": "...", "story": "..." } ]`. `LevelDto.text`(코어), `LevelCatalog.NameOf(stage, lang)` 등(게임플레이/UI·씬 플로우).
+- `chapters.json`: 같은 방식 `"text": [ { "lang": "en", "planet": "...", "concept": "...", "intro": "..." } ]`. `ChapterInfo.text`(아키텍트).
+- 텔레메트리는 ko 이름(키)을 그대로 보낸다(분석이 이름으로 묶음). `session_start`에 `lang`을 실을지는 백엔드.
+
+### 13.6 누락 검사
+- export(`unity/Tools/export-levels.mjs`, 레벨 디자인): en이 켜져 있으면(`chapters.json`/설정 플래그) 모든 스테이지·챕터에 en `text`가 있고 빈 칸이 아님. 실패하면 파일을 쓰지 않고 exit 1.
+- Unity 빌드 전(`SceneFlowValidator`에 `LocalizationCheck` 추가, 씬 플로우): ko 키 = en 키(빠진 것·남는 것 오류), 코드의 `loc.Get("...")`/`Format("...")` 리터럴 키가 테이블에 있음(GlyphCheck의 리터럴 스캐너 재사용), **GlyphCheck를 언어별로**(각 언어 테이블·레벨·챕터 텍스트를 그 언어 글꼴의 cmap으로).
+- 코드에 남은 한글 리터럴(UI 문구)도 오류로(로그·주석 제외) → 문구가 테이블로 다 옮겨졌는지 확인.
+
+### 13.7 담당·순서 (50스테이지·3별 다음)
+1. 아키텍트: Contracts `Language`·`StringTable`·`Localizer`, `SettingsData.language` 값 규칙·`SetLanguage`, `LaunchOptions.Language`, `ChapterInfo.text`, 이 장.
+2. 게임플레이/UI: 문구를 키로 옮김(`MessagePresenter`, HUD, 결과·설정·크레딧), `ko.json` 작성, 언어 바꿀 때 다시 그리기, `UiTheme` 언어별 글꼴 적용.
+3. 씬 플로우: 타이틀·스테이지 선택 문구, `LocalizationCheck`·언어별 GlyphCheck, 설정 패널 언어 토글 흐름.
+4. 코어: `LevelDto.text`.
+5. 레벨 디자인: 레벨·챕터 en 텍스트, export 검사. 번역 품질 확인은 리드·사용자.
+6. 아트: en 필기체 글꼴 선정·크레딧, `UiTheme.fonts`.
+
 ---
 
 ## 변경 기록
@@ -672,3 +740,5 @@ else flow.Go(AppState.Title);
 | 2026-11-09 | 아키텍트 | 11.3.1 진행 기록 v2 구현: `ProgressData`(v2, `stages`/`lastStage` 이름), `StageRecord`, `ProgressMigration`(v0·v1 → v2, 고정 17스테이지 이름표), `SaveSystem` 이전·백업 키 `seven-steps.progress.v1`·미래 버전 읽기 전용, `LevelCatalog.At`·이름 중복 예외. **`ProgressData` 공개 API 변경**(번호 → `Level`): 호출부 함께 수정 |
 | 2026-11-09 | 아키텍트 | 11.3.1 `StageRecord.bestStars`(int, 0 = 없음) 자리 추가(사용자 지시, 3별 B안 대비, 계산 없음). 형식 버전은 2 그대로(필드 추가는 JsonUtility가 기본값 0으로 읽음) |
 | 2026-11-09 | 아키텍트 | 2장 어셈블리 `SevenSteps.Art`(`Art/`), `SevenSteps.Art.Editor`(`Art/Editor/`, Editor 전용) 추가. 아트 스크립트가 Assembly-CSharp에서 빠짐(GUID 유지) |
+| 2026-11-09 | 아키텍트 | 6.5 3별 계약(B안): 시도 정의, 셈 규칙(undos/restarts/hintUsed), Core `Scoring.Stars(AttemptStats)`(코어), 셈은 `BoardController`(게임플레이/UI)·`IStageBoard` 노출(씬 플로우), 저장 `ProgressData.MarkCleared(level, bodies, stars)`/`BestStars`(Contracts, 구현). 13장 다국어 설계: 자체 경량 JSON 문자열 테이블(Unity Localization 기각: WebGL 용량·비동기 초기화·병합), 언어 설정·첫 실행 시스템 언어, UiTheme 언어별 글꼴, levels/chapters `text` 배열, 누락 검사 |
+| 2026-11-09 | 코어·아키텍트 | 6.5 판정 API를 코어 구현에 맞춤: `Scoring.Stars(AttemptStats)` 대신 `SevenSteps.Core.Stars.Of(bodiesUsed, minBodies, hints, undos, restarts)`(0 = 판정 불가), `Stars.Max`, `Stars.BodiesUsed(State)`. 의미는 같음(★2는 최소 몸 이하·힌트 0, ★3은 Z·R 0) |
