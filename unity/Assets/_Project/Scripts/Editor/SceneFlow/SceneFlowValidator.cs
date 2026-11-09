@@ -19,7 +19,8 @@ namespace SevenSteps.EditorTools
     /// the build list holds every AppScenes name exactly once, Boot first, at Assets/_Project/Scenes/&lt;name&gt;.unity;
     /// each scene has exactly one root (Boot: BootScreen, Title: TitleScreen, Game: GameController) and no other scene's root;
     /// each root's required references are set and every scene points at the same AppConfig; AppConfig.tileSet and the
-    /// GameAssets data (levels.json, font) are set. Scene loading is by name, so a missing or duplicated name only fails here.
+    /// GameAssets data (levels.json, font, uiTheme) are set; every UI character is in the UI font (GlyphCheck).
+    /// Scene loading is by name, so a missing or duplicated name only fails here.
     /// Menu: Seven Steps > Scene Flow > Validate Scenes. Batch: -executeMethod SevenSteps.EditorTools.SceneFlowValidator.BatchValidate
     /// (exit 1 on errors). Report: Logs/batch-scene-validate.log via unity.sh scene-validate, or the Console.
     /// </summary>
@@ -89,6 +90,11 @@ namespace SevenSteps.EditorTools
             }
             if (sharedConfig != null && sharedConfig.tileSet == null)
                 issues.Add($"ERROR {AssetDatabase.GetAssetPath(sharedConfig)}: tileSet is empty (the board has nothing to draw)");
+
+            // Every character the UI can show must be in the UI font (missing glyphs draw nothing in WebGL).
+            var gameAssets = AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset");
+            if (gameAssets == null) issues.Add("ERROR Assets/_Project/Data/GameAssets.asset missing");
+            else GlyphCheck.Check(gameAssets.uiTheme, gameAssets, issues);
 
             int errors = issues.Count(i => i.StartsWith("ERROR", StringComparison.Ordinal));
             var sb = new StringBuilder();
