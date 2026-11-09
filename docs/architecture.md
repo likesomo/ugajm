@@ -609,7 +609,9 @@ else flow.Go(AppState.Title);
 - 다리(구덩이를 메운 석상)·봉인(금 간 바닥)은 타일(`Bridge`)이라 몸별 외형이 없다. 필요하면 아트가 요청한다.
 - **보드(게임플레이/UI 구현)**: 플레이어 인스턴스는 `BodyIndex.Current`가 바뀌면(`Respawn`, Undo, Restart) 프리팹을 바꿔 다시 만든다. 석상은 `Draw`에서 칸마다 `StatueFor(BodyIndex.OfStatue(s, i))`로 만들고, 같은 칸의 주인이 바뀌면(Undo 후 다른 몸이 KEEP) 다시 만든다. 플레이어 머리 위 숫자 위치는 `PlayerFor(k).labelOffset`.
 - **검사**: `TileSetValidator`가 두 배열의 각 항목에 프리팹이 있는지 보고(오류), 길이가 3이 아니면 경고한다. `bodyColors`가 3개가 아니면 경고. EditMode `BodyIndexTests`(KEEP 주인, Undo, Restart, 대체·순환).
-- **아트**: `playerBodies` = PlayerA/B/C, `statueBodies` = 형제 색 흔적이 있는 석상 3개(지금 세트에는 중성 석상 하나뿐이라 새로 필요).
+- **아트**: `playerBodies` = PlayerA/B/C(RuinsHenge_Chapter01에 연결됨: `SS_Actor_Triplet_A/B/C`, 같은 메시·머플러 3색, `labelOffset.y` 1.04).
+- **KEEP 선돌 외형 `TileSet.keepLook`(2026-11-10, 아트 바이블 "KEEP 선돌")**: `KeepLook.Neutral`(기본값 0) = 모든 몸의 석상이 `statue`(색 없는 중성 화강암 #B9BFC0 선돌, 같은 몸 실루엣). `KeepLook.SiblingTrace` = `statueBodies[k]`(머플러 윗면에 형제 색 흔적, `Menhir_A/B/C`). 흔적 채택은 가독성 검토 후 아트·리드가 세트 에셋 값만 바꿔 정한다(코드 변경 없음). Neutral이면 `statueBodies`는 무시된다(지워도 되고 남겨도 된다). 어느 쪽이든 형제 식별은 HUD 몸 아이콘(`BodyColor`)이 맡고 석상 색에 기대지 않는다.
+- **검사 추가**: `playerBodies`에 같은 프리팹이 겹치면 경고(세쌍둥이는 서로 달라야 함). `keepLook = SiblingTrace`인데 `statueBodies`가 비면 **오류**, 같은 프리팹이 겹치면 경고. EditMode `BodyIndexTests.KeepLookNeutralIgnoresStatueBodies`.
 - **몸 수 상한 3**(사용자 결정 2026-11-09). 지금 4~5개인 14~17스테이지는 레벨 디자인이 고친다. `levels.js`·`LevelVerifier`에 `bodies <= 3` 검사를 넣는다(레벨 디자인·코어). 순환은 안전장치로만 남는다.
 - **HUD 몸 아이콘 3색**: `TileSet.bodyColors[3]`(기본값 청록 `#568C88`, 황토 `#B99A57`, 적갈 `#B96C59`, 아트 바이블 머플러 색), 조회 `tileSet.BodyColor(k)`. HUD는 남은 몸·쓴 몸을 이 색 아이콘으로 그린다(쓴 몸은 흐리게, 지금 몸은 강조). 색은 캐릭터 고유라 챕터가 바뀌어도 같은 값을 쓴다(세트마다 같은 값을 넣는다).
 
@@ -765,3 +767,4 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 | 2026-11-09 | 아키텍트 | 13.4 UiTheme 글꼴을 아트 제안(fonts.md, ui-theme.md)과 맞춤: `LanguageFonts{language, title, body, 크기·줄간격}` + 테마 공통 `number`, `FontFor(lang, role)`, `symbolFallbackFont` 없음(레거시 Text는 에셋 간 대체 불가). 6.4 `artPreset` ↔ `AppConfig.chapters` 검사 켬 |
 | 2026-11-10 | 아키텍트 | 13장 1번 구현: `Language`/`Languages`(93347db), `StringTable`/`StringTableAsset`/`Localizer`, `SaveSystem.Language`/`SetLanguage`·첫 실행 시스템 언어, `LaunchOptions.Language`(`-lang`/`?lang`), `ChapterInfo.text`/`ChapterText`, `GameAssets.strings` + `Data/Strings/ko.json`·`en.json` 빈 틀. EditMode `LocalizationContractTests` |
 | 2026-11-10 | 코어·아키텍트 | 6.5 `Stars.Of` 전제 조건 예외(bodiesUsed<1, 음수 카운트; feat/core a332e43). 13.5 `LevelDto.text`/`TextFor(code)`(6398ca5), export가 chapters.json text 보존 |
+| 2026-11-10 | 아키텍트 | 12.6 아트 확정 계약: `KeepLook`(Contracts enum `Neutral`/`SiblingTrace`), `TileSet.keepLook`(끝에 추가, 기본 Neutral). **`TileSet.StatueFor` 동작 변경**: Neutral이면 `statueBodies`를 보지 않고 `statue`. 지금 RuinsHenge는 `statueBodies`가 모두 중성 `Statue`라 화면 변화 없음. 검사기: 세쌍둥이 프리팹 중복 경고, SiblingTrace인데 `statueBodies` 없음 오류. `AppConfig.tileSet` = `RuinsHenge_Chapter01`은 7300d9d에서 이미 전환됨(변경 없음). 영향: 게임플레이/UI(`BoardView`는 이미 `StatueFor`만 부르므로 코드 변경 없음, HUD는 `BodyColor` 그대로), 씬 플로우(없음, `UiTheme`과 무관), 아트(흔적 채택 시 `keepLook`과 `statueBodies`=Menhir_A/B/C 설정, `RuinsHengeBuilder`가 값을 쓴다면 같이) |
