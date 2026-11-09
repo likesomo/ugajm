@@ -29,7 +29,9 @@ namespace SevenSteps.Game.Telemetry
         const int TimeoutSeconds = 10;
         public const string QueueKey = "seven-steps.telemetry-queue";
 
-        struct Item { public string Session; public string Json; }
+        /// Player and session the event was recorded under: a batch never goes out under another player's id
+        /// (-newplayer starts a new id while the last tester's events may still wait in the queue).
+        struct Item { public string Player; public string Session; public string Json; }
 
         readonly ISaveStore store;
         readonly List<Item> queue = new List<Item>();
@@ -90,7 +92,7 @@ namespace SevenSteps.Game.Telemetry
                 e.Stamp(seq++, NowMs());
                 sb.Clear();
                 TelemetryJson.WriteEvent(sb, e);
-                queue.Add(new Item { Session = Context.SessionId, Json = sb.ToString() });
+                queue.Add(new Item { Player = Context.PlayerId, Session = Context.SessionId, Json = sb.ToString() });
                 if (queue.Count > QueueMax) queue.RemoveRange(0, queue.Count - QueueMax);
                 queueDirty = true;
                 if (queue.Count >= FlushCount) nextFlushAt = 0;
@@ -161,10 +163,10 @@ namespace SevenSteps.Game.Telemetry
         /// Oldest events of one session as a POST body (header from Context, events as queued).
         string NextBatch(out int count)
         {
-            string sid = queue[0].Session;
+            string pid = queue[0].Player, sid = queue[0].Session;
             var b = new StringBuilder(1024);
             b.Append("{\"v\":").Append(TelemetryContext.SchemaVersion).Append(",\"playerId\":");
-            TelemetryJson.Str(b, Context.PlayerId);
+            TelemetryJson.Str(b, pid);
             b.Append(",\"sessionId\":");
             TelemetryJson.Str(b, sid);
             b.Append(",\"client\":");
@@ -176,7 +178,7 @@ namespace SevenSteps.Game.Telemetry
             count = 0;
             foreach (var item in queue)
             {
-                if (item.Session != sid || count >= BatchMax) break;
+                if (item.Player != pid || item.Session != sid || count >= BatchMax) break;
                 int n = Encoding.UTF8.GetByteCount(item.Json) + 1;
                 if (bytes + n > BytesMax && count > 0) break;
                 if (count > 0) b.Append(',');
@@ -253,14 +255,14 @@ namespace SevenSteps.Game.Telemetry
 
         // ---------- persistence ----------
 
-        /// Lines "sessionId\tjson". Set every few seconds (memory only) and written to disk on hide/quit/pause.
+        /// Lines "playerId\tsessionId\tjson" (older queues "sessionId\tjson" read as the current player). Set every few seconds (memory only) and written to disk on hide/quit/pause.
         public void SaveQueue(bool toDisk)
         {
             if (!queueDirty && !toDisk) return;
             queueDirty = false;
             if (!Enabled) return;
             var b = new StringBuilder(queue.Count * 160);
-            foreach (var item in queue) b.Append(item.Session).Append('\t').Append(item.Json).Append('\n');
+            foreach (var item in queue) b.Append(item.Player).Append('\t').Append(item.Session).Append('\t').Append(item.Json).Append('\n');
             store.Set(QueueKey, b.ToString());
             if (toDisk) store.Flush();
         }
@@ -273,7 +275,15 @@ namespace SevenSteps.Game.Telemetry
             {
                 int tab = line.IndexOf('\t');
                 if (tab <= 0 || tab == line.Length - 1) continue;
-                queue.Add(new Item { Session = line.Substring(0, tab), Json = line.Substring(tab + 1) });
+                string rest = line.Substring(tab + 1);
+                if (rest.StartsWith("{", StringComparison.Ordinal)) // a queue saved before players were kept: "sessionId\tjson"
+                {
+                    queue.Add(new Item { Player = Context.PlayerId, Session = line.Substring(0, tab), Json = rest });
+                    continue;
+                }
+                int tab2 = rest.IndexOf('\t');
+                if (tab2 <= 0 || tab2 == rest.Length - 1) continue;
+                queue.Add(new Item { Player = line.Substring(0, tab), Session = rest.Substring(0, tab2), Json = rest.Substring(tab2 + 1) });
             }
             if (queue.Count > QueueMax) queue.RemoveRange(0, queue.Count - QueueMax);
         }
