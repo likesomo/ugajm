@@ -111,6 +111,7 @@ namespace SevenSteps.EditorTools
                     if (lang != Languages.Base && !(c.text ?? new ChapterText[0]).Any(t => t.lang == code)) continue; // export check (13.6) reports it
                     texts.Add((c.Planet(lang), $"chapters.json {c.id} planet ({code})"));
                     texts.Add((c.Intro(lang), $"chapters.json {c.id} intro ({code})"));
+                    texts.Add((c.Tagline(lang), $"chapters.json {c.id} tagline ({code})"));
                 }
             }
             return texts;
