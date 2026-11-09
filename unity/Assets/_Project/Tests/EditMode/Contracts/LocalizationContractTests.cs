@@ -76,6 +76,25 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void LanguageChosenOnlyBySetLanguage()
+        {
+            var store = new MemoryStore();
+            var save = new SaveSystem(store);
+            Assert.IsFalse(save.LanguageChosen, "first run: system default, not a choice");
+            save.SetMasterVolume(0.5f);
+            Assert.IsFalse(new SaveSystem(store).LanguageChosen, "saving other settings does not mark it");
+
+            store.Set(SaveSystem.SettingsKey, "{\"version\":1,\"language\":\"en\"}"); // a save from before the field
+            Assert.IsFalse(new SaveSystem(store).LanguageChosen, "older saves read as not chosen");
+
+            var again = new SaveSystem(store);
+            again.SetLanguage(Language.Ko);
+            Assert.IsTrue(again.LanguageChosen);
+            Assert.IsTrue(new SaveSystem(store).LanguageChosen, "kept in the save");
+            Assert.AreEqual(Language.Ko, new SaveSystem(store).Language);
+        }
+
+        [Test]
         public void ChapterTextFallsToBaseAndThrowsWhenMissing()
         {
             var c = JsonUtility.FromJson<ChapterFileDto>(

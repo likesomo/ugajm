@@ -243,7 +243,7 @@ namespace SevenSteps.Art
         public static void BuildWindows()=>BuildPlayer(BuildTarget.StandaloneWindows64,"../Builds/RuinsHenge/Windows/Seven Steps.exe");
         public static void BuildPreviewWindows(){Build();BuildWindows();}
         public static void BuildWebGL()=>BuildPlayer(BuildTarget.WebGL,"../Builds/RuinsHenge/WebGL");
-        static void BuildPlayer(BuildTarget target,string path){Directory.CreateDirectory(Path.GetDirectoryName(path));var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{"Assets/_Project/Art/Test/Game.unity"},target=target,locationPathName=path,options=BuildOptions.None});Debug.Log("[RuinsHenge] "+target+" "+report.summary.result+" errors="+report.summary.totalErrors);EditorApplication.Exit(report.summary.result==BuildResult.Succeeded?0:1);}
+        static void BuildPlayer(BuildTarget target,string path){Directory.CreateDirectory(Path.GetDirectoryName(path));var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{"Assets/_Project/Art/Test/Game.unity"},extraScriptingDefines=new[]{"SEVENSTEPS_ART_PREVIEW"},target=target,locationPathName=path,options=BuildOptions.None});Debug.Log("[RuinsHenge] "+target+" "+report.summary.result+" errors="+report.summary.totalErrors);EditorApplication.Exit(report.summary.result==BuildResult.Succeeded?0:1);}
     }
 }
 #endif

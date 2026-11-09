@@ -92,6 +92,44 @@ namespace SevenSteps.Tests
             stage.Dispose();
         }
 
+        /// Builds a child renderer with the shared base material on Fit, like the planet summit rebuilds its meshes.
+        sealed class RebuildOnFit : MonoBehaviour, IStageEnvironment
+        {
+            public Material surface;
+            public void Fit(BoardGrid grid)
+            {
+                var child = new GameObject("Summit", typeof(MeshRenderer));
+                child.transform.SetParent(transform, false);
+                child.GetComponent<MeshRenderer>().sharedMaterial = surface;
+            }
+        }
+
+        [Test]
+        public void MaterialOverridesReachSkyAndPlanetAlsoAfterFit()
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            var baseMat = Make(new Material(shader) { name = "Base" });
+            var frostMat = Make(new Material(shader) { name = "Frost" });
+            var preset = Preset("frost", Color.white, Color.black);
+            preset.materialOverrides = new[] { new MaterialOverride { from = baseMat, to = frostMat } };
+            preset.sky.skyPrefab.AddComponent<MeshRenderer>().sharedMaterial = baseMat;
+            Object.DestroyImmediate(preset.sky.planetPrefab.GetComponent<FitProbe>());
+            preset.sky.planetPrefab.AddComponent<MeshRenderer>().sharedMaterial = baseMat;
+            preset.sky.planetPrefab.AddComponent<RebuildOnFit>().surface = baseMat;
+
+            var cam = Make(new GameObject("Camera")).AddComponent<Camera>();
+            Light L(string n) => Make(new GameObject(n)).AddComponent<Light>();
+            var root = Make(new GameObject("Root")).transform;
+            var stage = new ChapterStage(cam, L("Key"), L("Fill"), L("Rim"), root);
+            stage.Enter(preset);
+            Assert.AreSame(frostMat, cam.transform.GetChild(0).GetComponent<MeshRenderer>().sharedMaterial, "sky");
+            var planet = root.GetChild(0);
+            Assert.AreSame(frostMat, planet.GetComponent<MeshRenderer>().sharedMaterial, "planet");
+            stage.Fit(new BoardGrid(4, 4));
+            Assert.AreSame(frostMat, planet.Find("Summit").GetComponent<MeshRenderer>().sharedMaterial, "meshes built in Fit");
+            stage.Dispose();
+        }
+
         [Test]
         public void TileSetOrderIsOverrideThenChapterThenAssets()
         {

@@ -32,15 +32,17 @@ SevenSteps.Contracts   Scripts/Runtime/Contracts   UnityEngine 사용     (아�
    ▲
 SevenSteps.Game        Scripts/Runtime/Game        + InputSystem, uGUI  (게임플레이/UI)  화면·입력·사운드·HUD
    ▲
-SevenSteps.Art         Art/                        + uGUI, URP          (아트)  행성·하늘 환경, 벽 변형, UI 리소스, 프리뷰 스크립트
+SevenSteps.Art         Art/                        + uGUI, URP          (아트)  행성·하늘 환경, 벽 변형, UI 리소스
+SevenSteps.Art.Preview Art/Test                    UNITY_EDITOR || SEVENSTEPS_ART_PREVIEW → Art  (아트)  프리뷰·캡처 스크립트, 정식 빌드 제외
    ▲
 SevenSteps.Editor      Scripts/Editor              Editor 전용          (여러 소유자, 파일 단위)
-SevenSteps.Art.Editor  Art/Editor                  Editor 전용 → Art, Editor  (아트)  세트·환경·UI 생성기
+SevenSteps.Art.Editor  Art/Editor                  Editor 전용 → Art, Art.Preview, Editor  (아트)  세트·환경·UI 생성기
 
 SevenSteps.Tests.EditMode  Tests/EditMode          Editor 전용, UNITY_INCLUDE_TESTS → Core, Contracts, Game
 ```
 
 - `SevenSteps.Art`(2026-11-09): 아트 런타임 스크립트가 정식 Game 씬 프리팹에 들어가므로 Assembly-CSharp에서 분리. Core·Contracts·Game·uGUI·URP를 참조하고, Game·Contracts는 Art를 모른다(보드는 `IStageEnvironment` 같은 Contracts 인터페이스로만 부른다). `autoReferenced: false`. 스크립트 GUID는 그대로라 프리팹 참조는 유지된다. `Art/` 아래 새 런타임 스크립트는 자동으로 이 어셈블리, `Art/Editor/` 아래는 `SevenSteps.Art.Editor`.
+- `SevenSteps.Art.Preview`(2026-11-10, 93477aa 검토 P1): `Art/Test/`의 프리뷰·캡처 스크립트(`PlanetReviewCapture`, `RuinsHengeEnvironment`, `RuinsHengeProbe`). `defineConstraints: UNITY_EDITOR || SEVENSTEPS_ART_PREVIEW` → 에디터에서는 항상 컴파일, **정식 빌드(BuildTools)에는 들어가지 않는다**(파일 IO·화면 캡처·명령줄 읽기 코드가 플레이어에서 빠짐). 아트 프리뷰 플레이어 빌드(`RuinsHengeBuilder.BuildPlayer`, `SevenPlanetBuilder.ReviewWindows`)는 `BuildPlayerOptions.extraScriptingDefines = { "SEVENSTEPS_ART_PREVIEW" }`를 넣어야 이 스크립트가 들어간다(없으면 프리뷰 씬의 스크립트가 빠진다). `Art/Test/` 아래 새 스크립트는 자동으로 이 어셈블리. 정식 게임 코드(Art·Game)는 이 어셈블리를 참조하지 않는다.
 - 화살표 방향으로만 참조한다. `Core`는 아무것도 참조하지 않는다. `Contracts`는 `Game`을 모른다. 테스트 어셈블리는 Core·Contracts·Game을 참조할 수 있다(반대 방향 참조는 없음).
 - UI(HUD, 패널)는 별도 어셈블리로 나누지 않고 `SevenSteps.Game` 안의 `Game/UI/` 폴더, 네임스페이스 `SevenSteps.Game.UI`로 둔다. 잼 규모에서는 컴파일 시간 이득이 없고, `GameController` ↔ HUD 순환을 막으려면 어차피 같은 어셈블리여야 한다. HUD는 `GameSession.Updated`와 `State`만 읽는다.
 - 새 asmdef가 필요하면 아키텍트에게 요청한다. asmdef 파일은 아키텍트 소유다 (위치한 폴더의 소유자와 무관).
@@ -647,6 +649,8 @@ else flow.Go(AppState.Title);
 
 **아트 프리뷰 이전**: `RuinsHengeEnvironment`(지금 `FindFirstObjectByType<GameController>` + `LateUpdate` 폴링 + 명령줄 직접 파싱 + 하늘을 카메라에 맞춰 매 프레임 크기 조정)를 `SkyPreset.skyPrefab`과 `planetPrefab`(`IStageEnvironment.Fit`)으로 나눈다. `artfx=off`/`-artfxoff`는 `LaunchOptions`가 흡수(씬 플로우 S1). 프리뷰 조명 값(키 `#FFE2B9` 2.0, 필 `#A8CFFA` 0.55, 림 `#E4CEFF` 0.28)은 `LightingPreset` 에셋으로.
 
+**머티리얼 교체(feat/view cfde7f2)**: `ChapterMaterials.Apply(root, chapter)`가 `materialOverrides`를 보드 조각·하늘·행성 인스턴스에 한 번씩 적용하고, 행성은 `Fit` 뒤 다시 적용한다. 그래서 **환경 프리팹(`planetPrefab`)은 렌더러를 `Fit` 안에서만 만든다**(`Start`/`Awake`/`Update`에서 만들면 교체를 비켜 간다). 하늘(`RuinsHengeSky`)은 메시를 `Start`에서 카메라 밑에 만들어 교체가 닿지 않는다 — 하늘 색은 하늘 프리팹 필드로 바꾼다.
+
 **검사**: `TileSetValidator`가 `ChapterPreset`도 본다: id 비었거나 중복이면 오류, `tileSet` 없으면 오류, 빈 머티리얼 교체 오류, `lighting`·`sky` 없음 경고, `planetPrefab` 루트에 `IStageEnvironment` 없으면 경고. `levels.json` `chapter` id가 `AppConfig.chapters`에 다 있는지는 필드가 생기면 추가.
 
 **WebGL 예산**: 챕터 에셋은 `AppConfig.chapters` 참조로 모두 빌드에 들어간다(Addressables 안 씀). 행성을 늘리면 빌드 크기를 잰다. 1280×720 draw call 400 안팎(유적 레벨 8: 403). 바닥·벽은 SRP Batcher, 하늘·장식은 결합 메시. 후처리는 Bloom·톤매핑까지(Mobile 렌더러).
@@ -685,6 +689,7 @@ else flow.Go(AppState.Title);
 
 ### 13.3 언어 설정
 - `SettingsData.language` 값은 `"ko"`/`"en"`. **첫 실행**(설정 저장 없음): `SaveSystem`이 `Application.systemLanguage`로 정한다(Korean → ko, 그 밖 en). 읽기는 `SaveSystem.Language`(모르는 값이면 ko), 바꾸기는 `SaveSystem.SetLanguage(lang)`(바로 저장 + `SettingsChanged`). 구현됨.
+- **언어를 고른 적 있음**(2026-11-10, 씬 플로우 요청, 첫 실행 언어 선택 화면): `SettingsData.languageChosen`(bool, 기본 false), 읽기 `SaveSystem.LanguageChosen`. `SetLanguage`만 true로 만든다(설정 토글·선택 화면 모두 `SetLanguage`). 시스템 언어 기본값·다른 설정 저장은 바꾸지 않는다. 이 필드 이전의 저장은 false로 읽혀 기존 플레이어에게도 선택 화면이 한 번 나온다(의도: 아직 고른 적이 없음). Title은 `!LanguageChosen && launch.Language == null`일 때 선택 화면을 먼저 띄운다(`-lang`/`?lang=` 실행은 띄우지 않고 저장도 하지 않는다). 선택 화면의 "계속"은 바꾸지 않았어도 지금 보이는 언어로 `SetLanguage`를 부른다(그래야 다음 실행에 다시 안 나온다), 그다음 `Localizer.Set`.
 - 실행 인자 `-lang en`/URL `?lang=en`(플레이테스트·스모크용, `LaunchOptions.Language`(`Language?`, null = 저장된 설정), 저장하지 않음, 잘못된 값은 `Warnings`). 구현됨. 이번 실행의 언어 = `launch.Language ?? save.Language`.
 - 바꾸면 즉시 반영: `Localizer.Changed` → 뷰가 다시 그린다(코드 생성 UI는 `Refresh`, 프리팹 뷰는 텍스트 갱신 메서드). 씬 다시 읽기 없음.
 
@@ -771,3 +776,5 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 | 2026-11-10 | 아키텍트 | 12.6 아트 확정 계약: `KeepLook`(Contracts enum `Neutral`/`SiblingTrace`), `TileSet.keepLook`(끝에 추가, 기본 Neutral). **`TileSet.StatueFor` 동작 변경**: Neutral이면 `statueBodies`를 보지 않고 `statue`. 지금 RuinsHenge는 `statueBodies`가 모두 중성 `Statue`라 화면 변화 없음. 검사기: 세쌍둥이 프리팹 중복 경고, SiblingTrace인데 `statueBodies` 없음 오류. `AppConfig.tileSet` = `RuinsHenge_Chapter01`은 7300d9d에서 이미 전환됨(변경 없음). 영향: 게임플레이/UI(`BoardView`는 이미 `StatueFor`만 부르므로 코드 변경 없음, HUD는 `BodyColor` 그대로), 씬 플로우(없음, `UiTheme`과 무관), 아트(흔적 채택 시 `keepLook`과 `statueBodies`=Menhir_A/B/C 설정, `RuinsHengeBuilder`가 값을 쓴다면 같이) |
 | 2026-11-10 | 아키텍트 | 6.4·13.5 `chapters.json` `tagline`(행성 선택 한 줄, 리드 요청): `ChapterInfo.tagline`/`ChapterText.tagline`/`Tagline(lang)`(ko가 비면 모든 언어 `""`). export: 한 챕터라도 ko tagline이 있으면 모든 챕터 ko + 모든 번역 tagline 필수, 없으면 경고. `Data/chapters.json`에 빈 `tagline` 필드가 생김. 영향: 레벨 디자인(`design/levels/chapters.json` 값 채움, ko·en 함께), 씬 플로우(행성 선택 표시, `LocalizationCheck` 글꼴 검사에 tagline 추가), 게임플레이/UI 없음. EditMode `ChapterTaglineIsOptionalUntilFilled` |
 | 2026-11-10 | 아키텍트 | 12.8 챕터 프리셋 적용 반영(feat/view 5e0a1cb 검토 승인): `AppConfig.chapters` 7개 + `AppConfig.tileSet` 비움, 첫 세트 `TileSetFor`, 검증기 조건. 공용 API 변경 없음 |
+| 2026-11-10 | 아키텍트 | 2장 `SevenSteps.Art.Preview`(`Art/Test/`, defineConstraints UNITY_EDITOR 또는 SEVENSTEPS_ART_PREVIEW) 추가, `SevenSteps.Art.Editor`가 참조. 정식 Windows 빌드 Managed에 Preview dll 없음 확인. 영향: 아트(프리뷰 플레이어 빌드 두 곳에 `extraScriptingDefines` 한 줄 필요) |
+| 2026-11-10 | 아키텍트 | 13.3 `SettingsData.languageChosen`·`SaveSystem.LanguageChosen`(씬 플로우 요청, 첫 실행 언어 선택 화면). `SetLanguage`가 true로 저장, 이전 저장은 false. 영향: 씬 플로우(Title 선택 화면), 게임플레이/UI 없음(설정 토글은 이미 `SetLanguage`). EditMode `LanguageChosenOnlyBySetLanguage` |

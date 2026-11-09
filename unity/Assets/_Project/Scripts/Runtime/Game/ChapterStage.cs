@@ -47,10 +47,15 @@ namespace SevenSteps.Game
             {
                 cam.backgroundColor = chapter.sky.background;
                 // The sky follows the camera (12.8 contract): a camera child, local pose from the prefab.
-                if (chapter.sky.skyPrefab != null) sky = Object.Instantiate(chapter.sky.skyPrefab, cam.transform, false);
+                if (chapter.sky.skyPrefab != null)
+                {
+                    sky = Object.Instantiate(chapter.sky.skyPrefab, cam.transform, false);
+                    ChapterMaterials.Apply(sky, chapter);
+                }
                 if (chapter.sky.planetPrefab != null)
                 {
                     planet = Object.Instantiate(chapter.sky.planetPrefab, parent);
+                    ChapterMaterials.Apply(planet, chapter);
                     environment = planet.GetComponent<IStageEnvironment>(); // optional: TileSetValidator warns when missing
                 }
             }
@@ -60,7 +65,9 @@ namespace SevenSteps.Game
         /// After the board is built for a stage: fit the planet summit to W x H (same chapter or new one).
         public void Fit(BoardGrid grid)
         {
-            environment?.Fit(grid);
+            if (environment == null) return;
+            environment.Fit(grid);
+            ChapterMaterials.Apply(planet, Current); // Fit rebuilds the summit meshes: same overrides on the new renderers
         }
 
         public void Dispose() => DestroyInstances();
