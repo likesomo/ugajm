@@ -80,9 +80,9 @@ DB_PATH=server/data/playtest-$(date +%F).sqlite node server/src/index.mjs
 - 레벨 디자이너용 내보내기:
   ```bash
   T=<토큰>; B=http://localhost:8787/api/export
-  curl -H "Authorization: Bearer $T" "$B/attempts.csv?since=2026-11-08" -o attempts.csv
-  curl -H "Authorization: Bearer $T" "$B/levels.csv?since=2026-11-08" -o levels.csv
-  curl -H "Authorization: Bearer $T" "$B/events.jsonl?since=2026-11-08" -o events.jsonl
+  curl -H "Authorization: Bearer $T" "$B/attempts.csv?since=2026-11-08&tz=Asia/Seoul" -o attempts.csv
+  curl -H "Authorization: Bearer $T" "$B/levels.csv?since=2026-11-08&tz=Asia/Seoul" -o levels.csv
+  curl -H "Authorization: Bearer $T" "$B/events.jsonl?since=2026-11-08&tz=Asia/Seoul" -o events.jsonl
   ```
   대시보드 위쪽 "내보내기" 링크도 같은 파일을 준다 (현재 필터 적용)
 
@@ -122,7 +122,7 @@ DB_PATH=server/data/playtest-$(date +%F).sqlite node server/src/index.mjs
 | `GET /api/export/events.jsonl` · `events.json` | 토큰 | 원본 이벤트 + 배치 머리 + `attemptId` |
 | `GET /api/export/levels.csv` · `levels.json` | 토큰 | 스테이지별 집계 |
 
-토큰: `Authorization: Bearer <token>` 또는 `?token=<token>`. 모든 `/api/*`는 필터 `client`, `build`, `lang`(UI 언어, 이벤트에 없으면 세션의 직전 값; 언어를 보내지 않은 옛 기록은 언어 필터에서 빠진다), `since`(=`from`), `to`를 받는다 (ms 또는 ISO 날짜, 서버 수신 시각 기준).
+토큰: `Authorization: Bearer <token>` 또는 `?token=<token>`. 모든 `/api/*`는 필터 `client`, `build`, `lang`(UI 언어, 이벤트에 없으면 세션의 직전 값; 언어를 보내지 않은 옛 기록은 언어 필터에서 빠진다), `since`(=`from`), `to`, `tz`를 받는다 (서버 수신 시각 기준. epoch ms, 오프셋 있는 ISO는 그대로, `2026-11-10`·`2026-11-10T09:00`처럼 오프셋 없는 값은 `tz`(IANA 이름 또는 `+09:00`, 기본은 서버 PC 시간대)의 그 시각. 잘못된 값은 400, `src/time.mjs`).
 
 ```bash
 curl -H "Authorization: Bearer $STATS_TOKEN" "http://localhost:8787/api/export/attempts.csv?client=web-proto&since=2026-11-07" -o attempts.csv

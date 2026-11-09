@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { checkEnvelope, checkEvent, MAX_BYTES } from './validate.mjs';
 import { levelStats, chapterStats, stageHeatmap, timelines, toCsv, attemptRows, eventsJsonl, ATTEMPT_COLUMNS } from './stats.mjs';
 import { PROTO_DIR, minMovesLookup } from './levels.mjs';
+import { parseTime, checkTz, SERVER_TZ } from './time.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const MIME = {
@@ -132,14 +133,21 @@ export function createApp({ store, token, levels = [], allowedOrigins = [], trus
   };
 
   const minMovesFor = minMovesLookup(levels);
-  // client, build, from/since and to (epoch ms or ISO date) filter on build/client and server receive time.
+  // client, build, lang, from/since and to filter on build/client/language and server receive time. Times: epoch ms,
+  // ISO with offset, or a date/date-time without offset read in ?tz= (IANA or +09:00), default the server's zone
+  // (time.mjs). Returns { error } for a bad time or zone instead of silently not filtering.
   const filters = (url) => {
     const f = {};
-    const time = (v) => (/^d+$/.test(v) ? Number(v) : Date.parse(v) || null);
     for (const k of ['client', 'build', 'lang']) if (url.searchParams.get(k)) f[k] = url.searchParams.get(k);
-    const from = url.searchParams.get('from') ?? url.searchParams.get('since');
-    if (from) f.from = time(from);
-    if (url.searchParams.get('to')) f.to = time(url.searchParams.get('to'));
+    let tz = SERVER_TZ;
+    if (url.searchParams.get('tz')) {
+      try { tz = checkTz(url.searchParams.get('tz')); } catch { return { error: `unknown tz "${url.searchParams.get('tz')}"` }; }
+    }
+    for (const [k, v] of [['from', url.searchParams.get('from') ?? url.searchParams.get('since')], ['to', url.searchParams.get('to')]]) {
+      if (!v) continue;
+      f[k] = parseTime(v, tz);
+      if (f[k] == null) return { error: `bad time "${v}" (epoch ms, YYYY-MM-DD, YYYY-MM-DDTHH:mm or ISO with offset)` };
+    }
     return f;
   };
 
@@ -232,6 +240,7 @@ export function createApp({ store, token, levels = [], allowedOrigins = [], trus
       if (path.startsWith('/api/')) {
         if (!authed(req, url)) return send(res, 401, { error: 'token required' });
         const f = filters(url);
+        if (f.error) return send(res, 400, { error: f.error });
         const t = now();
         switch (path) {
           case '/api/levels': return send(res, 200, levels);
