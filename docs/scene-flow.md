@@ -326,7 +326,7 @@ Scene root (MonoBehaviour 하나, 조립만)
 
 | 대상 | 공개 면 | 구독·호출하는 쪽 | 단정 조건·비고 |
 |---|---|---|---|
-| `ResultView` | `Show(ResultModel)`, `Hide()`. 이벤트 `NextRequested`, `RetryRequested`, `StageSelectRequested` | `GameFlowController` | 클리어와 실패(몸을 모두 잃음)를 한 뷰로 그린다. 열림 여부의 기준은 흐름 쪽: 클리어 = `AppFlow.State == Result`, 실패 = 보드 상태 Lost(`AppState`는 Game 그대로, 2.4 결정). 실패일 때는 `NextRequested`를 내지 않는다 |
+| `ResultView` | `Show(ResultModel)`, `Hide()`. 이벤트 `NextRequested`, `RetryRequested`, `StageSelectRequested` | `GameFlowController` | 클리어와 실패(몸을 모두 잃음)를 한 뷰로 그린다. 열림 여부의 기준은 흐름 쪽: 클리어 = `AppFlow.State == Result`, 실패 = 보드 상태 Lost(`AppState`는 Game 그대로, 2.4 결정). 실패일 때는 `NextRequested`를 내지 않는다. `Show`/`Hide`를 부르는 쪽은 `GameFlowController` 하나다. 실패는 보드 컨트롤러의 이벤트 `BoardLost(State)`/`BoardRecovered`(코어 `Status.Lose`를 그대로 전달)로 받는다. 실패 결과는 **오버레이가 아니다**(`OverlayStack`에 넣지 않음). 그래서 Z(되돌리기)·R(다시 시작) 보드 입력이 살아 있고, 상태가 Lose를 벗어나면 `BoardRecovered`로 `Hide` |
 | `ResultModel` (읽기 전용) | `stage`, `cleared`, `bodiesUsed`, `minBodies`, `bestBodies`, `isLast` | — | 생성자 검사: `stage >= 0`, `cleared`일 때만 `1 <= bodiesUsed <= level.Bodies`(스테이지별 2~5), `minBodies`는 0(모름) 또는 `1..Bodies`, `bestBodies`는 0(기록 없음) 또는 `1..Bodies`. chapter 필드가 들어오면 `nextChapterChanges` 추가 자리 |
 | `HudView` | `Refresh(State, HudModel{stageIdx, stageCount, message, progress})`. 이벤트 `StageSelectRequested`, `SettingsRequested`, `StageClicked(int)` / `UndoRequested`, `RestartRequested`, `HintRequested` | 앞 3개는 흐름 컨트롤러, 뒤 3개는 보드 컨트롤러 | `GameController` 직접 참조 제거. `NudgeChoice()`와 보드 피드백 메서드는 보드 컨트롤러 전용. 세쌍둥이 몸 아이콘 외형은 `HudModel`이 아니라 `HudView`가 TileSet/GameAssets에서 읽음(아키텍트 설계 대기) |
 | `IOverlay` (설정, 크레딧, 이후 확인 창·챕터 전환) | `Show()`, `Hide()`, `event CloseRequested` | `BackNavigator` | 뷰는 스스로 닫지 않고 `CloseRequested`만 낸다. 열림 여부는 `OverlayStack`(`Contains`, `Count`) 하나가 가진다. 설정 저장은 `Hide`가 아니라 값이 바뀔 때 컨트롤러가 `SaveSystem` 명령으로 한다(Pop 경로와 무관) |
@@ -438,3 +438,4 @@ Open Project 1은 미러의 파일 목록과 커밋 메시지만 확인했다(�
 | 2026-11-09 | 구현 시작(사용자 승인). S0 ①③④ 커밋(5fdaf49, 971ae2f, feb8fcb), 진행 상태 5.2 추가. origin/7lucky 80b74cd 합침 |
 | 2026-11-09 | 4.7 뷰 공개 면 합의 초안(게임플레이/UI), 5.1/5.2 순서 정리 |
 | 2026-11-09 | 4.7: 실패 결과도 ResultView(NextRequested 없음, bodiesUsed 검사는 클리어일 때만). S0-1 아키텍트 승인, 971ae2f 확인(변경 없음) |
+| 2026-11-09 | 4.7: 실패 결과는 오버레이 아님, BoardLost/BoardRecovered → GameFlowController가 ResultView 표시/숨김 |
