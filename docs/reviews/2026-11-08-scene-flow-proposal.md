@@ -43,3 +43,13 @@ EditMode + 가짜 로더 + `smoke`/`smoke-webgl`로 S0~S4를 덮을 수 있다. 
 - 씬 소유: 7lucky 29b1f4a README 소유권 표에서 `Scenes/**`·`Game/App/**`가 씬 플로우로 정해졌다. 아키텍처 8장 표의 소유자 열은 아키텍트가 이에 맞춰 고쳤다.
 - S3의 `GameController` 분리는 두 담당이 같은 파일을 고치게 된다. 먼저 씬 플로우가 흐름 부분을 빼는 커밋을 합치고, 그 뒤 게임플레이/UI가 보드 부분을 정리하는 순서로(동시 작업 금지).
 - 텔레메트리 시점 보존(5.1) 좋다. `level_start.via` 골든 외에 씬을 넘는 `level_leave`는 S3 EditMode 테스트로 고정하는 안 그대로 진행.
+
+---
+
+## S0-1 검토: feat/scene-flow 5fdaf49 (Services.cs, 2026-11-09)
+
+**결론: 승인.** 8장·9장 계약과 위 승인 조건 그대로다.
+- `Services.ResetForPlay()`: `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]`, `map.Clear()`. `Clear()`는 테스트용으로 남김. 공개 API 추가뿐이고 기존 호출 영향 없음.
+- 직접 Play 판단: `Bootstrap.HasRunThisPlay`(Run 끝에서 true, 같은 훅으로 false). `GameController`·`TitleScreen`이 `Services.Has<AppFlow>()` 대신 이것을 본다(8장 문장과 일치). `Run`이 중간에 던지면 플래그가 false로 남아 다음 진입에서 다시 시도한다(맞는 동작).
+- 런타임 정적 필드 전수 확인: `Services.map`, `Bootstrap.HasRunThisPlay`, `LevelCatalog`(cached/source/minBodies), `GameController.FirstEntryPending`, `Ui.Font`/`circle` 모두 초기화됨. 나머지는 `static readonly` 상수 표(`Messages`)와 매번 비우는 임시 목록(`BoardView` Ints)이라 문제 없음.
+- 테스트: `PlayResetTests`(5개 타입에 훅이 정확히 하나)는 리플렉션이지만 에디터 전용 테스트라 9장 "리플렉션 금지"(런타임·스트리핑)와 무관. 새 정적 보유 타입을 만들면 이 목록에 추가할 것.
