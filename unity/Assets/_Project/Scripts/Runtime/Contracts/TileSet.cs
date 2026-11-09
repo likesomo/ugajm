@@ -64,6 +64,8 @@ namespace SevenSteps.Contracts
         public TileVisual lever;
         [Tooltip("Index 0 = raised now (blocks), 1 = lowered now (passable). Rules.TileAt gives the current shape.")]
         public TileVisual[] flipWalls = new TileVisual[2];
+        [Tooltip("Mud m: entering costs 2 steps (docs 6.3). Floor-like, top at y = 0. No prefab = drawn as floor (validator warns).")]
+        public TileVisual mud;
 
         [Header("Actors and markers")]
         public TileVisual player;
@@ -123,6 +125,7 @@ namespace SevenSteps.Contracts
                 case TileKind.CountDoor: return countDoor;
                 case TileKind.Lever: return lever;
                 case TileKind.FlipWall: return Pick(flipWalls, id.Variant);
+                case TileKind.Mud: return mud.HasPrefab ? mud : floor;
                 default: return default;
             }
         }

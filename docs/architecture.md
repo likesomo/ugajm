@@ -239,6 +239,33 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
 - 경계 사례(코어가 테스트·골든 트레이스로 고정): (1) 벽이 올라올 때 그 칸에 석상이나 출발점이 있어도 그대로 뒤집힌다(실험과 같음, 잼 범위에서 겹침 허용). 화면은 올라온 벽과 석상/출발점 표시를 한 칸에 함께 그릴 수 있어야 한다. (2) 출발점인 레버 칸에서 7번째 → `Vanish`, `Flip` 없음.
 - 텔레메트리 `tile` 값(`lever`, 뒤집힘 벽 이름)과 `flip` 이벤트 여부는 백엔드/분석이 `docs/telemetry.md`에 정한다.
 
+### 6.3 진흙 (`m`, 2026-11-09 승인, 코어 구현 feat/core 6ae58e2)
+
+레벨 디자인 제안(`design/levels/stage-plan-50.md` 5장, 실험 `prototypes/seven-steps/experiments/mud/`). 7장(원형 제단)의 새 기믹.
+
+- 맵 글자 `m`. 레벨 필드 추가 없음. 리플레이 글자와 겹치지 않음.
+- 규칙(실험 `core.js` 기준, 코어가 `core.js`·C#·골든으로 고정): 진흙 칸에 **들어가는 걸음이 2걸음**이다(`stepIdx = used + 2`). 남은 걸음이 1이면(6걸음 쓴 뒤) 들어갈 수 없다 → `Bump`. 얼음에서 미끄러지다 진흙에 닿으면 거기서 멈춘다(추가 걸음 없음). 7번째 걸음이 진흙 위에서 끝나면 보통 바닥과 같다(`Choose`/`Stone`/`Vanish`, 석상 가능). SWITCH로 진흙 칸이 출발점이 될 수 있다. Core 질의 `Rules.IsMud(char)`(공개 API 추가는 이것 하나). 숫자 문(`1`~`7`)은 그 걸음의 `stepIdx`로 판단하므로 진흙을 지나면 숫자 하나를 건너뛴다.
+- 이벤트: 새 종류 없음(실험과 같음, 코어 구현도 같음). 막힐 때는 `Bump`(At = 진흙 칸). 진흙으로 들어간 걸음은 `Step`(또는 마지막 칸 이벤트)의 `StepIdx`가 2 오른다. 화면은 `StepIdx`로 걸음 표시를 2칸 채우고, 칸이 진흙인지는 `TileId.At`으로 안다. 진흙 진입 전용 이벤트(`Mud` = 19)는 넣지 않는다(코어 제안 보류): 화면이 `TileId`로 알 수 있다. 연출에 꼭 필요하면 게임플레이/UI가 요청한다.
+- 표시: `TileKind.Mud`(끝에 추가, variant 0), `TileId.FromChar('m')`, `TileSet.mud`(바닥처럼 윗면 y = 0). 프리팹이 없으면 바닥으로 그린다(검사기 경고). 아트: 이끼 늪 진흙 바닥 1종.
+- 담당: 코어(규칙·파서·`Rules.Key` 영향 없음 확인·테스트·JS), 레벨 디자인(43~50 스테이지), 아키텍트(`TileKind`/`TileId`/`TileSet`/검사기, 이 절), 게임플레이/UI(걸음 표시 2칸, 진흙 연출), 아트(진흙 프리팹), 백엔드/분석(텔레메트리 `tile` 값 `mud`).
+
+### 6.4 챕터 필드와 `chapters.json` (2026-11-09 결정)
+
+리드 결정: 레벨 디자인 제안(정수 `chapter`, `stage-plan-50.md` 7장)을 **문자열 id**로 바꾼다. 챕터 순서는 `chapters.json`의 배열 순서다.
+
+- `levels.js` 레벨 객체 / `levels.json` `LevelDto`: `chapter`(문자열 id, 예 `"moss"`), `story`(한 줄 서사, 세쌍둥이 시점, 힌트와 별개, 선택). Core `Level`에는 넣지 않는다(규칙과 무관). `LevelDto` 필드 추가는 코어.
+- `design/levels/chapters.json`(레벨 디자인 원본) → `unity.sh levels`가 `Assets/_Project/Data/chapters.json`으로 복사(텍스트, 커밋).
+  ```json
+  { "chapters": [
+    { "id": "moss", "planet": "이끼의 궤도", "concept": "...", "intro": "진입 문구", "artPreset": "moss" }
+  ] }
+  ```
+  `id`: 소문자·하이픈, 바꾸지 않는다(텔레메트리·저장이 기댈 수 있음). `artPreset`: `ChapterPreset.id`(12.8). 비면 `id`와 같다. 여러 챕터가 한 프리셋을 같이 쓸 수 있다.
+- 런타임 형식: `Contracts/Chapters/ChapterInfo.cs`의 `ChapterFileDto`/`ChapterInfo`(아키텍트). 읽기는 `GameAssets.chaptersJson`(TextAsset) → `LevelCatalog`(게임플레이/UI): `ChapterOf(stage)` → `ChapterInfo`, 아트는 `AppConfig.Chapter(info.ArtPreset)`.
+- export 단정 검증(`unity/Tools/export-levels.mjs`, 실패하면 파일을 쓰지 않고 exit 1, 레벨 디자인 제안 그대로): 모든 스테이지에 `chapter`가 있고 `chapters.json`에 있다, 스테이지 순서대로 챕터가 `chapters.json` 순서를 거스르지 않고 이어진다, 모든 `bodies <= 3`, 모두 솔버로 풀리고 최소 몸 수 <= 3, 이름 중복 없음. **지금 17스테이지(챕터 없음, 14~17 몸 4~5)는 플레이테스트 1차까지 그대로**이므로 검증은 형식 도입 커밋(첫 묶음)부터 켠다. 그 전까지 런타임은 `chapter`가 없으면 첫 챕터, 몸 4~5는 외형 순환(A, B, C, A)으로 임시 허용(12.6).
+- Unity 검사: `TileSetValidator`가 `Data/chapters.json`의 `artPreset`이 모두 `AppConfig.chapters`에 있는지 본다(파일과 챕터 에셋이 생기면 아키텍트가 켬).
+- 담당: 레벨 디자인(`chapters.json`, `chapter`/`story` 채우기, export 검증), 코어(`LevelDto` 필드), 아키텍트(`ChapterInfo`, 이 절, 검사기), 게임플레이/UI(`LevelCatalog`·진입 문구 표시), 씬 플로우(챕터가 바뀔 때의 흐름·`ResultModel.nextChapterChanges`), 백엔드/분석(이벤트에 챕터 id를 실을지).
+
 ---
 
 ## 7. 타일 → 프리팹 매핑: `TileSet`
@@ -538,7 +565,7 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | `SkyPreset` (SO) | `background`, `skyPrefab`, `planetPrefab` | 카메라 배경색, 카메라를 따라가는 하늘(성운·별·먼 행성, 후처리 `Volume` 가능), 보드 아래 행성 정상부·장식 |
 | `IStageEnvironment` | `Fit(BoardGrid grid)` | `planetPrefab` 루트가 구현. 스테이지 진입 때 한 번 불려 정상부를 W×H에 맞춘다. 게임 오브젝트 찾기·폴링·명령줄 읽기 금지 |
 | `AppConfig.chapters[]` | 첫 항목이 기본 | `AppConfig.Chapter(id)`: 빈 id = 첫 챕터, 챕터 없음 = null, 모르는 id = 예외 |
-| `levels.json` `chapter` | 문자열 id, 없으면 첫 챕터 | `LevelDto`에만 둔다(Core `Level`은 모름). 조회 `LevelCatalog.ChapterOf(stage)`. 레벨 디자인 제안 → 코어(`LevelDto`)·게임플레이/UI(`LevelCatalog`) |
+| `levels.json` `chapter` + `chapters.json` | 문자열 id, 챕터 정보·`artPreset`은 `chapters.json`(6.4) | `LevelDto`에만 둔다(Core `Level`은 모름). `LevelCatalog.ChapterOf(stage)` → `ChapterInfo` → `AppConfig.Chapter(info.ArtPreset)` |
 
 **보드 세트 결정 순서**: `AppConfig.tileSet`(설정되어 있으면 디버그·전환용 덮어쓰기) → 스테이지 챕터의 `tileSet` → `GameAssets.tileSet`. 지금(챕터 에셋 전)은 `AppConfig.tileSet = RuinsHenge_Chapter01`. 챕터 에셋이 생기면 `chapters[0]`에 유적 챕터를 넣고 `AppConfig.tileSet`은 비운다.
 
@@ -587,3 +614,5 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 2026-11-09 | 아키텍트 | 12.6 몸별 외형 계약: `BodyIndex.Current`/`OfStatue`(Contracts, Undo 사슬에서 계산, Core 변경 없음), `TileSet.playerBodies[]`/`statueBodies[]`(끝에 추가)·`PlayerFor`/`StatueFor`(비면 기존 필드, 인덱스 순환). 12.7 TileSet 정식 위치 `Art/<세트>/`, 검사기 범위 `Assets/_Project`·메시/머티리얼 누락 오류·벽 높이 경고. 12.8 챕터 프리셋 설계(`ChapterPreset`, `IStageEnvironment`, `AppConfig.chapters`, `levels.json` `chapter`). 12.9 smoke-webgl 팔레트 무관 판정 제안. 게임플레이/UI가 보드에 적용 |
 | 2026-11-09 | 아키텍트 | 12.6 몸 수 상한 3(사용자 결정), `TileSet.bodyColors[3]`/`BodyColor(k)`(HUD 몸 아이콘, 머플러 3색), `BodyIndexTests`. 12.7 `Art/Test/Game.unity` 별칭은 빌드 목록 밖 조건으로 허용. 12.8 챕터 프리셋 타입 추가: `ChapterPreset`(`materialOverrides`), `LightingPreset`(`LightRig`), `SkyPreset`, `IStageEnvironment.Fit(BoardGrid)`, `AppConfig.chapters`/`Chapter(id)`, 세트 결정 순서, 검사기 챕터 검사. 12.9 리드 구현. 적용은 게임플레이/UI |
 | 2026-11-09 | 아키텍트 | 11.2 씬 플로우 S0·S1 반영(feat/scene-flow 5fdaf49·923a1a6, 아키텍트 검토 승인): `Services.ResetForPlay`(SubsystemRegistration), `Register` 중복 예외, `Bootstrap.Run` config null·두 번째 실행 예외·`HasRunThisPlay`. **`LaunchOptions` 공개 필드 → 읽기 전용 속성**(읽기 호환), `TakeReplay()`, `UseEditorStart(level, replay)`, `OpenStageSelect`/`OpenCredits`, `Warnings`. 필드에 값을 대입하던 코드는 컴파일 오류가 나므로 두 메서드로 바꿀 것 |
+| 2026-11-09 | 아키텍트 | 6.3 진흙 `m`(2걸음, 남은 1걸음이면 막힘, 얼음 미끄러짐 멈춤, 새 이벤트 없음) 고지, `TileKind.Mud`(끝에 추가)·`TileId.FromChar('m')`·`TileSet.mud`(없으면 바닥, 검사기 경고). 6.4 `chapter` = 문자열 id + `chapters.json`(`id`, `planet`, `concept`, `intro`, `artPreset`), `story`, export 검증은 첫 묶음부터, `ChapterInfo`/`ChapterFileDto`(Contracts). 12.8 표 갱신 |
+| 2026-11-09 | 코어·아키텍트 | 6.3 진흙 코어 구현(feat/core 6ae58e2): `Rules.IsMud(char)`, SWITCH 출발점 가능, 막히면 `Bump`(진흙 칸). `Mud` 이벤트는 넣지 않음. 골든 트레이스 id가 스테이지 이름 기준으로 바뀜(`server/fixtures` 재생성) |
