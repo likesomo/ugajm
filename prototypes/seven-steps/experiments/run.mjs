@@ -34,7 +34,8 @@ for (const [i, def] of STAGES.entries()) {
   if (best) console.log(`     ${best.path.map((d) => arrows[d]).join('')}  (${best.moves} 행동)`);
   if (def.gimmickTiles) {
     console.log(`     기믹 칸을 바닥으로 바꾸면: ${plain ? `몸 ${plain.bodies}로 풀림 (${plain.moves} 행동), 그 해가 원래 판에서 ${plainWorks ? '통함' : '안 통함'}` : '못 풂'}${plainNoSwitch && needsSwitch ? ', SWITCH 없이도 풀림' : ''}`);
-    const needed = !plain || plain.bodies < (best?.bodies ?? 99) || !plainWorks || (needsSwitch && plainNoSwitch);
+    // Needed when removing it changes the answer either way: unsolvable, other body count or length, or its answer fails here.
+    const needed = !plain || plain.bodies !== best?.bodies || plain.moves !== best?.moves || !plainWorks || (needsSwitch && plainNoSwitch);
     console.log(`     → 기믹 ${needed ? '필요' : '불필요 (장식)'}`);
   }
 }

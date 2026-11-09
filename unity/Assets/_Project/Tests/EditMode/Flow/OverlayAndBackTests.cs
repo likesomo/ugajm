@@ -111,7 +111,7 @@ namespace SevenSteps.Tests
                 Press(canvas, "TelemetryToggle");   // default on -> off
                 Assert.AreEqual(2, save.Settings.telemetryChoice);
                 Assert.AreEqual("", save.Settings.playerId, "opt-out forgets the id");
-                Assert.IsFalse(SettingsController.TelemetryOn(save.Settings, true));
+                Assert.IsFalse(save.TelemetryOn(true));
             }
             finally { UnityEngine.Object.DestroyImmediate(canvas); }
         }

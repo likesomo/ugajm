@@ -97,7 +97,7 @@
 | 18 | 반전 | 처음부터 다시 세기 | new (batch2) | gate, switch, recount | 0.32 | 첫째는 못 지나는 2 문. 넘긴 자리에서 둘째는 1부터 센다 |
 | 19 | 응용 | 숫자와 구멍 | new (batch2) | gate, pit, bridge | 0.3 | 다리를 건너는 걸음까지 센다 |
 | 20 | 응용 | 두 숫자 | new (batch2, 탐색 후보) | gate, switch | 0.38 | 바통을 넘길 자리로 둘째의 걸음 번호를 맞춘다 |
-| 21 | 피날레 | 새김돌의 계산 | new (gate+pit+plate) | gate, pit, keep, plate | 0.5 | 세 형제의 쓰임을 숫자로 맞춘다 |
+| 21 | 피날레 | 새김돌의 계산 | new (batch3, 탐색 후보) | gate, keep, plate, switch | 0.45 | 세 형제의 쓰임을 숫자로 맞춘다 |
 
 ### 4장 서리 위성 (22–28)
 
@@ -105,13 +105,13 @@
 
 | # | 역할 | 제목 | 출처 | 기믹 | 목표 D | 의도한 아하 |
 |---|---|---|---|---|---|---|
-| 22 | 소개 | 미끄러운 첫걸음 | new (ice) | ice | 0.2 | 얼음은 몇 칸을 가도 한 걸음 |
+| 22 | 소개 | 미끄러운 첫걸음 | new (batch3) | ice | 0.17 | 얼음은 몇 칸을 가도 한 걸음 |
 | 23 | 응용 | 홀수의 저주 | keep 7 | ice, parity | 0.3 | 바닥만으로는 7이 안 되는 칸, 얼음이 홀짝을 바꾼다 |
-| 24 | 응용 | 얼음 위의 숫자 | new (gate-ice) | ice, gate | 0.38 | 미끄럼 한 번이 숫자 하나 |
+| 24 | 응용 | 얼음 위의 숫자 | new (batch3, 탐색 후보) | ice, gate, switch | 0.37 | 미끄럼 한 번이 숫자 하나 |
 | 25 | 반전 | 멈춰 세우는 석상 | keep 9 | ice, keep, statueStopper | 0.42 | 선돌이 얼음을 멈추는 벽이 된다 |
-| 26 | 반전 | 미끄럼을 막는 형제 | new (ice-statue) | ice, keep, statueStopper, statueBlock | 0.45 | 멈춤벽이 다음 미끄럼도 막는다. 세울 자리를 고른다 |
-| 27 | 응용 | 얼음 끝의 구멍 | new (ice-pit) | ice, pit, bridge | 0.5 | 미끄러져 7번째에 구멍에 닿으면 다리 |
-| 28 | 피날레 | 서리의 길목 | new (ice+plate+switch) | ice, plate, keep, switch | 0.55 | 얼음, 선돌, 바통을 한 판에서 |
+| 26 | 반전 | 미끄럼을 막는 형제 | new (batch3, 탐색 후보) | ice, keep, statueStopper, statueBlock, switch | 0.56 | 멈춤벽이 다음 미끄럼도 막는다. 세울 자리를 고른다 |
+| 27 | 응용 | 얼음 끝의 구멍 | new (batch3, 탐색 후보) | ice, pit, bridge | 0.43 | 미끄러져 7번째에 구멍에 닿으면 다리 |
+| 28 | 피날레 | 서리의 길목 | new (batch3, 탐색 후보) | ice, plate, keep | 0.44 | 미끄럼으로 발판에 닿아 선돌을 세우고 둘째가 문을 지난다 |
 
 ### 5장 결구의 행성 (29–35)
 
@@ -120,7 +120,7 @@
 | # | 역할 | 제목 | 출처 | 기믹 | 목표 D | 의도한 아하 |
 |---|---|---|---|---|---|---|
 | 29 | 소개 | 내리는 벽 | keep 8 | lever | 0.32 | 7번째 걸음이 레버를 당겨 벽을 내린다 |
-| 30 | 응용 | 열면 닫힌다 | exp lever 응용 | lever, switch | 0.4 | 레버는 한 길을 열고 다른 길을 닫는다 |
+| 30 | 응용 | 열면 닫힌다 | exp lever 응용 | lever, switch | 0.5 | 레버는 한 길을 열고 다른 길을 닫는다 |
 | 31 | 반전 | 올려서 멈추기 | keep 10 | lever, ice, wallStopper | 0.42 | 벽을 올려 미끄럼을 멈춘다 |
 | 32 | 응용 | 두 번 당기기 | new (lever+switch) | lever, switch, switchBack | 0.48 | 출발점을 옮겨 레버를 다시 당긴다 |
 | 33 | 응용 | 레버와 숫자 | new (lever-gate) | lever, gate | 0.5 | 벽이 내려간 뒤의 길이로 숫자를 맞춘다 |

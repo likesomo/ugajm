@@ -380,7 +380,7 @@ S2·S3 커밋마다 `unity.sh test`(텔레메트리 골든)를 돌린다. 골든
 | S3b `HudView` 이벤트화, TileSet 주입 | 70ccc03 | test 242, build-win + smoke 7/7. feat/view eafd97b(BodyLook)를 먼저 합친 뒤 주입으로 바꿈 | — |
 | S3c Game 씬 분리 | 0fc35a3 | test 249, build-win + smoke 7/7. `GameController`=씬 루트(클래스·guid·필드 유지: Game.unity, Art/Test/Game.unity, 아트 빌더 그대로), `BoardController`=보드, `Flow/GameFlowController`=흐름(`IStageBoard`/`IResultPanel`) | 아키텍트 승인(2026-11-09, 42613fb). 보드 쪽 정리는 게임플레이/UI. `GameController.LevelIndex`/`Levels`(아트 프리뷰용)는 12.8 이전 때 삭제 |
 | S3d Title 씬 분리 | 18029f4 | test 253, build-win + smoke 7/7, 타이틀 스모크, **build-webgl(Mobile_RPAsset) + smoke-webgl 1/8/13 OK**(33381/27627/24738, 콘솔 0). 64bb47f에서 7lucky 81262de 합친 뒤 test 253, build-win + smoke 7/7 | Title→Game 실제 클릭은 수동 확인 |
-| S4 오버레이·뒤로 가기·챕터 자리 | 753fc60 | test 258/258(+5), scene-validate OK, build-win + smoke 7/7, 타이틀 스모크(크레딧을 오버레이로 띄움) OK. `AppInput`은 만들지 않음(키 읽기는 씬 루트 두 곳뿐이라 필요 없음). 챕터 전환 카드·테마 프리셋은 `GameFlowController.ChapterEntering`에 구독만 붙이면 된다 | Esc 실제 키 확인은 수동(설정 열고 Esc → 닫힘, 다시 Esc → StageSelect) |
+| S4 오버레이·뒤로 가기·챕터 자리 | 753fc60 | test 258/258(+5), scene-validate OK, build-win + smoke 7/7, 타이틀 스모크(크레딧을 오버레이로 띄움) OK. `AppInput`은 만들지 않음(키 읽기는 씬 루트 두 곳뿐이라 필요 없음). 챕터 전환 카드·테마 프리셋은 `GameFlowController.ChapterEntering`에 구독만 붙이면 된다. **chapters.json이 생기면** 비교 전에 `ChapterFileDto.Get(id).id`로 정규화한다(""와 첫 챕터 id를 같은 챕터로, 아키텍트 S4 메모) | 아키텍트 승인. 리드 WebGL 수동 확인(클리어→결과→다음, 설정·크레딧 Esc) 완료 |
 
 챕터 방향(2026-11-08 사용자): 챕터 = 우주 속 행성, 주인공 세쌍둥이. S4에서 `GameFlowController`에 챕터 전환 연출 자리(다음 스테이지의 chapter가 바뀌면 전환 오버레이), S6에서 `UiTheme`·조명·하늘을 챕터별 프리셋으로 고를 자리를 남긴다. 레벨 데이터 chapter 필드는 레벨 담당이 추가한다.
 
@@ -455,3 +455,4 @@ Open Project 1은 미러의 파일 목록과 커밋 메시지만 확인했다(�
 | 2026-11-09 | S3 완료(83a55d6, 70ccc03, 0fc35a3, 18029f4), 5.2 갱신. origin/7lucky 81262de 합침 |
 | 2026-11-09 | S4 커밋 753fc60, 5.2 갱신 |
 | 2026-11-09 | S3 아키텍트 승인(42613fb) |
+| 2026-11-09 | S4 승인, SettingsController가 SaveSystem 명령 사용, ChapterEntering 정규화 메모. origin/7lucky 6b9c419 합침 |
