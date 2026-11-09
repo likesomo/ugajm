@@ -55,12 +55,12 @@ namespace SevenSteps.Game.Telemetry
 #endif
                 Build = build.Length > 40 ? build.Substring(0, 40) : build,
             };
-            var t = new HttpTelemetry(ctx, new PlayerPrefsStore(), level => save.Progress.CountStart(level - 1));
+            var t = new HttpTelemetry(ctx, new PlayerPrefsStore(), level => save.Progress.CountStart(LevelCatalog.At(level - 1)));
             var go = new GameObject(ObjectName);
             DontDestroyOnLoad(go);
             go.AddComponent<TelemetryRunner>().telemetry = t;
             t.SetEnabled(allowed);
-            if (allowed) t.Tracker.SessionStart(firstTime, save.Progress.cleared.Count);
+            if (allowed) t.Tracker.SessionStart(firstTime, save.Progress.ClearedCount);
 
             // Consent changes in Settings apply right away (11.3). Opting in again starts a session with a fresh id.
             save.SettingsChanged += s =>
@@ -72,7 +72,7 @@ namespace SevenSteps.Game.Telemetry
                 t.Context.PlayerId = s.playerId;
                 t.SetEnabled(on);
                 if (fresh) save.SaveSettings();
-                if (on) t.Tracker.SessionStart(fresh, save.Progress.cleared.Count);
+                if (on) t.Tracker.SessionStart(fresh, save.Progress.ClearedCount);
             };
 #if UNITY_WEBGL && !UNITY_EDITOR
             SevenSteps_RegisterVisibility(ObjectName);

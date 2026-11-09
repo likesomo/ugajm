@@ -16,3 +16,4 @@ MonoBehaviour:
   telemetryOnByDefault: 0
   buildChannel: dev
   tileSet: {fileID: 11400000, guid: d5840d2071f7eb24f85c080dffcfcb06, type: 2}
+  chapters: []

@@ -53,15 +53,15 @@ unity/Tools/unity.sh test         # EditMode 테스트 (Tests/EditMode) → repo
 unity/Tools/unity.sh scene-validate   # 빌드 목록 = AppScenes, 씬 루트·필수 참조(폰트 등 공유 에셋 포함) 검사. build-win/build-webgl 도 빌드 전에 같은 검사를 하고 오류면 빌드하지 않는다
 unity/Tools/unity.sh tileset-validate # 모든 TileSet 을 docs/architecture.md 12장 규격으로 검사 (오류면 실패). 아트 TileSet 을 합치기 전 필수
 unity/Tools/unity.sh tileset      # 임시 TileSet 다시 생성 (Data/TileSets/TopDown_Placeholder.asset)
-unity/Tools/unity.sh verify       # C# 규칙이 JS 솔버와 같은 답인지 전 스테이지(17) 검사 → reports/seven-steps-unity-verify.json
+unity/Tools/unity.sh verify       # C# 규칙이 JS 솔버와 같은 답인지 전 스테이지(50) 검사 → reports/seven-steps-unity-verify.json
 unity/Tools/unity.sh build-win    # → Builds/Windows/Seven Steps.exe      (play 로 실행)
-unity/Tools/unity.sh smoke-webgl  # WebGL 빌드를 Orca 브라우저로 3개 스테이지 열어 3D 보드 표시·콘솔 예외 확인 → reports/smoke-webgl/ (약 90초)
-unity/Tools/unity.sh smoke        # 윈도우 빌드를 리플레이 7개(스테이지 1,3,8,9,13,15,16)로 실행, 스크린샷+로그 → reports/smoke/, 예외 있으면 실패
+unity/Tools/unity.sh smoke-webgl  # WebGL 빌드를 Orca 브라우저로 3개 스테이지(1, 29, 50) 열어 3D 보드 표시·콘솔 예외 확인 → reports/smoke-webgl/ (약 90초)
+unity/Tools/unity.sh smoke        # 윈도우 빌드를 리플레이 7개(스테이지 1,4,8,10,22,29,43)로 실행, 스크린샷+로그 → reports/smoke/, 예외 있으면 실패
 unity/Tools/unity.sh build-webgl  # → Builds/WebGL/   (serve [포트] 로 http://localhost:8090, Node 정적 서버 unity/Tools/serve.mjs)
 unity/Tools/unity.sh all          # levels + setup + verify + build-win + smoke
 ```
 - 에디터: `unity/Tools/unity.sh editor` → 메뉴 **Seven Steps > Open Game Scene** → Play. `Game` 오브젝트의 `startLevel`/`replay`로 시작 스테이지 지정
-- 같은 재현 형식: 데스크톱 `"Seven Steps.exe" -level 8 -replay LRRRRDDK`, WebGL `?level=8&replay=LRRRRDDK` (U D L R 이동, K KEEP, X SWITCH)
+- 같은 재현 형식: 데스크톱 `"Seven Steps.exe" -level 29 -replay DURRRRRKDDR`, WebGL `?level=29&replay=DURRRRRKDDR` (U D L R 이동, K KEEP, X SWITCH)
 - 조작: 방향키/WASD/옆 칸 클릭, K KEEP, X SWITCH, Z 되돌리기, R 재시작, H 풀이, `[` `]` 스테이지, Enter 다음
 - Node.js: `C:\Program Files\nodejs` (스크립트가 PATH에 추가함)
 

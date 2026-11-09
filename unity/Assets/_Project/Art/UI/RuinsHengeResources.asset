@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a6f392e622e634abeae24c1c7c8c74, type: 3}
+  m_Name: RuinsHengeResources
+  m_EditorClassIdentifier: Assembly-CSharp::SevenSteps.Art.RuinsHengeUiResources
+  theme: {fileID: 11400000, guid: 5fb5bfb0b12b0b541b9acd8cfff3f58e, type: 2}
+  atlas: {fileID: 4343727234628468602, guid: b10ae72d2408c9a498191a0910c21c63, type: 2}
+  buttonDefault: {fileID: -7786063599247119672, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  buttonHover: {fileID: 425597936212420307, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  buttonPressed: {fileID: 5123317806511552220, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  buttonDisabled: {fileID: -5730984250091439851, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  panelStone: {fileID: -1599458904988553923, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  panelWood: {fileID: -8833158543952631988, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  undo: {fileID: 2208648326410687911, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  restart: {fileID: -877065831318381754, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  hint: {fileID: -4650518636092720140, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  settings: {fileID: 4230216764240656230, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  sound: {fileID: 6493222095853719535, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  starEmpty: {fileID: -4730573424505813790, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  starFilled: {fileID: 3802091392676919337, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  bodyA: {fileID: 3475012551155145360, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  bodyB: {fileID: -8619288524255508097, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  bodyC: {fileID: 3912379694211042956, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  bodyStone: {fileID: 8184383529751792328, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  dipper:
+  - {x: 0.12, y: 0.12}
+  - {x: 0.1, y: 0.36}
+  - {x: 0.35, y: 0.4}
+  - {x: 0.42, y: 0.18}
+  - {x: 0.62, y: 0.12}
+  - {x: 0.79, y: 0.2}
+  - {x: 0.98, y: 0.28}

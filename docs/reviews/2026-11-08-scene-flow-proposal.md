@@ -127,3 +127,10 @@ EditMode + 가짜 로더 + `smoke`/`smoke-webgl`로 S0~S4를 덮을 수 있다. 
 - DDOL `SceneFader`: 텔레메트리 러너는 텔레메트리가 꺼지면 없으므로 별도 오브젝트가 맞다. 8장 "DDOL은 러너 하나" 문구를 두 개로 고쳤다. `SceneLoader`는 부트스트랩마다 새로 만들어지고 Play 끝에 DDOL도 사라져 도메인 리로드 꺼짐에서도 중복 없음.
 - 사소: `LoadSceneAsync`가 null인 비정상 경로는 `Loaded`를 내서 흐름은 풀리지만 `AppFlow.State`는 새 상태, 씬은 이전 씬으로 어긋난다. 오류 로그가 크게 남고 사전 검사 뒤라 사실상 안 일어나므로 둔다.
 - 텔레메트리: 씬을 넘는 `level_leave`가 페이드 아웃(0.15초)만큼 늦게 나간다. 순서·값은 같고 시간만 조금 늘어남(골든은 씬을 안 쓰므로 영향 없음).
+
+## GlyphCheck 검토: feat/scene-flow 942995f (2026-11-09)
+
+**결론: 승인.** 에디터 전용(`Scripts/Editor/SceneFlow`), `SceneFlowValidator` 안에서 빌드 전에 돈다.
+- 기준이 `Font.HasCharacter`가 아니라 TTF cmap(형식 4·12)이라 동적 글꼴의 "있다고 하는데 WebGL에서 안 그려짐"을 잡는다. 예외 허용은 WebGL에서 확인한 `U+00B7` 하나뿐(근거 주석).
+- 검사 대상: 테마 글꼴을 쓰는 프리팹 `Text`, `levels.json` 이름·힌트, `UI/Credits.txt`, `Game` 런타임 코드와 `UiBuilder`의 비ASCII 문자열 리터럴(주석 제외). 글꼴 파일을 못 읽으면(공유 폴더 미연결) 오류 — fail fast.
+- **추가 필요(데이터가 생기면)**: `levels.json`의 `story`(6.4), `Data/chapters.json`의 `planet`·`concept`·`intro`. 챕터 전환 카드·결과 문구에 나온다.

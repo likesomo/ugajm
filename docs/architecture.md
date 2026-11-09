@@ -32,11 +32,15 @@ SevenSteps.Contracts   Scripts/Runtime/Contracts   UnityEngine 사용     (아�
    ▲
 SevenSteps.Game        Scripts/Runtime/Game        + InputSystem, uGUI  (게임플레이/UI)  화면·입력·사운드·HUD
    ▲
+SevenSteps.Art         Art/                        + uGUI, URP          (아트)  행성·하늘 환경, 벽 변형, UI 리소스, 프리뷰 스크립트
+   ▲
 SevenSteps.Editor      Scripts/Editor              Editor 전용          (여러 소유자, 파일 단위)
+SevenSteps.Art.Editor  Art/Editor                  Editor 전용 → Art, Editor  (아트)  세트·환경·UI 생성기
 
 SevenSteps.Tests.EditMode  Tests/EditMode          Editor 전용, UNITY_INCLUDE_TESTS → Core, Contracts, Game
 ```
 
+- `SevenSteps.Art`(2026-11-09): 아트 런타임 스크립트가 정식 Game 씬 프리팹에 들어가므로 Assembly-CSharp에서 분리. Core·Contracts·Game·uGUI·URP를 참조하고, Game·Contracts는 Art를 모른다(보드는 `IStageEnvironment` 같은 Contracts 인터페이스로만 부른다). `autoReferenced: false`. 스크립트 GUID는 그대로라 프리팹 참조는 유지된다. `Art/` 아래 새 런타임 스크립트는 자동으로 이 어셈블리, `Art/Editor/` 아래는 `SevenSteps.Art.Editor`.
 - 화살표 방향으로만 참조한다. `Core`는 아무것도 참조하지 않는다. `Contracts`는 `Game`을 모른다. 테스트 어셈블리는 Core·Contracts·Game을 참조할 수 있다(반대 방향 참조는 없음).
 - UI(HUD, 패널)는 별도 어셈블리로 나누지 않고 `SevenSteps.Game` 안의 `Game/UI/` 폴더, 네임스페이스 `SevenSteps.Game.UI`로 둔다. 잼 규모에서는 컴파일 시간 이득이 없고, `GameController` ↔ HUD 순환을 막으려면 어차피 같은 어셈블리여야 한다. HUD는 `GameSession.Updated`와 `State`만 읽는다.
 - 새 asmdef가 필요하면 아키텍트에게 요청한다. asmdef 파일은 아키텍트 소유다 (위치한 폴더의 소유자와 무관).
@@ -469,6 +473,32 @@ else flow.Go(AppState.Title);
   - `TelemetryOn(onByDefault)`: 토글 표시값(명시 선택, 없으면 빌드 기본값). `TelemetryAllowed(config)`와 같은 판단.
 - `SaveSystem(store)`: `store`가 null이면 `ArgumentNullException`.
 
+#### 11.3.1 진행 기록 v2: 스테이지 이름 기준 (2026-11-09 결정·구현, `Contracts/Save/Progress.cs`)
+
+문제(`design/levels/rollout-50.md` 4장 "저장 데이터"): `ProgressData`의 `cleared`·`bestStage`·`starts`·`lastStage`가 **스테이지 번호(0부터)**라 50스테이지 반영(삽입·순서 변경) 때 옛 기록이 다른 스테이지에 붙는다.
+
+**결정: 기록 키를 스테이지 이름(`Level.Name`)으로 바꾸고, 옛 기록은 이름으로 옮긴다(초기화하지 않는다).**
+- 이름은 이미 고유하다(레벨 디자인 export 검증 "이름 중복 없음", 텔레메트리 분석도 이름으로 묶음). 번호가 바뀌어도, 스테이지가 끼어들어도 기록이 따라간다. 레벨 세트 버전으로 비우는 방식은 반영 묶음(R1~R5)마다 플레이테스터 기록을 다섯 번 지우게 되어 채택하지 않는다.
+- 맵이 바뀐 같은 이름 스테이지(`edit`)는 `levelKey`(`TelemetryJson.LevelKey`, 맵·몸 수 해시)로 구분한다: **클리어 표시는 유지, 최소 몸 기록은 버린다**(다른 퍼즐의 기록이므로).
+
+형식 (`seven-steps.progress`, `version = 2`):
+```json
+{ "version": 2, "lastStage": "새 출발점",
+  "stages": [ { "name": "일곱 걸음", "levelKey": "a1b2c3d4", "cleared": true, "bestBodies": 1, "starts": 3 } ] }
+```
+- `StageRecord { name, levelKey, cleared, bestBodies(0 = 없음), starts, bestStars(0 = 없음, 3별 B안 대비 자리만 — 계산·기록 없음, 결정되면 규칙과 함께 채움) }`, `ProgressData { version, stages, lastStage(이름, "" = 없음) }`.
+- 질의·명령(Contracts, `Level`을 받음): `IsCleared(level)`, `BestBodies(level)`(기록 없음·`levelKey` 다름·몸 수 초과면 0), `MarkCleared(level, bodiesUsed)`(기록 갱신, `levelKey` 갱신), `CountStart(level)`(텔레메트리 `attempt`), `ClearedCount`, `LastStage`(이름)와 `LastStageIndex(levels)`(없거나 지금 목록에 없으면 0).
+- 지금 목록에 없는 이름의 기록은 지우지 않는다(나중에 다시 들어올 수 있음, 크기 작음).
+
+이전(읽을 때 한 번, 바로 v2로 저장):
+- **v1**(`version` 1, 번호 목록)과 **v0**(`seven-steps-cleared` 쉼표 목록): 번호 k → `ProgressMigration.V1StageNames[k]`(**2026-11-09 7lucky의 17스테이지 이름을 고정한 표**, 코드에 상수). 표 밖 번호는 버린다. `levelKey`는 비워 둔다("모름" = 최소 몸 기록은 몸 수 범위 안일 때만 표시).
+- 이전 전 원본은 `seven-steps.progress.v1` 키에 복사해 둔다(되돌릴 수 있게).
+- `version`이 2보다 크면(더 새 빌드의 저장) 덮어쓰지 않고 기본값으로 시작 + 경고(외부 입력 규칙).
+- 같은 이름이 `levels.json`에 둘 이상이면 `LevelCatalog.Load`가 예외(이름 = 저장 키).
+- 호출부: 마지막 스테이지는 `GameFlowController`가 보드 로드 뒤 `SetLastStage(level)`, 클리어는 `MarkCleared(s.Level, ...)`, 결과 화면 최고 기록은 `BestBodies(level)`. `TitleFlowController(flow, save, panels, levels)`의 `PlayLastStage`는 `LastStageIndex`. `HudView(coroutines, tileSet, levels)`(stage 수 대신 목록). 텔레메트리 `attempt`는 `CountStart(LevelCatalog.At(level - 1))`, `session_start.cleared`는 `ClearedCount`. 테스트 `ProgressV2Tests`(이름 따라감, 맵 변경, v1 이전·백업, 미래 버전).
+
+**구현 담당 제안**: 아키텍트가 Contracts(`ProgressData` v2, `StageRecord`, `ProgressMigration`, EditMode 테스트: v0·v1 이전, `levelKey` 불일치, 미래 버전)와 **호출부 기계적 수정을 한 커밋에** 넣는다(공용 API가 바뀌어 나눠 넣으면 7lucky 컴파일이 깨짐). 호출부: `GameFlowController`·`TitleFlowController`(씬 플로우), `TitleViews`·`HudView`·`TelemetryRunner`(게임플레이/UI), `LevelCatalog` 이름 중복 검사(씬 플로우). 각 소유자가 자기 파일을 검토한다. **R1(첫 50스테이지 묶음) 합류 전에** 들어가야 한다.
+
 ### 11.4 텔레메트리 (`ITelemetry`, 스키마 v1)
 
 스키마·전송 사양의 기준은 **`docs/telemetry.md` v1**(백엔드/분석)이고, 이벤트 생성 기준 구현은 `prototypes/seven-steps/src/telemetry.js`의 `Tracker`다. Unity는 같은 입력에 같은 이벤트를 낸다. 공용 타입(`Contracts/Telemetry/`):
@@ -638,3 +668,7 @@ else flow.Go(AppState.Title);
 | 2026-11-09 | 아키텍트 | 11.3 `SaveSystem` 설정 명령 `SetMasterVolume`/`SetSfxVolume`/`SetTelemetryChoice`/`TelemetryOn` 추가(씬 플로우 S4 `SettingsController`용), 설정은 바꿀 때마다 저장, 생성자 null 검사. EditMode `SaveSettingsCommandTests` |
 | 2026-11-09 | 아키텍트 | 12.8 결정: 챕터별 `UiTheme`은 `ChapterPreset`에 넣지 않음(의존 방향·일관성·비용), 필요하면 `uiAccent` 색 하나. 씬 플로우 S6 검토 승인 |
 | 2026-11-09 | 아키텍트 | 씬 플로우 S5 반영(feat/scene-flow 1f9f462, 승인): 11.1 로드 실패 시 `AppFlow` 되돌림·`SceneLoader` 사전 거부·페이드 경로, 8장 DDOL 문구를 `TelemetryRunner` + `SceneFader` 두 개로 수정 |
+| 2026-11-09 | 아키텍트 | 11.3.1 진행 기록 v2 결정(구현 전): 키 = 스테이지 이름, `StageRecord`(`levelKey`로 맵 변경 감지 → 최소 몸 기록만 버림), v0·v1은 고정 이름표(17스테이지)로 이전, 원본 백업 키, 미래 버전은 덮어쓰지 않음, 이름 중복 예외. 구현은 아키텍트(Contracts + 호출부 한 커밋, 소유자 검토), R1 전 |
+| 2026-11-09 | 아키텍트 | 11.3.1 진행 기록 v2 구현: `ProgressData`(v2, `stages`/`lastStage` 이름), `StageRecord`, `ProgressMigration`(v0·v1 → v2, 고정 17스테이지 이름표), `SaveSystem` 이전·백업 키 `seven-steps.progress.v1`·미래 버전 읽기 전용, `LevelCatalog.At`·이름 중복 예외. **`ProgressData` 공개 API 변경**(번호 → `Level`): 호출부 함께 수정 |
+| 2026-11-09 | 아키텍트 | 11.3.1 `StageRecord.bestStars`(int, 0 = 없음) 자리 추가(사용자 지시, 3별 B안 대비, 계산 없음). 형식 버전은 2 그대로(필드 추가는 JsonUtility가 기본값 0으로 읽음) |
+| 2026-11-09 | 아키텍트 | 2장 어셈블리 `SevenSteps.Art`(`Art/`), `SevenSteps.Art.Editor`(`Art/Editor/`, Editor 전용) 추가. 아트 스크립트가 Assembly-CSharp에서 빠짐(GUID 유지) |

@@ -1,8 +1,9 @@
 # 50스테이지 계획 (리드 승인 2026-11-09, 7lucky 6cf3de4)
 
 사용자 결정(2026-11-08~09): 몸 상한 3(세쌍둥이, 머플러 청록·황토·적갈은 형제 식별만 뜻함), 전체 50스테이지, 6~8챕터(행성), 챕터당 5~8스테이지.
+**지금 기준 곡선은 `interest-curve-50.html`(후보 맵을 솔버로 잰 값)이다. 아래 `stage-plan-50.html`은 맵이 없던 계획 단계의 예측(목표 D·계획 태그)이라 실제와 다르다.**
 데이터: `stage-plan-50.json` (스테이지별 목표 D, 계획 태그, 깨달음 A). 곡선: **`stage-plan-50.html`** (`node prototypes/seven-steps/tools/plan-curve.mjs`로 다시 그림).
-리드 승인: 7행성×7+1, 예산 3 통일, 기존 17 유지 11·수정 4·재설계 2, 진흙 기믹(코어 구현 요청됨). 색 퍼즐은 제안으로만 유지. `levels.js`·`levels.json` 반영은 플레이테스트 1차 뒤 10스테이지 묶음 단위(7장).
+후보: 50개 모두 `experiments/batch1~5`에 있음(전체 곡선 `interest-curve-50.html`, 반영 순서 `rollout-50.md`). 리드 승인: 7행성×7+1, 예산 3 통일, 기존 17 유지 11·수정 4·재설계 2, 진흙 기믹(코어 구현 요청됨). 색 퍼즐은 제안으로만 유지. `levels.js`·`levels.json` 반영은 플레이테스트 1차 뒤 10스테이지 묶음 단위(7장).
 
 ## 1. 요약
 
@@ -109,7 +110,7 @@
 | 23 | 응용 | 홀수의 저주 | keep 7 | ice, parity | 0.3 | 바닥만으로는 7이 안 되는 칸, 얼음이 홀짝을 바꾼다 |
 | 24 | 응용 | 얼음 위의 숫자 | new (batch3, 탐색 후보) | ice, gate, switch | 0.37 | 미끄럼 한 번이 숫자 하나 |
 | 25 | 반전 | 멈춰 세우는 석상 | keep 9 | ice, keep, statueStopper | 0.42 | 선돌이 얼음을 멈추는 벽이 된다 |
-| 26 | 반전 | 미끄럼을 막는 형제 | new (batch3, 탐색 후보) | ice, keep, statueStopper, statueBlock, switch | 0.56 | 멈춤벽이 다음 미끄럼도 막는다. 세울 자리를 고른다 |
+| 26 | 반전 | 미끄럼을 막는 형제 | new (손질, --strict 탐색 후보) | ice, keep, statueStopper | 0.4 | 멈춤벽이 다음 미끄럼도 막는다. 세울 자리를 고른다 |
 | 27 | 응용 | 얼음 끝의 구멍 | new (batch3, 탐색 후보) | ice, pit, bridge | 0.43 | 미끄러져 7번째에 구멍에 닿으면 다리 |
 | 28 | 피날레 | 서리의 길목 | new (batch3, 탐색 후보) | ice, plate, keep | 0.44 | 미끄럼으로 발판에 닿아 선돌을 세우고 둘째가 문을 지난다 |
 
@@ -122,10 +123,10 @@
 | 29 | 소개 | 내리는 벽 | keep 8 | lever | 0.32 | 7번째 걸음이 레버를 당겨 벽을 내린다 |
 | 30 | 응용 | 열면 닫힌다 | exp lever 응용 | lever, switch | 0.5 | 레버는 한 길을 열고 다른 길을 닫는다 |
 | 31 | 반전 | 올려서 멈추기 | keep 10 | lever, ice, wallStopper | 0.42 | 벽을 올려 미끄럼을 멈춘다 |
-| 32 | 응용 | 레버와 바통 | new (batch4, 탐색 후보) | lever, switch | 0.56 | 레버를 당긴 형제가 바통을 넘긴다. 벽 너머 출발점을 고른다 |
+| 32 | 응용 | 레버와 발판 | new (손질, --strict 탐색 후보) | lever, plate, switch | 0.4 | 한 번 당기면 끝인 레버와 계속 눌러야 하는 발판을 구분한다 |
 | 33 | 응용 | 레버와 숫자 | new (batch4, 탐색 후보) | lever, gate, keep, switch | 0.6 | 벽이 내려간 뒤의 길이로 숫자를 맞춘다 |
-| 34 | 반전 | 레버와 발판 | new (batch4, 탐색 후보) | lever, plate, switch | 0.52 | 한 번 당기면 끝인 레버와 계속 눌러야 하는 발판을 구분한다 |
-| 35 | 피날레 | 결구의 장치 | new (batch4, 탐색 후보) | lever, ice, keep, switch | 0.62 | 레버로 벽을 바꾸고 얼음·선돌·바통을 함께 쓴다 |
+| 34 | 반전 | 레버와 바통 | new (batch4, 탐색 후보) | lever, switch | 0.56 | 레버를 당긴 형제가 바통을 넘긴다. 벽 너머 출발점을 고른다 |
+| 35 | 피날레 | 결구의 장치 | new (손질, --strict 탐색 후보) | lever, ice, keep, switch | 0.56 | 레버로 벽을 바꾸고 얼음·선돌·바통을 함께 쓴다 |
 
 ### 6장 무너지는 행성 (36–42)
 
@@ -138,8 +139,8 @@
 | 38 | 소개 | 하나만 남겨라 | keep 13 | statueDoor, keep | 0.36 | 문의 숫자 = 서 있는 선돌 수 |
 | 39 | 응용 | 열쇠가 되는 형제 | redo 14 (batch4) | statueDoor, plate, statueKey | 0.48 | 막다른 곳에 선 첫째 형제가 석상 수 문의 열쇠가 된다 |
 | 40 | 반전 | 남기기 전에 지나가라 | edit 15 (예산 4→3) | statueDoor, emptyDoor, switch | 0.46 | 0 문: 선돌을 세우면 닫힌다 |
-| 41 | 반전 | 선돌 아닌 흔적 | new (qdoor-cracked) | statueDoor, cracked, seal | 0.55 | 굳은 바닥과 다리는 선돌로 세지 않는다 |
-| 42 | 피날레 | 무너지는 계산 | new (qdoor+cracked+pit) | statueDoor, cracked, pit, bridge | 0.6 | 몇을 세우고 몇을 다리로 쓸지 |
+| 41 | 반전 | 선돌 아닌 흔적 | new (batch5, 뼈대 탐색) | statueDoor, cracked, seal, switch | 0.57 | 굳은 바닥은 길이 되지만 선돌로 세지 않는다. 2 문은 닫힌 채 |
+| 42 | 피날레 | 무너지는 계산 | new (batch5, 뼈대 탐색) | statueDoor, cracked, pit, bridge, switch | 0.57 | 다리도 굳은 바닥도 선돌이 아니다. 수 문 없이 돌아간다 |
 
 ### 7장 원형 제단 (43–50)
 
@@ -147,14 +148,14 @@
 
 | # | 역할 | 제목 | 출처 | 기믹 | 목표 D | 의도한 아하 |
 |---|---|---|---|---|---|---|
-| 43 | 소개 | 한 칸에 두 걸음 | new (진흙 소개, exp mud 1) | mud | 0.22 | 진흙은 두 걸음. 짝수 거리에 7번째로 닿는 두 번째 방법 |
-| 44 | 응용 | 진흙과 숫자 | new (exp mud 2) | mud, gate, switch | 0.45 | 진흙을 지나면 숫자가 하나 건너뛴다 |
-| 45 | 반전 | 얼음과 진흙 | new (exp mud 3) | mud, ice, parity, switch | 0.48 | 여러 칸에 한 걸음, 한 칸에 두 걸음을 섞어 맞춘다 |
-| 46 | 응용 | 칠칠의 방 | redo 16 (몸 3) | pit, plate, gate, ice, keep | 0.58 | 다섯 기믹을 형제 셋으로 |
-| 47 | 응용 | 레버와 선돌의 수 | new (lever+qdoor) | lever, statueDoor, keep | 0.6 | 벽을 내린 선돌 하나가 문의 수를 맞춘다 |
-| 48 | 반전 | 길이 된 형제들 | new (bridge+seal) | pit, bridge, cracked, seal, statueDoor, emptyDoor | 0.62 | 선돌 없이(0 문) 두 형제가 모두 길이 된다 |
-| 49 | 응용 | 일곱의 일곱 | new (7×7) | mud, lever, gate, keep, switch | 0.68 | 7×7 방 전체를 센다 |
-| 50 | 피날레 | 원형 제단 | new (최종장) | statueDoor, keep, multiStatue, plate, ice | 0.7 | 두 형제가 원의 선돌로 서고, 셋째의 7번째 걸음이 제단 가운데에 닿는다 |
+| 43 | 소개 | 한 칸에 두 걸음 | new (batch5, 진흙 실험 1) | mud | 0.15 | 진흙은 두 걸음. 짝수 거리에 7번째로 닿는 두 번째 방법 |
+| 44 | 응용 | 진흙과 숫자 | new (batch5, 진흙 실험 2) | mud, gate, switch | 0.52 | 진흙을 지나면 숫자가 하나 건너뛴다 |
+| 45 | 반전 | 얼음과 진흙 | new (batch5, 진흙 실험 3) | mud, ice, parity, switch | 0.41 | 여러 칸에 한 걸음, 한 칸에 두 걸음을 섞어 맞춘다 |
+| 46 | 응용 | 칠칠의 방 | redo 16 (batch5, 뼈대 탐색) | pit, plate, gate, lever, switch | 0.49 | 다리, 발판, 숫자 문, 레버를 형제 셋으로 |
+| 47 | 응용 | 레버와 선돌의 수 | new (batch5, 뼈대 탐색) | lever, statueDoor, emptyDoor, keep | 0.4 | 레버를 당긴 형제가 선돌로 남으면 0 문이 닫힌다 |
+| 48 | 반전 | 길이 된 형제들 | new (batch5, 뼈대 탐색) | pit, bridge, cracked, seal | 0.54 | 두 형제가 봉인과 다리로 모두 길이 된다 |
+| 49 | 응용 | 일곱의 일곱 | new (batch5, 7×7 뼈대 탐색) | mud, gate, switch | 0.58 | 7×7 방을 진흙·숫자 문·바통 두 번으로 센다 |
+| 50 | 피날레 | 원형 제단 | new (batch5, 고리 뼈대 탐색) | statueDoor, keep, multiStatue, plate, ice, mud | 0.59 | 두 형제가 원의 선돌로 서고, 셋째의 7번째 걸음이 제단 가운데에 닿는다 |
 
 ### 4.1 기존 17스테이지를 몸 예산 3으로 푼 결과 (솔버)
 

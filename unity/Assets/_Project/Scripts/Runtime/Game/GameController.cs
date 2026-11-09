@@ -79,7 +79,7 @@ namespace SevenSteps.Game
 
             // Views
             board = gameObject.AddComponent<BoardController>();
-            hud = new HudView(board, tiles, levels.Length);
+            hud = new HudView(board, tiles, levels);
             var result = ResultView.Create();
             var settings = SettingsPanel.Create(OverlayCanvas(), save, cfg.telemetryOnByDefault);
             settingsController = new SettingsController(save, settings, cfg.telemetryOnByDefault);

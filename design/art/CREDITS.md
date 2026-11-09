@@ -69,6 +69,8 @@ Font: Jua by The Jua Project Authors (SIL Open Font License 1.1)
 ```
 # 유적×선돌×오리엔탈 — 2026-11-08
 
+UI 작업(2026-11-09): GPT 생성 화면9종 및 타이틀/HUD 교정v2는 시안 전용이다. 실제 `RH_UI_Atlas.png`의 프레임·아이콘은 `build-ui-atlas.ps1`로 자체 제작했다. UI 폰트는 기존 Jua(OFL1.1, Copyright2018 The Jua Project Authors)를 재사용한다. Pretendard는 [공식 OFL](https://github.com/orioncactus/pretendard/blob/main/LICENSE) 확인한 본문 후보이며 다운로드/사용하지 않았다. 환경 프리팹·머리 보정·벽 변형은 기존 자체 제작 메시를 사용하며 추가 외부 에셋은 없다.
+
 Unity2차(2026-11-09)의 행성 외피·풀 카드·돌·원경 행성·성운·별은 `RuinsHengeEnvironment.cs`가 절차적으로 만든 메시/버텍스 색이다. 벽 스타일 Mesh와 확대 링도 자체 생성이며 추가 외부 에셋·텍스처는 사용하지 않았다.
 
 이번 제작의23모듈(초기21종+석재V2/V3)·RH_Atlas512.png는 `design/art/blender/build_ruins_henge.py`로 자체 생성했다. GPT 시안9종은 제작 참고이며 외부 CC0 에셋으로 분류하지 않는다. 외부 텍스처·모델 다운로드와 사용은 없었다.
