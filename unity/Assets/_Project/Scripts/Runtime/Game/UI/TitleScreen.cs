@@ -32,6 +32,9 @@ namespace SevenSteps.Game.UI
         SettingsPanel settings;
         CreditsPanel creditsPanel;
         TitleFlowController flowController;
+        SettingsController settingsController;
+        OverlayStack overlays;
+        BackNavigator back;
 
         void Awake()
         {
@@ -52,16 +55,25 @@ namespace SevenSteps.Game.UI
             var root = BuildCanvas();
             titleView = new TitleView(root);
             stageSelectView = new StageSelectView(root, levels);
-            settings = new SettingsPanel(root, save);
+            bool telemetryDefault = Services.Get<AppConfig>().telemetryOnByDefault;
+            settings = new SettingsPanel(root, save, telemetryDefault);
+            settingsController = new SettingsController(save, settings, telemetryDefault);
             creditsPanel = new CreditsPanel(root, credits, licenses);
+            overlays = new OverlayStack();
 
             flowController = new TitleFlowController(flow, save, this);
+            back = new BackNavigator(overlays, flowController.Back);
             titleView.StartRequested += flowController.OpenStageSelect;
-            titleView.SettingsRequested += settings.Open;
-            titleView.CreditsRequested += creditsPanel.Open;
+            titleView.SettingsRequested += () => Open(settings);
+            titleView.CreditsRequested += () => Open(creditsPanel);
             stageSelectView.StageClicked += flowController.PlayStage;
             stageSelectView.BackRequested += flowController.Back;
-            stageSelectView.SettingsRequested += settings.Open;
+            stageSelectView.SettingsRequested += () => Open(settings);
+        }
+
+        void Open(IOverlay overlay)
+        {
+            if (!overlays.Contains(overlay)) overlays.Push(overlay);
         }
 
         void Start()
@@ -72,12 +84,16 @@ namespace SevenSteps.Game.UI
             if (!string.IsNullOrEmpty(launch.Screenshot))
             {
                 if (launch.OpenStageSelect) flowController.OpenStageSelect();
-                if (launch.OpenCredits) creditsPanel.Open();
+                if (launch.OpenCredits) Open(creditsPanel);
                 StartCoroutine(ScreenshotOnce.Run(launch.Screenshot, () => $"{flow.State}, cleared {save.Progress.cleared.Count}"));
             }
         }
 
-        void OnDestroy() => flowController?.Dispose();
+        void OnDestroy()
+        {
+            flowController?.Dispose();
+            settingsController?.Dispose();
+        }
 
         /// ITitlePanels: the flow controller shows the panel for the state.
         public void Show(AppState state)
@@ -87,25 +103,15 @@ namespace SevenSteps.Game.UI
             if (state == AppState.StageSelect) stageSelectView.Show(save.Progress); else stageSelectView.Hide();
         }
 
-        /// Flow keys (overlay Esc first, until S4's BackNavigator).
+        /// Flow keys. Esc in one place: the top overlay closes first, otherwise AppFlow's back target (BackNavigator).
         void Update()
         {
             var kb = Keyboard.current;
-            if (kb == null) return;
-            if (settings.IsOpen)
-            {
-                if (kb.escapeKey.wasPressedThisFrame) settings.Close();
-                return;
-            }
-            if (creditsPanel.IsOpen)
-            {
-                if (kb.escapeKey.wasPressedThisFrame) creditsPanel.Close();
-                return;
-            }
-            if (flow.IsLoading) return;
+            if (kb == null || flow.IsLoading) return;
+            if (kb.escapeKey.wasPressedThisFrame) { back.Back(); return; }
+            if (overlays.Count > 0) return;
             bool enter = kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame;
             if (flow.State == AppState.Title && (enter || kb.spaceKey.wasPressedThisFrame)) flowController.OpenStageSelect();
-            else if (flow.State == AppState.StageSelect && kb.escapeKey.wasPressedThisFrame) flowController.Back();
             else if (flow.State == AppState.StageSelect && enter) flowController.PlayLastStage();
         }
 

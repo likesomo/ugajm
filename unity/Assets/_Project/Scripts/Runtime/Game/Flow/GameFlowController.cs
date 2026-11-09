@@ -10,7 +10,7 @@ namespace SevenSteps.Game.Flow
     /// into stage loads on the board and the result panel, saves a clear, and takes the flow actions (stage pick, next,
     /// again, stage select, back). Moved out of GameController. View events and keys call the public methods; a method the
     /// flow cannot take now (scene loading, no next stage) does nothing, it is not an error.
-    /// Chapter transitions (S4) hook in at <see cref="Enter"/>: compare LevelCatalog.ChapterIdOf of the old and new stage.
+    /// Chapter transitions hook in through <see cref="ChapterEntering"/>.
     /// </summary>
     public sealed class GameFlowController : IDisposable
     {
@@ -20,9 +20,17 @@ namespace SevenSteps.Game.Flow
         readonly IStageBoard board;
         readonly IResultPanel result;
         readonly Func<int, int> minBodies;
+        readonly Func<int, string> chapterOf;
+        string enteredChapter;
+
+        /// A stage of another chapter is being entered (fromChapter is null for the first stage this scene enters).
+        /// Raised before the board loads the stage. S4/S6 hook: chapter transition card (an IOverlay), chapter theme
+        /// preset (UiTheme, lighting, sky, docs/architecture.md 12.8). Chapter ids are levels.json "chapter", "" = first chapter.
+        public event Action<string, string, int> ChapterEntering;
 
         /// <param name="minBodies">Solver's fewest bodies per stage, 0 = unknown (LevelCatalog.MinBodies).</param>
-        public GameFlowController(AppFlow flow, EntryTracker entries, SaveSystem save, IStageBoard board, IResultPanel result, Func<int, int> minBodies)
+        /// <param name="chapterOf">Chapter id per stage (LevelCatalog.ChapterIdOf).</param>
+        public GameFlowController(AppFlow flow, EntryTracker entries, SaveSystem save, IStageBoard board, IResultPanel result, Func<int, int> minBodies, Func<int, string> chapterOf)
         {
             this.flow = flow ?? throw new ArgumentNullException(nameof(flow));
             this.entries = entries ?? throw new ArgumentNullException(nameof(entries));
@@ -30,6 +38,7 @@ namespace SevenSteps.Game.Flow
             this.board = board ?? throw new ArgumentNullException(nameof(board));
             this.result = result ?? throw new ArgumentNullException(nameof(result));
             this.minBodies = minBodies ?? throw new ArgumentNullException(nameof(minBodies));
+            this.chapterOf = chapterOf ?? throw new ArgumentNullException(nameof(chapterOf));
             flow.Changed += OnFlowChanged;
             board.Won += OnWon;
             board.WinPresented += OnWinPresented;
@@ -120,6 +129,9 @@ namespace SevenSteps.Game.Flow
         void Enter(int stage)
         {
             result.Hide();
+            string chapter = chapterOf(stage) ?? "";
+            if (enteredChapter == null || chapter != enteredChapter) ChapterEntering?.Invoke(enteredChapter, chapter, stage);
+            enteredChapter = chapter;
             save.Progress.lastStage = stage;
             board.LoadStage(stage, entries.TakeVia());
         }

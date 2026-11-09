@@ -26,7 +26,6 @@ namespace SevenSteps.Game.UI
         readonly Text[] levelTexts;
         readonly GameObject choicePanel;
         readonly RectTransform choiceRect;
-        readonly SettingsPanel settings;
 
         /// Body colors for the HUD icons (TileSet.BodyColor, docs 12.6). Every chapter set uses the same three colors, so
         /// the set given at construction is enough (docs/scene-flow.md 4.7).
@@ -38,19 +37,18 @@ namespace SevenSteps.Game.UI
         public event Action<int> StageClicked;
         /// Footer "스테이지" button. Flow controller.
         public event Action StageSelectRequested;
+        /// Footer "설정" button. Scene root (opens the settings overlay).
+        public event Action SettingsRequested;
         /// Board actions. Board controller.
         public event Action UndoRequested, RestartRequested, HintRequested, KeepRequested, SwitchRequested;
 
-        public bool SettingsOpen => settings.IsOpen;
-        public void CloseSettings() => settings.Close();
 
         /// <param name="coroutines">Runs the KEEP/SWITCH shake (the HUD is not a MonoBehaviour).</param>
-        public HudView(MonoBehaviour coroutines, TileSet bodyLook, int levelCount, SaveSystem save)
+        public HudView(MonoBehaviour coroutines, TileSet bodyLook, int levelCount)
         {
             this.coroutines = coroutines != null ? coroutines : throw new ArgumentNullException(nameof(coroutines));
             this.bodyLook = bodyLook != null ? bodyLook : throw new ArgumentNullException(nameof(bodyLook));
             if (levelCount < 1) throw new ArgumentOutOfRangeException(nameof(levelCount), levelCount, "at least one stage");
-            if (save == null) throw new ArgumentNullException(nameof(save));
             var canvasGo = new GameObject("HUD", typeof(RectTransform));
             canvasGo.layer = 5;
             var canvas = canvasGo.AddComponent<Canvas>();
@@ -126,7 +124,7 @@ namespace SevenSteps.Game.UI
             FooterButton(footer, "재시작 R", () => RestartRequested?.Invoke());
             FooterButton(footer, "풀이 보기 H", () => HintRequested?.Invoke());
             FooterButton(footer, "스테이지 Esc", () => StageSelectRequested?.Invoke());
-            FooterButton(footer, "설정", () => settings.Open());
+            FooterButton(footer, "설정", () => SettingsRequested?.Invoke());
             var keys = Ui.Label(root, "이동: 방향키 / WASD / 옆 칸 클릭 · 7걸음 후: K / X · 스테이지: [ ]", 14, Ui.Dim, TextAnchor.MiddleRight, "Keys");
             keys.rectTransform.Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-24, 24), new Vector2(520, 24));
 
@@ -137,7 +135,6 @@ namespace SevenSteps.Game.UI
             ChoiceButton(choiceRect, "KEEP (K)", "여기에 석상을 남긴다\n다음 몸은 지금 출발점에서", Ui.Stone, () => KeepRequested?.Invoke());
             ChoiceButton(choiceRect, "SWITCH (X)", "석상을 남기지 않는다\n여기가 새 출발점이 된다", Ui.Gold, () => SwitchRequested?.Invoke());
 
-            settings = new SettingsPanel(root, save);
         }
 
         /// A move was pressed while KEEP/SWITCH is pending: shake the choice buttons.
