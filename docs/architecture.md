@@ -32,11 +32,15 @@ SevenSteps.Contracts   Scripts/Runtime/Contracts   UnityEngine 사용     (아�
    ▲
 SevenSteps.Game        Scripts/Runtime/Game        + InputSystem, uGUI  (게임플레이/UI)  화면·입력·사운드·HUD
    ▲
+SevenSteps.Art         Art/                        + uGUI, URP          (아트)  행성·하늘 환경, 벽 변형, UI 리소스, 프리뷰 스크립트
+   ▲
 SevenSteps.Editor      Scripts/Editor              Editor 전용          (여러 소유자, 파일 단위)
+SevenSteps.Art.Editor  Art/Editor                  Editor 전용 → Art, Editor  (아트)  세트·환경·UI 생성기
 
 SevenSteps.Tests.EditMode  Tests/EditMode          Editor 전용, UNITY_INCLUDE_TESTS → Core, Contracts, Game
 ```
 
+- `SevenSteps.Art`(2026-11-09): 아트 런타임 스크립트가 정식 Game 씬 프리팹에 들어가므로 Assembly-CSharp에서 분리. Core·Contracts·Game·uGUI·URP를 참조하고, Game·Contracts는 Art를 모른다(보드는 `IStageEnvironment` 같은 Contracts 인터페이스로만 부른다). `autoReferenced: false`. 스크립트 GUID는 그대로라 프리팹 참조는 유지된다. `Art/` 아래 새 런타임 스크립트는 자동으로 이 어셈블리, `Art/Editor/` 아래는 `SevenSteps.Art.Editor`.
 - 화살표 방향으로만 참조한다. `Core`는 아무것도 참조하지 않는다. `Contracts`는 `Game`을 모른다. 테스트 어셈블리는 Core·Contracts·Game을 참조할 수 있다(반대 방향 참조는 없음).
 - UI(HUD, 패널)는 별도 어셈블리로 나누지 않고 `SevenSteps.Game` 안의 `Game/UI/` 폴더, 네임스페이스 `SevenSteps.Game.UI`로 둔다. 잼 규모에서는 컴파일 시간 이득이 없고, `GameController` ↔ HUD 순환을 막으려면 어차피 같은 어셈블리여야 한다. HUD는 `GameSession.Updated`와 `State`만 읽는다.
 - 새 asmdef가 필요하면 아키텍트에게 요청한다. asmdef 파일은 아키텍트 소유다 (위치한 폴더의 소유자와 무관).
@@ -667,3 +671,4 @@ else flow.Go(AppState.Title);
 | 2026-11-09 | 아키텍트 | 11.3.1 진행 기록 v2 결정(구현 전): 키 = 스테이지 이름, `StageRecord`(`levelKey`로 맵 변경 감지 → 최소 몸 기록만 버림), v0·v1은 고정 이름표(17스테이지)로 이전, 원본 백업 키, 미래 버전은 덮어쓰지 않음, 이름 중복 예외. 구현은 아키텍트(Contracts + 호출부 한 커밋, 소유자 검토), R1 전 |
 | 2026-11-09 | 아키텍트 | 11.3.1 진행 기록 v2 구현: `ProgressData`(v2, `stages`/`lastStage` 이름), `StageRecord`, `ProgressMigration`(v0·v1 → v2, 고정 17스테이지 이름표), `SaveSystem` 이전·백업 키 `seven-steps.progress.v1`·미래 버전 읽기 전용, `LevelCatalog.At`·이름 중복 예외. **`ProgressData` 공개 API 변경**(번호 → `Level`): 호출부 함께 수정 |
 | 2026-11-09 | 아키텍트 | 11.3.1 `StageRecord.bestStars`(int, 0 = 없음) 자리 추가(사용자 지시, 3별 B안 대비, 계산 없음). 형식 버전은 2 그대로(필드 추가는 JsonUtility가 기본값 0으로 읽음) |
+| 2026-11-09 | 아키텍트 | 2장 어셈블리 `SevenSteps.Art`(`Art/`), `SevenSteps.Art.Editor`(`Art/Editor/`, Editor 전용) 추가. 아트 스크립트가 Assembly-CSharp에서 빠짐(GUID 유지) |
