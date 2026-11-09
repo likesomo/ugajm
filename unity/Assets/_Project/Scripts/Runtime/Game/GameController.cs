@@ -91,9 +91,10 @@ namespace SevenSteps.Game
             hud = HudView.Create(tiles); // theme prefab with its own canvas; LabelLayer is valid for board.Init below
             var result = ResultView.Create();
             var overlayCanvas = OverlayCanvas();
-            var settings = SettingsPanel.Create(overlayCanvas, save, cfg.telemetryOnByDefault);
+            var localizer = Services.Get<Localizer>();
+            var settings = SettingsPanel.Create(overlayCanvas, save, cfg.telemetryOnByDefault, localizer);
             var chapterCard = ChapterCardView.CreateOptional(overlayCanvas); // null when the theme has no card
-            settingsController = new SettingsController(save, settings, cfg.telemetryOnByDefault);
+            settingsController = new SettingsController(save, settings, cfg.telemetryOnByDefault, localizer);
             overlays = new OverlayStack();
 
             // Board controller, then the flow controller on top of it

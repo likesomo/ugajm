@@ -101,7 +101,7 @@ namespace SevenSteps.Tests
             try
             {
                 var view = SettingsPanel.Create(canvas.transform, save, telemetryOnByDefault: true);
-                using var ctl = new SettingsController(save, view, telemetryOnByDefault: true);
+                using var ctl = new SettingsController(save, view, telemetryOnByDefault: true, TwoLanguages(Language.Ko));
                 save.Settings.masterVolume = 1f;
                 Press(canvas, "전체 음량 -");
                 Assert.AreEqual(0.9f, save.Settings.masterVolume, 1e-4f);
@@ -113,6 +113,46 @@ namespace SevenSteps.Tests
                 Assert.AreEqual(2, save.Settings.telemetryChoice);
                 Assert.AreEqual("", save.Settings.playerId, "opt-out forgets the id");
                 Assert.IsFalse(save.TelemetryOn(true));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(canvas); }
+        }
+
+        static Localizer TwoLanguages(Language current) => new Localizer(new[]
+        {
+            StringTable.FromJson(Language.Ko, "{\"entries\":[]}"),
+            StringTable.FromJson(Language.En, "{\"entries\":[]}"),
+        }, current);
+
+        [Test]
+        public void LanguageToggleSavesAndSwitchesAtOnce()
+        {
+            var save = new SaveSystem(new MemoryStore());
+            var loc = TwoLanguages(Language.Ko);
+            Language? changedTo = null;
+            loc.Changed += l => changedTo = l;
+            TestTheme.Use();
+            var canvas = new UnityEngine.GameObject("canvas", typeof(UnityEngine.RectTransform));
+            try
+            {
+                // The prefab has no language button yet: add one before Init wires the buttons.
+                var view = UnityEngine.Object.Instantiate(Ui.Theme.settingsPanel, canvas.transform, false);
+                view.languageToggle = new UnityEngine.GameObject("LanguageToggle", typeof(UnityEngine.RectTransform), typeof(UnityEngine.UI.Button)).GetComponent<UnityEngine.UI.Button>();
+                view.languageToggle.transform.SetParent(view.transform, false);
+                view.languageText = new UnityEngine.GameObject("LanguageText", typeof(UnityEngine.RectTransform), typeof(UnityEngine.UI.Text)).GetComponent<UnityEngine.UI.Text>();
+                view.languageText.transform.SetParent(view.transform, false);
+                view.Init(save, true, loc);
+                using var ctl = new SettingsController(save, view, true, loc);
+
+                Press(canvas, "LanguageToggle");
+                Assert.AreEqual(Language.En, loc.Current);
+                Assert.AreEqual(Language.En, changedTo);
+                Assert.AreEqual(Language.En, save.Language, "saved");
+                Assert.AreEqual("English", view.languageText.text);
+                Assert.AreEqual("PatrickHand-Regular", view.languageText.font.name, "its own body font");
+
+                Press(canvas, "LanguageToggle");
+                Assert.AreEqual(Language.Ko, loc.Current);
+                Assert.AreEqual("한국어", view.languageText.text);
             }
             finally { UnityEngine.Object.DestroyImmediate(canvas); }
         }

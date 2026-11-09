@@ -17,10 +17,23 @@ namespace SevenSteps.Tests
             {
                 var issues = new List<string>();
                 theme.Validate(issues);
-                Assert.AreEqual(4, issues.Count, string.Join("\n", issues)); // font, settingsPanel, resultPanel, hud
+                Assert.AreEqual(7, issues.Count, string.Join("\n", issues)); // font, settingsPanel, resultPanel, hud, number, ko fonts, en fonts
                 Assert.Throws<System.InvalidOperationException>(() => Ui.Theme = theme);
             }
             finally { Object.DestroyImmediate(theme); }
+        }
+
+        [Test]
+        public void FontsPerLanguageAndRole()
+        {
+            TestTheme.Use();
+            var t = Ui.Theme;
+            Assert.AreEqual("Gaegu-Regular", t.FontFor(SevenSteps.Contracts.Language.Ko, FontRole.Title).name);
+            Assert.AreEqual("KaushanScript-Regular", t.FontFor(SevenSteps.Contracts.Language.En, FontRole.Title).name);
+            Assert.AreEqual("PatrickHand-Regular", t.FontFor(SevenSteps.Contracts.Language.En, FontRole.Body).name);
+            Assert.AreSame(t.FontFor(SevenSteps.Contracts.Language.Ko, FontRole.Number), t.FontFor(SevenSteps.Contracts.Language.En, FontRole.Number), "numbers do not change with the language");
+            Assert.AreEqual(0.9f, t.FontsFor(SevenSteps.Contracts.Language.En).BodyLineSpacing, 1e-4f);
+            Assert.AreEqual(1f, t.FontsFor(SevenSteps.Contracts.Language.En).TitleScale, "0 means 1");
         }
 
         [Test]
