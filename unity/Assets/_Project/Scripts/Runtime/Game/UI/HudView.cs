@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace SevenSteps.Game.UI
 {
     /// <summary>
-    /// Screen UI built from code: stage list, 7 step pips, bodies, message, buttons, KEEP/SWITCH choice, clear/fail panel.
+    /// Screen UI built from code: stage list, 7 step pips, bodies, message, buttons, KEEP/SWITCH choice, (the clear/loss panel is ResultView).
     /// Layout is in 1280x720 reference pixels. Same information as the web prototype's HUD.
     /// </summary>
     public sealed class HudView
@@ -23,17 +23,10 @@ namespace SevenSteps.Game.UI
         readonly List<Image> bodyIcons = new List<Image>();
         readonly Image[] levelButtons;
         readonly Text[] levelTexts;
-        readonly GameObject choicePanel, overlay;
-        readonly Text overlayTitle, overlayBody;
-        readonly GameObject overlayNext, overlayAgain, overlaySelect, overlayUndo, overlayRestart;
+        readonly GameObject choicePanel;
         readonly RectTransform choiceRect;
         readonly SettingsPanel settings;
         readonly GameController game;
-        bool resultShown;
-        State lastState;
-        int lastStage, lastCount;
-        string lastMsg;
-        ProgressData lastProgress;
 
         TileSet bodyLook;
 
@@ -143,39 +136,7 @@ namespace SevenSteps.Game.UI
             ChoiceButton(choiceRect, "KEEP (K)", "여기에 석상을 남긴다\n다음 몸은 지금 출발점에서", Ui.Stone, () => game.Send(Command.Keep));
             ChoiceButton(choiceRect, "SWITCH (X)", "석상을 남기지 않는다\n여기가 새 출발점이 된다", Ui.Gold, () => game.Send(Command.Switch));
 
-            // Result (clear) / fail overlay
-            var dim = Ui.MakeImage(root, new Color(0, 0, 0, 0.55f), null, "Overlay");
-            dim.rectTransform.Stretch();
-            dim.raycastTarget = true;
-            overlay = dim.gameObject;
-            var panel = Ui.MakeImage(dim.transform, Ui.PanelBg, null, "Panel");
-            panel.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(460, 330));
-            overlayTitle = Ui.Label(panel.transform, "", 40, Ui.Gold, TextAnchor.MiddleCenter, "Title");
-            overlayTitle.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -24), new Vector2(420, 50));
-            overlayBody = Ui.Label(panel.transform, "", 20, Ui.Ink, TextAnchor.MiddleCenter, "Body");
-            overlayBody.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -84), new Vector2(420, 50));
-            var col = Ui.Rect("Buttons", panel.transform);
-            col.Place(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 20), new Vector2(300, 150));
-            var v = col.gameObject.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 10;
-            v.childAlignment = TextAnchor.LowerCenter;
-            v.childControlWidth = v.childControlHeight = false;
-            v.childForceExpandWidth = v.childForceExpandHeight = false;
-            overlayNext = OverlayButton(col, "다음 스테이지 (Enter)", game.NextLevel);
-            overlayAgain = OverlayButton(col, "다시 하기 (R)", game.Again);
-            overlaySelect = OverlayButton(col, "스테이지 선택 (Esc)", game.OpenStageSelect);
-            overlayUndo = OverlayButton(col, "한 걸음 되돌리기 (Z)", () => game.Send(Command.Undo));
-            overlayRestart = OverlayButton(col, "다시 시작 (R)", game.Restart);
-            overlay.SetActive(false);
-
             settings = new SettingsPanel(root, save);
-        }
-
-        /// Result state (after a clear) shows the clear panel; leaving it hides the panel.
-        public void ShowResult(bool show, State s, int levelIdx, int levelCount)
-        {
-            resultShown = show;
-            if (lastState != null) Refresh(lastState, lastStage, lastCount, lastMsg, lastProgress);
         }
 
         /// A move was pressed while KEEP/SWITCH is pending: shake the choice buttons.
@@ -197,7 +158,6 @@ namespace SevenSteps.Game.UI
 
         public void Refresh(State s, int levelIdx, int levelCount, string msg, ProgressData progress)
         {
-            lastState = s; lastStage = levelIdx; lastCount = levelCount; lastMsg = msg; lastProgress = progress;
             stageTitle.text = $"{levelIdx + 1}. {s.Level.Name}";
             stageHint.text = s.Level.Hint; // levels.js hint as written (level design); the solution (H) stays separate
             int next = s.Used + 1;
@@ -243,36 +203,6 @@ namespace SevenSteps.Game.UI
             message.text = msg == null || msg == s.Level.Hint ? "" : msg;
             choicePanel.SetActive(s.Status == Status.Choose);
             RefreshStatues(s);
-
-            bool last = levelIdx == levelCount - 1;
-            bool win = resultShown && s.Status == Status.Win;
-            overlay.SetActive(win || s.Status == Status.Lose);
-            if (win)
-            {
-                int used = s.Level.Bodies - s.Bodies + 1;
-                int k = progress.bestStage.IndexOf(levelIdx);
-                // Shown only after a clear: "몸 2개 (최소 1개 · 최고 기록 2개)". Minimum = JS solver's expected.minBodies.
-                int min = LevelCatalog.MinBodies(levelIdx);
-                string detail = min > 0 ? $"최소 {min}개" : "";
-                if (k >= 0) detail += (detail.Length > 0 ? " · " : "") + $"최고 기록 {progress.bestBodies[k]}개";
-                overlayTitle.text = "클리어";
-                overlayBody.text = $"몸 {used}개" + (detail.Length > 0 ? $" ({detail})" : "") + (last ? "\n모든 스테이지를 끝냈다. 고맙습니다!" : "");
-                overlayNext.SetActive(!last);
-                overlayAgain.SetActive(true);
-                overlaySelect.SetActive(true);
-                overlayUndo.SetActive(false);
-                overlayRestart.SetActive(false);
-            }
-            else if (s.Status == Status.Lose)
-            {
-                overlayTitle.text = "몸을 모두 잃었다";
-                overlayBody.text = "되돌리거나 처음부터 다시.";
-                overlayNext.SetActive(false);
-                overlayAgain.SetActive(false);
-                overlaySelect.SetActive(true);
-                overlayUndo.SetActive(true);
-                overlayRestart.SetActive(true);
-            }
         }
 
 
@@ -308,13 +238,6 @@ namespace SevenSteps.Game.UI
         {
             var b = Ui.MakeButton(parent, label, 16, onClick, out _, label);
             ((RectTransform)b.transform).sizeDelta = new Vector2(132, 40);
-        }
-
-        static GameObject OverlayButton(Transform parent, string label, System.Action onClick)
-        {
-            var b = Ui.MakeButton(parent, label, 18, onClick, out _, label);
-            ((RectTransform)b.transform).sizeDelta = new Vector2(300, 40);
-            return b.gameObject;
         }
 
         static void ChoiceButton(Transform parent, string title, string desc, Color accent, System.Action onClick)

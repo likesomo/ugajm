@@ -64,6 +64,7 @@ namespace SevenSteps.Game
         LaunchOptions launch;
         string message;
         HudView hud;
+        ResultView result;
         BoardView board;
         AudioSource sfx;
         Camera cam;
@@ -119,6 +120,12 @@ namespace SevenSteps.Game
                 new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
             hud = new HudView(this, levels.Length, save);
+            result = new ResultView();
+            result.NextRequested += NextLevel;
+            result.RetryRequested += Again;
+            result.StageSelectRequested += OpenStageSelect;
+            result.UndoRequested += () => Send(Command.Undo);
+            result.RestartRequested += Restart;
             board = gameObject.AddComponent<BoardView>();
             var tiles = cfg.tileSet != null ? cfg.tileSet : assets.tileSet;
             if (tiles == null) throw new InvalidOperationException("[SevenSteps] No TileSet: set AppConfig.tileSet or GameAssets.tileSet");
@@ -166,7 +173,7 @@ namespace SevenSteps.Game
         void OnFlowChanged(AppState from, AppState to)
         {
             if (to == AppState.Game) EnterStage(flow.Stage);
-            hud.ShowResult(to == AppState.Result, session.State, flow.Stage, levels.Length);
+            if (session.State != null) SyncResult();
         }
 
         void EnterStage(int stage)
@@ -392,6 +399,32 @@ namespace SevenSteps.Game
             if (sfx != null) sfx.volume = Mathf.Clamp01(s.sfxVolume);
         }
 
-        void Refresh() => hud.Refresh(session.State, flow.Stage, levels.Length, message, save.Progress);
+        void Refresh()
+        {
+            hud.Refresh(session.State, flow.Stage, levels.Length, message, save.Progress);
+            SyncResult();
+        }
+
+        /// Result panel: a clear once the flow is in Result (after the exit walk), a loss whenever the board is lost
+        /// (AppState stays Game, docs/scene-flow.md 4.7). S3 moves this to the game flow controller.
+        void SyncResult()
+        {
+            var s = session.State;
+            int stage = flow.Stage;
+            bool isLast = stage == levels.Length - 1;
+            if (flow.State == AppState.Result && s.Status == Status.Win)
+            {
+                int used = s.Level.Bodies - s.Bodies + 1;
+                int min = LevelCatalog.MinBodies(stage);
+                int k = save.Progress.bestStage.IndexOf(stage);
+                int best = k >= 0 ? save.Progress.bestBodies[k] : 0;
+                if (best > s.Level.Bodies) best = 0; // a record from an older version of the stage (save data is external input)
+                result.Show(ResultModel.Clear(stage, s.Level.Bodies, used, min <= s.Level.Bodies ? min : 0, best, isLast));
+            }
+            else if (s.Status == Status.Lose)
+                result.Show(ResultModel.Loss(stage, s.Level.Bodies, isLast));
+            else
+                result.Hide();
+        }
     }
 }
