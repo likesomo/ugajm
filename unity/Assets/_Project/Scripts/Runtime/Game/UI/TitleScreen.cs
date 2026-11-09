@@ -64,6 +64,7 @@ namespace SevenSteps.Game.UI
             this.localizer = localizer;
             titleView.Apply(localizer);
             stageSelectView.Apply(localizer);
+            creditsPanel.Apply(localizer);
             localizer.Changed += OnLanguageChanged;
             overlays = new OverlayStack();
 
@@ -101,6 +102,7 @@ namespace SevenSteps.Game.UI
         {
             titleView.Apply(localizer);
             stageSelectView.Apply(localizer);
+            creditsPanel.Apply(localizer);
         }
 
         void OnDestroy()

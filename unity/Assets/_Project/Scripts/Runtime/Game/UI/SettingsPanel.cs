@@ -25,6 +25,8 @@ namespace SevenSteps.Game.UI
         public Button languageToggle;
         [Tooltip("Optional: the current language's own name, drawn in that language's body font (13.4)")]
         public Text languageText;
+        [Tooltip("Fixed labels worded from the string table (settings.*, 13.2)")]
+        public Text titleText, masterLabel, sfxLabel, telemetryLabel;
 
         SaveSystem save;
         bool telemetryOnByDefault;
@@ -44,6 +46,8 @@ namespace SevenSteps.Game.UI
             Need(masterDown, nameof(masterDown)); Need(masterUp, nameof(masterUp));
             Need(sfxDown, nameof(sfxDown)); Need(sfxUp, nameof(sfxUp));
             Need(telemetryToggle, nameof(telemetryToggle)); Need(close, nameof(close));
+            Need(titleText, nameof(titleText)); Need(masterLabel, nameof(masterLabel));
+            Need(sfxLabel, nameof(sfxLabel)); Need(telemetryLabel, nameof(telemetryLabel));
         }
 
         void OnValidate()
@@ -105,9 +109,20 @@ namespace SevenSteps.Game.UI
             masterText.text = $"{Mathf.RoundToInt(s.masterVolume * 100)}%";
             sfxText.text = $"{Mathf.RoundToInt(s.sfxVolume * 100)}%";
             bool on = save.TelemetryOn(telemetryOnByDefault);
-            telemetryText.text = on ? "켜짐" : "꺼짐";
             telemetryText.color = on ? Ui.Gold : Ui.Dim;
-            if (languageText != null && localizer != null)
+            if (localizer == null) return; // tests without a language keep the prefab's words
+            // Words and role fonts in the current language (settings.*, 13.2 / 13.4); Redraw runs on every switch.
+            var body = Ui.Theme.FontFor(localizer.Current, FontRole.Body);
+            void Set(Text t, string key) { t.text = localizer.Get(key); t.font = body; }
+            Set(titleText, "settings.title");
+            titleText.font = Ui.Theme.FontFor(localizer.Current, FontRole.Title);
+            Set(masterLabel, "settings.master");
+            Set(sfxLabel, "settings.sfx");
+            Set(telemetryLabel, "settings.telemetry");
+            Set(telemetryNote, "settings.telemetry_note");
+            Set(telemetryText, on ? "settings.on" : "settings.off");
+            Set(close.GetComponentInChildren<Text>(true), "settings.close");
+            if (languageText != null)
             {
                 // The language's own name in its own body font, whatever the UI language is (13.4).
                 languageText.text = NativeName(localizer.Current);
