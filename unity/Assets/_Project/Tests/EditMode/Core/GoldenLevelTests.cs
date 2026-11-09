@@ -87,6 +87,32 @@ namespace SevenSteps.Tests
             Assert.AreEqual(3, f.levels[0].ToLevel().Bodies, "chapter/story do not touch the rules");
         }
 
+        /// docs/architecture.md 13: "text" holds translations; ko stays in the base fields and name is the save key.
+        [Test]
+        public void LevelDtoTextByLanguage()
+        {
+            var f = JsonUtility.FromJson<LevelFileDto>(
+                "{\"steps\":7,\"levels\":[" +
+                "{\"name\":\"일곱 걸음\",\"hint\":\"일곱 번째\",\"story\":\"첫째\",\"bodies\":1,\"map\":[\"#S.E#\"]," +
+                "\"text\":[{\"lang\":\"en\",\"name\":\"Seven Steps\",\"hint\":\"The seventh\",\"story\":\"The eldest\"}]}," +
+                "{\"name\":\"b\",\"hint\":\"h\",\"bodies\":1,\"map\":[\"#S.E#\"]}]}");
+            var a = f.levels[0];
+            Assert.AreEqual("일곱 걸음", a.name, "name stays ko (save key)");
+            Assert.AreEqual("Seven Steps", a.TextFor("en").name);
+            Assert.AreEqual("The seventh", a.TextFor("en").hint);
+            Assert.AreEqual("The eldest", a.TextFor("en").story);
+            Assert.AreEqual("일곱 걸음", a.TextFor("ko").name);
+            Assert.AreEqual("첫째", a.TextFor("ko").story);
+            var b = f.levels[1];
+            Assert.IsNotNull(b.text, "missing text reads as empty, not null");
+            Assert.AreEqual(0, b.text.Length);
+            Assert.AreEqual("h", b.TextFor("ko").hint);
+            Assert.AreEqual("", b.TextFor("ko").story);
+            Assert.Throws<KeyNotFoundException>(() => b.TextFor("en"));
+            Assert.Throws<System.ArgumentException>(() => b.TextFor(""));
+            Assert.AreEqual(1, a.ToLevel().Bodies, "text does not touch the rules");
+        }
+
         /// levels.json is the level designer's export; the golden data is the core's. If a stage changed, both must be regenerated.
         [Test]
         public void ShippedLevelsMatchGolden()
