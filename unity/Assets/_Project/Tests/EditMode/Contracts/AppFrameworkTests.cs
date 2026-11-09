@@ -82,5 +82,13 @@ namespace SevenSteps.Tests
             Assert.Throws<InvalidOperationException>(() => Services.Get<ISaveStore>());
             Services.Clear();
         }
+
+        [Test]
+        public void ServicesResetForPlayDropsPreviousPlay()
+        {
+            Services.Register<ITelemetry>(new NullTelemetry());
+            Services.ResetForPlay();
+            Assert.IsFalse(Services.Has<ITelemetry>());
+        }
     }
 }

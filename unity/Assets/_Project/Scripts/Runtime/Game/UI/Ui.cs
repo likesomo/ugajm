@@ -20,6 +20,14 @@ namespace SevenSteps.Game.UI
 
         static Sprite circle;
 
+        /// Domain reload is disabled in the editor: drop the previous Play's font and generated sprite.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetForPlay()
+        {
+            Font = null;
+            circle = null;
+        }
+
         /// A soft-edged white circle, generated once (no texture asset needed).
         public static Sprite Circle
         {
