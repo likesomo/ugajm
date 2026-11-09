@@ -81,7 +81,7 @@ namespace SevenSteps.Game.UI
             ApplyText();
             localizer.Changed += OnLanguageChanged;
 
-            flowController = new TitleFlowController(flow, save, this, levels);
+            flowController = new TitleFlowController(flow, save, this, levels, Services.Get<EntryTracker>());
             back = new BackNavigator(overlays, flowController.Back);
             titleView.BeginRequested += flowController.BeginJourney;
             titleView.ContinueRequested += flowController.ContinueJourney;

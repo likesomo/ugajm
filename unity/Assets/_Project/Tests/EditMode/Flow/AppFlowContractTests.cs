@@ -169,11 +169,23 @@ namespace SevenSteps.Tests
         }
 
         [Test]
-        public void FirstEntryWinsOverAnAnnouncement()
+        public void AnnouncedSelectWinsOnTheFirstEntry()
         {
+            var t = EntryTracker.ForLaunch(false);
+            t.Announce(TelemetryNames.Via.Select);
+            Assert.AreEqual(TelemetryNames.Via.Select, t.TakeVia(), "a pick on the map right after launch");
+            Assert.IsFalse(t.FirstPending);
+            var url = EntryTracker.ForLaunch(true);
+            Assert.AreEqual(TelemetryNames.Via.Url, url.TakeVia(), "-level launch: nothing announced");
+        }
+
+        [Test]
+        public void AnAnnouncementWinsOverTheFirstEntry()
+        {
+            // Was the other way round until 2026-11-10: a pick before the first Game scene now counts as select (lead decision).
             var t = EntryTracker.ForLaunch(true);
-            t.Announce(TelemetryNames.Via.Select); // a stage picked on Stage Select before the first Game scene
-            Assert.AreEqual(TelemetryNames.Via.Url, t.TakeVia());
+            t.Announce(TelemetryNames.Via.Select);
+            Assert.AreEqual(TelemetryNames.Via.Select, t.TakeVia());
         }
 
         [Test]

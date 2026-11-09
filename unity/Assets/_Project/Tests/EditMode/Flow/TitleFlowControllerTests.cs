@@ -30,6 +30,7 @@ namespace SevenSteps.Tests
         Panels panels;
         SaveSystem save;
         TitleFlowController ctl;
+        EntryTracker entries;
 
         [SetUp]
         public void SetUp()
@@ -38,7 +39,8 @@ namespace SevenSteps.Tests
             flow = new AppFlow(scenes, 17);
             panels = new Panels();
             save = new SaveSystem(new MemoryStore());
-            ctl = new TitleFlowController(flow, save, panels, Stages);
+            entries = EntryTracker.ForLaunch(false);
+            ctl = new TitleFlowController(flow, save, panels, Stages, entries);
         }
 
         [TearDown] public void TearDown() => ctl.Dispose();
@@ -84,6 +86,33 @@ namespace SevenSteps.Tests
             Assert.AreEqual(AppState.Game, flow.State, "Title -> Game (playtest rehearsal 2026-11-10: was refused)");
             Assert.AreEqual(0, flow.Stage);
             Assert.AreEqual(AppScenes.Game, scenes.Pending);
+        }
+
+        [Test]
+        public void PickedStagesAreSelectEvenAsTheFirstEntry()
+        {
+            ctl.Start();
+            ctl.OpenStageSelect();
+            ctl.PlayStage(14);                        // rotation tester: planet 3 from the map, first entry of the run
+            Assert.AreEqual(TelemetryNames.Via.Select, entries.TakeVia(), "lead decision 2026-11-10: a pick is select, not boot");
+        }
+
+        [Test]
+        public void BeginIsSelectContinueIsBootOnTheFirstEntry()
+        {
+            ctl.Start();
+            ctl.BeginJourney();
+            Assert.AreEqual(TelemetryNames.Via.Select, entries.TakeVia());
+
+            var t = EntryTracker.ForLaunch(false);
+            save.Progress.lastStage = "s5";
+            var flow2 = new AppFlow(new Scenes(), 17);
+            using (var c2 = new TitleFlowController(flow2, save, new Panels(), Stages, t))
+            {
+                c2.Start();
+                c2.ContinueJourney();
+                Assert.AreEqual(TelemetryNames.Via.Boot, t.TakeVia(), "Continue resumes: boot on the run's first entry");
+            }
         }
 
         [Test]

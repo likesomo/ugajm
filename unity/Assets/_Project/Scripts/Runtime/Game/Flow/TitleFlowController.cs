@@ -23,10 +23,13 @@ namespace SevenSteps.Game.Flow
         readonly SaveSystem save;
         readonly ITitlePanels panels;
         readonly IReadOnlyList<Level> levels;
+        readonly EntryTracker entries;
 
         /// <param name="levels">levels.json stages (the last played stage is saved by name, 11.3.1).</param>
-        public TitleFlowController(AppFlow flow, SaveSystem save, ITitlePanels panels, IReadOnlyList<Level> levels)
+        /// <param name="entries">The run's entry tracker (Services): stage picks announce "select" (telemetry level_start.via).</param>
+        public TitleFlowController(AppFlow flow, SaveSystem save, ITitlePanels panels, IReadOnlyList<Level> levels, EntryTracker entries)
         {
+            this.entries = entries ?? throw new ArgumentNullException(nameof(entries));
             this.levels = levels ?? throw new ArgumentNullException(nameof(levels));
             this.flow = flow ?? throw new ArgumentNullException(nameof(flow));
             this.save = save ?? throw new ArgumentNullException(nameof(save));
@@ -49,22 +52,27 @@ namespace SevenSteps.Game.Flow
         /// Title "stages" button: the planet map.
         public void OpenStageSelect() => Go(AppState.StageSelect);
 
-        /// Title "begin": stage 1.
+        /// Title "begin": stage 1, a stage the player chose (via select).
         public void BeginJourney() => PlayStage(0);
 
-        /// Title "continue": the last played stage. Only when there is one (<see cref="CanContinue"/>).
+        /// Title "continue": the last played stage, resumed (no announcement: boot on the run's first entry, select later).
+        /// Only when there is one (<see cref="CanContinue"/>).
         public void ContinueJourney()
         {
-            if (CanContinue) PlayLastStage();
+            if (CanContinue) Enter(save.Progress.LastStageIndex(levels), announceSelect: false);
         }
 
         /// A stage was played before (saved by name, 11.3.1).
         public bool CanContinue => !string.IsNullOrEmpty(save.Progress.lastStage);
 
         /// Stage buttons.
-        public void PlayStage(int stage)
+        public void PlayStage(int stage) => Enter(stage, announceSelect: true);
+
+        void Enter(int stage, bool announceSelect)
         {
-            if (flow.CanGoToGame(stage)) flow.GoToGame(stage);
+            if (!flow.CanGoToGame(stage)) return;
+            if (announceSelect) entries.Announce(TelemetryNames.Via.Select);
+            flow.GoToGame(stage);
         }
 
         /// The last played stage (by name); stage 1 when none or no longer in levels.json.

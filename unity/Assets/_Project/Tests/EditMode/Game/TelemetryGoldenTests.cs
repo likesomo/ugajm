@@ -51,7 +51,9 @@ namespace SevenSteps.Tests
                         ((List<object>)trace["map"]).Cast<string>().ToArray(), count);
                     var want = (List<object>)trace["events"];
                     events += want.Count;
-                    string diff = Compare(want, Replay(level, n, (string)trace["commands"], stages));
+                    // First level_start via from the trace (boot = direct launch, select = picked on the map/list; server e953eb0).
+                    string firstVia = trace.TryGetValue("via", out var v) && v is string sv ? sv : TelemetryNames.Via.Boot;
+                    string diff = Compare(want, Replay(level, n, (string)trace["commands"], stages, firstVia));
                     if (diff != null) failures.Add($"{id}: {diff}");
                 }
                 catch (Exception e) { failures.Add($"{id}: {e.Message}"); }
@@ -61,7 +63,7 @@ namespace SevenSteps.Tests
             Debug.Log($"[TelemetryGolden] {traces} traces, {events} events match telemetry.js");
         }
 
-        static List<object> Replay(Level level, int n, string commands, Level[] stages)
+        static List<object> Replay(Level level, int n, string commands, Level[] stages, string firstVia)
         {
             var sink = new MemoryTelemetry();
             var attempts = new Dictionary<int, int>();
@@ -69,7 +71,7 @@ namespace SevenSteps.Tests
             var tr = new TelemetryTracker(sink, () => 0, NextAttempt);
             var state = Rules.NewState(level);
             tr.SessionStart(true, 0);
-            tr.LevelStart(state, n, level.Name, TelemetryNames.Via.Boot);
+            tr.LevelStart(state, n, level.Name, firstVia);
             foreach (char ch in commands)
             {
                 if (ch == 'H') { tr.Hint(state); continue; }
