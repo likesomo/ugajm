@@ -14,20 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: SevenSteps.Contracts::SevenSteps.Contracts.LightingPreset
   key:
     enabled: 1
-    color: {r: 1, g: 0.8784314, b: 0.6862745, a: 1}
-    intensity: 2
+    color: {r: 1, g: 0.827451, b: 0.57254905, a: 1}
+    intensity: 1.35
     euler: {x: 48, y: -27, z: 0}
     shadows: 1
   fill:
     enabled: 1
-    color: {r: 0.65882355, g: 0.8117647, b: 0.98039216, a: 1}
-    intensity: 0.55
+    color: {r: 0.9137255, g: 0.70980394, b: 0.3254902, a: 1}
+    intensity: 0.4
     euler: {x: 32, y: 135, z: 0}
     shadows: 0
   rim:
     enabled: 1
-    color: {r: 0.39607844, g: 0.34117648, b: 0.41960785, a: 1}
+    color: {r: 0.21960784, g: 0.14117648, b: 0.07058824, a: 1}
     intensity: 0.35
     euler: {x: 20, y: 175, z: 0}
     shadows: 0
-  ambient: {r: 0.5411765, g: 0.6117647, b: 0.6862745, a: 1}
+  ambient: {r: 0.4417255, g: 0.32313725, b: 0.15215686, a: 1}

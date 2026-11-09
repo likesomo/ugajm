@@ -1,89 +1,117 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using SevenSteps.Contracts;
 using UnityEngine;
-namespace SevenSteps.Art {
- public sealed class RuinsHengePlanet : MonoBehaviour, IStageEnvironment {
-  public Material surface;
-  public string chapterId="moss";
-  public Color summitTint=new Color32(198,202,182,255),rimTint=new Color32(116,141,87,255),rockTint=new Color32(88,107,128,255),moonTint=new Color32(126,172,178,255);
-  Color Tint(Color value)=>QualitySettings.activeColorSpace==ColorSpace.Linear?value.linear:value;
-  GameObject terrain,decor;
-  static Color C(string hex){ColorUtility.TryParseHtmlString("#"+hex,out var c);return QualitySettings.activeColorSpace==ColorSpace.Linear?c.linear:c;}
-  public void Fit(BoardGrid grid){transform.position=grid.Origin;transform.localScale=Vector3.one*grid.CellSize;Rebuild(grid.W,grid.H);}
-  void OnDestroy(){foreach(var f in GetComponentsInChildren<MeshFilter>())if(f.sharedMesh)Destroy(f.sharedMesh);}        Mesh Mesh(List<Vector3> v,List<int> t,List<Color> colors)
+namespace SevenSteps.Art
+{
+    public sealed class RuinsHengePlanet : MonoBehaviour, IStageEnvironment
+    {
+        public Material surface;
+        public string chapterId="moss";
+        public Color summitTint=new Color32(198,202,182,255),rimTint=new Color32(116,141,87,255),rockTint=new Color32(88,107,128,255),moonTint=new Color32(126,172,178,255);
+        GameObject terrain,decor;
+        Color Tint(Color c)=>QualitySettings.activeColorSpace==ColorSpace.Linear?c.linear:c;
+        static void Dispose(Object o){if(!o)return;if(Application.isPlaying)Destroy(o);else DestroyImmediate(o);}
+        void OnDestroy(){foreach(var f in GetComponentsInChildren<MeshFilter>())Dispose(f.sharedMesh);}
+        public void Fit(BoardGrid grid){transform.position=grid.Origin;transform.localScale=Vector3.one*grid.CellSize;Rebuild(grid.W,grid.H);}
+        public void Preview(int w,int h)=>Rebuild(w,h);
+        Mesh Make(List<Vector3> v,List<int> t,List<Color> colors)
         {
-            var mesh=new Mesh{name="RuinsPreviewMesh"};mesh.SetVertices(v);mesh.SetTriangles(t,0);mesh.SetColors(colors);
+            var mesh=new Mesh{name="Ruins_"+chapterId};mesh.SetVertices(v);mesh.SetTriangles(t,0);mesh.SetColors(colors);
             var uv=new Vector2[v.Count];var style=new Vector2[v.Count];for(int i=0;i<v.Count;i++){uv[i]=new Vector2(.3125f,.5f);style[i]=new Vector2(2,0);}
             mesh.uv=uv;mesh.uv2=style;mesh.RecalculateNormals();return mesh;
         }
-        GameObject Draw(string name,Mesh mesh,Material material,Transform parent=null)
+        GameObject Draw(string name,List<Vector3> v,List<int> t,List<Color> colors)
         {
-            var go=new GameObject(name,typeof(MeshFilter),typeof(MeshRenderer));go.transform.SetParent(parent?parent:transform,false);
-            go.GetComponent<MeshFilter>().sharedMesh=mesh;var r=go.GetComponent<MeshRenderer>();r.sharedMaterial=material;return go;
+            var go=new GameObject(name,typeof(MeshFilter),typeof(MeshRenderer));go.transform.SetParent(transform,false);go.GetComponent<MeshFilter>().sharedMesh=Make(v,t,colors);go.GetComponent<MeshRenderer>().sharedMaterial=surface;return go;
         }
+        void Clear(GameObject go){if(!go)return;Dispose(go.GetComponent<MeshFilter>().sharedMesh);Dispose(go);}
         void Rebuild(int w,int h)
         {
-            if(terrain){Destroy(terrain.GetComponent<MeshFilter>().sharedMesh);Destroy(terrain);}if(decor){Destroy(decor.GetComponent<MeshFilter>().sharedMesh);Destroy(decor);}
-
-            const int n=48;float rx=w*.5f+.6f,rz=h*.5f+1.2f,centerZ=-.5f;
-            var v=new List<Vector3>{new Vector3(0,-.12f,centerZ)};var t=new List<int>();var colors=new List<Color>{Tint(summitTint)};
-            float depth=Mathf.Clamp(w*.28f,1.7f,3.4f);
-            float[] ys={-.12f,-.3f,-.75f,-depth*.65f,-depth,-depth*1.2f};float[] scales={1,1.035f,1.02f,.9f,.56f,.01f};
+            Clear(terrain);Clear(decor);foreach(var m in GetComponentsInChildren<RuinsMoon>())Clear(m.gameObject);
+            // Flat supporting summit stays below y=0. Silhouette and strata change below it.
+            const int n=64;float rx=w*.5f+2.2f,rz=h*.5f+2.2f,depth=Mathf.Clamp(w*.42f,2.5f,4);
+            float[] ys={-.12f,-.35f,-.8f,-1.25f,-depth*.72f,-depth,-depth*1.2f};
+            float[] scales=chapterId=="carved"?new[]{1f,1.12f,.88f,1.0f,.70f,.80f,.02f}:chapterId=="altar"?new[]{1f,1.08f,.86f,.94f,.70f,.80f,.02f}:new[]{1f,1.03f,1.01f,.93f,.8f,.55f,.02f};
+            var v=new List<Vector3>{new Vector3(0,-.12f,0)};var t=new List<int>();var colors=new List<Color>{Tint(summitTint)};
             for(int ring=0;ring<ys.Length;ring++)for(int i=0;i<n;i++)
             {
                 float a=i*Mathf.PI*2/n,c=Mathf.Cos(a),s=Mathf.Sin(a);
-                float x=Mathf.Sign(c)*Mathf.Sqrt(Mathf.Abs(c))*rx*scales[ring],z=Mathf.Sign(s)*Mathf.Sqrt(Mathf.Abs(s))*rz*scales[ring];
-                if(chapterId=="crumble"&&ring>0){x*=1+.08f*Mathf.Sin(i*3.7f);z*=1+.08f*Mathf.Cos(i*2.9f);}
-                if(chapterId=="carved"&&ring%2==1){x*=.95f;z*=.95f;}
-                v.Add(new Vector3(x,ys[ring],z+centerZ));
-                colors.Add(ring==0?Tint(rimTint):Color.Lerp(Tint(rockTint),C("A5AC9B"),(.5f+.5f*Mathf.Sin(i*2.71f+ring))* .65f));
+                bool angular=chapterId=="joinery"||chapterId=="crumble";
+                float x=(angular?Mathf.Sign(c)*Mathf.Sqrt(Mathf.Abs(c)):c)*rx*scales[ring],z=(angular?Mathf.Sign(s)*Mathf.Sqrt(Mathf.Abs(s)):s)*rz*scales[ring];
+                if(chapterId=="crumble"&&ring>0){x*=1+.15f*Mathf.Sin(i*3.7f);z*=1+.15f*Mathf.Cos(i*2.9f);}
+                v.Add(new Vector3(x,ys[ring],z));
+                colors.Add(Tint(ring==0?summitTint:Color.Lerp(rockTint,rimTint,ring%2==0?.15f:.65f)));
             }
-            for(int i=0;i<n;i++)t.AddRange(new[]{0,1+(i+1)%n,1+i});
-            for(int j=0;j<ys.Length-1;j++)for(int i=0;i<n;i++){if(chapterId=="hollow"&&j>0&&(i%12<3))continue;int a=1+j*n+i,b=1+j*n+(i+1)%n;t.AddRange(new[]{a,b,a+n,a+n,b,b+n});}
-            terrain=Draw("StageSized_RockPlanet",Mesh(v,t,colors),surface);
+            if(chapterId!="hollow")for(int i=0;i<n;i++)t.AddRange(new[]{0,1+(i+1)%n,1+i});
+            else
+            {
+                // Two visible apertures in the outer crust. The central rectangle under all board cells is continuous.
+                const int cells=48;
+                for(int x=0;x<cells;x++)for(int z=0;z<cells;z++)
+                {
+                    float xx=-rx+x*rx*2/cells,zz=-rz+z*rz*2/cells,dx=rx*2/cells,dz=rz*2/cells;
+                    float cx=xx+dx*.5f,cz=zz+dz*.5f;
+                    if(cx*cx/(rx*rx)+cz*cz/(rz*rz)>.94f)continue;
+                    if(Mathf.Abs(cx)>w*.5f+.45f&&Mathf.Abs(cx)<w*.5f+1.65f&&Mathf.Abs(cz)<.8f)continue;
+                    int start=v.Count;v.AddRange(new[]{new Vector3(xx,-.12f,zz),new Vector3(xx+dx,-.12f,zz),new Vector3(xx,-.12f,zz+dz),new Vector3(xx+dx,-.12f,zz+dz)});
+                    t.AddRange(new[]{start,start+2,start+1,start+1,start+2,start+3});for(int q=0;q<4;q++)colors.Add(Tint(summitTint));
+                }
+            }
+            for(int j=0;j<ys.Length-1;j++)for(int i=0;i<n;i++)
+            {
+                // Large windows through the purple crust, while the summit continues supporting the board.
+                if(chapterId=="hollow"&&j>0&&j<5&&i%16<10)continue;
+                int a=1+j*n+i,b=1+j*n+(i+1)%n;t.AddRange(new[]{a,b,a+n,a+n,b,b+n});
+            }
+            terrain=Draw("PlanetHull_"+chapterId,v,t,colors);
             v=new List<Vector3>();t=new List<int>();colors=new List<Color>();
-            for(int i=0;i<(chapterId=="frost"?0:74);i++)
+            // Every decorative vertex lies outside the board rectangle expanded by one cell.
+            // Tall features only occupy lateral wings to preserve screen-space visibility as well.
+            float side=w*.5f+1.75f;
+            for(int sign=-1;sign<=1;sign+=2)for(int i=0;i<3;i++)
             {
-                float a=i*Mathf.PI*2/74,c=Mathf.Cos(a),s=Mathf.Sin(a);
-                var p=new Vector3(Mathf.Sign(c)*Mathf.Sqrt(Mathf.Abs(c))*rx*.99f,-.1f,centerZ+Mathf.Sign(s)*Mathf.Sqrt(Mathf.Abs(s))*rz*.99f);
-                float ht=.10f+.07f*(i%3);int k=v.Count;
-                v.AddRange(new[]{p+new Vector3(-.05f,0,0),p+new Vector3(.05f,0,0),p+new Vector3(.035f,ht,.02f)});t.AddRange(new[]{k,k+2,k+1});for(int q=0;q<3;q++)colors.Add(Color.Lerp(Tint(rimTint),C("B2AF6C"),i%2==0?0:.3f));
-                if(i%4==0)Rock(p+new Vector3(0,-.04f,0),v,t,colors,i);
+                var p=new Vector3(sign*side,-.05f,(i-1)*h*.32f);
+                if(chapterId=="frost")for(int k=0;k<3;k++)Crystal(p+new Vector3(sign*k*.3f,0,k*.24f),.24f,1.1f+k*.3f,moonTint,v,t,colors);
+                else if(chapterId=="altar")Box(p+Vector3.up*.7f,new Vector3(.60f,1.6f,.52f),rimTint,v,t,colors);
+                else if(chapterId=="joinery")
+                {
+                    Box(p,new Vector3(.8f,.28f,.28f),rockTint,v,t,colors);
+                    Box(p+new Vector3(sign*.3f,.17f,0),new Vector3(.14f,.4f,.48f),rimTint,v,t,colors);
+                }
+                else if(chapterId=="carved")Box(p+Vector3.up*.22f,new Vector3(.45f,.55f,.5f),rimTint,v,t,colors);
+                else if(chapterId=="crumble")Box(p+new Vector3(sign*.4f,-.8f-i*.3f,.2f),new Vector3(.6f,.65f,.5f),rockTint,v,t,colors);
+                else if(chapterId=="moss")
+                {
+                    Box(p,new Vector3(.6f,.2f,.7f),rimTint,v,t,colors);
+                    for(int k=0;k<4;k++)Crystal(p+new Vector3(k*.08f,0,0),.025f,.20f,rimTint,v,t,colors);
+                }
             }
-            // All chapter props stay beyond the board edge.
-            for(int i=0;i<7;i++)
+            // Timber construction replaces the rounded lower crust with layered joists.
+            if(chapterId=="joinery")for(int i=-2;i<=2;i++)
             {
-                float a=i*Mathf.PI*2/7;
-                var p=new Vector3(Mathf.Cos(a)*(rx+.08f),-.04f,centerZ+Mathf.Sin(a)*(rz+.08f));
-                int tiers=chapterId=="altar"?6:chapterId=="carved"?4:chapterId=="frost"?2:1;
-                for(int tier=0;tier<tiers;tier++)Rock(p+Vector3.up*tier*.12f,v,t,colors,i);
+                // These structural beams are strictly underneath the supporting planet, not on board cells.
+                // They belong to the hull mesh so the prop-clearance assertion applies only to exterior props.
+                var hv=new List<Vector3>();var ht=new List<int>();var hc=new List<Color>();
+                Box(new Vector3(0,-1.0f,i*rz*.36f),new Vector3(rx*2,.5f,.5f),rockTint,hv,ht,hc);
+                var beam=Draw("UndersideJoist",hv,ht,hc);beam.AddComponent<RuinsMoon>();
             }
-            decor=Draw("MossRim_GrassAndRock",Mesh(v,t,colors),surface);
-            foreach(var moon in GetComponentsInChildren<RuinsMoon>()){Destroy(moon.GetComponent<MeshFilter>().sharedMesh);Destroy(moon.gameObject);}
-            for(int i=0;i<3;i++)
+            decor=Draw("ExteriorProps_"+chapterId,v,t,colors);
+            foreach(var point in v)if(Mathf.Abs(point.x)<w*.5f+1&&Mathf.Abs(point.z)<h*.5f+1)throw new System.InvalidOperationException("Decor entered one-cell board exclusion zone: "+chapterId);
+            for(int i=0;i<2;i++)
             {
-                var moon=Draw("DistantMoon"+i,Octahedron(i),surface);moon.AddComponent<RuinsMoon>();
-                moon.transform.localPosition=new Vector3(i==0?-w*.5f-.1f:i==1?w*.5f+.05f:w*.2f,i==2?1.6f:.9f,h*.5f+1.2f+i*.25f);
-                moon.transform.localScale=Vector3.one*(i==0?.65f:i==1?.43f:.20f);
+                var mv=new List<Vector3>();var mt=new List<int>();var mc=new List<Color>();Crystal(Vector3.zero,1,1.6f,moonTint,mv,mt,mc);
+                var moon=Draw("DistantWorld_"+chapterId,mv,mt,mc);moon.AddComponent<RuinsMoon>();moon.transform.localPosition=new Vector3((i==0?-1:1)*(w*.5f+3.8f),1.0f,h*.5f+2.5f+i);moon.transform.localScale=Vector3.one*(i==0?.7f:.45f);
             }
         }
-        void Rock(Vector3 p,List<Vector3> v,List<int> t,List<Color> colors,int seed)
+        void Box(Vector3 p,Vector3 size,Color color,List<Vector3> v,List<int> t,List<Color> colors)
         {
-            int k=v.Count;float sx=.14f+(seed%3)*.04f;
-            Vector3[] b={new Vector3(-sx,-.05f,-.12f),new Vector3(sx,-.05f,-.12f),new Vector3(sx,-.05f,.12f),new Vector3(-sx,-.05f,.12f),new Vector3(-sx*.7f,.13f,-.10f),new Vector3(sx*.7f,.13f,-.10f),new Vector3(sx*.7f,.13f,.10f),new Vector3(-sx*.7f,.13f,.10f)};
-            foreach(var x in b){v.Add(p+x);colors.Add(C(seed%2==0?"829096":"A0AA9C"));}
-            foreach(int q in new[]{0,4,1,1,4,5,1,5,2,2,5,6,2,6,3,3,6,7,3,7,0,0,7,4,4,7,5,5,7,6})t.Add(k+q);
+            int start=v.Count;foreach(var corner in new[]{new Vector3(-1,-1,-1),new Vector3(1,-1,-1),new Vector3(1,-1,1),new Vector3(-1,-1,1),new Vector3(-1,1,-1),new Vector3(1,1,-1),new Vector3(1,1,1),new Vector3(-1,1,1)}){v.Add(p+Vector3.Scale(corner,size)*.5f);colors.Add(Tint(color));}
+            var faces=new[]{0,1,4,1,5,4,1,2,5,2,6,5,2,3,6,3,7,6,3,0,7,0,4,7,4,5,7,5,6,7,0,3,1,1,3,2};for(int i=0;i<faces.Length;i+=3)t.AddRange(new[]{start+faces[i],start+faces[i+2],start+faces[i+1]});
         }
-        Mesh Octahedron(int variant)
+        void Crystal(Vector3 p,float radius,float height,Color color,List<Vector3> v,List<int> t,List<Color> colors)
         {
-            var v=new List<Vector3>();var t=new List<int>();var colors=new List<Color>();
-            Vector3[] p={Vector3.up,Vector3.down,Vector3.left,Vector3.right,Vector3.forward,Vector3.back};
-            int[] faces={0,4,3,0,2,4,0,5,2,0,3,5,1,3,4,1,4,2,1,2,5,1,5,3};
-            for(int i=0;i<faces.Length;i+=3){Vector3 a=p[faces[i]],b=p[faces[i+1]],c=p[faces[i+2]];Tri(a,(a+b).normalized,(a+c).normalized);Tri((a+b).normalized,b,(b+c).normalized);Tri((a+c).normalized,(b+c).normalized,c);Tri((a+b).normalized,(b+c).normalized,(a+c).normalized);}
-            void Tri(Vector3 a,Vector3 b,Vector3 c){int k=v.Count;v.AddRange(new[]{a,b,c});t.AddRange(new[]{k,k+1,k+2});var color=Color.Lerp(Tint(moonTint),C(variant==1?"B39A69":"9A8DB8"),variant==0?0:.35f)*(.8f+.2f*(k%7)/6f);colors.AddRange(new[]{color,color,color});}
-            return Mesh(v,t,colors);
+            int k=v.Count;v.Add(p+Vector3.up*height);colors.Add(Tint(color));for(int i=0;i<6;i++){float a=i*Mathf.PI/3;v.Add(p+new Vector3(Mathf.Cos(a)*radius,0,Mathf.Sin(a)*radius));colors.Add(Tint(color)*(.75f+i*.035f));}for(int i=0;i<6;i++)t.AddRange(new[]{k,k+1+(i+1)%6,k+1+i});
         }
-
- }
- public sealed class RuinsMoon : MonoBehaviour {} 
+    }
+    public sealed class RuinsMoon : MonoBehaviour {}
 }

@@ -66,7 +66,7 @@ namespace SevenSteps.Art
         {
             ko=korean;if(root)Destroy(root.gameObject);root=Rect("Layout",0,0,1280,720,canvas.transform);
             Image("Background",0,0,1280,720,background,Color.white).type=UnityEngine.UI.Image.Type.Simple;
-            Image("NavyWash",0,0,1280,720,null,new Color(0.04f,.08f,.15f,screen=="title"?.12f:.76f));
+            Image("NavyWash",0,0,1280,720,null,new Color(0.04f,.08f,.15f,screen=="title"?.12f:screen=="stage-select"?.97f:.76f));
             Text("EN / KO",1130,22,120,28,20,numbers,gold,TextAnchor.UpperRight);
             if(screen=="title")TitleScreen();else if(screen=="stage-select")SelectScreen();else if(screen=="hud")Hud();else if(screen=="result")Result();else if(screen=="loading")Loading();else if(screen=="chapter-entry")Chapter();else Language(screen=="settings");
             Text(L("Handwritten UI study | Art preview","손글씨 UI 시안 | 아트 프리뷰"),34,686,700,24,16,null,dim);

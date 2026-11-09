@@ -15,6 +15,8 @@ MonoBehaviour:
   id: joinery
   displayName: Joinery World
   tileSet: {fileID: 11400000, guid: d5840d2071f7eb24f85c080dffcfcb06, type: 2}
-  materialOverrides: []
+  materialOverrides:
+  - from: {fileID: 2100000, guid: c38ccdba49b258446a7b458cfb37786b, type: 2}
+    to: {fileID: 2100000, guid: e60554b103945dc49839caf14d2f91be, type: 2}
   lighting: {fileID: 11400000, guid: 4812d52e8de885343ad77a91f538b149, type: 2}
   sky: {fileID: 11400000, guid: 6a0ee7c25aeacce498c37700ff3e468f, type: 2}
