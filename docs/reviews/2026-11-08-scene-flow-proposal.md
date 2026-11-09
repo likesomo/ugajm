@@ -144,3 +144,11 @@ EditMode + 가짜 로더 + `smoke`/`smoke-webgl`로 S0~S4를 덮을 수 있다. 
 - `ChapterCardView`: 직렬화 참조 `Validate`, 타이머는 `unscaledTime`, 닫히면 비활성이라 `CloseRequested`가 한 번만 나간다.
 - **`OverlayStack.Close` 규칙 변경(S4 단정 완화)**: 맨 위가 아니어도 열린 것이면 닫을 수 있게 됨. 근거가 맞다 — 설정이 카드 위에 열린 동안 카드 타이머가 끝나면 카드가 스스로 닫혀야 한다. 열려 있지 않은 것을 닫으면 여전히 예외. `Pop`/Esc는 계속 맨 위만. 테스트 갱신됨.
 - 남은 것(R1 데이터 때, 씬 플로우): GlyphCheck에 `story`·`chapters.json`(`planet`/`concept`/`intro`) 추가. 13장(다국어) 뒤에는 언어별로.
+
+## 검토: feat/scene-flow 481e953 (12.8 챕터 연결: 방향광 3개, UseChapters, chapters.json, GlyphCheck story·chapters, 2026-11-09)
+
+**결론: 승인.**
+- `Game.unity`: 방향광 3개(Key 그림자 Soft, Fill·Rim 그림자 없음), 예전 방향광 없음. `GameController` 필드 `keyLight`/`fillLight`/`rimLight`, 없으면 `Awake`에서 예외 + 검증기. 생성기 `GameSceneLights`(씬 플로우).
+- `board.UseChapters(new ChapterStage(cam, key, fill, rim, transform), stage → chapters.json artPreset → AppConfig.Chapter, cfg.tileSet)` — 12.8 순서 그대로. `AppConfig.chapters`가 비면 null이라 지금 모습 유지.
+- `GameAssets.chaptersJson` 연결, GlyphCheck가 `story`·`planet`·`intro`까지(4d6d373 남은 것 해결). `concept`는 화면에 안 나오므로 제외 — 나중에 쓰면 추가.
+- 주의(아키텍트가 검사 켬): 아트 `Chapter01.asset`의 id는 `moss-ruins`인데 `chapters.json`의 `artPreset`은 `moss`다. `AppConfig.chapters`에 넣는 순간 `TileSetValidator`가 오류를 낸다 → 아트가 id를 `moss`로 하거나 레벨 디자인이 `artPreset`을 맞춘다.
