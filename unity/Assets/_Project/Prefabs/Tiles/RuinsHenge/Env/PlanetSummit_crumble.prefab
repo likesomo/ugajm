@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2170302913168506093
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 143275626077027924}
+  - component: {fileID: 5764933574831154803}
+  m_Layer: 0
+  m_Name: PlanetSummit_crumble
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &143275626077027924
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2170302913168506093}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5764933574831154803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2170302913168506093}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f65bc34a575f681448db1a8bce45bce9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.RuinsHengePlanet
+  surface: {fileID: 2100000, guid: c38ccdba49b258446a7b458cfb37786b, type: 2}
+  chapterId: crumble
+  summitTint: {r: 0.78039217, g: 0.73333335, b: 0.69411767, a: 1}
+  rimTint: {r: 0.52156866, g: 0.4627451, b: 0.41960785, a: 1}
+  rockTint: {r: 0.47058824, g: 0.39215687, b: 0.37254903, a: 1}
+  moonTint: {r: 0.52156866, g: 0.4627451, b: 0.41960785, a: 1}

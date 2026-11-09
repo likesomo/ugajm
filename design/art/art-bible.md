@@ -1,5 +1,7 @@
 # Seven Steps 아트 바이블 — 유적×선돌×오리엔탈
 
+> 2026-11-10 current scope: seven confirmed planets `moss`, `hollow`, `carved`, `frost`, `joinery`, `crumble`, `altar`; chapters.json is authoritative. Earlier five-planet limits below are historical. UI architecture now uses independent menhirs with one straight weathered timber beam, exposed tenons and wedges; paired curved lintels and red lacquer gateways are forbidden. See [seven-planet delivery](seven-planets-2026-11-10.md).
+
 > EN/KO 손글씨 UI 방향: [fonts.md](fonts.md). EN 제목 Kaushan Script·본문 Patrick Hand, KO Gaegu, 수량/걸음 숫자 Jua를 추천한다. 기존 패널/트림은 유지한다.7행성의 열린 선택 화면과 실제 TTF 렌더는 공유 `concepts/ui/en/`·`ko/`를 따른다. 언어별 UiTheme 필드는 요청안이며 타입을 변경하지 않았다.
 
 > UI 테마 후보와 게임용 환경 전달(2026-11-09): [ui-theme.md](ui-theme.md), [정식 씬 연결](unity-integration.md). UI는 남색 평탄 면/석재·목재 프레임/놋쇠, 칠성은 숫자와 병기한다.3별 평가는 검토안이며 점수 규칙 확정으로 간주하지 않는다. 세쌍둥이0.88m·같은 몸 메시를 유지하면서 머리 비율·명도를 보완하고, 벽은 이끼 줄눈과 석재/목재 장식 변형을 추가했다.
@@ -42,25 +44,21 @@ KEEP 선돌은 같은 몸/후드/망토 윤곽의 **색 없는 중성 화강암 
 
 ‘세 형제’는 이번 서사/아트 기준이다. 기존17스테이지에는 몸4개 등 자원 수가 다른 데이터가 있으므로 **코어·레벨·HUD의 몸 수를 이번 아트 작업에서3으로 강제 변경하지 않는다**. 레벨 디자이너가 챕터 재구성과 함께 조율해야 한다. 이번 행성 시안은 두 살아 있는 형제+한 KEEP 선돌로 셋을 표현한다.
 
-## 5개 챕터
+## 7 confirmed chapters (2026-11-10)
 
-**현재5행성 유지, 장 경계는 잠정안**이다. 아래17스테이지 범위는 기존 비교 기준이며 레벨 디자이너의50스테이지·6–8행성 계획 확정 후 별도 요청으로 갱신한다. 이번에는 챕터 수·레벨 데이터를 확장하지 않는다. 비율은 화면 면적 목표이며 머티리얼 개수가 아니다.
+The IDs and order in `unity/Assets/_Project/Data/chapters.json` are authoritative. All seven use the same playable tile kit and keep floor y=0; background geometry and lighting differ.
 
-| 장·장소 | 스테이지·학습 | 시간·하늘·조명 | 석재/목재/기타 | 소품·트림 |
-|---|---|---|---|---|
-| 1 이끼의 궤도: 작은 이끼 행성 | 1–4: 일곱 걸음, 늦게 도착, KEEP·발판, SWITCH | 아침 같은 좌측 금빛 별광, 남청 우주·청자 위성 | 70/20/10 | 잘린 석주, 목재 보수 블록, 풀 가장자리 |
-| 2 건넘의 위성: 갈라진 작은 달 | 5–6: 몸 다리, 숫자 문 | 부드러운 확산 별광, 청록 성운·작은 위성 | 60/30/10 | 목재 받침, 석재 마감, 우주가 보이는 틈 |
-| 3 서리의 별길: 얼어붙은 위성 | 7–10: 얼음, 레버, 석상 정지, 뒤집힘 벽 | 푸른 림광·놋쇠 반사, 보라 성운·다른 행성 | 55/25/20(서리) | 낮은 목재 난간, 보호된 모서리 이끼 |
-| 4 회랑의 작은 별: 떠 있는 목조 유적 섬 | 11–15: 금 간 바닥, 두 문, 석상 수 문, 남기기 순서 | 등잔빛 키·청록 필, 어두운 우주·두 위성 | 40/50/10 | 회랑 파편, 끝단 청록/적갈 트림, 낮은 등 |
-| 5 선돌의 마지막 행성: 원형 제단 유적 | 16–17: 칠칠의 방, 떠나온 자리 | 감청 우주, 먼 별의 가는 금빛·행성 림광 | 70/20/10 | 원형 외곽 마당, 불균등한 세 선돌 무리, 별빛 틈 |
+| ID | Environment direction | Preset |
+|---|---|---|
+| moss | Moss rim, broken stone, warm morning starlight | Chapter_moss |
+| hollow | Open underside sectors, cool teal moon and stars | Chapter_hollow |
+| carved | Recessed stone strata, counting pillar concept, warm stone | Chapter_carved |
+| frost | Frost palette, bare rock rim, cold blue key | Chapter_frost |
+| joinery | Faded timber palette, exposed joinery concept, amber key | Chapter_joinery |
+| crumble | Irregular underside fragments, muted warm stone | Chapter_crumble |
+| altar | Perimeter standing stones, moss and narrow warm starlight | Chapter_altar |
 
-| 장 | 팔레트 HEX: 밝은 바닥 / 보조 석재·이끼 / 목재·강조·하늘 |
-|---|---|
-| 1 | #D5D9C8 #707D63 #6F8B4E #6D5140 #9C7560 #A4BDC1 |
-| 2 | #CCD2C7 #76847A #668249 #846147 #B29768 #8FAAB0 |
-| 3 | #D8E4DE #66828D #536D55 #715B4F #9CBAC5 #B49A6C |
-| 4 | #D1D2BE #5E7760 #8B6548 #344C4B #A95F4D #C2A270 |
-| 5 | #D9DEC8 #607568 #324C60 #78604A #C5AE78 #BD7257 |
+Delivery paths, references and validation: [seven-planets-2026-11-10.md](seven-planets-2026-11-10.md). Old five-chapter stage ranges are superseded by the 50-stage data.
 
 ## 칸과 규칙을 먼저 읽게 한다
 
