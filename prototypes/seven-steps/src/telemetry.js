@@ -1,7 +1,7 @@
 // Anonymous play telemetry (schema: docs/telemetry.md, v1). Owned by backend/analytics.
 // Tracker turns dispatch() results into events and is pure (clock and output injected), so the fake-data
 // generator in server/tools reuses it. initTelemetry() wires it to the browser: local queue, batching, sendBeacon.
-import { STEPS, tileAt, minBodies } from './core.js';
+import { STEPS, tileAt, minBodies, stars as coreStars } from './core.js';
 
 export const SCHEMA_VERSION = 1;
 export const IDLE_MS = 30000;
@@ -47,13 +47,8 @@ export function levelKey(level) {
   return fnv1a(`${level.bodies}\n${rows.join('\n')}`);
 }
 
-// Stars (design/levels/stars.md, plan B): 1 = cleared; 2 = no hint and the fewest bodies the stage allows;
-// 3 = that plus no undo and no restart in the attempt. null when the fewest bodies is not known.
-export function starsFor({ bodiesUsed, minBodies: min, hints, undos, restarts }) {
-  if (!min) return null;
-  if (hints > 0 || bodiesUsed > min) return 1;
-  return undos === 0 && restarts === 0 ? 3 : 2;
-}
+// Stars (design/levels/stars.md, plan B): core.js stars(), under the name the server and tests use.
+export const starsFor = coreStars;
 
 // Fewest bodies for a level (solver), cached by map. levels.json carries it as expected.minBodies.
 const MIN_BODIES = new Map();

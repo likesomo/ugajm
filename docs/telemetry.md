@@ -120,7 +120,7 @@
 - ★2: 풀이 보기(`hints`) 0이고 `bodiesUsed == minBodies`(그 맵을 깰 수 있는 가장 적은 몸 수, 솔버 `minBodies` = `levels.json` `expected.minBodies`)
 - ★3: ★2이고 `undos` 0, `restarts` 0
 
-기준 구현 `telemetry.js` `starsFor`(코어가 공식 함수를 만들면 그것을 쓴다). 최소 몸 수를 모르면 보내지 않는다. 서버는 `stars`가 없는 옛 기록도 `level_clear`의 `bodiesUsed`·`hints`·`undos`·`restarts`와 현재 맵(같은 `levelKey`)의 최소 몸 수로 다시 계산한다.
+판정 함수는 코어 `core.js` `stars()`(C# `Stars.Of`, 골든 `Tests/Golden/stars.golden.json`). `telemetry.js`는 이것을 `starsFor`로 다시 내보낸다. 최소 몸 수를 모르면 보내지 않는다. 서버는 `stars`가 없는 옛 기록도 `level_clear`의 `bodiesUsed`·`hints`·`undos`·`restarts`와 현재 맵(같은 `levelKey`)의 최소 몸 수로 다시 계산한다.
 
 ## 변경 기록
 
