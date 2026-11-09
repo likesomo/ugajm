@@ -144,6 +144,7 @@ namespace SevenSteps.EditorTools
             {
                 case BootScreen boot:
                     Require(name, "BootScreen.config", boot.config, issues);
+                    RequireAssets(name, "BootScreen.assets", boot.assets, issues);
                     return boot.config;
                 case TitleScreen title:
                     Require(name, "TitleScreen.config", title.config, issues);

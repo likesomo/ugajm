@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using SevenSteps.Contracts;
 using SevenSteps.Core;
+using SevenSteps.Game.Flow;
 using SevenSteps.Game.Telemetry;
 using SevenSteps.Game.UI;
 using UnityEngine;
@@ -82,15 +83,8 @@ namespace SevenSteps.Game
         /// Raised for HUD-only actions that do not touch the session (hint).
         public event Action HintShown;
 
-        string nextVia = TelemetryNames.Via.Boot;
-
-        /// Set by Bootstrap.Run: the next stage entry is the first of this app run (telemetry via = boot/url).
-        internal static bool FirstEntryPending;
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStaticsForPlay() => FirstEntryPending = false;
-        /// Scene played directly in the editor (or a build without Boot): the start level came from startLevel, not the URL.
-        bool levelFromInspector;
+        /// telemetry level_start.via for each stage entry (boot/url first, then select/next/again). One per Play, from Services.
+        EntryTracker entries;
 
         void Awake()
         {
@@ -101,10 +95,11 @@ namespace SevenSteps.Game
             {
                 // Played directly in the editor: same bootstrap as the Boot scene, with this object's debug start values.
                 var opts = Bootstrap.ReadLaunchOptions();
-                levelFromInspector = opts.UseEditorStart(Mathf.Max(1, startLevel), replay);
-                Bootstrap.Run(config, opts, enterFirstScreen: false);
+                bool levelFromInspector = opts.UseEditorStart(Mathf.Max(1, startLevel), replay);
+                Bootstrap.Run(config, assets, opts, enterFirstScreen: false, levelFromEditor: levelFromInspector);
             }
             flow = Services.Get<AppFlow>();
+            entries = Services.Get<EntryTracker>();
             save = Services.Get<SaveSystem>();
             launch = Services.Get<LaunchOptions>();
             var cfg = Services.Get<AppConfig>();
@@ -139,19 +134,14 @@ namespace SevenSteps.Game
 
         void Start()
         {
-            // Boot -> Game (or editor direct play): enter the game state now that the scene exists.
+            // Editor direct play (state still Boot): enter the game state now that the scene exists (EnterStage via Changed).
             if (flow.State == AppState.Boot)
-            {
-                nextVia = launch.DirectToGame && !levelFromInspector ? TelemetryNames.Via.Url : TelemetryNames.Via.Boot;
-                flow.GoToGame(Mathf.Clamp(launch.DirectToGame ? launch.Level - 1 : 0, 0, levels.Length - 1));
-            }
+                flow.GoToGame(launch.DirectToGame ? Bootstrap.FirstStage(launch, levels.Length) : 0);
+            // Boot -> Game for ?level= / -level, or StageSelect -> Game: the flow is already in Game.
             else if (flow.State == AppState.Game)
-            {
-                // Boot -> Game for ?level= / -level, or StageSelect -> Game.
-                nextVia = FirstEntryPending && launch.DirectToGame ? TelemetryNames.Via.Url : FirstEntryPending ? TelemetryNames.Via.Boot : TelemetryNames.Via.Select;
                 EnterStage(flow.Stage);
-            }
-            FirstEntryPending = false;
+            else
+                throw new InvalidOperationException($"[SevenSteps] Game scene started in state {flow.State}");
 
             if (!string.IsNullOrEmpty(launch.Replay) && launch.DirectToGame && flow.Stage == launch.Level - 1)
                 session.Replay(launch.TakeReplay()); // once per launch
@@ -181,39 +171,42 @@ namespace SevenSteps.Game
 
         void EnterStage(int stage)
         {
-            stage = Mathf.Clamp(stage, 0, levels.Length - 1);
+            if (stage < 0 || stage >= levels.Length) throw new ArgumentOutOfRangeException(nameof(stage), stage, "AppFlow gave a stage outside levels.json");
             StageLeaving?.Invoke(stage);
             loadedStage = stage;
             session.Load(levels[stage]);
             save.Progress.lastStage = stage;
-            StageEntered?.Invoke(stage, nextVia);
-            nextVia = TelemetryNames.Via.Select;
+            StageEntered?.Invoke(stage, entries.TakeVia());
         }
+
+        // Player actions: a key or button the flow cannot take now (scene loading, first/last stage) is ignored.
 
         /// Stage buttons, [ and ]. Goes through AppFlow (Game -> Game, or Result -> Game).
         public void SelectStage(int idx)
         {
-            if (idx < 0 || idx >= levels.Length) return;
-            nextVia = TelemetryNames.Via.Select;
+            if (!flow.CanGoToGame(idx)) return;
+            entries.Announce(TelemetryNames.Via.Select);
             flow.GoToGame(idx);
         }
 
         public void NextLevel()
         {
-            if (flow.Stage >= levels.Length - 1) return;
-            nextVia = TelemetryNames.Via.Next;
+            if (!flow.CanGoToGame(flow.Stage + 1)) return;
+            entries.Announce(TelemetryNames.Via.Next);
             flow.GoToGame(flow.Stage + 1);
         }
 
         /// Result panel "다시 하기" after a clear: a fresh attempt at the same stage.
         public void Again()
         {
-            nextVia = TelemetryNames.Via.Again;
+            if (!flow.CanGoToGame(flow.Stage)) return;
+            entries.Announce(TelemetryNames.Via.Again);
             flow.GoToGame(flow.Stage);
         }
 
         public void OpenStageSelect()
         {
+            if (flow.IsLoading) return;
             save.SaveProgress();
             flow.Go(AppState.StageSelect);
         }
@@ -222,6 +215,7 @@ namespace SevenSteps.Game
 
         void Update()
         {
+            if (flow.IsLoading) return; // the next scene replaces this one; keys now would act on a stale flow state
             if (hud.SettingsOpen)
             {
                 // Esc closes the settings panel (and saves it), it does not leave the stage.

@@ -37,6 +37,7 @@ const RECIPES = {
   'pit':         { w: [5, 9], h: [3, 5], walls: 0.3, place: { o: [1, 3] } },
   'pit-plate':   { w: [6, 9], h: [4, 6], walls: 0.3, place: { o: [1, 2], a: [1, 1], A: [1, 1] } },
   'gate':        { w: [5, 9], h: [3, 5], walls: 0.3, place: { gate: [1, 3] } },
+  'gate-plate':  { w: [6, 9], h: [3, 6], walls: 0.3, place: { gate: [1, 2], a: [1, 1], A: [1, 1] } },
   'gate-pit':    { w: [6, 9], h: [3, 6], walls: 0.3, place: { gate: [1, 2], o: [1, 2] } },
   'ice':         { w: [6, 9], h: [4, 6], walls: 0.2, place: { iceRun: [1, 2] } },
   'gate-ice':    { w: [6, 9], h: [4, 6], walls: 0.25, place: { iceRun: [1, 2], gate: [1, 2] } },

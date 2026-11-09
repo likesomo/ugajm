@@ -15,7 +15,7 @@ namespace SevenSteps.Tests
     {
         static readonly Type[] TypesWithPlayState =
         {
-            typeof(Services), typeof(Bootstrap), typeof(LevelCatalog), typeof(GameController), typeof(Ui),
+            typeof(Services), typeof(Bootstrap), typeof(LevelCatalog), typeof(Ui), // GameController.FirstEntryPending moved to EntryTracker (S2)
         };
 
         [Test]

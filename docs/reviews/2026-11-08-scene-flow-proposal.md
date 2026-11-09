@@ -62,3 +62,14 @@ EditMode + 가짜 로더 + `smoke`/`smoke-webgl`로 S0~S4를 덮을 수 있다. 
 - `Bootstrap.Run`: 경고 로그 → `Services.Clear()` → 등록 순서. 중간에 던진 Run 뒤 재시도도 `Clear`로 깨끗하다.
 - 사소: `Warnings`가 내부 `List`를 `IReadOnlyList`로 그대로 내보낸다(형 변환하면 수정 가능). 지금은 문제 없음.
 - 다른 에이전트 영향: `LaunchOptions` 필드에 대입하던 코드는 컴파일 오류가 난다. 7lucky 기준 대입은 `GameController` 두 곳뿐이고 이 커밋이 고쳤다. 다른 브랜치(feat/view 등)에서 새로 대입하면 `UseEditorStart`/`TakeReplay`로.
+
+## S2 검토: feat/scene-flow f08f4d6 (AppFlow, ISceneLoader, 2026-11-09)
+
+**결론: 승인.** 승인 조건(로더 null 금지, `stageCount >= 1`, 범위 예외, 기존 전이 표 안의 Back, `Loaded`는 `SceneLoader`가 `sceneLoaded`로, `Entered` 없음) 모두 지켰다. 11.1·11.2·변경 기록 반영.
+- `AppFlow`: 검사 순서가 맞다(범위 → 로드 중 → 전이 표, 실패 시 상태·`Stage` 그대로). `loadingScene`을 `Load` 전에 세워 가짜 로더의 동기 `Loaded`도 처리. 다른 씬 이름의 `Loaded` 무시.
+- `SceneLoader`: 대기 중에만 `sceneLoaded` 구독, 받으면 해제 → Play 사이 누수 없음. `Current`는 활성 씬 이름이라 로드 요청 직후에는 이전 씬이지만 그동안 `Go`가 막히므로 문제 없음.
+- 위험(문서화함): 씬 로드가 끝나지 않으면 `IsLoading`이 계속 참이라 흐름이 멈춘다. 빌드 목록 누락은 `SceneFlowValidator`가 막는다. S5 비동기 로더에서도 실패 시 `Loaded`를 못 내는 경로가 없게 할 것.
+- `Changed`가 `IsLoading` = 참일 때 나가므로 떠나는 씬의 구독자가 그 안에서 `Go`를 부르면 예외 — 의도대로(진입 경로 하나).
+- `EntryTracker`: 정적 플래그 제거, 인자 검사 단정적. `Services`에 Game 타입을 등록하는 것은 로케이터 규칙(조회는 씬 루트만)과 맞다.
+- `Bootstrap.FirstStage`: 실행 인자·URL은 외부 입력이라 경고 + 마지막 스테이지(9장 규칙과 같음).
+- 공용 API 영향: `AppFlow` 생성자·`ISceneLoader` 멤버 추가로 다른 브랜치의 가짜 로더·직접 생성 코드는 컴파일 오류. 리드 고지.

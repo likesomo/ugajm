@@ -261,7 +261,7 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
   ] }
   ```
   `id`: 소문자·하이픈, 바꾸지 않는다(텔레메트리·저장이 기댈 수 있음). `artPreset`: `ChapterPreset.id`(12.8). 비면 `id`와 같다. 여러 챕터가 한 프리셋을 같이 쓸 수 있다.
-- 런타임 형식: `Contracts/Chapters/ChapterInfo.cs`의 `ChapterFileDto`/`ChapterInfo`(아키텍트). 읽기는 `GameAssets.chaptersJson`(TextAsset) → `LevelCatalog`(게임플레이/UI): `ChapterOf(stage)` → `ChapterInfo`, 아트는 `AppConfig.Chapter(info.ArtPreset)`.
+- 런타임 형식: `Contracts/Chapters/ChapterInfo.cs`의 `ChapterFileDto`/`ChapterInfo`(아키텍트). 읽기는 `GameAssets.chaptersJson`(TextAsset) → `LevelCatalog`: `ChapterIdOf(stage)`(구현됨, 7lucky 9f3d109, 텔레메트리 `level_start` 챕터용) → `ChapterFileDto.Get(id)` → `ChapterInfo`(chapters.json이 생기면), 아트는 `AppConfig.Chapter(info.ArtPreset)`. `LevelDto.chapter`/`story`는 코어 b5c4464에서 추가됨.
 - export 단정 검증(`unity/Tools/export-levels.mjs`, 실패하면 파일을 쓰지 않고 exit 1, 레벨 디자인 제안 그대로): 모든 스테이지에 `chapter`가 있고 `chapters.json`에 있다, 스테이지 순서대로 챕터가 `chapters.json` 순서를 거스르지 않고 이어진다, 모든 `bodies <= 3`, 모두 솔버로 풀리고 최소 몸 수 <= 3, 이름 중복 없음. **지금 17스테이지(챕터 없음, 14~17 몸 4~5)는 플레이테스트 1차까지 그대로**이므로 검증은 형식 도입 커밋(첫 묶음)부터 켠다. 그 전까지 런타임은 `chapter`가 없으면 첫 챕터, 몸 4~5는 외형 순환(A, B, C, A)으로 임시 허용(12.6).
 - Unity 검사: `TileSetValidator`가 `Data/chapters.json`의 `artPreset`이 모두 `AppConfig.chapters`에 있는지 본다(파일과 챕터 에셋이 생기면 아키텍트가 켬).
 - 담당: 레벨 디자인(`chapters.json`, `chapter`/`story` 채우기, export 검증), 코어(`LevelDto` 필드), 아키텍트(`ChapterInfo`, 이 절, 검사기), 게임플레이/UI(`LevelCatalog`·진입 문구 표시), 씬 플로우(챕터가 바뀔 때의 흐름·`ResultModel.nextChapterChanges`), 백엔드/분석(이벤트에 챕터 id를 실을지).
@@ -399,7 +399,15 @@ Boot ──▶ Title ⇄ StageSelect ──▶ Game ⇄ Result
 - 상태: `AppState { Boot, Title, StageSelect, Game, Result }` (끝에만 추가). 허용 전이는 `AppFlow.CanGo`가 정한다. 허용되지 않은 전이는 예외.
 - 상태 → 씬: `AppScenes.For(state)`. 같은 씬 안의 상태 변경(Title⇄StageSelect, Game⇄Result, Game→Game 스테이지 변경)은 씬을 다시 읽지 않고 `AppFlow.Changed(from, to)`로 패널만 바꾼다.
 - 스테이지 선택: `flow.GoToGame(stage)` (0부터). 클리어 시 `GameController`가 `flow.Go(AppState.Result)`, 결과 패널의 다음/재시도는 `flow.GoToGame(...)`.
-- 씬 로드: `ISceneLoader`를 Game 어셈블리에서 `SceneManager.LoadScene`으로 구현(게임플레이/UI). `AppFlow`는 순수 C#이라 테스트에서 가짜 로더를 쓴다.
+- 씬 로드: `ISceneLoader`(`Current`, `Load(name)`, `event Action<string> Loaded`)를 Game 어셈블리 `SceneLoader`가 `SceneManager.LoadScene`으로 구현(씬 플로우). `Loaded`는 `SceneManager.sceneLoaded`에서 낸다(새 씬의 Awake 뒤, Start 전). 로드 대기 중에만 구독한다(도메인 리로드 꺼짐에서 누수 없음). 테스트는 가짜 로더(`Load` 안에서 `Loaded`를 내도 된다).
+- **단정적 계약 (2026-11-09, 씬 플로우 S2)**:
+  - 생성자 `AppFlow(ISceneLoader scenes, int stageCount)`: `scenes` null → `ArgumentNullException`, `stageCount < 1` → `ArgumentOutOfRangeException`. `StageCount` 공개.
+  - `GoToGame(stage)`: `0 <= stage < StageCount`가 아니면 `ArgumentOutOfRangeException`(상태·`Stage` 그대로). 허용되지 않은 전이는 `InvalidOperationException`.
+  - `IsLoading`: 다른 씬 로드를 요청하면 참, 그 씬의 `Loaded`에서 거짓. **로드 중 전이는 `InvalidOperationException`.** 다른 씬 이름의 `Loaded`는 무시. 로드가 끝나지 않으면(빌드 목록에 없는 씬) 흐름이 멈추므로 `SceneFlowValidator`가 빌드 전에 막는다.
+  - 뒤로: `static TryGetBackTarget(from, out to)`/인스턴스 `TryGetBackTarget(out to)` — StageSelect→Title, Game→StageSelect, Result→StageSelect, Boot·Title은 없음. 모두 `CanGo` 안(새 전이 없음). `CanBack` = 로드 중 아님 + 뒤 대상 있음.
+  - 입력 처리는 먼저 묻고 안 되면 무시한다: `IsLoading`, `CanBack`, `CanGoToGame(stage)`.
+  - `Changed(from, to)`는 로드 요청 **뒤**(이전 씬이 아직 있고 `IsLoading` = 참)에 난다. 그 안에서 `Go`를 부르면 예외. 진입 경로는 하나: 새 씬은 루트 `Start`에서 `flow.State`로, 같은 씬 안 전이는 `Changed`로. `Entered` 이벤트는 없다.
+- 진입 경로(`level_start.via`): `EntryTracker`(Game `Flow/`, 부트스트랩이 `Services`에 등록). 첫 진입은 `url`(실행 인자·URL 레벨) 또는 `boot`, 그 뒤는 `Announce(next|again|select)` 후 `TakeVia()`, 알림 없으면 `select`. 정적 `GameController.FirstEntryPending`을 대체했다.
 - `GameSession`(보드 안의 입력 락)과 `AppFlow`(화면 흐름)는 별개다. 스테이지 바꾸기 = `flow.GoToGame(k)` → `GameController`가 `session.Load(level)`.
 
 ### 11.2 서비스 등록 (`Services` + Boot 부트스트랩)
@@ -408,7 +416,7 @@ Boot ──▶ Title ⇄ StageSelect ──▶ Game ⇄ Result
 
 - 같은 타입을 두 번 `Register`하면 `InvalidOperationException`(조용히 덮어쓰지 않는다). 테스트는 `[SetUp]`에서 `Services.Clear()`.
 - `Services.ResetForPlay()`가 `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]`로 Play마다(플레이어 시작 때도) 비운다(도메인 리로드 꺼짐, 9장).
-- `Bootstrap.Run`: `config`가 null이면 `ArgumentNullException`, 같은 Play에서 두 번째 호출이면 `InvalidOperationException`. 직접 Play 판단은 `Bootstrap.HasRunThisPlay`(8장). `launch.Warnings`를 `Debug.LogWarning`으로 남긴다.
+- `Bootstrap.Run(config, assets, launch, enterFirstScreen, levelFromEditor)`: `config`·`assets`가 null이면 `ArgumentNullException`(Boot 씬 루트 `BootScreen`에 둘 다 연결, 검증기 필수), 같은 Play에서 두 번째 호출이면 `InvalidOperationException`. 직접 Play 판단은 `Bootstrap.HasRunThisPlay`(8장). `launch.Warnings`를 `Debug.LogWarning`으로 남긴다.
 
 부트스트랩 순서 (게임플레이/UI가 `SevenSteps.Game`의 `Bootstrap`으로 구현):
 
@@ -422,10 +430,11 @@ var save    = new SaveSystem(new PlayerPrefsStore());
 ITelemetry telemetry = string.IsNullOrEmpty(config.telemetryEndpoint) || launch.TelemetryOff
                        ? new NullTelemetry() : new HttpTelemetry(/* Game 어셈블리 */);
 telemetry.SetEnabled(save.TelemetryAllowed(config) && !launch.TelemetryOff);
-var flow    = new AppFlow(new SceneLoader());
+var flow    = new AppFlow(new SceneLoader(), LevelCatalog.Load(assets).Length);   // Run(config, assets, ...)
 Services.Register(config); Services.Register(launch); Services.Register<ISaveStore>(...); Services.Register(save);
-Services.Register(telemetry); Services.Register(flow);
-flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title);
+Services.Register(telemetry); Services.Register(flow); Services.Register(EntryTracker.ForLaunch(...));
+if (launch.DirectToGame) flow.GoToGame(FirstStage(launch, stageCount));   // 마지막 스테이지를 넘으면 경고 후 마지막
+else flow.Go(AppState.Title);
 ```
 
 | 서비스 | 타입 | 수명 |
@@ -436,6 +445,7 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 진행·설정 | `SaveSystem` (`Progress`, `Settings`, `SettingsChanged`) | 앱 전체 |
 | 텔레메트리 | `ITelemetry` | 앱 전체 |
 | 앱 흐름 | `AppFlow` | 앱 전체 |
+| 진입 경로 | `EntryTracker` (Game 어셈블리) | 앱 전체 |
 
 **`LaunchOptions` (2026-11-09 캡슐화)**: 읽기 전용 속성 `Level`(1부터, 0 = 없음), `Replay`, `Screenshot`, `TelemetryOff`, `TelemetryUrl`, `DirectToGame`, `OpenStageSelect`(`-stageselect`), `OpenCredits`(`-credits`), `Warnings`.
 - 바꿀 수 있는 곳은 두 메서드뿐: `TakeReplay()`(리플레이를 한 번만 꺼내고 비움), `UseEditorStart(level, replay)`(에디터에서 Game 씬 직접 Play: 실행 인자·URL이 없을 때만 인스펙터 값을 씀, 인스펙터 레벨을 썼으면 true, `level < 1`이면 예외).
@@ -616,3 +626,4 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 2026-11-09 | 아키텍트 | 11.2 씬 플로우 S0·S1 반영(feat/scene-flow 5fdaf49·923a1a6, 아키텍트 검토 승인): `Services.ResetForPlay`(SubsystemRegistration), `Register` 중복 예외, `Bootstrap.Run` config null·두 번째 실행 예외·`HasRunThisPlay`. **`LaunchOptions` 공개 필드 → 읽기 전용 속성**(읽기 호환), `TakeReplay()`, `UseEditorStart(level, replay)`, `OpenStageSelect`/`OpenCredits`, `Warnings`. 필드에 값을 대입하던 코드는 컴파일 오류가 나므로 두 메서드로 바꿀 것 |
 | 2026-11-09 | 아키텍트 | 6.3 진흙 `m`(2걸음, 남은 1걸음이면 막힘, 얼음 미끄러짐 멈춤, 새 이벤트 없음) 고지, `TileKind.Mud`(끝에 추가)·`TileId.FromChar('m')`·`TileSet.mud`(없으면 바닥, 검사기 경고). 6.4 `chapter` = 문자열 id + `chapters.json`(`id`, `planet`, `concept`, `intro`, `artPreset`), `story`, export 검증은 첫 묶음부터, `ChapterInfo`/`ChapterFileDto`(Contracts). 12.8 표 갱신 |
 | 2026-11-09 | 코어·아키텍트 | 6.3 진흙 코어 구현(feat/core 6ae58e2): `Rules.IsMud(char)`, SWITCH 출발점 가능, 막히면 `Bump`(진흙 칸). `Mud` 이벤트는 넣지 않음. 골든 트레이스 id가 스테이지 이름 기준으로 바뀜(`server/fixtures` 재생성) |
+| 2026-11-09 | 아키텍트 | 11.1·11.2 씬 플로우 S2 반영(feat/scene-flow f08f4d6, 검토 승인): **`AppFlow(ISceneLoader, int stageCount)` 생성자 변경**, `StageCount`, `GoToGame` 범위 예외, `TryGetBackTarget`/`CanBack`/`CanGoToGame`, `IsLoading` + **`ISceneLoader.Loaded` 추가**(로드 중 전이 예외), `Changed` 시점 명시, `EntryTracker`(Game, `Services` 등록), `Bootstrap.Run(config, assets, ...)`, 범위 밖 `-level`은 경고 후 마지막 스테이지. `AppFlow`를 직접 만들거나 `ISceneLoader`를 구현하던 코드(테스트 가짜 로더 포함)는 고쳐야 한다 |

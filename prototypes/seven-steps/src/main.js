@@ -100,7 +100,7 @@ function hint() {
 }
 
 const CELL = {
-  '#': 'wall', '.': 'floor', 'E': 'exit', 'o': 'pit', '~': 'ice', 'x': 'cracked', '=': 'bridge',
+  '#': 'wall', '.': 'floor', 'E': 'exit', 'o': 'pit', '~': 'ice', 'x': 'cracked', '=': 'bridge', 'm': 'mud',
 };
 
 function cellHtml(i) {
@@ -208,6 +208,7 @@ function render() {
         <li><span class="cell mini pit"></span> 구덩이: 7번째 걸음으로 빠지면 다리가 된다</li>
         <li><span class="cell mini ice"></span> 얼음: 막힐 때까지 미끄러진다. 몇 칸이든 1걸음</li>
         <li><span class="cell mini cracked"></span> 금 간 바닥: 지나가면 무너진다. 7번째 걸음으로 서면 굳는다</li>
+        <li><span class="cell mini mud"></span> 진흙: 들어가는 데 2걸음. 남은 걸음이 1이면 못 들어간다. 미끄러지다 닿으면 멈춘다</li>
         <li><span class="cell mini exit"><span class="label">出</span></span> 출구: 7번째 걸음으로 밟아야 한다</li>
         <li><span class="cell mini start"></span> 출발점: SWITCH를 고르면 옮겨진다 (점선은 원래 출발점)</li>
       </ul>
