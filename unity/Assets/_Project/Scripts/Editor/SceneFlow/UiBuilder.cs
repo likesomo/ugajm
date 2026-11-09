@@ -99,12 +99,14 @@ namespace SevenSteps.EditorTools
             panel.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(520, 380));
             var title = Ui.Label(panel.transform, "설정", 34, Ui.Gold, TextAnchor.MiddleCenter, "Title");
             title.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -22), new Vector2(480, 44));
+            view.titleText = title; // labels: placeholder ko text, SettingsPanel sets the table strings (settings.*)
 
-            view.masterText = VolumeRow(panel.transform, "전체 음량", -90, out view.masterDown, out view.masterUp);
-            view.sfxText = VolumeRow(panel.transform, "효과음", -150, out view.sfxDown, out view.sfxUp);
+            view.masterText = VolumeRow(panel.transform, "전체 음량", -90, out view.masterDown, out view.masterUp, out view.masterLabel);
+            view.sfxText = VolumeRow(panel.transform, "효과음", -150, out view.sfxDown, out view.sfxUp, out view.sfxLabel);
 
             var tLabel = Ui.Label(panel.transform, "플레이 기록 보내기", 20, Ui.Ink, TextAnchor.MiddleLeft, "TelemetryLabel");
             tLabel.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(-110, -210), new Vector2(240, 40));
+            view.telemetryLabel = tLabel;
             view.telemetryToggle = Ui.MakeButton(panel.transform, "", 18, Nothing, out view.telemetryText, "TelemetryToggle");
             ((RectTransform)view.telemetryToggle.transform).Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(150, -210), new Vector2(140, 40));
             view.telemetryNote = Ui.Label(panel.transform, "익명 플레이 기록(이동·클리어)만 보냅니다. 이름이나 계정은 보내지 않습니다.", 14, Ui.Dim, TextAnchor.MiddleCenter, "TelemetryNote");
@@ -117,9 +119,9 @@ namespace SevenSteps.EditorTools
             return dim.gameObject;
         }
 
-        static Text VolumeRow(Transform parent, string label, float y, out Button down, out Button up)
+        static Text VolumeRow(Transform parent, string label, float y, out Button down, out Button up, out Text labelText)
         {
-            var l = Ui.Label(parent, label, 20, Ui.Ink, TextAnchor.MiddleLeft, label);
+            var l = labelText = Ui.Label(parent, label, 20, Ui.Ink, TextAnchor.MiddleLeft, label);
             l.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(-110, y), new Vector2(240, 40));
             down = Ui.MakeButton(parent, "-", 22, Nothing, out _, label + " -"); // ASCII: Jua has no U+2212 (WebGL showed nothing)
             ((RectTransform)down.transform).Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(70, y), new Vector2(44, 40));

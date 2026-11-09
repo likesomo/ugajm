@@ -45,6 +45,7 @@ namespace SevenSteps.Game
             // Registered before telemetry: TelemetryRunner reports Localizer.Current as lang and follows Localizer.Changed.
             Services.Register(Localizer.FromAssets(assets.strings, launch.Language ?? save.Language));
             var telemetry = TelemetryRunner.CreateTelemetry(config, launch, save);
+            UI.Ui.Theme = assets.uiTheme; // the scene fader's loading screen is built before any scene root sets it
             var flow = new AppFlow(new SceneLoader(), stageCount);
 
             Services.Register(config);

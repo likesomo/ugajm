@@ -1,5 +1,10 @@
 {
   "entries": [
+    { "key": "loading.title", "text": "Reading the star map" },
+    { "key": "loading.tip.1", "text": "A body left behind can become a bridge." },
+    { "key": "loading.tip.2", "text": "Only on the seventh step can you choose KEEP or SWITCH." },
+    { "key": "loading.tip.3", "text": "A standing stone can block a path or hold down a plate." },
+    { "key": "chapter.number", "text": "Chapter {0:00}" },
     { "key": "title.name", "text": "Seven Steps" },
     { "key": "title.tagline", "text": "Three wanderers. One sky." },
     { "key": "title.begin", "text": "Begin the Journey" },
