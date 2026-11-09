@@ -1,40 +1,54 @@
 using System;
+using System.Collections.Generic;
 using SevenSteps.Contracts;
 using SevenSteps.Core;
+using SevenSteps.Game.Flow;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace SevenSteps.Game.UI
 {
     /// <summary>
-    /// Title panel (view only): name, tagline, start / settings / credits buttons. Text comes from the string table
-    /// (keys title.*, docs/architecture.md 13.2) in the role fonts of the current language (13.4); <see cref="Apply"/>
-    /// redraws it when the language changes. Built from code (prefab later, with the art theme).
+    /// Title panel (view only, art layout concepts/ui title, docs/scene-flow.md S7): framed menu on the left with the name,
+    /// tagline and five buttons (begin, continue, stages, settings, credits) and the language line. Text from the string
+    /// table (title.*) in the current language's role fonts; <see cref="Apply"/> redraws on a language change.
+    /// Positions are the art's 1280x720 top-left pixels.
     /// </summary>
     public sealed class TitleView
     {
         readonly GameObject panel;
-        readonly Text name, sub, tagline, start, settings, credits;
+        readonly Text name, tagline, begin, cont, stages, settings, credits, language;
+        readonly Button beginButton, continueButton;
 
-        public event Action StartRequested, SettingsRequested, CreditsRequested;
+        public event Action BeginRequested, ContinueRequested, StagesRequested, SettingsRequested, CreditsRequested, LanguageRequested;
 
         public TitleView(Transform root)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
             panel = Ui.Rect("Title", root).Stretch().gameObject;
             var t = panel.transform;
-            name = Ui.Label(t, "", 96, Ui.Gold, TextAnchor.MiddleCenter, "Name");
-            name.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 150), new Vector2(800, 120));
-            sub = Ui.Label(t, "", 26, Ui.Dim, TextAnchor.MiddleCenter, "Sub");
-            sub.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 76), new Vector2(400, 36));
-            tagline = Ui.Label(t, "", 20, Ui.Ink, TextAnchor.MiddleCenter, "Tagline");
-            tagline.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 30), new Vector2(800, 30));
-            var startButton = Ui.MakeButton(t, "", 24, () => StartRequested?.Invoke(), out start, "Start");
-            ((RectTransform)startButton.transform).Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(260, 54));
-            var set = Ui.MakeButton(t, "", 20, () => SettingsRequested?.Invoke(), out settings, "Settings");
-            ((RectTransform)set.transform).Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -126), new Vector2(260, 44));
-            var cr = Ui.MakeButton(t, "", 20, () => CreditsRequested?.Invoke(), out credits, "Credits");
-            ((RectTransform)cr.transform).Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -182), new Vector2(260, 44));
+            Ui.Wash(t, 0.12f);
+            var menu = Ui.Panel(t, "Menu").rectTransform.TopLeft(32, 40, 450, 624);
+            name = Ui.Label(menu, "", 66, Ui.Gold, TextAnchor.MiddleLeft, "Name");
+            name.rectTransform.TopLeft(30, 27, 390, 105);
+            tagline = Ui.Label(menu, "", 25, Ui.Ink, TextAnchor.MiddleLeft, "Tagline");
+            tagline.rectTransform.TopLeft(32, 138, 390, 46);
+            Button Menu(int row, Action click, out Text label, string id)
+            {
+                var b = Ui.MenuButton(menu, 25, click, out label, id);
+                ((RectTransform)b.transform).TopLeft(38, 217 + row * 70, 370, 55);
+                return b;
+            }
+            beginButton = Menu(0, () => BeginRequested?.Invoke(), out begin, "Begin");
+            continueButton = Menu(1, () => ContinueRequested?.Invoke(), out cont, "Continue");
+            Menu(2, () => StagesRequested?.Invoke(), out stages, "Stages");
+            Menu(3, () => SettingsRequested?.Invoke(), out settings, "Settings");
+            Menu(4, () => CreditsRequested?.Invoke(), out credits, "Credits");
+            begin.color = Ui.Gold;
+            var lang = Ui.MakeButton(menu, "", 22, () => LanguageRequested?.Invoke(), out language, "Language");
+            ((Image)lang.targetGraphic).color = new Color(0, 0, 0, 0);
+            ((RectTransform)lang.transform).TopLeft(40, 572, 370, 34);
+            language.color = Ui.Dim;
             var ver = Ui.Label(t, Application.version, 14, Ui.Dim, TextAnchor.LowerRight, "Version");
             ver.rectTransform.Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-16, 12), new Vector2(300, 20));
             panel.SetActive(false);
@@ -45,130 +59,332 @@ namespace SevenSteps.Game.UI
         {
             if (loc == null) throw new ArgumentNullException(nameof(loc));
             UiText.Set(name, loc, "title.name", FontRole.Title);
-            UiText.Set(sub, loc, "title.subtitle", FontRole.Body);
             UiText.Set(tagline, loc, "title.tagline", FontRole.Body);
-            UiText.Set(start, loc, "title.start", FontRole.Body);
+            UiText.Set(begin, loc, "title.begin", FontRole.Body);
+            UiText.Set(cont, loc, "title.continue", FontRole.Body);
+            UiText.Set(stages, loc, "title.stages", FontRole.Body);
             UiText.Set(settings, loc, "title.settings", FontRole.Body);
             UiText.Set(credits, loc, "title.credits", FontRole.Body);
+            // Both language names in their own script: the number font (Jua) has Latin and Hangul (13.4).
+            var other = loc.Current == Language.Ko ? Language.En : Language.Ko;
+            language.text = SettingsPanel.NativeName(loc.Current) + " / " + SettingsPanel.NativeName(other);
+            language.font = Ui.Theme.FontFor(loc.Current, FontRole.Number);
         }
 
-        public void Show() => panel.SetActive(true);
+        /// Shows the menu; Continue is off without a last played stage. Focus: Continue when it can, else Begin (Enter plays it).
+        public void Show(bool canContinue)
+        {
+            panel.SetActive(true);
+            continueButton.interactable = canContinue;
+            (canContinue ? continueButton : beginButton).Select();
+        }
+
+        public void Hide() => panel.SetActive(false);
+    }
+
+    /// <summary>One planet on the map: chapters.json chapter and its stages (0-based, levels.json order).</summary>
+    public sealed class PlanetEntry
+    {
+        public string Key { get; }
+        /// null when there is no chapters.json: one planet with every stage.
+        public ChapterInfo Info { get; }
+        public IReadOnlyList<int> Stages { get; }
+
+        public PlanetEntry(string key, ChapterInfo info, IReadOnlyList<int> stages)
+        {
+            Key = key ?? throw new ArgumentNullException(nameof(key));
+            Info = info;
+            Stages = stages ?? throw new ArgumentNullException(nameof(stages));
+            if (stages.Count == 0) throw new ArgumentException($"planet {key} has no stages", nameof(stages));
+        }
+
+        public string Name(Localizer loc) => Info != null ? Info.Planet(loc.Current) : loc.Get("planets.head");
+        public string Tagline(Localizer loc) => Info != null ? Info.Tagline(loc.Current) : "";
+
+        /// Planets in chapters.json order, from LevelCatalog (after Load). A chapter without stages is left out.
+        public static List<PlanetEntry> FromCatalog(int stageCount)
+        {
+            var list = new List<PlanetEntry>();
+            foreach (var c in LevelCatalog.Chapters)
+            {
+                var stages = LevelCatalog.StagesOf(c.id);
+                if (stages.Length > 0) list.Add(new PlanetEntry(c.id, c, stages));
+            }
+            if (list.Count == 0)
+            {
+                var all = new int[stageCount];
+                for (int k = 0; k < stageCount; k++) all[k] = k;
+                list.Add(new PlanetEntry("", null, all));
+            }
+            return list;
+        }
+
+        /// Earned and possible stars of this planet's stages.
+        public (int earned, int max) Stars(ProgressData progress, IReadOnlyList<Level> levels)
+        {
+            int earned = 0;
+            foreach (int s in Stages) earned += progress.BestStars(levels[s]);
+            return (earned, Stages.Count * ProgressData.MaxStars);
+        }
+    }
+
+    /// <summary>
+    /// Planet select (view only, state StageSelect; art layout concepts/ui stage-select): the planets as cards on the Big
+    /// Dipper (UiTheme.Dipper, edges 1-2-3-4-1 / 4-5-6-7), each with its name and star total, no locks. A click / Enter
+    /// on a planet raises <see cref="PlanetClicked"/> (the root opens <see cref="PlanetStagesPanel"/>). Arrow keys move
+    /// between planets (uGUI automatic navigation).
+    /// </summary>
+    public sealed class PlanetMapView
+    {
+        const float MapX = 60, MapY = 190, MapW = 1140, MapH = 650;
+
+        readonly GameObject panel;
+        readonly IReadOnlyList<PlanetEntry> planets;
+        readonly IReadOnlyList<Level> levels;
+        readonly Button[] cards;
+        readonly Text[] names, totals;
+        readonly Text head, detail, totalLabel, totalValue, back, note;
+        Localizer loc;
+        ProgressData shown;
+
+        /// Index into the planets list.
+        public event Action<int> PlanetClicked;
+        public event Action BackRequested;
+
+        public PlanetMapView(Transform root, IReadOnlyList<PlanetEntry> planets, IReadOnlyList<Level> levels)
+        {
+            if (root == null) throw new ArgumentNullException(nameof(root));
+            this.planets = planets ?? throw new ArgumentNullException(nameof(planets));
+            this.levels = levels ?? throw new ArgumentNullException(nameof(levels));
+            if (planets.Count == 0) throw new ArgumentException("no planets", nameof(planets));
+            panel = Ui.Rect("PlanetSelect", root).Stretch().gameObject;
+            var s = panel.transform;
+            Ui.Wash(s, 0.97f);
+            head = Ui.Label(s, "", 48, Ui.Ink, TextAnchor.MiddleLeft, "Head");
+            head.rectTransform.TopLeft(40, 30, 1070, 72);
+            detail = Ui.Label(s, "", 24, Ui.Dim, TextAnchor.MiddleLeft, "Detail");
+            detail.rectTransform.TopLeft(42, 100, 1160, 48);
+
+            var pos = new Vector2[planets.Count];
+            for (int i = 0; i < pos.Length; i++) pos[i] = Position(i, pos.Length);
+            if (planets.Count <= 7)
+                foreach (var (a, b) in UiTheme.DipperEdges)
+                    if (a < pos.Length && b < pos.Length) Ui.Line(s, pos[a], pos[b], Ui.Dim, "Edge");
+
+            cards = new Button[planets.Count];
+            names = new Text[planets.Count];
+            totals = new Text[planets.Count];
+            for (int i = 0; i < planets.Count; i++)
+            {
+                int idx = i;
+                var p = pos[i];
+                var card = Ui.Card(s, "Planet " + (i + 1));
+                card.rectTransform.TopLeft(p.x - 65, p.y - 24, 130, 48);
+                card.raycastTarget = true;
+                cards[i] = card.gameObject.AddComponent<Button>();
+                var colors = cards[i].colors;
+                colors.highlightedColor = colors.selectedColor = Ui.Gold;
+                cards[i].colors = colors;
+                cards[i].onClick.AddListener(() => PlanetClicked?.Invoke(idx));
+                var num = Ui.Label(card.transform, (i + 1).ToString(), 25, Ui.Gold, TextAnchor.MiddleCenter, "Number");
+                num.rectTransform.Stretch();
+                names[i] = Ui.Label(s, "", 23, Ui.Ink, TextAnchor.UpperCenter, "Name " + (i + 1));
+                names[i].rectTransform.TopLeft(p.x - 95, p.y + 30, 190, 60);
+                names[i].horizontalOverflow = HorizontalWrapMode.Wrap;
+                var star = Ui.Star(s, true, "Star " + (i + 1));
+                star.rectTransform.TopLeft(p.x - 48, p.y + 92, 22, 22);
+                totals[i] = Ui.Label(s, "", 22, Ui.Gold, TextAnchor.MiddleLeft, "Stars " + (i + 1));
+                totals[i].rectTransform.TopLeft(p.x - 20, p.y + 88, 100, 30);
+            }
+
+            totalLabel = Ui.Label(s, "", 30, Ui.Gold, TextAnchor.MiddleLeft, "TotalLabel");
+            totalLabel.rectTransform.TopLeft(440, 572, 400, 40);
+            totalValue = Ui.Label(s, "", 27, Ui.Gold, TextAnchor.MiddleLeft, "TotalValue");
+            var backButton = Ui.MenuButton(s, 25, () => BackRequested?.Invoke(), out back, "Back");
+            ((RectTransform)backButton.transform).TopLeft(40, 624, 230, 55);
+            note = Ui.Label(s, "", 24, Ui.Ink, TextAnchor.MiddleLeft, "Note");
+            note.rectTransform.TopLeft(310, 634, 900, 35);
+            panel.SetActive(false);
+        }
+
+        /// A planet's card center in top-left reference pixels: the Dipper for up to 7 planets, else one row.
+        static Vector2 Position(int i, int count)
+        {
+            if (count <= 7)
+            {
+                var d = Ui.Theme.Dipper[i];
+                return new Vector2(MapX + d.x * MapW, MapY + d.y * MapH);
+            }
+            float step = (MapW - 130) / (count - 1);
+            return new Vector2(MapX + 65 + i * step, 320);
+        }
+
+        public void Apply(Localizer localizer)
+        {
+            loc = localizer ?? throw new ArgumentNullException(nameof(localizer));
+            UiText.Set(head, loc, "planets.head", FontRole.Title);
+            UiText.Set(detail, loc, "planets.detail", FontRole.Body);
+            UiText.Set(totalLabel, loc, "planets.total", FontRole.Body);
+            UiText.Set(back, loc, "planets.back", FontRole.Body);
+            UiText.Set(note, loc, "planets.note", FontRole.Body);
+            var body = Ui.Theme.FontFor(loc.Current, FontRole.Body);
+            var number = Ui.Theme.FontFor(loc.Current, FontRole.Number);
+            for (int i = 0; i < planets.Count; i++)
+            {
+                names[i].text = planets[i].Name(loc);
+                names[i].font = body;
+                totals[i].font = number;
+                cards[i].GetComponentInChildren<Text>().font = number;
+            }
+            totalValue.font = number;
+            // The value follows the label's measured width + 12 px (art: HandwrittenUiPreview).
+            totalLabel.rectTransform.sizeDelta = new Vector2(totalLabel.preferredWidth + 2, 40);
+            totalValue.rectTransform.TopLeft(440 + totalLabel.preferredWidth + 12, 572, 200, 40);
+            if (shown != null && panel.activeSelf) Show(shown, -1);
+        }
+
+        /// Shows the map with this progress (read only). <paramref name="focus"/>: planet to select, -1 = the last played one.
+        public void Show(ProgressData progress, int focus)
+        {
+            if (progress == null) throw new ArgumentNullException(nameof(progress));
+            if (loc == null) throw new InvalidOperationException("PlanetMapView.Show before Apply");
+            shown = progress;
+            panel.SetActive(true);
+            int earnedAll = 0, maxAll = 0;
+            for (int i = 0; i < planets.Count; i++)
+            {
+                var (earned, max) = planets[i].Stars(progress, levels);
+                totals[i].text = $"{earned} / {max}";
+                earnedAll += earned;
+                maxAll += max;
+            }
+            totalValue.text = $"{earnedAll} / {maxAll}";
+            if (focus < 0) focus = PlanetOf(progress.LastStageIndex(levels));
+            cards[Mathf.Clamp(focus, 0, cards.Length - 1)].Select();
+        }
+
+        /// The planet holding a stage (0 when none does).
+        public int PlanetOf(int stage)
+        {
+            for (int i = 0; i < planets.Count; i++)
+                foreach (int s in planets[i].Stages) if (s == stage) return i;
+            return 0;
+        }
+
+        public void Focus(int planet) => cards[Mathf.Clamp(planet, 0, cards.Length - 1)].Select();
+
         public void Hide() => panel.SetActive(false);
     }
 
     /// <summary>
-    /// Stage select panel (view only): stage grid with clear marks and best bodies, back / settings buttons.
-    /// Text from the string table (keys stageselect.*), role fonts of the current language; stage names in the current
-    /// language from LevelCatalog.TextOf (levels.json text, 13.5): never a ko name in an en font (no Hangul there).
+    /// The stages of one planet as an overlay over the map (view only): planet name, tagline (hidden when empty), a card per
+    /// stage with its number and best stars, and a back button. Esc / back closes it (OverlayStack). Arrow keys move
+    /// between cards, Enter plays.
     /// </summary>
-    public sealed class StageSelectView
+    public sealed class PlanetStagesPanel : IOverlay
     {
-        const int Columns = 4;
+        const int Columns = 4, MaxCards = 12;
+
         readonly GameObject panel;
-        readonly Level[] levels;
-        readonly Button[] stageButtons;
-        readonly Text[] stageTexts;
-        readonly Text head, back, settings;
-        readonly ScrollRect scroll;
-        Localizer loc;
-        ProgressData shown;
+        readonly Text title, tagline, back;
+        readonly Button[] cards = new Button[MaxCards];
+        readonly Text[] labels = new Text[MaxCards], numbers = new Text[MaxCards];
+        readonly Image[,] stars = new Image[MaxCards, ProgressData.MaxStars];
+        readonly int[] cardStage = new int[MaxCards];
+        readonly RectTransform grid;
 
         /// 0-based stage.
         public event Action<int> StageClicked;
-        public event Action BackRequested, SettingsRequested;
+        public event Action CloseRequested;
 
-        public StageSelectView(Transform root, Level[] levels)
+        public PlanetStagesPanel(Transform root)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
-            this.levels = levels ?? throw new ArgumentNullException(nameof(levels));
-            if (levels.Length == 0) throw new ArgumentException("no stages", nameof(levels));
-            panel = Ui.Rect("StageSelect", root).Stretch().gameObject;
-            var s = panel.transform;
-            head = Ui.Label(s, "", 40, Ui.Gold, TextAnchor.MiddleCenter, "Head");
-            head.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -60), new Vector2(600, 56));
-            // 50 stages do not fit: the grid scrolls inside a masked viewport between the header and the bottom buttons.
-            var viewport = Ui.MakeImage(s, new Color(0, 0, 0, 0.01f), null, "Viewport");
-            viewport.rectTransform.anchorMin = new Vector2(0.5f, 0);
-            viewport.rectTransform.anchorMax = new Vector2(0.5f, 1);
-            viewport.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            viewport.rectTransform.offsetMin = new Vector2(-500, 90);
-            viewport.rectTransform.offsetMax = new Vector2(500, -110);
-            viewport.raycastTarget = true; // wheel and drag
-            viewport.gameObject.AddComponent<RectMask2D>();
-            var grid = Ui.Rect("Grid", viewport.transform);
-            grid.anchorMin = new Vector2(0, 1);
-            grid.anchorMax = new Vector2(1, 1);
-            grid.pivot = new Vector2(0.5f, 1);
-            grid.anchoredPosition = Vector2.zero;
-            grid.sizeDelta = Vector2.zero;
-            grid.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            scroll = viewport.gameObject.AddComponent<ScrollRect>();
-            scroll.viewport = viewport.rectTransform;
-            scroll.content = grid;
-            scroll.horizontal = false;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = 40f;
+            panel = Ui.Rect("PlanetStages", root).Stretch().gameObject;
+            var blocker = Ui.Wash(panel.transform, 0.6f, "Blocker");
+            blocker.raycastTarget = true;
+            var frame = Ui.Panel(panel.transform, "Frame").rectTransform.TopLeft(140, 60, 1000, 600);
+            title = Ui.Label(frame, "", 52, Ui.Gold, TextAnchor.MiddleCenter, "Planet");
+            title.rectTransform.TopLeft(40, 28, 920, 72);
+            tagline = Ui.Label(frame, "", 24, Ui.Dim, TextAnchor.MiddleCenter, "Tagline");
+            tagline.rectTransform.TopLeft(40, 100, 920, 40);
+            tagline.horizontalOverflow = HorizontalWrapMode.Wrap;
+            grid = Ui.Rect("Grid", frame).TopLeft(40, 156, 920, 340);
             var g = grid.gameObject.AddComponent<GridLayoutGroup>();
-            g.cellSize = new Vector2(232, 84);
-            g.spacing = new Vector2(14, 14);
-            g.childAlignment = TextAnchor.MiddleCenter;
+            g.cellSize = new Vector2(214, 96);
+            g.spacing = new Vector2(16, 14);
+            g.childAlignment = TextAnchor.UpperCenter;
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             g.constraintCount = Columns;
-            stageButtons = new Button[levels.Length];
-            stageTexts = new Text[levels.Length];
-            for (int k = 0; k < levels.Length; k++)
+            for (int k = 0; k < MaxCards; k++)
             {
-                int idx = k;
-                stageButtons[k] = Ui.MakeButton(grid, "", 18, () => StageClicked?.Invoke(idx), out stageTexts[k], $"Stage {k + 1}");
-                stageTexts[k].horizontalOverflow = HorizontalWrapMode.Wrap;
+                int slot = k;
+                var card = Ui.Card(grid, "Stage " + (k + 1));
+                card.raycastTarget = true;
+                cards[k] = card.gameObject.AddComponent<Button>();
+                var colors = cards[k].colors;
+                colors.highlightedColor = colors.selectedColor = Ui.Gold;
+                cards[k].colors = colors;
+                cards[k].onClick.AddListener(() => StageClicked?.Invoke(cardStage[slot]));
+                labels[k] = Ui.Label(card.transform, "", 22, Ui.Ink, TextAnchor.UpperLeft, "Label");
+                labels[k].rectTransform.TopLeft(16, 10, 120, 32);
+                numbers[k] = Ui.Label(card.transform, "", 28, Ui.Gold, TextAnchor.UpperRight, "Number");
+                numbers[k].rectTransform.TopLeft(120, 8, 80, 36);
+                for (int st = 0; st < ProgressData.MaxStars; st++)
+                {
+                    stars[k, st] = Ui.Star(card.transform, false, "Star " + (st + 1));
+                    stars[k, st].rectTransform.TopLeft(16 + st * 32, 56, 24, 24);
+                }
             }
-            var backButton = Ui.MakeButton(s, "", 18, () => BackRequested?.Invoke(), out back, "Back");
-            ((RectTransform)backButton.transform).Place(new Vector2(0, 0), new Vector2(0, 0), new Vector2(110, 40), new Vector2(180, 44));
-            var set = Ui.MakeButton(s, "", 18, () => SettingsRequested?.Invoke(), out settings, "Settings");
-            ((RectTransform)set.transform).Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-110, 40), new Vector2(180, 44));
+            var backButton = Ui.MenuButton(frame, 25, () => CloseRequested?.Invoke(), out back, "Back");
+            ((RectTransform)backButton.transform).TopLeft(385, 516, 230, 55);
             panel.SetActive(false);
         }
 
-        /// Text and fonts for the current language (call once, then on Localizer.Changed); redraws the grid if shown.
-        public void Apply(Localizer localizer)
+        /// Fills the panel for a planet (call before Show; the root pushes it on the OverlayStack).
+        public void Bind(PlanetEntry planet, ProgressData progress, IReadOnlyList<Level> levels, Localizer loc)
         {
-            loc = localizer ?? throw new ArgumentNullException(nameof(localizer));
-            UiText.Set(head, loc, "stageselect.head", FontRole.Title);
-            UiText.Set(back, loc, "stageselect.back", FontRole.Body);
-            UiText.Set(settings, loc, "stageselect.settings", FontRole.Body);
-            var body = Ui.Theme.FontFor(loc.Current, FontRole.Body);
-            foreach (var t in stageTexts) t.font = body;
-            if (shown != null && panel.activeSelf) Show(shown);
-        }
-
-        /// Shows the grid with this progress (read only) and selects the last played stage.
-        public void Show(ProgressData progress)
-        {
+            if (planet == null) throw new ArgumentNullException(nameof(planet));
             if (progress == null) throw new ArgumentNullException(nameof(progress));
-            if (loc == null) throw new InvalidOperationException("StageSelectView.Show before Apply");
-            shown = progress;
-            panel.SetActive(true);
-            int last = progress.LastStageIndex(levels);
-            for (int k = 0; k < levels.Length; k++)
+            if (levels == null) throw new ArgumentNullException(nameof(levels));
+            if (loc == null) throw new ArgumentNullException(nameof(loc));
+            if (planet.Stages.Count > MaxCards) throw new ArgumentException($"planet {planet.Key}: {planet.Stages.Count} stages, the panel holds {MaxCards}", nameof(planet));
+            title.text = planet.Name(loc);
+            title.font = Ui.Theme.FontFor(loc.Current, FontRole.Title);
+            string line = planet.Tagline(loc);
+            tagline.text = line;
+            tagline.font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
+            tagline.gameObject.SetActive(!string.IsNullOrEmpty(line));
+            UiText.Set(back, loc, "planets.list_back", FontRole.Body);
+            var body = Ui.Theme.FontFor(loc.Current, FontRole.Body);
+            var number = Ui.Theme.FontFor(loc.Current, FontRole.Number);
+            string label = loc.Get("planets.stage");
+            int last = progress.LastStageIndex(levels), focus = 0;
+            for (int k = 0; k < MaxCards; k++)
             {
-                bool done = progress.IsCleared(levels[k]);
-                int b = progress.BestBodies(levels[k]);
-                string mark = done ? loc.Get("stageselect.cleared") + (b > 0 ? loc.Format("stageselect.best_bodies", b) : "") : "";
-                stageTexts[k].text = $"{k + 1}. {LevelCatalog.TextOf(k, loc.Current).name}\n<size=14>{mark}</size>";
-                stageTexts[k].color = done ? Ui.Gold : Ui.Ink;
-                if (k == last) stageButtons[k].Select();
+                bool used = k < planet.Stages.Count;
+                cards[k].gameObject.SetActive(used);
+                if (!used) continue;
+                int stage = planet.Stages[k];
+                cardStage[k] = stage;
+                labels[k].text = label;
+                labels[k].font = body;
+                numbers[k].text = (stage + 1).ToString("00");
+                numbers[k].font = number;
+                int best = progress.BestStars(levels[stage]);
+                for (int st = 0; st < ProgressData.MaxStars; st++) Ui.SetStar(stars[k, st], st < best);
+                if (stage == last) focus = k;
             }
-            ScrollTo(last);
+            focusSlot = focus;
         }
 
-        /// Puts the row of a stage in view (Columns per row): the last played stage when the panel opens.
-        void ScrollTo(int stage)
+        int focusSlot;
+
+        public void Show()
         {
-            int rows = (levels.Length + Columns - 1) / Columns;
-            if (rows <= 1) return;
-            Canvas.ForceUpdateCanvases();
-            float t = 1f - (float)(stage / Columns) / (rows - 1); // 1 = top
-            scroll.verticalNormalizedPosition = Mathf.Clamp01(t);
+            panel.transform.SetAsLastSibling();
+            panel.SetActive(true);
+            cards[focusSlot].Select();
         }
 
         public void Hide() => panel.SetActive(false);

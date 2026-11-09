@@ -220,7 +220,7 @@ namespace SevenSteps.Game.UI
 
         /// Next language that has a table (Ko -> En -> Ko). Saved (SetLanguage) and applied now (Localizer.Changed redraws
         /// the views and updates telemetry lang); a -lang launch override is replaced by the player's choice.
-        void ToggleLanguage()
+        public void ToggleLanguage()
         {
             var next = NextLanguage(localizer.Current);
             save.SetLanguage(next);

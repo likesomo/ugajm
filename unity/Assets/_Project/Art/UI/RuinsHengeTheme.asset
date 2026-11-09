@@ -40,3 +40,13 @@ MonoBehaviour:
     bodyScale: 0
     bodyLineSpacing: 0.9
   number: {fileID: 12800000, guid: 6726afba0e987134bb60bf8a871ea91c, type: 3}
+  menuBackground: {fileID: 7747551252074775291, guid: aa44887d02373564b9c45df8df7426af, type: 3}
+  buttonNormal: {fileID: -7786063599247119672, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  buttonHover: {fileID: 425597936212420307, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  buttonPressed: {fileID: 5123317806511552220, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  buttonDisabled: {fileID: -5730984250091439851, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  panel: {fileID: -1599458904988553923, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  card: {fileID: -8833158543952631988, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  starFilled: {fileID: 3802091392676919337, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  starEmpty: {fileID: -4730573424505813790, guid: fe24eb6a0392380448af5d0ac5e52acc, type: 3}
+  dipper: []

@@ -245,6 +245,9 @@ MonoBehaviour:
   credits: {fileID: 4900000, guid: 3d82da0b9f4e95e42aa4a188285c19c3, type: 3}
   licenses:
   - {fileID: 4900000, guid: c991c7caacdb5f145882d0d5facc2d54, type: 3}
+  - {fileID: 4900000, guid: 4c1dfb4756aca26409a7cfbbfc3555ad, type: 3}
+  - {fileID: 4900000, guid: b0e8b16229c2db44bab4ecd0ed45e2cd, type: 3}
+  - {fileID: 4900000, guid: ec456b9c7569e4347aec279d69ff119d, type: 3}
 --- !u!4 &1059046613
 Transform:
   m_ObjectHideFlags: 0

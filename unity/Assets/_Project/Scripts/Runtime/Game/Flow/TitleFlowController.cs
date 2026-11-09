@@ -5,7 +5,7 @@ using SevenSteps.Core;
 
 namespace SevenSteps.Game.Flow
 {
-    /// <summary>Which Title-scene panel is visible (TitleScreen toggles TitleView / StageSelectView; a fake in tests).</summary>
+    /// <summary>Which Title-scene panel is visible (TitleScreen toggles TitleView / PlanetMapView; a fake in tests).</summary>
     public interface ITitlePanels
     {
         /// Title shows the title panel, StageSelect the stage list, anything else hides both (the scene is being left).
@@ -46,8 +46,20 @@ namespace SevenSteps.Game.Flow
             else throw new InvalidOperationException($"[SevenSteps] Title scene started in state {flow.State}");
         }
 
-        /// Title "시작" / Enter / Space.
+        /// Title "stages" button: the planet map.
         public void OpenStageSelect() => Go(AppState.StageSelect);
+
+        /// Title "begin": stage 1.
+        public void BeginJourney() => PlayStage(0);
+
+        /// Title "continue": the last played stage. Only when there is one (<see cref="CanContinue"/>).
+        public void ContinueJourney()
+        {
+            if (CanContinue) PlayLastStage();
+        }
+
+        /// A stage was played before (saved by name, 11.3.1).
+        public bool CanContinue => !string.IsNullOrEmpty(save.Progress.lastStage);
 
         /// Stage buttons.
         public void PlayStage(int stage)
@@ -55,10 +67,10 @@ namespace SevenSteps.Game.Flow
             if (flow.CanGoToGame(stage)) flow.GoToGame(stage);
         }
 
-        /// Enter on Stage Select: the last played stage (by name); stage 1 when none or no longer in levels.json.
+        /// The last played stage (by name); stage 1 when none or no longer in levels.json.
         public void PlayLastStage() => PlayStage(save.Progress.LastStageIndex(levels));
 
-        /// Stage Select "뒤로" / Esc.
+        /// Planet map back button / Esc.
         public void Back()
         {
             if (flow.CanBack && flow.TryGetBackTarget(out var target)) Go(target);
