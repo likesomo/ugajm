@@ -649,42 +649,44 @@
       "ch": 6,
       "role": "반전",
       "title": "선돌 아닌 흔적",
-      "src": "new (qdoor-cracked)",
+      "src": "new (batch5, 뼈대 탐색)",
       "tags": [
         "statueDoor",
         "cracked",
-        "seal"
+        "seal",
+        "switch"
       ],
-      "D": 0.55,
+      "D": 0.57,
       "A": 0.6,
-      "aha": "굳은 바닥과 다리는 선돌로 세지 않는다"
+      "aha": "굳은 바닥은 길이 되지만 선돌로 세지 않는다. 2 문은 닫힌 채"
     },
     {
       "n": 42,
       "ch": 6,
       "role": "피날레",
       "title": "무너지는 계산",
-      "src": "new (qdoor+cracked+pit)",
+      "src": "new (batch5, 뼈대 탐색)",
       "tags": [
         "statueDoor",
         "cracked",
         "pit",
-        "bridge"
+        "bridge",
+        "switch"
       ],
-      "D": 0.6,
+      "D": 0.57,
       "A": 0.5,
-      "aha": "몇을 세우고 몇을 다리로 쓸지"
+      "aha": "다리도 굳은 바닥도 선돌이 아니다. 수 문 없이 돌아간다"
     },
     {
       "n": 43,
       "ch": 7,
       "role": "소개",
       "title": "한 칸에 두 걸음",
-      "src": "new (진흙 소개, exp mud 1)",
+      "src": "new (batch5, 진흙 실험 1)",
       "tags": [
         "mud"
       ],
-      "D": 0.22,
+      "D": 0.15,
       "A": 0.6,
       "aha": "진흙은 두 걸음. 짝수 거리에 7번째로 닿는 두 번째 방법"
     },
@@ -693,13 +695,13 @@
       "ch": 7,
       "role": "응용",
       "title": "진흙과 숫자",
-      "src": "new (exp mud 2)",
+      "src": "new (batch5, 진흙 실험 2)",
       "tags": [
         "mud",
         "gate",
         "switch"
       ],
-      "D": 0.45,
+      "D": 0.52,
       "A": 0.5,
       "aha": "진흙을 지나면 숫자가 하나 건너뛴다"
     },
@@ -708,14 +710,14 @@
       "ch": 7,
       "role": "반전",
       "title": "얼음과 진흙",
-      "src": "new (exp mud 3)",
+      "src": "new (batch5, 진흙 실험 3)",
       "tags": [
         "mud",
         "ice",
         "parity",
         "switch"
       ],
-      "D": 0.48,
+      "D": 0.41,
       "A": 0.6,
       "aha": "여러 칸에 한 걸음, 한 칸에 두 걸음을 섞어 맞춘다"
     },
@@ -724,82 +726,80 @@
       "ch": 7,
       "role": "응용",
       "title": "칠칠의 방",
-      "src": "redo 16 (몸 3)",
+      "src": "redo 16 (batch5, 뼈대 탐색)",
       "tags": [
         "pit",
         "plate",
         "gate",
-        "ice",
-        "keep"
+        "lever",
+        "switch"
       ],
-      "D": 0.58,
+      "D": 0.49,
       "A": 0.5,
-      "aha": "다섯 기믹을 형제 셋으로"
+      "aha": "다리, 발판, 숫자 문, 레버를 형제 셋으로"
     },
     {
       "n": 47,
       "ch": 7,
       "role": "응용",
       "title": "레버와 선돌의 수",
-      "src": "new (lever+qdoor)",
+      "src": "new (batch5, 뼈대 탐색)",
       "tags": [
         "lever",
         "statueDoor",
+        "emptyDoor",
         "keep"
       ],
-      "D": 0.6,
+      "D": 0.4,
       "A": 0.5,
-      "aha": "벽을 내린 선돌 하나가 문의 수를 맞춘다"
+      "aha": "레버를 당긴 형제가 선돌로 남으면 0 문이 닫힌다"
     },
     {
       "n": 48,
       "ch": 7,
       "role": "반전",
       "title": "길이 된 형제들",
-      "src": "new (bridge+seal)",
+      "src": "new (batch5, 뼈대 탐색)",
       "tags": [
         "pit",
         "bridge",
         "cracked",
-        "seal",
-        "statueDoor",
-        "emptyDoor"
+        "seal"
       ],
-      "D": 0.62,
+      "D": 0.54,
       "A": 0.6,
-      "aha": "선돌 없이(0 문) 두 형제가 모두 길이 된다"
+      "aha": "두 형제가 봉인과 다리로 모두 길이 된다"
     },
     {
       "n": 49,
       "ch": 7,
       "role": "응용",
       "title": "일곱의 일곱",
-      "src": "new (7×7)",
+      "src": "new (batch5, 7×7 뼈대 탐색)",
       "tags": [
         "mud",
-        "lever",
         "gate",
-        "keep",
         "switch"
       ],
-      "D": 0.68,
+      "D": 0.58,
       "A": 0.5,
-      "aha": "7×7 방 전체를 센다"
+      "aha": "7×7 방을 진흙·숫자 문·바통 두 번으로 센다"
     },
     {
       "n": 50,
       "ch": 7,
       "role": "피날레",
       "title": "원형 제단",
-      "src": "new (최종장)",
+      "src": "new (batch5, 고리 뼈대 탐색)",
       "tags": [
         "statueDoor",
         "keep",
         "multiStatue",
         "plate",
-        "ice"
+        "ice",
+        "mud"
       ],
-      "D": 0.7,
+      "D": 0.59,
       "A": 0.8,
       "aha": "두 형제가 원의 선돌로 서고, 셋째의 7번째 걸음이 제단 가운데에 닿는다"
     }

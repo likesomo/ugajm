@@ -45,7 +45,7 @@ const TAG_KO = {
   walk7: '7걸음', detour: '돌아가기', keep: 'KEEP 석상', plate: '발판·문', switch: 'SWITCH', pit: '구덩이', bridge: '몸 다리',
   gate: '숫자 문', ice: '얼음', parity: '홀짝', statueStopper: '석상 멈춤벽', cracked: '금 간 바닥', seal: '봉인 다리',
   multiStatue: '석상 여러 개', switchBack: '출발점 되돌리기', statueDoor: '석상 수 문', statueKey: '열쇠 석상',
-  emptyDoor: '0개 문',
+  emptyDoor: '0개 문', lever: '레버', mud: '진흙',
 };
 const ko = (t) => TAG_KO[t] ?? t;
 
@@ -135,6 +135,8 @@ function tagsOf(level, def, best, needsSwitch) {
   if (has(/x/)) tags.add('cracked');
   if (has(/[1-7]/)) tags.add('gate');
   if (has(/Q/)) tags.add('statueDoor');
+  if (has(/L/)) tags.add('lever');
+  if (has(/m/)) tags.add('mud');
   if (needsSwitch) tags.add('switch');
   const ev = { keep: 0, switch: 0, bridge: 0, seal: 0, crumble: 0, reversals: 0, bodies: best.bodies };
   let s = newState(level);
