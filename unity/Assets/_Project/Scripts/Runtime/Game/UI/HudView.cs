@@ -193,6 +193,8 @@ namespace SevenSteps.Game.UI
             nextStep.text = s.Status == Status.Choose ? "KEEP 또는 SWITCH"
                 : s.Status == Status.Play ? (next == Rules.Steps ? "다음 걸음 7 · 행운" : $"다음 걸음 {next}")
                 : "";
+            // Its box only while there is something to say (empty after a clear or a loss).
+            nextStep.transform.parent.gameObject.SetActive(nextStep.text.Length > 0);
         }
 
         /// One slot per body in play order (A, B, C). State in words, portrait in the body's look, KEEP statues as 선돌.
