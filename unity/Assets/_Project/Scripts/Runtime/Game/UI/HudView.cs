@@ -197,8 +197,7 @@ namespace SevenSteps.Game.UI
                 levelTexts[k].color = cur ? new Color32(0x22, 0x22, 0x22, 0xff) : progress.IsCleared(k) ? Ui.Gold : Ui.Ink;
             }
 
-            // The hint has its own label under the title. Stage start sends the hint as the message; do not show it twice.
-            message.text = msg == null || msg == s.Level.Hint ? "" : msg;
+            message.text = msg ?? throw new System.ArgumentNullException(nameof(msg)); // "" = empty line (MessagePresenter)
             choicePanel.SetActive(s.Status == Status.Choose);
             RefreshStatues(s);
         }
