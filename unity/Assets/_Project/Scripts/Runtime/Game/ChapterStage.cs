@@ -23,7 +23,7 @@ namespace SevenSteps.Game
         public ChapterPreset Current { get; private set; }
 
         /// <param name="key">Key light (the only one with shadows, WebGL Mobile budget).</param>
-        /// <param name="parent">Where sky and planet instances go (the Game scene root).</param>
+        /// <param name="parent">Where the planet instance goes (the Game scene root). The sky goes under the camera.</param>
         public ChapterStage(Camera cam, Light key, Light fill, Light rim, Transform parent)
         {
             this.cam = cam != null ? cam : throw new ArgumentNullException(nameof(cam));
@@ -46,7 +46,8 @@ namespace SevenSteps.Game
             if (chapter.sky != null)
             {
                 cam.backgroundColor = chapter.sky.background;
-                if (chapter.sky.skyPrefab != null) sky = Object.Instantiate(chapter.sky.skyPrefab, parent);
+                // The sky follows the camera (12.8 contract): a camera child, local pose from the prefab.
+                if (chapter.sky.skyPrefab != null) sky = Object.Instantiate(chapter.sky.skyPrefab, cam.transform, false);
                 if (chapter.sky.planetPrefab != null)
                 {
                     planet = Object.Instantiate(chapter.sky.planetPrefab, parent);
