@@ -51,6 +51,7 @@
 - `levelKey`: 스테이지 내용의 해시(8자리 소문자 16진수). 문자열 `<몸 수>
 <행1>
 <행2>…`(각 행은 레벨 폭까지 `#`으로 채우고 출발점은 `S`)의 FNV-1a 32비트. 맵이나 몸 수가 바뀌면 달라지고 순서만 바뀌면 같다. 기준 구현 `telemetry.js` `levelKey()`, 예: 스테이지 1 → 골든 파일 참고
+- `lang`(선택, `session_start`·`level_start`): 그때의 UI 언어 `ko` \| `en`(형식 `[a-z]{2,3}`, 지역 붙이면 `pt-BR`). `docs/architecture.md` 13장. 플레이어가 설정에서 언어를 바꾸면 다음 `level_start`부터 새 값. 스테이지·챕터 이름(`levelName` 등)은 언어와 상관없이 ko 원문을 보낸다(13.5). 서버는 이벤트에 `lang`이 없으면 같은 세션의 직전 값을 이어 받아 저장하고, 대시보드 언어 필터는 그 값으로 거른다
 - `chapter`: `levels.json`/`levels.js` 스테이지의 `chapter` 값(문자열 id, `docs/architecture.md` 12.8) 그대로. 없으면 보내지 않는다. 서버는 현재 빌드 레벨 데이터의 챕터를 우선 쓰고, 이 값은 지금 빌드에 없는 맵의 챕터를 알 때만 쓴다
 - `body`: 이번 스테이지에서 몇 번째 몸인지 (1부터). `level.bodies - state.bodies + 1`
 - `step`: 그 이동이 몇 번째 걸음인지 (1~7). `state.used + 1`. 단 진흙(`m`)에 들어가는 `move`는 2걸음이 들어 `state.used + 2`(막힌 이동은 항상 `used + 1`). 그래서 진흙을 지나면 `step`이 하나 건너뛰고, 진흙으로 7걸음이 되면 `seventh_step`이 나온다
@@ -62,7 +63,7 @@
 
 | type | 언제 | 필드 |
 |---|---|---|
-| `session_start` | 게임을 켰을 때, 숨긴 탭이 다시 보일 때 | `firstTime`(이 기기에서 처음), `cleared`(저장된 클리어 스테이지 수), `resumed`(탭 복귀면 true) |
+| `session_start` | 게임을 켰을 때, 숨긴 탭이 다시 보일 때 | `firstTime`(이 기기에서 처음), `cleared`(저장된 클리어 스테이지 수), `resumed`(탭 복귀면 true), `lang`(선택) |
 | `level_start` | 스테이지 진입·클리어 뒤 재시작 | `level`, `levelName`, `levelKey`(선택), `chapter`(선택, 챕터 문자열 id ≤40자, 스테이지에 챕터가 있을 때만), `attempt`(이 기기에서 이 스테이지를 시작한 횟수, 1부터), `via`: `boot` \| `url` \| `next` \| `select` \| `again`, `bodies`(몸 수) |
 | `move` | 방향 입력 하나 (막혀도 보낸다) | `level`, `body`, `step`, `dir`: `up` \| `down` \| `left` \| `right`, `from`, `to`(멈춘 칸, 막혔으면 막은 칸), `result`: `moved` \| `blocked` \| `slid` \| `fell` \| `bridged` \| `door` \| `gate`, 선택: `blockedBy`(막은 tile 종류 또는 `statue` `edge`), `crumbled`(지나온 금 간 바닥이 무너졌으면 true) |
 | `seventh_step` | 7번째 걸음이 어딘가에 닿았을 때 (`move` 바로 뒤) | `level`, `body`, `at`, `tile`, `effect`: `win` \| `bridge` \| `seal` \| `vanish` \| `choose` \| `statue`(마지막 몸이라 자동 석상), 선택: `flipped`(레버를 밟아 뒤집힘 벽이 바뀌었으면 true) |
@@ -128,6 +129,7 @@
 |---|---|---|
 | 2026-11-07 | v1 | 최초 확정 |
 | 2026-11-07 | v1 | `level_start.levelKey`(선택) 추가 — 레벨 디자인 요청. 선택 필드라 버전은 그대로 |
+| 2026-11-09 | v1 | `session_start.lang`·`level_start.lang`(선택) 추가 — 다국어(architecture 13장). 웹 `Tracker({ lang })`·`setLang`, `initTelemetry({ lang })`(기본 `ko`). Unity는 `Localizer` 현재 언어를 `level_start` 끝(`bodies` 다음)과 `session_start` 끝에. 골든에는 넣지 않음(변화 없음) |
 | 2026-11-09 | v1 | `level_clear.stars`(선택, 1~3) 추가 — 3별 B안("별" 절). 골든 재생성(클리어 이벤트마다 `stars`). Unity `TelemetryTracker`도 같은 판정으로 넣어야 골든 테스트가 통과한다 |
 | 2026-11-09 | v1 | 진흙·레버 반영(코어 6ae58e2 뒤): 진흙에 들어가는 `move.step`은 `used + 2`, 진흙으로 7걸음이 되면 `seventh_step`. `tile`에 `mud` `lever` `flip_up` `flip_down`, `Q` 문은 `door`(그래서 Q 문을 지나는 `move.result`도 `door`). `seventh_step.flipped`(선택). 서버는 칸 이름을 형식으로 검사. 골든 재생성(125개 중 44개 트레이스 변경). Unity `TelemetryTracker`도 같은 규칙으로 맞춰야 골든 테스트가 통과한다 |
 | 2026-11-09 | v1 | `level_start.chapter`(선택) 추가 — 50스테이지·챕터 대비. 선택 필드라 버전은 그대로. 웹 `Tracker.levelStart(state, level, name, via, chapter)`. Unity `TelemetryTracker`는 `LevelCatalog.ChapterOf`가 생기면 같은 자리(`levelKey` 다음)에 넣는다. 챕터 없는 지금 스테이지에서는 이벤트가 같으므로 골든 변화 없음 |
