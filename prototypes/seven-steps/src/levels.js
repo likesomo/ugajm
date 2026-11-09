@@ -50,7 +50,7 @@ export const LEVELS = [
     name: '돌이 된 몸',
     chapter: 'moss',
     story: '형이 멈춰 섰다. 그 자리에서 돌이 되어 문을 붙든다.',
-    hint: '7걸음을 다 쓰면 고른다. KEEP: 그 자리에 석상을 남긴다. 석상은 발판을 계속 눌러 준다.',
+    hint: '7걸음을 다 쓰면 고른다. KEEP: 그 자리에 선돌을 남긴다. 선돌은 발판을 계속 눌러 준다.',
     bodies: 3,
     text: [{ lang: 'en', name: 'Turned to Stone', hint: 'After 7 steps, you choose. KEEP: leave a standing stone here. A stone keeps a plate pressed.', story: 'The eldest stops. Right there he turns to stone and holds the door.' }],
     map: [
@@ -96,7 +96,7 @@ export const LEVELS = [
     name: '두 개의 문',
     chapter: 'moss',
     story: '둘이 문을 지키고, 셋째가 고향을 떠난다.',
-    hint: '석상은 몇 개든 남길 수 있다. 몸이 다 떨어지기 전에.',
+    hint: '선돌은 몇 개든 남길 수 있다. 형제가 남아 있는 한.',
     bodies: 3,
     text: [{ lang: 'en', name: 'Two Doors', hint: 'You can leave as many stones as you like, while brothers last.', story: 'Two keep the doors. The third leaves home.' }],
     map: [
@@ -113,7 +113,7 @@ export const LEVELS = [
     name: '새 출발점',
     chapter: 'hollow',
     story: '남지 않고, 선 자리를 동생에게 넘긴다.',
-    hint: 'SWITCH: 석상을 남기지 않는 대신, 지금 선 자리가 다음 몸의 출발점이 된다.',
+    hint: 'SWITCH: 선돌을 남기지 않는 대신, 지금 선 자리가 다음 형제의 출발점이 된다.',
     bodies: 3,
     text: [{ lang: 'en', name: 'A New Start', hint: 'SWITCH: leave no stone. Instead, this spot becomes the next brother\'s start.', story: 'Leave nothing behind. Hand your spot to your brother.' }],
     map: [
@@ -143,7 +143,7 @@ export const LEVELS = [
     name: '몸으로 놓는 다리',
     chapter: 'hollow',
     story: '구멍 아래로 별이 보인다. 일곱 번째라면 떨어져도 다리가 된다.',
-    hint: '구덩이를 7번째 걸음으로 밟으면, 떨어진 몸이 다리가 된다.',
+    hint: '구멍을 7번째 걸음으로 밟으면, 떨어진 형제가 다리가 된다.',
     bodies: 3,
     text: [{ lang: 'en', name: 'A Bridge of Brothers', hint: 'Step into a hole on your 7th step and the fallen brother becomes a bridge.', story: 'Stars below the hole. Fall on the seventh step and you land as a bridge.' }],
     map: [
@@ -366,7 +366,7 @@ export const LEVELS = [
     name: '멈춰 세우는 석상',
     chapter: 'frost',
     story: '벽이 없으면, 형이 벽이 된다.',
-    hint: '얼음은 벽에 닿아야 멈춘다. 석상도 벽이다.',
+    hint: '얼음은 벽에 닿아야 멈춘다. 선돌도 벽이다.',
     bodies: 3,
     text: [{ lang: 'en', name: 'The Stone That Stops', hint: 'Ice stops only at a wall. A stone is a wall.', story: 'No wall? Then a brother becomes the wall.' }],
     map: [
@@ -383,7 +383,7 @@ export const LEVELS = [
     name: '미끄럼을 막는 형제',
     chapter: 'frost',
     story: '멈춤벽이 된 형이 다음 길을 막지 않게.',
-    hint: '석상은 미끄럼을 멈추지만 길도 막는다. 어디에 세울까?',
+    hint: '선돌은 미끄럼을 멈추지만 길도 막는다. 어디에 세울까?',
     bodies: 3,
     text: [{ lang: 'en', name: 'A Brother in the Slide', hint: 'A stone stops a slide, but it blocks the path too. Where should it stand?', story: 'Stand as the stopper, but not in the next brother\'s way.' }],
     map: [
@@ -464,7 +464,7 @@ export const LEVELS = [
     name: '올려서 멈추기',
     chapter: 'joinery',
     story: '내려가 있던 벽을 올려 미끄럼을 멈춘다.',
-    hint: '레버는 모든 벽을 뒤집는다. 내려가 있던 벽(r)은 올라와 얼음을 멈춘다.',
+    hint: '레버는 모든 벽을 뒤집는다. 내려가 있던 벽은 올라와 얼음을 멈춘다.',
     bodies: 3,
     text: [{ lang: 'en', name: 'Raise It to Stop', hint: 'The lever flips every wall. A lowered wall rises and stops the ice.', story: 'Raise the sunken wall to stop the slide.' }],
     map: [
@@ -548,9 +548,9 @@ export const LEVELS = [
     name: '한 번만 버티는 바닥',
     chapter: 'crumble',
     story: '지나간 바닥은 무너진다. 서서 멈추면 굳는다.',
-    hint: '금 간 바닥은 한 번 지나가면 무너진다. 7번째 걸음으로 그 위에 서면 영원히 다리가 된다.',
+    hint: '금 간 바닥은 지나가면 무너진다. 7번째 걸음으로 그 위에 서면 굳어서 길이 된다.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Floor That Holds Once', hint: 'Cracked floor breaks once you walk over it. Stop on it with your 7th step and it becomes a bridge forever.', story: 'The floor behind you crumbles. Stop on it, and it sets.' }],
+    text: [{ lang: 'en', name: 'Floor That Holds Once', hint: 'Cracked floor breaks after you cross it. End your 7th step on it and it seals into a path.', story: 'The floor behind you crumbles. Stop on it, and it sets.' }],
     map: [
       '#########',
       '#S..x.a.#',
@@ -579,7 +579,7 @@ export const LEVELS = [
     name: '하나만 남겨라',
     chapter: 'crumble',
     story: '문은 서 있는 선돌을 센다. 하나만.',
-    hint: '문의 숫자는 서 있는 석상 수. 정확히 그 수일 때만 열린다.',
+    hint: '문의 숫자는 서 있는 선돌 수. 정확히 그 수일 때만 열린다.',
     bodies: 3,
     text: [{ lang: 'en', name: 'Leave Only One', hint: 'The number on the gate is the number of standing stones. It opens only at exactly that many.', story: 'The gate counts the stones. Just one.' }],
     statueCount: 1,
@@ -612,7 +612,7 @@ export const LEVELS = [
     name: '남기기 전에 지나가라',
     chapter: 'crumble',
     story: '0이 적힌 문. 선돌이 서기 전에 지나가야 한다.',
-    hint: '0이 적힌 문은 석상이 하나라도 서면 닫힌다.',
+    hint: '0이 적힌 문은 선돌이 하나라도 서면 닫힌다.',
     bodies: 3,
     text: [{ lang: 'en', name: 'Pass Before You Stay', hint: 'A gate marked 0 closes as soon as any stone stands.', story: 'A gate marked zero. Get through before anyone turns to stone.' }],
     statueCount: 0,
@@ -713,7 +713,7 @@ export const LEVELS = [
     name: '칠칠의 방',
     chapter: 'altar',
     story: '다리와 발판과 숫자와 레버. 형제는 셋뿐이다.',
-    hint: '다리, 발판, 숫자 문, 레버. 몸은 셋.',
+    hint: '다리, 발판, 숫자 문, 레버. 형제는 셋.',
     bodies: 3,
     text: [{ lang: 'en', name: 'Seven by Seven Room', hint: 'Bridge, plate, numbered gate, lever. Three brothers.', story: 'Bridge, plate, number and lever, and only three brothers.' }],
     map: [
