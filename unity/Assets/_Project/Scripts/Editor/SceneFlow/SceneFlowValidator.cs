@@ -159,6 +159,11 @@ namespace SevenSteps.EditorTools
                 case GameController game:
                     Require(name, "GameController.config", game.config, issues);
                     RequireAssets(name, "GameController.assets", game.assets, issues);
+                    Require(name, "GameController.keyLight", game.keyLight, issues); // Seven Steps > Scene Flow > Build Game Lights
+                    Require(name, "GameController.fillLight", game.fillLight, issues);
+                    Require(name, "GameController.rimLight", game.rimLight, issues);
+                    if (game.fillLight != null && game.fillLight.shadows != LightShadows.None) issues.Add($"WARN {name}: fill light casts shadows (only the key should, WebGL budget)");
+                    if (game.rimLight != null && game.rimLight.shadows != LightShadows.None) issues.Add($"WARN {name}: rim light casts shadows (only the key should, WebGL budget)");
                     if (Camera.main == null) issues.Add($"ERROR {name}: no MainCamera-tagged camera (GameController uses Camera.main)");
                     return game.config;
                 default:

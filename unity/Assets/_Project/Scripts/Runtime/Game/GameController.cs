@@ -33,6 +33,12 @@ namespace SevenSteps.Game
         [Tooltip("Plan A, front 3/4 view: pitch 50, yaw 0, orthographic. Keep yaw 0: input is not rotated.")]
         public CameraRig cameraRig = new CameraRig { orthographic = true, pitch = 50f, yaw = 0f, fieldOfView = 30f, distance = 30f, padding = 0.6f };
 
+        [Header("Chapter lights (docs/architecture.md 12.8): set per chapter by ChapterStage")]
+        [Tooltip("Key light, the only one with shadows (WebGL Mobile budget)")]
+        public Light keyLight;
+        public Light fillLight;
+        public Light rimLight;
+
         AppFlow flow;
         LaunchOptions launch;
         BoardController board;
@@ -54,6 +60,8 @@ namespace SevenSteps.Game
             Application.targetFrameRate = 60;
             if (assets == null) throw new MissingReferenceException($"[SevenSteps] {name}: GameController.assets is not set (unity.sh scene-validate)");
             if (config == null) throw new MissingReferenceException($"[SevenSteps] {name}: GameController.config is not set (unity.sh scene-validate)");
+            if (keyLight == null || fillLight == null || rimLight == null)
+                throw new MissingReferenceException($"[SevenSteps] {name}: GameController key / fill / rim light is not set (Seven Steps > Scene Flow > Build Game Lights)");
             if (!Bootstrap.HasRunThisPlay)
             {
                 // Played directly in the editor: same bootstrap as the Boot scene, with this object's start values.
@@ -90,6 +98,8 @@ namespace SevenSteps.Game
 
             // Board controller, then the flow controller on top of it
             board.Init(assets, levels, save, hud, cam, tiles, overrideCamera ? cameraRig : (CameraRig?)null, Services.Get<ITelemetry>());
+            // Chapter look (12.8): stage -> chapters.json artPreset -> AppConfig.Chapter; null (no chapter assets yet) = as now.
+            board.UseChapters(new ChapterStage(cam, keyLight, fillLight, rimLight, transform), ChapterPresetFor(cfg), cfg.tileSet);
             flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, result, LevelCatalog.MinBodies, LevelCatalog.ChapterKeyOf);
             back = new BackNavigator(overlays, flowController.Back);
             chapterIntro = new ChapterIntroController(flowController, overlays, chapterCard, LevelCatalog.ChapterCard);
@@ -140,6 +150,14 @@ namespace SevenSteps.Game
             else if (kb.rightBracketKey.wasPressedThisFrame) flowController.SelectStage(flow.Stage + 1);
             else if ((kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) && flow.State == AppState.Result) flowController.Next();
         }
+
+        /// Stage -> its chapter's art preset: levels.json chapter -> chapters.json artPreset -> AppConfig.Chapter.
+        /// Null when there is no chapters.json or AppConfig has no chapters yet (the scene keeps its own look).
+        static Func<int, ChapterPreset> ChapterPresetFor(AppConfig cfg) => stage =>
+        {
+            var info = LevelCatalog.ChapterOf(stage);
+            return info != null ? cfg.Chapter(info.ArtPreset) : null;
+        };
 
         /// Canvas for overlays above the HUD (0) and the result panel (5).
         static Transform OverlayCanvas()

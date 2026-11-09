@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GameAssets
   m_EditorClassIdentifier: SevenSteps.Game::SevenSteps.Game.GameAssets
   levelsJson: {fileID: 4900000, guid: 33033d08c982fa7439594f8738882a8f, type: 3}
+  chaptersJson: {fileID: 4900000, guid: 26694f7509a40e9c51bb6c14b0e2ab3d, type: 3}
   font: {fileID: 12800000, guid: 6726afba0e987134bb60bf8a871ea91c, type: 3}
   uiTheme: {fileID: 11400000, guid: b8c34fecbb675874eabea8da6ed01eb4, type: 2}
   tileSet: {fileID: 0}

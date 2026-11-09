@@ -15,7 +15,7 @@ namespace SevenSteps.EditorTools
     /// Every character the UI can show must exist in the UI font (UiTheme.font, Jua): a missing glyph draws nothing in
     /// WebGL (U+2212 minus, arrows, box rules were found by hand, 2026-11-09). Part of SceneFlowValidator, so it also runs
     /// before every build. Checked text: Text components in prefabs under Assets/_Project that use the theme font,
-    /// levels.json stage names and hints, UI/Credits.txt, and string literals in Scripts/Runtime/Game (comments skipped;
+    /// levels.json stage names, hints and stories, chapters.json planet names and intros (chapter card), UI/Credits.txt, and string literals in Scripts/Runtime/Game (comments skipped;
     /// literals that contain a non-ASCII character are UI text and are checked whole; ASCII-only literals are logs and keys).
     /// The font's coverage comes from its TTF/OTF cmap table (formats 4 and 12), not from Font.HasCharacter.
     /// </summary>
@@ -71,6 +71,16 @@ namespace SevenSteps.EditorTools
                 {
                     Text(file.levels[k].name, $"levels.json stage {k + 1} name");
                     Text(file.levels[k].hint, $"levels.json stage {k + 1} hint");
+                    Text(file.levels[k].story, $"levels.json stage {k + 1} story");
+                }
+            }
+            if (assets != null && assets.chaptersJson != null)
+            {
+                var chapters = JsonUtility.FromJson<SevenSteps.Contracts.ChapterFileDto>(assets.chaptersJson.text);
+                foreach (var c in chapters.chapters ?? new SevenSteps.Contracts.ChapterInfo[0])
+                {
+                    Text(c.planet, $"chapters.json {c.id} planet");
+                    Text(c.intro, $"chapters.json {c.id} intro");
                 }
             }
 
