@@ -46,15 +46,18 @@ test('stage 1 solution: moves, seventh step, clear', () => {
   for (const e of events) assert.equal(checkEvent(e), null, JSON.stringify(e));
 });
 
-test('blocked move, idle after a long pause, undo and restart', () => {
-  const { events } = play('일곱 걸음', 'LRZ*', { pauses: { 1: 45000 } });
+test('blocked move, idle after a long pause, undo and restart (R at the stage start is not recorded)', () => {
+  const { events } = play('일곱 걸음', 'LRZ*R*', { pauses: { 1: 45000 } }); // the first * is at the start again (undone back)
   const types = events.map((e) => e.type);
-  assert.deepEqual(types.slice(2), ['move', 'idle', 'move', 'undo', 'restart']);
+  assert.deepEqual(types.slice(2), ['move', 'idle', 'move', 'undo', 'move', 'restart']);
   assert.equal(events[2].result, 'blocked');
   assert.equal(events[2].blockedBy, 'wall');
   assert.equal(events[3].idleMs, 45000);
   assert.deepEqual(events[3].at, [1, 1]);
-  assert.equal(events[6].moves, 1);
+  assert.equal(events[7].moves, 2);
+  const clear = play('일곱 걸음', '*RRRRRRR').events.find((e) => e.type === 'level_clear');
+  assert.equal(clear.restarts, 0);
+  assert.equal(clear.stars, 3);
 });
 
 test('pit without the 7th step: fell + body_lost wasted', () => {
