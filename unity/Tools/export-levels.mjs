@@ -1,8 +1,8 @@
 // Exports the web prototype's stages (prototypes/seven-steps/src/levels.js) to unity/Assets/_Project/Data/levels.json,
 // together with what the JS solver finds for each stage. Unity's LevelVerifier checks the C# port gives the same answers.
-// Also copies design/levels/chapters.json to unity/Assets/_Project/Data/chapters.json (docs/architecture.md 6.4).
+// Also copies design/levels/chapters.json (with its "text" translations) to unity/Assets/_Project/Data/chapters.json (docs/architecture.md 6.4).
 // Before writing anything it asserts the stage set (6.4); on any failure it prints every problem and exits 1
-// without touching either file.
+// without touching either file. Missing or empty translations for a language in chapters.json "languages" fail too (13.6).
 // Usage (repo root): node unity/Tools/export-levels.mjs
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -24,10 +24,34 @@ const fail = (msg) => problems.push(msg);
 
 // ---- chapters.json ----
 const chapterFile = JSON.parse(readFileSync(chaptersSrc, 'utf8'));
-const chapters = (chapterFile.chapters ?? []).map((c) => ({
+// Translations (docs/architecture.md 13.5, 13.6). design/levels/chapters.json "languages" lists the languages that are on;
+// ko is the base fields, every other one must be a "text" entry with no empty field on every chapter and stage.
+const BASE_LANG = 'ko';
+const LANGS = (chapterFile.languages ?? [BASE_LANG]).filter((l) => l !== BASE_LANG);
+const LANG_CODE = /^[a-z]{2}$/;
+if (!LANGS.every((l) => LANG_CODE.test(l))) fail(`chapters.json languages ${JSON.stringify(chapterFile.languages)}: codes are two lowercase letters`);
+// Checks one "text" array and returns it trimmed to the known fields (unknown languages are an error, not dropped).
+function checkText(text, fields, tag) {
+  const out = [];
+  const seen = new Set();
+  for (const t of text ?? []) {
+    if (!LANGS.includes(t?.lang)) { fail(`${tag}: text lang "${t?.lang}" is not in chapters.json languages`); continue; }
+    if (seen.has(t.lang)) fail(`${tag}: text lang "${t.lang}" appears twice`);
+    seen.add(t.lang);
+    const e = { lang: t.lang };
+    for (const f of fields) {
+      if (typeof t[f] !== 'string' || !t[f].trim()) fail(`${tag}: ${t.lang} ${f} is empty`);
+      e[f] = t[f] ?? '';
+    }
+    out.push(e);
+  }
+  for (const l of LANGS) if (!seen.has(l)) fail(`${tag}: no ${l} text`);
+  return out;
+}
+
+const chapters = (chapterFile.chapters ?? []).map((c, i) => ({
   id: c.id, planet: c.planet ?? '', concept: c.concept ?? '', intro: c.intro ?? '', artPreset: c.artPreset ?? '',
-  // docs/architecture.md 13: translations (ChapterInfo.text), copied only when present.
-  ...(c.text?.length ? { text: c.text.map((t) => ({ lang: t.lang, planet: t.planet ?? '', concept: t.concept ?? '', intro: t.intro ?? '' })) } : {}),
+  text: checkText(c.text, ['planet', 'concept', 'intro'], `chapters.json "${c.id ?? `#${i + 1}`}"`),
 }));
 const order = new Map();
 chapters.forEach((c, i) => {
@@ -66,8 +90,8 @@ const levels = LEVELS.map((def, i) => {
     // docs/architecture.md 6.4: chapter id and one-line story.
     ...(def.chapter ? { chapter: def.chapter } : {}),
     ...(def.story ? { story: def.story } : {}),
-    // docs/architecture.md 13: translations other than ko (name stays the ko save key), written only when present.
-    ...(def.text?.length ? { text: def.text.map((t) => ({ lang: t.lang, name: t.name ?? '', hint: t.hint ?? '', story: t.story ?? '' })) } : {}),
+    // docs/architecture.md 13.5: translations; name stays the ko save/telemetry key.
+    text: checkText(def.text, ['name', 'hint', 'story'], tag),
     map: def.map,
     expected: {
       minBodies: best.bodies,
