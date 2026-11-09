@@ -22477,8 +22477,9 @@
       6,
       1
      ],
-     "tile": "floor",
-     "effect": "choose"
+     "tile": "lever",
+     "effect": "choose",
+     "flipped": true
     },
     {
      "seq": 10,
@@ -29571,8 +29572,9 @@
       6,
       1
      ],
-     "tile": "floor",
-     "effect": "choose"
+     "tile": "lever",
+     "effect": "choose",
+     "flipped": true
     },
     {
      "seq": 10,
@@ -40413,7 +40415,7 @@
       3,
       3
      ],
-     "result": "moved"
+     "result": "door"
     },
     {
      "seq": 16,
@@ -40988,7 +40990,7 @@
       3,
       3
      ],
-     "result": "moved"
+     "result": "door"
     },
     {
      "seq": 31,
@@ -42213,7 +42215,7 @@
       3
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 11,
@@ -42325,7 +42327,7 @@
       3
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 18,
@@ -42379,7 +42381,7 @@
       3
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 21,
@@ -42740,7 +42742,7 @@
       3
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 43,
@@ -43919,7 +43921,7 @@
       4,
       1
      ],
-     "result": "moved"
+     "result": "door"
     },
     {
      "seq": 28,
@@ -44524,7 +44526,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 24,
@@ -44542,7 +44544,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 25,
@@ -44755,7 +44757,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 38,
@@ -44773,7 +44775,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 39,
@@ -44845,7 +44847,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 43,
@@ -44998,7 +45000,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 52,
@@ -45016,7 +45018,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 53,
@@ -45111,7 +45113,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 59,
@@ -45587,7 +45589,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 88,
@@ -45623,7 +45625,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 90,
@@ -45677,7 +45679,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 93,
@@ -46201,7 +46203,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 22,
@@ -46977,7 +46979,7 @@
       4,
       1
      ],
-     "result": "moved"
+     "result": "door"
     },
     {
      "seq": 69,
@@ -47047,7 +47049,7 @@
       4,
       1
      ],
-     "result": "moved"
+     "result": "door"
     },
     {
      "seq": 73,
@@ -47561,7 +47563,7 @@
       6,
       1
      ],
-     "result": "moved"
+     "result": "door"
     },
     {
      "seq": 9,
@@ -47572,7 +47574,7 @@
       6,
       1
      ],
-     "tile": "floor",
+     "tile": "door",
      "effect": "choose"
     },
     {
@@ -50212,7 +50214,7 @@
       6,
       1
      ],
-     "result": "moved"
+     "result": "door"
     },
     {
      "seq": 42,
@@ -50493,7 +50495,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 61,
@@ -51276,7 +51278,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 108,
@@ -59239,7 +59241,7 @@
       5,
       3
      ],
-     "result": "moved"
+     "result": "door"
     },
     {
      "seq": 27,
@@ -62807,7 +62809,7 @@
       5,
       3
      ],
-     "result": "moved"
+     "result": "door"
     },
     {
      "seq": 26,
@@ -66518,8 +66520,9 @@
       7,
       1
      ],
-     "tile": "floor",
-     "effect": "choose"
+     "tile": "lever",
+     "effect": "choose",
+     "flipped": true
     },
     {
      "seq": 20,
@@ -67035,7 +67038,7 @@
       4,
       1
      ],
-     "tile": "floor",
+     "tile": "flip_down",
      "effect": "choose"
     },
     {
@@ -67076,7 +67079,7 @@
       4,
       1
      ],
-     "tile": "floor",
+     "tile": "flip_down",
      "effect": "choose"
     },
     {
@@ -67625,7 +67628,7 @@
       3
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "flip_up"
     },
     {
      "seq": 60,
@@ -67661,7 +67664,7 @@
       3
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "flip_up"
     },
     {
      "seq": 62,
@@ -67715,7 +67718,7 @@
       3
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "flip_up"
     },
     {
      "seq": 65,
@@ -68955,7 +68958,7 @@
       3
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "flip_up"
     },
     {
      "seq": 31,
@@ -69198,7 +69201,7 @@
       4,
       1
      ],
-     "tile": "floor",
+     "tile": "flip_down",
      "effect": "choose"
     },
     {
@@ -69379,7 +69382,7 @@
       2
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "flip_up"
     },
     {
      "seq": 57,
@@ -69962,8 +69965,9 @@
       7,
       1
      ],
-     "tile": "floor",
-     "effect": "statue"
+     "tile": "lever",
+     "effect": "statue",
+     "flipped": true
     },
     {
      "seq": 94,
@@ -70224,7 +70228,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 3,
+     "step": 4,
      "dir": "right",
      "from": [
       3,
@@ -70927,7 +70931,7 @@
      "type": "move",
      "level": 1,
      "body": 2,
-     "step": 4,
+     "step": 5,
      "dir": "right",
      "from": [
       3,
@@ -71037,7 +71041,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "mud"
     },
     {
      "seq": 44,
@@ -71055,7 +71059,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "mud"
     },
     {
      "seq": 45,
@@ -71248,7 +71252,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 5,
+     "step": 6,
      "dir": "right",
      "from": [
       3,
@@ -71331,7 +71335,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 5,
+     "step": 6,
      "dir": "right",
      "from": [
       3,
@@ -73356,7 +73360,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 3,
+     "step": 4,
      "dir": "right",
      "from": [
       3,
@@ -73480,7 +73484,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 6,
+     "step": 7,
      "dir": "left",
      "from": [
       5,
@@ -73491,6 +73495,18 @@
       1
      ],
      "result": "moved"
+    },
+    {
+     "seq": 97,
+     "type": "seventh_step",
+     "level": 1,
+     "body": 1,
+     "at": [
+      4,
+      1
+     ],
+     "tile": "mud",
+     "effect": "choose"
     }
    ]
   },
@@ -73619,7 +73635,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 6,
+     "step": 7,
      "dir": "down",
      "from": [
       6,
@@ -73633,6 +73649,18 @@
     },
     {
      "seq": 8,
+     "type": "seventh_step",
+     "level": 1,
+     "body": 1,
+     "at": [
+      6,
+      5
+     ],
+     "tile": "mud",
+     "effect": "choose"
+    },
+    {
+     "seq": 9,
      "type": "switch",
      "level": 1,
      "body": 1,
@@ -73642,7 +73670,7 @@
      ]
     },
     {
-     "seq": 9,
+     "seq": 10,
      "type": "body_lost",
      "level": 1,
      "body": 1,
@@ -73654,7 +73682,7 @@
      "wasted": false
     },
     {
-     "seq": 10,
+     "seq": 11,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -73671,11 +73699,11 @@
      "result": "moved"
     },
     {
-     "seq": 11,
+     "seq": 12,
      "type": "move",
      "level": 1,
      "body": 2,
-     "step": 2,
+     "step": 3,
      "dir": "up",
      "from": [
       6,
@@ -73688,7 +73716,7 @@
      "result": "moved"
     },
     {
-     "seq": 12,
+     "seq": 13,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -73705,11 +73733,11 @@
      "result": "moved"
     },
     {
-     "seq": 13,
+     "seq": 14,
      "type": "move",
      "level": 1,
      "body": 2,
-     "step": 5,
+     "step": 6,
      "dir": "up",
      "from": [
       6,
@@ -73722,7 +73750,7 @@
      "result": "moved"
     },
     {
-     "seq": 14,
+     "seq": 15,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -73739,7 +73767,7 @@
      "result": "moved"
     },
     {
-     "seq": 15,
+     "seq": 16,
      "type": "seventh_step",
      "level": 1,
      "body": 2,
@@ -73751,7 +73779,7 @@
      "effect": "choose"
     },
     {
-     "seq": 16,
+     "seq": 17,
      "type": "switch",
      "level": 1,
      "body": 2,
@@ -73761,7 +73789,7 @@
      ]
     },
     {
-     "seq": 17,
+     "seq": 18,
      "type": "body_lost",
      "level": 1,
      "body": 2,
@@ -73773,7 +73801,7 @@
      "wasted": false
     },
     {
-     "seq": 18,
+     "seq": 19,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -73790,7 +73818,7 @@
      "result": "moved"
     },
     {
-     "seq": 19,
+     "seq": 20,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -73807,7 +73835,7 @@
      "result": "moved"
     },
     {
-     "seq": 20,
+     "seq": 21,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -73824,7 +73852,7 @@
      "result": "gate"
     },
     {
-     "seq": 21,
+     "seq": 22,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -73841,7 +73869,7 @@
      "result": "moved"
     },
     {
-     "seq": 22,
+     "seq": 23,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -73858,7 +73886,7 @@
      "result": "moved"
     },
     {
-     "seq": 23,
+     "seq": 24,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -73875,7 +73903,7 @@
      "result": "moved"
     },
     {
-     "seq": 24,
+     "seq": 25,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -73892,7 +73920,7 @@
      "result": "moved"
     },
     {
-     "seq": 25,
+     "seq": 26,
      "type": "seventh_step",
      "level": 1,
      "body": 3,
@@ -73904,7 +73932,7 @@
      "effect": "win"
     },
     {
-     "seq": 26,
+     "seq": 27,
      "type": "level_clear",
      "level": 1,
      "moves": 18,
@@ -75165,7 +75193,7 @@
      "type": "move",
      "level": 1,
      "body": 2,
-     "step": 6,
+     "step": 7,
      "dir": "down",
      "from": [
       6,
@@ -75179,6 +75207,18 @@
     },
     {
      "seq": 77,
+     "type": "seventh_step",
+     "level": 1,
+     "body": 2,
+     "at": [
+      6,
+      5
+     ],
+     "tile": "mud",
+     "effect": "choose"
+    },
+    {
+     "seq": 78,
      "type": "keep",
      "level": 1,
      "body": 2,
@@ -75188,7 +75228,7 @@
      ]
     },
     {
-     "seq": 78,
+     "seq": 79,
      "type": "body_lost",
      "level": 1,
      "body": 2,
@@ -75200,7 +75240,7 @@
      "wasted": false
     },
     {
-     "seq": 79,
+     "seq": 80,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -75218,7 +75258,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 80,
+     "seq": 81,
      "type": "undo",
      "level": 1,
      "body": 3,
@@ -75230,7 +75270,7 @@
      "status": "play"
     },
     {
-     "seq": 81,
+     "seq": 82,
      "type": "keep",
      "level": 1,
      "body": 2,
@@ -75240,7 +75280,7 @@
      ]
     },
     {
-     "seq": 82,
+     "seq": 83,
      "type": "body_lost",
      "level": 1,
      "body": 2,
@@ -75252,7 +75292,7 @@
      "wasted": false
     },
     {
-     "seq": 83,
+     "seq": 84,
      "type": "undo",
      "level": 1,
      "body": 3,
@@ -76159,7 +76199,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 6,
+     "step": 7,
      "dir": "down",
      "from": [
       6,
@@ -76173,6 +76213,18 @@
     },
     {
      "seq": 54,
+     "type": "seventh_step",
+     "level": 1,
+     "body": 1,
+     "at": [
+      6,
+      5
+     ],
+     "tile": "mud",
+     "effect": "choose"
+    },
+    {
+     "seq": 55,
      "type": "keep",
      "level": 1,
      "body": 1,
@@ -76182,7 +76234,7 @@
      ]
     },
     {
-     "seq": 55,
+     "seq": 56,
      "type": "body_lost",
      "level": 1,
      "body": 1,
@@ -76194,7 +76246,7 @@
      "wasted": false
     },
     {
-     "seq": 56,
+     "seq": 57,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -76212,7 +76264,7 @@
      "blockedBy": "gate"
     },
     {
-     "seq": 57,
+     "seq": 58,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -76229,7 +76281,7 @@
      "result": "moved"
     },
     {
-     "seq": 58,
+     "seq": 59,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -76246,7 +76298,7 @@
      "result": "moved"
     },
     {
-     "seq": 59,
+     "seq": 60,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -76263,11 +76315,11 @@
      "result": "moved"
     },
     {
-     "seq": 60,
+     "seq": 61,
      "type": "move",
      "level": 1,
      "body": 2,
-     "step": 4,
+     "step": 5,
      "dir": "left",
      "from": [
       5,
@@ -76280,7 +76332,7 @@
      "result": "moved"
     },
     {
-     "seq": 61,
+     "seq": 62,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -76295,24 +76347,6 @@
       2
      ],
      "result": "moved"
-    },
-    {
-     "seq": 62,
-     "type": "move",
-     "level": 1,
-     "body": 2,
-     "step": 7,
-     "dir": "right",
-     "from": [
-      4,
-      2
-     ],
-     "to": [
-      5,
-      2
-     ],
-     "result": "blocked",
-     "blockedBy": "wall"
     },
     {
      "seq": 63,
@@ -76338,6 +76372,24 @@
      "level": 1,
      "body": 2,
      "step": 7,
+     "dir": "right",
+     "from": [
+      4,
+      2
+     ],
+     "to": [
+      5,
+      2
+     ],
+     "result": "blocked",
+     "blockedBy": "wall"
+    },
+    {
+     "seq": 65,
+     "type": "move",
+     "level": 1,
+     "body": 2,
+     "step": 7,
      "dir": "down",
      "from": [
       4,
@@ -76351,7 +76403,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 65,
+     "seq": 66,
      "type": "restart",
      "level": 1,
      "body": 2,
@@ -76363,7 +76415,7 @@
      "moves": 20
     },
     {
-     "seq": 66,
+     "seq": 67,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76381,7 +76433,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 67,
+     "seq": 68,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76398,7 +76450,7 @@
      "result": "moved"
     },
     {
-     "seq": 68,
+     "seq": 69,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76415,7 +76467,7 @@
      "result": "moved"
     },
     {
-     "seq": 69,
+     "seq": 70,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76432,7 +76484,7 @@
      "result": "moved"
     },
     {
-     "seq": 70,
+     "seq": 71,
      "type": "undo",
      "level": 1,
      "body": 1,
@@ -76444,7 +76496,7 @@
      "status": "play"
     },
     {
-     "seq": 71,
+     "seq": 72,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76461,7 +76513,7 @@
      "result": "moved"
     },
     {
-     "seq": 72,
+     "seq": 73,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76479,7 +76531,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 73,
+     "seq": 74,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76496,7 +76548,7 @@
      "result": "moved"
     },
     {
-     "seq": 74,
+     "seq": 75,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76514,7 +76566,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 75,
+     "seq": 76,
      "type": "undo",
      "level": 1,
      "body": 1,
@@ -76526,7 +76578,7 @@
      "status": "play"
     },
     {
-     "seq": 76,
+     "seq": 77,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76543,7 +76595,7 @@
      "result": "moved"
     },
     {
-     "seq": 77,
+     "seq": 78,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76560,7 +76612,7 @@
      "result": "moved"
     },
     {
-     "seq": 78,
+     "seq": 79,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76577,7 +76629,7 @@
      "result": "moved"
     },
     {
-     "seq": 79,
+     "seq": 80,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76594,7 +76646,7 @@
      "result": "moved"
     },
     {
-     "seq": 80,
+     "seq": 81,
      "type": "seventh_step",
      "level": 1,
      "body": 1,
@@ -76606,7 +76658,7 @@
      "effect": "choose"
     },
     {
-     "seq": 81,
+     "seq": 82,
      "type": "switch",
      "level": 1,
      "body": 1,
@@ -76616,7 +76668,7 @@
      ]
     },
     {
-     "seq": 82,
+     "seq": 83,
      "type": "body_lost",
      "level": 1,
      "body": 1,
@@ -76628,7 +76680,7 @@
      "wasted": false
     },
     {
-     "seq": 83,
+     "seq": 84,
      "type": "restart",
      "level": 1,
      "body": 2,
@@ -76640,7 +76692,7 @@
      "moves": 29
     },
     {
-     "seq": 84,
+     "seq": 85,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76658,7 +76710,7 @@
      "blockedBy": "gate"
     },
     {
-     "seq": 85,
+     "seq": 86,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76675,7 +76727,7 @@
      "result": "moved"
     },
     {
-     "seq": 86,
+     "seq": 87,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76693,7 +76745,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 87,
+     "seq": 88,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76706,24 +76758,6 @@
      "to": [
       5,
       4
-     ],
-     "result": "blocked",
-     "blockedBy": "wall"
-    },
-    {
-     "seq": 88,
-     "type": "move",
-     "level": 1,
-     "body": 1,
-     "step": 2,
-     "dir": "left",
-     "from": [
-      5,
-      3
-     ],
-     "to": [
-      4,
-      3
      ],
      "result": "blocked",
      "blockedBy": "wall"
@@ -76748,6 +76782,24 @@
     },
     {
      "seq": 90,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 2,
+     "dir": "left",
+     "from": [
+      5,
+      3
+     ],
+     "to": [
+      4,
+      3
+     ],
+     "result": "blocked",
+     "blockedBy": "wall"
+    },
+    {
+     "seq": 91,
      "type": "undo",
      "level": 1,
      "body": 1,
@@ -76759,7 +76811,7 @@
      "status": "play"
     },
     {
-     "seq": 91,
+     "seq": 92,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76776,7 +76828,7 @@
      "result": "moved"
     },
     {
-     "seq": 92,
+     "seq": 93,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76793,7 +76845,7 @@
      "result": "moved"
     },
     {
-     "seq": 93,
+     "seq": 94,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76810,7 +76862,7 @@
      "result": "moved"
     },
     {
-     "seq": 94,
+     "seq": 95,
      "type": "undo",
      "level": 1,
      "body": 1,
@@ -76822,7 +76874,7 @@
      "status": "play"
     },
     {
-     "seq": 95,
+     "seq": 96,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76839,7 +76891,7 @@
      "result": "moved"
     },
     {
-     "seq": 96,
+     "seq": 97,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -76897,7 +76949,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 1,
+     "step": 2,
      "dir": "up",
      "from": [
       5,
@@ -76931,7 +76983,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 4,
+     "step": 5,
      "dir": "up",
      "from": [
       5,
@@ -77366,7 +77418,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 3,
+     "step": 4,
      "dir": "up",
      "from": [
       5,
@@ -77400,7 +77452,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 6,
+     "step": 7,
      "dir": "left",
      "from": [
       6,
@@ -77414,6 +77466,18 @@
     },
     {
      "seq": 15,
+     "type": "seventh_step",
+     "level": 1,
+     "body": 1,
+     "at": [
+      5,
+      5
+     ],
+     "tile": "mud",
+     "effect": "choose"
+    },
+    {
+     "seq": 16,
      "type": "keep",
      "level": 1,
      "body": 1,
@@ -77423,7 +77487,7 @@
      ]
     },
     {
-     "seq": 16,
+     "seq": 17,
      "type": "body_lost",
      "level": 1,
      "body": 1,
@@ -77435,7 +77499,7 @@
      "wasted": false
     },
     {
-     "seq": 17,
+     "seq": 18,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -77452,7 +77516,7 @@
      "result": "moved"
     },
     {
-     "seq": 18,
+     "seq": 19,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -77470,7 +77534,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 19,
+     "seq": 20,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -77487,7 +77551,7 @@
      "result": "moved"
     },
     {
-     "seq": 20,
+     "seq": 21,
      "type": "undo",
      "level": 1,
      "body": 2,
@@ -77499,7 +77563,7 @@
      "status": "play"
     },
     {
-     "seq": 21,
+     "seq": 22,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -77514,24 +77578,6 @@
       5
      ],
      "result": "moved"
-    },
-    {
-     "seq": 22,
-     "type": "move",
-     "level": 1,
-     "body": 2,
-     "step": 3,
-     "dir": "right",
-     "from": [
-      4,
-      5
-     ],
-     "to": [
-      5,
-      5
-     ],
-     "result": "blocked",
-     "blockedBy": "statue"
     },
     {
      "seq": 23,
@@ -77557,6 +77603,24 @@
      "level": 1,
      "body": 2,
      "step": 3,
+     "dir": "right",
+     "from": [
+      4,
+      5
+     ],
+     "to": [
+      5,
+      5
+     ],
+     "result": "blocked",
+     "blockedBy": "statue"
+    },
+    {
+     "seq": 25,
+     "type": "move",
+     "level": 1,
+     "body": 2,
+     "step": 3,
      "dir": "left",
      "from": [
       4,
@@ -77570,7 +77634,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 25,
+     "seq": 26,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -77587,7 +77651,7 @@
      "result": "moved"
     },
     {
-     "seq": 26,
+     "seq": 27,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -77604,7 +77668,7 @@
      "result": "moved"
     },
     {
-     "seq": 27,
+     "seq": 28,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -77621,7 +77685,7 @@
      "result": "moved"
     },
     {
-     "seq": 28,
+     "seq": 29,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -77638,7 +77702,7 @@
      "result": "moved"
     },
     {
-     "seq": 29,
+     "seq": 30,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -77655,7 +77719,7 @@
      "result": "slid"
     },
     {
-     "seq": 30,
+     "seq": 31,
      "type": "seventh_step",
      "level": 1,
      "body": 2,
@@ -77667,7 +77731,7 @@
      "effect": "choose"
     },
     {
-     "seq": 31,
+     "seq": 32,
      "type": "undo",
      "level": 1,
      "body": 2,
@@ -77679,7 +77743,7 @@
      "status": "choose"
     },
     {
-     "seq": 32,
+     "seq": 33,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -77696,7 +77760,7 @@
      "result": "slid"
     },
     {
-     "seq": 33,
+     "seq": 34,
      "type": "seventh_step",
      "level": 1,
      "body": 2,
@@ -77708,7 +77772,7 @@
      "effect": "choose"
     },
     {
-     "seq": 34,
+     "seq": 35,
      "type": "switch",
      "level": 1,
      "body": 2,
@@ -77718,7 +77782,7 @@
      ]
     },
     {
-     "seq": 35,
+     "seq": 36,
      "type": "body_lost",
      "level": 1,
      "body": 2,
@@ -77730,7 +77794,7 @@
      "wasted": false
     },
     {
-     "seq": 36,
+     "seq": 37,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -77747,7 +77811,7 @@
      "result": "slid"
     },
     {
-     "seq": 37,
+     "seq": 38,
      "type": "restart",
      "level": 1,
      "body": 3,
@@ -77759,7 +77823,7 @@
      "moves": 16
     },
     {
-     "seq": 38,
+     "seq": 39,
      "type": "restart",
      "level": 1,
      "body": 1,
@@ -77771,11 +77835,11 @@
      "moves": 16
     },
     {
-     "seq": 39,
+     "seq": 40,
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 1,
+     "step": 2,
      "dir": "up",
      "from": [
       5,
@@ -77788,7 +77852,7 @@
      "result": "moved"
     },
     {
-     "seq": 40,
+     "seq": 41,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -77805,7 +77869,7 @@
      "result": "moved"
     },
     {
-     "seq": 41,
+     "seq": 42,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -77822,7 +77886,7 @@
      "result": "moved"
     },
     {
-     "seq": 42,
+     "seq": 43,
      "type": "undo",
      "level": 1,
      "body": 1,
@@ -77834,7 +77898,7 @@
      "status": "play"
     },
     {
-     "seq": 43,
+     "seq": 44,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -77852,11 +77916,11 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 44,
+     "seq": 45,
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 4,
+     "step": 5,
      "dir": "right",
      "from": [
       4,
@@ -77864,23 +77928,6 @@
      ],
      "to": [
       5,
-      5
-     ],
-     "result": "moved"
-    },
-    {
-     "seq": 45,
-     "type": "move",
-     "level": 1,
-     "body": 1,
-     "step": 6,
-     "dir": "right",
-     "from": [
-      5,
-      5
-     ],
-     "to": [
-      6,
       5
      ],
      "result": "moved"
@@ -77890,6 +77937,23 @@
      "type": "move",
      "level": 1,
      "body": 1,
+     "step": 6,
+     "dir": "right",
+     "from": [
+      5,
+      5
+     ],
+     "to": [
+      6,
+      5
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 47,
+     "type": "move",
+     "level": 1,
+     "body": 1,
      "step": 7,
      "dir": "left",
      "from": [
@@ -77901,10 +77965,10 @@
       5
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "mud"
     },
     {
-     "seq": 47,
+     "seq": 48,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -77921,7 +77985,7 @@
      "result": "moved"
     },
     {
-     "seq": 48,
+     "seq": 49,
      "type": "seventh_step",
      "level": 1,
      "body": 1,
@@ -77933,7 +77997,7 @@
      "effect": "choose"
     },
     {
-     "seq": 49,
+     "seq": 50,
      "type": "keep",
      "level": 1,
      "body": 1,
@@ -77943,7 +78007,7 @@
      ]
     },
     {
-     "seq": 50,
+     "seq": 51,
      "type": "body_lost",
      "level": 1,
      "body": 1,
@@ -77955,7 +78019,7 @@
      "wasted": false
     },
     {
-     "seq": 51,
+     "seq": 52,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -77972,7 +78036,7 @@
      "result": "moved"
     },
     {
-     "seq": 52,
+     "seq": 53,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -77990,7 +78054,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 53,
+     "seq": 54,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -78007,7 +78071,7 @@
      "result": "moved"
     },
     {
-     "seq": 54,
+     "seq": 55,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -78024,7 +78088,7 @@
      "result": "moved"
     },
     {
-     "seq": 55,
+     "seq": 56,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -78042,7 +78106,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 56,
+     "seq": 57,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -78059,7 +78123,7 @@
      "result": "moved"
     },
     {
-     "seq": 57,
+     "seq": 58,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -78076,7 +78140,7 @@
      "result": "moved"
     },
     {
-     "seq": 58,
+     "seq": 59,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -78093,7 +78157,7 @@
      "result": "moved"
     },
     {
-     "seq": 59,
+     "seq": 60,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -78108,10 +78172,10 @@
       5
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "mud"
     },
     {
-     "seq": 60,
+     "seq": 61,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -78128,7 +78192,7 @@
      "result": "moved"
     },
     {
-     "seq": 61,
+     "seq": 62,
      "type": "seventh_step",
      "level": 1,
      "body": 2,
@@ -78140,7 +78204,7 @@
      "effect": "choose"
     },
     {
-     "seq": 62,
+     "seq": 63,
      "type": "keep",
      "level": 1,
      "body": 2,
@@ -78150,7 +78214,7 @@
      ]
     },
     {
-     "seq": 63,
+     "seq": 64,
      "type": "body_lost",
      "level": 1,
      "body": 2,
@@ -78162,7 +78226,7 @@
      "wasted": false
     },
     {
-     "seq": 64,
+     "seq": 65,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -78180,7 +78244,7 @@
      "blockedBy": "statue"
     },
     {
-     "seq": 65,
+     "seq": 66,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -78198,11 +78262,11 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 66,
+     "seq": 67,
      "type": "move",
      "level": 1,
      "body": 3,
-     "step": 1,
+     "step": 2,
      "dir": "up",
      "from": [
       5,
@@ -78215,7 +78279,7 @@
      "result": "moved"
     },
     {
-     "seq": 67,
+     "seq": 68,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -78232,7 +78296,7 @@
      "result": "moved"
     },
     {
-     "seq": 68,
+     "seq": 69,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -78249,7 +78313,7 @@
      "result": "moved"
     },
     {
-     "seq": 69,
+     "seq": 70,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -78266,7 +78330,7 @@
      "result": "moved"
     },
     {
-     "seq": 70,
+     "seq": 71,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -78282,24 +78346,6 @@
      ],
      "result": "blocked",
      "blockedBy": "statue"
-    },
-    {
-     "seq": 71,
-     "type": "move",
-     "level": 1,
-     "body": 3,
-     "step": 6,
-     "dir": "right",
-     "from": [
-      7,
-      6
-     ],
-     "to": [
-      8,
-      6
-     ],
-     "result": "blocked",
-     "blockedBy": "wall"
     },
     {
      "seq": 72,
@@ -78307,24 +78353,6 @@
      "level": 1,
      "body": 3,
      "step": 6,
-     "dir": "left",
-     "from": [
-      7,
-      6
-     ],
-     "to": [
-      6,
-      6
-     ],
-     "result": "blocked",
-     "blockedBy": "statue"
-    },
-    {
-     "seq": 73,
-     "type": "move",
-     "level": 1,
-     "body": 3,
-     "step": 6,
      "dir": "right",
      "from": [
       7,
@@ -78338,19 +78366,37 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 74,
+     "seq": 73,
      "type": "move",
      "level": 1,
      "body": 3,
      "step": 6,
-     "dir": "down",
+     "dir": "left",
      "from": [
       7,
       6
      ],
      "to": [
+      6,
+      6
+     ],
+     "result": "blocked",
+     "blockedBy": "statue"
+    },
+    {
+     "seq": 74,
+     "type": "move",
+     "level": 1,
+     "body": 3,
+     "step": 6,
+     "dir": "right",
+     "from": [
       7,
-      7
+      6
+     ],
+     "to": [
+      8,
+      6
      ],
      "result": "blocked",
      "blockedBy": "wall"
@@ -78361,17 +78407,17 @@
      "level": 1,
      "body": 3,
      "step": 6,
-     "dir": "left",
+     "dir": "down",
      "from": [
       7,
       6
      ],
      "to": [
-      6,
-      6
+      7,
+      7
      ],
      "result": "blocked",
-     "blockedBy": "statue"
+     "blockedBy": "wall"
     },
     {
      "seq": 76,
@@ -78393,6 +78439,24 @@
     },
     {
      "seq": 77,
+     "type": "move",
+     "level": 1,
+     "body": 3,
+     "step": 6,
+     "dir": "left",
+     "from": [
+      7,
+      6
+     ],
+     "to": [
+      6,
+      6
+     ],
+     "result": "blocked",
+     "blockedBy": "statue"
+    },
+    {
+     "seq": 78,
      "type": "undo",
      "level": 1,
      "body": 3,
@@ -78404,7 +78468,7 @@
      "status": "play"
     },
     {
-     "seq": 78,
+     "seq": 79,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -78421,7 +78485,7 @@
      "result": "moved"
     },
     {
-     "seq": 79,
+     "seq": 80,
      "type": "restart",
      "level": 1,
      "body": 3,
@@ -78431,24 +78495,6 @@
       5
      ],
      "moves": 34
-    },
-    {
-     "seq": 80,
-     "type": "move",
-     "level": 1,
-     "body": 1,
-     "step": 1,
-     "dir": "down",
-     "from": [
-      5,
-      6
-     ],
-     "to": [
-      5,
-      7
-     ],
-     "result": "blocked",
-     "blockedBy": "wall"
     },
     {
      "seq": 81,
@@ -78474,6 +78520,24 @@
      "level": 1,
      "body": 1,
      "step": 1,
+     "dir": "down",
+     "from": [
+      5,
+      6
+     ],
+     "to": [
+      5,
+      7
+     ],
+     "result": "blocked",
+     "blockedBy": "wall"
+    },
+    {
+     "seq": 83,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 1,
      "dir": "left",
      "from": [
       5,
@@ -78486,7 +78550,7 @@
      "result": "moved"
     },
     {
-     "seq": 83,
+     "seq": 84,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -78504,7 +78568,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 84,
+     "seq": 85,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -78521,7 +78585,7 @@
      "result": "moved"
     },
     {
-     "seq": 85,
+     "seq": 86,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -78538,7 +78602,7 @@
      "result": "moved"
     },
     {
-     "seq": 86,
+     "seq": 87,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -78556,7 +78620,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 87,
+     "seq": 88,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -78573,7 +78637,7 @@
      "result": "moved"
     },
     {
-     "seq": 88,
+     "seq": 89,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -78590,7 +78654,7 @@
      "result": "moved"
     },
     {
-     "seq": 89,
+     "seq": 90,
      "type": "undo",
      "level": 1,
      "body": 1,
@@ -78602,7 +78666,7 @@
      "status": "play"
     },
     {
-     "seq": 90,
+     "seq": 91,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -78619,7 +78683,7 @@
      "result": "slid"
     },
     {
-     "seq": 91,
+     "seq": 92,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -78636,7 +78700,7 @@
      "result": "slid"
     },
     {
-     "seq": 92,
+     "seq": 93,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -78654,7 +78718,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 93,
+     "seq": 94,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -78671,7 +78735,7 @@
      "result": "moved"
     },
     {
-     "seq": 94,
+     "seq": 95,
      "type": "seventh_step",
      "level": 1,
      "body": 1,
@@ -78724,7 +78788,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 1,
+     "step": 2,
      "dir": "up",
      "from": [
       5,
@@ -79092,7 +79156,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 3,
+     "step": 4,
      "dir": "right",
      "from": [
       4,
@@ -79126,7 +79190,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 6,
+     "step": 7,
      "dir": "up",
      "from": [
       5,
@@ -79140,6 +79204,18 @@
     },
     {
      "seq": 28,
+     "type": "seventh_step",
+     "level": 1,
+     "body": 1,
+     "at": [
+      5,
+      5
+     ],
+     "tile": "mud",
+     "effect": "choose"
+    },
+    {
+     "seq": 29,
      "type": "switch",
      "level": 1,
      "body": 1,
@@ -79149,7 +79225,7 @@
      ]
     },
     {
-     "seq": 29,
+     "seq": 30,
      "type": "body_lost",
      "level": 1,
      "body": 1,
@@ -79161,7 +79237,7 @@
      "wasted": false
     },
     {
-     "seq": 30,
+     "seq": 31,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -79179,7 +79255,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 31,
+     "seq": 32,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -79196,7 +79272,7 @@
      "result": "moved"
     },
     {
-     "seq": 32,
+     "seq": 33,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -79213,7 +79289,7 @@
      "result": "moved"
     },
     {
-     "seq": 33,
+     "seq": 34,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -79230,7 +79306,7 @@
      "result": "moved"
     },
     {
-     "seq": 34,
+     "seq": 35,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -79248,7 +79324,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 35,
+     "seq": 36,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -79263,24 +79339,6 @@
       5
      ],
      "result": "moved"
-    },
-    {
-     "seq": 36,
-     "type": "move",
-     "level": 1,
-     "body": 2,
-     "step": 5,
-     "dir": "right",
-     "from": [
-      7,
-      5
-     ],
-     "to": [
-      8,
-      5
-     ],
-     "result": "blocked",
-     "blockedBy": "wall"
     },
     {
      "seq": 37,
@@ -79342,6 +79400,24 @@
      "level": 1,
      "body": 2,
      "step": 5,
+     "dir": "right",
+     "from": [
+      7,
+      5
+     ],
+     "to": [
+      8,
+      5
+     ],
+     "result": "blocked",
+     "blockedBy": "wall"
+    },
+    {
+     "seq": 41,
+     "type": "move",
+     "level": 1,
+     "body": 2,
+     "step": 5,
      "dir": "left",
      "from": [
       7,
@@ -79354,11 +79430,11 @@
      "result": "moved"
     },
     {
-     "seq": 41,
+     "seq": 42,
      "type": "move",
      "level": 1,
      "body": 2,
-     "step": 6,
+     "step": 7,
      "dir": "left",
      "from": [
       6,
@@ -79371,7 +79447,19 @@
      "result": "moved"
     },
     {
-     "seq": 42,
+     "seq": 43,
+     "type": "seventh_step",
+     "level": 1,
+     "body": 2,
+     "at": [
+      5,
+      5
+     ],
+     "tile": "start",
+     "effect": "vanish"
+    },
+    {
+     "seq": 44,
      "type": "body_lost",
      "level": 1,
      "body": 2,
@@ -79381,42 +79469,6 @@
      ],
      "reason": "vanish",
      "wasted": true
-    },
-    {
-     "seq": 43,
-     "type": "move",
-     "level": 1,
-     "body": 3,
-     "step": 1,
-     "dir": "up",
-     "from": [
-      5,
-      5
-     ],
-     "to": [
-      5,
-      4
-     ],
-     "result": "blocked",
-     "blockedBy": "wall"
-    },
-    {
-     "seq": 44,
-     "type": "move",
-     "level": 1,
-     "body": 3,
-     "step": 1,
-     "dir": "up",
-     "from": [
-      5,
-      5
-     ],
-     "to": [
-      5,
-      4
-     ],
-     "result": "blocked",
-     "blockedBy": "wall"
     },
     {
      "seq": 45,
@@ -79460,6 +79512,42 @@
      "level": 1,
      "body": 3,
      "step": 1,
+     "dir": "up",
+     "from": [
+      5,
+      5
+     ],
+     "to": [
+      5,
+      4
+     ],
+     "result": "blocked",
+     "blockedBy": "wall"
+    },
+    {
+     "seq": 48,
+     "type": "move",
+     "level": 1,
+     "body": 3,
+     "step": 1,
+     "dir": "up",
+     "from": [
+      5,
+      5
+     ],
+     "to": [
+      5,
+      4
+     ],
+     "result": "blocked",
+     "blockedBy": "wall"
+    },
+    {
+     "seq": 49,
+     "type": "move",
+     "level": 1,
+     "body": 3,
+     "step": 1,
      "dir": "left",
      "from": [
       5,
@@ -79472,7 +79560,7 @@
      "result": "moved"
     },
     {
-     "seq": 48,
+     "seq": 50,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -79489,7 +79577,7 @@
      "result": "moved"
     },
     {
-     "seq": 49,
+     "seq": 51,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -79507,7 +79595,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 50,
+     "seq": 52,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -79525,35 +79613,6 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 51,
-     "type": "undo",
-     "level": 1,
-     "body": 3,
-     "step": 2,
-     "at": [
-      4,
-      6
-     ],
-     "status": "play"
-    },
-    {
-     "seq": 52,
-     "type": "move",
-     "level": 1,
-     "body": 3,
-     "step": 2,
-     "dir": "up",
-     "from": [
-      4,
-      5
-     ],
-     "to": [
-      4,
-      4
-     ],
-     "result": "moved"
-    },
-    {
      "seq": 53,
      "type": "undo",
      "level": 1,
@@ -79561,7 +79620,7 @@
      "step": 2,
      "at": [
       4,
-      4
+      6
      ],
      "status": "play"
     },
@@ -79584,6 +79643,35 @@
     },
     {
      "seq": 55,
+     "type": "undo",
+     "level": 1,
+     "body": 3,
+     "step": 2,
+     "at": [
+      4,
+      4
+     ],
+     "status": "play"
+    },
+    {
+     "seq": 56,
+     "type": "move",
+     "level": 1,
+     "body": 3,
+     "step": 2,
+     "dir": "up",
+     "from": [
+      4,
+      5
+     ],
+     "to": [
+      4,
+      4
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 57,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -79600,7 +79688,7 @@
      "result": "moved"
     },
     {
-     "seq": 56,
+     "seq": 58,
      "type": "undo",
      "level": 1,
      "body": 3,
@@ -79612,7 +79700,7 @@
      "status": "play"
     },
     {
-     "seq": 57,
+     "seq": 59,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -79629,7 +79717,7 @@
      "result": "moved"
     },
     {
-     "seq": 58,
+     "seq": 60,
      "type": "move",
      "level": 1,
      "body": 3,
@@ -79644,64 +79732,35 @@
       2
      ],
      "result": "moved"
-    },
-    {
-     "seq": 59,
-     "type": "move",
-     "level": 1,
-     "body": 3,
-     "step": 5,
-     "dir": "up",
-     "from": [
-      4,
-      2
-     ],
-     "to": [
-      4,
-      1
-     ],
-     "result": "moved"
-    },
-    {
-     "seq": 60,
-     "type": "undo",
-     "level": 1,
-     "body": 3,
-     "step": 5,
-     "at": [
-      4,
-      1
-     ],
-     "status": "play"
     },
     {
      "seq": 61,
-     "type": "undo",
-     "level": 1,
-     "body": 3,
-     "step": 4,
-     "at": [
-      4,
-      2
-     ],
-     "status": "play"
-    },
-    {
-     "seq": 62,
      "type": "move",
      "level": 1,
      "body": 3,
-     "step": 4,
+     "step": 5,
      "dir": "up",
      "from": [
       4,
-      3
+      2
      ],
      "to": [
       4,
-      2
+      1
      ],
      "result": "moved"
+    },
+    {
+     "seq": 62,
+     "type": "undo",
+     "level": 1,
+     "body": 3,
+     "step": 5,
+     "at": [
+      4,
+      1
+     ],
+     "status": "play"
     },
     {
      "seq": 63,
@@ -79717,6 +79776,35 @@
     },
     {
      "seq": 64,
+     "type": "move",
+     "level": 1,
+     "body": 3,
+     "step": 4,
+     "dir": "up",
+     "from": [
+      4,
+      3
+     ],
+     "to": [
+      4,
+      2
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 65,
+     "type": "undo",
+     "level": 1,
+     "body": 3,
+     "step": 4,
+     "at": [
+      4,
+      2
+     ],
+     "status": "play"
+    },
+    {
+     "seq": 66,
      "type": "undo",
      "level": 1,
      "body": 3,
@@ -79728,7 +79816,7 @@
      "status": "play"
     },
     {
-     "seq": 65,
+     "seq": 67,
      "type": "restart",
      "level": 1,
      "body": 3,
@@ -79740,43 +79828,43 @@
      "moves": 32
     },
     {
-     "seq": 66,
-     "type": "move",
-     "level": 1,
-     "body": 1,
-     "step": 1,
-     "dir": "down",
-     "from": [
-      5,
-      6
-     ],
-     "to": [
-      5,
-      7
-     ],
-     "result": "blocked",
-     "blockedBy": "wall"
-    },
-    {
-     "seq": 67,
-     "type": "move",
-     "level": 1,
-     "body": 1,
-     "step": 1,
-     "dir": "down",
-     "from": [
-      5,
-      6
-     ],
-     "to": [
-      5,
-      7
-     ],
-     "result": "blocked",
-     "blockedBy": "wall"
-    },
-    {
      "seq": 68,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 1,
+     "dir": "down",
+     "from": [
+      5,
+      6
+     ],
+     "to": [
+      5,
+      7
+     ],
+     "result": "blocked",
+     "blockedBy": "wall"
+    },
+    {
+     "seq": 69,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 1,
+     "dir": "down",
+     "from": [
+      5,
+      6
+     ],
+     "to": [
+      5,
+      7
+     ],
+     "result": "blocked",
+     "blockedBy": "wall"
+    },
+    {
+     "seq": 70,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -79793,7 +79881,7 @@
      "result": "moved"
     },
     {
-     "seq": 69,
+     "seq": 71,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -79810,11 +79898,11 @@
      "result": "moved"
     },
     {
-     "seq": 70,
+     "seq": 72,
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 3,
+     "step": 4,
      "dir": "up",
      "from": [
       5,
@@ -79827,7 +79915,7 @@
      "result": "moved"
     },
     {
-     "seq": 71,
+     "seq": 73,
      "type": "undo",
      "level": 1,
      "body": 1,
@@ -79839,7 +79927,7 @@
      "status": "play"
     },
     {
-     "seq": 72,
+     "seq": 74,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -79857,7 +79945,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 73,
+     "seq": 75,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -79874,7 +79962,7 @@
      "result": "moved"
     },
     {
-     "seq": 74,
+     "seq": 76,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -79891,7 +79979,7 @@
      "result": "moved"
     },
     {
-     "seq": 75,
+     "seq": 77,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -79908,7 +79996,7 @@
      "result": "moved"
     },
     {
-     "seq": 76,
+     "seq": 78,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -79925,7 +80013,7 @@
      "result": "moved"
     },
     {
-     "seq": 77,
+     "seq": 79,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -79943,7 +80031,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 78,
+     "seq": 80,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -79961,7 +80049,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 79,
+     "seq": 81,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -79976,10 +80064,10 @@
       4
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "mud"
     },
     {
-     "seq": 80,
+     "seq": 82,
      "type": "undo",
      "level": 1,
      "body": 1,
@@ -79991,7 +80079,7 @@
      "status": "play"
     },
     {
-     "seq": 81,
+     "seq": 83,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -80009,7 +80097,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 82,
+     "seq": 84,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -80026,7 +80114,7 @@
      "result": "moved"
     },
     {
-     "seq": 83,
+     "seq": 85,
      "type": "move",
      "level": 1,
      "body": 1,
@@ -80043,7 +80131,7 @@
      "result": "moved"
     },
     {
-     "seq": 84,
+     "seq": 86,
      "type": "seventh_step",
      "level": 1,
      "body": 1,
@@ -80055,7 +80143,7 @@
      "effect": "choose"
     },
     {
-     "seq": 85,
+     "seq": 87,
      "type": "switch",
      "level": 1,
      "body": 1,
@@ -80065,7 +80153,7 @@
      ]
     },
     {
-     "seq": 86,
+     "seq": 88,
      "type": "body_lost",
      "level": 1,
      "body": 1,
@@ -80077,7 +80165,7 @@
      "wasted": false
     },
     {
-     "seq": 87,
+     "seq": 89,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -80094,40 +80182,11 @@
      "result": "moved"
     },
     {
-     "seq": 88,
-     "type": "move",
-     "level": 1,
-     "body": 2,
-     "step": 2,
-     "dir": "up",
-     "from": [
-      5,
-      6
-     ],
-     "to": [
-      5,
-      5
-     ],
-     "result": "moved"
-    },
-    {
-     "seq": 89,
-     "type": "undo",
-     "level": 1,
-     "body": 2,
-     "step": 3,
-     "at": [
-      5,
-      5
-     ],
-     "status": "play"
-    },
-    {
      "seq": 90,
      "type": "move",
      "level": 1,
      "body": 2,
-     "step": 2,
+     "step": 3,
      "dir": "up",
      "from": [
       5,
@@ -80156,6 +80215,35 @@
      "type": "move",
      "level": 1,
      "body": 2,
+     "step": 3,
+     "dir": "up",
+     "from": [
+      5,
+      6
+     ],
+     "to": [
+      5,
+      5
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 93,
+     "type": "undo",
+     "level": 1,
+     "body": 2,
+     "step": 3,
+     "at": [
+      5,
+      5
+     ],
+     "status": "play"
+    },
+    {
+     "seq": 94,
+     "type": "move",
+     "level": 1,
+     "body": 2,
      "step": 2,
      "dir": "down",
      "from": [
@@ -80170,7 +80258,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 93,
+     "seq": 95,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -80187,7 +80275,7 @@
      "result": "moved"
     },
     {
-     "seq": 94,
+     "seq": 96,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -80204,7 +80292,7 @@
      "result": "moved"
     },
     {
-     "seq": 95,
+     "seq": 97,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -80220,35 +80308,6 @@
      ],
      "result": "blocked",
      "blockedBy": "wall"
-    },
-    {
-     "seq": 96,
-     "type": "move",
-     "level": 1,
-     "body": 2,
-     "step": 4,
-     "dir": "left",
-     "from": [
-      5,
-      6
-     ],
-     "to": [
-      4,
-      6
-     ],
-     "result": "moved"
-    },
-    {
-     "seq": 97,
-     "type": "undo",
-     "level": 1,
-     "body": 2,
-     "step": 4,
-     "at": [
-      4,
-      6
-     ],
-     "status": "play"
     },
     {
      "seq": 98,
@@ -80256,6 +80315,35 @@
      "level": 1,
      "body": 2,
      "step": 4,
+     "dir": "left",
+     "from": [
+      5,
+      6
+     ],
+     "to": [
+      4,
+      6
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 99,
+     "type": "undo",
+     "level": 1,
+     "body": 2,
+     "step": 4,
+     "at": [
+      4,
+      6
+     ],
+     "status": "play"
+    },
+    {
+     "seq": 100,
+     "type": "move",
+     "level": 1,
+     "body": 2,
+     "step": 4,
      "dir": "down",
      "from": [
       5,
@@ -80269,7 +80357,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 99,
+     "seq": 101,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -80286,7 +80374,7 @@
      "result": "moved"
     },
     {
-     "seq": 100,
+     "seq": 102,
      "type": "undo",
      "level": 1,
      "body": 2,
@@ -80298,7 +80386,7 @@
      "status": "play"
     },
     {
-     "seq": 101,
+     "seq": 103,
      "type": "undo",
      "level": 1,
      "body": 2,
@@ -80310,7 +80398,7 @@
      "status": "play"
     },
     {
-     "seq": 102,
+     "seq": 104,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -80328,7 +80416,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 103,
+     "seq": 105,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -80346,7 +80434,7 @@
      "blockedBy": "wall"
     },
     {
-     "seq": 104,
+     "seq": 106,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -80363,7 +80451,7 @@
      "result": "moved"
     },
     {
-     "seq": 105,
+     "seq": 107,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -80380,7 +80468,7 @@
      "result": "moved"
     },
     {
-     "seq": 106,
+     "seq": 108,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -86792,7 +86880,7 @@
       2
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     }
    ]
   },
@@ -86843,7 +86931,7 @@
       2
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     },
     {
      "seq": 3,
@@ -87013,7 +87101,7 @@
       1,
       2
      ],
-     "result": "moved"
+     "result": "door"
     },
     {
      "seq": 14,
@@ -87196,7 +87284,7 @@
       2
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     }
    ]
   },
@@ -87390,7 +87478,7 @@
       2
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     }
    ]
   },
@@ -87584,7 +87672,7 @@
       2
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "door"
     }
    ]
   },
@@ -88109,7 +88197,7 @@
       8,
       1
      ],
-     "result": "moved"
+     "result": "door"
     },
     {
      "seq": 9,
@@ -88120,7 +88208,7 @@
       8,
       1
      ],
-     "tile": "floor",
+     "tile": "door",
      "effect": "choose"
     },
     {
@@ -88482,7 +88570,7 @@
       8,
       1
      ],
-     "result": "moved"
+     "result": "door"
     },
     {
      "seq": 9,
@@ -88493,7 +88581,7 @@
       8,
       1
      ],
-     "tile": "floor",
+     "tile": "door",
      "effect": "choose"
     },
     {
@@ -88687,7 +88775,7 @@
       2
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "flip_up"
     },
     {
      "seq": 3,
@@ -88817,8 +88905,9 @@
       8,
       1
      ],
-     "tile": "floor",
-     "effect": "choose"
+     "tile": "lever",
+     "effect": "choose",
+     "flipped": true
     },
     {
      "seq": 11,
@@ -89253,7 +89342,7 @@
       2
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "flip_up"
     },
     {
      "seq": 13,
@@ -89383,8 +89472,9 @@
       4,
       1
      ],
-     "tile": "floor",
-     "effect": "choose"
+     "tile": "lever",
+     "effect": "choose",
+     "flipped": true
     },
     {
      "seq": 21,
@@ -89586,8 +89676,9 @@
       8,
       1
      ],
-     "tile": "floor",
-     "effect": "choose"
+     "tile": "lever",
+     "effect": "choose",
+     "flipped": true
     },
     {
      "seq": 10,
@@ -89915,8 +90006,9 @@
       8,
       1
      ],
-     "tile": "floor",
-     "effect": "choose"
+     "tile": "lever",
+     "effect": "choose",
+     "flipped": true
     },
     {
      "seq": 10,
@@ -90068,8 +90160,9 @@
       7,
       2
      ],
-     "tile": "floor",
-     "effect": "choose"
+     "tile": "lever",
+     "effect": "choose",
+     "flipped": true
     },
     {
      "seq": 20,
@@ -90109,7 +90202,7 @@
       2
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "flip_up"
     }
    ]
   },
@@ -90272,7 +90365,7 @@
       3,
       2
      ],
-     "tile": "floor",
+     "tile": "flip_down",
      "effect": "choose"
     },
     {
@@ -90425,8 +90518,9 @@
       8,
       1
      ],
-     "tile": "floor",
-     "effect": "choose"
+     "tile": "lever",
+     "effect": "choose",
+     "flipped": true
     },
     {
      "seq": 20,
@@ -90610,8 +90704,9 @@
       8,
       1
      ],
-     "tile": "floor",
-     "effect": "statue"
+     "tile": "lever",
+     "effect": "statue",
+     "flipped": true
     },
     {
      "seq": 10,
@@ -90797,8 +90892,9 @@
       8,
       1
      ],
-     "tile": "floor",
-     "effect": "choose"
+     "tile": "lever",
+     "effect": "choose",
+     "flipped": true
     },
     {
      "seq": 10,
@@ -90838,8 +90934,9 @@
       8,
       1
      ],
-     "tile": "floor",
-     "effect": "choose"
+     "tile": "lever",
+     "effect": "choose",
+     "flipped": true
     },
     {
      "seq": 13,
@@ -90913,8 +91010,9 @@
       8,
       1
      ],
-     "tile": "floor",
-     "effect": "choose"
+     "tile": "lever",
+     "effect": "choose",
+     "flipped": true
     },
     {
      "seq": 19,
@@ -90966,7 +91064,7 @@
       2
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "flip_up"
     }
    ]
   },
@@ -91022,7 +91120,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 2,
+     "step": 3,
      "dir": "right",
      "from": [
       2,
@@ -91051,7 +91149,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 2,
+     "step": 3,
      "dir": "right",
      "from": [
       2,
@@ -91293,7 +91391,7 @@
       1
      ],
      "result": "blocked",
-     "blockedBy": "floor"
+     "blockedBy": "mud"
     },
     {
      "seq": 9,
@@ -91446,7 +91544,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 6,
+     "step": 7,
      "dir": "right",
      "from": [
       6,
@@ -91460,6 +91558,18 @@
     },
     {
      "seq": 8,
+     "type": "seventh_step",
+     "level": 1,
+     "body": 1,
+     "at": [
+      7,
+      1
+     ],
+     "tile": "mud",
+     "effect": "choose"
+    },
+    {
+     "seq": 9,
      "type": "keep",
      "level": 1,
      "body": 1,
@@ -91469,7 +91579,7 @@
      ]
     },
     {
-     "seq": 9,
+     "seq": 10,
      "type": "body_lost",
      "level": 1,
      "body": 1,
@@ -91481,7 +91591,7 @@
      "wasted": false
     },
     {
-     "seq": 10,
+     "seq": 11,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -91498,7 +91608,7 @@
      "result": "moved"
     },
     {
-     "seq": 11,
+     "seq": 12,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -91515,7 +91625,7 @@
      "result": "moved"
     },
     {
-     "seq": 12,
+     "seq": 13,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -91532,7 +91642,7 @@
      "result": "moved"
     },
     {
-     "seq": 13,
+     "seq": 14,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -91549,7 +91659,7 @@
      "result": "moved"
     },
     {
-     "seq": 14,
+     "seq": 15,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -91566,7 +91676,7 @@
      "result": "moved"
     },
     {
-     "seq": 15,
+     "seq": 16,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -91654,7 +91764,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 3,
+     "step": 4,
      "dir": "left",
      "from": [
       5,
@@ -91703,7 +91813,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 1,
+     "step": 2,
      "dir": "right",
      "from": [
       1,
@@ -91769,7 +91879,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 1,
+     "step": 2,
      "dir": "right",
      "from": [
       1,
@@ -91921,7 +92031,7 @@
      "type": "move",
      "level": 1,
      "body": 1,
-     "step": 6,
+     "step": 7,
      "dir": "right",
      "from": [
       6,
@@ -91935,6 +92045,18 @@
     },
     {
      "seq": 8,
+     "type": "seventh_step",
+     "level": 1,
+     "body": 1,
+     "at": [
+      7,
+      1
+     ],
+     "tile": "mud",
+     "effect": "choose"
+    },
+    {
+     "seq": 9,
      "type": "switch",
      "level": 1,
      "body": 1,
@@ -91944,7 +92066,7 @@
      ]
     },
     {
-     "seq": 9,
+     "seq": 10,
      "type": "body_lost",
      "level": 1,
      "body": 1,
@@ -91956,7 +92078,7 @@
      "wasted": false
     },
     {
-     "seq": 10,
+     "seq": 11,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -91973,7 +92095,7 @@
      "result": "moved"
     },
     {
-     "seq": 11,
+     "seq": 12,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -91990,7 +92112,7 @@
      "result": "moved"
     },
     {
-     "seq": 12,
+     "seq": 13,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -92007,7 +92129,7 @@
      "result": "moved"
     },
     {
-     "seq": 13,
+     "seq": 14,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -92024,7 +92146,7 @@
      "result": "moved"
     },
     {
-     "seq": 14,
+     "seq": 15,
      "type": "move",
      "level": 1,
      "body": 2,
@@ -92041,11 +92163,11 @@
      "result": "moved"
     },
     {
-     "seq": 15,
+     "seq": 16,
      "type": "move",
      "level": 1,
      "body": 2,
-     "step": 6,
+     "step": 7,
      "dir": "right",
      "from": [
       6,
@@ -92058,7 +92180,19 @@
      "result": "moved"
     },
     {
-     "seq": 16,
+     "seq": 17,
+     "type": "seventh_step",
+     "level": 1,
+     "body": 2,
+     "at": [
+      7,
+      1
+     ],
+     "tile": "start",
+     "effect": "vanish"
+    },
+    {
+     "seq": 18,
      "type": "body_lost",
      "level": 1,
      "body": 2,

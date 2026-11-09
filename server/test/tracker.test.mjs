@@ -6,7 +6,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseLevel, newState, dispatch } from '../../prototypes/seven-steps/src/core.js';
 import { LEVELS } from '../../prototypes/seven-steps/src/levels.js';
-import { Tracker, levelKey, fnv1a } from '../../prototypes/seven-steps/src/telemetry.js';
+import { Tracker, levelKey, fnv1a, tileKind } from '../../prototypes/seven-steps/src/telemetry.js';
 import { checkEvent } from '../src/validate.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -93,4 +93,22 @@ test('level_start carries the chapter id only when the stage has one', () => {
   assert.equal(ev[1].chapter, 'moss-ruins');
   for (const e of ev) assert.equal(checkEvent(e), null);
   assert.match(checkEvent({ ...ev[1], chapter: 'x'.repeat(41) }), /chapter is invalid/);
+});
+
+test('mud costs 2 steps: a 7th step reached through mud is recorded; tile names', () => {
+  let clock = 1_762_500_000_000;
+  const ev = [];
+  const tr = new Tracker({ emit: (e) => ev.push(e), now: () => (clock += 1000) });
+  let s = newState(parseLevel({ name: 'mud', bodies: 2, map: ['#########', '#S....m.#', '#########'] }));
+  tr.levelStart(s, 1, 'mud', 'boot');
+  for (let i = 0; i < 6; i++) { const r = dispatch(s, { type: 'move', dir: 'right' }); tr.command(s, { type: 'move', dir: 'right' }, r); s = r.state; }
+  const moves = ev.filter((e) => e.type === 'move');
+  assert.deepEqual(moves.map((m) => m.step), [1, 2, 3, 4, 6, 7]); // 5th move enters mud: steps 5+6
+  const seventh = ev.find((e) => e.type === 'seventh_step');
+  assert.ok(seventh, 'seventh_step after mud');
+  assert.deepEqual(seventh.at, [7, 1]);
+  for (const e of ev) assert.equal(checkEvent(e), null, JSON.stringify(e));
+  const lv = parseLevel({ name: 't', bodies: 1, map: ['#mLRrQ#', '#S....E#'], statueCount: 0 });
+  const st = newState(lv);
+  assert.deepEqual([1, 2, 3, 4, 5].map((x) => tileKind(st, x)), ['mud', 'lever', 'flip_up', 'flip_down', 'door']);
 });
