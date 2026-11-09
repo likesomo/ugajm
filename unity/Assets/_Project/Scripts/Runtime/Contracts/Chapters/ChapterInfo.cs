@@ -34,6 +34,8 @@ namespace SevenSteps.Contracts
         public string concept = "";
         /// Line shown when the chapter is entered.
         public string intro = "";
+        /// One line for the planet select screen (docs 6.4). Empty until level design fills it (export: all chapters or none).
+        public string tagline = "";
         /// ChapterPreset.id in AppConfig.chapters. Empty = same as id.
         public string artPreset = "";
 
@@ -45,6 +47,8 @@ namespace SevenSteps.Contracts
         public string Planet(Language lang) => lang == Languages.Base ? planet : Text(lang).planet;
         public string Concept(Language lang) => lang == Languages.Base ? concept : Text(lang).concept;
         public string Intro(Language lang) => lang == Languages.Base ? intro : Text(lang).intro;
+        /// Empty when the data has no taglines yet (then the translation is not required either).
+        public string Tagline(Language lang) => lang == Languages.Base || string.IsNullOrEmpty(tagline) ? tagline ?? "" : Text(lang).tagline;
 
         /// The translation for a non-base language. Missing = data error (export and LocalizationCheck catch it), so it throws.
         public ChapterText Text(Language lang)
@@ -64,5 +68,6 @@ namespace SevenSteps.Contracts
         public string planet = "";
         public string concept = "";
         public string intro = "";
+        public string tagline = "";
     }
 }
