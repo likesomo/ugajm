@@ -129,6 +129,7 @@ namespace SevenSteps.Game.Flow
         void Enter(int stage)
         {
             result.Hide();
+            clearStars = 0; // a new attempt: no stars until it is won (architect note on 7028a00)
             string chapter = chapterOf(stage) ?? "";
             if (enteredChapter == null || chapter != enteredChapter) ChapterEntering?.Invoke(enteredChapter, chapter, stage);
             enteredChapter = chapter;
