@@ -1,0 +1,305 @@
+{
+  "about": "Draft chapter id and one-line story per stage for R1-R4 (rollout-50.md). Story = the triplets view, separate from the hint (architecture 6.4). Merged into levels.js when each batch is rolled out. Brothers: 1st teal muffler, 2nd ochre, 3rd russet (colour = identity only).",
+  "stages": [
+    {
+      "n": 1,
+      "name": "일곱 걸음",
+      "chapter": "moss",
+      "story": "첫걸음부터 세자. 일곱 번째에 하늘이 맞춰진다."
+    },
+    {
+      "n": 2,
+      "name": "늦게 도착하기",
+      "chapter": "moss",
+      "story": "문이 코앞이지만, 아직 별이 다 뜨지 않았다."
+    },
+    {
+      "n": 3,
+      "name": "딱 맞는 길",
+      "chapter": "moss",
+      "story": "갈림길은 많아도 일곱 걸음짜리 길은 하나."
+    },
+    {
+      "n": 4,
+      "name": "돌이 된 몸",
+      "chapter": "moss",
+      "story": "형이 멈춰 섰다. 그 자리에서 돌이 되어 문을 붙든다."
+    },
+    {
+      "n": 5,
+      "name": "가까운 발판",
+      "chapter": "moss",
+      "story": "가까운 발판은 일곱 번째 걸음과 짝이 맞지 않는다."
+    },
+    {
+      "n": 6,
+      "name": "길을 막는 선돌",
+      "chapter": "moss",
+      "story": "문을 연 형이, 지름길도 막고 서 있다."
+    },
+    {
+      "n": 7,
+      "name": "두 개의 문",
+      "chapter": "moss",
+      "story": "둘이 문을 지키고, 셋째가 고향을 떠난다."
+    },
+    {
+      "n": 8,
+      "name": "새 출발점",
+      "chapter": "hollow",
+      "story": "남지 않고, 선 자리를 동생에게 넘긴다."
+    },
+    {
+      "n": 9,
+      "name": "바통 넘기기",
+      "chapter": "hollow",
+      "story": "혼자서는 못 가는 길. 셋이 이어 걷는다."
+    },
+    {
+      "n": 10,
+      "name": "몸으로 놓는 다리",
+      "chapter": "hollow",
+      "story": "구멍 아래로 별이 보인다. 일곱 번째라면 떨어져도 다리가 된다."
+    },
+    {
+      "n": 11,
+      "name": "다리냐 선돌이냐",
+      "chapter": "hollow",
+      "story": "하나는 다리로, 하나는 선돌로."
+    },
+    {
+      "n": 12,
+      "name": "건너편에서 깨어나기",
+      "chapter": "hollow",
+      "story": "다리를 건넌 둘째가 건너편에서 바통을 넘긴다."
+    },
+    {
+      "n": 13,
+      "name": "구멍 둘, 형제 셋",
+      "chapter": "hollow",
+      "story": "구멍이 둘이면, 다리도 둘."
+    },
+    {
+      "n": 14,
+      "name": "떠나온 자리",
+      "chapter": "hollow",
+      "story": "멀리 넘긴 출발점에서 다시 돌아와야 한다."
+    },
+    {
+      "n": 15,
+      "name": "숫자 문",
+      "chapter": "carved",
+      "story": "돌에 새긴 숫자는 몇 번째 걸음에 지나가라는 뜻이다."
+    },
+    {
+      "n": 16,
+      "name": "문 너머의 발판",
+      "chapter": "carved",
+      "story": "숫자 문 너머에 발판이 있다."
+    },
+    {
+      "n": 17,
+      "name": "갈림길의 숫자",
+      "chapter": "carved",
+      "story": "숫자 문이 지름길을 막는다. 돌아가는 길을 센다."
+    },
+    {
+      "n": 18,
+      "name": "처음부터 다시 세기",
+      "chapter": "carved",
+      "story": "첫째에게는 너무 먼 문. 둘째는 처음부터 다시 센다."
+    },
+    {
+      "n": 19,
+      "name": "숫자와 구멍",
+      "chapter": "carved",
+      "story": "다리를 건너는 걸음도 숫자에 든다."
+    },
+    {
+      "n": 20,
+      "name": "두 숫자",
+      "chapter": "carved",
+      "story": "바통을 넘길 자리가 둘째의 숫자를 정한다."
+    },
+    {
+      "n": 21,
+      "name": "새김돌의 계산",
+      "chapter": "carved",
+      "story": "새김돌의 마지막 셈. 세 형제의 걸음을 모두 맞춘다."
+    },
+    {
+      "n": 22,
+      "name": "미끄러운 첫걸음",
+      "chapter": "frost",
+      "story": "얼음 위에서는 몇 칸을 미끄러져도 한 걸음."
+    },
+    {
+      "n": 23,
+      "name": "홀수의 저주",
+      "chapter": "frost",
+      "story": "바닥만으로는 일곱이 되지 않는다. 일곱은 홀수니까."
+    },
+    {
+      "n": 24,
+      "name": "얼음 위의 숫자",
+      "chapter": "frost",
+      "story": "미끄럼 한 번이 숫자 하나."
+    },
+    {
+      "n": 25,
+      "name": "멈춰 세우는 석상",
+      "chapter": "frost",
+      "story": "벽이 없으면, 형이 벽이 된다."
+    },
+    {
+      "n": 26,
+      "name": "미끄럼을 막는 형제",
+      "chapter": "frost",
+      "story": "멈춤벽이 된 형이 다음 길을 막지 않게."
+    },
+    {
+      "n": 27,
+      "name": "얼음 끝의 구멍",
+      "chapter": "frost",
+      "story": "미끄러져 닿은 구멍. 그 순간이 일곱 번째라면."
+    },
+    {
+      "n": 28,
+      "name": "서리의 길목",
+      "chapter": "frost",
+      "story": "서리 위성의 끝. 얼음 너머에 발판과 문이 있다."
+    },
+    {
+      "n": 29,
+      "name": "내리는 벽",
+      "chapter": "joinery",
+      "story": "일곱 번째 걸음으로 레버를 밟으면 벽이 내려간다."
+    },
+    {
+      "n": 30,
+      "name": "열면 닫힌다",
+      "chapter": "joinery",
+      "story": "한 길이 열리면 다른 길이 닫힌다."
+    },
+    {
+      "n": 31,
+      "name": "올려서 멈추기",
+      "chapter": "joinery",
+      "story": "내려가 있던 벽을 올려 미끄럼을 멈춘다."
+    },
+    {
+      "n": 32,
+      "name": "레버와 발판",
+      "chapter": "joinery",
+      "story": "레버는 한 번, 발판은 계속."
+    },
+    {
+      "n": 33,
+      "name": "레버와 숫자",
+      "chapter": "joinery",
+      "story": "벽이 바뀌면 숫자까지의 거리도 바뀐다."
+    },
+    {
+      "n": 34,
+      "name": "레버와 바통",
+      "chapter": "joinery",
+      "story": "레버를 당긴 형이 바통을 넘긴다."
+    },
+    {
+      "n": 35,
+      "name": "결구의 장치",
+      "chapter": "joinery",
+      "story": "결구의 행성을 빠져나가는 장치. 레버와 얼음과 형제."
+    },
+    {
+      "n": 36,
+      "name": "한 번만 버티는 바닥",
+      "chapter": "crumble",
+      "story": "지나간 바닥은 무너진다. 서서 멈추면 굳는다."
+    },
+    {
+      "n": 37,
+      "name": "무너진 길 위의 구멍",
+      "chapter": "crumble",
+      "story": "무너질 길과 남길 길을 고른다."
+    },
+    {
+      "n": 38,
+      "name": "하나만 남겨라",
+      "chapter": "crumble",
+      "story": "문은 서 있는 선돌을 센다. 하나만."
+    },
+    {
+      "n": 39,
+      "name": "열쇠가 되는 형제",
+      "chapter": "crumble",
+      "story": "아무도 가지 않는 막다른 곳에, 형이 열쇠로 선다."
+    },
+    {
+      "n": 40,
+      "name": "남기기 전에 지나가라",
+      "chapter": "crumble",
+      "story": "0이 적힌 문. 선돌이 서기 전에 지나가야 한다."
+    },
+    {
+      "n": 41,
+      "name": "선돌 아닌 흔적",
+      "chapter": "crumble",
+      "story": "굳은 바닥은 길이 되지만, 선돌로 세지 않는다."
+    },
+    {
+      "n": 42,
+      "name": "무너지는 계산",
+      "chapter": "crumble",
+      "story": "다리도 굳은 바닥도 선돌이 아니다. 문은 끝까지 닫혀 있다."
+    },
+    {
+      "n": 43,
+      "name": "한 칸에 두 걸음",
+      "chapter": "altar",
+      "story": "늪의 진흙은 한 칸에 두 걸음."
+    },
+    {
+      "n": 44,
+      "name": "진흙과 숫자",
+      "chapter": "altar",
+      "story": "진흙을 밟으면 숫자 하나를 건너뛴다."
+    },
+    {
+      "n": 45,
+      "name": "얼음과 진흙",
+      "chapter": "altar",
+      "story": "얼음은 빠르게, 진흙은 느리게."
+    },
+    {
+      "n": 46,
+      "name": "칠칠의 방",
+      "chapter": "altar",
+      "story": "다리와 발판과 숫자와 레버. 형제는 셋뿐이다."
+    },
+    {
+      "n": 47,
+      "name": "레버와 선돌의 수",
+      "chapter": "altar",
+      "story": "레버를 당긴 형이 남으면 0 문이 닫힌다."
+    },
+    {
+      "n": 48,
+      "name": "길이 된 형제들",
+      "chapter": "altar",
+      "story": "두 형제가 모두 길이 되고, 셋째가 그 위를 걷는다."
+    },
+    {
+      "n": 49,
+      "name": "일곱의 일곱",
+      "chapter": "altar",
+      "story": "일곱 칸씩 일곱 줄. 제단이 가까워진다."
+    },
+    {
+      "n": 50,
+      "name": "원형 제단",
+      "chapter": "altar",
+      "story": "두 형제가 원의 선돌로 서고, 셋째의 일곱 번째 걸음이 제단에 닿는다."
+    }
+  ]
+}
