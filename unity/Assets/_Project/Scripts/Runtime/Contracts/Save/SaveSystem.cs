@@ -97,7 +97,7 @@ namespace SevenSteps.Contracts
 
         public SaveSystem(ISaveStore store)
         {
-            this.store = store;
+            this.store = store ?? throw new ArgumentNullException(nameof(store));
             Progress = Read<ProgressData>(ProgressKey) ?? MigrateLegacy();
             Settings = Read<SettingsData>(SettingsKey) ?? new SettingsData();
         }
@@ -109,6 +109,33 @@ namespace SevenSteps.Contracts
             store.Set(SettingsKey, JsonUtility.ToJson(Settings));
             store.Flush();
             SettingsChanged?.Invoke(Settings);
+        }
+
+        // ---------- Settings commands (docs/architecture.md 11.3): change one value and save at once ----------
+
+        /// Master volume 0..1, rounded to 0.1 and clamped (a + past 1 stays 1). Saves and raises SettingsChanged.
+        public void SetMasterVolume(float volume) { Settings.masterVolume = Volume(volume); SaveSettings(); }
+
+        /// Sound-effect volume 0..1, rounded to 0.1 and clamped. Saves and raises SettingsChanged.
+        public void SetSfxVolume(float volume) { Settings.sfxVolume = Volume(volume); SaveSettings(); }
+
+        /// Play-data consent from the settings panel: on = 1, off = 2 and the anonymous playerId is forgotten (11.3).
+        /// A new id is made when telemetry starts again. Saves and raises SettingsChanged.
+        public void SetTelemetryChoice(bool on)
+        {
+            Settings.telemetryChoice = on ? 1 : 2;
+            if (!on) Settings.playerId = "";
+            SaveSettings();
+        }
+
+        /// What the consent toggle shows: the explicit choice, or the build default when none was made (telemetryChoice 0).
+        public bool TelemetryOn(bool onByDefault) =>
+            Settings.telemetryChoice == 1 || (Settings.telemetryChoice == 0 && onByDefault);
+
+        static float Volume(float v)
+        {
+            if (float.IsNaN(v)) throw new ArgumentException("volume is NaN", nameof(v));
+            return Mathf.Clamp01(Mathf.Round(v * 10f) / 10f);
         }
 
         public bool TelemetryAllowed(AppConfig config) =>
