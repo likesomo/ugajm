@@ -107,6 +107,8 @@ namespace SevenSteps.Contracts
         public int bestBodies;
         /// Starts on this device (level_start.attempt).
         public int starts;
+        /// Best star rating (3-star scoring, plan B candidate, not decided). Slot only: nothing computes or writes it yet. 0 = none.
+        public int bestStars;
     }
 
     /// <summary>

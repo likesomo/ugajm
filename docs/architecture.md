@@ -482,7 +482,7 @@ else flow.Go(AppState.Title);
 { "version": 2, "lastStage": "새 출발점",
   "stages": [ { "name": "일곱 걸음", "levelKey": "a1b2c3d4", "cleared": true, "bestBodies": 1, "starts": 3 } ] }
 ```
-- `StageRecord { name, levelKey, cleared, bestBodies(0 = 없음), starts }`, `ProgressData { version, stages, lastStage(이름, "" = 없음) }`.
+- `StageRecord { name, levelKey, cleared, bestBodies(0 = 없음), starts, bestStars(0 = 없음, 3별 B안 대비 자리만 — 계산·기록 없음, 결정되면 규칙과 함께 채움) }`, `ProgressData { version, stages, lastStage(이름, "" = 없음) }`.
 - 질의·명령(Contracts, `Level`을 받음): `IsCleared(level)`, `BestBodies(level)`(기록 없음·`levelKey` 다름·몸 수 초과면 0), `MarkCleared(level, bodiesUsed)`(기록 갱신, `levelKey` 갱신), `CountStart(level)`(텔레메트리 `attempt`), `ClearedCount`, `LastStage`(이름)와 `LastStageIndex(levels)`(없거나 지금 목록에 없으면 0).
 - 지금 목록에 없는 이름의 기록은 지우지 않는다(나중에 다시 들어올 수 있음, 크기 작음).
 
@@ -666,3 +666,4 @@ else flow.Go(AppState.Title);
 | 2026-11-09 | 아키텍트 | 씬 플로우 S5 반영(feat/scene-flow 1f9f462, 승인): 11.1 로드 실패 시 `AppFlow` 되돌림·`SceneLoader` 사전 거부·페이드 경로, 8장 DDOL 문구를 `TelemetryRunner` + `SceneFader` 두 개로 수정 |
 | 2026-11-09 | 아키텍트 | 11.3.1 진행 기록 v2 결정(구현 전): 키 = 스테이지 이름, `StageRecord`(`levelKey`로 맵 변경 감지 → 최소 몸 기록만 버림), v0·v1은 고정 이름표(17스테이지)로 이전, 원본 백업 키, 미래 버전은 덮어쓰지 않음, 이름 중복 예외. 구현은 아키텍트(Contracts + 호출부 한 커밋, 소유자 검토), R1 전 |
 | 2026-11-09 | 아키텍트 | 11.3.1 진행 기록 v2 구현: `ProgressData`(v2, `stages`/`lastStage` 이름), `StageRecord`, `ProgressMigration`(v0·v1 → v2, 고정 17스테이지 이름표), `SaveSystem` 이전·백업 키 `seven-steps.progress.v1`·미래 버전 읽기 전용, `LevelCatalog.At`·이름 중복 예외. **`ProgressData` 공개 API 변경**(번호 → `Level`): 호출부 함께 수정 |
+| 2026-11-09 | 아키텍트 | 11.3.1 `StageRecord.bestStars`(int, 0 = 없음) 자리 추가(사용자 지시, 3별 B안 대비, 계산 없음). 형식 버전은 2 그대로(필드 추가는 JsonUtility가 기본값 0으로 읽음) |
