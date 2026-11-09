@@ -455,31 +455,13 @@ namespace SevenSteps.Game
             if (!v.HasPrefab) return null;
             var go = Instantiate(v.prefab, root);
             go.name = name;
-            OverrideMaterials(go);
+            ChapterMaterials.Apply(go, chapter); // 12.8, once per spawned prefab
             Place(go, v, cell);
             go.transform.localScale = v.Scale * grid.CellSize;
             return go;
         }
 
         Material Chapter(Material m) => chapter != null ? chapter.Override(m) : m;
-
-        /// Chapter material swap, once per spawned prefab: sharedMaterials replaced by array (no per-frame work, no
-        /// renderer.material instance copies; 12.8).
-        void OverrideMaterials(GameObject go)
-        {
-            if (chapter == null || !chapter.HasOverrides) return;
-            foreach (var rend in go.GetComponentsInChildren<Renderer>(true))
-            {
-                var mats = rend.sharedMaterials;
-                bool changed = false;
-                for (int i = 0; i < mats.Length; i++)
-                {
-                    var to = chapter.Override(mats[i]);
-                    if (to != mats[i]) { mats[i] = to; changed = true; }
-                }
-                if (changed) rend.sharedMaterials = mats;
-            }
-        }
 
         /// Replaces the player instance with body <paramref name="body"/>'s prefab (TileSet.PlayerFor) and moves the step label onto it.
         void SpawnPlayer(int body, int cell)
