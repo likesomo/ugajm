@@ -435,7 +435,7 @@ Boot ──▶ Title ⇄ StageSelect ──▶ Game ⇄ Result
   - 입력 처리는 먼저 묻고 안 되면 무시한다: `IsLoading`, `CanBack`, `CanGoToGame(stage)`.
   - `Changed(from, to)`는 로드 요청 **뒤**(이전 씬이 아직 있고 `IsLoading` = 참)에 난다. 그 안에서 `Go`를 부르면 예외. 진입 경로는 하나: 새 씬은 루트 `Start`에서 `flow.State`로, 같은 씬 안 전이는 `Changed`로. `Entered` 이벤트는 없다.
 - **로드 실패(S5)**: `ISceneLoader.Load`가 예외를 던지면 `AppFlow.Go`는 `IsLoading`·`State`를 되돌리고(`GoToGame`은 `Stage`도) 다시 던진다. `Changed`는 나가지 않는다. `SceneLoader`는 빌드에 없는 씬(`Application.CanStreamedLevelBeLoaded` 거짓)을 `Load`에서 바로 거부하므로 흐름이 '로드 중'에 멈추지 않는다. 정상 경로: 페이드 아웃(0.15초, Boot에서 나갈 때는 생략) → `LoadSceneAsync` → `sceneLoaded`에서 `Loaded` → 한 프레임(새 씬 `Start`) → 페이드 인. 어두운 동안 클릭 차단, 키 입력은 `IsLoading`으로 차단.
-- 진입 경로(`level_start.via`): `EntryTracker`(Game `Flow/`, 부트스트랩이 `Services`에 등록). 첫 진입은 `url`(실행 인자·URL 레벨) 또는 `boot`, 그 뒤는 `Announce(next|again|select)` 후 `TakeVia()`, 알림 없으면 `select`. 정적 `GameController.FirstEntryPending`을 대체했다.
+- 진입 경로(`level_start.via`): `EntryTracker`(Game `Flow/`, 부트스트랩이 `Services`에 등록). `TakeVia() = announced ?? (첫 진입 ? firstVia : select)` — 알린 via가 첫 진입보다 앞선다(2026-11-10 리드 결정, docs/telemetry.md 3장 via 정의, feat/scene-flow c474b03): 지도·목록 선택과 타이틀 "시작"은 `Announce(select)`(앱 첫 진입이어도 `select`), 타이틀 "이어하기"는 알리지 않음(첫 진입이면 `boot`), `-level`/`?level=`은 `url`, 결과 화면은 `next`/`again`. `TitleFlowController`가 `EntryTracker`를 생성자 필수 인자로 받는다. 정적 `GameController.FirstEntryPending`을 대체했다.
 - `GameSession`(보드 안의 입력 락)과 `AppFlow`(화면 흐름)는 별개다. 스테이지 바꾸기 = `flow.GoToGame(k)` → `GameController`가 `session.Load(level)`.
 
 ### 11.2 서비스 등록 (`Services` + Boot 부트스트랩)
@@ -789,3 +789,4 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 | 2026-11-10 | 씬 플로우·아키텍트 | 11장 `LaunchOptions.FlowCheck`(`-flowcheck`/`?flowcheck=1`, 개발·스모크용, feat/scene-flow 0bcade4 검토 승인), `unity.sh smoke` 흐름 단계 |
 | 2026-11-10 | 게임플레이/UI·아키텍트 | 11장 `LaunchOptions.OpenSettings`(`-settings`/`?settings=1`, feat/view 6a6056d 검토 승인). 영향: 씬 플로우(`TitleScreen` 한 줄) |
 | 2026-11-10 | 씬 플로우·아키텍트 | 11.1 `AppFlow.CanGo`에 (Title, Game) 추가(feat/scene-flow 19554a3, 검토 승인). 타이틀 시작·이어하기가 조용히 막히던 버그 수정. 뒤로 표 변경 없음 |
+| 2026-11-10 | 씬 플로우·아키텍트 | 11.2 `EntryTracker.TakeVia`: 알린 via가 첫 진입보다 앞섬(지도·목록·타이틀 시작 = select, 이어하기 = 첫 진입이면 boot), `TitleFlowController(…, EntryTracker)` 생성자 인자 추가(feat/scene-flow c474b03 검토 승인, telemetry.md v1 via 정의 e953eb0). 텔레메트리 골든은 트레이스 `via`로 첫 `level_start` |
