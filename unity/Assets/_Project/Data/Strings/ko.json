@@ -88,6 +88,9 @@
     { "key": "settings.on", "text": "켜짐" },
     { "key": "settings.off", "text": "꺼짐" },
     { "key": "settings.close", "text": "닫기 (Esc)" },
+    { "key": "settings.status", "text": "보냄 {0}, 대기 {1}, 마지막 응답 {2}, ID {3}" },
+    { "key": "settings.status_off", "text": "보내지 않음" },
+    { "key": "settings.status_no_connection", "text": "연결 안 됨" },
 
     { "key": "credits.title", "text": "크레딧" },
     { "key": "credits.game", "text": "일곱 걸음 (Seven Steps)" },
