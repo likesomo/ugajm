@@ -34,6 +34,8 @@ namespace SevenSteps.Game.UI
         public ResultView resultPanel;
         [Tooltip("Game HUD with its own canvas (UI/Prefabs/Hud.prefab, first built by Seven Steps > Gameplay > Build HUD)")]
         public HudView hud;
+        [Tooltip("Optional: chapter card shown when a new chapter starts (gameplay/UI prefab). Empty = no card.")]
+        public ChapterCardView chapterCard;
 
         /// Missing required parts, one line each (SceneFlowValidator, and Ui.Theme at runtime).
         public void Validate(List<string> issues)
@@ -45,6 +47,7 @@ namespace SevenSteps.Game.UI
             else resultPanel.Validate(issues);
             if (hud == null) issues.Add($"UiTheme {name}: hud prefab is not set");
             else hud.Validate(issues);
+            if (chapterCard != null) chapterCard.Validate(issues);
         }
     }
 

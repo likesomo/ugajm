@@ -94,7 +94,7 @@ namespace SevenSteps.EditorTools
             // Every character the UI can show must be in the UI font (missing glyphs draw nothing in WebGL).
             var gameAssets = AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset");
             if (gameAssets == null) issues.Add("ERROR Assets/_Project/Data/GameAssets.asset missing");
-            else GlyphCheck.Check(gameAssets.uiTheme, gameAssets, issues);
+            else ValidateThemes(gameAssets, issues);
 
             int errors = issues.Count(i => i.StartsWith("ERROR", StringComparison.Ordinal));
             var sb = new StringBuilder();
@@ -159,6 +159,11 @@ namespace SevenSteps.EditorTools
                 case GameController game:
                     Require(name, "GameController.config", game.config, issues);
                     RequireAssets(name, "GameController.assets", game.assets, issues);
+                    Require(name, "GameController.keyLight", game.keyLight, issues); // Seven Steps > Scene Flow > Build Game Lights
+                    Require(name, "GameController.fillLight", game.fillLight, issues);
+                    Require(name, "GameController.rimLight", game.rimLight, issues);
+                    if (game.fillLight != null && game.fillLight.shadows != LightShadows.None) issues.Add($"WARN {name}: fill light casts shadows (only the key should, WebGL budget)");
+                    if (game.rimLight != null && game.rimLight.shadows != LightShadows.None) issues.Add($"WARN {name}: rim light casts shadows (only the key should, WebGL budget)");
                     if (Camera.main == null) issues.Add($"ERROR {name}: no MainCamera-tagged camera (GameController uses Camera.main)");
                     return game.config;
                 default:
@@ -169,6 +174,24 @@ namespace SevenSteps.EditorTools
         static void Require(string scene, string field, Object value, List<string> issues)
         {
             if (value == null) issues.Add($"ERROR {scene}: {field} is not set");
+        }
+
+        /// Every UiTheme under Assets/_Project, not only the one GameAssets uses: an art theme (Art/UI/RuinsHengeTheme)
+        /// or a chapter's theme can be switched in later, so its prefabs and font must already be complete. Glyphs are
+        /// checked once per distinct theme font.
+        static void ValidateThemes(GameAssets gameAssets, List<string> issues)
+        {
+            var fontsChecked = new HashSet<Font>();
+            foreach (var guid in AssetDatabase.FindAssets("t:UiTheme", new[] { "Assets/_Project" }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var theme = AssetDatabase.LoadAssetAtPath<UiTheme>(path);
+                var themeIssues = new List<string>();
+                theme.Validate(themeIssues);
+                foreach (var i in themeIssues) issues.Add($"ERROR {path}: {i}");
+                if (theme.font != null && fontsChecked.Add(theme.font)) GlyphCheck.Check(theme, gameAssets, issues);
+            }
+            if (gameAssets.uiTheme == null) issues.Add("ERROR GameAssets.uiTheme is not set");
         }
 
         static void RequireAssets(string scene, string field, GameAssets assets, List<string> issues)
