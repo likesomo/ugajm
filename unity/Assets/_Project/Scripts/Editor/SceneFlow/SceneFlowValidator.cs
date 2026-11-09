@@ -88,8 +88,9 @@ namespace SevenSteps.EditorTools
                 else if (config != sharedConfig)
                     issues.Add($"ERROR {name}: AppConfig {AssetDatabase.GetAssetPath(config)} differs from {AssetDatabase.GetAssetPath(sharedConfig)}; direct Play would run with other settings");
             }
-            if (sharedConfig != null && sharedConfig.tileSet == null)
-                issues.Add($"ERROR {AssetDatabase.GetAssetPath(sharedConfig)}: tileSet is empty (the board has nothing to draw)");
+            // 12.8: an empty tileSet is the normal case once chapters carry their sets (TileSetValidator checks each chapter's).
+            if (sharedConfig != null && sharedConfig.tileSet == null && (sharedConfig.chapters == null || sharedConfig.chapters.Length == 0))
+                issues.Add($"ERROR {AssetDatabase.GetAssetPath(sharedConfig)}: neither tileSet nor chapters is set (the board has nothing to draw)");
 
             // Every character the UI can show must be in the UI font (missing glyphs draw nothing in WebGL).
             var gameAssets = AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset");
