@@ -2,7 +2,8 @@
 // together with what the JS solver finds for each stage. Unity's LevelVerifier checks the C# port gives the same answers.
 // Also copies design/levels/chapters.json (with its "text" translations) to unity/Assets/_Project/Data/chapters.json (docs/architecture.md 6.4).
 // Before writing anything it asserts the stage set (6.4); on any failure it prints every problem and exits 1
-// without touching either file. Missing or empty translations for a language in chapters.json "languages" fail too (13.6).
+// without touching either file. Missing or empty translations for a language in chapters.json "languages" fail too (13.6),
+// and so does a chapter without a tagline once any chapter has one (6.4).
 // Usage (repo root): node unity/Tools/export-levels.mjs
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -49,9 +50,14 @@ function checkText(text, fields, tag) {
   return out;
 }
 
+// tagline (6.4, 2026-11-10): one line for the planet select screen. All or none while level design fills it in:
+// once any chapter has a ko tagline, every chapter needs one and every language's text needs a tagline.
+const HAS_TAGLINE = (chapterFile.chapters ?? []).some((c) => typeof c.tagline === 'string' && c.tagline.trim());
+const TEXT_FIELDS = HAS_TAGLINE ? ['planet', 'concept', 'intro', 'tagline'] : ['planet', 'concept', 'intro'];
+if (!HAS_TAGLINE) console.warn('[export-levels] WARN chapters.json: no tagline yet (planet select shows none; docs 6.4)');
 const chapters = (chapterFile.chapters ?? []).map((c, i) => ({
-  id: c.id, planet: c.planet ?? '', concept: c.concept ?? '', intro: c.intro ?? '', artPreset: c.artPreset ?? '',
-  text: checkText(c.text, ['planet', 'concept', 'intro'], `chapters.json "${c.id ?? `#${i + 1}`}"`),
+  id: c.id, planet: c.planet ?? '', concept: c.concept ?? '', intro: c.intro ?? '', tagline: c.tagline ?? '', artPreset: c.artPreset ?? '',
+  text: checkText(c.text, TEXT_FIELDS, `chapters.json "${c.id ?? `#${i + 1}`}"`),
 }));
 const order = new Map();
 chapters.forEach((c, i) => {
@@ -59,6 +65,7 @@ chapters.forEach((c, i) => {
   if (order.has(c.id)) fail(`chapters.json: id "${c.id}" appears twice`);
   order.set(c.id, i);
   if (!c.planet) fail(`chapters.json "${c.id}": planet is empty`);
+  if (HAS_TAGLINE && !(typeof c.tagline === 'string' && c.tagline.trim())) fail(`chapters.json "${c.id}": tagline is empty (other chapters have one)`);
 });
 if (!chapters.length) fail('chapters.json: no chapters');
 

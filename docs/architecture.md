@@ -261,9 +261,10 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
 - `design/levels/chapters.json`(레벨 디자인 원본) → `unity.sh levels`가 `Assets/_Project/Data/chapters.json`으로 복사(텍스트, 커밋).
   ```json
   { "chapters": [
-    { "id": "moss", "planet": "이끼의 궤도", "concept": "...", "intro": "진입 문구", "artPreset": "moss" }
+    { "id": "moss", "planet": "이끼의 궤도", "concept": "...", "intro": "진입 문구", "tagline": "행성 선택 한 줄", "artPreset": "moss" }
   ] }
   ```
+  `tagline`(2026-11-10, 리드 요청): 행성 선택 화면에 행성 이름 아래 보이는 한 줄. `ChapterInfo.tagline`/`Tagline(lang)`. **전부 아니면 없음**: 한 챕터라도 ko `tagline`이 있으면 export가 모든 챕터의 ko `tagline`과 모든 번역 `text[].tagline`을 요구한다(빈 값 실패). 하나도 없으면 경고만 하고 `Tagline(lang)`은 모든 언어에서 `""`(행성 선택은 줄을 숨긴다). 채우기는 레벨 디자인, 표시는 씬 플로우.
   `id`: 소문자·하이픈, 바꾸지 않는다(텔레메트리·저장이 기댈 수 있음). `artPreset`: `ChapterPreset.id`(12.8). 비면 `id`와 같다. 여러 챕터가 한 프리셋을 같이 쓸 수 있다.
 - 런타임 형식: `Contracts/Chapters/ChapterInfo.cs`의 `ChapterFileDto`/`ChapterInfo`(아키텍트). 읽기는 `GameAssets.chaptersJson`(TextAsset) → `LevelCatalog`: `ChapterIdOf(stage)`(구현됨, 7lucky 9f3d109, 텔레메트리 `level_start` 챕터용) → `ChapterFileDto.Get(id)` → `ChapterInfo`(chapters.json이 생기면), 아트는 `AppConfig.Chapter(info.ArtPreset)`. `LevelDto.chapter`/`story`는 코어 b5c4464에서 추가됨.
 - export 단정 검증(`unity/Tools/export-levels.mjs`, 실패하면 파일을 쓰지 않고 exit 1, 레벨 디자인 제안 그대로): 모든 스테이지에 `chapter`가 있고 `chapters.json`에 있다, 스테이지 순서대로 챕터가 `chapters.json` 순서를 거스르지 않고 이어진다, 모든 `bodies <= 3`, 모두 솔버로 풀리고 최소 몸 수 <= 3, 이름 중복 없음. **지금 17스테이지(챕터 없음, 14~17 몸 4~5)는 플레이테스트 1차까지 그대로**이므로 검증은 형식 도입 커밋(첫 묶음)부터 켠다. 그 전까지 런타임은 `chapter`가 없으면 첫 챕터, 몸 4~5는 외형 순환(A, B, C, A)으로 임시 허용(12.6).
@@ -713,7 +714,7 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 
 ### 13.5 레벨·챕터 텍스트
 - `levels.js`/`levels.json`: 기존 `name`/`hint`/`story`는 **ko 그대로**(그리고 `name`은 저장 키, 11.3.1 — 번역해도 키는 ko 이름). 번역은 `text` 배열: `"text": [ { "lang": "en", "name": "...", "hint": "...", "story": "..." } ]`. `LevelDto.text`(`LevelTextDto[]`)·`LevelDto.TextFor(code)`(코어 구현 feat/core 6398ca5: ko는 기본 필드, 번역 없으면 `KeyNotFoundException`. Core는 Contracts를 모르므로 언어는 코드 문자열 — 호출부가 `Languages.Code(lang)`로 바꿔 넘긴다). `LevelCatalog`의 언어별 조회는 게임플레이/UI·씬 플로우. export가 `chapters.json`의 `text`도 `Data/chapters.json`으로 옮긴다.
-- `chapters.json`: 같은 방식 `"text": [ { "lang": "en", "planet": "...", "concept": "...", "intro": "..." } ]`. `ChapterInfo.text`(`ChapterText[]`), `Planet(lang)`/`Concept(lang)`/`Intro(lang)`(ko는 기본 필드, 다른 언어 번역이 없으면 `KeyNotFoundException` — 검사가 빌드 전에 잡는다). 구현됨.
+- `chapters.json`: 같은 방식 `"text": [ { "lang": "en", "planet": "...", "concept": "...", "intro": "...", "tagline": "..." } ]`. `ChapterInfo.text`(`ChapterText[]`), `Planet(lang)`/`Concept(lang)`/`Intro(lang)`/`Tagline(lang)`(ko는 기본 필드, 다른 언어 번역이 없으면 `KeyNotFoundException` — 검사가 빌드 전에 잡는다). 구현됨. `Tagline`만 예외: ko `tagline`이 비었으면 번역을 찾지 않고 `""`(6.4 전부 아니면 없음). `LocalizationCheck`(씬 플로우)의 글꼴 검사 대상에 `Tagline(lang)`을 더한다.
 - 텔레메트리는 ko 이름(키)을 그대로 보낸다(분석이 이름으로 묶음). `session_start`에 `lang`을 실을지는 백엔드.
 
 ### 13.6 누락 검사
@@ -768,3 +769,4 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 | 2026-11-10 | 아키텍트 | 13장 1번 구현: `Language`/`Languages`(93347db), `StringTable`/`StringTableAsset`/`Localizer`, `SaveSystem.Language`/`SetLanguage`·첫 실행 시스템 언어, `LaunchOptions.Language`(`-lang`/`?lang`), `ChapterInfo.text`/`ChapterText`, `GameAssets.strings` + `Data/Strings/ko.json`·`en.json` 빈 틀. EditMode `LocalizationContractTests` |
 | 2026-11-10 | 코어·아키텍트 | 6.5 `Stars.Of` 전제 조건 예외(bodiesUsed<1, 음수 카운트; feat/core a332e43). 13.5 `LevelDto.text`/`TextFor(code)`(6398ca5), export가 chapters.json text 보존 |
 | 2026-11-10 | 아키텍트 | 12.6 아트 확정 계약: `KeepLook`(Contracts enum `Neutral`/`SiblingTrace`), `TileSet.keepLook`(끝에 추가, 기본 Neutral). **`TileSet.StatueFor` 동작 변경**: Neutral이면 `statueBodies`를 보지 않고 `statue`. 지금 RuinsHenge는 `statueBodies`가 모두 중성 `Statue`라 화면 변화 없음. 검사기: 세쌍둥이 프리팹 중복 경고, SiblingTrace인데 `statueBodies` 없음 오류. `AppConfig.tileSet` = `RuinsHenge_Chapter01`은 7300d9d에서 이미 전환됨(변경 없음). 영향: 게임플레이/UI(`BoardView`는 이미 `StatueFor`만 부르므로 코드 변경 없음, HUD는 `BodyColor` 그대로), 씬 플로우(없음, `UiTheme`과 무관), 아트(흔적 채택 시 `keepLook`과 `statueBodies`=Menhir_A/B/C 설정, `RuinsHengeBuilder`가 값을 쓴다면 같이) |
+| 2026-11-10 | 아키텍트 | 6.4·13.5 `chapters.json` `tagline`(행성 선택 한 줄, 리드 요청): `ChapterInfo.tagline`/`ChapterText.tagline`/`Tagline(lang)`(ko가 비면 모든 언어 `""`). export: 한 챕터라도 ko tagline이 있으면 모든 챕터 ko + 모든 번역 tagline 필수, 없으면 경고. `Data/chapters.json`에 빈 `tagline` 필드가 생김. 영향: 레벨 디자인(`design/levels/chapters.json` 값 채움, ko·en 함께), 씬 플로우(행성 선택 표시, `LocalizationCheck` 글꼴 검사에 tagline 추가), 게임플레이/UI 없음. EditMode `ChapterTaglineIsOptionalUntilFilled` |
