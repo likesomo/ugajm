@@ -275,14 +275,17 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
 - 규칙: ★1 = 클리어. ★2 = ★1 + 이번 시도에서 풀이 보기(H)를 쓰지 않음 + 쓴 몸 수 ≤ 최소 몸 수(`levels.json` `expected.minBodies`, JS 솔버). ★3 = ★2 + 이번 시도에서 되돌리기·재시작 없음(한 번에). 잠금 없음(별은 진행을 막지 않는다).
 - **시도(attempt)** = 스테이지에 들어온 때(`LoadStage`: 선택·다음·다시 하기·`[` `]`)부터 클리어까지. 결과 화면의 "다시 하기"는 새 시도다. 시도 안의 재시작(R)은 시도를 끝내지 않는다(★3만 잃음).
 - 셈: `undos` = 실제로 상태를 되돌린 Undo(`Undo` 이벤트가 난 것). `restarts` = 시작 상태가 아닐 때의 Restart(움직인 뒤 처음부터). `hintUsed` = 이번 시도에서 H를 한 번이라도. 실패(`Lose`) 뒤의 Undo도 센다.
-- **판정 함수(코어, Core 어셈블리, 엔진 없음)**: `SevenSteps.Core.Scoring`
+- **판정 함수(코어 구현 feat/core b41948d, Core 어셈블리, 엔진 없음, `core.js` `stars()` 이식)**: `SevenSteps.Core.Stars`
   ```csharp
-  public readonly struct AttemptStats { public readonly int BodiesUsed, MinBodies, Undos, Restarts; public readonly bool HintUsed; /* 생성자 */ }
-  public static class Scoring { public const int MaxStars = 3; public static int Stars(AttemptStats a); }  // 1..3
+  public static class Stars {
+      public const int Max = 3;
+      public static int Of(int bodiesUsed, int minBodies, int hints, int undos, int restarts); // 0 = 판정 불가, 1..3
+      public static int BodiesUsed(State s);   // Level.Bodies - Bodies + 1 (클리어 상태면 쓴 몸 수)
+  }
   ```
-  전제 조건(예외): `BodiesUsed >= 1`, `MinBodies >= 1`(levels.json export가 항상 채움; 0이면 데이터 오류), `Undos >= 0`, `Restarts >= 0`. 클리어하지 않은 시도에는 부르지 않는다. `BodiesUsed < MinBodies`(솔버보다 적음)는 ★2 조건을 만족한 것으로 본다. 원하면 `core.js`에도 같은 `stars()`를 두고 골든으로 맞춘다(웹 프로토타입 표시용).
-- **셈(게임플레이/UI)**: `BoardController`가 시도마다 센다(`LoadStage`에서 0으로, `ShowHint`·`Undo`/`Restart` 결과에서 증가). `IStageBoard`에 `AttemptStats Attempt(int minBodies)` 또는 같은 정보를 내는 읽기 전용 속성을 추가(씬 플로우 인터페이스, 씬 플로우가 모양 결정).
-- **저장(씬 플로우)**: `GameFlowController.OnWon`에서 `stars = Scoring.Stars(...)` → `save.Progress.MarkCleared(level, bodiesUsed, stars)`(Contracts, 구현됨: 최소 몸·최다 별 유지, 맵이 바뀌면 별도 0부터). 표시용 `save.Progress.BestStars(level)`(0 = 없음). `ProgressData.MaxStars == Scoring.MaxStars`(= 3).
+  ★1 클리어, ★2 = `hints == 0 && bodiesUsed <= minBodies`, ★3 = ★2 `&& undos == 0 && restarts == 0`. `minBodies <= 0`(데이터에 최소 몸 수가 없음)이면 **0 = 판정 불가**(core.js는 null): 이때는 별 없이 `MarkCleared(level, bodies)`. levels.json export가 모든 스테이지에 `minBodies`를 채우므로 정상 빌드에서는 나오지 않는다. 클리어 안 한 시도에는 부르지 않는다. `GameFlowController.BodiesUsed`·`TelemetryTracker`의 같은 식은 `Stars.BodiesUsed`로 바꿀 수 있다.
+- **셈(게임플레이/UI)**: `BoardController`가 시도마다 센다(`LoadStage`에서 0으로, `ShowHint`·`Undo`/`Restart` 결과에서 증가). `IStageBoard`에 시도 셈(`Hints`, `Undos`, `Restarts`)을 내는 읽기 전용 속성을 추가(씬 플로우 인터페이스, 씬 플로우가 모양 결정).
+- **저장(씬 플로우)**: `GameFlowController.OnWon`에서 `stars = Stars.Of(...)`, 0이 아니면 → `save.Progress.MarkCleared(level, bodiesUsed, stars)`(Contracts, 구현됨: 최소 몸·최다 별 유지, 맵이 바뀌면 별도 0부터). 표시용 `save.Progress.BestStars(level)`(0 = 없음). `ProgressData.MaxStars == Stars.Max`(= 3).
 - **표시(게임플레이/UI·아트)**: 결과 화면 이번 별 + 최고 별, 스테이지 선택의 별. 행성(챕터)마다 7스테이지 = 북두칠성 7별, 별 수 = 밝기, 50번(원형 제단) = 북극성. 아트 `RuinsHengeUiResources.starEmpty/starFilled`.
 - 텔레메트리 `level_clear`에 `stars`를 실을지는 백엔드/분석이 `docs/telemetry.md`에 정한다(규칙 변경이 아니라 필드 추가).
 
@@ -738,3 +741,4 @@ else flow.Go(AppState.Title);
 | 2026-11-09 | 아키텍트 | 11.3.1 `StageRecord.bestStars`(int, 0 = 없음) 자리 추가(사용자 지시, 3별 B안 대비, 계산 없음). 형식 버전은 2 그대로(필드 추가는 JsonUtility가 기본값 0으로 읽음) |
 | 2026-11-09 | 아키텍트 | 2장 어셈블리 `SevenSteps.Art`(`Art/`), `SevenSteps.Art.Editor`(`Art/Editor/`, Editor 전용) 추가. 아트 스크립트가 Assembly-CSharp에서 빠짐(GUID 유지) |
 | 2026-11-09 | 아키텍트 | 6.5 3별 계약(B안): 시도 정의, 셈 규칙(undos/restarts/hintUsed), Core `Scoring.Stars(AttemptStats)`(코어), 셈은 `BoardController`(게임플레이/UI)·`IStageBoard` 노출(씬 플로우), 저장 `ProgressData.MarkCleared(level, bodies, stars)`/`BestStars`(Contracts, 구현). 13장 다국어 설계: 자체 경량 JSON 문자열 테이블(Unity Localization 기각: WebGL 용량·비동기 초기화·병합), 언어 설정·첫 실행 시스템 언어, UiTheme 언어별 글꼴, levels/chapters `text` 배열, 누락 검사 |
+| 2026-11-09 | 코어·아키텍트 | 6.5 판정 API를 코어 구현에 맞춤: `Scoring.Stars(AttemptStats)` 대신 `SevenSteps.Core.Stars.Of(bodiesUsed, minBodies, hints, undos, restarts)`(0 = 판정 불가), `Stars.Max`, `Stars.BodiesUsed(State)`. 의미는 같음(★2는 최소 몸 이하·힌트 0, ★3은 Z·R 0) |
