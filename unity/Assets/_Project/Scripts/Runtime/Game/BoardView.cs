@@ -625,6 +625,17 @@ namespace SevenSteps.Game
             // KEEP/SWITCH choice: the player breathes until a choice is made.
             if (choosing && anim == null && player.activeSelf)
                 player.transform.localScale = PlayerScale * (1f + 0.06f * Mathf.Sin(Time.time * 6f));
+            if (Hidden) HideAll();
+        }
+
+        /// Smoke check negative control (LaunchOptions.SmokeView.Empty): the board still plays, nothing of it is drawn.
+        /// Checked every frame because pieces are spawned and labels enabled while playing; smoke runs only.
+        public bool Hidden { get; set; }
+
+        void HideAll()
+        {
+            if (root != null) foreach (var r in root.GetComponentsInChildren<Renderer>()) r.enabled = false;
+            foreach (var l in labels) if (l.Text != null) l.Text.enabled = false;
         }
 
         static class ListPool

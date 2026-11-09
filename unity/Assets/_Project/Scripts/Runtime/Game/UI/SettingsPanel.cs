@@ -25,6 +25,8 @@ namespace SevenSteps.Game.UI
         public Button languageToggle;
         [Tooltip("Optional: the current language's own name, drawn in that language's body font (13.4)")]
         public Text languageText;
+        [Tooltip("Fixed labels worded from the string table (settings.*, 13.2)")]
+        public Text titleText, masterLabel, sfxLabel, telemetryLabel;
 
         SaveSystem save;
         bool telemetryOnByDefault;
@@ -44,6 +46,8 @@ namespace SevenSteps.Game.UI
             Need(masterDown, nameof(masterDown)); Need(masterUp, nameof(masterUp));
             Need(sfxDown, nameof(sfxDown)); Need(sfxUp, nameof(sfxUp));
             Need(telemetryToggle, nameof(telemetryToggle)); Need(close, nameof(close));
+            Need(titleText, nameof(titleText)); Need(masterLabel, nameof(masterLabel));
+            Need(sfxLabel, nameof(sfxLabel)); Need(telemetryLabel, nameof(telemetryLabel));
         }
 
         void OnValidate()
@@ -72,7 +76,36 @@ namespace SevenSteps.Game.UI
             telemetryToggle.onClick.AddListener(() => TelemetryToggled?.Invoke());
             if (languageToggle != null) languageToggle.onClick.AddListener(() => LanguageToggled?.Invoke());
             close.onClick.AddListener(() => CloseRequested?.Invoke());
+            // Facilitator line under the consent note (playtest-1-prep E): a copy of the note, one line lower.
+            var copy = Instantiate(telemetryNote.gameObject, telemetryNote.transform.parent, false);
+            copy.name = "TelemetryStatus";
+            telemetryStatus = copy.GetComponent<Text>();
+            var r = telemetryStatus.rectTransform;
+            r.anchoredPosition -= new Vector2(0, telemetryNote.rectTransform.rect.height + 2);
+            telemetryStatus.text = "";
             wired = true;
+        }
+
+        Text telemetryStatus;
+        float statusAt;
+
+        /// While open: the sending status once a second (events sent and waiting, last reply, short player id).
+        void Update()
+        {
+            if (localizer == null || save == null || Time.unscaledTime < statusAt) return;
+            statusAt = Time.unscaledTime + 1f;
+            telemetryStatus.text = StatusLine(localizer, Services.TryGet<ITelemetry>(out var t) ? t as Telemetry.HttpTelemetry : null);
+            telemetryStatus.font = Ui.Theme.FontFor(localizer.Current, FontRole.Body);
+        }
+
+        /// "Sent 12, waiting 0, last reply 200, ID 3f2a9c1e" or "Not sending" (settings.status*).
+        public static string StatusLine(Localizer loc, Telemetry.HttpTelemetry t)
+        {
+            if (loc == null) throw new ArgumentNullException(nameof(loc));
+            if (t == null || !t.Enabled) return loc.Get("settings.status_off");
+            string reply = t.LastStatus < 0 ? "-" : t.LastStatus == 0 ? loc.Get("settings.status_no_connection") : t.LastStatus.ToString();
+            string id = t.Context.PlayerId ?? "";
+            return loc.Format("settings.status", t.SentEvents, t.PendingEvents, reply, id.Length > 8 ? id.Substring(0, 8) : id);
         }
 
         /// Called once by the scene root right after Instantiate. <paramref name="telemetryOnByDefault"/> = AppConfig.telemetryOnByDefault.
@@ -105,9 +138,20 @@ namespace SevenSteps.Game.UI
             masterText.text = $"{Mathf.RoundToInt(s.masterVolume * 100)}%";
             sfxText.text = $"{Mathf.RoundToInt(s.sfxVolume * 100)}%";
             bool on = save.TelemetryOn(telemetryOnByDefault);
-            telemetryText.text = on ? "켜짐" : "꺼짐";
             telemetryText.color = on ? Ui.Gold : Ui.Dim;
-            if (languageText != null && localizer != null)
+            if (localizer == null) return; // tests without a language keep the prefab's words
+            // Words and role fonts in the current language (settings.*, 13.2 / 13.4); Redraw runs on every switch.
+            var body = Ui.Theme.FontFor(localizer.Current, FontRole.Body);
+            void Set(Text t, string key) { t.text = localizer.Get(key); t.font = body; }
+            Set(titleText, "settings.title");
+            titleText.font = Ui.Theme.FontFor(localizer.Current, FontRole.Title);
+            Set(masterLabel, "settings.master");
+            Set(sfxLabel, "settings.sfx");
+            Set(telemetryLabel, "settings.telemetry");
+            Set(telemetryNote, "settings.telemetry_note");
+            Set(telemetryText, on ? "settings.on" : "settings.off");
+            Set(close.GetComponentInChildren<Text>(true), "settings.close");
+            if (languageText != null)
             {
                 // The language's own name in its own body font, whatever the UI language is (13.4).
                 languageText.text = NativeName(localizer.Current);

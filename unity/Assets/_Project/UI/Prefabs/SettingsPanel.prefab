@@ -978,6 +978,10 @@ MonoBehaviour:
   sfxUp: {fileID: 2663084619790677257}
   telemetryToggle: {fileID: 1077971791258184914}
   close: {fileID: 2823643948384839870}
+  titleText: {fileID: 6475021150009965353}
+  masterLabel: {fileID: 255413504723323140}
+  sfxLabel: {fileID: 4747378719892251867}
+  telemetryLabel: {fileID: 1346237273012307444}
 --- !u!1 &6668098966006395469
 GameObject:
   m_ObjectHideFlags: 0

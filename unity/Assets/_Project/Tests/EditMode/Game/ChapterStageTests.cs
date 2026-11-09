@@ -131,6 +131,36 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void SmokeOptionParsesFromCommandLineAndUrl()
+        {
+            Assert.AreEqual(SmokeView.Board, LaunchOptions.Parse(new[] { "x.exe", "-smoke", "board" }, "").SmokeView);
+            Assert.AreEqual(SmokeView.Empty, LaunchOptions.Parse(new string[0], "http://h/?level=1&smoke=empty").SmokeView);
+            var bad = LaunchOptions.Parse(new[] { "x.exe", "-smoke", "sky" }, "");
+            Assert.AreEqual(SmokeView.None, bad.SmokeView);
+            Assert.AreEqual(1, bad.Warnings.Count);
+            Assert.AreEqual(SmokeView.None, LaunchOptions.Parse(new string[0], "").SmokeView);
+        }
+
+        [Test]
+        public void SmokeBoardSkipsSkyAndPlanetClearsMagentaKeepsLights()
+        {
+            FitProbe.Fits.Clear();
+            var cam = Make(new GameObject("Camera")).AddComponent<Camera>();
+            Light L(string n) => Make(new GameObject(n)).AddComponent<Light>();
+            Light key = L("Key");
+            var root = Make(new GameObject("Root")).transform;
+            var stage = new ChapterStage(cam, key, L("Fill"), L("Rim"), root, SmokeView.Board);
+            Assert.IsTrue(stage.Enter(Preset("moss", Color.green, Color.black)));
+            Assert.AreEqual(ChapterStage.SmokeClear, cam.backgroundColor);
+            Assert.AreEqual(Color.green, key.color, "chapter lights as usual");
+            Assert.AreEqual(0, cam.transform.childCount, "no sky");
+            Assert.AreEqual(0, root.childCount, "no planet");
+            stage.Fit(new BoardGrid(5, 5));
+            Assert.AreEqual(0, FitProbe.Fits.Count, "no Fit without a planet");
+            stage.Dispose();
+        }
+
+        [Test]
         public void TileSetOrderIsOverrideThenChapterThenAssets()
         {
             var over = Make(ScriptableObject.CreateInstance<TileSet>());

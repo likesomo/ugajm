@@ -51,6 +51,14 @@ namespace SevenSteps.Game.Telemetry
         /// Last state of a Game scene left for the stage select; closes that attempt at the next stage start.
         public State PendingLeaveState;
 
+        // Status for the playtest facilitator (settings panel line, playtest-1-prep E): read only, no effect on sending.
+        /// Events the collector accepted (2xx) this run.
+        public int SentEvents { get; private set; }
+        /// Events waiting in the queue (kept across runs).
+        public int PendingEvents => queue.Count;
+        /// HTTP status of the last answered POST, 0 = connection error, -1 = none yet this run.
+        public long LastStatus { get; private set; } = -1;
+
         /// <param name="minBodies">(1-based level, level) -> fewest bodies for level_clear.stars; null = the solver (TelemetryTracker).</param>
         public HttpTelemetry(TelemetryContext context, ISaveStore store, Func<int, int> nextAttempt, Func<int, Level, int> minBodies = null)
         {
@@ -132,6 +140,8 @@ namespace SevenSteps.Game.Telemetry
         void Finish(float time)
         {
             bool retry = ShouldRetry(inFlight);
+            LastStatus = inFlight.responseCode;
+            if (inFlight.responseCode >= 200 && inFlight.responseCode < 300) SentEvents += inFlightCount;
             string retryAfter = inFlight.GetResponseHeader("Retry-After");
             inFlight.Dispose();
             inFlight = null;

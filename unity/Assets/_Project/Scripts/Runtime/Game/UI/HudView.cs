@@ -26,6 +26,8 @@ namespace SevenSteps.Game.UI
         [Header("Stage")]
         public Text stageNumber;
         public Text stageName, stageHint;
+        [Tooltip("The stage story (levels.json story, the triplets' view), left of the board; hidden when the stage has none")]
+        public Text stageStory;
 
         [Header("Big Dipper step counter: index 0..6 = step 1..7")]
         public Image[] stars = new Image[Rules.Steps];
@@ -73,7 +75,8 @@ namespace SevenSteps.Game.UI
         Localizer loc;
         State shownState;
         int shownStage;
-        string shownName = "", shownHint = "", shownMessage = "";
+        LevelTextDto shownText;
+        string shownMessage = "";
 
         /// Body colors (TileSet.BodyColor, docs 12.6); the same three in every chapter set, so the one from Create is enough.
         TileSet bodyLook;
@@ -115,6 +118,7 @@ namespace SevenSteps.Game.UI
             void Need(Object o, string field) { if (o == null) issues.Add($"HudView {name}: {field} is not set"); }
             Need(labelLayer, nameof(labelLayer));
             Need(stageNumber, nameof(stageNumber)); Need(stageName, nameof(stageName)); Need(stageHint, nameof(stageHint));
+            Need(stageStory, nameof(stageStory));
             if (stars == null || stars.Length != Rules.Steps) issues.Add($"HudView {name}: stars needs {Rules.Steps} entries");
             else for (int k = 0; k < Rules.Steps; k++) Need(stars[k], $"stars[{k}]");
             if (starNumbers == null || starNumbers.Length != Rules.Steps) issues.Add($"HudView {name}: starNumbers needs {Rules.Steps} entries");
@@ -181,11 +185,11 @@ namespace SevenSteps.Game.UI
             Set(switchDesc, "hud.switch_desc", FontRole.Body);
             Set(keys, "hud.keys", FontRole.Body);
             Font body = Ui.Theme.FontFor(loc.Current, FontRole.Body);
-            stageNumber.font = body;
+            stageNumber.font = Ui.Theme.FontFor(loc.Current, FontRole.Number); // the number alone (hud.stage)
             stageName.font = Ui.Theme.FontFor(loc.Current, FontRole.Title);
-            foreach (var t in new[] { stageHint, nextStep, statues, message }) t.font = body;
+            foreach (var t in new[] { stageHint, stageStory, nextStep, statues, message }) t.font = body;
             foreach (var slot in slots) { slot.name.font = body; slot.state.font = body; }
-            if (shownState != null) Refresh(shownState, shownStage, shownName, shownHint, shownMessage);
+            if (shownState != null) Refresh(shownState, shownStage, shownText, shownMessage);
         }
 
         void Set(Text text, string key, FontRole role)
@@ -203,20 +207,21 @@ namespace SevenSteps.Game.UI
             if (choice.gameObject.activeInHierarchy) StartCoroutine(Shake(choice));
         }
 
-        /// Redraws from the state. <paramref name="name"/>/<paramref name="hintText"/> are the stage texts in the current
-        /// language (LevelCatalog.TextOf), <paramref name="msg"/> the message line ("" = empty, MessagePresenter).
-        public void Refresh(State s, int levelIdx, string name, string hintText, string msg)
+        /// Redraws from the state. <paramref name="text"/> is the stage's name, hint and story in the current language
+        /// (LevelCatalog.TextOf), <paramref name="msg"/> the message line ("" = empty, MessagePresenter).
+        public void Refresh(State s, int levelIdx, LevelTextDto text, string msg)
         {
             if (s == null) throw new ArgumentNullException(nameof(s));
             if (bodyLook == null || loc == null) throw new InvalidOperationException("HudView.Refresh before Create");
             shownState = s;
             shownStage = levelIdx;
-            shownName = name ?? throw new ArgumentNullException(nameof(name));
-            shownHint = hintText ?? throw new ArgumentNullException(nameof(hintText));
+            shownText = text ?? throw new ArgumentNullException(nameof(text));
             shownMessage = msg ?? throw new ArgumentNullException(nameof(msg));
             stageNumber.text = loc.Format("hud.stage", levelIdx + 1);
-            stageName.text = name;
-            stageHint.text = hintText; // levels.js hint as written (level design); the solution (H) is the message line
+            stageName.text = text.name ?? "";
+            stageHint.text = text.hint ?? ""; // levels.js hint as written (level design); the solution (H) is the message line
+            stageStory.text = text.story ?? ""; // the triplets' line (6.4), separate from the hint
+            stageStory.gameObject.SetActive(stageStory.text.Length > 0);
             RefreshDipper(s);
             RefreshBodies(s);
             message.text = msg;

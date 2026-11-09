@@ -117,10 +117,11 @@ namespace SevenSteps.Tests
             finally { UnityEngine.Object.DestroyImmediate(canvas); }
         }
 
+        /// The game's ko/en tables: the settings panel words itself from them (settings.*, 13.2).
         static Localizer TwoLanguages(Language current) => new Localizer(new[]
         {
-            StringTable.FromJson(Language.Ko, "{\"entries\":[]}"),
-            StringTable.FromJson(Language.En, "{\"entries\":[]}"),
+            StringTable.FromJson(Language.Ko, UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.TextAsset>("Assets/_Project/Data/Strings/ko.json").text),
+            StringTable.FromJson(Language.En, UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.TextAsset>("Assets/_Project/Data/Strings/en.json").text),
         }, current);
 
         [Test]

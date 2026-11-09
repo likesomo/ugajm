@@ -18,7 +18,7 @@
     { "key": "language.note", "text": "You can change this later in Settings." },
     { "key": "language.continue", "text": "Continue" },
 
-    { "key": "hud.stage", "text": "Stage {0:00}" },
+    { "key": "hud.stage", "text": "{0:00}" },
     { "key": "hud.traveller_1", "text": "Teal traveller" },
     { "key": "hud.traveller_2", "text": "Ochre traveller" },
     { "key": "hud.traveller_3", "text": "Russet traveller" },
@@ -83,6 +83,22 @@
     { "key": "result.chapter_done", "text": "Leaving {0}" },
     { "key": "result.journey_done", "text": "The three brothers reached the stone circle" },
 
-    { "key": "board.exit", "text": "EXIT" }
+    { "key": "board.exit", "text": "EXIT" },
+
+    { "key": "settings.title", "text": "Settings" },
+    { "key": "settings.master", "text": "Master volume" },
+    { "key": "settings.sfx", "text": "Sound effects" },
+    { "key": "settings.telemetry", "text": "Send play data" },
+    { "key": "settings.telemetry_note", "text": "Only anonymous play data (moves, clears) is sent. No names or accounts." },
+    { "key": "settings.on", "text": "On" },
+    { "key": "settings.off", "text": "Off" },
+    { "key": "settings.close", "text": "Close (Esc)" },
+    { "key": "settings.status", "text": "Sent {0}, waiting {1}, last reply {2}, ID {3}" },
+    { "key": "settings.status_off", "text": "Not sending" },
+    { "key": "settings.status_no_connection", "text": "no connection" },
+
+    { "key": "credits.title", "text": "Credits" },
+    { "key": "credits.game", "text": "Seven Steps" },
+    { "key": "credits.close", "text": "Close (Esc)" }
   ]
 }

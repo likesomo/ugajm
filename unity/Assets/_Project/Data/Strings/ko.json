@@ -18,7 +18,7 @@
     { "key": "language.note", "text": "설정에서 언제든 언어를 바꿀 수 있습니다." },
     { "key": "language.continue", "text": "계속" },
 
-    { "key": "hud.stage", "text": "스테이지 {0:00}" },
+    { "key": "hud.stage", "text": "{0:00}" },
     { "key": "hud.traveller_1", "text": "청록 여행자" },
     { "key": "hud.traveller_2", "text": "황토 여행자" },
     { "key": "hud.traveller_3", "text": "적갈 여행자" },
@@ -83,6 +83,22 @@
     { "key": "result.chapter_done", "text": "{0}\n다음 행성으로" },
     { "key": "result.journey_done", "text": "세 형제가 원형 제단에 닿았다" },
 
-    { "key": "board.exit", "text": "출구" }
+    { "key": "board.exit", "text": "출구" },
+
+    { "key": "settings.title", "text": "설정" },
+    { "key": "settings.master", "text": "전체 음량" },
+    { "key": "settings.sfx", "text": "효과음" },
+    { "key": "settings.telemetry", "text": "플레이 기록 보내기" },
+    { "key": "settings.telemetry_note", "text": "익명 플레이 기록(이동, 클리어)만 보냅니다. 이름이나 계정은 보내지 않습니다." },
+    { "key": "settings.on", "text": "켜짐" },
+    { "key": "settings.off", "text": "꺼짐" },
+    { "key": "settings.close", "text": "닫기 (Esc)" },
+    { "key": "settings.status", "text": "보냄 {0}, 대기 {1}, 마지막 응답 {2}, ID {3}" },
+    { "key": "settings.status_off", "text": "보내지 않음" },
+    { "key": "settings.status_no_connection", "text": "연결 안 됨" },
+
+    { "key": "credits.title", "text": "크레딧" },
+    { "key": "credits.game", "text": "일곱 걸음 (Seven Steps)" },
+    { "key": "credits.close", "text": "닫기 (Esc)" }
   ]
 }
