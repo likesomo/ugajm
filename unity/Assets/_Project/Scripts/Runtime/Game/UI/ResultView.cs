@@ -51,7 +51,7 @@ namespace SevenSteps.Game.UI
     /// Clear / loss panel (view only, docs/scene-flow.md 4.7). Shows a <see cref="ResultModel"/> and raises button events;
     /// the flow controller decides what they do. Built from code on its own canvas above the HUD (S6 moves it to a prefab).
     /// </summary>
-    public sealed class ResultView
+    public sealed class ResultView : Flow.IResultPanel
     {
         readonly GameObject root;
         readonly Text title, body;
