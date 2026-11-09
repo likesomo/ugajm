@@ -68,7 +68,8 @@ namespace SevenSteps.Contracts
         public static class Tile
         {
             public const string Floor = "floor", Exit = "exit", Pit = "pit", Ice = "ice", Cracked = "cracked", Bridge = "bridge",
-                Plate = "plate", Door = "door", Gate = "gate", Wall = "wall", Start = "start", Statue = "statue", Edge = "edge";
+                Plate = "plate", Door = "door", Gate = "gate", Wall = "wall", Start = "start", Statue = "statue", Edge = "edge",
+                Mud = "mud", Lever = "lever", FlipUp = "flip_up", FlipDown = "flip_down"; // docs/telemetry.md 2026-11-09 v1: Q door = Door, flip walls by current shape
         }
 
         /// Idle threshold (telemetry.js IDLE_MS).
