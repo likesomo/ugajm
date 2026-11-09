@@ -84,7 +84,7 @@ namespace SevenSteps.EditorTools
                 c.buildChannel = "dev";
                 AssetDatabase.CreateAsset(c, ConfigPath);
             }
-            if (c.tileSet == null)
+            if (c.tileSet == null && (c.chapters == null || c.chapters.Length == 0)) // chapters carry their own sets (12.8)
             {
                 c.tileSet = AssetDatabase.LoadAssetAtPath<TileSet>(TileSetPath);
                 EditorUtility.SetDirty(c);

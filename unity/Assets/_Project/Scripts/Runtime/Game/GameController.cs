@@ -85,8 +85,9 @@ namespace SevenSteps.Game
             if (FindAnyObjectByType<EventSystem>() == null)
                 new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
-            var tiles = cfg.tileSet != null ? cfg.tileSet : assets.tileSet;
-            if (tiles == null) throw new InvalidOperationException("[SevenSteps] No TileSet: set AppConfig.tileSet or GameAssets.tileSet");
+            // The set the board starts with (12.8 order: AppConfig.tileSet → first stage's chapter → GameAssets.tileSet);
+            // each stage then swaps to its chapter's set. The HUD reads only body colours from it (the same in every set).
+            var tiles = BoardController.TileSetFor(cfg.tileSet, ChapterPresetFor(cfg)(0), assets.tileSet);
 
             // Views
             board = gameObject.AddComponent<BoardController>();
