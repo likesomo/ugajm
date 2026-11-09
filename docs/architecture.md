@@ -267,7 +267,7 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
   `id`: 소문자·하이픈, 바꾸지 않는다(텔레메트리·저장이 기댈 수 있음). `artPreset`: `ChapterPreset.id`(12.8). 비면 `id`와 같다. 여러 챕터가 한 프리셋을 같이 쓸 수 있다.
 - 런타임 형식: `Contracts/Chapters/ChapterInfo.cs`의 `ChapterFileDto`/`ChapterInfo`(아키텍트). 읽기는 `GameAssets.chaptersJson`(TextAsset) → `LevelCatalog`: `ChapterIdOf(stage)`(구현됨, 7lucky 9f3d109, 텔레메트리 `level_start` 챕터용) → `ChapterFileDto.Get(id)` → `ChapterInfo`(chapters.json이 생기면), 아트는 `AppConfig.Chapter(info.ArtPreset)`. `LevelDto.chapter`/`story`는 코어 b5c4464에서 추가됨.
 - export 단정 검증(`unity/Tools/export-levels.mjs`, 실패하면 파일을 쓰지 않고 exit 1, 레벨 디자인 제안 그대로): 모든 스테이지에 `chapter`가 있고 `chapters.json`에 있다, 스테이지 순서대로 챕터가 `chapters.json` 순서를 거스르지 않고 이어진다, 모든 `bodies <= 3`, 모두 솔버로 풀리고 최소 몸 수 <= 3, 이름 중복 없음. **지금 17스테이지(챕터 없음, 14~17 몸 4~5)는 플레이테스트 1차까지 그대로**이므로 검증은 형식 도입 커밋(첫 묶음)부터 켠다. 그 전까지 런타임은 `chapter`가 없으면 첫 챕터, 몸 4~5는 외형 순환(A, B, C, A)으로 임시 허용(12.6).
-- Unity 검사: `TileSetValidator`가 `Data/chapters.json`의 `artPreset`이 모두 `AppConfig.chapters`에 있는지 본다(파일과 챕터 에셋이 생기면 아키텍트가 켬).
+- Unity 검사(켜짐, 2026-11-09): `TileSetValidator`가 `GameAssets.chaptersJson`의 `artPreset`이 모두 `AppConfig.chapters`에 있는지 본다(없으면 오류). `AppConfig.chapters`가 비어 있으면 경고만(모든 스테이지가 `AppConfig.tileSet`/`GameAssets.tileSet`).
 - 담당: 레벨 디자인(`chapters.json`, `chapter`/`story` 채우기, export 검증), 코어(`LevelDto` 필드), 아키텍트(`ChapterInfo`, 이 절, 검사기), 게임플레이/UI(`LevelCatalog`·진입 문구 표시), 씬 플로우(챕터가 바뀔 때의 흐름·`ResultModel.nextChapterChanges`), 백엔드/분석(이벤트에 챕터 id를 실을지).
 
 ### 6.5 3별 (2026-11-09 사용자 결정 B안, 50스테이지 반영 다음 순서)
@@ -684,10 +684,29 @@ else flow.Go(AppState.Title);
 - 실행 인자 `-lang en`/URL `?lang=en`(플레이테스트·스모크용, `LaunchOptions.Language`, 저장하지 않음).
 - 바꾸면 즉시 반영: `Localizer.Changed` → 뷰가 다시 그린다(코드 생성 UI는 `Refresh`, 프리팹 뷰는 텍스트 갱신 메서드). 씬 다시 읽기 없음.
 
-### 13.4 글꼴 (UiTheme 언어별 세트)
-- `UiTheme`에 언어별 글꼴: `[Serializable] struct LanguageFont { Language language; Font font; float sizeScale; }`, `fonts[]`. ko = Jua(지금), en = 필기체(아트 선택, OFL 등 무료, 크레딧). 글꼴 크기 비율(`sizeScale`)로 필기체의 작은 x-height를 보정한다.
-- `Ui.Font`는 현재 언어의 글꼴. 언어가 바뀌면 `Text.font`를 바꾼다.
-- 보드 위 숫자 라벨(걸음 수, 숫자 문)은 언어와 무관하게 숫자 글꼴 하나(가독성).
+### 13.4 글꼴 (UiTheme 언어·역할별 세트, 2026-11-09 아트 제안 반영)
+
+아트 확정(`design/art/fonts.md`): en 제목 **Kaushan Script**, en 본문 **Patrick Hand**, ko 제목·본문 **Gaegu**, 숫자(공통) **Jua**. 모두 OFL, 공유 폴더 `Shared/Fonts`. WebGL gzip +843 KiB(손글씨 세트 비교 빌드).
+
+`UiTheme`(Game 어셈블리, 씬 플로우 구현) 필드 — 아트 제안 `LocalizedFontSet`을 아래로 정리:
+```csharp
+public enum FontRole { Title, Body, Number }
+[Serializable] public struct LanguageFonts {
+    public Language language;        // Contracts Language (Ko, En) — 문자열 locale 대신 13.2의 enum
+    public Font title, body;
+    public float titleScale, bodyScale;   // 0 = 1. 필기체의 작은 x-height 보정
+    public float bodyLineSpacing;         // 0 = 1. en 0.90, ko 1.10 (아트 프리뷰 값)
+}
+public LanguageFonts[] languages;         // 언어당 하나
+public Font number;                       // 숫자 역할: 언어와 무관하게 하나(Jua). 보드 라벨·걸음·몸·석상 수·별 수
+public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(검증기가 빌드 전에 잡음)
+```
+- 아트 제안과 다른 점: (1) `numberFont`는 언어별이 아니라 테마에 하나(두 언어 모두 Jua, 보드 숫자는 언어와 무관해야 함). (2) **`symbolFallbackFont`는 두지 않는다** — 레거시 uGUI `Text`는 다른 글꼴 에셋으로 글자별 대체를 하지 못하고 WebGL에는 OS 글꼴도 없다. 기호는 해당 역할 글꼴에 있어야 하고 GlyphCheck가 검사한다(없으면 문구를 바꾸거나 숫자 역할 Text로 분리). (3) locale 문자열 대신 `Language` enum.
+- `Text` 하나에 글꼴을 섞지 않는다. 숫자는 별도 `Text`(역할 Number).
+- 언어 선택 버튼(첫 실행·설정)의 언어 이름은 **현재 UI 언어와 무관하게 그 언어의 본문 글꼴**로 그린다("English"는 Patrick Hand, "한국어"는 Gaegu).
+- 기존 `UiTheme.font`는 이전 기간 동안 기본값(`Ui.Font`)으로 남기고, 화면마다 역할 글꼴로 옮긴 뒤 지운다.
+- GlyphCheck(13.6, 씬 플로우): 각 언어 문자열(테이블·레벨·챕터 텍스트)을 그 언어의 **제목·본문 글꼴 둘 다**의 cmap으로(어느 역할로 보일지 모르므로), 숫자 역할 문자(`0-9`, 쓰는 기호 `/ · × ★` 등 목록)를 `number` 글꼴로.
+- 줄 높이·레이아웃: 문자 수로 높이를 계산하지 않고 `preferredHeight`, 제목·행성 이름은 2줄까지(아트 `ui-theme.md` 레이아웃 기준).
 
 ### 13.5 레벨·챕터 텍스트
 - `levels.js`/`levels.json`: 기존 `name`/`hint`/`story`는 **ko 그대로**(그리고 `name`은 저장 키, 11.3.1 — 번역해도 키는 ko 이름). 번역은 `text` 배열: `"text": [ { "lang": "en", "name": "...", "hint": "...", "story": "..." } ]`. `LevelDto.text`(코어), `LevelCatalog.NameOf(stage, lang)` 등(게임플레이/UI·씬 플로우).
@@ -742,3 +761,4 @@ else flow.Go(AppState.Title);
 | 2026-11-09 | 아키텍트 | 2장 어셈블리 `SevenSteps.Art`(`Art/`), `SevenSteps.Art.Editor`(`Art/Editor/`, Editor 전용) 추가. 아트 스크립트가 Assembly-CSharp에서 빠짐(GUID 유지) |
 | 2026-11-09 | 아키텍트 | 6.5 3별 계약(B안): 시도 정의, 셈 규칙(undos/restarts/hintUsed), Core `Scoring.Stars(AttemptStats)`(코어), 셈은 `BoardController`(게임플레이/UI)·`IStageBoard` 노출(씬 플로우), 저장 `ProgressData.MarkCleared(level, bodies, stars)`/`BestStars`(Contracts, 구현). 13장 다국어 설계: 자체 경량 JSON 문자열 테이블(Unity Localization 기각: WebGL 용량·비동기 초기화·병합), 언어 설정·첫 실행 시스템 언어, UiTheme 언어별 글꼴, levels/chapters `text` 배열, 누락 검사 |
 | 2026-11-09 | 코어·아키텍트 | 6.5 판정 API를 코어 구현에 맞춤: `Scoring.Stars(AttemptStats)` 대신 `SevenSteps.Core.Stars.Of(bodiesUsed, minBodies, hints, undos, restarts)`(0 = 판정 불가), `Stars.Max`, `Stars.BodiesUsed(State)`. 의미는 같음(★2는 최소 몸 이하·힌트 0, ★3은 Z·R 0) |
+| 2026-11-09 | 아키텍트 | 13.4 UiTheme 글꼴을 아트 제안(fonts.md, ui-theme.md)과 맞춤: `LanguageFonts{language, title, body, 크기·줄간격}` + 테마 공통 `number`, `FontFor(lang, role)`, `symbolFallbackFont` 없음(레거시 Text는 에셋 간 대체 불가). 6.4 `artPreset` ↔ `AppConfig.chapters` 검사 켬 |

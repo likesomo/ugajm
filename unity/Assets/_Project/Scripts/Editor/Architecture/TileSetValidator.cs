@@ -54,6 +54,7 @@ namespace SevenSteps.EditorTools
                 foreach (var i in issues) sb.AppendLine("  " + i);
             }
             errors += ValidateChapters(sb);
+            errors += ValidateChapterPresets(sb);
             report = sb.ToString();
             return errors;
         }
@@ -137,6 +138,35 @@ namespace SevenSteps.EditorTools
         }
 
         /// ChapterPreset assets (docs 12.8): unique non-empty id, a TileSet, lighting and sky. Their TileSets are checked above.
+        const string AppConfigPath = "Assets/_Project/Data/AppConfig.asset";
+        const string GameAssetsPath = "Assets/_Project/Data/GameAssets.asset";
+
+        /// chapters.json artPreset ids must all be in AppConfig.chapters (docs 6.4, 12.8). While AppConfig has no chapters
+        /// the board uses AppConfig.tileSet / GameAssets.tileSet for every stage: a warning, not an error.
+        static int ValidateChapterPresets(StringBuilder sb)
+        {
+            var config = AssetDatabase.LoadAssetAtPath<AppConfig>(AppConfigPath);
+            var assets = AssetDatabase.LoadAssetAtPath<SevenSteps.Game.GameAssets>(GameAssetsPath);
+            if (config == null || assets == null) { sb.AppendLine($"[SevenSteps] Chapter presets: ERROR {AppConfigPath} or {GameAssetsPath} missing"); return 1; }
+            if (assets.chaptersJson == null) { sb.AppendLine("[SevenSteps] Chapter presets: OK (no chapters.json)"); return 0; }
+            var file = JsonUtility.FromJson<ChapterFileDto>(assets.chaptersJson.text);
+            if (config.chapters == null || config.chapters.Length == 0)
+            {
+                sb.AppendLine("[SevenSteps] Chapter presets: OK (0 errors, 1 warnings)");
+                sb.AppendLine("  WARN AppConfig.chapters is empty: every chapter draws with AppConfig.tileSet / GameAssets.tileSet");
+                return 0;
+            }
+            var issues = new List<string>();
+            foreach (var c in file.chapters ?? new ChapterInfo[0])
+            {
+                try { config.Chapter(c.ArtPreset); }
+                catch (System.ArgumentException) { issues.Add($"ERROR chapters.json {c.id}: artPreset \"{c.ArtPreset}\" is not in AppConfig.chapters"); }
+            }
+            sb.AppendLine($"[SevenSteps] Chapter presets: {(issues.Count > 0 ? "FAIL" : "OK")} ({issues.Count} errors, 0 warnings)");
+            foreach (var i in issues) sb.AppendLine("  " + i);
+            return issues.Count;
+        }
+
         static int ValidateChapters(StringBuilder sb)
         {
             int errors = 0;
