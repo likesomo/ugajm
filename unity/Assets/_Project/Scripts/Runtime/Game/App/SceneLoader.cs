@@ -58,6 +58,14 @@ namespace SevenSteps.Game
                 yield break;
             }
             fader.BeginLoading();
+            // -loadDelay (development): hold the new scene back so the loading screen can be checked.
+            float delay = Services.TryGet<LaunchOptions>(out var launch) ? launch.LoadDelay : 0f;
+            if (delay > 0f)
+            {
+                op.allowSceneActivation = false;
+                for (float t = 0; t < delay; t += Time.unscaledDeltaTime) { fader.Progress(Mathf.Min(op.progress / 0.9f, t / delay)); yield return null; }
+                op.allowSceneActivation = true;
+            }
             while (!op.isDone) { fader.Progress(op.progress / 0.9f); yield return null; }
             fader.Progress(1f);
             yield return null; // let the new scene's Start run behind the dark screen

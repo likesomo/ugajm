@@ -45,7 +45,7 @@ namespace SevenSteps.Game.UI
         OverlayStack overlays;
         BackNavigator back;
         int openPlanet = -1;
-        bool languageOpen, languageConfirmed;
+        LanguageController language;
 
         void Awake()
         {
@@ -92,8 +92,8 @@ namespace SevenSteps.Game.UI
             planetMap.PlanetClicked += OpenPlanet;
             planetMap.BackRequested += flowController.Back;
             planetStages.StageClicked += flowController.PlayStage;
-            languagePanel.LanguagePicked += lang => localizer.Set(lang); // preview: every view redraws, nothing saved yet
-            languagePanel.ContinueRequested += ConfirmLanguage;
+            language = new LanguageController(languagePanel, overlays, localizer, save, Services.Get<LaunchOptions>().Language);
+            settingsController.OpenLanguage = OpenLanguage; // the settings language button opens the picker
             overlays.Changed += OnOverlaysChanged;
         }
 
@@ -124,31 +124,11 @@ namespace SevenSteps.Game.UI
             Open(planetStages);
         }
 
-        void OpenLanguage()
-        {
-            if (overlays.Contains(languagePanel)) return;
-            languageOpen = true;
-            languageConfirmed = false;
-            Open(languagePanel);
-        }
-
-        /// The picker's Continue saves the shown language even when unchanged, so the first-run picker does not come back (13.3).
-        void ConfirmLanguage()
-        {
-            languageConfirmed = true;
-            save.SetLanguage(localizer.Current);
-            if (overlays.Top == languagePanel) overlays.Pop();
-        }
+        void OpenLanguage() => language.Open();
 
         /// An overlay opened or closed: when none is left, give the keyboard focus back to the screen under it.
         void OnOverlaysChanged()
         {
-            if (languageOpen && !overlays.Contains(languagePanel))
-            {
-                // Closed without Continue (Esc): drop the previewed language, back to this run's language (architect N1).
-                languageOpen = false;
-                if (!languageConfirmed) localizer.Set(Services.Get<LaunchOptions>().Language ?? save.Language);
-            }
             if (overlays.Count > 0) return;
             if (flow.State == AppState.StageSelect && openPlanet >= 0) planetMap.Focus(openPlanet);
             else if (!flow.IsLoading) Show(flow.State);
@@ -182,6 +162,7 @@ namespace SevenSteps.Game.UI
         {
             flowController?.Dispose();
             settingsController?.Dispose();
+            language?.Dispose();
             if (localizer != null) localizer.Changed -= OnLanguageChanged;
             if (overlays != null) overlays.Changed -= OnOverlaysChanged;
         }

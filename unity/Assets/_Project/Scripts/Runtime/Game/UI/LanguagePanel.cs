@@ -13,7 +13,7 @@ namespace SevenSteps.Game.UI
     /// (<see cref="ContinueRequested"/>; the root saves it). Shown over the Title on the first run and from the title's
     /// language line. An overlay: Esc closes it without saving.
     /// </summary>
-    public sealed class LanguagePanel : IOverlay
+    public sealed class LanguagePanel : ILanguagePanel
     {
         readonly GameObject panel;
         readonly Text head, both, note, cont;
@@ -86,5 +86,73 @@ namespace SevenSteps.Game.UI
         }
 
         public void Hide() => panel.SetActive(false);
+    }
+
+    /// <summary>The language picker as LanguageController sees it (LanguagePanel; a fake in tests).</summary>
+    public interface ILanguagePanel : IOverlay
+    {
+        event Action<Language> LanguagePicked;
+        event Action ContinueRequested;
+    }
+
+    /// <summary>
+    /// The language picker's behavior in one place (Title and Game scenes; docs/architecture.md 13.3): opens the panel on
+    /// the OverlayStack, previews a picked language at once (Localizer.Set, not saved), Continue saves the shown language
+    /// (SetLanguage, also when unchanged: the first-run picker must not come back), and closing without Continue (Esc)
+    /// returns to this run's language: the launch override, else the saved one (architect N1).
+    /// </summary>
+    public sealed class LanguageController : IDisposable
+    {
+        readonly ILanguagePanel panel;
+        readonly OverlayStack overlays;
+        readonly Localizer localizer;
+        readonly SaveSystem save;
+        readonly Language? launchLanguage;
+        bool open, confirmed;
+
+        public LanguageController(ILanguagePanel panel, OverlayStack overlays, Localizer localizer, SaveSystem save, Language? launchLanguage)
+        {
+            this.panel = panel ?? throw new ArgumentNullException(nameof(panel));
+            this.overlays = overlays ?? throw new ArgumentNullException(nameof(overlays));
+            this.localizer = localizer ?? throw new ArgumentNullException(nameof(localizer));
+            this.save = save ?? throw new ArgumentNullException(nameof(save));
+            this.launchLanguage = launchLanguage;
+            panel.LanguagePicked += Pick;
+            panel.ContinueRequested += Confirm;
+            overlays.Changed += OnOverlaysChanged;
+        }
+
+        public void Dispose()
+        {
+            panel.LanguagePicked -= Pick;
+            panel.ContinueRequested -= Confirm;
+            overlays.Changed -= OnOverlaysChanged;
+        }
+
+        public bool IsOpen => overlays.Contains(panel);
+
+        public void Open()
+        {
+            if (IsOpen) return;
+            open = true;
+            confirmed = false;
+            overlays.Push(panel);
+        }
+
+        void Pick(Language lang) => localizer.Set(lang);
+
+        void Confirm()
+        {
+            confirmed = true;
+            save.SetLanguage(localizer.Current);
+            if (overlays.Top == panel) overlays.Pop();
+        }
+
+        void OnOverlaysChanged()
+        {
+            if (!open || IsOpen) return;
+            open = false;
+            if (!confirmed) localizer.Set(launchLanguage ?? save.Language);
+        }
     }
 }

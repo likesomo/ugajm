@@ -28,7 +28,7 @@ namespace SevenSteps.EditorTools
         const string CodeRoot = "Assets/_Project/Scripts/Runtime/Game";
 
         /// Flip to true when the UI text has moved to the string tables (gameplay/UI tells scene flow).
-        public static bool KoreanLiteralsAreErrors = false;
+        public static bool KoreanLiteralsAreErrors = true;
 
         /// Characters shown with the number role in every language (board labels, steps, bodies, statues, stars).
         public const string NumberRoleCharacters = "0123456789/·★"; // not U+00D7 "×": Jua has none (write "x")
