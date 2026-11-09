@@ -1,5 +1,17 @@
 # RuinsHenge Unity 연결·테스트
 
+## UI 작업 이후: 정식 씬용 환경 전달(2026-11-09)
+
+`Prefabs/Tiles/RuinsHenge/Env/Planet_Chapter01.prefab`은 행성/성운·별/원경3행성/키·필·림/Volume를 묶은 수동 배치용 프리팹이다. 루트 `RuinsHengePlanet`의 `Fit(BoardGrid)`를 스테이지 진입 시 호출한다. 입력·게임 객체·커맨드라인을 읽지 않으며 geometry는 런타임에 생성한다. 보드1칸=1m·y=0, 정상부y=-.12, 메시6재질 공유를 유지한다.
+
+**기존 ChapterStage 경로에는 아래 분리형을 권장한다.** `Art/RuinsHenge/Chapter01.asset` → `Sky_Chapter01.asset` → `PlanetSummit_Chapter01.prefab`(IStageEnvironment 루트) 및 `Sky_Chapter01.prefab`, `Lighting_Chapter01.asset`로 전달했다. ChapterStage가 행성을 월드 원점에 놓고 Fit를 호출하며 하늘은 카메라 자식, 조명은 씬 소유3등에 값을 복사한다. 분리형과 전체 환경 프리팹을 동시에 쓰면 조명/하늘이 중복되므로 **둘 중 한 경로만** 쓴다. 전체형도 메시 Fit 전에는 빈 정상부이며 생성 실패가 아니다.
+
+리드/씬 플로우의 연결 요청: 공용 AppConfig.chapters에 Chapter01 또는 확정된 장 preset를 등록하고 레벨 chapter id를 맞춘다(`moss-ruins`, 빈id는첫장). `ChapterStage`와 `BoardController.UseChapters` 헬퍼는 있지만 현재 GameController에서 실제 생성·연결하는 호출은 아직 없으므로 씬/조립 담당이 연결해야 한다. 이때 전체 프리팹을 추가하기보다 위 split Sky/Lighting을 사용한다. UI는 GameAssets.uiTheme를 `Art/UI/RuinsHengeTheme.asset`로 지정한다. 실제 UiTheme에는 스프라이트 필드가 없어 `Art/UI/RuinsHengeResources.asset`도 전달한다. UI 담당이 HUD/Title/StageSelect를 [UI 명세](ui-theme.md)로 연결한다. 공용 씬·AppConfig·GameAssets는 이 작업에서 수정하지 않았다.
+
+새 TileSet.playerBodies에는 A/B/C 실제 외형을 채웠다. KEEP는 중성 공통 외형을 사용한다. 이전 문서의 ‘몸별 계약 없음’ 요청은 최신12.6 계약으로 해결됐으며 출신색 KEEP 흔적은 후속 선택 사항이다. `RuinsWallVariations`는 좌표 해시로 기본/V2/V3/목재를 선택하는 장식 컴포넌트이고 타일 규칙·충돌을 바꾸지 않는다. 머리는 같은0.88m 규격 안에서 폭/깊이만 확대하고 밝은 UV·최소조명으로 두건 뭉침을 줄였다.
+
+정식 계약 구현 `RuinsHengePlanet`/`RuinsHengeSky`/`RuinsWallVariations`는 Art/RuinsHenge/Runtime에 있다. Art/Test의 기존 Environment는 프리뷰 어댑터만 남겼다. 생성기 `RuinsHengeEnvironmentBuilder`와 `RuinsHengeUiBuilder`는 RuinsHengeBuilder.Build에서 호출되어 GUID를 보존하며 재실행한다.
+
 > 아래는1차 연결 기록이다. 최신 조명·벽 높이·색 링·행성 환경과 재검증 결과는 [2차 다듬기](unity-phase2.md)를 따른다.
 
 작업:2026-11-09, Unity6000.6.8f1. 아트 전용 생성기 `Assets/_Project/Art/Editor/RuinsHengeBuilder.cs`를 사용한다. 공용 AppConfig/씬/게임플레이 계약은 수정하지 않는다. 기본 Game 씬을 읽어 아트 소유 `Assets/_Project/Art/Test/RuinsHenge_Preview.unity`로 저장하고 별도 `Art/RuinsHenge/PreviewConfig.asset`을 연결한다.
