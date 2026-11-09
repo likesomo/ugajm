@@ -1,6 +1,7 @@
 # 50스테이지 계획 (리드 승인 2026-11-09, 7lucky 6cf3de4)
 
 사용자 결정(2026-11-08~09): 몸 상한 3(세쌍둥이, 머플러 청록·황토·적갈은 형제 식별만 뜻함), 전체 50스테이지, 6~8챕터(행성), 챕터당 5~8스테이지.
+**지금 기준 곡선은 `interest-curve-50.html`(후보 맵을 솔버로 잰 값)이다. 아래 `stage-plan-50.html`은 맵이 없던 계획 단계의 예측(목표 D·계획 태그)이라 실제와 다르다.**
 데이터: `stage-plan-50.json` (스테이지별 목표 D, 계획 태그, 깨달음 A). 곡선: **`stage-plan-50.html`** (`node prototypes/seven-steps/tools/plan-curve.mjs`로 다시 그림).
 후보: 50개 모두 `experiments/batch1~5`에 있음(전체 곡선 `interest-curve-50.html`, 반영 순서 `rollout-50.md`). 리드 승인: 7행성×7+1, 예산 3 통일, 기존 17 유지 11·수정 4·재설계 2, 진흙 기믹(코어 구현 요청됨). 색 퍼즐은 제안으로만 유지. `levels.js`·`levels.json` 반영은 플레이테스트 1차 뒤 10스테이지 묶음 단위(7장).
 
@@ -109,7 +110,7 @@
 | 23 | 응용 | 홀수의 저주 | keep 7 | ice, parity | 0.3 | 바닥만으로는 7이 안 되는 칸, 얼음이 홀짝을 바꾼다 |
 | 24 | 응용 | 얼음 위의 숫자 | new (batch3, 탐색 후보) | ice, gate, switch | 0.37 | 미끄럼 한 번이 숫자 하나 |
 | 25 | 반전 | 멈춰 세우는 석상 | keep 9 | ice, keep, statueStopper | 0.42 | 선돌이 얼음을 멈추는 벽이 된다 |
-| 26 | 반전 | 미끄럼을 막는 형제 | new (batch3, 탐색 후보) | ice, keep, statueStopper, statueBlock, switch | 0.56 | 멈춤벽이 다음 미끄럼도 막는다. 세울 자리를 고른다 |
+| 26 | 반전 | 미끄럼을 막는 형제 | new (손질, --strict 탐색 후보) | ice, keep, statueStopper | 0.4 | 멈춤벽이 다음 미끄럼도 막는다. 세울 자리를 고른다 |
 | 27 | 응용 | 얼음 끝의 구멍 | new (batch3, 탐색 후보) | ice, pit, bridge | 0.43 | 미끄러져 7번째에 구멍에 닿으면 다리 |
 | 28 | 피날레 | 서리의 길목 | new (batch3, 탐색 후보) | ice, plate, keep | 0.44 | 미끄럼으로 발판에 닿아 선돌을 세우고 둘째가 문을 지난다 |
 
@@ -122,10 +123,10 @@
 | 29 | 소개 | 내리는 벽 | keep 8 | lever | 0.32 | 7번째 걸음이 레버를 당겨 벽을 내린다 |
 | 30 | 응용 | 열면 닫힌다 | exp lever 응용 | lever, switch | 0.5 | 레버는 한 길을 열고 다른 길을 닫는다 |
 | 31 | 반전 | 올려서 멈추기 | keep 10 | lever, ice, wallStopper | 0.42 | 벽을 올려 미끄럼을 멈춘다 |
-| 32 | 응용 | 레버와 바통 | new (batch4, 탐색 후보) | lever, switch | 0.56 | 레버를 당긴 형제가 바통을 넘긴다. 벽 너머 출발점을 고른다 |
+| 32 | 응용 | 레버와 발판 | new (손질, --strict 탐색 후보) | lever, plate, switch | 0.4 | 한 번 당기면 끝인 레버와 계속 눌러야 하는 발판을 구분한다 |
 | 33 | 응용 | 레버와 숫자 | new (batch4, 탐색 후보) | lever, gate, keep, switch | 0.6 | 벽이 내려간 뒤의 길이로 숫자를 맞춘다 |
-| 34 | 반전 | 레버와 발판 | new (batch4, 탐색 후보) | lever, plate, switch | 0.52 | 한 번 당기면 끝인 레버와 계속 눌러야 하는 발판을 구분한다 |
-| 35 | 피날레 | 결구의 장치 | new (batch4, 탐색 후보) | lever, ice, keep, switch | 0.62 | 레버로 벽을 바꾸고 얼음·선돌·바통을 함께 쓴다 |
+| 34 | 반전 | 레버와 바통 | new (batch4, 탐색 후보) | lever, switch | 0.56 | 레버를 당긴 형제가 바통을 넘긴다. 벽 너머 출발점을 고른다 |
+| 35 | 피날레 | 결구의 장치 | new (손질, --strict 탐색 후보) | lever, ice, keep, switch | 0.56 | 레버로 벽을 바꾸고 얼음·선돌·바통을 함께 쓴다 |
 
 ### 6장 무너지는 행성 (36–42)
 

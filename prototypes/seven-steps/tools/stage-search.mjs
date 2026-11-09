@@ -9,6 +9,7 @@
 //            --json reports/stage-search/<recipe>.json (default), --budget 3 (body cap, triplets)
 //            --flips N (shortest answer pulls a lever at least N times)
 //            --base "row,row,..." (fixed skeleton; recipe tiles go on its floor), --sc N (fixed statueCount)
+//            --strict (every gimmick must change solvability, bodies or length, not just the answer)
 //
 // Hard filters for every candidate:
 //   - solvable with the budget (default 3 bodies = the triplets), minimum bodies within --min..--max
@@ -94,6 +95,7 @@ const pick = (a) => a[Math.floor(rnd() * a.length)];
 // ---- layout ----
 // --base "row,row,...": a hand-drawn skeleton (walls fixed); the recipe's tiles are scattered on its floor cells.
 const BASE = arg('base') ? arg('base').split(',') : null; // comma-separated rows (Git Bash rewrites '/' in arguments)
+const STRICT = argv.includes('--strict'); // gimmick must change solvability, body count or length
 const SC = arg('sc') === undefined ? null : Number(arg('sc')); // fixed statueCount (overrides the recipe)
 function layout() {
   let g, w, h;
@@ -175,7 +177,7 @@ export function classNeeded(def, chars, best) {
   const plain = minBodies(parseLevel(plainDef));
   if (!plain) return true;
   if (plain.bodies !== best.bodies || plain.moves !== best.moves) return true;
-  return !replay(parseLevel(def), plain.path);
+  return !STRICT && !replay(parseLevel(def), plain.path); // --strict: a different answer of the same size is not enough
 }
 
 function evaluate(def) {

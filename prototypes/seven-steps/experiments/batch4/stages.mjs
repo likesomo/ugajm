@@ -5,21 +5,25 @@ const old = (n, extra = {}) => ({ ...LEVELS[n - 1], bodies: 3, ...extra });
 
 export const STAGES = [
   old(10, { gimmickTiles: 'r' }),             // 31 올려서 멈추기 (keep 10)
+
+
+
+
   {
-    name: '레버와 바통', // 32 new (stage-search lever, seed 102 #1): pull, hand over, walk through the lowered wall
-    hint: '레버를 당긴 형제 다음은 어디서 출발할까?',
+    name: '레버와 발판', // 32 polish (stage-search lever-plate --strict, seed 131): first lever stage after 31; removing the lever or the plate changes the answer size
+    hint: '레버는 한 번, 발판은 계속. 둘 다 필요하다.',
     bodies: 3,
-    gimmickTiles: 'LRr',
+    gimmickTiles: 'LRraA',
     map: [
-      '##########',
-      '#ER.#.#.##',
-      '##...S#..#',
-      '#.....L..#',
-      '#R...#r.##',
-      '##########',
+      '#########',
+      '#...A..S#',
+      '#.#.#.#.#',
+      '#....R..#',
+      '#.#E#L#.#',
+      '#....a..#',
+      '#########',
     ],
-  },
-  {
+  },  {
     name: '레버와 숫자', // 33 new (stage-search lever-gate, seed 101 #1): the wall comes down; count the new way to the numbered doors
     hint: '벽이 내려간 뒤의 길이로 숫자를 맞추자.',
     bodies: 3,
@@ -33,38 +37,34 @@ export const STAGES = [
       '#6.....#',
       '########',
     ],
-  },
-  {
-    name: '레버와 발판', // 34 new (stage-search lever-plate, seed 103 #1): a lever and a plate, two brothers spent before the third walks
-    hint: '레버는 한 번, 발판은 계속. 둘 다 필요하다.',
+  },  {
+    name: '레버와 바통', // 34 new (was 32) (stage-search lever, seed 102 #1): pull, hand over, walk through the lowered wall
+    hint: '레버를 당긴 형제 다음은 어디서 출발할까?',
     bodies: 3,
-    gimmickTiles: 'LRraA',
+    gimmickTiles: 'LRr',
     map: [
       '##########',
-      '#.#..a..##',
-      '#E#...#R.#',
-      '#...###R.#',
-      '#.##.##..#',
-      '#...A.LS##',
+      '#ER.#.#.##',
+      '##...S#..#',
+      '#.....L..#',
+      '#R...#r.##',
       '##########',
     ],
-  },
-  {
-    name: '결구의 장치', // 35 new (stage-search lever-ice2, seed 109 #1): chapter 5 finale, lever + ice + statue + hand-over
+  },  {
+    name: '결구의 장치', // 35 polish (stage-search lever-ice2 --strict, seed 132): removing the lever or the ice changes the answer size
     hint: '레버, 얼음, 선돌, 바통. 결구의 행성을 빠져나가자.',
     bodies: 3,
     gimmickTiles: 'LRr~',
     map: [
-      '#########',
-      '#..L...##',
-      '#.S..##E#',
-      '##..#...#',
-      '#.~R....#',
-      '#..#r##.#',
-      '#########',
+      '##########',
+      '#....#...#',
+      '#.##.#.#~#',
+      '#~~~r.R.~#',
+      '#.#S##.#~#',
+      '#..L#..E~#',
+      '##########',
     ],
-  },
-  old(11, { gimmickTiles: 'xaA' }),          // 36 한 번만 버티는 바닥 (keep 11)
+  },  old(11, { gimmickTiles: 'xaA' }),          // 36 한 번만 버티는 바닥 (keep 11)
   {
     name: '무너진 길 위의 구멍', // 37 new (stage-search cracked-pit, seed 105 #0): cracked floor and a pit close the short ways
     hint: '지나간 바닥은 무너진다. 돌아올 길을 남겨 두자.',

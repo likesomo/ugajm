@@ -48,18 +48,17 @@ export const STAGES = [
   },
   old(9, { gimmickTiles: '~' }),               // 25 멈춰 세우는 석상 (keep 9)
   {
-    name: '미끄럼을 막는 형제',        // 26 new (stage-search ice-statue, seed 93 #1): a statue stops the slide; where it stands decides the last walk
+    name: '미끄럼을 막는 형제', // 26 polish (stage-search ice-statue --strict on a skeleton, seed 133): the statue stops the slide; 2 bodies, D 0.56 -> 0.40
     hint: '석상은 미끄럼을 멈추지만 길도 막는다. 어디에 세울까?',
     bodies: 3,
     gimmickTiles: '~',
     map: [
       '##########',
-      '#....S#.##',
-      '#.#..#~~.#',
-      '####...###',
-      '#.E##.#..#',
-      '##.#....##',
-      '#.~~~~#..#',
+      '#...E#...#',
+      '#.##.#.#.#',
+      '#~~.~....#',
+      '#.#.##.#.#',
+      '#...#S...#',
       '##########',
     ],
   },
