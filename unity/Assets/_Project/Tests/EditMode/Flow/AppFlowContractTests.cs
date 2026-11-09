@@ -111,6 +111,25 @@ namespace SevenSteps.Tests
             Assert.AreEqual(5, flow.Stage);
         }
 
+        sealed class RefusingScenes : ISceneLoader
+        {
+            public string Current => AppScenes.Boot;
+            public void Load(string sceneName) => throw new InvalidOperationException($"{sceneName} is not in the build");
+            public event Action<string> Loaded { add { } remove { } }
+        }
+
+        [Test]
+        public void ARefusedLoadLeavesTheFlowWhereItWas()
+        {
+            var flow = new AppFlow(new RefusingScenes(), 17);
+            int changed = 0;
+            flow.Changed += (a, b) => changed++;
+            Assert.Throws<InvalidOperationException>(() => flow.Go(AppState.Title));
+            Assert.AreEqual(AppState.Boot, flow.State);
+            Assert.IsFalse(flow.IsLoading, "a failed load must not leave the flow stuck (architect S2 note)");
+            Assert.AreEqual(0, changed);
+        }
+
         [Test]
         public void ChangedIsRaisedWhileTheNewSceneIsStillLoading()
         {

@@ -102,8 +102,10 @@ namespace SevenSteps.Contracts
             if (stage < 0 || stage >= StageCount)
                 throw new ArgumentOutOfRangeException(nameof(stage), stage, $"AppFlow: stage must be 0..{StageCount - 1}");
             ThrowIfCannotGo(AppState.Game);
+            int previous = Stage;
             Stage = stage;
-            Go(AppState.Game);
+            try { Go(AppState.Game); }
+            catch { Stage = previous; throw; }
         }
 
         public void Go(AppState to)
@@ -115,7 +117,14 @@ namespace SevenSteps.Contracts
             if (scenes.Current != scene)
             {
                 loadingScene = scene; // set first: a fake loader may report Loaded inside Load
-                scenes.Load(scene);
+                try { scenes.Load(scene); }
+                catch
+                {
+                    // The loader refused (scene not in the build): nothing changed, so the flow must not stay "loading".
+                    loadingScene = null;
+                    State = from;
+                    throw;
+                }
             }
             Changed?.Invoke(from, to);
         }
