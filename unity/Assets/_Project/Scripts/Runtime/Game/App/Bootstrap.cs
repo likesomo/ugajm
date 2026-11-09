@@ -25,13 +25,13 @@ namespace SevenSteps.Game
         public static void Run(AppConfig config, LaunchOptions launch = null, bool enterFirstScreen = true)
         {
             if (config == null)
-            {
-                Debug.LogWarning("[SevenSteps] Bootstrap without AppConfig: using defaults (telemetry off).");
-                config = ScriptableObject.CreateInstance<AppConfig>();
-            }
+                throw new ArgumentNullException(nameof(config), "[SevenSteps] Bootstrap needs Data/AppConfig.asset: set config on the scene root (unity.sh scene-validate)");
+            if (HasRunThisPlay) throw new InvalidOperationException("[SevenSteps] Bootstrap already ran in this Play");
             launch ??= ReadLaunchOptions();
+            foreach (var w in launch.Warnings) Debug.LogWarning("[SevenSteps] Launch option " + w);
 
-            Services.Clear();
+            Services.Clear(); // a Run that threw halfway left HasRunThisPlay false; start clean
+
             var store = new PlayerPrefsStore();
             var save = new SaveSystem(store);
             var telemetry = TelemetryRunner.CreateTelemetry(config, launch, save);

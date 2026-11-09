@@ -49,6 +49,9 @@ namespace SevenSteps.Core
         /// Flip wall letters: R raised (blocks), r lowered (open), as seen through TileAt.
         public static bool IsFlipWall(char t) => t == 'R' || t == 'r';
 
+        /// Mud 'm': stepping into it costs 2 steps, so it blocks with one step left. An ice slide stops on it at no extra cost.
+        public static bool IsMud(char t) => t == 'm';
+
         /// Statues standing now. Bridges (filled pits, sealed cracked floor) are not statues.
         public static int StatueCount(State s) => s.Statues.Length;
 
@@ -132,9 +135,10 @@ namespace SevenSteps.Core
         {
             var events = new List<GameEvent>();
             if (s.Status != Status.Play) return new StepResult(s, events);
-            int stepIdx = s.Used + 1;
             int first = Neighbor(s.Level, s.Pos, dir);
-            if (!Passable(s, first, stepIdx))
+            // Mud: stepping into it costs 2 steps; with only one step left it blocks like a wall.
+            int stepIdx = s.Used + (first >= 0 && IsMud(TileAt(s, first)) ? 2 : 1);
+            if (stepIdx > Steps || !Passable(s, first, stepIdx))
             {
                 events.Add(new GameEvent(GameEventType.Bump, first));
                 return new StepResult(s, events);
@@ -144,6 +148,7 @@ namespace SevenSteps.Core
             var path = new List<int> { pos };
             var trail = new List<Footprint>(s.Trail) { new Footprint(pos, stepIdx) };
             // Ice: keep sliding while standing on ice and the next cell is open. The slide is still one step.
+            // Sliding into mud stops there (mud is not ice) and adds no step.
             while (TileAt(s, pos) == '~')
             {
                 int n = Neighbor(s.Level, pos, dir);

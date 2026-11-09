@@ -75,6 +75,7 @@ svg text { fill: var(--text-secondary); font-size: 11px; }
   <label>클라이언트 <select id="f-client"><option value="">전체</option><option>web-proto</option><option>unity-webgl</option><option>unity-desktop</option></select></label>
   <label>빌드 <select id="f-build"><option value="">전체</option></select></label>
   <label>기간 <select id="f-range"><option value="">전체</option><option value="1">최근 1시간</option><option value="24">최근 24시간</option><option value="168">최근 7일</option></select></label>
+  <label id="f-chapter-wrap" hidden>챕터 <select id="f-chapter"><option value="">전체</option></select></label>
   <button id="refresh">새로고침</button>
   <span id="exports" style="font-size:12px"></span>
   <label style="margin-left:auto">토큰 <input id="token" type="password" size="12"></label>
@@ -83,10 +84,16 @@ svg text { fill: var(--text-secondary); font-size: 11px; }
   <div id="status"></div>
   <div class="tiles" id="tiles"></div>
 
+  <section id="chapters-sec" hidden>
+    <h2>챕터</h2>
+    <p class="sub">챕터를 시작한 플레이어(전체 대비), 마지막 스테이지까지 간 플레이어, 모든 스테이지를 깬 플레이어, 여기서 그만둔 플레이어. 현재 빌드의 스테이지만 센다</p>
+    <div id="chapters"></div>
+  </section>
+
   <div class="row2">
     <section>
       <h2>스테이지 퍼널</h2>
-      <p class="sub">스테이지를 시작한 플레이어 수와 그중 클리어한 플레이어 수</p>
+      <p class="sub">스테이지를 시작한 플레이어 수와 그중 클리어한 플레이어 수. 스테이지는 현재 빌드 순서이고, 예전 빌드 기록은 맵(levelKey)·이름으로 찾아 넣는다. 지금 빌드에 없는 맵은 맨 아래 "이전 맵"</p>
       <div class="legend"><span><i class="sw" style="background:var(--s-start)"></i>시작한 플레이어</span><span><i class="sw" style="background:var(--s-clear)"></i>클리어한 플레이어</span></div>
       <div id="funnel"></div>
     </section>
@@ -178,6 +185,34 @@ document.addEventListener('mousemove', (e) => {
 
 let LEVELS = [];
 let STATS = [];
+let CHAPTERS = [];
+const HAS_CH = () => LEVELS.some((l) => l.chapter);
+const chName = (c) => (c ? c : '챕터 없음');
+const stageNo = (s) => (s.level == null ? '이전 맵' : s.level);
+// Stats rows shown under the chapter filter (old maps only under "전체").
+const visible = (stats) => {
+  const c = $('f-chapter').value;
+  return c ? stats.filter((x) => !x.old && x.chapter === c) : stats;
+};
+
+function renderChapters() {
+  if (!HAS_CH()) { $('chapters-sec').hidden = true; return; }
+  $('chapters-sec').hidden = false;
+  if (!CHAPTERS.some((c) => c.players)) { $('chapters').innerHTML = '<p class="empty">데이터 없음</p>'; return; }
+  const W = 1160, rowH = 30, left = 200, right = 360, H = CHAPTERS.length * rowH + 8; // full-width section
+  const sx = (v) => v * (W - left - right);
+  let g = '';
+  CHAPTERS.forEach((c, i) => {
+    const y = i * rowH + 4;
+    const tipText = `${chName(c.chapter)} (스테이지 ${c.firstLevel}–${c.lastLevel}, ${c.stages}개)\n시작 ${c.players}명 (전체의 ${pct(c.playerShare)})\n마지막 스테이지 시작 ${c.reachedLast}명 · 전부 클리어 ${c.clearedAll}명 (${pct(c.clearedAllRate)})\n여기서 그만둠 ${c.quitPlayers}명 (${pct(c.quitRate)}) · 시도 ${c.attempts}회`;
+    g += `<g data-tip="${esc(tipText)}"><rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/>
+      <text x="${left - 8}" y="${y + 18}" text-anchor="end">${esc(chName(c.chapter).slice(0, 20))} · ${c.firstLevel}–${c.lastLevel}</text>
+      <rect x="${left}" y="${y + 4}" width="${Math.max(sx(c.playerShare ?? 0), c.players ? 2 : 0)}" height="10" rx="2" fill="var(--s-start)"/>
+      <rect x="${left}" y="${y + 16}" width="${Math.max(sx(c.players ? (c.playerShare ?? 0) * (c.clearedAll / c.players) : 0), c.clearedAll ? 2 : 0)}" height="8" rx="2" fill="var(--s-clear)"/>
+      <text x="${W - right + 8}" y="${y + 18}" style="fill:var(--text-primary)">시작 ${c.players}명 (${pct(c.playerShare)}) · 끝 스테이지 ${c.reachedLast} · 전부 클리어 ${c.clearedAll} · 그만둠 ${pct(c.quitRate)}</text></g>`;
+  });
+  $('chapters').innerHTML = `<div class="legend"><span><i class="sw" style="background:var(--s-start)"></i>챕터를 시작한 플레이어(전체 대비)</span><span><i class="sw" style="background:var(--s-clear)"></i>챕터 전부 클리어(전체 대비)</span></div><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="챕터별 시작·완료 플레이어">${g}</svg>`;
+}
 
 function renderTiles(ov, stats) {
   const t = ov.totals;
@@ -189,23 +224,35 @@ function renderTiles(ov, stats) {
 }
 
 function renderFunnel(stats) {
-  const rows = stats.filter((s) => s.players || LEVELS.some((l) => l.n === s.level));
+  const rows = stats.filter((s) => s.players || (!s.old && LEVELS.some((l) => l.n === s.level)));
   if (!rows.length) { $('funnel').innerHTML = '<p class="empty">데이터 없음</p>'; return; }
   const max = Math.max(1, ...rows.map((s) => s.players));
-  const W = 560, rowH = 24, left = 150, right = 70, H = rows.length * rowH + 8;
+  const W = 560, rowH = 24, left = 150, right = 70, headH = 22;
+  // Group headers: a chapter change (when the levels have chapters) and the start of the old maps.
+  const items = [];
+  let prev;
+  for (const s of rows) {
+    const grp = s.old ? '이전 맵 (지금 빌드에 없는 맵)' : HAS_CH() ? chName(s.chapter) : null;
+    if (grp != null && grp !== prev) items.push({ head: grp });
+    prev = grp;
+    items.push(s);
+  }
+  const H = items.reduce((h, it) => h + (it.head ? headH : rowH), 8);
   const sx = (v) => (v / max) * (W - left - right);
   let g = '';
-  rows.forEach((s, i) => {
-    const y = i * rowH + 4;
-    const tipText = `${s.level}. ${s.name}\n시작 ${s.players}명 · 클리어 ${s.clearPlayers}명 (${pct(s.clearRate)})\n시도 ${s.attempts}회`;
+  let y = 4;
+  for (const s of items) {
+    if (s.head) { g += `<text x="0" y="${y + 15}" style="font-weight:600;fill:var(--text-primary)">${esc(s.head)}</text>`; y += headH; continue; }
+    const tipText = `${stageNo(s)}. ${s.name}${s.chapter ? ` (${s.chapter})` : ''}\n시작 ${s.players}명 · 클리어 ${s.clearPlayers}명 (${pct(s.clearRate)})\n시도 ${s.attempts}회${s.old ? `\n맵 ${s.levelKey}` : ''}`;
     g += `<g data-tip="${esc(tipText)}">
       <rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/>
-      <text x="${left - 8}" y="${y + 15}" text-anchor="end">${s.level}. ${esc(s.name.slice(0, 12))}</text>
+      <text x="${left - 8}" y="${y + 15}" text-anchor="end">${s.old ? '' : s.level + '. '}${esc(s.name.slice(0, 12))}</text>
       <rect x="${left}" y="${y + 3}" width="${Math.max(sx(s.players), s.players ? 2 : 0)}" height="8" rx="2" fill="var(--s-start)"/>
       <rect x="${left}" y="${y + 13}" width="${Math.max(sx(s.clearPlayers), s.clearPlayers ? 2 : 0)}" height="8" rx="2" fill="var(--s-clear)"/>
       <text x="${left + sx(s.players) + 6}" y="${y + 15}" style="fill:var(--text-primary)">${s.clearPlayers}/${s.players} · ${pct(s.clearRate)}</text>
     </g>`;
-  });
+    y += rowH;
+  }
   $('funnel').innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="스테이지별 시작·클리어 플레이어 수">${g}</svg>`;
 }
 
@@ -223,33 +270,35 @@ function renderDropoff(stats) {
     const v = k * step;
     g += `<line x1="${left}" x2="${W}" y1="${sy(v)}" y2="${sy(v)}" stroke="var(--grid)"/><text x="${left - 4}" y="${sy(v) + 4}" text-anchor="end">${Math.round(v * 100)}%</text>`;
   }
-  const worst = [...rows].sort((a, b) => (b.playerQuitRate ?? 0) - (a.playerQuitRate ?? 0)).slice(0, 3).map((s) => s.level);
+  const worst = [...rows].sort((a, b) => (b.playerQuitRate ?? 0) - (a.playerQuitRate ?? 0)).slice(0, 3);
+  const every = rows.length > 25 ? 5 : 1; // 50 stages: label every 5th (and the worst ones)
   rows.forEach((s, i) => {
     const v = s.playerQuitRate ?? 0;
     const x = left + i * bw + bw * 0.2;
     const w = bw * 0.6;
     const y = sy(v);
     const h = H - bottom - y;
-    const tipText = `${s.level}. ${s.name}\n여기서 그만둔 플레이어 ${s.playerQuits}/${s.players} (${pct(s.playerQuitRate)})\n세션 종료율 ${pct(s.sessionEndRate)}`;
+    const tipText = `${stageNo(s)}. ${s.name}\n여기서 그만둔 플레이어 ${s.playerQuits}/${s.players} (${pct(s.playerQuitRate)})\n세션 종료율 ${pct(s.sessionEndRate)}`;
     const path = h > 4 ? `M${x},${H - bottom} V${y + 4} Q${x},${y} ${x + 4},${y} H${x + w - 4} Q${x + w},${y} ${x + w},${y + 4} V${H - bottom} Z` : `M${x},${H - bottom} V${y} H${x + w} V${H - bottom} Z`;
     g += `<g data-tip="${esc(tipText)}"><rect x="${left + i * bw}" y="${top}" width="${bw}" height="${H - top - bottom}" fill="transparent"/>
-      <path d="${path}" fill="var(--s-quit)" opacity="${worst.includes(s.level) ? 1 : 0.55}"/>
-      ${worst.includes(s.level) && v > 0 ? `<text x="${x + w / 2}" y="${y - 4}" text-anchor="middle" style="fill:var(--text-primary)">${pct(v)}</text>` : ''}
-      <text x="${x + w / 2}" y="${H - bottom + 16}" text-anchor="middle">${s.level}</text></g>`;
+      <path d="${path}" fill="var(--s-quit)" opacity="${worst.includes(s) ? 1 : 0.55}"/>
+      ${worst.includes(s) && v > 0 ? `<text x="${x + w / 2}" y="${y - 4}" text-anchor="middle" style="fill:var(--text-primary)">${pct(v)}</text>` : ''}
+      ${s.old ? `<text x="${x + w / 2}" y="${H - bottom + 16}" text-anchor="middle">구</text>` : (s.level % every === 0 || every === 1 || worst.includes(s)) ? `<text x="${x + w / 2}" y="${H - bottom + 16}" text-anchor="middle">${s.level}</text>` : ''}</g>`;
   });
   $('dropoff').innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="스테이지별 이탈률">${g}<line x1="${left}" x2="${W}" y1="${H - bottom}" y2="${H - bottom}" stroke="var(--text-muted)"/></svg>`;
 }
 
 function renderMetrics(stats) {
-  const head = ['스테이지', '이름', '시작', '클리어율', '이탈률', '세션 종료율', '클리어 시간 중앙', '상위 25%', '클리어 이동 중앙', '시도', '되돌리기/시도', '재시작/시도', '힌트 본 비율', '실패', '몸 낭비', '오래 멈춤', '몸 사용 사유'];
+  const ch = HAS_CH();
+  const head = ['스테이지', '이름', ...(ch ? ['챕터'] : []), '시작', '클리어율', '이탈률', '세션 종료율', '클리어 시간 중앙', '상위 25%', '클리어 이동 중앙', '시도', '되돌리기/시도', '재시작/시도', '힌트 본 비율', '실패', '몸 낭비', '오래 멈춤', '몸 사용 사유'];
   const rows = stats.filter((s) => s.attempts).map((s) => `<tr>
-    <td class="l">${s.level}</td><td class="l name" title="${esc(s.namesSeen.join(' / '))}">${esc(s.name)}</td>
+    <td class="l">${stageNo(s)}</td><td class="l name" title="${esc(s.namesSeen.join(' / '))}">${esc(s.name)}</td>${ch ? `<td class="l">${esc(s.chapter)}</td>` : ''}
     <td>${s.players}</td><td>${pct(s.clearRate)}</td><td>${pct(s.playerQuitRate)}</td><td>${pct(s.sessionEndRate)}</td>
     <td>${sec(s.clearMsMedian)}</td><td>${sec(s.clearMsP75)}</td><td>${num(s.clearMovesMedian)}</td>
     <td>${s.attempts}</td><td>${num(s.undosPerAttempt)}</td><td>${num(s.restartsPerAttempt)}</td><td>${pct(s.hintPlayerRate)}</td>
     <td>${s.fails}</td><td>${s.wastedBodies}</td><td>${s.idles}회 · ${sec(s.idleMs)}</td>
     <td class="l">${Object.entries(s.bodyLost).map(([k, v]) => `${LOST[k] ?? k} ${v}`).join(', ')}</td></tr>`).join('');
-  $('metrics').innerHTML = `<thead><tr>${head.map((h, i) => `<th class="${i < 2 || i === 16 ? 'l' : ''}">${h}</th>`).join('')}</tr></thead><tbody>${rows || `<tr><td class="l empty" colspan="${head.length}">데이터 없음</td></tr>`}</tbody>`;
+  $('metrics').innerHTML = `<thead><tr>${head.map((h, i) => `<th class="${i < (ch ? 3 : 2) || i === head.length - 1 ? 'l' : ''}">${h}</th>`).join('')}</tr></thead><tbody>${rows || `<tr><td class="l empty" colspan="${head.length}">데이터 없음</td></tr>`}</tbody>`;
 }
 
 const TILE_FILL = { '#': 'var(--wall)' };
@@ -258,7 +307,7 @@ async function renderHeatmap() {
   const n = Number($('hm-level').value);
   const metric = $('hm-metric').value;
   if (!n) { $('heatmap').innerHTML = '<p class="empty">레벨 데이터 없음</p>'; return; }
-  const { level, cells } = await api('/api/stats/heatmap', { level: n });
+  const { level, cells, otherMapAttempts } = await api('/api/stats/heatmap', { level: n });
   if (!level) { $('heatmap').innerHTML = '<p class="empty">현재 빌드의 levels.js에 없는 스테이지</p>'; return; }
   const val = (c) => (metric === 'lost' ? Object.keys(c).filter((k) => k.startsWith('lost_')).reduce((a, k) => a + c[k], 0) : c[metric] ?? 0);
   const byCell = new Map(cells.map((c) => [`${c.x},${c.y}`, c]));
@@ -280,7 +329,7 @@ async function renderHeatmap() {
     if (v > 0) g += `<text x="${x * S + S / 2}" y="${y * S + S / 2 + 5}" text-anchor="middle" style="font-size:12px;font-weight:600;fill:${dark ? '#fff' : 'var(--text-primary)'}">${metric === 'idleMs' ? Math.round(v / 1000) + 's' : v}</text>`;
     g += '</g>';
   }
-  const legend = `<div class="legend"><span>적음</span>${[0, 1, 2, 3, 4, 5, 6].map((k) => `<i class="sw" style="background:var(--seq-${k});margin:0"></i>`).join('')}<span>많음 (최대 ${metric === 'idleMs' ? sec(max) : max})</span><span>S 원래 출발점 · 出 출구 · ○ 구덩이 · ≈ 얼음 · × 금 간 바닥</span></div>`;
+  const legend = `<div class="legend"><span>적음</span>${[0, 1, 2, 3, 4, 5, 6].map((k) => `<i class="sw" style="background:var(--seq-${k});margin:0"></i>`).join('')}<span>많음 (최대 ${metric === 'idleMs' ? sec(max) : max})</span><span>S 원래 출발점 · 出 출구 · ○ 구덩이 · ≈ 얼음 · × 금 간 바닥</span>${otherMapAttempts ? `<span>맵이 지금과 달랐던 예전 시도 ${otherMapAttempts}회는 뺐다</span>` : ''}</div>`;
   $('heatmap').innerHTML = `<div class="scroll"><svg viewBox="0 0 ${level.w * S} ${level.h * S}" width="${level.w * S}" style="max-width:100%" role="img" aria-label="스테이지 ${n} 히트맵">${g}</svg></div>${legend}`;
 }
 
@@ -295,31 +344,42 @@ async function renderTimeline() {
       ${s.attempts.at(-1)?.outcome === 'quit' ? (si === p.sessions.length - 1 ? '<span class="end">← 여기서 그만둠</span>' : '<span class="meta">← 세션 끝, 나중에 돌아옴</span>') : ''}</div>`).join('')}</div></div>`).join('');
 }
 
+function renderStages() {
+  renderChapters();
+  renderFunnel(visible(STATS));
+  renderDropoff(visible(STATS));
+  renderMetrics(visible(STATS));
+}
+
 async function load() {
   $('status').innerHTML = '';
   try {
-    const [ov, stats, levels] = await Promise.all([api('/api/stats/overview'), api('/api/stats/levels'), api('/api/levels')]);
+    const [ov, stats, levels, chapters] = await Promise.all([api('/api/stats/overview'), api('/api/stats/levels'), api('/api/levels'), api('/api/stats/chapters')]);
     LEVELS = levels;
     STATS = stats;
+    CHAPTERS = chapters;
+    const chCur = $('f-chapter').value;
+    $('f-chapter-wrap').hidden = !HAS_CH();
+    $('f-chapter').innerHTML = '<option value="">전체</option>' + chapters.map((c) => `<option value="${esc(c.chapter)}" ${c.chapter === chCur ? 'selected' : ''}>${esc(chName(c.chapter))}</option>`).join('');
     const cur = $('f-build').value;
     const builds = [...new Set(ov.builds.map((b) => b.build))];
     $('f-build').innerHTML = '<option value="">전체</option>' + builds.map((b) => `<option ${b === cur ? 'selected' : ''}>${esc(b)}</option>`).join('');
     const hmCur = $('hm-level').value;
-    const opts = levels.map((l) => `<option value="${l.n}">${l.n}. ${esc(l.name)}</option>`);
-    $('hm-level').innerHTML = opts.join('');
+    const opt = (l) => `<option value="${l.n}">${l.n}. ${esc(l.name)}</option>`;
+    $('hm-level').innerHTML = HAS_CH()
+      ? chapters.map((c) => `<optgroup label="${esc(chName(c.chapter))}">${levels.filter((l) => (l.chapter ?? '') === c.chapter).map(opt).join('')}</optgroup>`).join('')
+      : levels.map(opt).join('');
     if (hmCur) $('hm-level').value = hmCur;
     else {
       // Default to the stage with the highest drop-off.
       const worst = [...stats].sort((a, b) => (b.playerQuitRate ?? 0) - (a.playerQuitRate ?? 0))[0];
-      if (worst && levels.some((l) => l.n === worst.level)) $('hm-level').value = worst.level;
+      if (worst && !worst.old && levels.some((l) => l.n === worst.level)) $('hm-level').value = worst.level;
     }
     const q = query();
     q.set('token', token);
     $('exports').innerHTML = `내보내기: ${['attempts.csv', 'levels.csv', 'events.jsonl', 'levels.json'].map((f) => `<a href="/api/export/${f}?${esc(q)}">${f}</a>`).join(' · ')}`;
     renderTiles(ov, stats);
-    renderFunnel(stats);
-    renderDropoff(stats);
-    renderMetrics(stats);
+    renderStages();
     await Promise.all([renderHeatmap(), renderTimeline()]);
   } catch (err) {
     $('status').innerHTML = `<p class="err">${esc(err.message)}</p>`;
@@ -328,6 +388,7 @@ async function load() {
 
 for (const id of ['f-client', 'f-build', 'f-range']) $(id).addEventListener('change', load);
 $('refresh').addEventListener('click', load);
+$('f-chapter').addEventListener('change', renderStages);
 $('hm-level').addEventListener('change', () => renderHeatmap().catch((e) => ($('status').innerHTML = `<p class="err">${esc(e.message)}</p>`)));
 $('hm-metric').addEventListener('change', () => renderHeatmap().catch((e) => ($('status').innerHTML = `<p class="err">${esc(e.message)}</p>`)));
 load();

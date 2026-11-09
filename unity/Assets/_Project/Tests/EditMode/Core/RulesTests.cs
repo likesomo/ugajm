@@ -294,6 +294,61 @@ namespace SevenSteps.Tests
                         Assert.AreEqual(Rules.Steps, e.StepIdx, $"{where}: {e.Type}");
         }
 
+        // ---- mud ----------------------------------------------------------------------------------------
+
+        [Test]
+        public void MudCostsTwoStepsOnlyWhenSteppedIntoDirectly()
+        {
+            int moves = 0, mud = 0;
+            foreach (var (prev, cmd, r, where) in AllResults())
+            {
+                var s = r.State;
+                if ("UDLR".IndexOf(cmd) < 0 || s.Used <= prev.Used) continue; // not a move, rejected, or a new body
+                moves++;
+                int first = s.Trail[prev.Trail.Length].Cell;
+                int cost = Rules.IsMud(Rules.TileAt(prev, first)) ? 2 : 1;
+                if (cost == 2) mud++;
+                Assert.AreEqual(prev.Used + cost, s.Used, $"{where}: step cost");
+            }
+            Assert.Greater(mud, 0, "golden traces step into mud");
+            Assert.Greater(moves, mud);
+        }
+
+        [Test]
+        public void MudBlocksWithOneStepLeft()
+        {
+            var s = Run(Rules.NewState(Map(2, "##########", "#S......m#", "##########")), "RRRRRR");
+            Assert.AreEqual(6, s.Used);
+            var r = Rules.Dispatch(s, Command.FromAct(Act.Right));
+            Assert.AreSame(s, r.State);
+            Assert.AreEqual(GameEventType.Bump, r.Events[0].Type);
+            Assert.AreEqual(s.Pos + 1, r.Events[0].At);
+        }
+
+        [Test]
+        public void SeventhStepCanEndOnMud()
+        {
+            var s = Run(Rules.NewState(Map(2, "#########", "#S.....m#", "#########")), "RRRRRR");
+            Assert.AreEqual(Status.Choose, s.Status);
+            Assert.AreEqual('m', Rules.TileAt(s, s.Pos));
+            Assert.AreEqual(Rules.Steps, s.Used);
+        }
+
+        [Test]
+        public void IceSlideStopsOnMudWithoutExtraStep()
+        {
+            var s = Run(Rules.NewState(Map(2, "#########", "#S~~m...#", "#########")), "R");
+            Assert.AreEqual('m', Rules.TileAt(s, s.Pos));
+            Assert.AreEqual(1, s.Used);
+        }
+
+        [Test]
+        public void MudLetter()
+        {
+            Assert.IsTrue(Rules.IsMud('m'));
+            foreach (char c in "#.SEo~x=MLRr") Assert.IsFalse(Rules.IsMud(c), c.ToString());
+        }
+
         // ---- parsing ------------------------------------------------------------------------------------
 
         [Test]

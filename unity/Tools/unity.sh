@@ -138,19 +138,29 @@ case "$cmd" in
     # Opens Builds/WebGL in Orca's built-in browser on a few replays, screenshots each and counts board pixels.
     # Fails when the 3D board is missing (UI only) or the console shows an exception. Needs the `orca` CLI.
     command -v orca >/dev/null || { echo "[unity.sh] smoke-webgl needs the orca CLI (Orca built-in browser)"; exit 1; }
-    out="$REPO/reports/smoke-webgl"; mkdir -p "$out"; rm -f "$out"/*; fail=0; port=8091
+    out="$REPO/reports/smoke-webgl"; mkdir -p "$out"; rm -f "$out"/*; fail=0
+    [ -f "$REPO/Builds/WebGL/index.html" ] || { echo "[unity.sh] smoke-webgl: no build at Builds/WebGL (run build-webgl)"; exit 1; }
+    # Every workspace runs this on the same PC: take a free port so we never talk to another workspace's server
+    # (a busy fixed port made this check stop silently, or test another workspace's build).
+    port=""; for p in $(seq 8091 8190); do netstat -ano | grep -q "[:.]$p .*LISTENING" || { port=$p; break; }; done
+    [ -n "$port" ] || { echo "[unity.sh] smoke-webgl: no free port in 8091-8190"; exit 1; }
     node "$HERE/serve.mjs" "$port" "$REPO/Builds/WebGL" > "$out/serve.log" 2>&1 &
+    srv=$!; page=""
+    # Always stop our server and close our tab, whatever happens below.
+    trap 'kill "$srv" 2>/dev/null || true; [ -n "$page" ] && orca tab close --page "$page" --json >/dev/null 2>&1 || true' EXIT
     sleep 2
+    kill -0 "$srv" 2>/dev/null || { echo "[unity.sh] smoke-webgl: server did not start on port $port:"; tail -5 "$out/serve.log"; exit 1; }
+    echo "[unity.sh] smoke-webgl: serving Builds/WebGL on port $port"
     for spec in "1:R" "8:DURRRRRKDDR" "13:DUDUDURKDD"; do
       lv="${spec%%:*}"; rp="${spec#*:}"
-      page="$(orca tab create --url "http://localhost:$port/?level=$lv&replay=$rp" --json 2>/dev/null | grep -o '"browserPageId": "[^"]*"' | head -1 | cut -d'"' -f4)"
-      [ -z "$page" ] && { echo "[unity.sh] smoke-webgl level $lv: could not open a browser tab"; fail=1; continue; }
+      page="$(orca tab create --url "http://localhost:$port/?level=$lv&replay=$rp" --json 2>/dev/null | grep -o '"browserPageId": "[^"]*"' | head -1 | cut -d'"' -f4 || true)"
+      [ -z "$page" ] && { echo "[unity.sh] smoke-webgl level $lv: could not open a browser tab (orca tab create failed or timed out)"; fail=1; continue; }
       orca capture start --page "$page" --json > /dev/null 2>&1 || true
       orca wait --page "$page" --load load --json > /dev/null 2>&1 || true
       sleep 25
-      shot="$(orca screenshot --page "$page" 2>/dev/null | grep -oE '[A-Za-z]:\\[^ ]+\.png' | head -1)"
+      shot="$(orca screenshot --page "$page" 2>/dev/null | grep -oE '[A-Za-z]:\\[^ ]+\.png' | head -1 || true)"
       orca console --page "$page" --limit 400 > "$out/level$lv.console.txt" 2>&1 || true
-      orca tab close --page "$page" --json > /dev/null 2>&1 || true
+      orca tab close --page "$page" --json > /dev/null 2>&1 || true; page=""
       if [ -z "$shot" ]; then echo "[unity.sh] smoke-webgl level $lv: no screenshot"; fail=1; continue; fi
       cp "$(cygpath -u "$shot")" "$out/level$lv.png"
       px="$(powershell -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$HERE/board-pixels.ps1")" -Path "$(cygpath -w "$out/level$lv.png")" | tr -d '\r')"
@@ -159,7 +169,6 @@ case "$cmd" in
       if [ "${px:-0}" -lt 500 ]; then echo "[unity.sh]   board not drawn (UI only?) -> see $out/level$lv.png"; fail=1; fi
       if [ "${errs:-0}" -gt 0 ]; then grep -iE '^\[error\]|Exception' "$out/level$lv.console.txt" | head -5; fail=1; fi
     done
-    for p in $(netstat -ano | grep ":$port .*LISTENING" | awk '{print $5}' | sort -u); do taskkill //PID "$p" //F > /dev/null; done
     [ "$fail" -eq 0 ] && echo "[unity.sh] smoke-webgl OK -> reports/smoke-webgl/" || { echo "[unity.sh] smoke-webgl FAILED"; exit 1; } ;;
   serve)
     port="${2:-8090}"
