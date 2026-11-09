@@ -122,10 +122,10 @@
 | 29 | 소개 | 내리는 벽 | keep 8 | lever | 0.32 | 7번째 걸음이 레버를 당겨 벽을 내린다 |
 | 30 | 응용 | 열면 닫힌다 | exp lever 응용 | lever, switch | 0.5 | 레버는 한 길을 열고 다른 길을 닫는다 |
 | 31 | 반전 | 올려서 멈추기 | keep 10 | lever, ice, wallStopper | 0.42 | 벽을 올려 미끄럼을 멈춘다 |
-| 32 | 응용 | 두 번 당기기 | new (lever+switch) | lever, switch, switchBack | 0.48 | 출발점을 옮겨 레버를 다시 당긴다 |
-| 33 | 응용 | 레버와 숫자 | new (lever-gate) | lever, gate | 0.5 | 벽이 내려간 뒤의 길이로 숫자를 맞춘다 |
-| 34 | 반전 | 레버 위의 선돌 | new (lever+keep) | lever, keep, plate | 0.52 | 레버에 남은 선돌은 발판도 누르지만 다시 당길 수 없다 |
-| 35 | 피날레 | 결구의 장치 | new (lever+ice+plate) | lever, ice, plate, keep | 0.58 | 벽, 얼음, 발판을 한 번의 레버로 |
+| 32 | 응용 | 레버와 바통 | new (batch4, 탐색 후보) | lever, switch | 0.56 | 레버를 당긴 형제가 바통을 넘긴다. 벽 너머 출발점을 고른다 |
+| 33 | 응용 | 레버와 숫자 | new (batch4, 탐색 후보) | lever, gate, keep, switch | 0.6 | 벽이 내려간 뒤의 길이로 숫자를 맞춘다 |
+| 34 | 반전 | 레버와 발판 | new (batch4, 탐색 후보) | lever, plate, switch | 0.52 | 한 번 당기면 끝인 레버와 계속 눌러야 하는 발판을 구분한다 |
+| 35 | 피날레 | 결구의 장치 | new (batch4, 탐색 후보) | lever, ice, keep, switch | 0.62 | 레버로 벽을 바꾸고 얼음·선돌·바통을 함께 쓴다 |
 
 ### 6장 무너지는 행성 (36–42)
 
@@ -134,10 +134,10 @@
 | # | 역할 | 제목 | 출처 | 기믹 | 목표 D | 의도한 아하 |
 |---|---|---|---|---|---|---|
 | 36 | 소개 | 한 번만 버티는 바닥 | keep 11 | cracked, seal, plate | 0.38 | 지나간 바닥은 무너지고, 7번째에 서면 굳는다 |
-| 37 | 응용 | 무너진 길 위의 다리 | new (cracked-pit) | cracked, seal, pit, bridge | 0.42 | 무너질 길과 메울 구멍의 순서 |
+| 37 | 응용 | 무너진 길 위의 구멍 | new (batch4, 탐색 후보) | cracked, pit, switch | 0.51 | 금 간 바닥과 구멍이 지름길을 막는다. 무너뜨릴 길을 고른다 |
 | 38 | 소개 | 하나만 남겨라 | keep 13 | statueDoor, keep | 0.36 | 문의 숫자 = 서 있는 선돌 수 |
-| 39 | 응용 | 열쇠가 되는 형제 | redo 14 (몸 3) | statueDoor, plate, statueKey | 0.48 | 쓸모없어 보이는 자리에 선돌을 세워 문을 연다 |
-| 40 | 반전 | 남기기 전에 지나가라 | edit 15 (예산 4→3) | statueDoor, emptyDoor, switch | 0.5 | 0 문: 선돌을 세우면 닫힌다 |
+| 39 | 응용 | 열쇠가 되는 형제 | redo 14 (batch4) | statueDoor, plate, statueKey | 0.48 | 막다른 곳에 선 첫째 형제가 석상 수 문의 열쇠가 된다 |
+| 40 | 반전 | 남기기 전에 지나가라 | edit 15 (예산 4→3) | statueDoor, emptyDoor, switch | 0.46 | 0 문: 선돌을 세우면 닫힌다 |
 | 41 | 반전 | 선돌 아닌 흔적 | new (qdoor-cracked) | statueDoor, cracked, seal | 0.55 | 굳은 바닥과 다리는 선돌로 세지 않는다 |
 | 42 | 피날레 | 무너지는 계산 | new (qdoor+cracked+pit) | statueDoor, cracked, pit, bridge | 0.6 | 몇을 세우고 몇을 다리로 쓸지 |
 

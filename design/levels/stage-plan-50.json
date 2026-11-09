@@ -513,28 +513,29 @@
       "n": 32,
       "ch": 5,
       "role": "응용",
-      "title": "두 번 당기기",
-      "src": "new (lever+switch)",
+      "title": "레버와 바통",
+      "src": "new (batch4, 탐색 후보)",
       "tags": [
         "lever",
-        "switch",
-        "switchBack"
+        "switch"
       ],
-      "D": 0.48,
-      "A": 0.6,
-      "aha": "출발점을 옮겨 레버를 다시 당긴다"
+      "D": 0.56,
+      "A": 0.5,
+      "aha": "레버를 당긴 형제가 바통을 넘긴다. 벽 너머 출발점을 고른다"
     },
     {
       "n": 33,
       "ch": 5,
       "role": "응용",
       "title": "레버와 숫자",
-      "src": "new (lever-gate)",
+      "src": "new (batch4, 탐색 후보)",
       "tags": [
         "lever",
-        "gate"
+        "gate",
+        "keep",
+        "switch"
       ],
-      "D": 0.5,
+      "D": 0.6,
       "A": 0.4,
       "aha": "벽이 내려간 뒤의 길이로 숫자를 맞춘다"
     },
@@ -542,32 +543,32 @@
       "n": 34,
       "ch": 5,
       "role": "반전",
-      "title": "레버 위의 선돌",
-      "src": "new (lever+keep)",
+      "title": "레버와 발판",
+      "src": "new (batch4, 탐색 후보)",
       "tags": [
         "lever",
-        "keep",
-        "plate"
+        "plate",
+        "switch"
       ],
       "D": 0.52,
-      "A": 0.6,
-      "aha": "레버에 남은 선돌은 발판도 누르지만 다시 당길 수 없다"
+      "A": 0.5,
+      "aha": "한 번 당기면 끝인 레버와 계속 눌러야 하는 발판을 구분한다"
     },
     {
       "n": 35,
       "ch": 5,
       "role": "피날레",
       "title": "결구의 장치",
-      "src": "new (lever+ice+plate)",
+      "src": "new (batch4, 탐색 후보)",
       "tags": [
         "lever",
         "ice",
-        "plate",
-        "keep"
+        "keep",
+        "switch"
       ],
-      "D": 0.58,
+      "D": 0.62,
       "A": 0.5,
-      "aha": "벽, 얼음, 발판을 한 번의 레버로"
+      "aha": "레버로 벽을 바꾸고 얼음·선돌·바통을 함께 쓴다"
     },
     {
       "n": 36,
@@ -588,17 +589,16 @@
       "n": 37,
       "ch": 6,
       "role": "응용",
-      "title": "무너진 길 위의 다리",
-      "src": "new (cracked-pit)",
+      "title": "무너진 길 위의 구멍",
+      "src": "new (batch4, 탐색 후보)",
       "tags": [
         "cracked",
-        "seal",
         "pit",
-        "bridge"
+        "switch"
       ],
-      "D": 0.42,
+      "D": 0.51,
       "A": 0.4,
-      "aha": "무너질 길과 메울 구멍의 순서"
+      "aha": "금 간 바닥과 구멍이 지름길을 막는다. 무너뜨릴 길을 고른다"
     },
     {
       "n": 38,
@@ -619,7 +619,7 @@
       "ch": 6,
       "role": "응용",
       "title": "열쇠가 되는 형제",
-      "src": "redo 14 (몸 3)",
+      "src": "redo 14 (batch4)",
       "tags": [
         "statueDoor",
         "plate",
@@ -627,7 +627,7 @@
       ],
       "D": 0.48,
       "A": 0.6,
-      "aha": "쓸모없어 보이는 자리에 선돌을 세워 문을 연다"
+      "aha": "막다른 곳에 선 첫째 형제가 석상 수 문의 열쇠가 된다"
     },
     {
       "n": 40,
@@ -640,7 +640,7 @@
         "emptyDoor",
         "switch"
       ],
-      "D": 0.5,
+      "D": 0.46,
       "A": 0.7,
       "aha": "0 문: 선돌을 세우면 닫힌다"
     },
