@@ -117,6 +117,42 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void StarsFromTheAttemptAreSavedAndShown()
+        {
+            Make(3, false);            // stage 0: minBodies 1, the test win uses 1 body
+            ctl.Start(0);
+            board.Win();               // no hint, no undo, no restart
+            Assert.AreEqual(3, panel.Shown.Stars);
+            Assert.AreEqual(3, panel.Shown.BestStars);
+            Assert.AreEqual(3, save.Progress.BestStars(board.State.Level));
+
+            ctl.Again();               // a new attempt: a hint makes it 1 star, the best stays 3
+            board.Attempt = new AttemptCounts(1, 0, 0);
+            board.Win();
+            Assert.AreEqual(1, panel.Shown.Stars);
+            Assert.AreEqual(3, panel.Shown.BestStars);
+
+            ctl.Again();               // undo only: 2 stars
+            board.Attempt = new AttemptCounts(0, 2, 0);
+            board.Win();
+            Assert.AreEqual(2, panel.Shown.Stars);
+        }
+
+        [Test]
+        public void UnknownMinimumGivesNoStars()
+        {
+            Make(3, false);            // stage 1: minBodies 0 (unknown)
+            ctl.Start(1);
+            board.Win();
+            Assert.AreEqual(0, panel.Shown.Stars);
+            Assert.AreEqual(0, save.Progress.BestStars(board.State.Level));
+            Assert.IsTrue(save.Progress.IsCleared(board.State.Level), "still a clear");
+            Assert.Throws<ArgumentOutOfRangeException>(() => ResultModel.Clear(0, 3, 1, 1, 1, false, stars: 3, bestStars: 2),
+                "best below this clear");
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ResultModel(0, false, 3, 0, 0, 0, false, stars: 1));
+        }
+
+        [Test]
         public void NoNextAfterTheLastStage()
         {
             Make(2, false);

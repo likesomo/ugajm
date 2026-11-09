@@ -23,9 +23,18 @@ namespace SevenSteps.Game.UI
         /// Player's best for this stage, 0 = no record.
         public int BestBodies { get; }
         public bool IsLast { get; }
+        /// Stars of this clear, 0..3 (0 = unknown minimum or a loss). docs/architecture.md 6.5.
+        public int Stars { get; }
+        /// Best stars recorded for the stage, 0..3, at least <see cref="Stars"/> (the clear is saved first).
+        public int BestStars { get; }
 
-        public ResultModel(int stage, bool cleared, int levelBodies, int bodiesUsed, int minBodies, int bestBodies, bool isLast)
+        public ResultModel(int stage, bool cleared, int levelBodies, int bodiesUsed, int minBodies, int bestBodies, bool isLast,
+            int stars = 0, int bestStars = 0)
         {
+            if (stars < 0 || stars > Core.Stars.Max) throw new ArgumentOutOfRangeException(nameof(stars), stars, $"0..{Core.Stars.Max}");
+            if (bestStars < 0 || bestStars > Core.Stars.Max) throw new ArgumentOutOfRangeException(nameof(bestStars), bestStars, $"0..{Core.Stars.Max}");
+            if (!cleared && stars != 0) throw new ArgumentOutOfRangeException(nameof(stars), stars, "a loss has no stars");
+            if (bestStars < stars) throw new ArgumentOutOfRangeException(nameof(bestStars), bestStars, $"best below this clear's {stars} (save the clear first)");
             if (stage < 0) throw new ArgumentOutOfRangeException(nameof(stage), stage, "0-based stage");
             if (levelBodies < 1) throw new ArgumentOutOfRangeException(nameof(levelBodies), levelBodies, "at least one body");
             if (cleared && (bodiesUsed < 1 || bodiesUsed > levelBodies))
@@ -40,10 +49,13 @@ namespace SevenSteps.Game.UI
             MinBodies = minBodies;
             BestBodies = bestBodies;
             IsLast = isLast;
+            Stars = stars;
+            BestStars = bestStars;
         }
 
-        public static ResultModel Clear(int stage, int levelBodies, int bodiesUsed, int minBodies, int bestBodies, bool isLast) =>
-            new ResultModel(stage, true, levelBodies, bodiesUsed, minBodies, bestBodies, isLast);
+        public static ResultModel Clear(int stage, int levelBodies, int bodiesUsed, int minBodies, int bestBodies, bool isLast,
+            int stars = 0, int bestStars = 0) =>
+            new ResultModel(stage, true, levelBodies, bodiesUsed, minBodies, bestBodies, isLast, stars, bestStars);
 
         public static ResultModel Loss(int stage, int levelBodies, bool isLast) =>
             new ResultModel(stage, false, levelBodies, 0, 0, 0, isLast);
