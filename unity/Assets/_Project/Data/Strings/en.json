@@ -4,7 +4,9 @@
     { "key": "loading.tip.1", "text": "A body left behind can become a bridge." },
     { "key": "loading.tip.2", "text": "Only on the seventh step can you choose KEEP or SWITCH." },
     { "key": "loading.tip.3", "text": "A standing stone can block a path or hold down a plate." },
+
     { "key": "chapter.number", "text": "Chapter {0:00}" },
+
     { "key": "title.name", "text": "Seven Steps" },
     { "key": "title.tagline", "text": "Three wanderers. One sky." },
     { "key": "title.begin", "text": "Begin the Journey" },
@@ -12,6 +14,7 @@
     { "key": "title.stages", "text": "Choose a Stage" },
     { "key": "title.settings", "text": "Settings" },
     { "key": "title.credits", "text": "Credits" },
+
     { "key": "planets.head", "text": "Choose a planet" },
     { "key": "planets.detail", "text": "All seven worlds are open. Stars record your journey." },
     { "key": "planets.total", "text": "All stars:" },
@@ -19,6 +22,7 @@
     { "key": "planets.note", "text": "No locks. Replay any planet." },
     { "key": "planets.stage", "text": "Stage" },
     { "key": "planets.list_back", "text": "Star map" },
+
     { "key": "language.head", "text": "Choose your language" },
     { "key": "language.note", "text": "You can change this later in Settings." },
     { "key": "language.continue", "text": "Continue" },
@@ -101,6 +105,8 @@
     { "key": "settings.status", "text": "Sent {0}, waiting {1}, last reply {2}, ID {3}" },
     { "key": "settings.status_off", "text": "Not sending" },
     { "key": "settings.status_no_connection", "text": "no connection" },
+    { "key": "settings.language", "text": "Language" },
+    { "key": "settings.language_change", "text": "Change language" },
 
     { "key": "credits.title", "text": "Credits" },
     { "key": "credits.game", "text": "Seven Steps" },
