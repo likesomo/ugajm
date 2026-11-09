@@ -14,10 +14,12 @@ namespace SevenSteps.Tests
         public const string Regenerate = "Regenerate the golden data: node unity/Tools/gen-golden.mjs";
         static GoldenLevelsFile levels;
         static GoldenTracesFile traces;
+        static GoldenStarsFile stars;
 
         public static string Dir => Path.Combine(Application.dataPath, "_Project", "Tests", "Golden");
         public static GoldenLevelsFile Levels => levels ??= Load<GoldenLevelsFile>("levels.golden.json");
         public static GoldenTracesFile Traces => traces ??= Load<GoldenTracesFile>("traces.golden.json");
+        public static GoldenStarsFile Stars => stars ??= Load<GoldenStarsFile>("stars.golden.json");
 
         static T Load<T>(string file)
         {
@@ -105,6 +107,14 @@ namespace SevenSteps.Tests
 
     [Serializable] public sealed class GoldenPlate { public string plate; public int[] cells; }
     [Serializable] public sealed class GoldenSolve { public int bodies, bodiesUsed; public bool noSwitch, solvable; public string path; }
+
+    [Serializable] public sealed class GoldenStarsFile { public string generator; public GoldenStarCase[] cases; public GoldenStarStage[] stages; }
+    [Serializable] public sealed class GoldenStarCase
+    {
+        public int bodiesUsed, minBodies, hints, undos, restarts, stars;
+        public override string ToString() => $"used{bodiesUsed} min{minBodies} h{hints} z{undos} r{restarts}";
+    }
+    [Serializable] public sealed class GoldenStarStage { public string name, path; public int minBodies, bodiesUsed, stars; public override string ToString() => name; }
 
     [Serializable] public sealed class GoldenTracesFile { public string generator; public int steps; public GoldenTrace[] traces; }
 
