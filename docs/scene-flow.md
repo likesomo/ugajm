@@ -378,7 +378,7 @@ S2·S3 커밋마다 `unity.sh test`(텔레메트리 골든)를 돌린다. 골든
 | (요청) `LevelCatalog.ChapterIdOf` | 9f3d109, e83bb64 | test +2. core b5c4464 뒤 `LevelDto.chapter`를 읽음 | — |
 | S3a `ResultView`/`ResultModel` | 83a55d6 | test 242, build-win + smoke 7/7. 결과 패널은 EditMode로 확인(리플레이는 끝 상태로 바로 가서 패널을 열지 않음, 7lucky도 같음) | — |
 | S3b `HudView` 이벤트화, TileSet 주입 | 70ccc03 | test 242, build-win + smoke 7/7. feat/view eafd97b(BodyLook)를 먼저 합친 뒤 주입으로 바꿈 | — |
-| S3c Game 씬 분리 | 0fc35a3 | test 249, build-win + smoke 7/7. `GameController`=씬 루트(클래스·guid·필드 유지: Game.unity, Art/Test/Game.unity, 아트 빌더 그대로), `BoardController`=보드, `Flow/GameFlowController`=흐름(`IStageBoard`/`IResultPanel`) | 보드 쪽 정리는 게임플레이/UI |
+| S3c Game 씬 분리 | 0fc35a3 | test 249, build-win + smoke 7/7. `GameController`=씬 루트(클래스·guid·필드 유지: Game.unity, Art/Test/Game.unity, 아트 빌더 그대로), `BoardController`=보드, `Flow/GameFlowController`=흐름(`IStageBoard`/`IResultPanel`) | 아키텍트 승인(2026-11-09, 42613fb). 보드 쪽 정리는 게임플레이/UI. `GameController.LevelIndex`/`Levels`(아트 프리뷰용)는 12.8 이전 때 삭제 |
 | S3d Title 씬 분리 | 18029f4 | test 253, build-win + smoke 7/7, 타이틀 스모크, **build-webgl(Mobile_RPAsset) + smoke-webgl 1/8/13 OK**(33381/27627/24738, 콘솔 0). 64bb47f에서 7lucky 81262de 합친 뒤 test 253, build-win + smoke 7/7 | Title→Game 실제 클릭은 수동 확인 |
 | S4 오버레이·뒤로 가기·챕터 자리 | 753fc60 | test 258/258(+5), scene-validate OK, build-win + smoke 7/7, 타이틀 스모크(크레딧을 오버레이로 띄움) OK. `AppInput`은 만들지 않음(키 읽기는 씬 루트 두 곳뿐이라 필요 없음). 챕터 전환 카드·테마 프리셋은 `GameFlowController.ChapterEntering`에 구독만 붙이면 된다 | Esc 실제 키 확인은 수동(설정 열고 Esc → 닫힘, 다시 Esc → StageSelect) |
 
@@ -454,3 +454,4 @@ Open Project 1은 미러의 파일 목록과 커밋 메시지만 확인했다(�
 | 2026-11-09 | S2 아키텍트 승인, S5에 로드 실패 경로 조건 추가. origin/7lucky 0ca8ae6 합침 |
 | 2026-11-09 | S3 완료(83a55d6, 70ccc03, 0fc35a3, 18029f4), 5.2 갱신. origin/7lucky 81262de 합침 |
 | 2026-11-09 | S4 커밋 753fc60, 5.2 갱신 |
+| 2026-11-09 | S3 아키텍트 승인(42613fb) |
