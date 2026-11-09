@@ -100,7 +100,10 @@ namespace SevenSteps.Game
             localizer.Changed += applyResultLanguage;
             var overlayCanvas = OverlayCanvas();
             var settings = SettingsPanel.Create(overlayCanvas, save, cfg.telemetryOnByDefault, localizer);
-            var chapterCard = ChapterCardView.CreateOptional(overlayCanvas); // null when the theme has no card
+            // The theme's card prefab, else the code-built chapter entry screen (art concept chapter-entry). None in smoke /
+            // replay runs: the screenshot must show the board.
+            IChapterCard chapterCard = launch.SmokeView != SmokeView.None || !string.IsNullOrEmpty(launch.Replay) ? null
+                : (IChapterCard)ChapterCardView.CreateOptional(overlayCanvas) ?? ChapterEntryView.Create(overlayCanvas, localizer);
             settingsController = new SettingsController(save, settings, cfg.telemetryOnByDefault, localizer);
             overlays = new OverlayStack();
 

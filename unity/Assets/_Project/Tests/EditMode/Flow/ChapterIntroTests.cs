@@ -19,7 +19,7 @@ namespace SevenSteps.Tests
             { ""name"": ""b"", ""hint"": """", ""bodies"": 3, ""chapter"": ""ruins"", ""map"": [ ""#####"", ""#S.E#"", ""#####"" ] },
             { ""name"": ""c"", ""hint"": """", ""bodies"": 3, ""chapter"": ""moss"", ""map"": [ ""#####"", ""#S.E#"", ""#####"" ] } ] }";
         const string Chapters = @"{ ""chapters"": [
-            { ""id"": ""ruins"", ""planet"": ""폐허 행성"", ""intro"": ""첫 별"" },
+            { ""id"": ""ruins"", ""planet"": ""폐허 행성"", ""intro"": ""첫 별"", ""text"": [ { ""lang"": ""en"", ""planet"": ""Ruins Planet"", ""intro"": ""First star"" } ] },
             { ""id"": ""moss"", ""planet"": ""이끼 행성"", ""intro"": """", ""text"": [ { ""lang"": ""en"", ""planet"": ""Moss Planet"", ""intro"": ""Go"" } ] } ] }";
 
         GameAssets assets;
@@ -56,10 +56,12 @@ namespace SevenSteps.Tests
             var card = LevelCatalog.ChapterCard("moss", Language.Ko);
             Assert.AreEqual(2, card.Number);
             Assert.AreEqual("이끼 행성", card.Planet);
+            CollectionAssert.AreEqual(new[] { "폐허 행성", "이끼 행성" }, card.Planets, "every planet, chapter order");
+            Assert.Throws<ArgumentException>(() => new ChapterCardModel("x", 2, "p", "", new[] { "p" }), "number outside the list");
             var en = LevelCatalog.ChapterCard("moss", Language.En);
             Assert.AreEqual("Moss Planet", en.Planet, "the card is in the UI language");
             Assert.AreEqual("Go", en.Intro);
-            Assert.Throws<KeyNotFoundException>(() => LevelCatalog.ChapterCard("ruins", Language.En), "no en text");
+            CollectionAssert.AreEqual(new[] { "Ruins Planet", "Moss Planet" }, en.Planets, "the planet row in the UI language too");
         }
 
         [Test]

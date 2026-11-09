@@ -1,5 +1,10 @@
 {
   "entries": [
+    { "key": "loading.title", "text": "별지도를 펼치는 중" },
+    { "key": "loading.tip.1", "text": "남겨진 몸이 다음 길의 다리가 됩니다." },
+    { "key": "loading.tip.2", "text": "일곱 번째 걸음에서만 KEEP과 SWITCH를 고를 수 있습니다." },
+    { "key": "loading.tip.3", "text": "선돌은 길을 막기도, 발판을 눌러 주기도 합니다." },
+    { "key": "chapter.number", "text": "챕터 {0:00}" },
     { "key": "title.name", "text": "일곱 걸음" },
     { "key": "title.tagline", "text": "세 방랑자, 하나의 하늘." },
     { "key": "title.begin", "text": "시작" },

@@ -120,7 +120,8 @@ namespace SevenSteps.Game
             var info = chapters.Get(chapterKey);
             if (info == null || string.IsNullOrEmpty(info.planet)) return null;
             int number = Array.IndexOf(chapters.chapters, info) + 1;
-            return new Flow.ChapterCardModel(info.id, number, info.Planet(lang), info.Intro(lang));
+            var planets = chapters.chapters.Select(c => c.Planet(lang)).ToArray();
+            return new Flow.ChapterCardModel(info.id, number, info.Planet(lang), info.Intro(lang), planets);
         }
     }
 }
