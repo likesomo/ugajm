@@ -5,8 +5,8 @@ namespace SevenSteps.Contracts
 {
     /// <summary>
     /// Start options from the command line (desktop) or the page URL (WebGL). Same format as the web prototype:
-    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-settings] [-lang en] [-smoke board|empty] [-newplayer] [-loadDelay 1.5] [-flowcheck]
-    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1&amp;loadDelay=1.5&amp;settings=1&amp;flowcheck=1   (docs/telemetry.md section 4)
+    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-settings] [-lang en] [-smoke board|empty] [-newplayer] [-loadDelay 1.5] [-flowcheck] [-titlecheck begin|continue|map]
+    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1&amp;loadDelay=1.5&amp;settings=1&amp;flowcheck=1&amp;titlecheck=map   (docs/telemetry.md section 4)
     /// Pure parsing: the caller passes Environment.GetCommandLineArgs() and Application.absoluteURL.
     /// Bad values are not exceptions (external input): they are skipped and described in <see cref="Warnings"/>,
     /// which the bootstrap logs (Contracts does not log). Read-only after parsing, except the two editor/once-only changes below.
@@ -45,6 +45,10 @@ namespace SevenSteps.Contracts
         /// wins, check the result text, press Next, check the chapter entry and the chapter look, log OK / FAIL and quit
         /// (unity.sh smoke flow step; docs/scene-flow.md S8).
         public bool FlowCheck { get; private set; }
+        /// Development / smoke only (-titlecheck begin|continue|map, no -level): the Title presses that path's real buttons
+        /// (title Begin; title Continue; Stages -> planet 2 -> its first stage), the Game scene logs the stage and via it
+        /// arrived at and quits (unity.sh smoke title step; docs/scene-flow.md S8). "" = off.
+        public string TitleCheck { get; private set; } = "";
 
         readonly List<string> warnings = new List<string>();
         /// What was ignored while parsing, one line each. Empty when everything parsed.
@@ -96,6 +100,12 @@ namespace SevenSteps.Contracts
             else warnings.Add($"{source}: loadDelay \"{v}\" is not 0..10 seconds; ignored");
         }
 
+        void SetTitleCheck(string source, string v)
+        {
+            if (v == "begin" || v == "continue" || v == "map") TitleCheck = v;
+            else warnings.Add($"{source}: titlecheck \"{v}\" is not begin, continue or map; ignored");
+        }
+
         void SetFlowCheck(string source, string v)
         {
             if (v == "1" || v == "true") FlowCheck = true;
@@ -123,7 +133,7 @@ namespace SevenSteps.Contracts
                         case "-settings": o.OpenSettings = true; continue;
                         case "-newplayer": o.NewPlayer = true; continue;
                         case "-flowcheck": o.FlowCheck = true; continue;
-                        case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": case "-loadDelay": break;
+                        case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": case "-loadDelay": case "-titlecheck": break;
                         default: continue;
                     }
                     if (k + 1 >= args.Length || args[k + 1].StartsWith("-", StringComparison.Ordinal))
@@ -141,6 +151,7 @@ namespace SevenSteps.Contracts
                         case "-lang": o.SetLanguage("command line", v); break;
                         case "-smoke": o.SetSmoke("command line", v); break;
                         case "-loadDelay": o.SetLoadDelay("command line", v); break;
+                        case "-titlecheck": o.SetTitleCheck("command line", v); break;
                     }
                 }
 
@@ -160,6 +171,7 @@ namespace SevenSteps.Contracts
                     case "smoke": o.SetSmoke("url", v); break;
                     case "loadDelay": o.SetLoadDelay("url", v); break;
                     case "flowcheck": o.SetFlowCheck("url", v); break;
+                    case "titlecheck": o.SetTitleCheck("url", v); break;
                     case "newplayer":
                         if (v == "1" || v == "true") o.NewPlayer = true;
                         else if (v != "0" && v != "false") o.warnings.Add($"url: newplayer \"{v}\" is not 1 or 0; ignored");

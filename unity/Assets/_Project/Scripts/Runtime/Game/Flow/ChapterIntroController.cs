@@ -38,7 +38,7 @@ namespace SevenSteps.Game.Flow
 
     /// <summary>
     /// Chapter entry presentation (docs/scene-flow.md S4/S6 hook, 12.8): when the game flow enters a stage of another
-    /// chapter, show the chapter card as an overlay (board input waits; Esc, a click or the card's own timer closes it).
+    /// chapter, show the chapter card as an overlay (a board key closes the card and is applied as usual, feat/view 365d5bb; Esc, a click or the card's own timer also close it).
     /// Pure C#. No card (theme without one) or no chapter data (no chapters.json yet) = nothing happens.
     /// Card content and look are gameplay/UI's (prefab on UiTheme.chapterCard); when it shows is decided here.
     /// </summary>

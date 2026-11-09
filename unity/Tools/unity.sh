@@ -145,6 +145,20 @@ case "$cmd" in
       grep -q "\[SevenSteps\] Flow check stage $lv: OK" "$out/flow$lv.log" || fail=1
       if grep -qE "^[A-Za-z.]*Exception" "$out/flow$lv.log"; then grep -E "^[A-Za-z.]*Exception" "$out/flow$lv.log"; fail=1; fi
     done
+    # Title step (docs/scene-flow.md S8): no -level, Boot -> Title, the real buttons of each path (-titlecheck), the Game
+    # scene logs where it arrived. In order: begin (fresh player) -> stage 1 via select; map -> planet 2's first stage via
+    # select; continue -> that stage again via boot (resumed). Catches a dead title button that replay runs skip.
+    p2="$(node "$HERE/flow-stages.mjs" "$(cygpath -w "$REPO/unity/Assets/_Project/Data/levels.json")" --planet2-first)"
+    for spec in "begin:1:select:-newplayer" "map:$p2:select:" "continue:$p2:boot:"; do
+      IFS=: read -r path lv via extra <<< "$spec"
+      winout="$(cygpath -w "$out")"
+      "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -lang ko $extra \
+        -titlecheck "$path" -logFile "$winout\\title-$path.log" > /dev/null || true
+      want="[SevenSteps] Title check $path: arrived stage $lv via $via"
+      grep -h "\[SevenSteps\] Title check" "$out/title-$path.log" || echo "[unity.sh] smoke title $path: no result line"
+      grep -qF "$want" "$out/title-$path.log" || { echo "[unity.sh] smoke title $path: expected \"$want\""; fail=1; }
+      if grep -qE "^[A-Za-z.]*Exception" "$out/title-$path.log"; then grep -E "^[A-Za-z.]*Exception" "$out/title-$path.log"; fail=1; fi
+    done
     [ "$fail" -eq 0 ] && echo "[unity.sh] smoke OK -> reports/smoke/" || { echo "[unity.sh] smoke FAILED"; exit 1; } ;;
   smoke-webgl)
     # Opens Builds/WebGL in Orca's built-in browser and screenshots 3 replays three ways (docs: CLAUDE.md "WebGL 3D 보드 누락"):

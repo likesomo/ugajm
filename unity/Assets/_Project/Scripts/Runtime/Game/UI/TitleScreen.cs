@@ -108,6 +108,7 @@ namespace SevenSteps.Game.UI
             var launch = Services.Get<LaunchOptions>();
             if (!save.LanguageChosen && launch.Language == null && flow.State == AppState.Title) OpenLanguage();
             if (launch.OpenSettings) Open(settings); // -settings / ?settings=1 (development, screenshots)
+            if (launch.TitleCheck != "" && !launch.DirectToGame) StartCoroutine(TitleCheck(launch.TitleCheck));
             // Smoke test without -level: "-screenshot title.png" [-stageselect] [-credits] opens that panel first.
             if (!string.IsNullOrEmpty(launch.Screenshot))
             {
@@ -115,6 +116,35 @@ namespace SevenSteps.Game.UI
                 if (launch.OpenCredits) Open(creditsPanel);
                 StartCoroutine(ScreenshotOnce.Run(launch.Screenshot, () => $"{flow.State}, cleared {save.Progress.ClearedCount}"));
             }
+        }
+
+        /// -titlecheck (S8): press the real buttons of one Title path; the Game scene logs where it arrived. A path that
+        /// does not leave the Title scene logs FAIL here.
+        System.Collections.IEnumerator TitleCheck(string path)
+        {
+            yield return new WaitForSecondsRealtime(1f);
+            while (overlays.Count > 0) overlays.Pop(); // e.g. the first-run language picker
+            string fail = null;
+            switch (path)
+            {
+                case "begin": titleView.BeginButton.onClick.Invoke(); break;
+                case "continue":
+                    if (!titleView.ContinueButton.interactable) fail = "Continue is off (no last played stage)";
+                    else titleView.ContinueButton.onClick.Invoke();
+                    break;
+                case "map":
+                    titleView.StagesButton.onClick.Invoke();
+                    yield return null;
+                    int planet = Mathf.Min(1, planets.Count - 1);
+                    planetMap.Card(planet).onClick.Invoke();
+                    yield return null;
+                    planetStages.Card(0).onClick.Invoke();
+                    break;
+            }
+            float t0 = Time.unscaledTime;
+            while (fail == null && Time.unscaledTime - t0 < 10f) yield return null; // the Game scene takes over (this object goes)
+            Debug.Log($"[SevenSteps] Title check {path}: FAIL: {fail ?? $"still in {flow.State} after 10 s"}");
+            Application.Quit();
         }
 
         void OpenPlanet(int planet)
