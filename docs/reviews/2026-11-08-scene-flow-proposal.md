@@ -73,3 +73,18 @@ EditMode + 가짜 로더 + `smoke`/`smoke-webgl`로 S0~S4를 덮을 수 있다. 
 - `EntryTracker`: 정적 플래그 제거, 인자 검사 단정적. `Services`에 Game 타입을 등록하는 것은 로케이터 규칙(조회는 씬 루트만)과 맞다.
 - `Bootstrap.FirstStage`: 실행 인자·URL은 외부 입력이라 경고 + 마지막 스테이지(9장 규칙과 같음).
 - 공용 API 영향: `AppFlow` 생성자·`ISceneLoader` 멤버 추가로 다른 브랜치의 가짜 로더·직접 생성 코드는 컴파일 오류. 리드 고지.
+
+## S3 검토: feat/scene-flow f8c875e (83a55d6, 70ccc03, 0fc35a3, 18029f4, e83bb64; 2026-11-09)
+
+**결론: 승인.** 9장 MVC·단정 규칙, 텔레메트리 시점, 씬 참조 모두 문제 없음. 코드 읽기(테스트·스모크는 씬 플로우 보고).
+
+- **GUID 유지**: `GameController.cs`·`TitleScreen.cs`는 같은 파일·같은 `.meta`로 **씬 루트 클래스로 남는다**(이름·GUID 그대로라 `Game.unity`/`Title.unity`의 컴포넌트 참조와 인스펙터 값 `assets`/`config`/`startLevel`/`replay`/`overrideCamera` 유지). `BoardController`는 루트가 `AddComponent`로 붙이므로 씬 파일 변경 없음. 새 파일은 모두 `.meta` 동반, 씬 파일 변경 없음.
+- **MVC**: `GameController` = 조립(Services는 여기서만), `BoardController` = 보드 진행(`AppFlow`를 모름, `IStageBoard`로 `Won`/`WinPresented`/`Lost`/`Recovered`만 냄), `GameFlowController`/`TitleFlowController` = 순수 C# 흐름. 뷰(`HudView`, `ResultView`, `TitleView`/`StageSelectView`)는 이벤트만 내고 `Services`·`AppFlow`·컨트롤러를 모른다. `HudView`가 받는 것은 코루틴용 `MonoBehaviour`와 `TileSet`(지난 권장 `SetBodyLook` 대신 생성자 주입으로 해결).
+- **단정적**: 루트 `Awake`에서 `assets`/`config`/MainCamera/TileSet 없으면 예외, 컨트롤러 생성자 null 검사, `LoadStage` 범위·via 검사, 결과 화면 `ResultModel` 생성자 검사. 지금 할 수 없는 흐름 입력은 `CanGoToGame`/`CanBack`/`IsLoading`으로 드러내 무시. 저장 데이터·솔버 값이 범위 밖이면 0(모름)으로(외부 입력 예외 규칙).
+- **텔레메트리(5.1)**: `StageLeaving` → `session.Load` → `StageEntered(via)` 순서가 예전 `GameController.EnterStage`와 같다. via는 `EntryTracker.TakeVia()`가 `Enter`에서 한 번. 씬을 넘는 `level_leave`는 예전처럼 `BoardController.OnDestroy` → `TelemetryRecorder.Dispose` → `PendingLeaveState` 경로 그대로. 클리어 저장은 `Won`(HUD 갱신 전), 결과 패널은 `WinPresented`에서 `Go(Result)` — 7lucky 동작과 같다.
+- **흐름**: 다른 씬으로 가는 `Changed`는 `IsLoading`이라 무시하고 새 씬 루트의 `Start`가 진입(진입 경로 하나, 11.1). Result에서 R = 다시 하기(`TakesCommand`), 로드 중 보드 입력 차단.
+
+### 남은 것 (막지 않음)
+- `GameController.LevelIndex`/`Levels` 공개 속성은 아트 프리뷰 `RuinsHengeEnvironment`가 `FindFirstObjectByType<GameController>`로 읽기 때문에 남았다. 12.8 `IStageEnvironment.Fit`으로 옮기면 지운다.
+- Esc·설정 패널 처리가 아직 `GameController.Update`/`TitleScreen`에 있다 → S4(`OverlayStack` + `BackNavigator`).
+- `BoardController`의 문구 표·힌트·사운드 정리는 게임플레이/UI 몫(리드 배분, 동시 수정 금지 순서대로).
