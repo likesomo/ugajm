@@ -23,21 +23,15 @@ namespace SevenSteps.Game
             chapterIds = null;
         }
 
-        // levels.json "chapter" (docs/architecture.md 6.4). Read here, not through Core's LevelDto: the rules do not know chapters.
-        [Serializable] sealed class ChapterFieldDto { public string chapter; }
-        [Serializable] sealed class StageChaptersDto { public ChapterFieldDto[] levels; }
-
         public static Level[] Load(GameAssets assets)
         {
             if (assets == null) throw new ArgumentNullException(nameof(assets));
             if (assets.levelsJson == null) throw new MissingReferenceException("[SevenSteps] GameAssets.levelsJson is not set");
             if (cached != null && source == assets.levelsJson) return cached;
-            string json = assets.levelsJson.text;
-            var file = JsonUtility.FromJson<LevelFileDto>(json);
+            var file = JsonUtility.FromJson<LevelFileDto>(assets.levelsJson.text);
             cached = file.levels.Select(d => d.ToLevel()).ToArray();
             minBodies = file.levels.Select(d => d.expected != null ? d.expected.minBodies : 0).ToArray();
-            var chapters = JsonUtility.FromJson<StageChaptersDto>(json).levels;
-            chapterIds = cached.Select((_, k) => chapters != null && k < chapters.Length ? chapters[k].chapter ?? "" : "").ToArray();
+            chapterIds = file.levels.Select(d => d.chapter ?? "").ToArray(); // LevelDto.chapter (6.4), not part of Core Level
             source = assets.levelsJson;
             return cached;
         }

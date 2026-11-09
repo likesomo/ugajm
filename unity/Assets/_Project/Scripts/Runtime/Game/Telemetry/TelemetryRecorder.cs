@@ -11,12 +11,12 @@ namespace SevenSteps.Game.Telemetry
     /// </summary>
     public sealed class TelemetryRecorder
     {
-        readonly GameController game;
+        readonly BoardController game;
         readonly GameSession session;
         readonly HttpTelemetry telemetry;
         TelemetryTracker Tracker => telemetry.Tracker;
 
-        public TelemetryRecorder(GameController game, GameSession session, HttpTelemetry telemetry)
+        public TelemetryRecorder(BoardController game, GameSession session, HttpTelemetry telemetry)
         {
             this.game = game;
             this.session = session;
