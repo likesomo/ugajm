@@ -135,13 +135,11 @@ namespace SevenSteps.Tests
             var canvas = new UnityEngine.GameObject("canvas", typeof(UnityEngine.RectTransform));
             try
             {
-                // The prefab has no language button yet: add one before Init wires the buttons.
+                // The prefab's own language row (gameplay/UI SettingsLanguageRowBuilder); no picker here, so it toggles.
                 var view = UnityEngine.Object.Instantiate(Ui.Theme.settingsPanel, canvas.transform, false);
-                view.languageToggle = new UnityEngine.GameObject("LanguageToggle", typeof(UnityEngine.RectTransform), typeof(UnityEngine.UI.Button)).GetComponent<UnityEngine.UI.Button>();
-                view.languageToggle.transform.SetParent(view.transform, false);
-                view.languageText = new UnityEngine.GameObject("LanguageText", typeof(UnityEngine.RectTransform), typeof(UnityEngine.UI.Text)).GetComponent<UnityEngine.UI.Text>();
-                view.languageText.transform.SetParent(view.transform, false);
                 view.Init(save, true, loc);
+                view.Show();
+                Assert.AreEqual("언어 바꾸기", view.languageToggle.GetComponentInChildren<UnityEngine.UI.Text>().text, "the button says what it does");
                 using var ctl = new SettingsController(save, view, true, loc);
 
                 Press(canvas, "LanguageToggle");
