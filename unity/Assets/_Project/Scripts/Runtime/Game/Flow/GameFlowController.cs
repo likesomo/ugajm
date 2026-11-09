@@ -21,6 +21,7 @@ namespace SevenSteps.Game.Flow
         readonly IResultPanel result;
         readonly Func<int, int> minBodies;
         readonly Func<int, string> chapterOf;
+        readonly Func<int, ChapterInfo> chapterInfoOf;
         string enteredChapter;
 
         /// A stage of another chapter is being entered (fromChapter is null for the first stage this scene enters).
@@ -29,8 +30,11 @@ namespace SevenSteps.Game.Flow
         public event Action<string, string, int> ChapterEntering;
 
         /// <param name="minBodies">Solver's fewest bodies per stage, 0 = unknown (LevelCatalog.MinBodies).</param>
-        /// <param name="chapterOf">Chapter id per stage (LevelCatalog.ChapterIdOf).</param>
-        public GameFlowController(AppFlow flow, EntryTracker entries, SaveSystem save, IStageBoard board, IResultPanel result, Func<int, int> minBodies, Func<int, string> chapterOf)
+        /// <param name="chapterOf">Chapter key per stage (LevelCatalog.ChapterKeyOf).</param>
+        /// <param name="chapterInfoOf">Optional: the chapters.json planet of a stage (LevelCatalog.ChapterOf), for the result
+        /// panel when the last stage of a planet is cleared. Null = never shown.</param>
+        public GameFlowController(AppFlow flow, EntryTracker entries, SaveSystem save, IStageBoard board, IResultPanel result, Func<int, int> minBodies, Func<int, string> chapterOf,
+            Func<int, ChapterInfo> chapterInfoOf = null)
         {
             this.flow = flow ?? throw new ArgumentNullException(nameof(flow));
             this.entries = entries ?? throw new ArgumentNullException(nameof(entries));
@@ -39,6 +43,7 @@ namespace SevenSteps.Game.Flow
             this.result = result ?? throw new ArgumentNullException(nameof(result));
             this.minBodies = minBodies ?? throw new ArgumentNullException(nameof(minBodies));
             this.chapterOf = chapterOf ?? throw new ArgumentNullException(nameof(chapterOf));
+            this.chapterInfoOf = chapterInfoOf;
             flow.Changed += OnFlowChanged;
             board.Won += OnWon;
             board.WinPresented += OnWinPresented;
@@ -176,7 +181,16 @@ namespace SevenSteps.Game.Flow
             int stage = flow.Stage, bodies = s.Level.Bodies;
             int best = save.Progress.BestBodies(s.Level); // 0 = none, other map or out of range (11.3.1)
             result.Show(ResultModel.Clear(stage, bodies, BodiesUsed(s), MinBodies(s), best, IsLast,
-                clearStars, save.Progress.BestStars(s.Level)));
+                clearStars, save.Progress.BestStars(s.Level), FinishedChapter(stage)));
+        }
+
+        /// The planet a cleared stage finishes: the last stage of its chapter (the next stage is in another chapter) or the
+        /// last stage of all (architect review 6e1a6ca F2). Null when not the last, or there is no chapter data.
+        ChapterInfo FinishedChapter(int stage)
+        {
+            if (chapterInfoOf == null) return null;
+            bool last = stage == flow.StageCount - 1 || chapterOf(stage) != chapterOf(stage + 1);
+            return last ? chapterInfoOf(stage) : null;
         }
 
         bool IsLast => flow.Stage == flow.StageCount - 1;
