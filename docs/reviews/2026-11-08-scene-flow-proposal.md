@@ -152,3 +152,12 @@ EditMode + 가짜 로더 + `smoke`/`smoke-webgl`로 S0~S4를 덮을 수 있다. 
 - `board.UseChapters(new ChapterStage(cam, key, fill, rim, transform), stage → chapters.json artPreset → AppConfig.Chapter, cfg.tileSet)` — 12.8 순서 그대로. `AppConfig.chapters`가 비면 null이라 지금 모습 유지.
 - `GameAssets.chaptersJson` 연결, GlyphCheck가 `story`·`planet`·`intro`까지(4d6d373 남은 것 해결). `concept`는 화면에 안 나오므로 제외 — 나중에 쓰면 추가.
 - 주의(아키텍트가 검사 켬): 아트 `Chapter01.asset`의 id는 `moss-ruins`인데 `chapters.json`의 `artPreset`은 `moss`다. `AppConfig.chapters`에 넣는 순간 `TileSetValidator`가 오류를 낸다 → 아트가 id를 `moss`로 하거나 레벨 디자인이 `artPreset`을 맞춘다.
+
+## 검토: feat/scene-flow 7028a00 (3별 판정·저장, ResultModel.Stars/BestStars, e173f86 위, 2026-11-10)
+
+**결론: 승인.** 6.5 저장 담당 부분 완료.
+- `OnWon`: `Stars.Of(Stars.BodiesUsed(s), MinBodies(s), attempt.Hints, Undos, Restarts)` → 1..3이면 `MarkCleared(level, bodies, stars)`, 0(최소 몸 모름)이면 별 없이 `MarkCleared(level, bodies)`. `minBodies`가 이 스테이지 몸 수를 넘으면 0(외부 데이터 불일치 = 모름) — 예전 결과 화면 규칙과 같다.
+- `ResultModel`: `Stars`·`BestStars` 0..3 검사, 실패에는 별 없음, `BestStars >= Stars`(클리어를 먼저 저장하므로 성립) 단정. 기본값 0이라 기존 호출 호환.
+- `BodiesUsed`가 코어 `Stars.BodiesUsed`로 통일.
+- 사소: `clearStars`는 `OnWon`에서만 갱신된다. 지금 흐름(Won → WinPresented → Result)에서는 맞다. `Enter`에서 0으로 돌려 두면 다른 경로가 생겨도 이전 스테이지 별이 보이지 않는다.
+- 남은 것: restarts 기준 통일(telemetry.js + `TelemetryTracker` + 골든)은 리드 결정대로 다음 묶음.
