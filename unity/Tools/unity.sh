@@ -133,6 +133,18 @@ case "$cmd" in
       grep -h "\[SevenSteps\] Screenshot" "$out/level$lv.log" || { echo "[unity.sh] smoke level $lv: no screenshot"; fail=1; }
       if grep -qE "^[A-Za-z.]*Exception" "$out/level$lv.log"; then grep -E "^[A-Za-z.]*Exception" "$out/level$lv.log"; fail=1; fi
     done
+    # Flow step (docs/scene-flow.md S8): each planet's last stage + 2 mid-planet controls with -flowcheck. The solver's
+    # path wins for real; the player checks the Result text (chapter_done / journey_done), Next, the chapter entry card
+    # and the chapter look, logs OK or FAIL and quits. Screenshots flowN-result.png / flowN-next.png.
+    for spec in $(node "$HERE/flow-stages.mjs" "$(cygpath -w "$REPO/unity/Assets/_Project/Data/levels.json")"); do
+      lv="${spec%%:*}"; rp="${spec#*:}"
+      winout="$(cygpath -w "$out")"
+      "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -lang ko \
+        -level "$lv" -replay "$rp" -flowcheck -screenshot "$winout\\flow$lv.png" -logFile "$winout\\flow$lv.log" > /dev/null || true
+      grep -h "\[SevenSteps\] Flow check" "$out/flow$lv.log" || { echo "[unity.sh] smoke flow $lv: no result line"; fail=1; }
+      grep -q "\[SevenSteps\] Flow check stage $lv: OK" "$out/flow$lv.log" || fail=1
+      if grep -qE "^[A-Za-z.]*Exception" "$out/flow$lv.log"; then grep -E "^[A-Za-z.]*Exception" "$out/flow$lv.log"; fail=1; fi
+    done
     [ "$fail" -eq 0 ] && echo "[unity.sh] smoke OK -> reports/smoke/" || { echo "[unity.sh] smoke FAILED"; exit 1; } ;;
   smoke-webgl)
     # Opens Builds/WebGL in Orca's built-in browser and screenshots 3 replays three ways (docs: CLAUDE.md "WebGL 3D 보드 누락"):
