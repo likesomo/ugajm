@@ -101,3 +101,20 @@ EditMode + 가짜 로더 + `smoke`/`smoke-webgl`로 S0~S4를 덮을 수 있다. 
 ### 후속
 - **아키텍트 할 일 끝냄**: `SaveSystem` 명령 `SetMasterVolume`/`SetSfxVolume`/`SetTelemetryChoice`/`TelemetryOn`(11.3, feat/architecture). `SettingsController`는 필드 직접 수정 대신 이것을 쓰도록 다음 커밋에서 바꿀 것(`Step`의 반올림·자르기·playerId 지우기가 그대로 들어 있다).
 - `ChapterEntering`의 챕터 비교는 문자열 그대로라 `""`(챕터 없음 = 첫 챕터)와 첫 챕터 id(`"moss"`)가 다르게 보인다. `chapters.json`이 생기면 `ChapterFileDto.Get(id)`로 정규화한 id를 비교할 것(6.4).
+
+## S6 검토: feat/scene-flow 09a07b3 (07927a9 UiTheme, 0b3d260 패널 프리팹, 2026-11-09)
+
+**결론: 승인.** 코드 읽기(테스트는 씬 플로우 보고).
+- `UiTheme`(SO, Game 어셈블리): 글꼴·색·패널 프리팹. `Ui.Theme` 세터가 null·글꼴 없음을 바로 예외로, 게터도 미설정이면 예외(fail fast). 정적 `theme`은 기존 `Ui` 리셋 훅이 비운다(`PlayResetTests` 대상 유지). `Ui.Ink` 등 기존 호출 모양은 그대로라 코드 생성 UI 영향 없음.
+- 패널 프리팹(`UI/Prefabs/SettingsPanel`, `ResultPanel`): 뷰가 직렬화 참조를 `Validate`로 `OnValidate`(에디터 오류)·`Awake`(예외)·`SceneFlowValidator`(빌드 전)에서 검사 — 9장 그대로. `Create`는 테마에 프리팹이 없으면 예외.
+- `UiBuilder`: 없을 때만 만든다(있으면 그대로 둠) → 첫 생성 후 프리팹 손편집이 덮이지 않는다. 좋다.
+- `SettingsController`가 아키텍트 `SaveSystem` 명령(`SetMasterVolume`/`SetSfxVolume`/`SetTelemetryChoice`/`TelemetryOn`)을 쓴다 — S4 후속 해결.
+- 사소: `SettingsController.Saved`의 `AudioListener.volume = ...`은 `GameAudio.ApplyMaster`와 같은 일 — 한 곳(`ApplyMaster`)으로.
+- 소유권: `UI/Prefabs/**`는 README상 게임플레이/UI(`UI/**`). 이번 첫 생성은 씬 플로우가 했으니 이후 내용 편집은 게임플레이/UI, 테마 값은 아트로(리드 확인).
+
+### 결정: 챕터별 UiTheme는 `ChapterPreset`에 넣지 않는다
+1. **의존 방향**: `ChapterPreset`은 Contracts, `UiTheme`은 Game(패널 프리팹 타입 `SettingsPanel`/`ResultView`를 참조)이다. Contracts가 Game 타입을 참조할 수 없고, `UiTheme`을 Contracts로 옮기면 뷰 타입까지 끌려온다(2장 순환 금지).
+2. **일관성**: 글꼴·버튼·패널 모양은 게임 전체의 정체성이다. 행성마다 바뀌면 조작 UI가 낯설어진다. 아트 바이블의 테마는 하나다.
+3. **비용**: 코드 생성 HUD는 테마를 생성 시점에 읽어 챕터 전환 때 다시 만들어야 한다.
+
+대신: 챕터 분위기는 보드·조명·하늘(12.8)과 챕터 전환 카드(`ChapterEntering` 오버레이, 문구는 `ChapterInfo`)가 맡는다. 챕터마다 UI 강조색이 꼭 필요해지면 `ChapterPreset`에 `Color uiAccent` 하나를 추가하고(Contracts 타입만), HUD가 `ChapterEntering`에서 그 색만 바꾸는 방식으로 한다(아키텍트에게 요청).

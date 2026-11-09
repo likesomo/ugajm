@@ -582,6 +582,8 @@ else flow.Go(AppState.Title);
 | `AppConfig.chapters[]` | 첫 항목이 기본 | `AppConfig.Chapter(id)`: 빈 id = 첫 챕터, 챕터 없음 = null, 모르는 id = 예외 |
 | `levels.json` `chapter` + `chapters.json` | 문자열 id, 챕터 정보·`artPreset`은 `chapters.json`(6.4) | `LevelDto`에만 둔다(Core `Level`은 모름). `LevelCatalog.ChapterOf(stage)` → `ChapterInfo` → `AppConfig.Chapter(info.ArtPreset)` |
 
+**UI 테마는 챕터에 넣지 않는다(2026-11-09 결정)**: `UiTheme`(Game 어셈블리, 씬 플로우 S6)은 `GameAssets.uiTheme` 하나로 게임 전체에 쓴다. `ChapterPreset`(Contracts)은 Game 타입을 참조할 수 없고(2장), UI 모양은 게임 전체의 정체성이다. 챕터 분위기는 보드·조명·하늘과 챕터 전환 카드(`GameFlowController.ChapterEntering`)가 맡는다. 챕터별 강조색이 필요해지면 `ChapterPreset.uiAccent`(Color) 하나만 추가한다.
+
 **보드 세트 결정 순서**: `AppConfig.tileSet`(설정되어 있으면 디버그·전환용 덮어쓰기) → 스테이지 챕터의 `tileSet` → `GameAssets.tileSet`. 지금(챕터 에셋 전)은 `AppConfig.tileSet = RuinsHenge_Chapter01`. 챕터 에셋이 생기면 `chapters[0]`에 유적 챕터를 넣고 `AppConfig.tileSet`은 비운다.
 
 **적용 (게임플레이/UI, Game 씬 연결은 씬 플로우)**:
@@ -633,3 +635,4 @@ else flow.Go(AppState.Title);
 | 2026-11-09 | 코어·아키텍트 | 6.3 진흙 코어 구현(feat/core 6ae58e2): `Rules.IsMud(char)`, SWITCH 출발점 가능, 막히면 `Bump`(진흙 칸). `Mud` 이벤트는 넣지 않음. 골든 트레이스 id가 스테이지 이름 기준으로 바뀜(`server/fixtures` 재생성) |
 | 2026-11-09 | 아키텍트 | 11.1·11.2 씬 플로우 S2 반영(feat/scene-flow f08f4d6, 검토 승인): **`AppFlow(ISceneLoader, int stageCount)` 생성자 변경**, `StageCount`, `GoToGame` 범위 예외, `TryGetBackTarget`/`CanBack`/`CanGoToGame`, `IsLoading` + **`ISceneLoader.Loaded` 추가**(로드 중 전이 예외), `Changed` 시점 명시, `EntryTracker`(Game, `Services` 등록), `Bootstrap.Run(config, assets, ...)`, 범위 밖 `-level`은 경고 후 마지막 스테이지. `AppFlow`를 직접 만들거나 `ISceneLoader`를 구현하던 코드(테스트 가짜 로더 포함)는 고쳐야 한다 |
 | 2026-11-09 | 아키텍트 | 11.3 `SaveSystem` 설정 명령 `SetMasterVolume`/`SetSfxVolume`/`SetTelemetryChoice`/`TelemetryOn` 추가(씬 플로우 S4 `SettingsController`용), 설정은 바꿀 때마다 저장, 생성자 null 검사. EditMode `SaveSettingsCommandTests` |
+| 2026-11-09 | 아키텍트 | 12.8 결정: 챕터별 `UiTheme`은 `ChapterPreset`에 넣지 않음(의존 방향·일관성·비용), 필요하면 `uiAccent` 색 하나. 씬 플로우 S6 검토 승인 |
