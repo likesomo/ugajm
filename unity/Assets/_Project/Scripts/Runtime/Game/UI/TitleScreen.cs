@@ -107,6 +107,7 @@ namespace SevenSteps.Game.UI
             flowController.Start();
             var launch = Services.Get<LaunchOptions>();
             if (!save.LanguageChosen && launch.Language == null && flow.State == AppState.Title) OpenLanguage();
+            if (launch.OpenSettings) Open(settings); // -settings / ?settings=1 (development, screenshots)
             // Smoke test without -level: "-screenshot title.png" [-stageselect] [-credits] opens that panel first.
             if (!string.IsNullOrEmpty(launch.Screenshot))
             {

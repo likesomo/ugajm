@@ -5,8 +5,8 @@ namespace SevenSteps.Contracts
 {
     /// <summary>
     /// Start options from the command line (desktop) or the page URL (WebGL). Same format as the web prototype:
-    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-lang en] [-smoke board|empty] [-newplayer] [-loadDelay 1.5]
-    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1&amp;loadDelay=1.5   (docs/telemetry.md section 4)
+    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-settings] [-lang en] [-smoke board|empty] [-newplayer] [-loadDelay 1.5]
+    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1&amp;loadDelay=1.5&amp;settings=1   (docs/telemetry.md section 4)
     /// Pure parsing: the caller passes Environment.GetCommandLineArgs() and Application.absoluteURL.
     /// Bad values are not exceptions (external input): they are skipped and described in <see cref="Warnings"/>,
     /// which the bootstrap logs (Contracts does not log). Read-only after parsing, except the two editor/once-only changes below.
@@ -25,6 +25,9 @@ namespace SevenSteps.Contracts
         /// Smoke tests with -screenshot and no -level: open Stage Select / Credits on the title screen first.
         public bool OpenStageSelect { get; private set; }
         public bool OpenCredits { get; private set; }
+        /// Development / screenshots (-settings / ?settings=1): the settings panel is open when the first screen shows, over
+        /// the title or over the game (-level). Nothing is saved by it.
+        public bool OpenSettings { get; private set; }
         /// Playtest facilitator link (-newplayer / ?newplayer=1): the bootstrap really erases this browser's saved progress
         /// (cleared stages, best bodies, stars, attempt counts) and the anonymous playerId, so telemetry starts a new
         /// player with session_start firstTime. Volumes, consent and language are kept. WebGL removes the parameter from
@@ -106,6 +109,7 @@ namespace SevenSteps.Contracts
                     {
                         case "-stageselect": o.OpenStageSelect = true; continue;
                         case "-credits": o.OpenCredits = true; continue;
+                        case "-settings": o.OpenSettings = true; continue;
                         case "-newplayer": o.NewPlayer = true; continue;
                         case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": case "-loadDelay": break;
                         default: continue;
@@ -146,6 +150,10 @@ namespace SevenSteps.Contracts
                     case "newplayer":
                         if (v == "1" || v == "true") o.NewPlayer = true;
                         else if (v != "0" && v != "false") o.warnings.Add($"url: newplayer \"{v}\" is not 1 or 0; ignored");
+                        break;
+                    case "settings":
+                        if (v == "1" || v == "true") o.OpenSettings = true;
+                        else if (v != "0" && v != "false") o.warnings.Add($"url: settings \"{v}\" is not 1 or 0; ignored");
                         break;
                 }
             }
