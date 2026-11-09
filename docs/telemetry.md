@@ -83,6 +83,12 @@
 - 한 번의 입력에서 나오는 이벤트 순서: `idle`(있으면) → `move` → `seventh_step` → `body_lost` → `level_fail` 또는 `level_clear`
 - 스테이지 "시도"는 `level_start`에서 시작해 `level_clear` / `level_leave` / `session_end`로 끝난다. 시도 중 `restart`는 같은 시도로 센다(재시작 수로 집계)
 - 클리어한 뒤 다시 하기(R)는 `level_start` `via: "again"`으로 새 시도를 연다
+- `level_start.via` 정의 (2026-11-10 결정, 앱 실행의 첫 진입인지와 상관없이 **플레이어가 어떻게 들어왔는지**로 정한다):
+  - `select`: 지도·스테이지 목록에서 골라 들어감. **앱을 켜고 처음 들어가는 스테이지도 지도·목록에서 골랐으면 `select`**
+  - `boot`: 플레이어가 고르지 않고 앱이 바로 스테이지로 들어감 — 실행 인자로 바로 게임 진입, 저장된 진행으로 자동 이어가기, 에디터 `startLevel`, 웹 프로토타입 첫 화면
+  - `url`: 주소·실행 인자가 스테이지 번호를 지정함(WebGL·웹 `?level=N`, 데스크톱 `-level N`). 기존 값 그대로
+  - `next`: 결과 화면·HUD의 "다음", `again`: 클리어 뒤 다시 하기
+  - Unity `EntryTracker`(씬 플로우/게임플레이 UI)는 첫 진입이어도 지도·목록 선택이면 `select`. 골든 `manual-first-entry-select` 트레이스(트레이스 최상위 `via` = 첫 `level_start`의 via)
 - 리플레이(`?replay=…`) 입력은 기록하지 않는다
 - 알 수 없는 필드는 서버가 그대로 보관한다(`data` JSON). 새 필드는 선택 필드로만 추가하고, 의미가 바뀌면 `v`를 올린다
 
@@ -154,13 +160,13 @@ DB_PATH=server/data/playtest-$(date +%F).sqlite node server/src/index.mjs
 
 **5. 끝난 뒤**: 서버 `Ctrl+C`. DB 파일은 보관(git 제외). 레벨 디자인용 내보내기(대시보드 위쪽 링크도 같음, 현재 필터 적용):
 ```bash
-T=<토큰>; B=http://localhost:8787/api/export; D=$(date +%F)
-for f in attempts.csv levels.csv events.jsonl; do curl -sH "Authorization: Bearer $T" "$B/$f?since=$D" -o "$f"; done
+T=<토큰>; B=http://localhost:8787/api/export; D=$(date +%F)   # 오늘(한국 날짜)
+for f in attempts.csv levels.csv events.jsonl; do curl -sH "Authorization: Bearer $T" "$B/$f?since=$D&tz=Asia/Seoul" -o "$f"; done
 ```
 - `attempts.csv`/`.json`: 시도 한 줄. 열은 `design/levels/telemetry-mapping.md` 4.1 + 끝에 `chapter, stageNow, stageMatch, stars, starsSource, lang, planet`
 - `levels.csv`/`.json`: 스테이지 집계(`chapter`, `planet`, 퍼널, 헤맴, `stars1~3`, `star3Rate`, `minBodies`)
 - `events.jsonl`/`.json`: 원본 이벤트 + `attemptId`
-- 모든 내보내기는 `client`, `build`, `lang`, `since`, `to` 필터를 받는다. CSV는 UTF-8(BOM 없음). 엑셀에서 열 때는 "데이터 > 텍스트/CSV"로 UTF-8 지정
+- 모든 내보내기는 `client`, `build`, `lang`, `since`, `to` 필터를 받는다. 시각(서버 수신 기준): `2026-11-10`·`2026-11-10T09:00`(오프셋 없음)은 `tz`(IANA `Asia/Seoul` 또는 `+09:00`, 없으면 **서버 PC의 시간대**) 기준 그 시각, `2026-11-10T09:00+09:00`·`…Z`는 그대로, 숫자는 epoch ms. `to`는 그 시각 전까지(`since=2026-11-10&to=2026-11-11` = 11월 10일 하루). 잘못된 값은 400. CSV는 UTF-8(BOM 없음). 엑셀에서 열 때는 "데이터 > 텍스트/CSV"로 UTF-8 지정
 
 **가짜 데이터로 미리 보기**: 서버를 끈 상태에서 `node server/tools/fake-data.mjs --players 120 --db server/data/fake.sqlite` 후 `DB_PATH=server/data/fake.sqlite`로 켠다(7개 행성 모두에 플레이어가 있다. `lang`은 4명 중 1명 `en`).
 
@@ -171,6 +177,7 @@ for f in attempts.csv levels.csv events.jsonl; do curl -sH "Authorization: Beare
 | 날짜 | 버전 | 내용 |
 |---|---|---|
 | 2026-11-07 | v1 | 최초 확정 |
+| 2026-11-10 | v1 | `level_start.via` 정의 확정(3장 아래): 지도·목록에서 고른 진입은 앱 첫 진입이어도 `select`, `boot`은 고르지 않은 바로 진입(실행 인자로 바로 게임, 자동 이어가기)만, `url`은 그대로. 이벤트 형식은 같음. 골든에 `manual-first-entry-select` 추가(213 트레이스) — Unity `TelemetryGoldenTests`는 첫 `LevelStart`에 트레이스의 `via`를 써야 통과. 서버: `since`/`to` 날짜를 서버 시간대(또는 `tz`)로 해석, epoch ms 필터 버그 수정(대시보드 "기간"이 걸러지지 않던 문제), 몸 사용 사유 표시 석상 → 선돌 |
 | 2026-11-10 | v1 | 이벤트 변화 없음. 6장 로컬 플레이테스트 절차 추가. 서버 내보내기: `attempts`에 `lang`·`planet` 열(끝에 추가), `levels`·`chapters`에 `planet`(design/levels/chapters.json). 대시보드 챕터 이름을 행성 이름으로 |
 | 2026-11-07 | v1 | `level_start.levelKey`(선택) 추가 — 레벨 디자인 요청. 선택 필드라 버전은 그대로 |
 | 2026-11-10 | v1 | 재시작 셈을 게임 규칙(architecture 6.5)에 맞춤: 시작 상태에서 누른 R은 `restart` 이벤트도 `restarts` 셈도 없음(`level_clear.restarts`, ★3에 영향). Undo는 원래 실제로 되돌린 것만 셈. 골든 재생성(재시작 이벤트 32건 빠짐). Unity `TelemetryTracker`도 같은 조건(직전 상태의 `Prev`가 없으면 무시) |

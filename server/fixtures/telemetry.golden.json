@@ -3,7 +3,7 @@
  "source": "unity/Assets/_Project/Tests/Golden/traces.golden.json + manual scenarios",
  "reference": "prototypes/seven-steps/src/telemetry.js",
  "schema": 1,
- "notes": "Clock fixed at 0: no idle events. Removed fields: t, durationMs, idleMs, sessionMs. Excluded types: idle, session_end. Commands: U D L R K X, Z undo, * restart, H hint, > next stage via selector. session_start uses firstTime:true, cleared:0; attempts start at 1.",
+ "notes": "Clock fixed at 0: no idle events. Removed fields: t, durationMs, idleMs, sessionMs. Excluded types: idle, session_end. Commands: U D L R K X, Z undo, * restart, H hint, > next stage via selector. session_start uses firstTime:true, cleared:0; attempts start at 1. The first level_start uses the trace via (boot = direct launch, select = picked on the map/list).",
  "traces": [
   {
    "id": "stage:일곱 걸음:solution",
@@ -190791,6 +190791,182 @@
      ],
      "tile": "exit",
      "effect": "win"
+    }
+   ]
+  },
+  {
+   "id": "manual-first-entry-select",
+   "level": 1,
+   "levelName": "일곱 걸음",
+   "levelKey": "a1070f9a",
+   "via": "select",
+   "commands": "RRRRRRR",
+   "map": [
+    "##########",
+    "#S......E#",
+    "##########"
+   ],
+   "bodies": 3,
+   "statueCount": 0,
+   "events": [
+    {
+     "seq": 0,
+     "type": "session_start",
+     "firstTime": true,
+     "cleared": 0
+    },
+    {
+     "seq": 1,
+     "type": "level_start",
+     "level": 1,
+     "levelName": "일곱 걸음",
+     "levelKey": "a1070f9a",
+     "attempt": 1,
+     "via": "select",
+     "bodies": 3
+    },
+    {
+     "seq": 2,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 1,
+     "dir": "right",
+     "from": [
+      1,
+      1
+     ],
+     "to": [
+      2,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 3,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 2,
+     "dir": "right",
+     "from": [
+      2,
+      1
+     ],
+     "to": [
+      3,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 4,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 3,
+     "dir": "right",
+     "from": [
+      3,
+      1
+     ],
+     "to": [
+      4,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 5,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 4,
+     "dir": "right",
+     "from": [
+      4,
+      1
+     ],
+     "to": [
+      5,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 6,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 5,
+     "dir": "right",
+     "from": [
+      5,
+      1
+     ],
+     "to": [
+      6,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 7,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 6,
+     "dir": "right",
+     "from": [
+      6,
+      1
+     ],
+     "to": [
+      7,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 8,
+     "type": "move",
+     "level": 1,
+     "body": 1,
+     "step": 7,
+     "dir": "right",
+     "from": [
+      7,
+      1
+     ],
+     "to": [
+      8,
+      1
+     ],
+     "result": "moved"
+    },
+    {
+     "seq": 9,
+     "type": "seventh_step",
+     "level": 1,
+     "body": 1,
+     "at": [
+      8,
+      1
+     ],
+     "tile": "exit",
+     "effect": "win"
+    },
+    {
+     "seq": 10,
+     "type": "level_clear",
+     "level": 1,
+     "moves": 7,
+     "undos": 0,
+     "restarts": 0,
+     "hints": 0,
+     "fails": 0,
+     "bodiesUsed": 1,
+     "stars": 3
     }
    ]
   },

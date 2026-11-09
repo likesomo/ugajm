@@ -30,6 +30,9 @@ const CMD = { K: { type: 'keep' }, X: { type: 'switch' }, Z: { type: 'undo' }, '
 // via, reason or blockedBy, or a true flag such as crumbled). Generation fails when a scenario stops showing what it
 // is for (a stage renamed or its map changed), instead of silently testing something else.
 const MANUAL = [
+  // First entry of the app run picked on the map/list: via "select" (docs/telemetry.md via rule, 2026-11-10).
+  // Other traces model a direct launch (boot). The first level_start's via is the trace's top-level "via".
+  { id: 'manual-first-entry-select', stage: '일곱 걸음', via: 'select', commands: 'RRRRRRR', expect: ['level_start:select', 'level_clear'] },
   { id: 'manual-hint-then-clear', stage: '일곱 걸음', commands: 'RRRHRRRR', expect: ['hint', 'seventh_step:win', 'level_clear'] },
   { id: 'manual-select-leave', stage: '일곱 걸음', commands: 'RRZR>RRR', expect: ['undo', 'level_leave', 'level_start:select'] },
   { id: 'manual-clear-again', stage: '일곱 걸음', commands: 'RRRRRRR*RRL', expect: ['level_clear', 'level_start:again'] },
@@ -61,14 +64,14 @@ function loadTraces(arg) {
 
 const keyToStage = new Map(LEVELS.map((d, i) => [levelKey(parseLevel(d)), i + 1]));
 
-function run({ id, def, level, commands }) {
+function run({ id, def, level, commands, via = 'boot' }) {
   const events = [];
   const tr = new Tracker({ emit: (e) => events.push(e), now: () => 0, attempts: new Map() });
   let n = level;
   let d = def;
   let state = newState(parseLevel(d));
   tr.sessionStart({ firstTime: true, cleared: 0 });
-  tr.levelStart(state, n, d.name, 'boot');
+  tr.levelStart(state, n, d.name, via);
   for (const ch of commands) {
     if (ch === 'H') { tr.hint(state); continue; }
     if (ch === '>') {
@@ -88,7 +91,7 @@ function run({ id, def, level, commands }) {
   }
   const clean = events.filter((e) => !SKIP.has(e.type)).map((e) => Object.fromEntries(Object.entries(e).filter(([k]) => !DROP.has(k))));
   const parsed = parseLevel(def);
-  return { id, level, levelName: def.name, levelKey: levelKey(parsed), via: 'boot', commands, map: def.map, bodies: def.bodies, statueCount: parsed.statueCount ?? 0, events: clean };
+  return { id, level, levelName: def.name, levelKey: levelKey(parsed), via, commands, map: def.map, bodies: def.bodies, statueCount: parsed.statueCount ?? 0, events: clean };
 }
 
 const CHECK = process.argv.includes('--check');
@@ -108,7 +111,7 @@ for (const m of MANUAL) {
     if (m.commands.includes('>') && !LEVELS[level]) throw new Error(`${m.id}: "${m.stage}" is the last stage, ">" needs a next one`);
     def = LEVELS[level - 1];
   }
-  const t = run({ id: m.id, def, level, commands: m.commands });
+  const t = run({ id: m.id, def, level, commands: m.commands, via: m.via });
   const missing = m.expect.filter((x) => !shows(t.events, x));
   if (missing.length) throw new Error(`${m.id} (${def.name}): no ${missing.join(', ')}. The stage changed; fix the commands or pick another stage.`);
   traces.push(t);
@@ -120,7 +123,7 @@ const out = {
   reference: 'prototypes/seven-steps/src/telemetry.js',
   schema: SCHEMA_VERSION,
   notes: 'Clock fixed at 0: no idle events. Removed fields: t, durationMs, idleMs, sessionMs. Excluded types: idle, session_end. ' +
-    'Commands: U D L R K X, Z undo, * restart, H hint, > next stage via selector. session_start uses firstTime:true, cleared:0; attempts start at 1.',
+    'Commands: U D L R K X, Z undo, * restart, H hint, > next stage via selector. session_start uses firstTime:true, cleared:0; attempts start at 1. The first level_start uses the trace via (boot = direct launch, select = picked on the map/list).',
   traces,
 };
 const text = JSON.stringify(out, null, 1) + '\n';
