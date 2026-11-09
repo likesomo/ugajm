@@ -48,7 +48,8 @@ namespace SevenSteps.Game.UI
             var sb = new StringBuilder();
             if (licenses != null)
                 foreach (var l in licenses)
-                    if (l != null) sb.Append("── ").Append(l.name).Append(" ──\n").Append(l.text.Replace("\r\n", "\n").Trim()).Append("\n\n");
+                    // ASCII separators: Jua has no box-drawing U+2500, so "──" drew nothing in WebGL.
+                    if (l != null) sb.Append("-- ").Append(l.name).Append(" --\n").Append(l.text.Replace("\r\n", "\n").Trim()).Append("\n\n");
             var body = content.gameObject.AddComponent<Text>();
             body.font = Ui.Font;
             body.fontSize = 13;
