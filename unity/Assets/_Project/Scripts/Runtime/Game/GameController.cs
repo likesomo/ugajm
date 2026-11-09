@@ -54,6 +54,7 @@ namespace SevenSteps.Game
         ChapterIntroController chapterIntro;
         Localizer localizer;
         Action<Language> applyResultLanguage;
+        SettingsPanel settingsPanel;
 
         /// The board controller (tests, tools).
         public BoardController Board => board;
@@ -101,7 +102,7 @@ namespace SevenSteps.Game
             result.Apply(localizer);
             this.localizer = localizer;
             var overlayCanvas = OverlayCanvas();
-            var settings = SettingsPanel.Create(overlayCanvas, save, cfg.telemetryOnByDefault, localizer);
+            var settings = settingsPanel = SettingsPanel.Create(overlayCanvas, save, cfg.telemetryOnByDefault, localizer);
             var languagePanel = new LanguagePanel(overlayCanvas); // opened from the settings language button
             languagePanel.Apply(localizer);
             applyResultLanguage = _ => { result.Apply(localizer); languagePanel.Apply(localizer); }; // the HUD and board redraw in BoardController
@@ -150,6 +151,7 @@ namespace SevenSteps.Game
         void Start()
         {
             flowController.Start(launch.DirectToGame ? Bootstrap.FirstStage(launch, flow.StageCount) : 0);
+            if (launch.OpenSettings && !overlays.Contains(settingsPanel)) overlays.Push(settingsPanel); // -settings / ?settings=1
 
             if (launch.FlowCheck && !string.IsNullOrEmpty(launch.Replay) && launch.DirectToGame)
             {

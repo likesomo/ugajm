@@ -21,6 +21,18 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void OpenSettingsOptionParses()
+        {
+            Assert.IsTrue(LaunchOptions.Parse(new[] { "x.exe", "-settings" }, "").OpenSettings);
+            Assert.IsTrue(LaunchOptions.Parse(new string[0], "http://h/?settings=1").OpenSettings);
+            Assert.IsFalse(LaunchOptions.Parse(new string[0], "http://h/?settings=0").OpenSettings);
+            var bad = LaunchOptions.Parse(new string[0], "http://h/?settings=open");
+            Assert.IsFalse(bad.OpenSettings);
+            Assert.AreEqual(1, bad.Warnings.Count);
+            Assert.IsFalse(LaunchOptions.Parse(new[] { "x.exe" }, "").OpenSettings);
+        }
+
+        [Test]
         public void OffWhenNoHttpTelemetryOrDisabled()
         {
             var loc = Ko();
