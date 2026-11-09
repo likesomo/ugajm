@@ -11,7 +11,10 @@ import { checkEvent } from '../src/validate.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-function play(levelNo, commands, { step = 1000, pauses = {} } = {}) {
+// stage: name in levels.js (stage numbers change when stages are added or reordered).
+function play(stage, commands, { step = 1000, pauses = {} } = {}) {
+  const levelNo = LEVELS.findIndex((d) => d.name === stage) + 1;
+  assert.ok(levelNo, `no stage named ${stage}`);
   let clock = 1_762_500_000_000;
   const events = [];
   const tr = new Tracker({ emit: (e) => events.push(e), now: () => clock });
@@ -31,7 +34,7 @@ function play(levelNo, commands, { step = 1000, pauses = {} } = {}) {
 }
 
 test('stage 1 solution: moves, seventh step, clear', () => {
-  const { events } = play(1, 'RRRRRRR');
+  const { events } = play('일곱 걸음', 'RRRRRRR');
   assert.deepEqual(events.map((e) => e.type), ['session_start', 'level_start', ...Array(7).fill('move'), 'seventh_step', 'level_clear']);
   assert.deepEqual(events.map((e) => e.seq), events.map((_, i) => i));
   const clear = events.at(-1);
@@ -44,7 +47,7 @@ test('stage 1 solution: moves, seventh step, clear', () => {
 });
 
 test('blocked move, idle after a long pause, undo and restart', () => {
-  const { events } = play(1, 'LRZ*', { pauses: { 1: 45000 } });
+  const { events } = play('일곱 걸음', 'LRZ*', { pauses: { 1: 45000 } });
   const types = events.map((e) => e.type);
   assert.deepEqual(types.slice(2), ['move', 'idle', 'move', 'undo', 'restart']);
   assert.equal(events[2].result, 'blocked');
@@ -55,8 +58,8 @@ test('blocked move, idle after a long pause, undo and restart', () => {
 });
 
 test('pit without the 7th step: fell + body_lost wasted', () => {
-  // Stage 5: S..o.E — the third step lands in the pit.
-  const { events } = play(5, 'RRR');
+  // 몸으로 놓는 다리: S..o.E — the third step lands in the pit.
+  const { events } = play('몸으로 놓는 다리', 'RRR');
   const fell = events.find((e) => e.type === 'move' && e.result === 'fell');
   assert.ok(fell);
   const lost = events.find((e) => e.type === 'body_lost');
