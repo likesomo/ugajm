@@ -47,7 +47,7 @@ namespace SevenSteps.Tests
                 Assert.IsTrue(view.IsShown);
                 Assert.IsTrue(Button(canvas, "다음 스테이지 (Enter)").activeSelf);
                 Assert.IsFalse(Button(canvas, "한 걸음 되돌리기 (Z)").activeSelf);
-                StringAssert.Contains("형제 2명 (최소 1명 · 최고 기록 2명)", Text(canvas, "Body"));
+                StringAssert.Contains("형제 2명 (최소 1명, 최고 기록 2명)", Text(canvas, "Body"));
 
                 int next = 0;
                 view.NextRequested += () => next++;
