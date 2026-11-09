@@ -75,6 +75,8 @@ namespace SevenSteps.Game
         /// The TileSet given to Init (the HUD reads body colors from it, docs 12.6).
         public TileSet TileSet => set;
         public bool IsAnimating => anim != null;
+        /// Word on the exit tile in the UI language (board.exit), set by BoardController; the next draw uses it.
+        public string ExitLabel { get; set; } = "EXIT";
 
         /// <param name="cameraOverride">Camera preset to use instead of tileSet.cameraRig (Game scene setting), or null.</param>
         public void Init(TileSet tileSet, RectTransform labelLayer, Camera cam, CameraRig? cameraOverride = null)
@@ -422,7 +424,7 @@ namespace SevenSteps.Game
                 TileKind.Gate => id.Variant.ToString(),
                 TileKind.Plate => ((char)('A' + id.Variant)).ToString(),
                 TileKind.Door => ((char)('A' + id.Variant)).ToString(),
-                TileKind.Exit => "출구",
+                TileKind.Exit => ExitLabel,
                 TileKind.CountDoor => level.StatueCount.ToString(),
                 _ => null,
             };

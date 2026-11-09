@@ -13,7 +13,7 @@ namespace SevenSteps.Game
         static TextAsset source;
         static int[] minBodies;
         static string[] chapterIds;
-        static LevelDto[] dtos; // per-language texts (docs/architecture.md 13.5)
+        static LevelDto[] dtos; // stage texts per language (LevelDto.TextFor, 13.5)
         static ChapterFileDto chapters; // null = no chapters.json yet
 
         /// Domain reload is disabled in the editor: parse levels.json again on every Play so edits to it show up.
@@ -57,24 +57,24 @@ namespace SevenSteps.Game
             return minBodies != null && stage >= 0 && stage < minBodies.Length ? minBodies[stage] : 0;
         }
 
+        /// Name, hint and story of a stage in a language (levels.json text, docs/architecture.md 13.5): ko = the base fields,
+        /// a missing translation throws KeyNotFoundException (the export check catches it before a build). Call after Load.
+        public static LevelTextDto TextOf(int stage, Language lang)
+        {
+            if (dtos == null) throw new InvalidOperationException("LevelCatalog.TextOf before Load");
+            if (stage < 0 || stage >= dtos.Length) throw new ArgumentOutOfRangeException(nameof(stage), stage, $"stage must be 0..{dtos.Length - 1}");
+            return dtos[stage].TextFor(Languages.Code(lang));
+        }
+
+        /// A stage name in a language (Stage Select, chapter lists). Not the save key: that is always Level.Name (11.3.1).
+        public static string NameOf(int stage, Language lang) => TextOf(stage, lang).name;
+
         /// The stage at a 0-based index. Call after Load; a stage outside levels.json throws.
         public static Level At(int stage)
         {
             if (cached == null) throw new InvalidOperationException("LevelCatalog.At before Load");
             if (stage < 0 || stage >= cached.Length) throw new ArgumentOutOfRangeException(nameof(stage), stage, $"stage must be 0..{cached.Length - 1}");
             return cached[stage];
-        }
-
-        /// A stage's name in a language (levels.json name for ko, its "text" entry otherwise; docs/architecture.md 13.5).
-        /// Not the save key: that is always Level.Name (11.3.1). Call after Load; a missing translation throws (export checks it).
-        public static string NameOf(int stage, Language lang) => TextOf(stage, lang).name;
-
-        /// Name, hint and story of a stage in a language. Call after Load; a stage outside levels.json throws.
-        public static LevelTextDto TextOf(int stage, Language lang)
-        {
-            if (dtos == null) throw new InvalidOperationException("LevelCatalog.TextOf before Load");
-            if (stage < 0 || stage >= dtos.Length) throw new ArgumentOutOfRangeException(nameof(stage), stage, $"stage must be 0..{dtos.Length - 1}");
-            return dtos[stage].TextFor(Languages.Code(lang));
         }
 
         /// Chapter id of a stage (levels.json "chapter", e.g. "moss"), "" when the stage has none (= first chapter, 6.4).

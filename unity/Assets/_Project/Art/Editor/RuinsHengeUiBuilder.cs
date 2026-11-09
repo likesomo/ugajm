@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.U2D;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEditor.U2D;
 namespace SevenSteps.Art
 {
@@ -78,8 +79,11 @@ namespace SevenSteps.Art
         static T Panel<T>(GameObject source,string name,Dictionary<string,Sprite> sprites,UiTheme theme) where T:Component
         {
             // A variant of the shared UI/Prefabs panel (lead 2026-11-09): layout/content changes there reach this skin; only the look is overridden here.
-            var go=(GameObject)PrefabUtility.InstantiatePrefab(source);
-            foreach(var text in go.GetComponentsInChildren<Text>(true)){text.font=theme.font;text.color=theme.ink;}
+            // Built in a preview scene so a menu run leaves the open scene untouched (review N1).
+            var scene=EditorSceneManager.NewPreviewScene();
+            var go=(GameObject)PrefabUtility.InstantiatePrefab(source,scene);
+            // Colour only: fonts are the language role fonts the views set at runtime (UiTheme.FontFor, 13.4; review N2).
+            foreach(var text in go.GetComponentsInChildren<Text>(true))text.color=theme.ink;
             foreach(var button in go.GetComponentsInChildren<Button>(true))
             {
                 var image=button.GetComponent<Image>();if(image){image.sprite=sprites["button_default"];image.type=Image.Type.Sliced;image.color=Color.white;}
@@ -87,7 +91,7 @@ namespace SevenSteps.Art
             }
             // The panel body only (both shared panels name it "Panel"). Width tests caught the full-screen dim in a scene instance.
             foreach(var image in go.GetComponentsInChildren<Image>(true))if(!image.GetComponent<Button>()&&image.name=="Panel"){image.sprite=sprites["panel_stone"];image.type=Image.Type.Sliced;image.color=Color.white;}
-            var saved=PrefabUtility.SaveAsPrefabAsset(go,Root+"/"+name+".prefab");UnityEngine.Object.DestroyImmediate(go);return saved.GetComponent<T>();
+            var saved=PrefabUtility.SaveAsPrefabAsset(go,Root+"/"+name+".prefab");EditorSceneManager.ClosePreviewScene(scene);return saved.GetComponent<T>();
         }
     }
 }

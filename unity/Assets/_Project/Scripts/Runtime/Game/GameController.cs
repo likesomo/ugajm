@@ -48,6 +48,8 @@ namespace SevenSteps.Game
         OverlayStack overlays;
         BackNavigator back;
         ChapterIntroController chapterIntro;
+        Localizer localizer;
+        Action<Language> applyResultLanguage;
 
         /// The board controller (tests, tools).
         public BoardController Board => board;
@@ -88,17 +90,21 @@ namespace SevenSteps.Game
 
             // Views
             board = gameObject.AddComponent<BoardController>();
-            hud = HudView.Create(tiles); // theme prefab with its own canvas; LabelLayer is valid for board.Init below
-            var result = ResultView.Create();
-            var overlayCanvas = OverlayCanvas();
             var localizer = Services.Get<Localizer>();
+            hud = HudView.Create(tiles, localizer); // theme prefab with its own canvas; LabelLayer is valid for board.Init below
+            var result = ResultView.Create();
+            result.Apply(localizer);
+            this.localizer = localizer;
+            applyResultLanguage = _ => result.Apply(localizer); // the HUD and board redraw in BoardController
+            localizer.Changed += applyResultLanguage;
+            var overlayCanvas = OverlayCanvas();
             var settings = SettingsPanel.Create(overlayCanvas, save, cfg.telemetryOnByDefault, localizer);
             var chapterCard = ChapterCardView.CreateOptional(overlayCanvas); // null when the theme has no card
             settingsController = new SettingsController(save, settings, cfg.telemetryOnByDefault, localizer);
             overlays = new OverlayStack();
 
             // Board controller, then the flow controller on top of it
-            board.Init(assets, levels, save, hud, cam, tiles, overrideCamera ? cameraRig : (CameraRig?)null, Services.Get<ITelemetry>());
+            board.Init(assets, levels, save, hud, cam, tiles, overrideCamera ? cameraRig : (CameraRig?)null, Services.Get<ITelemetry>(), localizer);
             // Chapter look (12.8): stage -> chapters.json artPreset -> AppConfig.Chapter; null (no chapter assets yet) = as now.
             board.UseChapters(new ChapterStage(cam, keyLight, fillLight, rimLight, transform), ChapterPresetFor(cfg), cfg.tileSet);
             flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, result, LevelCatalog.MinBodies, LevelCatalog.ChapterKeyOf);
@@ -136,6 +142,7 @@ namespace SevenSteps.Game
             flowController?.Dispose();
             settingsController?.Dispose();
             chapterIntro?.Dispose();
+            if (localizer != null) localizer.Changed -= applyResultLanguage;
         }
 
         /// Flow keys. Board keys are read by the board controller (blocked while an overlay is open or a scene loads).

@@ -85,10 +85,17 @@ namespace SevenSteps.Game
 
         void DestroyInstances()
         {
-            if (sky != null) Object.Destroy(sky);
-            if (planet != null) Object.Destroy(planet);
+            if (sky != null) Kill(sky);
+            if (planet != null) Kill(planet);
             sky = planet = null;
             environment = null;
+        }
+
+        /// Destroy in play mode; outside it (edit-mode tests) Destroy is not allowed.
+        static void Kill(GameObject go)
+        {
+            if (Application.isPlaying) Object.Destroy(go);
+            else Object.DestroyImmediate(go);
         }
     }
 }
