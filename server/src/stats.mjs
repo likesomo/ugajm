@@ -53,7 +53,7 @@ export function buildAttempts(rows, now = Date.now(), minMovesFor = () => null) 
         cur = {
           id: `${r.session_id}:${r.seq}`,
           playerId: r.player_id, sessionId: r.session_id, client: r.client, build: r.build, sessionFirstTime: sess.firstTime,
-          level: d.level, levelName: d.levelName ?? '', levelKey: d.levelKey ?? '', chapter: d.chapter ?? '', attempt: d.attempt, via: d.via ?? '',
+          level: d.level, levelName: d.levelName ?? '', levelKey: d.levelKey ?? '', chapter: d.chapter ?? '', lang: r.lang ?? d.lang ?? '', attempt: d.attempt, via: d.via ?? '',
           bodies: d.bodies ?? null, t0: r.t, tEnd: null,
           outcome: 'open', durationMs: 0, moves: 0, blocked: 0, undos: 0, restarts: 0, hints: 0, fails: 0,
           idles: 0, idleMs: 0, idleMsMax: 0, firstHintMs: null, wasted: 0, lost: {}, keeps: 0, switches: 0,
@@ -218,13 +218,21 @@ function aggregate(rows, levels, now) {
 const rate = (a, b) => (b ? Math.round((a / b) * 1000) / 1000 : null);
 const per = (a, b) => (b ? Math.round((a / b) * 100) / 100 : null);
 
+// Chapter id -> planet name (ko) from the current build's levels (levels.mjs reads design/levels/chapters.json).
+const planetLookup = (levels) => {
+  const m = new Map(levels.filter((l) => l.chapter && l.planet).map((l) => [l.chapter, l.planet]));
+  return (ch) => m.get(ch) ?? '';
+};
+
 // Per-stage funnel and struggle metrics. levels: [{ n, name, key, chapter }] from the current build (optional).
 // level = stage number in the current build; null for a map the build no longer has (old = true).
 export function levelStats(rows, levels = [], now = Date.now()) {
+  const planetOf = planetLookup(levels);
   return aggregate(rows, levels, now).stages.map((s) => ({
     level: s.level,
     name: s.name || [...s.names][0] || '',
     chapter: s.chapter,
+    planet: planetOf(s.chapter),
     levelKey: s.key,
     old: s.old,
     namesSeen: [...s.names],
@@ -261,6 +269,7 @@ function starColumns(best, clearPlayers) {
 // stage. clearedAll: cleared every stage of it. quitPlayers: latest attempt overall is an uncleared stage here.
 export function chapterStats(rows, levels = [], now = Date.now()) {
   const { stages } = aggregate(rows, levels, now);
+  const planetOf = planetLookup(levels);
   const all = new Set();
   for (const s of stages) for (const p of s.players) all.add(p);
   const chapters = new Map();
@@ -276,7 +285,7 @@ export function chapterStats(rows, levels = [], now = Date.now()) {
     const last = c.stages.at(-1);
     const clearedAll = [...c.players].filter((p) => c.stages.every((s) => s.clearPlayers.has(p))).length;
     return {
-      chapter: c.chapter,
+      chapter: c.chapter, planet: planetOf(c.chapter),
       firstLevel: c.stages[0].level, lastLevel: last.level, stages: c.stages.length,
       players: c.players.size, playerShare: rate(c.players.size, all.size),
       reachedLast: last.players.size, clearedAll, clearedAllRate: rate(clearedAll, c.players.size),
@@ -381,12 +390,14 @@ export const ATTEMPT_COLUMNS = [
   'hints', 'fails', 'bodiesUsed', 'minMoves', 'idleCount', 'idleMsTotal', 'idleMsMax', 'firstHintMs', 'bodiesWasted',
   'lostFell', 'lostVanish', 'lostStatue', 'lostSwitch', 'lostBridge', 'lostSeal', 'keeps', 'switches',
   'lastStuckToClearMoves', 'lastStuckToClearMs', 'nextLevelStarted', 'chapter', 'stageNow', 'stageMatch', 'stars', 'starsSource',
+  'lang', 'planet',
 ];
 
 // levels (optional): adds chapter, stageNow (stage number in the current build, '' for an old map) and
 // stageMatch (key | name | old | number), see stageResolver.
 export function attemptRows(rows, now = Date.now(), minMovesFor, levels = []) {
   const resolve = stageResolver(levels);
+  const planetOf = planetLookup(levels);
   return buildAttempts(rows, now, minMovesFor).attempts.map((a) => ({
     attemptId: a.id, playerId: a.playerId, sessionId: a.sessionId, build: a.build, client: a.client,
     level: a.level, levelName: a.levelName, levelKey: a.levelKey, attempt: a.attempt, via: a.via, bodies: a.bodies,
@@ -397,7 +408,7 @@ export function attemptRows(rows, now = Date.now(), minMovesFor, levels = []) {
     lostFell: a.lost.fell ?? 0, lostVanish: a.lost.vanish ?? 0, lostStatue: a.lost.statue ?? 0, lostSwitch: a.lost.switch ?? 0,
     lostBridge: a.lost.bridge ?? 0, lostSeal: a.lost.seal ?? 0, keeps: a.keeps, switches: a.switches,
     lastStuckToClearMoves: a.lastStuckToClearMoves, lastStuckToClearMs: a.lastStuckToClearMs, nextLevelStarted: a.nextLevelStarted,
-    ...stageColumns(a, resolve(a)),
+    ...stageColumns(a, resolve(a)), lang: a.lang, planet: planetOf(resolve(a).chapter),
   }));
 }
 
