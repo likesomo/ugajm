@@ -1,7 +1,7 @@
 // Anonymous play telemetry (schema: docs/telemetry.md, v1). Owned by backend/analytics.
 // Tracker turns dispatch() results into events and is pure (clock and output injected), so the fake-data
 // generator in server/tools reuses it. initTelemetry() wires it to the browser: local queue, batching, sendBeacon.
-import { STEPS, tileAt } from './core.js';
+import { STEPS, tileAt, minBodies, stars as coreStars } from './core.js';
 
 export const SCHEMA_VERSION = 1;
 export const IDLE_MS = 30000;
@@ -47,14 +47,27 @@ export function levelKey(level) {
   return fnv1a(`${level.bodies}\n${rows.join('\n')}`);
 }
 
+// Stars (design/levels/stars.md, plan B): core.js stars(), under the name the server and tests use.
+export const starsFor = coreStars;
+
+// Fewest bodies for a level (solver), cached by map. levels.json carries it as expected.minBodies.
+const MIN_BODIES = new Map();
+export function minBodiesOf(level) {
+  const key = levelKey(level);
+  if (!MIN_BODIES.has(key)) MIN_BODIES.set(key, minBodies(level)?.bodies ?? null);
+  return MIN_BODIES.get(key);
+}
+
 const xy = (s, i) => (i < 0 || i == null ? null : [i % s.level.w, Math.floor(i / s.level.w)]);
 const bodyNo = (s) => s.level.bodies - s.bodies + 1;
 const LOST = { fall: 'fell', vanish: 'vanish', stone: 'statue', switch: 'switch', bridge: 'bridge', seal: 'seal' };
 
 export class Tracker {
-  // emit(event) receives { seq, t, type, ...fields }. now() returns ms.
-  constructor({ emit, now = () => Date.now(), idleMs = IDLE_MS, attempts = new Map() }) {
+  // emit(event) receives { seq, t, type, ...fields }. now() returns ms. lang: UI language ("ko", "en"), sent on
+  // session_start and level_start when set (docs/telemetry.md); change it with setLang when the player switches.
+  constructor({ emit, now = () => Date.now(), idleMs = IDLE_MS, attempts = new Map(), lang = null }) {
     this.emit = emit;
+    this.lang = lang;
     this.now = now;
     this.idleMs = idleMs;
     this.attempts = attempts; // level number -> times started on this device
@@ -68,10 +81,13 @@ export class Tracker {
     this.emit({ seq: this.seq++, t: Math.round(this.now()), type, ...fields });
   }
 
+  setLang(lang) { this.lang = lang || null; }
+  langField() { return this.lang ? { lang: this.lang } : {}; }
+
   sessionStart(fields = {}) {
     if (this.sessionT == null) this.sessionT = this.now();
     this.lastInput = this.now();
-    this.send('session_start', fields);
+    this.send('session_start', { ...fields, ...this.langField() });
   }
 
   // chapter: the stage's chapter id from levels.js (optional, sent only when the stage has one).
@@ -80,7 +96,7 @@ export class Tracker {
     this.attempts.set(level, attempt);
     this.run = { level, t0: this.now(), moves: 0, undos: 0, restarts: 0, hints: 0, fails: 0, done: false };
     this.lastInput = this.now();
-    this.send('level_start', { level, levelName, levelKey: levelKey(state.level), ...(chapter ? { chapter } : {}), attempt, via, bodies: state.level.bodies });
+    this.send('level_start', { level, levelName, levelKey: levelKey(state.level), ...(chapter ? { chapter } : {}), attempt, via, bodies: state.level.bodies, ...this.langField() });
   }
 
   where(s) {
@@ -172,9 +188,11 @@ export class Tracker {
     }
     if (after.status === 'win' && !run.done) {
       run.done = true;
+      const bodiesUsed = bodyNo(after);
+      const stars = starsFor({ bodiesUsed, minBodies: minBodiesOf(after.level), hints: run.hints, undos: run.undos, restarts: run.restarts });
       this.send('level_clear', {
         level: L, durationMs: Math.round(this.now() - run.t0), moves: run.moves, undos: run.undos,
-        restarts: run.restarts, hints: run.hints, fails: run.fails, bodiesUsed: bodyNo(after),
+        restarts: run.restarts, hints: run.hints, fails: run.fails, bodiesUsed, ...(stars ? { stars } : {}),
       });
     }
   }
@@ -256,7 +274,7 @@ function resolveEndpoint(params) {
 }
 
 // Returns a Tracker-like object; all methods are no-ops when telemetry is off. Never throws into the game.
-export function initTelemetry({ build = 'proto-dev', client = 'web-proto', params = new URLSearchParams(location.search), getState = () => null } = {}) {
+export function initTelemetry({ build = 'proto-dev', client = 'web-proto', params = new URLSearchParams(location.search), getState = () => null, lang = 'ko' } = {}) {
   if (['off', '0'].includes(params.get('telemetry'))) store.set(KEY_OFF, 'off');
   else if (params.get('telemetry')) store.del(KEY_OFF);
   const enabled = store.get(KEY_OFF) !== 'off';
@@ -279,6 +297,7 @@ export function initTelemetry({ build = 'proto-dev', client = 'web-proto', param
 
   const tracker = new Tracker({
     attempts,
+    lang,
     emit: (e) => {
       if (!enabled) return;
       queue.push({ s: sessionId, e });
@@ -364,6 +383,7 @@ export function initTelemetry({ build = 'proto-dev', client = 'web-proto', param
     command: safe((...a) => tracker.command(...a)),
     hint: safe((s) => tracker.hint(s)),
     leave: safe((...a) => tracker.leave(...a)),
+    setLang: safe((l) => tracker.setLang(l)),
     flush: safe(flush),
     setEnabled(on) {
       if (on) store.del(KEY_OFF);

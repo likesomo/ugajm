@@ -44,7 +44,7 @@ function plans() {
 const cmdOf = (a) => (DIRS[a] ? { type: 'move', dir: a } : { type: a });
 
 // Simulates one player. Returns envelopes ({ v, playerId, sessionId, client, build, events }).
-export function simulatePlayer(r, { startT, build = 'proto-fake', client = 'web-proto' }) {
+export function simulatePlayer(r, { startT, build = 'proto-fake', client = 'web-proto', lang = 'ko' }) {
   const P = plans();
   const playerId = uuidFrom(r);
   const skill = 0.35 + r() * 0.6;
@@ -59,7 +59,7 @@ export function simulatePlayer(r, { startT, build = 'proto-fake', client = 'web-
   for (let si = 0; si < sessions && !quit; si++) {
     const sessionId = uuidFrom(r);
     const events = [];
-    const tr = new Tracker({ emit: (e) => events.push(e), now: () => clock, attempts });
+    const tr = new Tracker({ emit: (e) => events.push(e), now: () => clock, attempts, lang });
     tr.sessionStart({ firstTime: si === 0, cleared: cleared.size, resumed: false });
     let idx = [...Array(P.length).keys()].find((k) => !cleared.has(k)) ?? 0;
     let via = si === 0 ? 'boot' : 'boot';
@@ -147,7 +147,7 @@ export function generate({ players = 40, seed = 7, startT = Date.now() - 3 * 864
   const out = [];
   for (let i = 0; i < players; i++) {
     const t = startT + Math.floor(r() * 2 * 86400000);
-    out.push(...simulatePlayer(r, { startT: t, build: builds[i % builds.length], client: r() < 0.7 ? 'web-proto' : 'unity-webgl' }));
+    out.push(...simulatePlayer(r, { startT: t, build: builds[i % builds.length], client: r() < 0.7 ? 'web-proto' : 'unity-webgl', lang: i % 4 === 3 ? 'en' : 'ko' }));
   }
   return out;
 }

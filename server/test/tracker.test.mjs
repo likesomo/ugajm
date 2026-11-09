@@ -6,7 +6,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseLevel, newState, dispatch } from '../../prototypes/seven-steps/src/core.js';
 import { LEVELS } from '../../prototypes/seven-steps/src/levels.js';
-import { Tracker, levelKey, fnv1a, tileKind } from '../../prototypes/seven-steps/src/telemetry.js';
+import { Tracker, levelKey, fnv1a, tileKind, starsFor } from '../../prototypes/seven-steps/src/telemetry.js';
 import { checkEvent } from '../src/validate.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -116,4 +116,31 @@ test('mud costs 2 steps: a 7th step reached through mud is recorded; tile names'
   const lv = parseLevel({ name: 't', bodies: 1, map: ['#mLRrQ#', '#S....E#'], statueCount: 0 });
   const st = newState(lv);
   assert.deepEqual([1, 2, 3, 4, 5].map((x) => tileKind(st, x)), ['mud', 'lever', 'flip_up', 'flip_down', 'door']);
+});
+
+test('stars (plan B): hint caps at 1, fewest bodies for 2, no undo or restart for 3', () => {
+  assert.equal(starsFor({ bodiesUsed: 1, minBodies: 1, hints: 0, undos: 0, restarts: 0 }), 3);
+  assert.equal(starsFor({ bodiesUsed: 1, minBodies: 1, hints: 0, undos: 2, restarts: 0 }), 2);
+  assert.equal(starsFor({ bodiesUsed: 1, minBodies: 1, hints: 0, undos: 0, restarts: 1 }), 2);
+  assert.equal(starsFor({ bodiesUsed: 2, minBodies: 1, hints: 0, undos: 0, restarts: 0 }), 1);
+  assert.equal(starsFor({ bodiesUsed: 1, minBodies: 1, hints: 1, undos: 0, restarts: 0 }), 1);
+  assert.equal(starsFor({ bodiesUsed: 1, minBodies: null, hints: 0, undos: 0, restarts: 0 }), null);
+  const clearOf = (cmds) => play('일곱 걸음', cmds).events.find((e) => e.type === 'level_clear');
+  assert.equal(clearOf('RRRRRRR').stars, 3);
+  assert.equal(clearOf('RRZRRRRRR').stars, 2);
+  assert.equal(clearOf('HRRRRRRR').stars, 1);
+});
+
+test('lang on session_start and level_start when set, and after setLang', () => {
+  const ev = [];
+  const tr = new Tracker({ emit: (e) => ev.push(e), now: () => 1_762_500_000_000, lang: 'en' });
+  const s = newState(parseLevel(LEVELS[0]));
+  tr.sessionStart({ firstTime: true, cleared: 0 });
+  tr.levelStart(s, 1, LEVELS[0].name, 'boot');
+  tr.setLang('ko');
+  tr.levelStart(s, 1, LEVELS[0].name, 'again');
+  tr.setLang(null);
+  tr.levelStart(s, 1, LEVELS[0].name, 'again');
+  assert.deepEqual(ev.map((e) => e.lang), ['en', 'en', 'ko', undefined]);
+  for (const e of ev) assert.equal(checkEvent(e), null);
 });

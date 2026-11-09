@@ -102,7 +102,7 @@ export function createApp({ store, token, levels = [], allowedOrigins = [], trus
   const filters = (url) => {
     const f = {};
     const time = (v) => (/^d+$/.test(v) ? Number(v) : Date.parse(v) || null);
-    for (const k of ['client', 'build']) if (url.searchParams.get(k)) f[k] = url.searchParams.get(k);
+    for (const k of ['client', 'build', 'lang']) if (url.searchParams.get(k)) f[k] = url.searchParams.get(k);
     const from = url.searchParams.get('from') ?? url.searchParams.get('since');
     if (from) f.from = time(from);
     if (url.searchParams.get('to')) f.to = time(url.searchParams.get('to'));

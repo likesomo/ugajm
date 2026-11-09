@@ -27,23 +27,49 @@ namespace SevenSteps.Game.Telemetry
         readonly Func<long> now;
         readonly Func<int, int> nextAttempt;
         readonly long idleMs;
+        readonly Func<int, Level, int> minBodies;
 
         long? sessionT;
         long? lastInput;
         Run run;
 
         /// <param name="nextAttempt">1-based level -> attempt number of this start (ProgressData.CountStart in the game).</param>
-        public TelemetryTracker(ITelemetry sink, Func<long> now, Func<int, int> nextAttempt, long idleMs = N.IdleMs)
+        /// <param name="minBodies">(1-based level, level) -> fewest bodies (levels.json expected.minBodies in the game, 0 = unknown),
+        /// for level_clear.stars. Null = solve it like telemetry.js minBodiesOf (Solver.MinBodies, cached by map).</param>
+        public TelemetryTracker(ITelemetry sink, Func<long> now, Func<int, int> nextAttempt, long idleMs = N.IdleMs, Func<int, Level, int> minBodies = null)
         {
             this.sink = sink;
             this.now = now;
             this.nextAttempt = nextAttempt;
             this.idleMs = idleMs;
+            this.minBodies = minBodies ?? SolvedMinBodies;
+        }
+
+        static readonly System.Collections.Generic.Dictionary<string, int> SolvedByMap = new System.Collections.Generic.Dictionary<string, int>();
+
+        /// telemetry.js minBodiesOf: the solver's fewest bodies, cached by levelKey; 0 when the level has no solution.
+        static int SolvedMinBodies(int levelNumber, Level level)
+        {
+            string key = TelemetryJson.LevelKey(level);
+            if (!SolvedByMap.TryGetValue(key, out int bodies))
+            {
+                bodies = Solver.MinBodies(level)?.BodiesUsed ?? 0;
+                SolvedByMap[key] = bodies;
+            }
+            return bodies;
         }
 
         public bool InLevel => run != null;
 
         void Emit(TelemetryEvent e) => sink.Track(e);
+
+        /// UI language ("ko", "en") sent at the end of session_start and level_start; null = not sent (telemetry.js Tracker lang).
+        public string Lang { get; private set; }
+
+        /// The player switched language (Settings): later session_start / level_start carry it (telemetry.js setLang).
+        public void SetLang(string lang) => Lang = string.IsNullOrEmpty(lang) ? null : lang;
+
+        TelemetryEvent WithLang(TelemetryEvent e) => Lang != null ? e.With("lang", Lang) : e;
 
         public void SessionStart(bool firstTime, int cleared, bool resumed = false)
         {
@@ -51,6 +77,7 @@ namespace SevenSteps.Game.Telemetry
             lastInput = now();
             var e = new TelemetryEvent(N.Types.SessionStart).With("firstTime", firstTime).With("cleared", cleared);
             if (resumed) e.With("resumed", true);
+            WithLang(e); // last, as telemetry.js session_start
             Emit(e);
         }
 
@@ -63,7 +90,7 @@ namespace SevenSteps.Game.Telemetry
             var e = new TelemetryEvent(N.Types.LevelStart).With("level", level).With("levelName", levelName)
                 .With("levelKey", TelemetryJson.LevelKey(state.Level));
             if (!string.IsNullOrEmpty(chapter)) e.With("chapter", chapter); // same place as telemetry.js: right after levelKey
-            Emit(e.With("attempt", attempt).With("via", via).With("bodies", state.Level.Bodies));
+            Emit(WithLang(e.With("attempt", attempt).With("via", via).With("bodies", state.Level.Bodies))); // lang last, as telemetry.js
         }
 
         TelemetryEvent Where(TelemetryEvent e, State s) =>
@@ -171,9 +198,14 @@ namespace SevenSteps.Game.Telemetry
             if (after.Status == Status.Win && !run.Done)
             {
                 run.Done = true;
-                Emit(new TelemetryEvent(N.Types.LevelClear).With("level", L).With("durationMs", now() - run.T0).With("moves", run.Moves)
+                int bodiesUsed = Stars.BodiesUsed(after);
+                // Same judgement as the game (Core Stars.Of, docs 6.5) over this run's counts; 0 = unknown, field left out.
+                int stars = Stars.Of(bodiesUsed, minBodies(L, after.Level), run.Hints, run.Undos, run.Restarts);
+                var clear = new TelemetryEvent(N.Types.LevelClear).With("level", L).With("durationMs", now() - run.T0).With("moves", run.Moves)
                     .With("undos", run.Undos).With("restarts", run.Restarts).With("hints", run.Hints).With("fails", run.Fails)
-                    .With("bodiesUsed", BodyNo(after)));
+                    .With("bodiesUsed", bodiesUsed);
+                if (stars > 0) clear.With("stars", stars);
+                Emit(clear);
             }
         }
 

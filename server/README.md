@@ -113,7 +113,7 @@ DB_PATH=server/data/playtest-$(date +%F).sqlite node server/src/index.mjs
 | `GET /webgl/` | 없음 | Unity WebGL 빌드 (`WEBGL_DIR`). `telemetry` 파라미터가 없으면 이 서버 주소를 붙여 302 |
 | `GET /dashboard` | 페이지는 공개, 데이터는 토큰 | 대시보드 (`#token=…`로 한 번 열면 브라우저에 기억) |
 | `GET /api/levels` | 토큰 | 현재 빌드 레벨 맵, `levelKey`, 최단 이동 수 |
-| `GET /api/stats/overview` | 토큰 | 합계, 빌드·클라이언트 목록 |
+| `GET /api/stats/overview` | 토큰 | 합계, 빌드·클라이언트 목록, 언어별 세션 수(`langs`) |
 | `GET /api/stats/levels` | 토큰 | 스테이지별 퍼널·이탈·헤맴 지표 |
 | `GET /api/stats/heatmap?level=N` | 토큰 | 현재 빌드 스테이지 N의 칸별 idle·undo·몸 사용·막힘·방문·떠난 위치. 맵이 지금과 같은 시도만(`otherMapAttempts`에 뺀 수) |
 | `GET /api/stats/chapters` | 토큰 | 챕터별 시작·끝 스테이지 도달·전부 클리어·그만둔 플레이어 (현재 빌드 스테이지만) |
@@ -122,7 +122,7 @@ DB_PATH=server/data/playtest-$(date +%F).sqlite node server/src/index.mjs
 | `GET /api/export/events.jsonl` · `events.json` | 토큰 | 원본 이벤트 + 배치 머리 + `attemptId` |
 | `GET /api/export/levels.csv` · `levels.json` | 토큰 | 스테이지별 집계 |
 
-토큰: `Authorization: Bearer <token>` 또는 `?token=<token>`. 모든 `/api/*`는 필터 `client`, `build`, `since`(=`from`), `to`를 받는다 (ms 또는 ISO 날짜, 서버 수신 시각 기준).
+토큰: `Authorization: Bearer <token>` 또는 `?token=<token>`. 모든 `/api/*`는 필터 `client`, `build`, `lang`(UI 언어, 이벤트에 없으면 세션의 직전 값; 언어를 보내지 않은 옛 기록은 언어 필터에서 빠진다), `since`(=`from`), `to`를 받는다 (ms 또는 ISO 날짜, 서버 수신 시각 기준).
 
 ```bash
 curl -H "Authorization: Bearer $STATS_TOKEN" "http://localhost:8787/api/export/attempts.csv?client=web-proto&since=2026-11-07" -o attempts.csv
@@ -138,6 +138,7 @@ curl -H "Authorization: Bearer $STATS_TOKEN" "http://localhost:8787/api/export/a
 - **이탈률**: 플레이어의 마지막 시도가 이 스테이지이고 클리어하지 못한 비율 = 여기서 그만둔 플레이어
 - **세션 종료율**: 이 스테이지를 미클리어로 둔 채 끝난 세션 비율 (나중에 돌아왔어도 센다)
 - **activeMs** = `durationMs − idle 합`. **lastStuckToClear**: 마지막 막힘(30초 이상 idle, 또는 연속 undo 5회)이 끝난 뒤 클리어까지의 이동 수·시간
+- **별**: 클리어 시도마다 `level_clear.stars`, 없으면 서버가 B안으로 계산(`docs/telemetry.md` "별"). 대시보드는 플레이어마다 그 스테이지의 최고 별로 ★1·★2·★3 분포와 ★3 비율을 보인다. 맵이 바뀐 예전 기록은 최소 몸 수를 몰라 "별을 모르는 클리어"로 뺀다. `attempts.csv`의 `stars`, `starsSource`(`client`/`server`/빈칸), `levels.csv`의 `stars1~3`, `star3Rate`, `minBodies`
 - **몸 낭비**: `body_lost`의 `fell`(7번째가 아닌 걸음에 구덩이) + `vanish`(출발점에서 7번째)
 
 ## 테스트

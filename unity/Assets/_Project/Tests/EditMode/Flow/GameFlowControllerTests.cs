@@ -26,6 +26,7 @@ namespace SevenSteps.Tests
             public readonly List<(int stage, string via)> Loads = new List<(int, string)>();
             public State State { get; set; }
             public void LoadStage(int stage, string via) { Loads.Add((stage, via)); State = Rules.NewState(Seven); }
+            public AttemptCounts Attempt { get; set; }
             public event Action<State> Won, WinPresented, Lost;
             public event Action Recovered;
             public void Win() { State = WinState(); Won?.Invoke(State); WinPresented?.Invoke(State); }
