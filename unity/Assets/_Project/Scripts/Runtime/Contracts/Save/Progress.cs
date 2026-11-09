@@ -14,6 +14,8 @@ namespace SevenSteps.Contracts
     public sealed class ProgressData
     {
         public const int Version = 2;
+        /// Most stars a clear can earn (docs/architecture.md 6.5, Core Scoring.MaxStars).
+        public const int MaxStars = 3;
 
         public int version = Version;
         public List<StageRecord> stages = new List<StageRecord>();
@@ -44,10 +46,29 @@ namespace SevenSteps.Contracts
             {
                 // Same name, other map (or a migrated record with no key): an old best only stands if it fits this map.
                 if (!string.IsNullOrEmpty(r.levelKey) || r.bestBodies > level.Bodies) r.bestBodies = 0;
+                r.bestStars = 0; // stars were earned on another map (or never: v0/v1 had none)
                 r.levelKey = key;
             }
             r.cleared = true;
             if (r.bestBodies == 0 || bodiesUsed < r.bestBodies) r.bestBodies = bodiesUsed;
+        }
+
+        /// A clear that earned <paramref name="stars"/> (1..MaxStars, Core Scoring.Stars; 6.5). Keeps the fewest bodies and the most stars.
+        public void MarkCleared(Level level, int bodiesUsed, int stars)
+        {
+            if (stars < 1 || stars > MaxStars) throw new ArgumentOutOfRangeException(nameof(stars), stars, $"1..{MaxStars}");
+            MarkCleared(level, bodiesUsed);
+            var r = Get(NameOf(level));
+            if (stars > r.bestStars) r.bestStars = stars;
+        }
+
+        /// Most stars earned on this map, 0 = none (no record, another map of the same name, or out of range).
+        public int BestStars(Level level)
+        {
+            var r = Find(NameOf(level));
+            if (r == null || r.bestStars <= 0 || r.bestStars > MaxStars) return 0;
+            if (r.levelKey != TelemetryJson.LevelKey(level)) return 0;
+            return r.bestStars;
         }
 
         /// Count one more start of <paramref name="level"/> and return the attempt number (1 = first; level_start.attempt).
@@ -107,7 +128,7 @@ namespace SevenSteps.Contracts
         public int bestBodies;
         /// Starts on this device (level_start.attempt).
         public int starts;
-        /// Best star rating (3-star scoring, plan B candidate, not decided). Slot only: nothing computes or writes it yet. 0 = none.
+        /// Most stars earned (0..3, docs/architecture.md 6.5). 0 = none. Written by MarkCleared(level, bodies, stars).
         public int bestStars;
     }
 

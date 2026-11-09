@@ -42,6 +42,24 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void StarsKeepTheMostAndResetOnAnotherMap()
+        {
+            var p = new ProgressData();
+            var x = L("x");
+            p.MarkCleared(x, 3, 2);
+            p.MarkCleared(x, 3, 1);
+            Assert.AreEqual(2, p.BestStars(x));
+            p.MarkCleared(x, 2);           // a clear without a rating keeps the stars
+            Assert.AreEqual(2, p.BestStars(x));
+            var edited = L("x", 3, "#S.#...E#");
+            Assert.AreEqual(0, p.BestStars(edited));
+            p.MarkCleared(edited, 3, 1);
+            Assert.AreEqual(1, p.BestStars(edited), "stars reset on the new map");
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => p.MarkCleared(edited, 3, 4));
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => p.MarkCleared(edited, 3, 0));
+        }
+
+        [Test]
         public void V1IsMigratedByTheFrozenNamesAndBackedUp()
         {
             var store = new MemoryStore();

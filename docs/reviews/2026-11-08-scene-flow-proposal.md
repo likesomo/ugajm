@@ -134,3 +134,13 @@ EditMode + 가짜 로더 + `smoke`/`smoke-webgl`로 S0~S4를 덮을 수 있다. 
 - 기준이 `Font.HasCharacter`가 아니라 TTF cmap(형식 4·12)이라 동적 글꼴의 "있다고 하는데 WebGL에서 안 그려짐"을 잡는다. 예외 허용은 WebGL에서 확인한 `U+00B7` 하나뿐(근거 주석).
 - 검사 대상: 테마 글꼴을 쓰는 프리팹 `Text`, `levels.json` 이름·힌트, `UI/Credits.txt`, `Game` 런타임 코드와 `UiBuilder`의 비ASCII 문자열 리터럴(주석 제외). 글꼴 파일을 못 읽으면(공유 폴더 미연결) 오류 — fail fast.
 - **추가 필요(데이터가 생기면)**: `levels.json`의 `story`(6.4), `Data/chapters.json`의 `planet`·`concept`·`intro`. 챕터 전환 카드·결과 문구에 나온다.
+
+## 검토: feat/scene-flow 4d6d373 (9eab620 모든 UiTheme 검사, 58b311f 챕터 진입 카드, 2026-11-09)
+
+**결론: 승인.**
+- `SceneFlowValidator`가 `Assets/_Project`의 모든 `UiTheme`을 검사 — 아트 테마(`RuinsHengeTheme`) 권장 반영.
+- `LevelCatalog`: `chaptersJson`을 읽고 로드 때 `levels.json`의 모든 `chapter` id를 `ChapterFileDto.Get`으로 확인(모르는 id면 예외, fail fast). `ChapterKeyOf`가 `""`와 첫 챕터 id를 같은 키로 정규화 → S4 후속(챕터 비교) 해결. `GameFlowController`가 이 키로 `ChapterEntering`을 낸다.
+- `ChapterIntroController`(순수 C#): 챕터가 바뀌면 카드를 오버레이로 띄움(보드 입력 대기, Esc·클릭·타이머로 닫힘). 카드·데이터가 없으면 아무 일도 안 함(테마에 카드가 없는 것은 선택 사항으로 명시). `ChapterCardModel` 생성자 검사.
+- `ChapterCardView`: 직렬화 참조 `Validate`, 타이머는 `unscaledTime`, 닫히면 비활성이라 `CloseRequested`가 한 번만 나간다.
+- **`OverlayStack.Close` 규칙 변경(S4 단정 완화)**: 맨 위가 아니어도 열린 것이면 닫을 수 있게 됨. 근거가 맞다 — 설정이 카드 위에 열린 동안 카드 타이머가 끝나면 카드가 스스로 닫혀야 한다. 열려 있지 않은 것을 닫으면 여전히 예외. `Pop`/Esc는 계속 맨 위만. 테스트 갱신됨.
+- 남은 것(R1 데이터 때, 씬 플로우): GlyphCheck에 `story`·`chapters.json`(`planet`/`concept`/`intro`) 추가. 13장(다국어) 뒤에는 언어별로.
