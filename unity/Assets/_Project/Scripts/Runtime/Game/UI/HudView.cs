@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using SevenSteps.Contracts;
 using SevenSteps.Core;
@@ -26,30 +27,30 @@ namespace SevenSteps.Game.UI
         readonly GameObject choicePanel;
         readonly RectTransform choiceRect;
         readonly SettingsPanel settings;
-        readonly GameController game;
 
-        TileSet bodyLook;
+        /// Body colors for the HUD icons (TileSet.BodyColor, docs 12.6). Every chapter set uses the same three colors, so
+        /// the set given at construction is enough (docs/scene-flow.md 4.7).
+        readonly TileSet bodyLook;
+        readonly MonoBehaviour coroutines;
 
-        /// TileSet the board draws with (body colors, docs 12.6). The HUD is built before the board, so it is read on first use.
-        /// Until S3 (docs/scene-flow.md 4.7) wires it in from the flow controller, it comes from the BoardView next to GameController.
-        TileSet BodyLook
-        {
-            get
-            {
-                if (bodyLook != null) return bodyLook;
-                var board = game.GetComponent<BoardView>();
-                if (board == null || board.TileSet == null)
-                    throw new System.InvalidOperationException("[SevenSteps] HudView: no BoardView with a TileSet next to GameController");
-                return bodyLook = board.TileSet;
-            }
-        }
+        // View events (docs/scene-flow.md 4.7): the HUD only reports; controllers decide.
+        /// Stage list buttons (0-based). Flow controller.
+        public event Action<int> StageClicked;
+        /// Footer "스테이지" button. Flow controller.
+        public event Action StageSelectRequested;
+        /// Board actions. Board controller.
+        public event Action UndoRequested, RestartRequested, HintRequested, KeepRequested, SwitchRequested;
 
         public bool SettingsOpen => settings.IsOpen;
         public void CloseSettings() => settings.Close();
 
-        public HudView(GameController game, int levelCount, SaveSystem save)
+        /// <param name="coroutines">Runs the KEEP/SWITCH shake (the HUD is not a MonoBehaviour).</param>
+        public HudView(MonoBehaviour coroutines, TileSet bodyLook, int levelCount, SaveSystem save)
         {
-            this.game = game;
+            this.coroutines = coroutines != null ? coroutines : throw new ArgumentNullException(nameof(coroutines));
+            this.bodyLook = bodyLook != null ? bodyLook : throw new ArgumentNullException(nameof(bodyLook));
+            if (levelCount < 1) throw new ArgumentOutOfRangeException(nameof(levelCount), levelCount, "at least one stage");
+            if (save == null) throw new ArgumentNullException(nameof(save));
             var canvasGo = new GameObject("HUD", typeof(RectTransform));
             canvasGo.layer = 5;
             var canvas = canvasGo.AddComponent<Canvas>();
@@ -77,7 +78,7 @@ namespace SevenSteps.Game.UI
             for (int k = 0; k < levelCount; k++)
             {
                 int idx = k;
-                var b = Ui.MakeButton(levelRow, (k + 1).ToString(), 16, () => game.SelectStage(idx), out levelTexts[k], $"Level {k + 1}");
+                var b = Ui.MakeButton(levelRow, (k + 1).ToString(), 16, () => StageClicked?.Invoke(idx), out levelTexts[k], $"Level {k + 1}");
                 ((RectTransform)b.transform).sizeDelta = new Vector2(34, 34);
                 levelButtons[k] = b.GetComponent<Image>();
             }
@@ -121,10 +122,10 @@ namespace SevenSteps.Game.UI
             // Footer buttons and key help
             var footer = Row(root, "Footer", 8, TextAnchor.MiddleLeft);
             footer.Place(new Vector2(0, 0), new Vector2(0, 0), new Vector2(20, 16), new Vector2(720, 40));
-            FooterButton(footer, "되돌리기 Z", () => game.Send(Command.Undo));
-            FooterButton(footer, "재시작 R", game.Restart);
-            FooterButton(footer, "풀이 보기 H", game.ShowHint);
-            FooterButton(footer, "스테이지 Esc", game.OpenStageSelect);
+            FooterButton(footer, "되돌리기 Z", () => UndoRequested?.Invoke());
+            FooterButton(footer, "재시작 R", () => RestartRequested?.Invoke());
+            FooterButton(footer, "풀이 보기 H", () => HintRequested?.Invoke());
+            FooterButton(footer, "스테이지 Esc", () => StageSelectRequested?.Invoke());
             FooterButton(footer, "설정", () => settings.Open());
             var keys = Ui.Label(root, "이동: 방향키 / WASD / 옆 칸 클릭 · 7걸음 후: K / X · 스테이지: [ ]", 14, Ui.Dim, TextAnchor.MiddleRight, "Keys");
             keys.rectTransform.Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-24, 24), new Vector2(520, 24));
@@ -133,8 +134,8 @@ namespace SevenSteps.Game.UI
             choiceRect = Row(root, "Choice", 24, TextAnchor.MiddleCenter);
             choiceRect.Place(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 108), new Vector2(640, 88));
             choicePanel = choiceRect.gameObject;
-            ChoiceButton(choiceRect, "KEEP (K)", "여기에 석상을 남긴다\n다음 몸은 지금 출발점에서", Ui.Stone, () => game.Send(Command.Keep));
-            ChoiceButton(choiceRect, "SWITCH (X)", "석상을 남기지 않는다\n여기가 새 출발점이 된다", Ui.Gold, () => game.Send(Command.Switch));
+            ChoiceButton(choiceRect, "KEEP (K)", "여기에 석상을 남긴다\n다음 몸은 지금 출발점에서", Ui.Stone, () => KeepRequested?.Invoke());
+            ChoiceButton(choiceRect, "SWITCH (X)", "석상을 남기지 않는다\n여기가 새 출발점이 된다", Ui.Gold, () => SwitchRequested?.Invoke());
 
             settings = new SettingsPanel(root, save);
         }
@@ -142,7 +143,7 @@ namespace SevenSteps.Game.UI
         /// A move was pressed while KEEP/SWITCH is pending: shake the choice buttons.
         public void NudgeChoice()
         {
-            if (choicePanel.activeInHierarchy) game.StartCoroutine(Shake(choiceRect));
+            if (choicePanel.activeInHierarchy) coroutines.StartCoroutine(Shake(choiceRect));
         }
 
         static System.Collections.IEnumerator Shake(RectTransform r)
@@ -186,7 +187,7 @@ namespace SevenSteps.Game.UI
             for (int k = 0; k < bodyIcons.Count; k++)
             {
                 bodyIcons[k].gameObject.SetActive(k < s.Level.Bodies);
-                var c = BodyLook.BodyColor(k);
+                var c = bodyLook.BodyColor(k);
                 if (k < spent) c.a = 0.25f;
                 bodyIcons[k].color = c;
                 bodyIcons[k].rectTransform.sizeDelta = k == spent && s.Status != Status.Lose ? new Vector2(26, 26) : new Vector2(18, 18);

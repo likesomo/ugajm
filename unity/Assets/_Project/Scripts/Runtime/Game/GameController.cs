@@ -119,7 +119,16 @@ namespace SevenSteps.Game
             if (FindAnyObjectByType<EventSystem>() == null)
                 new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
-            hud = new HudView(this, levels.Length, save);
+            var tiles = cfg.tileSet != null ? cfg.tileSet : assets.tileSet;
+            if (tiles == null) throw new InvalidOperationException("[SevenSteps] No TileSet: set AppConfig.tileSet or GameAssets.tileSet");
+            hud = new HudView(this, tiles, levels.Length, save);
+            hud.StageClicked += SelectStage;
+            hud.StageSelectRequested += OpenStageSelect;
+            hud.UndoRequested += () => Send(Command.Undo);
+            hud.RestartRequested += Restart;
+            hud.HintRequested += ShowHint;
+            hud.KeepRequested += () => Send(Command.Keep);
+            hud.SwitchRequested += () => Send(Command.Switch);
             result = new ResultView();
             result.NextRequested += NextLevel;
             result.RetryRequested += Again;
@@ -127,8 +136,6 @@ namespace SevenSteps.Game
             result.UndoRequested += () => Send(Command.Undo);
             result.RestartRequested += Restart;
             board = gameObject.AddComponent<BoardView>();
-            var tiles = cfg.tileSet != null ? cfg.tileSet : assets.tileSet;
-            if (tiles == null) throw new InvalidOperationException("[SevenSteps] No TileSet: set AppConfig.tileSet or GameAssets.tileSet");
             board.Init(tiles, hud.LabelLayer, cam, overrideCamera ? cameraRig : (CameraRig?)null);
 
             session = new GameSession(board);
