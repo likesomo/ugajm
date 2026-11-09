@@ -1,6 +1,6 @@
 // Batch 4 (stages 31-40 of design/levels/stage-plan-50.md), current rules, body budget 3.
 // Run: node prototypes/seven-steps/experiments/run.mjs batch4
-import { LEVELS } from '../../src/levels.js';
+import { LEVELS } from '../levels-v17.mjs';
 const old = (n, extra = {}) => ({ ...LEVELS[n - 1], bodies: 3, ...extra });
 
 export const STAGES = [
