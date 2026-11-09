@@ -15,7 +15,7 @@
 #   build-webgl  (batch) WebGL build -> Builds/WebGL/
 #   play         run the Windows build
 #   smoke        run the Windows build on 7 replays, save screenshots + logs to reports/smoke/
-#   smoke-webgl  open Builds/WebGL in the Orca browser on 3 replays, fail if the 3D board is missing
+#   smoke-webgl  open Builds/WebGL in the Orca browser on 3 replays (+ ?smoke=board, + a ?smoke=empty control), fail if the board is missing
 #   serve [port] serve Builds/WebGL on http://localhost:8090 (default)
 #   editor       open the project in the Unity editor
 #   all          levels + setup + verify + build-win + smoke
@@ -135,11 +135,16 @@ case "$cmd" in
     done
     [ "$fail" -eq 0 ] && echo "[unity.sh] smoke OK -> reports/smoke/" || { echo "[unity.sh] smoke FAILED"; exit 1; } ;;
   smoke-webgl)
-    # Opens Builds/WebGL in Orca's built-in browser on a few replays, screenshots each and counts board pixels.
-    # Fails when the 3D board is missing (UI only) or the console shows an exception. Needs the `orca` CLI.
+    # Opens Builds/WebGL in Orca's built-in browser and screenshots 3 replays three ways (docs: CLAUDE.md "WebGL 3D 보드 누락"):
+    #   normal              the real screen: console exceptions, saved for people to look at
+    #   ?smoke=board        no sky/planet, camera clear #FF00FF: board pixels = pixels that differ from magenta (any palette)
+    #   ?smoke=empty (1x)   same but the board is hidden: the negative control. It must score under the threshold, so a
+    #                       measurement that saturates again (or a build without the smoke option) fails instead of passing.
+    # Fails on a missing board, a failed control, or a console exception. Needs the `orca` CLI.
     command -v orca >/dev/null || { echo "[unity.sh] smoke-webgl needs the orca CLI (Orca built-in browser)"; exit 1; }
     out="$REPO/reports/smoke-webgl"; mkdir -p "$out"; rm -f "$out"/*; fail=0
     [ -f "$REPO/Builds/WebGL/index.html" ] || { echo "[unity.sh] smoke-webgl: no build at Builds/WebGL (run build-webgl)"; exit 1; }
+    BOARD_MIN="${SMOKE_BOARD_MIN:-500}"; SMOKE_BG="FF00FF"
     # Every workspace runs this on the same PC: take a free port so we never talk to another workspace's server
     # (a busy fixed port made this check stop silently, or test another workspace's build).
     port=""; for p in $(seq 8091 8190); do netstat -ano | grep -q "[:.]$p .*LISTENING" || { port=$p; break; }; done
@@ -150,25 +155,38 @@ case "$cmd" in
     trap 'kill "$srv" 2>/dev/null || true; [ -n "$page" ] && orca tab close --page "$page" --json >/dev/null 2>&1 || true' EXIT
     sleep 2
     kill -0 "$srv" 2>/dev/null || { echo "[unity.sh] smoke-webgl: server did not start on port $port:"; tail -5 "$out/serve.log"; exit 1; }
-    echo "[unity.sh] smoke-webgl: serving Builds/WebGL on port $port"
-    for spec in "1:R" "29:DURRRRRKDDR" "50:UUUDURUK"; do
-      lv="${spec%%:*}"; rp="${spec#*:}"
-      page="$(orca tab create --url "http://localhost:$port/?level=$lv&replay=$rp" --json 2>/dev/null | grep -o '"browserPageId": "[^"]*"' | head -1 | cut -d'"' -f4 || true)"
-      [ -z "$page" ] && { echo "[unity.sh] smoke-webgl level $lv: could not open a browser tab (orca tab create failed or timed out)"; fail=1; continue; }
+    echo "[unity.sh] smoke-webgl: serving Builds/WebGL on port $port (board threshold $BOARD_MIN)"
+    # shoot <name> <query>: one page load -> $out/<name>.png + .console.txt; sets px (pixels unlike magenta) and errs.
+    shoot() {
+      local name="$1" query="$2" shot
+      px=""; errs=0
+      page="$(orca tab create --url "http://localhost:$port/?$query" --json 2>/dev/null | grep -o '"browserPageId": "[^"]*"' | head -1 | cut -d'"' -f4 || true)"
+      [ -z "$page" ] && { echo "[unity.sh] smoke-webgl $name: could not open a browser tab (orca tab create failed or timed out)"; fail=1; return 1; }
       orca capture start --page "$page" --json > /dev/null 2>&1 || true
       orca wait --page "$page" --load load --json > /dev/null 2>&1 || true
       sleep 25
-      shot="$(orca screenshot --page "$page" 2>/dev/null | grep -oE '[A-Za-z]:\\[^ ]+\.png' | head -1 || true)"
-      orca console --page "$page" --limit 400 > "$out/level$lv.console.txt" 2>&1 || true
+      shot="$(orca screenshot --page "$page" 2>/dev/null | grep -oE '[A-Za-z]:\[^ ]+\.png' | head -1 || true)"
+      orca console --page "$page" --limit 400 > "$out/$name.console.txt" 2>&1 || true
       orca tab close --page "$page" --json > /dev/null 2>&1 || true; page=""
-      if [ -z "$shot" ]; then echo "[unity.sh] smoke-webgl level $lv: no screenshot"; fail=1; continue; fi
-      cp "$(cygpath -u "$shot")" "$out/level$lv.png"
-      px="$(powershell -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$HERE/board-pixels.ps1")" -Path "$(cygpath -w "$out/level$lv.png")" | tr -d '\r')"
-      errs="$(grep -ciE '^\[error\]|Exception' "$out/level$lv.console.txt" || true)"
-      echo "[unity.sh] smoke-webgl level $lv: board pixels $px, console errors $errs"
-      if [ "${px:-0}" -lt 500 ]; then echo "[unity.sh]   board not drawn (UI only?) -> see $out/level$lv.png"; fail=1; fi
-      if [ "${errs:-0}" -gt 0 ]; then grep -iE '^\[error\]|Exception' "$out/level$lv.console.txt" | head -5; fail=1; fi
+      if [ -z "$shot" ]; then echo "[unity.sh] smoke-webgl $name: no screenshot"; fail=1; return 1; fi
+      cp "$(cygpath -u "$shot")" "$out/$name.png"
+      px="$(powershell -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$HERE/board-pixels.ps1")" -Path "$(cygpath -w "$out/$name.png")" -Background "$SMOKE_BG" | tr -d '\r')"
+      errs="$(grep -ciE '^\[error\]|Exception' "$out/$name.console.txt" || true)"
+      if [ "${errs:-0}" -gt 0 ]; then echo "[unity.sh] smoke-webgl $name: console errors $errs"; grep -iE '^\[error\]|Exception' "$out/$name.console.txt" | head -5; fail=1; fi
+      return 0
+    }
+    for spec in "1:R" "29:DURRRRRKDDR" "50:UUUDURUK"; do
+      lv="${spec%%:*}"; rp="${spec#*:}"
+      shoot "level$lv" "level=$lv&replay=$rp" || true
+      shoot "level$lv.board" "level=$lv&replay=$rp&smoke=board" || continue
+      echo "[unity.sh] smoke-webgl level $lv: board pixels $px (>= $BOARD_MIN)"
+      if [ "${px:-0}" -lt "$BOARD_MIN" ]; then echo "[unity.sh]   board not drawn -> see $out/level$lv.board.png"; fail=1; fi
     done
+    # Negative control: same stage with the board hidden must read as "no board", or the check proves nothing.
+    if shoot "control.empty" "level=1&replay=R&smoke=empty"; then
+      echo "[unity.sh] smoke-webgl control (board hidden): pixels $px (< $BOARD_MIN)"
+      if [ "${px:-0}" -ge "$BOARD_MIN" ]; then echo "[unity.sh]   the board check cannot tell a missing board (background not magenta? -> $out/control.empty.png)"; fail=1; fi
+    fi
     [ "$fail" -eq 0 ] && echo "[unity.sh] smoke-webgl OK -> reports/smoke-webgl/" || { echo "[unity.sh] smoke-webgl FAILED"; exit 1; } ;;
   serve)
     port="${2:-8090}"
