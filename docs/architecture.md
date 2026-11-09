@@ -474,7 +474,7 @@ else flow.Go(AppState.Title);
 | 앱 흐름 | `AppFlow` | 앱 전체 |
 | 진입 경로 | `EntryTracker` (Game 어셈블리) | 앱 전체 |
 
-**`LaunchOptions` (2026-11-09 캡슐화)**: 읽기 전용 속성 `Level`(1부터, 0 = 없음), `Replay`, `Screenshot`, `TelemetryOff`, `TelemetryUrl`, `DirectToGame`, `OpenStageSelect`(`-stageselect`), `OpenCredits`(`-credits`), `Warnings`.
+**`LaunchOptions` (2026-11-09 캡슐화)**: 읽기 전용 속성 `Level`(1부터, 0 = 없음), `Replay`, `Screenshot`, `TelemetryOff`, `TelemetryUrl`, `DirectToGame`, `OpenStageSelect`(`-stageselect`), `OpenCredits`(`-credits`), `Language`(`-lang`, 13.3), `SmokeView`(`-smoke board|empty` / `?smoke=`, 2026-11-10 feat/view 26d60dc: `Board` = 하늘·행성 없이 카메라 #FF00FF로 지움(board-pixels.ps1 측정용), `Empty` = 보드도 숨긴 음성 대조. 상태·리플레이·텔레메트리는 그대로, 잘못된 값은 `Warnings`), `Warnings`.
 - 바꿀 수 있는 곳은 두 메서드뿐: `TakeReplay()`(리플레이를 한 번만 꺼내고 비움), `UseEditorStart(level, replay)`(에디터에서 Game 씬 직접 Play: 실행 인자·URL이 없을 때만 인스펙터 값을 씀, 인스펙터 레벨을 썼으면 true, `level < 1`이면 예외).
 - 잘못된 값은 외부 입력이라 예외가 아니다: 숫자가 아니거나 1 미만인 `level`, 값이 없는 플래그, `off`/`0`/http(s)가 아닌 `telemetry`는 버리고 `Warnings`에 한 줄씩 남긴다. Contracts는 로그하지 않고 `Bootstrap`이 로그한다. 알 수 없는 인자·URL 키는 조용히 무시한다(Unity 자체 인자, `artfx` 등). 스테이지 수를 넘는 `level`은 S2에서 부트스트랩이 경고 후 보정한다.
 
@@ -778,3 +778,4 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 | 2026-11-10 | 아키텍트 | 12.8 챕터 프리셋 적용 반영(feat/view 5e0a1cb 검토 승인): `AppConfig.chapters` 7개 + `AppConfig.tileSet` 비움, 첫 세트 `TileSetFor`, 검증기 조건. 공용 API 변경 없음 |
 | 2026-11-10 | 아키텍트 | 2장 `SevenSteps.Art.Preview`(`Art/Test/`, defineConstraints UNITY_EDITOR 또는 SEVENSTEPS_ART_PREVIEW) 추가, `SevenSteps.Art.Editor`가 참조. 정식 Windows 빌드 Managed에 Preview dll 없음 확인. 영향: 아트(프리뷰 플레이어 빌드 두 곳에 `extraScriptingDefines` 한 줄 필요) |
 | 2026-11-10 | 아키텍트 | 13.3 `SettingsData.languageChosen`·`SaveSystem.LanguageChosen`(씬 플로우 요청, 첫 실행 언어 선택 화면). `SetLanguage`가 true로 저장, 이전 저장은 false. 영향: 씬 플로우(Title 선택 화면), 게임플레이/UI 없음(설정 토글은 이미 `SetLanguage`). EditMode `LanguageChosenOnlyBySetLanguage` |
+| 2026-11-10 | 게임플레이/UI·아키텍트 | 11장 `LaunchOptions.SmokeView`(Contracts enum `SmokeView` None/Board/Empty, `-smoke`/`?smoke=`; feat/view 26d60dc, 코어 합의, 아키텍트 검토 승인). 스모크 전용, 일반 실행 동작 변경 없음 |
