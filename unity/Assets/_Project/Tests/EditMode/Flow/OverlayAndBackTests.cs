@@ -96,10 +96,11 @@ namespace SevenSteps.Tests
             var save = new SaveSystem(store);
             int changed = 0;
             save.SettingsChanged += _ => changed++;
+            TestTheme.Use();
             var canvas = new UnityEngine.GameObject("canvas", typeof(UnityEngine.RectTransform));
             try
             {
-                var view = new SettingsPanel(canvas.transform, save, telemetryOnByDefault: true);
+                var view = SettingsPanel.Create(canvas.transform, save, telemetryOnByDefault: true);
                 using var ctl = new SettingsController(save, view, telemetryOnByDefault: true);
                 save.Settings.masterVolume = 1f;
                 Press(canvas, "전체 음량 -");

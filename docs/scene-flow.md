@@ -381,6 +381,9 @@ S2·S3 커밋마다 `unity.sh test`(텔레메트리 골든)를 돌린다. 골든
 | S3c Game 씬 분리 | 0fc35a3 | test 249, build-win + smoke 7/7. `GameController`=씬 루트(클래스·guid·필드 유지: Game.unity, Art/Test/Game.unity, 아트 빌더 그대로), `BoardController`=보드, `Flow/GameFlowController`=흐름(`IStageBoard`/`IResultPanel`) | 아키텍트 승인(2026-11-09, 42613fb). 보드 쪽 정리는 게임플레이/UI. `GameController.LevelIndex`/`Levels`(아트 프리뷰용)는 12.8 이전 때 삭제 |
 | S3d Title 씬 분리 | 18029f4 | test 253, build-win + smoke 7/7, 타이틀 스모크, **build-webgl(Mobile_RPAsset) + smoke-webgl 1/8/13 OK**(33381/27627/24738, 콘솔 0). 64bb47f에서 7lucky 81262de 합친 뒤 test 253, build-win + smoke 7/7 | Title→Game 실제 클릭은 수동 확인 |
 | S4 오버레이·뒤로 가기·챕터 자리 | 753fc60 | test 258/258(+5), scene-validate OK, build-win + smoke 7/7, 타이틀 스모크(크레딧을 오버레이로 띄움) OK. `AppInput`은 만들지 않음(키 읽기는 씬 루트 두 곳뿐이라 필요 없음). 챕터 전환 카드·테마 프리셋은 `GameFlowController.ChapterEntering`에 구독만 붙이면 된다. **chapters.json이 생기면** 비교 전에 `ChapterFileDto.Get(id).id`로 정규화한다(""와 첫 챕터 id를 같은 챕터로, 아키텍트 S4 메모) | 아키텍트 승인. 리드 WebGL 수동 확인(클리어→결과→다음, 설정·크레딧 Esc) 완료 |
+| (후속) `SettingsController` → `SaveSystem` 설정 명령 | 625e258 | test 260, build-win + smoke 7/7 | — |
+| S6a `UiTheme`(글꼴·색) 에셋 | 07927a9 | test 260, scene-validate, build-win + smoke 7/7, build-webgl + smoke-webgl OK. `Data/UiTheme_Default.asset`(v0 값), `GameAssets.uiTheme`, `Ui` 색·글꼴은 테마에서 읽음 | 챕터별 테마 프리셋 연결은 12.8(`ChapterPreset`이 Contracts라 아키텍트와 형식 결정) |
+| S6b Settings·Result 프리팹 | 0b3d260 | test 262, scene-validate, build-win + smoke 7/7, 타이틀 스모크, build-webgl + smoke-webgl OK. `UI/Prefabs/SettingsPanel.prefab`, `ResultPanel.prefab`(UiBuilder가 v0 레이아웃으로 처음 생성, 이후 프리팹 편집), 직렬화 참조 + `Validate`(OnValidate·Awake·검증기) | 설정·결과 패널 실제 화면 확인은 수동(스모크 경로 없음). HUD·Title·Credits 프리팹은 게임플레이/UI(아트 테마 확정 뒤) |
 
 챕터 방향(2026-11-08 사용자): 챕터 = 우주 속 행성, 주인공 세쌍둥이. S4에서 `GameFlowController`에 챕터 전환 연출 자리(다음 스테이지의 chapter가 바뀌면 전환 오버레이), S6에서 `UiTheme`·조명·하늘을 챕터별 프리셋으로 고를 자리를 남긴다. 레벨 데이터 chapter 필드는 레벨 담당이 추가한다.
 
@@ -456,3 +459,4 @@ Open Project 1은 미러의 파일 목록과 커밋 메시지만 확인했다(�
 | 2026-11-09 | S4 커밋 753fc60, 5.2 갱신 |
 | 2026-11-09 | S3 아키텍트 승인(42613fb) |
 | 2026-11-09 | S4 승인, SettingsController가 SaveSystem 명령 사용, ChapterEntering 정규화 메모. origin/7lucky 6b9c419 합침 |
+| 2026-11-09 | S6 씬 플로우 몫 완료(07927a9, 0b3d260), 5.2 갱신 |

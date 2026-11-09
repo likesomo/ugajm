@@ -171,6 +171,13 @@ namespace SevenSteps.EditorTools
             if (assets == null) return;
             Require(scene, $"{field}.levelsJson", assets.levelsJson, issues);
             Require(scene, $"{field}.font", assets.font, issues); // in Assets/Shared: run tools/link-shared-assets.ps1 if missing
+            Require(scene, $"{field}.uiTheme", assets.uiTheme, issues); // Seven Steps > Scene Flow > Build UI
+            if (assets.uiTheme != null)
+            {
+                var themeIssues = new List<string>();
+                assets.uiTheme.Validate(themeIssues);
+                foreach (var i in themeIssues) issues.Add($"ERROR {scene}: {i}");
+            }
         }
     }
 }
