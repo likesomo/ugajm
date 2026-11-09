@@ -45,6 +45,9 @@ namespace SevenSteps.Game
         HudView hud;
         GameFlowController flowController;
         SettingsController settingsController;
+        ChapterStage chapterStage;
+        ResultView result;
+        Func<int, ChapterPreset> presetFor;
         LanguageController languageController;
         OverlayStack overlays;
         BackNavigator back;
@@ -105,7 +108,7 @@ namespace SevenSteps.Game
             localizer.Changed += applyResultLanguage;
             // The theme's card prefab, else the code-built chapter entry screen (art concept chapter-entry). None in smoke /
             // replay runs: the screenshot must show the board.
-            IChapterCard chapterCard = launch.SmokeView != SmokeView.None || !string.IsNullOrEmpty(launch.Replay) ? null
+            IChapterCard chapterCard = launch.SmokeView != SmokeView.None || (!string.IsNullOrEmpty(launch.Replay) && !launch.FlowCheck) ? null
                 : (IChapterCard)ChapterCardView.CreateOptional(overlayCanvas) ?? ChapterEntryView.Create(overlayCanvas, localizer);
             settingsController = new SettingsController(save, settings, cfg.telemetryOnByDefault, localizer);
             overlays = new OverlayStack();
@@ -116,7 +119,8 @@ namespace SevenSteps.Game
             board.Init(assets, levels, save, hud, cam, tiles, overrideCamera ? cameraRig : (CameraRig?)null, Services.Get<ITelemetry>(), localizer);
             // Chapter look (12.8): stage -> chapters.json artPreset -> AppConfig.Chapter; null (no chapter assets yet) = as now.
             // -smoke board|empty (smoke-webgl): no sky/planet and a magenta clear; empty also hides the board (negative control).
-            board.UseChapters(new ChapterStage(cam, keyLight, fillLight, rimLight, transform, launch.SmokeView), ChapterPresetFor(cfg), cfg.tileSet);
+            chapterStage = new ChapterStage(cam, keyLight, fillLight, rimLight, transform, launch.SmokeView);
+            board.UseChapters(chapterStage, ChapterPresetFor(cfg), cfg.tileSet);
             if (launch.SmokeView == SmokeView.Empty) board.HideBoardForSmoke();
             if (launch.SmokeView != SmokeView.None)
             {
@@ -129,6 +133,8 @@ namespace SevenSteps.Game
             flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, result, LevelCatalog.MinBodies, LevelCatalog.ChapterKeyOf, LevelCatalog.ChapterOf);
             back = new BackNavigator(overlays, flowController.Back);
             chapterIntro = new ChapterIntroController(flowController, overlays, chapterCard, key => LevelCatalog.ChapterCard(key, localizer.Current));
+            this.result = result;
+            presetFor = ChapterPresetFor(cfg);
             board.InputBlocked = () => flow.IsLoading || overlays.Count > 0;
             board.FlowTakes = flowController.TakesCommand;
 
@@ -145,6 +151,13 @@ namespace SevenSteps.Game
         {
             flowController.Start(launch.DirectToGame ? Bootstrap.FirstStage(launch, flow.StageCount) : 0);
 
+            if (launch.FlowCheck && !string.IsNullOrEmpty(launch.Replay) && launch.DirectToGame)
+            {
+                // -flowcheck: the replay wins for real, then Result -> Next -> chapter entry are checked (S8).
+                var check = new FlowCheck(flow, board, flowController, overlays, result, chapterStage, chapterIntro, localizer, presetFor);
+                StartCoroutine(check.Run(launch.TakeReplay(), launch.Screenshot));
+                return;
+            }
             if (!string.IsNullOrEmpty(launch.Replay) && launch.DirectToGame && flow.Stage == launch.Level - 1)
                 board.Replay(launch.TakeReplay()); // once per launch
 

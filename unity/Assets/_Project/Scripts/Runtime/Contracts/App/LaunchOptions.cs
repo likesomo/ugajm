@@ -5,8 +5,8 @@ namespace SevenSteps.Contracts
 {
     /// <summary>
     /// Start options from the command line (desktop) or the page URL (WebGL). Same format as the web prototype:
-    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-lang en] [-smoke board|empty] [-newplayer] [-loadDelay 1.5]
-    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1&amp;loadDelay=1.5   (docs/telemetry.md section 4)
+    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-lang en] [-smoke board|empty] [-newplayer] [-loadDelay 1.5] [-flowcheck]
+    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1&amp;loadDelay=1.5&amp;flowcheck=1   (docs/telemetry.md section 4)
     /// Pure parsing: the caller passes Environment.GetCommandLineArgs() and Application.absoluteURL.
     /// Bad values are not exceptions (external input): they are skipped and described in <see cref="Warnings"/>,
     /// which the bootstrap logs (Contracts does not log). Read-only after parsing, except the two editor/once-only changes below.
@@ -38,6 +38,10 @@ namespace SevenSteps.Contracts
         /// Development only (-loadDelay 1.5 / ?loadDelay=1.5): every scene load is held this many extra seconds behind the
         /// loading screen, so the loading screen can be seen and checked (docs/scene-flow.md S7b). 0 = off; 0..10.
         public float LoadDelay { get; private set; }
+        /// Development / smoke only (-flowcheck / ?flowcheck=1, with -level N -replay R): play the replay so its last move
+        /// wins, check the result text, press Next, check the chapter entry and the chapter look, log OK / FAIL and quit
+        /// (unity.sh smoke flow step; docs/scene-flow.md S8).
+        public bool FlowCheck { get; private set; }
 
         readonly List<string> warnings = new List<string>();
         /// What was ignored while parsing, one line each. Empty when everything parsed.
@@ -107,6 +111,7 @@ namespace SevenSteps.Contracts
                         case "-stageselect": o.OpenStageSelect = true; continue;
                         case "-credits": o.OpenCredits = true; continue;
                         case "-newplayer": o.NewPlayer = true; continue;
+                        case "-flowcheck": o.FlowCheck = true; continue;
                         case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": case "-loadDelay": break;
                         default: continue;
                     }
@@ -143,6 +148,7 @@ namespace SevenSteps.Contracts
                     case "lang": o.SetLanguage("url", v); break;
                     case "smoke": o.SetSmoke("url", v); break;
                     case "loadDelay": o.SetLoadDelay("url", v); break;
+                    case "flowcheck": o.FlowCheck = v == "1" || v == "true"; break;
                     case "newplayer":
                         if (v == "1" || v == "true") o.NewPlayer = true;
                         else if (v != "0" && v != "false") o.warnings.Add($"url: newplayer \"{v}\" is not 1 or 0; ignored");
