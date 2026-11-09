@@ -60,6 +60,18 @@ namespace SevenSteps.Tests
             Assert.AreEqual(g.minBodies, g.bodies - s.Bodies + 1, "bodies used");
         }
 
+        /// The triplets: every shipped stage gives at most 3 bodies and needs at most 3 (a data rule, docs/architecture.md 6.4;
+        /// the rules themselves accept any body count). Also checked by export-levels.mjs and LevelVerifier.
+        public const int BodyCap = 3;
+
+        [Test]
+        public void ShippedLevelsRespectBodyCap()
+        {
+            var bad = Shipped().levels.Where(l => l.bodies > BodyCap || l.expected.minBodies > BodyCap)
+                .Select(l => $"{l.name}: bodies {l.bodies}, needs {l.expected.minBodies}").ToList();
+            Assert.IsEmpty(bad, $"stages over {BodyCap} bodies:\n{string.Join("\n", bad)}");
+        }
+
         /// docs/architecture.md 6.4: chapter and story are optional strings in levels.json; a stage without them still loads.
         [Test]
         public void LevelDtoReadsOptionalChapterAndStory()

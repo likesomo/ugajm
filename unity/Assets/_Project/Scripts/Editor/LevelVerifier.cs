@@ -19,6 +19,8 @@ namespace SevenSteps.EditorTools
     /// </summary>
     public static class LevelVerifier
     {
+        const int BodyCap = 3;
+
         [Serializable]
         sealed class Row
         {
@@ -87,6 +89,9 @@ namespace SevenSteps.EditorTools
                     var exp = dto.expected;
                     var diffs = new List<string>();
                     if (best == null) diffs.Add("no solution");
+                    // The triplets: at most 3 bodies (data rule, docs/architecture.md 6.4).
+                    if (dto.bodies > BodyCap) diffs.Add($"bodies {dto.bodies} > {BodyCap}");
+                    if (best != null && row.minBodies > BodyCap) diffs.Add($"needs {row.minBodies} bodies > {BodyCap}");
                     if (row.minBodies != exp.minBodies) diffs.Add($"minBodies {row.minBodies} != {exp.minBodies}");
                     if (row.moves != exp.moves) diffs.Add($"moves {row.moves} != {exp.moves}");
                     if (row.path != exp.path) diffs.Add($"path {row.path} != {exp.path}");
