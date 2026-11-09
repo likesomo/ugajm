@@ -69,6 +69,7 @@ namespace SevenSteps.Contracts
             (AppState.Boot, AppState.Title) => true,
             (AppState.Boot, AppState.Game) => true,           // ?level= / -level launch
             (AppState.Title, AppState.StageSelect) => true,
+            (AppState.Title, AppState.Game) => true,          // title Begin (stage 1) / Continue (last played), S7a
             (AppState.StageSelect, AppState.Title) => true,
             (AppState.StageSelect, AppState.Game) => true,
             (AppState.Game, AppState.Result) => true,

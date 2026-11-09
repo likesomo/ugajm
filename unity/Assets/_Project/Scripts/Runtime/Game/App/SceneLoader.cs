@@ -69,8 +69,8 @@ namespace SevenSteps.Game
             while (!op.isDone) { fader.Progress(op.progress / 0.9f); yield return null; }
             fader.Progress(1f);
             yield return null; // let the new scene's Start run behind the dark screen
+            fader.EndLoading(); // the loading text goes first: only the plain screen fades (no ghost over the chapter card)
             yield return fader.To(0f);
-            fader.EndLoading();
         }
 
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)

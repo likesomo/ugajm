@@ -26,7 +26,7 @@ namespace SevenSteps.Tests
         static readonly HashSet<(AppState, AppState)> Allowed = new HashSet<(AppState, AppState)>
         {
             (AppState.Boot, AppState.Title), (AppState.Boot, AppState.Game),
-            (AppState.Title, AppState.StageSelect),
+            (AppState.Title, AppState.StageSelect), (AppState.Title, AppState.Game),
             (AppState.StageSelect, AppState.Title), (AppState.StageSelect, AppState.Game),
             (AppState.Game, AppState.Result), (AppState.Game, AppState.StageSelect), (AppState.Game, AppState.Game),
             (AppState.Result, AppState.Game), (AppState.Result, AppState.StageSelect),

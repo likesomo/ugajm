@@ -20,6 +20,9 @@ namespace SevenSteps.Game
     public sealed class FlowCheck
     {
         const float Timeout = 20f;
+        /// Result star reveal: 0.25 s wait + 0.22 s pop per star (ResultView), about 1.4 s for three; a slow first frame can
+        /// shift it, so the screenshot waits longer (core finding 2026-11-10: 1 s caught the third star still empty).
+        const float RevealSeconds = 2.2f;
 
         readonly AppFlow flow;
         readonly BoardController board;
@@ -30,6 +33,7 @@ namespace SevenSteps.Game
         readonly Localizer loc;
         readonly Func<int, ChapterPreset> presetFor;
         ChapterCardModel cardShown;
+        int stars = -1;
 
         public FlowCheck(AppFlow flow, BoardController board, GameFlowController flowController, OverlayStack overlays, ResultView result,
             ChapterStage chapterStage, ChapterIntroController chapterIntro, Localizer loc, Func<int, ChapterPreset> presetFor)
@@ -63,7 +67,9 @@ namespace SevenSteps.Game
             if (flow.State != AppState.Result) fails.Add($"no Result after the replay (state {flow.State}, status {board.State?.Status})");
             else
             {
-                yield return new WaitForSeconds(1f); // stars reveal
+                yield return new WaitForSecondsRealtime(RevealSeconds);
+                var level = board.State?.Level;
+                stars = level != null && Services.TryGet<SaveSystem>(out var save) ? save.Progress.BestStars(level) : -1;
                 CheckResultText(stage, fails);
                 if (shotBase != null) { ScreenCapture.CaptureScreenshot(shotBase + "-result.png"); yield return new WaitForSeconds(0.5f); }
 
@@ -80,7 +86,7 @@ namespace SevenSteps.Game
                 }
             }
 
-            Debug.Log(fails.Count == 0 ? $"[SevenSteps] Flow check stage {stage + 1}: OK"
+            Debug.Log(fails.Count == 0 ? $"[SevenSteps] Flow check stage {stage + 1}: OK (stars {stars})"
                 : $"[SevenSteps] Flow check stage {stage + 1}: FAIL: {string.Join("; ", fails)}");
             Application.Quit();
         }
