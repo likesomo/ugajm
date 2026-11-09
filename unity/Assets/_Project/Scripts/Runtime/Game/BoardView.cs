@@ -52,11 +52,17 @@ namespace SevenSteps.Game
         WorldLabel[] footLabels;
         readonly List<WorldLabel> labels = new List<WorldLabel>();
         readonly Dictionary<int, GameObject> statues = new Dictionary<int, GameObject>();
+        // Body index that made each statue (BodyIndex.OfStatue), so a cell is rebuilt only when its owner changes (docs 12.6).
+        readonly Dictionary<int, int> statueOwners = new Dictionary<int, int>();
         readonly List<GameObject> transients = new List<GameObject>();
         readonly StringBuilder sb = new StringBuilder(16);
         GameObject player, startMarker, oldStartMarker;
         WorldLabel playerLabel;
+        int playerBody = -1; // BodyIndex.Current of the player instance on the board; -1 before Rebuild
         bool choosing;
+
+        TileVisual PlayerVisual => set.PlayerFor(playerBody);
+        Vector3 PlayerScale => PlayerVisual.Scale * grid.CellSize;
 
         Coroutine anim;
         Coroutine shake;
@@ -65,6 +71,8 @@ namespace SevenSteps.Game
         public Func<bool> Hurry;
 
         public BoardGrid Grid => grid;
+        /// The TileSet given to Init (the HUD reads body colors from it, docs 12.6).
+        public TileSet TileSet => set;
         public bool IsAnimating => anim != null;
 
         /// <param name="cameraOverride">Camera preset to use instead of tileSet.cameraRig (Game scene setting), or null.</param>
@@ -85,6 +93,7 @@ namespace SevenSteps.Game
             foreach (var l in labels) if (l.Text != null) Destroy(l.Text.gameObject);
             labels.Clear();
             statues.Clear();
+            statueOwners.Clear();
             transients.Clear();
 
             level = s.Level;
@@ -99,12 +108,9 @@ namespace SevenSteps.Game
 
             startMarker = Spawn(set.Get(ActorKind.StartMarker), s.Start, "Start");
             oldStartMarker = Spawn(set.Get(ActorKind.OldStartMarker), level.Start, "Old Start");
-            var pv = set.Get(ActorKind.Player);
-            player = Spawn(pv, s.Pos, "Player") ?? new GameObject("Player");
-            player.transform.SetParent(root, true);
             playerLabel = AddLabel("7", Vector3.zero, 0.42f, Ui.Ink);
-            playerLabel.Follow = player.transform;
-            playerLabel.World = pv.LabelOffset(false) * grid.CellSize;
+            player = null; // destroyed with the old root
+            SpawnPlayer(BodyIndex.Current(s), s.Pos);
 
             FitCamera();
             Draw(s, false);
@@ -166,7 +172,7 @@ namespace SevenSteps.Game
         IEnumerator Animate(State prev, StepResult r, Action done)
         {
             var pt = player.transform;
-            var lift = set.Get(ActorKind.Player).offset * grid.CellSize;
+            var lift = PlayerVisual.offset * grid.CellSize;
             // Ice (Slide event): the first cell is a step, the rest of the path is a glide without hops.
             bool slide = r.Has(GameEventType.Slide);
             for (int p = 0; p < r.Path.Length; p++)
@@ -210,14 +216,14 @@ namespace SevenSteps.Game
                     {
                         float k = t / dur;
                         pt.position = from + Vector3.down * (k * k * 1.2f * grid.CellSize);
-                        pt.localScale = BaseScale(ActorKind.Player) * (1 - k * 0.6f);
+                        pt.localScale = PlayerScale * (1 - k * 0.6f);
                         yield return null;
                     }
                 }
             }
 
             Draw(r.State, true, prev);
-            if (r.Has(GameEventType.Respawn)) Tween(player.transform, BaseScale(ActorKind.Player));
+            if (r.Has(GameEventType.Respawn)) Tween(player.transform, PlayerScale);
             anim = null;
             done?.Invoke();
         }
@@ -272,14 +278,22 @@ namespace SevenSteps.Game
             // Statues
             var gone = ListPool.Ints;
             foreach (var kv in statues) if (!Rules.Contains(s.Statues, kv.Key)) gone.Add(kv.Key);
-            foreach (int i in gone) { Destroy(statues[i]); statues.Remove(i); }
+            foreach (int i in gone) { Destroy(statues[i]); statues.Remove(i); statueOwners.Remove(i); }
             gone.Clear();
             foreach (int i in s.Statues)
             {
-                if (statues.ContainsKey(i)) continue;
-                var st = Spawn(set.Get(ActorKind.Statue), i, $"Statue {i}");
+                // Owner walks the Undo chain: fine here, Draw runs once per state change (docs 12.6), never per frame.
+                int owner = BodyIndex.OfStatue(s, i);
+                if (statues.TryGetValue(i, out var old))
+                {
+                    if (statueOwners[i] == owner) continue;
+                    Destroy(old); // Undo, then a different body kept here
+                }
+                var sv = set.StatueFor(owner);
+                var st = Spawn(sv, i, $"Statue {i} (body {owner})");
                 statues[i] = st;
-                if (pop && st != null) Tween(st.transform, BaseScale(ActorKind.Statue));
+                statueOwners[i] = owner;
+                if (pop && st != null) Tween(st.transform, sv.Scale * grid.CellSize);
             }
 
             // Start markers
@@ -311,10 +325,13 @@ namespace SevenSteps.Game
             marked.Clear();
 
             // Player
+            // A new body (Respawn, Undo across a KEEP/SWITCH, Restart) gets that body's prefab (docs 12.6).
+            int body = BodyIndex.Current(s);
+            if (body != playerBody) SpawnPlayer(body, s.Pos);
             bool alive = s.Status != Status.Lose;
             player.SetActive(alive);
-            Place(player, set.Get(ActorKind.Player), s.Pos);
-            player.transform.localScale = BaseScale(ActorKind.Player);
+            Place(player, PlayerVisual, s.Pos);
+            player.transform.localScale = PlayerScale;
             playerLabel.Text.enabled = alive;
             int left = Rules.Steps - s.Used;
             playerLabel.Text.text = left.ToString();
@@ -421,6 +438,18 @@ namespace SevenSteps.Game
             Place(go, v, cell);
             go.transform.localScale = v.Scale * grid.CellSize;
             return go;
+        }
+
+        /// Replaces the player instance with body <paramref name="body"/>'s prefab (TileSet.PlayerFor) and moves the step label onto it.
+        void SpawnPlayer(int body, int cell)
+        {
+            if (player != null) Destroy(player);
+            playerBody = body;
+            var pv = PlayerVisual;
+            player = Spawn(pv, cell, $"Player (body {body})") ?? new GameObject("Player");
+            player.transform.SetParent(root, true);
+            playerLabel.Follow = player.transform;
+            playerLabel.World = pv.LabelOffset(false) * grid.CellSize;
         }
 
         void Place(GameObject go, TileVisual v, int cell)
@@ -572,7 +601,7 @@ namespace SevenSteps.Game
             if (playerLabel != null) playerLabel.Text.enabled = player.activeSelf;
             // KEEP/SWITCH choice: the player breathes until a choice is made.
             if (choosing && anim == null && player.activeSelf)
-                player.transform.localScale = BaseScale(ActorKind.Player) * (1f + 0.06f * Mathf.Sin(Time.time * 6f));
+                player.transform.localScale = PlayerScale * (1f + 0.06f * Mathf.Sin(Time.time * 6f));
         }
 
         static class ListPool

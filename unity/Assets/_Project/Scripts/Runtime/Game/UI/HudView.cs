@@ -35,6 +35,22 @@ namespace SevenSteps.Game.UI
         string lastMsg;
         ProgressData lastProgress;
 
+        TileSet bodyLook;
+
+        /// TileSet the board draws with (body colors, docs 12.6). The HUD is built before the board, so it is read on first use.
+        /// Until S3 (docs/scene-flow.md 4.7) wires it in from the flow controller, it comes from the BoardView next to GameController.
+        TileSet BodyLook
+        {
+            get
+            {
+                if (bodyLook != null) return bodyLook;
+                var board = game.GetComponent<BoardView>();
+                if (board == null || board.TileSet == null)
+                    throw new System.InvalidOperationException("[SevenSteps] HudView: no BoardView with a TileSet next to GameController");
+                return bodyLook = board.TileSet;
+            }
+        }
+
         public bool SettingsOpen => settings.IsOpen;
         public void CloseSettings() => settings.Close();
 
@@ -204,10 +220,16 @@ namespace SevenSteps.Game.UI
                 icon.rectTransform.sizeDelta = new Vector2(18, 18);
                 bodyIcons.Add(icon);
             }
+            // One icon per body in play order (A, B, C), in that body's color (TileSet.BodyColor, docs 12.6):
+            // spent bodies faded, the body now playing larger, bodies still waiting at normal size.
+            int spent = s.Level.Bodies - s.Bodies; // index of the body now playing; all spent after Lose (Bodies = 0)
             for (int k = 0; k < bodyIcons.Count; k++)
             {
                 bodyIcons[k].gameObject.SetActive(k < s.Level.Bodies);
-                bodyIcons[k].color = k < s.Bodies ? Ui.Ink : new Color(1, 1, 1, 0.15f);
+                var c = BodyLook.BodyColor(k);
+                if (k < spent) c.a = 0.25f;
+                bodyIcons[k].color = c;
+                bodyIcons[k].rectTransform.sizeDelta = k == spent && s.Status != Status.Lose ? new Vector2(26, 26) : new Vector2(18, 18);
             }
 
             for (int k = 0; k < levelCount; k++)
