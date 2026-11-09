@@ -1,1 +1,4 @@
+Font: Gaegu by The Gaegu Project Authors (SIL Open Font License 1.1)
+Font: Patrick Hand by Patrick Wagesreiter (SIL Open Font License 1.1)
+Font: Kaushan Script by Pablo Impallari and Igino Marini (SIL Open Font License 1.1)
 Font: Jua by The Jua Project Authors (SIL Open Font License 1.1)
