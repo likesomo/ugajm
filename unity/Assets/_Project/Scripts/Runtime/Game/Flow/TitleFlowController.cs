@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using SevenSteps.Contracts;
+using SevenSteps.Core;
 
 namespace SevenSteps.Game.Flow
 {
@@ -20,9 +22,12 @@ namespace SevenSteps.Game.Flow
         readonly AppFlow flow;
         readonly SaveSystem save;
         readonly ITitlePanels panels;
+        readonly IReadOnlyList<Level> levels;
 
-        public TitleFlowController(AppFlow flow, SaveSystem save, ITitlePanels panels)
+        /// <param name="levels">levels.json stages (the last played stage is saved by name, 11.3.1).</param>
+        public TitleFlowController(AppFlow flow, SaveSystem save, ITitlePanels panels, IReadOnlyList<Level> levels)
         {
+            this.levels = levels ?? throw new ArgumentNullException(nameof(levels));
             this.flow = flow ?? throw new ArgumentNullException(nameof(flow));
             this.save = save ?? throw new ArgumentNullException(nameof(save));
             this.panels = panels ?? throw new ArgumentNullException(nameof(panels));
@@ -48,8 +53,8 @@ namespace SevenSteps.Game.Flow
             if (flow.CanGoToGame(stage)) flow.GoToGame(stage);
         }
 
-        /// Enter on Stage Select: the last played stage. Save data is external input, so it is clamped, not asserted.
-        public void PlayLastStage() => PlayStage(Math.Max(0, Math.Min(save.Progress.lastStage, flow.StageCount - 1)));
+        /// Enter on Stage Select: the last played stage (by name); stage 1 when none or no longer in levels.json.
+        public void PlayLastStage() => PlayStage(save.Progress.LastStageIndex(levels));
 
         /// Stage Select "뒤로" / Esc.
         public void Back()

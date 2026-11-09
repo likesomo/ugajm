@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using SevenSteps.Contracts;
+using SevenSteps.Core;
 using SevenSteps.Game.Flow;
 
 namespace SevenSteps.Tests
@@ -37,7 +38,7 @@ namespace SevenSteps.Tests
             flow = new AppFlow(scenes, 17);
             panels = new Panels();
             save = new SaveSystem(new MemoryStore());
-            ctl = new TitleFlowController(flow, save, panels);
+            ctl = new TitleFlowController(flow, save, panels, Stages);
         }
 
         [TearDown] public void TearDown() => ctl.Dispose();
@@ -73,13 +74,32 @@ namespace SevenSteps.Tests
         }
 
         [Test]
-        public void EnterPlaysTheLastStageClampedFromSaveData()
+        public void EnterPlaysTheLastStageByName()
         {
-            save.Progress.lastStage = 99;             // save from a build with more stages
+            save.Progress.lastStage = "s5";
             ctl.Start();
             ctl.OpenStageSelect();
             ctl.PlayLastStage();
-            Assert.AreEqual(16, flow.Stage);
+            Assert.AreEqual(5, flow.Stage);
+        }
+
+        [Test]
+        public void EnterPlaysStageOneWhenTheLastStageIsGone()
+        {
+            save.Progress.lastStage = "a stage removed from levels.json";
+            ctl.Start();
+            ctl.OpenStageSelect();
+            ctl.PlayLastStage();
+            Assert.AreEqual(0, flow.Stage);
+        }
+
+        static readonly Level[] Stages = MakeStages(17);
+
+        static Level[] MakeStages(int n)
+        {
+            var r = new Level[n];
+            for (int k = 0; k < n; k++) r[k] = Level.Parse("s" + k, "", 3, new[] { "##########", "#S......E#", "##########" });
+            return r;
         }
 
         [Test]

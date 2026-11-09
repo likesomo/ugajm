@@ -29,7 +29,12 @@ namespace SevenSteps.Game
             if (assets.levelsJson == null) throw new MissingReferenceException("[SevenSteps] GameAssets.levelsJson is not set");
             if (cached != null && source == assets.levelsJson) return cached;
             var file = JsonUtility.FromJson<LevelFileDto>(assets.levelsJson.text);
-            cached = file.levels.Select(d => d.ToLevel()).ToArray();
+            var parsed = file.levels.Select(d => d.ToLevel()).ToArray();
+            // The stage name is the progress save key (docs/architecture.md 11.3.1): it must be unique.
+            var names = new System.Collections.Generic.HashSet<string>();
+            foreach (var l in parsed)
+                if (!names.Add(l.Name)) throw new InvalidOperationException($"[SevenSteps] levels.json: stage name \"{l.Name}\" is used twice (it is the save key)");
+            cached = parsed;
             minBodies = file.levels.Select(d => d.expected != null ? d.expected.minBodies : 0).ToArray();
             chapterIds = file.levels.Select(d => d.chapter ?? "").ToArray(); // LevelDto.chapter (6.4), not part of Core Level
             source = assets.levelsJson;
@@ -40,6 +45,14 @@ namespace SevenSteps.Game
         public static int MinBodies(int stage)
         {
             return minBodies != null && stage >= 0 && stage < minBodies.Length ? minBodies[stage] : 0;
+        }
+
+        /// The stage at a 0-based index. Call after Load; a stage outside levels.json throws.
+        public static Level At(int stage)
+        {
+            if (cached == null) throw new InvalidOperationException("LevelCatalog.At before Load");
+            if (stage < 0 || stage >= cached.Length) throw new ArgumentOutOfRangeException(nameof(stage), stage, $"stage must be 0..{cached.Length - 1}");
+            return cached[stage];
         }
 
         /// Chapter id of a stage (levels.json "chapter", e.g. "moss"), "" when the stage has none (= first chapter, 6.4).

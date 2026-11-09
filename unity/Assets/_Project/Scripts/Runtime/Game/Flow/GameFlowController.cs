@@ -132,14 +132,14 @@ namespace SevenSteps.Game.Flow
             string chapter = chapterOf(stage) ?? "";
             if (enteredChapter == null || chapter != enteredChapter) ChapterEntering?.Invoke(enteredChapter, chapter, stage);
             enteredChapter = chapter;
-            save.Progress.lastStage = stage;
             board.LoadStage(stage, entries.TakeVia());
+            save.Progress.SetLastStage(board.State.Level); // saved with the next progress save (clear, stage select)
         }
 
         void OnWon(State s)
         {
             if (flow.State != AppState.Game) return;
-            save.Progress.MarkCleared(flow.Stage, BodiesUsed(s));
+            save.Progress.MarkCleared(s.Level, BodiesUsed(s));
             save.SaveProgress();
         }
 
@@ -160,10 +160,8 @@ namespace SevenSteps.Game.Flow
             var s = board.State ?? throw new InvalidOperationException("Result without a board state");
             int stage = flow.Stage, bodies = s.Level.Bodies;
             int min = minBodies(stage);
-            int k = save.Progress.bestStage.IndexOf(stage);
-            int best = k >= 0 ? save.Progress.bestBodies[k] : 0;
-            // Save data and the solver's numbers are external to this build's stage: out of range = unknown.
-            if (best > bodies) best = 0;
+            int best = save.Progress.BestBodies(s.Level); // 0 = none, other map or out of range (11.3.1)
+            // The solver's number is external to this build's stage: out of range = unknown.
             if (min > bodies) min = 0;
             result.Show(ResultModel.Clear(stage, bodies, BodiesUsed(s), min, best, IsLast));
         }
