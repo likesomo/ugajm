@@ -25,3 +25,17 @@ MonoBehaviour:
   settingsPanel: {fileID: 735352942397860819, guid: 32d6c408d3abcbf42b220771e9f919bd, type: 3}
   resultPanel: {fileID: 5186985129672267715, guid: 5ee130465858b2147b36bb973a61f4ef, type: 3}
   hud: {fileID: 3232867761573120493, guid: d7ddcdf0dc12d0f4d92abe5380b8892c, type: 3}
+  languages:
+  - language: 0
+    title: {fileID: 12800000, guid: d9e4e5c79f0b73a4184ffc9d2e8fdc0f, type: 3}
+    body: {fileID: 12800000, guid: d9e4e5c79f0b73a4184ffc9d2e8fdc0f, type: 3}
+    titleScale: 0
+    bodyScale: 0
+    bodyLineSpacing: 1.1
+  - language: 1
+    title: {fileID: 12800000, guid: acfee755ff5f1b54fb67c86861cfbff8, type: 3}
+    body: {fileID: 12800000, guid: d7e497f55dc2d7c4095938e49425f8c1, type: 3}
+    titleScale: 0
+    bodyScale: 0
+    bodyLineSpacing: 0.9
+  number: {fileID: 12800000, guid: 6726afba0e987134bb60bf8a871ea91c, type: 3}
