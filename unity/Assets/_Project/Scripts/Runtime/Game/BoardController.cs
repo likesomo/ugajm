@@ -119,6 +119,13 @@ namespace SevenSteps.Game
             chapters?.Dispose();
         }
 
+        /// Smoke negative control (LaunchOptions.SmokeView.Empty): the board plays as usual but draws nothing.
+        public void HideBoardForSmoke()
+        {
+            if (board == null) throw new InvalidOperationException("BoardController.HideBoardForSmoke before Init");
+            board.Hidden = true;
+        }
+
         ChapterStage chapters;
         Func<int, ChapterPreset> chapterFor;
         TileSet tileSetOverride;

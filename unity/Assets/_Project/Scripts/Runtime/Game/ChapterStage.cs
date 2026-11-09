@@ -22,10 +22,16 @@ namespace SevenSteps.Game
 
         public ChapterPreset Current { get; private set; }
 
+        /// Smoke check camera clear (LaunchOptions.SmokeView): a colour no palette uses, measured against by board-pixels.ps1.
+        public static readonly Color SmokeClear = new Color(1f, 0f, 1f, 1f);
+        readonly SmokeView smoke;
+
         /// <param name="key">Key light (the only one with shadows, WebGL Mobile budget).</param>
         /// <param name="parent">Where the planet instance goes (the Game scene root). The sky goes under the camera.</param>
-        public ChapterStage(Camera cam, Light key, Light fill, Light rim, Transform parent)
+        /// <param name="smoke">Board / Empty: no sky or planet (so no Fit) and a #FF00FF clear; lights as the chapter says.</param>
+        public ChapterStage(Camera cam, Light key, Light fill, Light rim, Transform parent, SmokeView smoke = SmokeView.None)
         {
+            this.smoke = smoke;
             this.cam = cam != null ? cam : throw new ArgumentNullException(nameof(cam));
             this.key = key != null ? key : throw new ArgumentNullException(nameof(key));
             this.fill = fill != null ? fill : throw new ArgumentNullException(nameof(fill));
@@ -40,10 +46,11 @@ namespace SevenSteps.Game
             entered = true;
             Current = chapter;
             DestroyInstances();
+            if (smoke != SmokeView.None) cam.backgroundColor = SmokeClear;
             if (chapter == null) return true;
 
             if (chapter.lighting != null) ApplyLighting(chapter.lighting);
-            if (chapter.sky != null)
+            if (chapter.sky != null && smoke == SmokeView.None)
             {
                 cam.backgroundColor = chapter.sky.background;
                 // The sky follows the camera (12.8 contract): a camera child, local pose from the prefab.
