@@ -7,14 +7,19 @@ using UnityEngine;
 namespace SevenSteps.EditorTools
 {
     /// <summary>
-    /// Checks every TileSet in Data/TileSets against docs/architecture.md 7 and 12 (prefab spec: 1 cell = cellSize,
-    /// floor top at y = 0, hooks that exist). Errors = the board cannot draw something; warnings = likely wrong placement.
+    /// Checks every TileSet under Assets/_Project (Data/TileSets placeholder, Art/<Set>/ art sets) against docs/architecture.md 7 and 12
+    /// (prefab spec: 1 cell = cellSize, floor top at y = 0, wall height, hooks that exist, meshes/materials resolved). Errors = the board cannot draw something; warnings = likely wrong placement.
     /// Menu: Seven Steps > Architecture > Validate TileSets. Batch: -executeMethod SevenSteps.EditorTools.TileSetValidator.BatchValidate
     /// (exit 1 on errors). Report: Logs/batch-tileset-validate.log via unity.sh, or the Console.
     /// </summary>
     public static class TileSetValidator
     {
         const float Tolerance = 0.06f;
+        /// Search roots (docs 12.7). A TileSet anywhere else is reported as an error.
+        public static readonly string[] Roots = { "Assets/_Project" };
+        static readonly string[] AllowedPrefixes = { TileSetBuilder.Dir + "/", "Assets/_Project/Art/" };
+        /// Walls, doors, raised flip walls: max height in cells (docs 12.3, front 3/4 view).
+        const float MaxWallHeight = 0.6f;
 
         [MenuItem("Seven Steps/Architecture/Validate TileSets", priority = 41)]
         public static void ValidateMenu()
@@ -35,12 +40,15 @@ namespace SevenSteps.EditorTools
         {
             var sb = new StringBuilder();
             int errors = 0;
-            foreach (var guid in AssetDatabase.FindAssets("t:TileSet", new[] { TileSetBuilder.Dir }))
+            foreach (var guid in AssetDatabase.FindAssets("t:TileSet", Roots))
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
                 var ts = AssetDatabase.LoadAssetAtPath<TileSet>(path);
                 var issues = new List<string>();
-                int e = Validate(ts, issues);
+                int e = 0;
+                if (System.Array.Find(AllowedPrefixes, pre => path.StartsWith(pre, System.StringComparison.Ordinal)) == null)
+                { issues.Add("ERROR location: TileSets live in Data/TileSets (placeholder) or Art/<Set>/ (docs 12.7)"); e++; }
+                e += Validate(ts, issues);
                 errors += e;
                 sb.AppendLine($"[SevenSteps] TileSet {path}: {(e > 0 ? "FAIL" : "OK")} ({e} errors, {issues.Count - e} warnings)");
                 foreach (var i in issues) sb.AppendLine("  " + i);
@@ -53,7 +61,7 @@ namespace SevenSteps.EditorTools
         {
             int errors = 0;
             float cs = ts.cellSize;
-            void Check(string name, TileVisual v, bool required, bool flatTop, bool fitsCell)
+            void Check(string name, TileVisual v, bool required, bool flatTop, bool fitsCell, bool wallHeight = false)
             {
                 if (!v.HasPrefab)
                 {
@@ -75,7 +83,12 @@ namespace SevenSteps.EditorTools
                     if (!found) { issues.Add($"ERROR {name}: Animator has no trigger \"{trig}\""); errors++; }
                 }
 
+                foreach (var missing in MissingParts(v.prefab))
+                { issues.Add($"ERROR {name}: {missing} (shared folder not linked, or a GUID changed?)"); errors++; }
+
                 if (!Bounds(v, cs, out var b)) { issues.Add($"WARN {name}: no renderers"); return; }
+                if (wallHeight && b.max.y > cs * (MaxWallHeight + Tolerance))
+                    issues.Add($"WARN {name}: height {b.max.y / cs:0.00} cells, walls must be <= {MaxWallHeight} so they do not hide the cell behind (docs 12.3)");
                 if (fitsCell && (b.size.x > cs * (1 + Tolerance) || b.size.z > cs * (1 + Tolerance)))
                     issues.Add($"WARN {name}: footprint {b.size.x:0.00}x{b.size.z:0.00} is bigger than one cell ({cs:0.00})");
                 if (fitsCell && (Mathf.Abs(b.center.x) > cs * Tolerance || Mathf.Abs(b.center.z) > cs * Tolerance))
@@ -86,7 +99,7 @@ namespace SevenSteps.EditorTools
 
             Check("floor", ts.floor, true, true, true);
             Check("floorAlt", ts.floorAlt, false, true, true);
-            Check("wall", ts.wall, true, false, true);
+            Check("wall", ts.wall, true, false, true, wallHeight: true);
             Check("pit", ts.pit, true, false, true);
             Check("ice", ts.ice, true, true, true);
             Check("cracked", ts.cracked, true, true, true);
@@ -94,20 +107,45 @@ namespace SevenSteps.EditorTools
             Check("exit", ts.exit, true, false, true);
             Check("gate", ts.gate, true, false, true);
             for (int k = 0; k < 3; k++) Check($"plates[{k}]", At(ts.plates, k), true, false, true);
-            for (int k = 0; k < 3; k++) Check($"doors[{k}]", At(ts.doors, k), true, false, true);
-            Check("countDoor", ts.countDoor, true, false, true);
+            for (int k = 0; k < 3; k++) Check($"doors[{k}]", At(ts.doors, k), true, false, true, wallHeight: true);
+            Check("countDoor", ts.countDoor, true, false, true, wallHeight: true);
             Check("lever", ts.lever, true, false, true);
-            for (int k = 0; k < 2; k++) Check($"flipWalls[{k}]", At(ts.flipWalls, k), true, false, true);
+            Check("flipWalls[0]", At(ts.flipWalls, 0), true, false, true, wallHeight: true);
+            Check("flipWalls[1]", At(ts.flipWalls, 1), true, false, true);
             Check("player", ts.player, true, false, true);
             Check("statue", ts.statue, true, false, true);
             Check("startMarker", ts.startMarker, true, false, false);
             Check("oldStartMarker", ts.oldStartMarker, false, false, false);
             Check("footprint", ts.footprint, false, false, false);
             Check("luckyRing", ts.luckyRing, false, false, false);
+            // Per body (12.6): optional; when filled, every entry needs a prefab. 3 = triplets.
+            foreach (var (label, arr) in new[] { ("playerBodies", ts.playerBodies), ("statueBodies", ts.statueBodies) })
+            {
+                if (arr == null || arr.Length == 0) continue;
+                if (arr.Length != 3) issues.Add($"WARN {label}: {arr.Length} entries, triplets use 3 (index cycles)");
+                for (int k = 0; k < arr.Length; k++) Check($"{label}[{k}]", arr[k], true, false, true);
+            }
 
             if (ts.projection == BoardProjection.Quarter && Mathf.Abs(ts.cameraRig.yaw) > 0.01f)
                 issues.Add($"WARN camera yaw {ts.cameraRig.yaw}: arrow keys are map directions; GameController must rotate input (docs 12.2)");
             return errors;
+        }
+
+        /// Meshes or material slots that did not resolve (missing shared-folder asset or broken GUID).
+        static IEnumerable<string> MissingParts(GameObject prefab)
+        {
+            foreach (var mf in prefab.GetComponentsInChildren<MeshFilter>(true))
+                if (mf.sharedMesh == null) yield return $"mesh missing on \"{mf.name}\"";
+            foreach (var sk in prefab.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                if (sk.sharedMesh == null) yield return $"mesh missing on \"{sk.name}\"";
+            foreach (var r in prefab.GetComponentsInChildren<Renderer>(true))
+            {
+                if (r is ParticleSystemRenderer) continue;
+                var mats = r.sharedMaterials;
+                for (int k = 0; k < mats.Length; k++)
+                    if (mats[k] == null) yield return $"material slot {k} empty on \"{r.name}\"";
+                    else if (mats[k].shader == null || mats[k].shader.name == "Hidden/InternalErrorShader") yield return $"shader missing on \"{r.name}\" ({mats[k].name})";
+            }
         }
 
         static TileVisual At(TileVisual[] arr, int k) => arr != null && k < arr.Length ? arr[k] : default;
