@@ -13,6 +13,7 @@ namespace SevenSteps.Game
         static TextAsset source;
         static int[] minBodies;
         static string[] chapterIds;
+        static LevelDto[] dtos; // per-language texts (docs/architecture.md 13.5)
         static ChapterFileDto chapters; // null = no chapters.json yet
 
         /// Domain reload is disabled in the editor: parse levels.json again on every Play so edits to it show up.
@@ -23,6 +24,7 @@ namespace SevenSteps.Game
             source = null;
             minBodies = null;
             chapterIds = null;
+            dtos = null;
             chapters = null;
         }
 
@@ -39,6 +41,7 @@ namespace SevenSteps.Game
                 if (!names.Add(l.Name)) throw new InvalidOperationException($"[SevenSteps] levels.json: stage name \"{l.Name}\" is used twice (it is the save key)");
             cached = parsed;
             minBodies = file.levels.Select(d => d.expected != null ? d.expected.minBodies : 0).ToArray();
+            dtos = file.levels;
             chapterIds = file.levels.Select(d => d.chapter ?? "").ToArray(); // LevelDto.chapter (6.4), not part of Core Level
             chapters = assets.chaptersJson != null ? JsonUtility.FromJson<ChapterFileDto>(assets.chaptersJson.text) : null;
             if (chapters != null && (chapters.chapters == null || chapters.chapters.Length == 0)) chapters = null;
@@ -62,6 +65,18 @@ namespace SevenSteps.Game
             return cached[stage];
         }
 
+        /// A stage's name in a language (levels.json name for ko, its "text" entry otherwise; docs/architecture.md 13.5).
+        /// Not the save key: that is always Level.Name (11.3.1). Call after Load; a missing translation throws (export checks it).
+        public static string NameOf(int stage, Language lang) => TextOf(stage, lang).name;
+
+        /// Name, hint and story of a stage in a language. Call after Load; a stage outside levels.json throws.
+        public static LevelTextDto TextOf(int stage, Language lang)
+        {
+            if (dtos == null) throw new InvalidOperationException("LevelCatalog.TextOf before Load");
+            if (stage < 0 || stage >= dtos.Length) throw new ArgumentOutOfRangeException(nameof(stage), stage, $"stage must be 0..{dtos.Length - 1}");
+            return dtos[stage].TextFor(Languages.Code(lang));
+        }
+
         /// Chapter id of a stage (levels.json "chapter", e.g. "moss"), "" when the stage has none (= first chapter, 6.4).
         /// Call after Load; a stage outside levels.json throws.
         public static string ChapterIdOf(int stage)
@@ -82,14 +97,15 @@ namespace SevenSteps.Game
         /// levels.json value when there is no chapters.json. Used by GameFlowController.ChapterEntering.
         public static string ChapterKeyOf(int stage) => ChapterOf(stage)?.id ?? ChapterIdOf(stage);
 
-        /// What the chapter card shows for a chapter key; null when there is no chapters.json or no planet name.
-        public static Flow.ChapterCardModel ChapterCard(string chapterKey)
+        /// What the chapter card shows for a chapter key, in a language (ChapterInfo.Planet/Intro(lang), 13.5); null when there
+        /// is no chapters.json or no planet name. A missing translation throws (export and LocalizationCheck catch it).
+        public static Flow.ChapterCardModel ChapterCard(string chapterKey, Language lang)
         {
             if (chapters == null) return null;
             var info = chapters.Get(chapterKey);
             if (info == null || string.IsNullOrEmpty(info.planet)) return null;
             int number = Array.IndexOf(chapters.chapters, info) + 1;
-            return new Flow.ChapterCardModel(info.id, number, info.planet, info.intro);
+            return new Flow.ChapterCardModel(info.id, number, info.Planet(lang), info.Intro(lang));
         }
     }
 }

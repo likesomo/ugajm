@@ -103,7 +103,7 @@ namespace SevenSteps.Game
             board.UseChapters(new ChapterStage(cam, keyLight, fillLight, rimLight, transform), ChapterPresetFor(cfg), cfg.tileSet);
             flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, result, LevelCatalog.MinBodies, LevelCatalog.ChapterKeyOf);
             back = new BackNavigator(overlays, flowController.Back);
-            chapterIntro = new ChapterIntroController(flowController, overlays, chapterCard, LevelCatalog.ChapterCard);
+            chapterIntro = new ChapterIntroController(flowController, overlays, chapterCard, key => LevelCatalog.ChapterCard(key, localizer.Current));
             board.InputBlocked = () => flow.IsLoading || overlays.Count > 0;
             board.FlowTakes = flowController.TakesCommand;
 

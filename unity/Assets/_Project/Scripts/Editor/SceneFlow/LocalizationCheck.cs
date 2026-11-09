@@ -21,7 +21,7 @@ namespace SevenSteps.EditorTools
     ///   fonts of every UiTheme (a text may be shown in either role); number-role characters in the number font;
     /// - Korean UI literals left in Scripts/Runtime/Game: WARN while gameplay/UI moves the text to keys (13.7), then ERROR
     ///   (set <see cref="KoreanLiteralsAreErrors"/>).
-    /// Level texts in other languages come with LevelDto.text (core, 13.5); until then only ko level texts are checked.
+    /// Level texts: each language's LevelDto.TextFor (13.5); a stage without that language is skipped here (the export check reports it).
     /// </summary>
     public static class LocalizationCheck
     {
@@ -90,14 +90,17 @@ namespace SevenSteps.EditorTools
             var texts = new List<(string, string)>();
             if (table != null)
                 foreach (var key in table.Keys) texts.Add((table.Get(key), $"strings {code} {key}"));
-            if (lang == Languages.Base && assets.levelsJson != null)
+            if (assets.levelsJson != null)
             {
                 var file = JsonUtility.FromJson<LevelFileDto>(assets.levelsJson.text);
                 for (int k = 0; k < file.levels.Length; k++)
                 {
-                    texts.Add((file.levels[k].name, $"levels.json stage {k + 1} name"));
-                    texts.Add((file.levels[k].hint, $"levels.json stage {k + 1} hint"));
-                    texts.Add((file.levels[k].story, $"levels.json stage {k + 1} story"));
+                    var dto = file.levels[k];
+                    if (lang != Languages.Base && !(dto.text ?? new LevelTextDto[0]).Any(t => t != null && t.lang == code)) continue; // export check (13.6) reports it
+                    var t = dto.TextFor(code);
+                    texts.Add((t.name, $"levels.json stage {k + 1} name ({code})"));
+                    texts.Add((t.hint, $"levels.json stage {k + 1} hint ({code})"));
+                    texts.Add((t.story, $"levels.json stage {k + 1} story ({code})"));
                 }
             }
             if (assets.chaptersJson != null)

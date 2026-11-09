@@ -58,11 +58,12 @@ namespace SevenSteps.Game.UI
 
     /// <summary>
     /// Stage select panel (view only): stage grid with clear marks and best bodies, back / settings buttons.
-    /// Text from the string table (keys stageselect.*), role fonts of the current language; stage names are levels.json
-    /// names until the per-language level texts land (LevelDto.text, 13.5).
+    /// Text from the string table (keys stageselect.*), role fonts of the current language; stage names in the current
+    /// language from LevelCatalog.NameOf (levels.json text, 13.5): never a ko name in an en font (no Hangul there).
     /// </summary>
     public sealed class StageSelectView
     {
+        const int Columns = 4;
         readonly GameObject panel;
         readonly Level[] levels;
         readonly Button[] stageButtons;
@@ -112,7 +113,7 @@ namespace SevenSteps.Game.UI
             g.spacing = new Vector2(14, 14);
             g.childAlignment = TextAnchor.MiddleCenter;
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            g.constraintCount = 4;
+            g.constraintCount = Columns;
             stageButtons = new Button[levels.Length];
             stageTexts = new Text[levels.Length];
             for (int k = 0; k < levels.Length; k++)
@@ -153,20 +154,20 @@ namespace SevenSteps.Game.UI
                 bool done = progress.IsCleared(levels[k]);
                 int b = progress.BestBodies(levels[k]);
                 string mark = done ? loc.Get("stageselect.cleared") + (b > 0 ? loc.Format("stageselect.best_bodies", b) : "") : "";
-                stageTexts[k].text = $"{k + 1}. {levels[k].Name}\n<size=14>{mark}</size>";
+                stageTexts[k].text = $"{k + 1}. {LevelCatalog.NameOf(k, loc.Current)}\n<size=14>{mark}</size>";
                 stageTexts[k].color = done ? Ui.Gold : Ui.Ink;
                 if (k == last) stageButtons[k].Select();
             }
             ScrollTo(last);
         }
 
-        /// Puts the row of a stage in view (4 per row): the last played stage when the panel opens.
+        /// Puts the row of a stage in view (Columns per row): the last played stage when the panel opens.
         void ScrollTo(int stage)
         {
-            int rows = (levels.Length + 3) / 4;
+            int rows = (levels.Length + Columns - 1) / Columns;
             if (rows <= 1) return;
             Canvas.ForceUpdateCanvases();
-            float t = 1f - (float)(stage / 4) / (rows - 1); // 1 = top
+            float t = 1f - (float)(stage / Columns) / (rows - 1); // 1 = top
             scroll.verticalNormalizedPosition = Mathf.Clamp01(t);
         }
 

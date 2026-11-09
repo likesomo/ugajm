@@ -20,7 +20,7 @@ namespace SevenSteps.Tests
             { ""name"": ""c"", ""hint"": """", ""bodies"": 3, ""chapter"": ""moss"", ""map"": [ ""#####"", ""#S.E#"", ""#####"" ] } ] }";
         const string Chapters = @"{ ""chapters"": [
             { ""id"": ""ruins"", ""planet"": ""폐허 행성"", ""intro"": ""첫 별"" },
-            { ""id"": ""moss"", ""planet"": ""이끼 행성"", ""intro"": """" } ] }";
+            { ""id"": ""moss"", ""planet"": ""이끼 행성"", ""intro"": """", ""text"": [ { ""lang"": ""en"", ""planet"": ""Moss Planet"", ""intro"": ""Go"" } ] } ] }";
 
         GameAssets assets;
 
@@ -53,9 +53,13 @@ namespace SevenSteps.Tests
             Assert.AreEqual("ruins", LevelCatalog.ChapterKeyOf(0), "normalized: stage a and b are the same chapter");
             Assert.AreEqual("ruins", LevelCatalog.ChapterKeyOf(1));
             Assert.AreEqual("moss", LevelCatalog.ChapterKeyOf(2));
-            var card = LevelCatalog.ChapterCard("moss");
+            var card = LevelCatalog.ChapterCard("moss", Language.Ko);
             Assert.AreEqual(2, card.Number);
             Assert.AreEqual("이끼 행성", card.Planet);
+            var en = LevelCatalog.ChapterCard("moss", Language.En);
+            Assert.AreEqual("Moss Planet", en.Planet, "the card is in the UI language");
+            Assert.AreEqual("Go", en.Intro);
+            Assert.Throws<KeyNotFoundException>(() => LevelCatalog.ChapterCard("ruins", Language.En), "no en text");
         }
 
         [Test]
@@ -74,7 +78,7 @@ namespace SevenSteps.Tests
             LevelCatalog.Load(assets);
             Assert.IsNull(LevelCatalog.ChapterOf(0));
             Assert.AreEqual("ruins", LevelCatalog.ChapterKeyOf(1), "raw id when there is no file");
-            Assert.IsNull(LevelCatalog.ChapterCard("ruins"));
+            Assert.IsNull(LevelCatalog.ChapterCard("ruins", Language.Ko));
         }
 
         // ---------- controller ----------

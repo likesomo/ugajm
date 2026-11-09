@@ -10,6 +10,6 @@
     { "key": "stageselect.back", "text": "뒤로 (Esc)" },
     { "key": "stageselect.settings", "text": "설정" },
     { "key": "stageselect.cleared", "text": "클리어" },
-    { "key": "stageselect.best_bodies", "text": ", 몸 {0}개" }
+    { "key": "stageselect.best_bodies", "text": ", 형제 {0}명" }
   ]
 }

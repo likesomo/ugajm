@@ -10,6 +10,6 @@
     { "key": "stageselect.back", "text": "Back (Esc)" },
     { "key": "stageselect.settings", "text": "Settings" },
     { "key": "stageselect.cleared", "text": "Cleared" },
-    { "key": "stageselect.best_bodies", "text": ", {0} bodies" }
+    { "key": "stageselect.best_bodies", "text": ", {0} brothers" }
   ]
 }
