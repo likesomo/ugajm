@@ -335,7 +335,7 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 | `Scenes/Title.unity` | 1 | 상태 `Title`(제목, 설정 패널), `StageSelect`(스테이지 목록, 클리어 표시). 패널 전환만, 씬 이동 없음 | 씬 플로우 |
 | `Scenes/Game.unity` | 2 | 상태 `Game`(보드, HUD, `GameController`), `Result`(클리어/실패 패널, 다음·재시도·스테이지 선택). 같은 씬 안 오버레이 | 씬 플로우 (화면 내용은 게임플레이/UI) |
 
-- 씬 사이 전달값은 `Services`에 등록된 `AppFlow.Stage`(시작 스테이지)와 `LaunchOptions`(리플레이 등)로 넘긴다. 정적 전역 변수를 따로 만들지 않는다. 영구 싱글턴(`DontDestroyOnLoad`)은 Boot가 만든 하나(오디오·텔레메트리 전송용 러너)만 둔다.
+- 씬 사이 전달값은 `Services`에 등록된 `AppFlow.Stage`(시작 스테이지)와 `LaunchOptions`(리플레이 등)로 넘긴다. 정적 전역 변수를 따로 만들지 않는다. 영구 오브젝트(`DontDestroyOnLoad`)는 두 개뿐이다: 텔레메트리 러너 `TelemetryRunner`(텔레메트리가 켜졌을 때만, 이름 고정 — jslib가 이름으로 찾음, 11.5)와 씬 전환 페이드 `SceneFader`(첫 씬 로드 때 `SceneLoader`가 만듦, 씬 플로우 S5). 더 늘리려면 아키텍트와 정한다. 둘 다 Play가 끝나면 사라지고, 부트스트랩이 Play마다 한 번이라 중복 생성되지 않는다.
 - 에디터에서 `Game.unity`를 바로 Play하면 Boot를 거치지 않는다. 그래서 각 씬의 진입 코드는 **이번 Play에서 부트스트랩이 돌지 않았으면** 같은 부트스트랩 함수를 직접 부른다(테스트·디버그 편의, v0의 `startLevel`/`replay` 유지). `Services.Has<AppFlow>()`로 판단하지 않는다: 이 프로젝트는 에디터 도메인 리로드가 꺼져 있어(`EditorSettings` `m_EnterPlayModeOptions: 1`) 정적 상태가 Play 사이에 남는다(9장 "정적 가변 상태").
 - 씬 안의 오브젝트는 최소로(카메라, 라이트, 루트 하나) 두고 내용은 프리팹으로 나눈다. 한 씬은 한 에이전트만 고친다.
 - 빌드 씬 목록(`ProjectSettings/EditorBuildSettings.asset`)은 리드가 바꾼다. 씬 분리는 2단계 게임플레이/UI 작업이고, 그때까지 v0의 `Game.unity` 하나로 동작한다.
@@ -407,6 +407,7 @@ Boot ──▶ Title ⇄ StageSelect ──▶ Game ⇄ Result
   - 뒤로: `static TryGetBackTarget(from, out to)`/인스턴스 `TryGetBackTarget(out to)` — StageSelect→Title, Game→StageSelect, Result→StageSelect, Boot·Title은 없음. 모두 `CanGo` 안(새 전이 없음). `CanBack` = 로드 중 아님 + 뒤 대상 있음.
   - 입력 처리는 먼저 묻고 안 되면 무시한다: `IsLoading`, `CanBack`, `CanGoToGame(stage)`.
   - `Changed(from, to)`는 로드 요청 **뒤**(이전 씬이 아직 있고 `IsLoading` = 참)에 난다. 그 안에서 `Go`를 부르면 예외. 진입 경로는 하나: 새 씬은 루트 `Start`에서 `flow.State`로, 같은 씬 안 전이는 `Changed`로. `Entered` 이벤트는 없다.
+- **로드 실패(S5)**: `ISceneLoader.Load`가 예외를 던지면 `AppFlow.Go`는 `IsLoading`·`State`를 되돌리고(`GoToGame`은 `Stage`도) 다시 던진다. `Changed`는 나가지 않는다. `SceneLoader`는 빌드에 없는 씬(`Application.CanStreamedLevelBeLoaded` 거짓)을 `Load`에서 바로 거부하므로 흐름이 '로드 중'에 멈추지 않는다. 정상 경로: 페이드 아웃(0.15초, Boot에서 나갈 때는 생략) → `LoadSceneAsync` → `sceneLoaded`에서 `Loaded` → 한 프레임(새 씬 `Start`) → 페이드 인. 어두운 동안 클릭 차단, 키 입력은 `IsLoading`으로 차단.
 - 진입 경로(`level_start.via`): `EntryTracker`(Game `Flow/`, 부트스트랩이 `Services`에 등록). 첫 진입은 `url`(실행 인자·URL 레벨) 또는 `boot`, 그 뒤는 `Announce(next|again|select)` 후 `TakeVia()`, 알림 없으면 `select`. 정적 `GameController.FirstEntryPending`을 대체했다.
 - `GameSession`(보드 안의 입력 락)과 `AppFlow`(화면 흐름)는 별개다. 스테이지 바꾸기 = `flow.GoToGame(k)` → `GameController`가 `session.Load(level)`.
 
@@ -636,3 +637,4 @@ else flow.Go(AppState.Title);
 | 2026-11-09 | 아키텍트 | 11.1·11.2 씬 플로우 S2 반영(feat/scene-flow f08f4d6, 검토 승인): **`AppFlow(ISceneLoader, int stageCount)` 생성자 변경**, `StageCount`, `GoToGame` 범위 예외, `TryGetBackTarget`/`CanBack`/`CanGoToGame`, `IsLoading` + **`ISceneLoader.Loaded` 추가**(로드 중 전이 예외), `Changed` 시점 명시, `EntryTracker`(Game, `Services` 등록), `Bootstrap.Run(config, assets, ...)`, 범위 밖 `-level`은 경고 후 마지막 스테이지. `AppFlow`를 직접 만들거나 `ISceneLoader`를 구현하던 코드(테스트 가짜 로더 포함)는 고쳐야 한다 |
 | 2026-11-09 | 아키텍트 | 11.3 `SaveSystem` 설정 명령 `SetMasterVolume`/`SetSfxVolume`/`SetTelemetryChoice`/`TelemetryOn` 추가(씬 플로우 S4 `SettingsController`용), 설정은 바꿀 때마다 저장, 생성자 null 검사. EditMode `SaveSettingsCommandTests` |
 | 2026-11-09 | 아키텍트 | 12.8 결정: 챕터별 `UiTheme`은 `ChapterPreset`에 넣지 않음(의존 방향·일관성·비용), 필요하면 `uiAccent` 색 하나. 씬 플로우 S6 검토 승인 |
+| 2026-11-09 | 아키텍트 | 씬 플로우 S5 반영(feat/scene-flow 1f9f462, 승인): 11.1 로드 실패 시 `AppFlow` 되돌림·`SceneLoader` 사전 거부·페이드 경로, 8장 DDOL 문구를 `TelemetryRunner` + `SceneFader` 두 개로 수정 |

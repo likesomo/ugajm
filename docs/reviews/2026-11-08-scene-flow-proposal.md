@@ -118,3 +118,12 @@ EditMode + 가짜 로더 + `smoke`/`smoke-webgl`로 S0~S4를 덮을 수 있다. 
 3. **비용**: 코드 생성 HUD는 테마를 생성 시점에 읽어 챕터 전환 때 다시 만들어야 한다.
 
 대신: 챕터 분위기는 보드·조명·하늘(12.8)과 챕터 전환 카드(`ChapterEntering` 오버레이, 문구는 `ChapterInfo`)가 맡는다. 챕터마다 UI 강조색이 꼭 필요해지면 `ChapterPreset`에 `Color uiAccent` 하나를 추가하고(Contracts 타입만), HUD가 `ChapterEntering`에서 그 색만 바꾸는 방식으로 한다(아키텍트에게 요청).
+
+## S5 검토: feat/scene-flow 1f9f462 (AppFlow 로드 실패 되돌림, 페이드 SceneLoader, 2026-11-09)
+
+**결론: 승인.** S2 메모(로드 실패 시 `IsLoading` 고착) 해결. 11.1·8장·변경 기록 반영.
+- `AppFlow.Go`: `Load` 예외 시 `loadingScene`·`State` 되돌리고 다시 던짐, `Changed` 없음. `GoToGame`은 `Stage`도 되돌림. 테스트 있음.
+- `SceneLoader`: `CanStreamedLevelBeLoaded`로 `Load`에서 사전 거부(코루틴 시작 전 → 되돌림 경로가 맞게 동작). 정상 경로 페이드 아웃 → `LoadSceneAsync` → `sceneLoaded` → `Loaded` → 한 프레임 → 페이드 인. `sceneLoaded`는 대기 중에만 구독. `unscaledDeltaTime` 사용.
+- DDOL `SceneFader`: 텔레메트리 러너는 텔레메트리가 꺼지면 없으므로 별도 오브젝트가 맞다. 8장 "DDOL은 러너 하나" 문구를 두 개로 고쳤다. `SceneLoader`는 부트스트랩마다 새로 만들어지고 Play 끝에 DDOL도 사라져 도메인 리로드 꺼짐에서도 중복 없음.
+- 사소: `LoadSceneAsync`가 null인 비정상 경로는 `Loaded`를 내서 흐름은 풀리지만 `AppFlow.State`는 새 상태, 씬은 이전 씬으로 어긋난다. 오류 로그가 크게 남고 사전 검사 뒤라 사실상 안 일어나므로 둔다.
+- 텔레메트리: 씬을 넘는 `level_leave`가 페이드 아웃(0.15초)만큼 늦게 나간다. 순서·값은 같고 시간만 조금 늘어남(골든은 씬을 안 쓰므로 영향 없음).
