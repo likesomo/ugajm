@@ -35,13 +35,13 @@ namespace SevenSteps.Tests
             Assert.AreSame(settings, stack.Top);
             Assert.IsTrue(settings.Visible && credits.Visible);
             Assert.Throws<InvalidOperationException>(() => stack.Push(settings), "already open");
-            Assert.Throws<InvalidOperationException>(() => stack.Close(credits), "not the top one");
 
-            settings.ClickClose();     // its own close button
-            Assert.IsFalse(settings.Visible);
-            Assert.AreSame(credits, stack.Top);
-            Assert.IsTrue(stack.Pop());
+            credits.ClickClose();      // one below closes itself (a timer): removed, the top stays
             Assert.IsFalse(credits.Visible);
+            Assert.AreSame(settings, stack.Top);
+            Assert.Throws<InvalidOperationException>(() => stack.Close(credits), "not open any more");
+            Assert.IsTrue(stack.Pop());
+            Assert.IsFalse(settings.Visible);
             Assert.IsFalse(stack.Pop());
             Assert.AreEqual(4, changes);
 

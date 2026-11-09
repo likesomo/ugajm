@@ -13,6 +13,8 @@ namespace SevenSteps.Game
     {
         [Header("Data")]
         public TextAsset levelsJson;
+        [Tooltip("Data/chapters.json (docs/architecture.md 6.4). Empty until the chapters land: every stage is the first chapter.")]
+        public TextAsset chaptersJson;
         public Font font;
         [Tooltip("UI look: font, colors, panel prefabs (docs/scene-flow.md S6). Default Data/UiTheme_Default.asset")]
         public UI.UiTheme uiTheme;

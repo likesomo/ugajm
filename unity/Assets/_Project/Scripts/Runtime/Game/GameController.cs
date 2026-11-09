@@ -41,6 +41,7 @@ namespace SevenSteps.Game
         SettingsController settingsController;
         OverlayStack overlays;
         BackNavigator back;
+        ChapterIntroController chapterIntro;
 
         /// The board controller (tests, tools).
         public BoardController Board => board;
@@ -81,14 +82,17 @@ namespace SevenSteps.Game
             board = gameObject.AddComponent<BoardController>();
             hud = new HudView(board, tiles, levels);
             var result = ResultView.Create();
-            var settings = SettingsPanel.Create(OverlayCanvas(), save, cfg.telemetryOnByDefault);
+            var overlayCanvas = OverlayCanvas();
+            var settings = SettingsPanel.Create(overlayCanvas, save, cfg.telemetryOnByDefault);
+            var chapterCard = ChapterCardView.CreateOptional(overlayCanvas); // null when the theme has no card
             settingsController = new SettingsController(save, settings, cfg.telemetryOnByDefault);
             overlays = new OverlayStack();
 
             // Board controller, then the flow controller on top of it
             board.Init(assets, levels, save, hud, cam, tiles, overrideCamera ? cameraRig : (CameraRig?)null, Services.Get<ITelemetry>());
-            flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, result, LevelCatalog.MinBodies, LevelCatalog.ChapterIdOf);
+            flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, result, LevelCatalog.MinBodies, LevelCatalog.ChapterKeyOf);
             back = new BackNavigator(overlays, flowController.Back);
+            chapterIntro = new ChapterIntroController(flowController, overlays, chapterCard, LevelCatalog.ChapterCard);
             board.InputBlocked = () => flow.IsLoading || overlays.Count > 0;
             board.FlowTakes = flowController.TakesCommand;
 
@@ -121,6 +125,7 @@ namespace SevenSteps.Game
         {
             flowController?.Dispose();
             settingsController?.Dispose();
+            chapterIntro?.Dispose();
         }
 
         /// Flow keys. Board keys are read by the board controller (blocked while an overlay is open or a scene loads).
