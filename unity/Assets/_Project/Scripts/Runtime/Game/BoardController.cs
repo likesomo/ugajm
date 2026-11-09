@@ -168,10 +168,30 @@ namespace SevenSteps.Game
             loadedStage = stage;
             lost = false;
             attempt = default; // a new attempt: select, next, again, [ ]
+            // One line per stage load for performance checks (WebGL console, player log): where a planet change spends time.
+            var clock = System.Diagnostics.Stopwatch.StartNew();
             EnterChapter(stage);
+            long chapterMs = clock.ElapsedMilliseconds;
             session.Load(levels[stage]); // Rebuild runs inside Load
+            long boardMs = clock.ElapsedMilliseconds - chapterMs;
             chapters?.Fit(board.Grid);
+            long fitMs = clock.ElapsedMilliseconds - chapterMs - boardMs;
+            Debug.Log($"[SevenSteps] Stage {stage + 1} loaded in {clock.ElapsedMilliseconds} ms (chapter {chapterMs}, board {boardMs}, fit {fitMs}); " +
+                      $"memory {UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() >> 20} MB reserved, {System.GC.GetTotalMemory(false) >> 20} MB managed");
+            if (isActiveAndEnabled) StartCoroutine(LogFirstFrames(stage));
             StageEntered?.Invoke(stage, via);
+        }
+
+        /// The slowest of the first frames after a stage load (first draws of a planet's shaders and textures happen here).
+        IEnumerator LogFirstFrames(int stage)
+        {
+            float worst = 0;
+            for (int k = 0; k < 5; k++)
+            {
+                yield return null;
+                worst = Mathf.Max(worst, Time.unscaledDeltaTime);
+            }
+            Debug.Log($"[SevenSteps] Stage {stage + 1} first frames: slowest {Mathf.RoundToInt(worst * 1000)} ms");
         }
 
         /// Replay a move string on the current stage (-replay / editor replay).

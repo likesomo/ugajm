@@ -1,6 +1,7 @@
 // Golden telemetry for the C# port: runs command strings through core.js + telemetry.js Tracker and writes the
 // time-independent events to server/fixtures/telemetry.golden.json. Unity's TelemetryTracker must produce the same.
 //   node server/tools/telemetry-golden.mjs [traces.golden.json]
+//   node server/tools/telemetry-golden.mjs --check [traces.golden.json]   (compare only, ignores CRLF; exit 1 if stale)
 // Input: the core agent's traces (unity/Assets/_Project/Tests/Golden/traces.golden.json, from the working tree or
 // origin/feat/core) plus the manual scenarios below.
 // Command letters: U D L R move, K keep, X switch, Z undo, * restart, H hint, > go to the next stage via the stage
@@ -90,7 +91,8 @@ function run({ id, def, level, commands }) {
   return { id, level, levelName: def.name, levelKey: levelKey(parsed), via: 'boot', commands, map: def.map, bodies: def.bodies, statueCount: parsed.statueCount ?? 0, events: clean };
 }
 
-const { source, json } = loadTraces(process.argv[2]);
+const CHECK = process.argv.includes('--check');
+const { source, json } = loadTraces(process.argv.slice(2).find((a) => a !== '--check'));
 const traces = [];
 for (const t of json.traces) {
   const key = levelKey(parseLevel(t.level));
@@ -121,6 +123,17 @@ const out = {
     'Commands: U D L R K X, Z undo, * restart, H hint, > next stage via selector. session_start uses firstTime:true, cleared:0; attempts start at 1.',
   traces,
 };
+const text = JSON.stringify(out, null, 1) + '\n';
+if (CHECK) {
+  // Windows checkouts may hold the file with CRLF (core.autocrlf): compare the content, never rewrite it.
+  const current = existsSync(OUT) ? readFileSync(OUT, 'utf8').replace(/\r\n/g, '\n') : '';
+  if (current !== text) {
+    console.error('server/fixtures/telemetry.golden.json is stale: run node server/tools/telemetry-golden.mjs and commit the result');
+    process.exit(1);
+  }
+  console.log('golden up to date');
+  process.exit(0);
+}
 mkdirSync(dirname(OUT), { recursive: true });
-writeFileSync(OUT, JSON.stringify(out, null, 1) + '\n');
+writeFileSync(OUT, text);
 console.log(`${traces.length} traces, ${traces.reduce((a, t) => a + t.events.length, 0)} events → server/fixtures/telemetry.golden.json`);
