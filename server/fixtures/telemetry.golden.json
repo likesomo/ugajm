@@ -176,7 +176,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 1
+     "bodiesUsed": 1,
+     "stars": 3
     }
    ]
   },
@@ -3675,7 +3676,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 1
+     "bodiesUsed": 1,
+     "stars": 3
     }
    ]
   },
@@ -4010,7 +4012,8 @@
      "restarts": 1,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 1
+     "bodiesUsed": 1,
+     "stars": 2
     },
     {
      "seq": 22,
@@ -4358,7 +4361,8 @@
      "restarts": 1,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 1
+     "bodiesUsed": 1,
+     "stars": 2
     },
     {
      "seq": 44,
@@ -6468,7 +6472,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 2
+     "bodiesUsed": 2,
+     "stars": 3
     }
    ]
   },
@@ -9885,7 +9890,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 2
+     "bodiesUsed": 2,
+     "stars": 3
     }
    ]
   },
@@ -13031,7 +13037,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 2
+     "bodiesUsed": 2,
+     "stars": 3
     }
    ]
   },
@@ -16485,7 +16492,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 1
+     "bodiesUsed": 1,
+     "stars": 3
     }
    ]
   },
@@ -19714,7 +19722,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 1
+     "bodiesUsed": 1,
+     "stars": 3
     }
    ]
   },
@@ -22665,7 +22674,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 2
+     "bodiesUsed": 2,
+     "stars": 3
     }
    ]
   },
@@ -26220,7 +26230,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 2
+     "bodiesUsed": 2,
+     "stars": 3
     }
    ]
   },
@@ -29766,7 +29777,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 2
+     "bodiesUsed": 2,
+     "stars": 3
     }
    ]
   },
@@ -33596,7 +33608,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 3
+     "bodiesUsed": 3,
+     "stars": 3
     }
    ]
   },
@@ -37136,7 +37149,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 3
+     "bodiesUsed": 3,
+     "stars": 3
     }
    ]
   },
@@ -40526,7 +40540,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 2
+     "bodiesUsed": 2,
+     "stars": 3
     }
    ]
   },
@@ -44154,7 +44169,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 4
+     "bodiesUsed": 4,
+     "stars": 3
     }
    ]
   },
@@ -47935,7 +47951,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 3
+     "bodiesUsed": 3,
+     "stars": 3
     }
    ]
   },
@@ -51971,7 +51988,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 4
+     "bodiesUsed": 4,
+     "stars": 3
     }
    ]
   },
@@ -55962,7 +55980,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 4
+     "bodiesUsed": 4,
+     "stars": 3
     }
    ]
   },
@@ -59333,7 +59352,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 3
+     "bodiesUsed": 3,
+     "stars": 3
     }
    ]
   },
@@ -62938,7 +62958,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 3
+     "bodiesUsed": 3,
+     "stars": 3
     }
    ]
   },
@@ -66744,7 +66765,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 3
+     "bodiesUsed": 3,
+     "stars": 3
     }
    ]
   },
@@ -70373,7 +70395,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 1
+     "bodiesUsed": 1,
+     "stars": 3
     }
    ]
   },
@@ -74004,7 +74027,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 3
+     "bodiesUsed": 3,
+     "stars": 3
     }
    ]
   },
@@ -77270,7 +77294,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 2
+     "bodiesUsed": 2,
+     "stars": 3
     }
    ]
   },
@@ -80915,7 +80940,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 1
+     "bodiesUsed": 1,
+     "stars": 3
     }
    ]
   },
@@ -82740,7 +82766,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 3
+     "bodiesUsed": 3,
+     "stars": 1
     }
    ]
   },
@@ -84211,7 +84238,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 2
+     "bodiesUsed": 2,
+     "stars": 1
     },
     {
      "seq": 20,
@@ -84714,7 +84742,8 @@
      "restarts": 1,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 2
+     "bodiesUsed": 2,
+     "stars": 1
     }
    ]
   },
@@ -86770,7 +86799,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 1
+     "bodiesUsed": 1,
+     "stars": 3
     }
    ]
   },
@@ -92492,7 +92522,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 1
+     "bodiesUsed": 1,
+     "stars": 3
     },
     {
      "seq": 11,
@@ -92719,7 +92750,8 @@
      "restarts": 0,
      "hints": 1,
      "fails": 0,
-     "bodiesUsed": 1
+     "bodiesUsed": 1,
+     "stars": 1
     }
    ]
   },
@@ -93068,7 +93100,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 1
+     "bodiesUsed": 1,
+     "stars": 3
     },
     {
      "seq": 11,
@@ -93763,7 +93796,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 1
+     "bodiesUsed": 1,
+     "stars": 3
     }
    ]
   },
@@ -94116,7 +94150,8 @@
      "restarts": 0,
      "hints": 0,
      "fails": 0,
-     "bodiesUsed": 2
+     "bodiesUsed": 2,
+     "stars": 3
     }
    ]
   },

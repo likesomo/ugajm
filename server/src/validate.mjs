@@ -36,7 +36,7 @@ export const EVENTS = {
   body_lost: [{ ...AT, reason: oneOf('fell', 'vanish', 'statue', 'switch', 'bridge', 'seal') }, { wasted: bool }],
   level_fail: [{ ...LEVEL, at: xy }, { moves: int(), bodiesUsed: int(0, 99) }],
   level_clear: [{ ...LEVEL, durationMs: int(), moves: int() }, {
-    undos: int(), restarts: int(), hints: int(), fails: int(), bodiesUsed: int(0, 99), minMoves: int(),
+    undos: int(), restarts: int(), hints: int(), fails: int(), bodiesUsed: int(0, 99), minMoves: int(), stars: int(1, 3),
   }],
   level_leave: [{ ...LEVEL, durationMs: int() }, {
     toLevel: int(1, 999), moves: int(), undos: int(), restarts: int(), hints: int(), fails: int(),

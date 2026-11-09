@@ -1,3 +1,5 @@
+import { starsFor } from '../../prototypes/seven-steps/src/telemetry.js';
+
 // Aggregations for the dashboard. Works on rows from db.query(); events are replayed per session
 // into "attempts" (level_start .. level_clear | level_leave | end of session) so every metric shares one definition.
 export const QUIT_AFTER_MS = 30 * 60 * 1000; // an attempt with no event for this long counts as abandoned
@@ -95,6 +97,8 @@ export function buildAttempts(rows, now = Date.now(), minMovesFor = () => null) 
           if (d.wasted) cur.wasted++;
         } else if (r.type === 'level_clear') {
           cur.bodiesUsed = d.bodiesUsed ?? null;
+          cur.clientStars = d.stars ?? null;
+          cur.clearCounts = { hints: d.hints ?? cur.hints, undos: d.undos ?? cur.undos, restarts: d.restarts ?? cur.restarts };
           if (d.minMoves != null) cur.minMoves = d.minMoves;
           close('clear', r.t, d.durationMs);
         } else if (r.type === 'level_leave') {
@@ -131,7 +135,10 @@ export function stageResolver(levels = []) {
     const byNumber = !a.levelKey && !a.levelName ? levels.find((l) => l.n === a.level) : null; // nothing else to go on
     const hit = levels.length ? (a.levelKey && byKey.get(a.levelKey)) || (a.levelName && byName.get(a.levelName)) || byNumber || null : null;
     if (!levels.length) r = { slot: `n:${a.level}`, n: a.level, name: a.levelName, key: a.levelKey, chapter: a.chapter ?? '', match: 'number' };
-    else if (hit) r = { slot: `n:${hit.n}`, n: hit.n, name: hit.name, key: hit.key, chapter: hit.chapter || a.chapter || '', match: a.levelKey && a.levelKey === hit.key ? 'key' : a.levelName ? 'name' : 'number' };
+    else if (hit) {
+      const match = a.levelKey && a.levelKey === hit.key ? 'key' : a.levelName ? 'name' : 'number';
+      r = { slot: `n:${hit.n}`, n: hit.n, name: hit.name, key: hit.key, chapter: hit.chapter || a.chapter || '', match, minBodies: match === 'name' ? null : hit.minBodies ?? null };
+    }
     else {
       const id = a.levelKey || a.levelName || `#${a.level}`;
       r = { slot: `old:${id}`, n: null, name: a.levelName || `#${a.level}`, key: a.levelKey, chapter: a.chapter ?? '', match: 'old' };
@@ -139,6 +146,15 @@ export function stageResolver(levels = []) {
     cache.set(ck, r);
     return r;
   };
+}
+
+// Stars of a cleared attempt: what the client sent, else plan B from the level_clear counts and the fewest bodies of
+// the stage's current map (null when that is unknown, e.g. the map changed since).
+export function attemptStars(a, stage) {
+  if (a.outcome !== 'clear') return { stars: null, source: '' };
+  if (a.clientStars) return { stars: a.clientStars, source: 'client' };
+  const stars = starsFor({ bodiesUsed: a.bodiesUsed, minBodies: stage.minBodies, ...a.clearCounts });
+  return { stars, source: stars ? 'server' : '' };
 }
 
 function aggregate(rows, levels, now) {
@@ -152,11 +168,12 @@ function aggregate(rows, levels, now) {
         attempts: 0, players: new Set(), clearPlayers: new Set(), clears: 0, leaves: 0, quits: 0, open: 0,
         clearMs: [], allMs: [], clearMoves: [], undos: 0, restarts: 0, hints: 0, fails: 0, blocked: 0,
         idles: 0, idleMs: 0, wasted: 0, lost: {}, sessions: new Set(), sessionEnds: 0, playerQuits: 0, hintPlayers: new Set(),
+        bestStars: new Map(), minBodies: st.minBodies ?? null,
       });
     }
     return by.get(st.slot);
   };
-  for (const l of levels) get({ slot: `n:${l.n}`, n: l.n, name: l.name, key: l.key, chapter: l.chapter });
+  for (const l of levels) get({ slot: `n:${l.n}`, n: l.n, name: l.name, key: l.key, chapter: l.chapter, minBodies: l.minBodies });
 
   for (const a of attempts) {
     a.stage = resolve(a);
@@ -170,6 +187,8 @@ function aggregate(rows, levels, now) {
     else if (a.outcome === 'quit') s.quits++;
     else s.open++;
     if (a.outcome !== 'open') s.allMs.push(a.durationMs);
+    const { stars } = attemptStars(a, a.stage);
+    if (stars) s.bestStars.set(a.playerId, Math.max(stars, s.bestStars.get(a.playerId) ?? 0));
     s.undos += a.undos; s.restarts += a.restarts; s.hints += a.hints; s.fails += a.fails; s.blocked += a.blocked;
     s.idles += a.idles; s.idleMs += a.idleMs; s.wasted += a.wasted;
     if (a.hints) s.hintPlayers.add(a.playerId);
@@ -225,7 +244,16 @@ export function levelStats(rows, levels = [], now = Date.now()) {
     undosPerAttempt: per(s.undos, s.attempts), restartsPerAttempt: per(s.restarts, s.attempts),
     hintPlayerRate: rate(s.hintPlayers.size, s.players.size),
     idles: s.idles, idleMs: s.idleMs, wastedBodies: s.wasted, bodyLost: s.lost,
+    minBodies: s.minBodies,
+    ...starColumns(s.bestStars, s.clearPlayers.size),
   }));
+}
+
+// Players by their best stars on a stage: stars1..3, starsKnown (clear players with a star value), star3Rate of those.
+function starColumns(best, clearPlayers) {
+  const n = [0, 0, 0, 0];
+  for (const v of best.values()) n[v]++;
+  return { stars1: n[1], stars2: n[2], stars3: n[3], starsKnown: best.size, starsUnknown: clearPlayers - best.size, star3Rate: rate(n[3], best.size), star2PlusRate: rate(n[2] + n[3], best.size) };
 }
 
 // Per-chapter summary over the current build's stages (old maps left out), in play order.
@@ -340,7 +368,11 @@ export function toCsv(objs, cols = objs.length ? Object.keys(objs[0]) : []) {
   return [cols.join(','), ...objs.map((o) => cols.map((c) => CSV_ESC(o[c])).join(','))].join('\n') + '\n';
 }
 
-const stageColumns = (st) => ({ chapter: st.chapter, stageNow: st.n ?? '', stageMatch: st.match });
+// Columns from the attempt's current stage: chapter, stage number now, how it was matched, and its stars.
+const stageColumns = (a, st) => {
+  const { stars, source } = attemptStars(a, st);
+  return { chapter: st.chapter, stageNow: st.n ?? '', stageMatch: st.match, stars: stars ?? '', starsSource: source };
+};
 
 // One row per attempt; columns follow design/levels/telemetry-mapping.md section 4.1 (feat/levels).
 export const ATTEMPT_COLUMNS = [
@@ -348,7 +380,7 @@ export const ATTEMPT_COLUMNS = [
   'sessionFirstTime', 'startT', 'endT', 'outcome', 'durationMs', 'activeMs', 'moves', 'blocked', 'undos', 'restarts',
   'hints', 'fails', 'bodiesUsed', 'minMoves', 'idleCount', 'idleMsTotal', 'idleMsMax', 'firstHintMs', 'bodiesWasted',
   'lostFell', 'lostVanish', 'lostStatue', 'lostSwitch', 'lostBridge', 'lostSeal', 'keeps', 'switches',
-  'lastStuckToClearMoves', 'lastStuckToClearMs', 'nextLevelStarted', 'chapter', 'stageNow', 'stageMatch',
+  'lastStuckToClearMoves', 'lastStuckToClearMs', 'nextLevelStarted', 'chapter', 'stageNow', 'stageMatch', 'stars', 'starsSource',
 ];
 
 // levels (optional): adds chapter, stageNow (stage number in the current build, '' for an old map) and
@@ -365,7 +397,7 @@ export function attemptRows(rows, now = Date.now(), minMovesFor, levels = []) {
     lostFell: a.lost.fell ?? 0, lostVanish: a.lost.vanish ?? 0, lostStatue: a.lost.statue ?? 0, lostSwitch: a.lost.switch ?? 0,
     lostBridge: a.lost.bridge ?? 0, lostSeal: a.lost.seal ?? 0, keeps: a.keeps, switches: a.switches,
     lastStuckToClearMoves: a.lastStuckToClearMoves, lastStuckToClearMs: a.lastStuckToClearMs, nextLevelStarted: a.nextLevelStarted,
-    ...stageColumns(resolve(a)),
+    ...stageColumns(a, resolve(a)),
   }));
 }
 
