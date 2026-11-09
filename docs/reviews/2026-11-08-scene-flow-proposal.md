@@ -73,3 +73,57 @@ EditMode + 가짜 로더 + `smoke`/`smoke-webgl`로 S0~S4를 덮을 수 있다. 
 - `EntryTracker`: 정적 플래그 제거, 인자 검사 단정적. `Services`에 Game 타입을 등록하는 것은 로케이터 규칙(조회는 씬 루트만)과 맞다.
 - `Bootstrap.FirstStage`: 실행 인자·URL은 외부 입력이라 경고 + 마지막 스테이지(9장 규칙과 같음).
 - 공용 API 영향: `AppFlow` 생성자·`ISceneLoader` 멤버 추가로 다른 브랜치의 가짜 로더·직접 생성 코드는 컴파일 오류. 리드 고지.
+
+## S3 검토: feat/scene-flow f8c875e (83a55d6, 70ccc03, 0fc35a3, 18029f4, e83bb64; 2026-11-09)
+
+**결론: 승인.** 9장 MVC·단정 규칙, 텔레메트리 시점, 씬 참조 모두 문제 없음. 코드 읽기(테스트·스모크는 씬 플로우 보고).
+
+- **GUID 유지**: `GameController.cs`·`TitleScreen.cs`는 같은 파일·같은 `.meta`로 **씬 루트 클래스로 남는다**(이름·GUID 그대로라 `Game.unity`/`Title.unity`의 컴포넌트 참조와 인스펙터 값 `assets`/`config`/`startLevel`/`replay`/`overrideCamera` 유지). `BoardController`는 루트가 `AddComponent`로 붙이므로 씬 파일 변경 없음. 새 파일은 모두 `.meta` 동반, 씬 파일 변경 없음.
+- **MVC**: `GameController` = 조립(Services는 여기서만), `BoardController` = 보드 진행(`AppFlow`를 모름, `IStageBoard`로 `Won`/`WinPresented`/`Lost`/`Recovered`만 냄), `GameFlowController`/`TitleFlowController` = 순수 C# 흐름. 뷰(`HudView`, `ResultView`, `TitleView`/`StageSelectView`)는 이벤트만 내고 `Services`·`AppFlow`·컨트롤러를 모른다. `HudView`가 받는 것은 코루틴용 `MonoBehaviour`와 `TileSet`(지난 권장 `SetBodyLook` 대신 생성자 주입으로 해결).
+- **단정적**: 루트 `Awake`에서 `assets`/`config`/MainCamera/TileSet 없으면 예외, 컨트롤러 생성자 null 검사, `LoadStage` 범위·via 검사, 결과 화면 `ResultModel` 생성자 검사. 지금 할 수 없는 흐름 입력은 `CanGoToGame`/`CanBack`/`IsLoading`으로 드러내 무시. 저장 데이터·솔버 값이 범위 밖이면 0(모름)으로(외부 입력 예외 규칙).
+- **텔레메트리(5.1)**: `StageLeaving` → `session.Load` → `StageEntered(via)` 순서가 예전 `GameController.EnterStage`와 같다. via는 `EntryTracker.TakeVia()`가 `Enter`에서 한 번. 씬을 넘는 `level_leave`는 예전처럼 `BoardController.OnDestroy` → `TelemetryRecorder.Dispose` → `PendingLeaveState` 경로 그대로. 클리어 저장은 `Won`(HUD 갱신 전), 결과 패널은 `WinPresented`에서 `Go(Result)` — 7lucky 동작과 같다.
+- **흐름**: 다른 씬으로 가는 `Changed`는 `IsLoading`이라 무시하고 새 씬 루트의 `Start`가 진입(진입 경로 하나, 11.1). Result에서 R = 다시 하기(`TakesCommand`), 로드 중 보드 입력 차단.
+
+### 남은 것 (막지 않음)
+- `GameController.LevelIndex`/`Levels` 공개 속성은 아트 프리뷰 `RuinsHengeEnvironment`가 `FindFirstObjectByType<GameController>`로 읽기 때문에 남았다. 12.8 `IStageEnvironment.Fit`으로 옮기면 지운다.
+- Esc·설정 패널 처리가 아직 `GameController.Update`/`TitleScreen`에 있다 → S4(`OverlayStack` + `BackNavigator`).
+- `BoardController`의 문구 표·힌트·사운드 정리는 게임플레이/UI 몫(리드 배분, 동시 수정 금지 순서대로).
+
+## S4 검토: feat/scene-flow 614236b (753fc60, 2026-11-09)
+
+**결론: 승인.** 코드 읽기(테스트는 씬 플로우 보고).
+- `OverlayStack`(순수 C#, `Game/Flow/` — 위치 결정대로): 열린 것 다시 열기·맨 위가 아닌 것 닫기는 예외, 닫기 버튼 구독을 스택이 관리해 해제 누락 없음. "열려 있나"의 기준이 스택 하나뿐(`Count`).
+- `BackNavigator`: Esc = 맨 위 오버레이 닫기, 없으면 흐름 Back(`TryGetBackTarget`). Esc 처리가 루트 `Update` 한 곳. 로드 중에는 루트가 먼저 돌아간다.
+- 오버레이 중 보드 입력 차단(`InputBlocked = IsLoading || overlays.Count > 0`), `Time.timeScale` 안 씀.
+- `SettingsPanel` = `IOverlay` 뷰(이벤트만, `Services` 조회 제거), `SettingsController`가 바꾸고 저장. 바꿀 때마다 저장은 PlayerPrefs 쓰기가 버튼 클릭당 한 번이라 문제 없음.
+- `ChapterEntering(from, to, stage)`: 보드 로드 전에 한 번, 첫 진입은 `from` = null. 12.8 챕터 프리셋 적용과 전환 카드가 여기 붙는다.
+
+### 후속
+- **아키텍트 할 일 끝냄**: `SaveSystem` 명령 `SetMasterVolume`/`SetSfxVolume`/`SetTelemetryChoice`/`TelemetryOn`(11.3, feat/architecture). `SettingsController`는 필드 직접 수정 대신 이것을 쓰도록 다음 커밋에서 바꿀 것(`Step`의 반올림·자르기·playerId 지우기가 그대로 들어 있다).
+- `ChapterEntering`의 챕터 비교는 문자열 그대로라 `""`(챕터 없음 = 첫 챕터)와 첫 챕터 id(`"moss"`)가 다르게 보인다. `chapters.json`이 생기면 `ChapterFileDto.Get(id)`로 정규화한 id를 비교할 것(6.4).
+
+## S6 검토: feat/scene-flow 09a07b3 (07927a9 UiTheme, 0b3d260 패널 프리팹, 2026-11-09)
+
+**결론: 승인.** 코드 읽기(테스트는 씬 플로우 보고).
+- `UiTheme`(SO, Game 어셈블리): 글꼴·색·패널 프리팹. `Ui.Theme` 세터가 null·글꼴 없음을 바로 예외로, 게터도 미설정이면 예외(fail fast). 정적 `theme`은 기존 `Ui` 리셋 훅이 비운다(`PlayResetTests` 대상 유지). `Ui.Ink` 등 기존 호출 모양은 그대로라 코드 생성 UI 영향 없음.
+- 패널 프리팹(`UI/Prefabs/SettingsPanel`, `ResultPanel`): 뷰가 직렬화 참조를 `Validate`로 `OnValidate`(에디터 오류)·`Awake`(예외)·`SceneFlowValidator`(빌드 전)에서 검사 — 9장 그대로. `Create`는 테마에 프리팹이 없으면 예외.
+- `UiBuilder`: 없을 때만 만든다(있으면 그대로 둠) → 첫 생성 후 프리팹 손편집이 덮이지 않는다. 좋다.
+- `SettingsController`가 아키텍트 `SaveSystem` 명령(`SetMasterVolume`/`SetSfxVolume`/`SetTelemetryChoice`/`TelemetryOn`)을 쓴다 — S4 후속 해결.
+- 사소: `SettingsController.Saved`의 `AudioListener.volume = ...`은 `GameAudio.ApplyMaster`와 같은 일 — 한 곳(`ApplyMaster`)으로.
+- 소유권: `UI/Prefabs/**`는 README상 게임플레이/UI(`UI/**`). 이번 첫 생성은 씬 플로우가 했으니 이후 내용 편집은 게임플레이/UI, 테마 값은 아트로(리드 확인).
+
+### 결정: 챕터별 UiTheme는 `ChapterPreset`에 넣지 않는다
+1. **의존 방향**: `ChapterPreset`은 Contracts, `UiTheme`은 Game(패널 프리팹 타입 `SettingsPanel`/`ResultView`를 참조)이다. Contracts가 Game 타입을 참조할 수 없고, `UiTheme`을 Contracts로 옮기면 뷰 타입까지 끌려온다(2장 순환 금지).
+2. **일관성**: 글꼴·버튼·패널 모양은 게임 전체의 정체성이다. 행성마다 바뀌면 조작 UI가 낯설어진다. 아트 바이블의 테마는 하나다.
+3. **비용**: 코드 생성 HUD는 테마를 생성 시점에 읽어 챕터 전환 때 다시 만들어야 한다.
+
+대신: 챕터 분위기는 보드·조명·하늘(12.8)과 챕터 전환 카드(`ChapterEntering` 오버레이, 문구는 `ChapterInfo`)가 맡는다. 챕터마다 UI 강조색이 꼭 필요해지면 `ChapterPreset`에 `Color uiAccent` 하나를 추가하고(Contracts 타입만), HUD가 `ChapterEntering`에서 그 색만 바꾸는 방식으로 한다(아키텍트에게 요청).
+
+## S5 검토: feat/scene-flow 1f9f462 (AppFlow 로드 실패 되돌림, 페이드 SceneLoader, 2026-11-09)
+
+**결론: 승인.** S2 메모(로드 실패 시 `IsLoading` 고착) 해결. 11.1·8장·변경 기록 반영.
+- `AppFlow.Go`: `Load` 예외 시 `loadingScene`·`State` 되돌리고 다시 던짐, `Changed` 없음. `GoToGame`은 `Stage`도 되돌림. 테스트 있음.
+- `SceneLoader`: `CanStreamedLevelBeLoaded`로 `Load`에서 사전 거부(코루틴 시작 전 → 되돌림 경로가 맞게 동작). 정상 경로 페이드 아웃 → `LoadSceneAsync` → `sceneLoaded` → `Loaded` → 한 프레임 → 페이드 인. `sceneLoaded`는 대기 중에만 구독. `unscaledDeltaTime` 사용.
+- DDOL `SceneFader`: 텔레메트리 러너는 텔레메트리가 꺼지면 없으므로 별도 오브젝트가 맞다. 8장 "DDOL은 러너 하나" 문구를 두 개로 고쳤다. `SceneLoader`는 부트스트랩마다 새로 만들어지고 Play 끝에 DDOL도 사라져 도메인 리로드 꺼짐에서도 중복 없음.
+- 사소: `LoadSceneAsync`가 null인 비정상 경로는 `Loaded`를 내서 흐름은 풀리지만 `AppFlow.State`는 새 상태, 씬은 이전 씬으로 어긋난다. 오류 로그가 크게 남고 사전 검사 뒤라 사실상 안 일어나므로 둔다.
+- 텔레메트리: 씬을 넘는 `level_leave`가 페이드 아웃(0.15초)만큼 늦게 나간다. 순서·값은 같고 시간만 조금 늘어남(골든은 씬을 안 쓰므로 영향 없음).

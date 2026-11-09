@@ -4,27 +4,18 @@ using UnityEngine.UI;
 
 namespace SevenSteps.Game.UI
 {
-    /// Small helpers for building uGUI from code (legacy Text with the Jua font, so no TMP setup is needed).
-    public static class Ui
+    /// Small helpers for building uGUI from code (legacy Text, so no TMP setup is needed). Font and colors come from
+    /// <see cref="Theme"/> (UiTheme.cs, docs/scene-flow.md S6).
+    public static partial class Ui
     {
-        public static Font Font;
-        public static readonly Color Ink = new Color32(0xec, 0xe6, 0xd6, 0xff);
-        public static readonly Color Dim = new Color32(0x7d, 0x76, 0x90, 0xff);
-        public static readonly Color Gold = new Color32(0xf2, 0xc1, 0x4e, 0xff);
-        public static readonly Color Stone = new Color32(0x9a, 0x94, 0x8a, 0xff);
-        public static readonly Color ButtonBg = new Color32(0x2a, 0x26, 0x35, 0xff);
-        public static readonly Color PanelBg = new Color32(0x1f, 0x1c, 0x2a, 0xf2);
-        public static readonly Color PlateA = new Color32(0xe7, 0x6f, 0x51, 0xff);
-        public static readonly Color PlateB = new Color32(0x2a, 0x9d, 0x8f, 0xff);
-        public static readonly Color PlateC = new Color32(0x8e, 0x7d, 0xbe, 0xff);
 
         static Sprite circle;
 
-        /// Domain reload is disabled in the editor: drop the previous Play's font and generated sprite.
+        /// Domain reload is disabled in the editor: drop the previous Play's theme and generated sprite.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetForPlay()
         {
-            Font = null;
+            theme = null;
             circle = null;
         }
 

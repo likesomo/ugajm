@@ -69,8 +69,8 @@ Unity 씬·프리팹은 git으로 합치기 어렵다. **한 파일은 한 에�
 |---|---|
 | `Assets/_Project/Scripts/Runtime/Core/**`, `Assets/_Project/Tests/**`, `prototypes/seven-steps/src/core.js` | 코어 |
 | `Assets/_Project/Data/levels.json`, `prototypes/seven-steps/src/levels.js`, `design/levels/**`, `prototypes/seven-steps/experiments/**`, 웹 프로토타입 화면(`prototypes/seven-steps/src/main.js`·`style.css`, 텔레메트리 훅 제외) | 레벨 디자인 |
-| `Assets/_Project/Scripts/Runtime/Game/**` (아래 씬 플로우 영역 제외. 화면 내용 `BoardView`·`HudView`·패널 요소는 게임플레이/UI), `Assets/_Project/UI/**` (UI 프리팹) | 게임플레이/UI |
-| `Assets/_Project/Scenes/**`, `Assets/_Project/Scripts/Runtime/Game/App/**`, 새 흐름·전환 코드, `docs/scene-flow.md` (2026-11-08부터) | 씬 플로우 |
+| `Assets/_Project/Scripts/Runtime/Game/**` (아래 씬 플로우 영역 제외. 화면 내용 `BoardView`·`HudView`·패널 요소는 게임플레이/UI), `Assets/_Project/UI/**` (UI 프리팹 전부. S6에서 씬 플로우가 처음 만든 `SettingsPanel`·`ResultPanel` 프리팹도 이후 편집은 게임플레이/UI), `Data/UiTheme_*.asset` 값 | 게임플레이/UI |
+| `Assets/_Project/Scenes/**`, `Assets/_Project/Scripts/Runtime/Game/App/**`, `Game/Flow/**`, `Scripts/Editor/SceneFlow/**`(검증기·`UiBuilder`), `Tests/EditMode/Flow/**`, `UiTheme` 타입, 새 흐름·전환 코드, `docs/scene-flow.md` (2026-11-08부터) | 씬 플로우 |
 | `Assets/Shared/**` (git 밖 공유 폴더, **아트만 추가·수정**), `Assets/_Project/Art/**`, `Assets/_Project/Prefabs/Tiles/**`, `Assets/Settings/*RPAsset*`, `design/art/**` (`design/art/CREDITS.md` 포함) | 아트 |
 | `*.asmdef`, `docs/architecture.md`, 공용 인터페이스(아키텍트가 지정한 파일), `Packages/manifest.json` | 아키텍트 |
 | `server/**`, `docs/telemetry.md`, `prototypes/seven-steps/src/telemetry.js`, `prototypes/seven-steps/src/main.js`의 텔레메트리 훅 부분 (main.js의 나머지는 건드리지 않는다) | 백엔드/분석 |

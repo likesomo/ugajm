@@ -111,19 +111,22 @@ namespace SevenSteps.Game.Telemetry
             if (cmd.Type == CommandType.Move)
             {
                 int first = Rules.Neighbor(before.Level, before.Pos, cmd.Dir);
-                bool blocked = Has(r, GameEventType.Bump);
-                // step = the step count after this move: entering mud costs 2 (core rule). A blocked move reports Used + 1 (telemetry.js).
-                int step = before.Used + (!blocked && first >= 0 && Rules.TileAt(before, first) == 'm' ? 2 : 1);
                 string dir = DirName(cmd.Dir);
-                if (blocked)
+                if (Has(r, GameEventType.Bump))
                 {
+                    // A blocked move reports Used + 1 (telemetry.js), whatever the cell would have cost.
                     int at = EvAt(r, GameEventType.Bump);
                     string blockedBy = at >= 0 && Rules.Contains(before.Statues, at) ? N.Tile.Statue : TileKind(before, at);
-                    Emit(Base(before, L, step, dir).WithCell("to", at, w).With("result", N.MoveResult.Blocked).With("blockedBy", blockedBy));
+                    Emit(Base(before, L, before.Used + 1, dir).WithCell("to", at, w).With("result", N.MoveResult.Blocked).With("blockedBy", blockedBy));
                     return;
                 }
                 run.Moves++;
-                land = FirstAt(r);
+                // Step and landing cell come from the core's landing event: its StepIdx already counts mud as 2 steps,
+                // so the step cost is not computed again here (docs/architecture.md 9, review of 61180ac).
+                var landing = Landing(r);
+                int step = landing.StepIdx;
+                if (step <= before.Used) throw new InvalidOperationException($"TelemetryTracker: landing event {landing.Type} has step {step} after {before.Used} used");
+                land = landing.At;
                 string firstTile = TileKind(before, first);
                 string result = N.MoveResult.Moved;
                 if (Has(r, GameEventType.Fall)) result = N.MoveResult.Fell;
@@ -236,11 +239,13 @@ namespace SevenSteps.Game.Telemetry
             GameEventType.Choose, GameEventType.Stone, GameEventType.Step,
         };
 
-        /// Landing cell (after any ice slide), taken from the rule events in telemetry.js order.
-        static int FirstAt(StepResult r)
+        /// Landing event of an unblocked move (cell after any ice slide, and the step it took), in telemetry.js order.
+        static GameEvent Landing(StepResult r)
         {
-            foreach (var t in LandingOrder) if (Has(r, t)) return EvAt(r, t);
-            return -1;
+            foreach (var t in LandingOrder)
+                foreach (var e in r.Events)
+                    if (e.Type == t) return e;
+            throw new InvalidOperationException("TelemetryTracker: unblocked move without a landing event");
         }
 
         static string LostReason(GameEventType t) => t switch

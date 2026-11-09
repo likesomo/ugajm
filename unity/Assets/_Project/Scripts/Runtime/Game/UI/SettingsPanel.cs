@@ -1,108 +1,160 @@
+using System;
+using System.Collections.Generic;
 using SevenSteps.Contracts;
+using SevenSteps.Game.Flow;
 using UnityEngine;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace SevenSteps.Game.UI
 {
     /// <summary>
-    /// Settings overlay shared by the Title and Game scenes: master/sfx volume and the play-data (telemetry) consent.
-    /// Edits <see cref="SaveSystem.Settings"/> and saves on close (docs/architecture.md 11.3), which raises SettingsChanged
-    /// so audio and telemetry react. Volume is previewed live through AudioListener while open.
+    /// Settings overlay shared by the Title and Game scenes (view only, docs/scene-flow.md 4.7, S4, S6): master/sfx volume and
+    /// the play-data (telemetry) consent. Prefab UI/Prefabs/SettingsPanel.prefab (referenced by UiTheme.settingsPanel), placed
+    /// under an overlay canvas by the scene root and given the SaveSystem with <see cref="Init"/>. Reads
+    /// <see cref="SaveSystem.Settings"/> to draw and raises events; the <see cref="SettingsController"/> changes and saves.
+    /// Opened and closed through the OverlayStack.
     /// </summary>
-    public sealed class SettingsPanel
+    public sealed class SettingsPanel : MonoBehaviour, IOverlay
     {
-        const float VolumeStep = 0.1f;
+        public const float VolumeStep = 0.1f;
 
-        readonly SaveSystem save;
-        readonly GameObject root;
-        readonly Text masterText, sfxText, telemetryText, telemetryNote;
+        public Text masterText, sfxText, telemetryText, telemetryNote;
+        public Button masterDown, masterUp, sfxDown, sfxUp, telemetryToggle, close;
 
-        public bool IsOpen => root.activeSelf;
+        SaveSystem save;
+        bool telemetryOnByDefault;
 
-        public SettingsPanel(Transform parent, SaveSystem save)
+        /// +/- on a volume row: the step (+0.1 or -0.1).
+        public event Action<float> MasterVolumeStepped, SfxVolumeStepped;
+        public event Action TelemetryToggled;
+        public event Action CloseRequested;
+
+        /// Required references missing in the prefab, one line each (OnValidate, Awake, SceneFlowValidator).
+        public void Validate(List<string> issues)
         {
-            this.save = save;
-            var dim = Ui.MakeImage(parent, new Color(0, 0, 0, 0.6f), null, "Settings");
-            dim.rectTransform.Stretch();
-            dim.raycastTarget = true;
-            root = dim.gameObject;
-
-            var panel = Ui.MakeImage(dim.transform, Ui.PanelBg, null, "Panel");
-            panel.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(520, 380));
-            var title = Ui.Label(panel.transform, "설정", 34, Ui.Gold, TextAnchor.MiddleCenter, "Title");
-            title.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -22), new Vector2(480, 44));
-
-            masterText = VolumeRow(panel.transform, "전체 음량", -90, d => Change(ref save.Settings.masterVolume, d));
-            sfxText = VolumeRow(panel.transform, "효과음", -150, d => Change(ref save.Settings.sfxVolume, d));
-
-            var tLabel = Ui.Label(panel.transform, "플레이 기록 보내기", 20, Ui.Ink, TextAnchor.MiddleLeft, "TelemetryLabel");
-            tLabel.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(-110, -210), new Vector2(240, 40));
-            var tb = Ui.MakeButton(panel.transform, "", 18, ToggleTelemetry, out telemetryText, "TelemetryToggle");
-            ((RectTransform)tb.transform).Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(150, -210), new Vector2(140, 40));
-            telemetryNote = Ui.Label(panel.transform, "", 14, Ui.Dim, TextAnchor.MiddleCenter, "TelemetryNote");
-            telemetryNote.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -256), new Vector2(480, 40));
-
-            var close = Ui.MakeButton(panel.transform, "닫기 (Esc)", 20, Close, out _, "Close");
-            ((RectTransform)close.transform).Place(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 24), new Vector2(200, 44));
-
-            root.SetActive(false);
+            void Need(Object o, string field) { if (o == null) issues.Add($"SettingsPanel {name}: {field} is not set"); }
+            Need(masterText, nameof(masterText)); Need(sfxText, nameof(sfxText));
+            Need(telemetryText, nameof(telemetryText)); Need(telemetryNote, nameof(telemetryNote));
+            Need(masterDown, nameof(masterDown)); Need(masterUp, nameof(masterUp));
+            Need(sfxDown, nameof(sfxDown)); Need(sfxUp, nameof(sfxUp));
+            Need(telemetryToggle, nameof(telemetryToggle)); Need(close, nameof(close));
         }
 
-        public void Open()
+        void OnValidate()
         {
-            root.transform.SetAsLastSibling();
-            root.SetActive(true);
+            var issues = new List<string>();
+            Validate(issues);
+            foreach (var i in issues) Debug.LogError("[SevenSteps] " + i, this);
+        }
+
+        bool wired;
+
+        void Awake() => Wire();
+
+        /// Checks the references and connects the buttons once (also from Init: the prefab root is saved inactive, and
+        /// Awake does not run in edit-mode tests).
+        void Wire()
+        {
+            if (wired) return;
+            var issues = new List<string>();
+            Validate(issues);
+            if (issues.Count > 0) throw new MissingReferenceException("[SevenSteps] " + string.Join("; ", issues));
+            masterDown.onClick.AddListener(() => MasterVolumeStepped?.Invoke(-VolumeStep));
+            masterUp.onClick.AddListener(() => MasterVolumeStepped?.Invoke(VolumeStep));
+            sfxDown.onClick.AddListener(() => SfxVolumeStepped?.Invoke(-VolumeStep));
+            sfxUp.onClick.AddListener(() => SfxVolumeStepped?.Invoke(VolumeStep));
+            telemetryToggle.onClick.AddListener(() => TelemetryToggled?.Invoke());
+            close.onClick.AddListener(() => CloseRequested?.Invoke());
+            wired = true;
+        }
+
+        /// Called once by the scene root right after Instantiate. <paramref name="telemetryOnByDefault"/> = AppConfig.telemetryOnByDefault.
+        public void Init(SaveSystem save, bool telemetryOnByDefault)
+        {
+            if (this.save != null) throw new InvalidOperationException("SettingsPanel.Init twice");
+            this.save = save ?? throw new ArgumentNullException(nameof(save));
+            this.telemetryOnByDefault = telemetryOnByDefault;
+            Wire();
+        }
+
+        public void Show()
+        {
+            if (save == null) throw new InvalidOperationException("SettingsPanel.Show before Init");
+            transform.SetAsLastSibling();
+            gameObject.SetActive(true);
             Redraw();
         }
 
-        public void Close()
-        {
-            if (!IsOpen) return;
-            root.SetActive(false);
-            save.SaveSettings(); // raises SettingsChanged: volume + telemetry on/off
-        }
+        public void Hide() => gameObject.SetActive(false);
 
-        void Change(ref float value, float delta)
-        {
-            value = Mathf.Clamp01(Mathf.Round((value + delta) * 10f) / 10f);
-            AudioListener.volume = save.Settings.masterVolume;
-            Redraw();
-        }
-
-        void ToggleTelemetry()
-        {
-            var s = save.Settings;
-            bool on = s.telemetryChoice != 2 && (s.telemetryChoice == 1 || TelemetryDefault());
-            s.telemetryChoice = on ? 2 : 1;
-            if (s.telemetryChoice == 2) s.playerId = ""; // opt-out forgets the anonymous id (11.3)
-            Redraw();
-        }
-
-        static bool TelemetryDefault() =>
-            Services.TryGet<AppConfig>(out var cfg) && cfg.telemetryOnByDefault;
-
-        void Redraw()
+        /// The settings changed (the controller calls this after it saved).
+        public void Redraw()
         {
             var s = save.Settings;
             masterText.text = $"{Mathf.RoundToInt(s.masterVolume * 100)}%";
             sfxText.text = $"{Mathf.RoundToInt(s.sfxVolume * 100)}%";
-            bool on = s.telemetryChoice == 1 || (s.telemetryChoice == 0 && TelemetryDefault());
+            bool on = save.TelemetryOn(telemetryOnByDefault);
             telemetryText.text = on ? "켜짐" : "꺼짐";
             telemetryText.color = on ? Ui.Gold : Ui.Dim;
-            telemetryNote.text = "익명 플레이 기록(이동·클리어)만 보냅니다. 이름이나 계정은 보내지 않습니다.";
         }
 
-        static Text VolumeRow(Transform parent, string label, float y, System.Action<float> change)
+        /// Places the theme's settings prefab under <paramref name="parent"/> (an overlay canvas) and initializes it.
+        public static SettingsPanel Create(Transform parent, SaveSystem save, bool telemetryOnByDefault)
         {
-            var l = Ui.Label(parent, label, 20, Ui.Ink, TextAnchor.MiddleLeft, label);
-            l.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(-110, y), new Vector2(240, 40));
-            var minus = Ui.MakeButton(parent, "−", 22, () => change(-VolumeStep), out _, label + " -");
-            ((RectTransform)minus.transform).Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(70, y), new Vector2(44, 40));
-            var value = Ui.Label(parent, "", 20, Ui.Gold, TextAnchor.MiddleCenter, label + " value");
-            value.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(140, y), new Vector2(80, 40));
-            var plus = Ui.MakeButton(parent, "+", 22, () => change(VolumeStep), out _, label + " +");
-            ((RectTransform)plus.transform).Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(210, y), new Vector2(44, 40));
-            return value;
+            if (parent == null) throw new ArgumentNullException(nameof(parent));
+            var prefab = Ui.Theme.settingsPanel != null ? Ui.Theme.settingsPanel
+                : throw new MissingReferenceException($"[SevenSteps] UiTheme {Ui.Theme.name}: settingsPanel is not set (Seven Steps > Scene Flow > Build UI)");
+            var panel = Instantiate(prefab, parent, false);
+            panel.name = prefab.name;
+            panel.Init(save, telemetryOnByDefault);
+            return panel;
+        }
+    }
+
+    /// <summary>
+    /// Settings panel controller (docs/scene-flow.md 4.7, S4): turns panel events into SaveSystem commands (SetMasterVolume,
+    /// SetSfxVolume, SetTelemetryChoice, docs/architecture.md 11.3), which save at once, so the value is kept however the
+    /// panel closes (Esc, button, scene change). Saving raises SettingsChanged: audio and telemetry react.
+    /// </summary>
+    public sealed class SettingsController : IDisposable
+    {
+        readonly SaveSystem save;
+        readonly SettingsPanel view;
+        readonly bool telemetryOnByDefault;
+
+        public SettingsController(SaveSystem save, SettingsPanel view, bool telemetryOnByDefault)
+        {
+            this.save = save ?? throw new ArgumentNullException(nameof(save));
+            this.view = view ?? throw new ArgumentNullException(nameof(view));
+            this.telemetryOnByDefault = telemetryOnByDefault;
+            view.MasterVolumeStepped += StepMaster;
+            view.SfxVolumeStepped += StepSfx;
+            view.TelemetryToggled += ToggleTelemetry;
+        }
+
+        public void Dispose()
+        {
+            view.MasterVolumeStepped -= StepMaster;
+            view.SfxVolumeStepped -= StepSfx;
+            view.TelemetryToggled -= ToggleTelemetry;
+        }
+
+        void StepMaster(float delta) { save.SetMasterVolume(save.Settings.masterVolume + Step(delta)); Saved(); }
+        void StepSfx(float delta) { save.SetSfxVolume(save.Settings.sfxVolume + Step(delta)); Saved(); }
+        void ToggleTelemetry() { save.SetTelemetryChoice(!save.TelemetryOn(telemetryOnByDefault)); Saved(); }
+
+        static float Step(float delta)
+        {
+            if (Math.Abs(Math.Abs(delta) - SettingsPanel.VolumeStep) > 1e-4f) throw new ArgumentOutOfRangeException(nameof(delta), delta, "one volume step");
+            return delta;
+        }
+
+        /// The SaveSystem command already saved and raised SettingsChanged (audio and telemetry react).
+        void Saved()
+        {
+            GameAudio.ApplyMaster(save.Settings); // live preview in scenes without a GameAudio instance (Title)
+            view.Redraw();
         }
     }
 }

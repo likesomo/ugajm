@@ -1,6 +1,6 @@
 using System;
 using SevenSteps.Contracts;
-using SevenSteps.Core;
+using SevenSteps.Game.Flow;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -10,11 +10,12 @@ using UnityEngine.UI;
 namespace SevenSteps.Game.UI
 {
     /// <summary>
-    /// Title scene root: states Title (start, settings) and StageSelect (stage list with clear marks and best bodies).
-    /// Switching between the two only toggles panels (AppFlow.Changed); choosing a stage goes to the Game scene.
-    /// Played directly in the editor, it runs the bootstrap first.
+    /// Title scene root (states Title and StageSelect, docs/scene-flow.md 4.1, S3). Composition only: bootstraps when the scene
+    /// is played directly, builds the views (TitleView, StageSelectView, settings, credits), creates the
+    /// <see cref="TitleFlowController"/> and wires view events to it. Reads the flow keys (Enter / Space / Esc).
+    /// Settings and credits stay here until S4 (OverlayStack + BackNavigator).
     /// </summary>
-    public sealed class TitleScreen : MonoBehaviour
+    public sealed class TitleScreen : MonoBehaviour, ITitlePanels
     {
         public GameAssets assets;
         [Tooltip("Data/AppConfig.asset. Used when this scene is played without Boot.")]
@@ -26,13 +27,14 @@ namespace SevenSteps.Game.UI
 
         AppFlow flow;
         SaveSystem save;
-        Level[] levels;
-        GameObject titlePanel, selectPanel;
+        TitleView titleView;
+        StageSelectView stageSelectView;
         SettingsPanel settings;
         CreditsPanel creditsPanel;
-        Button[] stageButtons;
-        Text[] stageTexts;
-        Button startButton;
+        TitleFlowController flowController;
+        SettingsController settingsController;
+        OverlayStack overlays;
+        BackNavigator back;
 
         void Awake()
         {
@@ -41,83 +43,79 @@ namespace SevenSteps.Game.UI
             if (!Bootstrap.HasRunThisPlay) Bootstrap.Run(config, assets, null, enterFirstScreen: false);
             flow = Services.Get<AppFlow>();
             save = Services.Get<SaveSystem>();
-            Ui.Font = assets.font;
-            levels = LevelCatalog.Load(assets);
+            Ui.Theme = assets.uiTheme;
+            var levels = LevelCatalog.Load(assets);
 
             var cam = Camera.main;
             if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = assets.background; }
-            AudioListener.volume = save.Settings.masterVolume;
+            GameAudio.ApplyMaster(save.Settings); // the Title scene has no GameAudio instance: master volume only
             if (FindAnyObjectByType<EventSystem>() == null)
                 new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
-            BuildUi();
-            flow.Changed += OnFlowChanged;
+            var root = BuildCanvas();
+            titleView = new TitleView(root);
+            stageSelectView = new StageSelectView(root, levels);
+            bool telemetryDefault = Services.Get<AppConfig>().telemetryOnByDefault;
+            settings = SettingsPanel.Create(root, save, telemetryDefault);
+            settingsController = new SettingsController(save, settings, telemetryDefault);
+            creditsPanel = new CreditsPanel(root, credits, licenses);
+            overlays = new OverlayStack();
+
+            flowController = new TitleFlowController(flow, save, this);
+            back = new BackNavigator(overlays, flowController.Back);
+            titleView.StartRequested += flowController.OpenStageSelect;
+            titleView.SettingsRequested += () => Open(settings);
+            titleView.CreditsRequested += () => Open(creditsPanel);
+            stageSelectView.StageClicked += flowController.PlayStage;
+            stageSelectView.BackRequested += flowController.Back;
+            stageSelectView.SettingsRequested += () => Open(settings);
+        }
+
+        void Open(IOverlay overlay)
+        {
+            if (!overlays.Contains(overlay)) overlays.Push(overlay);
         }
 
         void Start()
         {
-            if (flow.State == AppState.Boot) flow.Go(AppState.Title);
-            else Show(flow.State);
+            flowController.Start();
             // Smoke test without -level: "-screenshot title.png" [-stageselect] [-credits] opens that panel first.
             var launch = Services.Get<LaunchOptions>();
             if (!string.IsNullOrEmpty(launch.Screenshot))
             {
-                if (launch.OpenStageSelect && flow.State == AppState.Title) flow.Go(AppState.StageSelect);
-                if (launch.OpenCredits) creditsPanel.Open();
+                if (launch.OpenStageSelect) flowController.OpenStageSelect();
+                if (launch.OpenCredits) Open(creditsPanel);
                 StartCoroutine(ScreenshotOnce.Run(launch.Screenshot, () => $"{flow.State}, cleared {save.Progress.cleared.Count}"));
             }
         }
 
         void OnDestroy()
         {
-            if (flow != null) flow.Changed -= OnFlowChanged;
+            flowController?.Dispose();
+            settingsController?.Dispose();
         }
 
-        void OnFlowChanged(AppState from, AppState to) => Show(to);
-
-        // Player actions: ignored while a scene is loading or when the flow does not allow them from the current state.
-        void Go(AppState to)
+        /// ITitlePanels: the flow controller shows the panel for the state.
+        public void Show(AppState state)
         {
-            if (flow.IsLoading || !AppFlow.CanGo(flow.State, to)) return;
-            flow.Go(to);
+            if (titleView == null) throw new InvalidOperationException("[SevenSteps] TitleScreen.Show before Awake");
+            if (state == AppState.Title) titleView.Show(); else titleView.Hide();
+            if (state == AppState.StageSelect) stageSelectView.Show(save.Progress); else stageSelectView.Hide();
         }
 
-        void PlayStage(int stage)
-        {
-            if (flow.CanGoToGame(stage)) flow.GoToGame(stage);
-        }
-
-        void Show(AppState s)
-        {
-            if (titlePanel == null) throw new InvalidOperationException("[SevenSteps] TitleScreen.Show before BuildUi (or after the scene unloaded without unsubscribing)");
-            titlePanel.SetActive(s == AppState.Title);
-            selectPanel.SetActive(s == AppState.StageSelect);
-            if (s == AppState.StageSelect) RefreshStages();
-        }
-
+        /// Flow keys. Esc in one place: the top overlay closes first, otherwise AppFlow's back target (BackNavigator).
         void Update()
         {
-            if (settings.IsOpen)
-            {
-                if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) settings.Close();
-                return;
-            }
-            if (creditsPanel.IsOpen)
-            {
-                if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) creditsPanel.Close();
-                return;
-            }
             var kb = Keyboard.current;
             if (kb == null || flow.IsLoading) return;
-            if (flow.State == AppState.Title && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame))
-                Go(AppState.StageSelect);
-            else if (flow.State == AppState.StageSelect && kb.escapeKey.wasPressedThisFrame && flow.TryGetBackTarget(out var back))
-                Go(back);
-            else if (flow.State == AppState.StageSelect && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame))
-                PlayStage(Mathf.Clamp(save.Progress.lastStage, 0, levels.Length - 1)); // save data is external input: clamp
+            if (kb.escapeKey.wasPressedThisFrame) { back.Back(); return; }
+            if (overlays.Count > 0) return;
+            bool enter = kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame;
+            if (flow.State == AppState.Title && (enter || kb.spaceKey.wasPressedThisFrame)) flowController.OpenStageSelect();
+            else if (flow.State == AppState.StageSelect && enter) flowController.PlayLastStage();
         }
 
-        void BuildUi()
+        static Transform BuildCanvas()
         {
             var canvasGo = new GameObject("TitleUI", typeof(RectTransform));
             canvasGo.layer = 5;
@@ -128,70 +126,7 @@ namespace SevenSteps.Game.UI
             scaler.referenceResolution = new Vector2(1280, 720);
             scaler.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
-            var root = canvasGo.transform;
-
-            // Title
-            titlePanel = Ui.Rect("Title", root).Stretch().gameObject;
-            var t = titlePanel.transform;
-            var name = Ui.Label(t, "일곱 걸음", 96, Ui.Gold, TextAnchor.MiddleCenter, "Name");
-            name.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 150), new Vector2(800, 120));
-            var sub = Ui.Label(t, "Seven Steps", 26, Ui.Dim, TextAnchor.MiddleCenter, "Sub");
-            sub.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 76), new Vector2(400, 36));
-            var tag = Ui.Label(t, "한 몸에 딱 일곱 걸음. 일곱 번째 걸음은 행운이다.", 20, Ui.Ink, TextAnchor.MiddleCenter, "Tagline");
-            tag.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 30), new Vector2(800, 30));
-            startButton = Ui.MakeButton(t, "시작 (Enter)", 24, () => Go(AppState.StageSelect), out _, "Start");
-            ((RectTransform)startButton.transform).Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(260, 54));
-            var set = Ui.MakeButton(t, "설정", 20, () => settings.Open(), out _, "Settings");
-            ((RectTransform)set.transform).Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -126), new Vector2(260, 44));
-            var cr = Ui.MakeButton(t, "크레딧", 20, () => creditsPanel.Open(), out _, "Credits");
-            ((RectTransform)cr.transform).Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -182), new Vector2(260, 44));
-            var ver = Ui.Label(t, Application.version, 14, Ui.Dim, TextAnchor.LowerRight, "Version");
-            ver.rectTransform.Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-16, 12), new Vector2(300, 20));
-
-            // Stage select
-            selectPanel = Ui.Rect("StageSelect", root).Stretch().gameObject;
-            var s = selectPanel.transform;
-            var head = Ui.Label(s, "스테이지 선택", 40, Ui.Gold, TextAnchor.MiddleCenter, "Head");
-            head.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -60), new Vector2(600, 56));
-            var grid = Ui.Rect("Grid", s);
-            grid.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 10), new Vector2(1000, 420));
-            var g = grid.gameObject.AddComponent<GridLayoutGroup>();
-            g.cellSize = new Vector2(232, 84);
-            g.spacing = new Vector2(14, 14);
-            g.childAlignment = TextAnchor.MiddleCenter;
-            g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            g.constraintCount = 4;
-            stageButtons = new Button[levels.Length];
-            stageTexts = new Text[levels.Length];
-            for (int k = 0; k < levels.Length; k++)
-            {
-                int idx = k;
-                stageButtons[k] = Ui.MakeButton(grid, "", 18, () => PlayStage(idx), out stageTexts[k], $"Stage {k + 1}");
-                stageTexts[k].horizontalOverflow = HorizontalWrapMode.Wrap;
-            }
-            var back = Ui.MakeButton(s, "뒤로 (Esc)", 18, () => Go(AppState.Title), out _, "Back");
-            ((RectTransform)back.transform).Place(new Vector2(0, 0), new Vector2(0, 0), new Vector2(110, 40), new Vector2(180, 44));
-            var set2 = Ui.MakeButton(s, "설정", 18, () => settings.Open(), out _, "Settings");
-            ((RectTransform)set2.transform).Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-110, 40), new Vector2(180, 44));
-
-            settings = new SettingsPanel(root, save);
-            creditsPanel = new CreditsPanel(root, credits, licenses);
-            titlePanel.SetActive(false);
-            selectPanel.SetActive(false);
-        }
-
-        void RefreshStages()
-        {
-            var p = save.Progress;
-            for (int k = 0; k < levels.Length; k++)
-            {
-                bool done = p.IsCleared(k);
-                int b = p.bestStage.IndexOf(k);
-                string best = b >= 0 ? $"  · 몸 {p.bestBodies[b]}" : "";
-                stageTexts[k].text = $"{k + 1}. {levels[k].Name}\n<size=14>{(done ? "클리어" + best : "")}</size>";
-                stageTexts[k].color = done ? Ui.Gold : Ui.Ink;
-                if (k == p.lastStage) stageButtons[k].Select();
-            }
+            return canvasGo.transform;
         }
     }
 }

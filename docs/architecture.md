@@ -335,7 +335,7 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 | `Scenes/Title.unity` | 1 | 상태 `Title`(제목, 설정 패널), `StageSelect`(스테이지 목록, 클리어 표시). 패널 전환만, 씬 이동 없음 | 씬 플로우 |
 | `Scenes/Game.unity` | 2 | 상태 `Game`(보드, HUD, `GameController`), `Result`(클리어/실패 패널, 다음·재시도·스테이지 선택). 같은 씬 안 오버레이 | 씬 플로우 (화면 내용은 게임플레이/UI) |
 
-- 씬 사이 전달값은 `Services`에 등록된 `AppFlow.Stage`(시작 스테이지)와 `LaunchOptions`(리플레이 등)로 넘긴다. 정적 전역 변수를 따로 만들지 않는다. 영구 싱글턴(`DontDestroyOnLoad`)은 Boot가 만든 하나(오디오·텔레메트리 전송용 러너)만 둔다.
+- 씬 사이 전달값은 `Services`에 등록된 `AppFlow.Stage`(시작 스테이지)와 `LaunchOptions`(리플레이 등)로 넘긴다. 정적 전역 변수를 따로 만들지 않는다. 영구 오브젝트(`DontDestroyOnLoad`)는 두 개뿐이다: 텔레메트리 러너 `TelemetryRunner`(텔레메트리가 켜졌을 때만, 이름 고정 — jslib가 이름으로 찾음, 11.5)와 씬 전환 페이드 `SceneFader`(첫 씬 로드 때 `SceneLoader`가 만듦, 씬 플로우 S5). 더 늘리려면 아키텍트와 정한다. 둘 다 Play가 끝나면 사라지고, 부트스트랩이 Play마다 한 번이라 중복 생성되지 않는다.
 - 에디터에서 `Game.unity`를 바로 Play하면 Boot를 거치지 않는다. 그래서 각 씬의 진입 코드는 **이번 Play에서 부트스트랩이 돌지 않았으면** 같은 부트스트랩 함수를 직접 부른다(테스트·디버그 편의, v0의 `startLevel`/`replay` 유지). `Services.Has<AppFlow>()`로 판단하지 않는다: 이 프로젝트는 에디터 도메인 리로드가 꺼져 있어(`EditorSettings` `m_EnterPlayModeOptions: 1`) 정적 상태가 Play 사이에 남는다(9장 "정적 가변 상태").
 - 씬 안의 오브젝트는 최소로(카메라, 라이트, 루트 하나) 두고 내용은 프리팹으로 나눈다. 한 씬은 한 에이전트만 고친다.
 - 빌드 씬 목록(`ProjectSettings/EditorBuildSettings.asset`)은 리드가 바꾼다. 씬 분리는 2단계 게임플레이/UI 작업이고, 그때까지 v0의 `Game.unity` 하나로 동작한다.
@@ -407,6 +407,7 @@ Boot ──▶ Title ⇄ StageSelect ──▶ Game ⇄ Result
   - 뒤로: `static TryGetBackTarget(from, out to)`/인스턴스 `TryGetBackTarget(out to)` — StageSelect→Title, Game→StageSelect, Result→StageSelect, Boot·Title은 없음. 모두 `CanGo` 안(새 전이 없음). `CanBack` = 로드 중 아님 + 뒤 대상 있음.
   - 입력 처리는 먼저 묻고 안 되면 무시한다: `IsLoading`, `CanBack`, `CanGoToGame(stage)`.
   - `Changed(from, to)`는 로드 요청 **뒤**(이전 씬이 아직 있고 `IsLoading` = 참)에 난다. 그 안에서 `Go`를 부르면 예외. 진입 경로는 하나: 새 씬은 루트 `Start`에서 `flow.State`로, 같은 씬 안 전이는 `Changed`로. `Entered` 이벤트는 없다.
+- **로드 실패(S5)**: `ISceneLoader.Load`가 예외를 던지면 `AppFlow.Go`는 `IsLoading`·`State`를 되돌리고(`GoToGame`은 `Stage`도) 다시 던진다. `Changed`는 나가지 않는다. `SceneLoader`는 빌드에 없는 씬(`Application.CanStreamedLevelBeLoaded` 거짓)을 `Load`에서 바로 거부하므로 흐름이 '로드 중'에 멈추지 않는다. 정상 경로: 페이드 아웃(0.15초, Boot에서 나갈 때는 생략) → `LoadSceneAsync` → `sceneLoaded`에서 `Loaded` → 한 프레임(새 씬 `Start`) → 페이드 인. 어두운 동안 클릭 차단, 키 입력은 `IsLoading`으로 차단.
 - 진입 경로(`level_start.via`): `EntryTracker`(Game `Flow/`, 부트스트랩이 `Services`에 등록). 첫 진입은 `url`(실행 인자·URL 레벨) 또는 `boot`, 그 뒤는 `Announce(next|again|select)` 후 `TakeVia()`, 알림 없으면 `select`. 정적 `GameController.FirstEntryPending`을 대체했다.
 - `GameSession`(보드 안의 입력 락)과 `AppFlow`(화면 흐름)는 별개다. 스테이지 바꾸기 = `flow.GoToGame(k)` → `GameController`가 `session.Load(level)`.
 
@@ -461,7 +462,12 @@ else flow.Go(AppState.Title);
 - 값이 없거나 깨졌으면 기본값으로 시작한다(예외로 멈추지 않음). v0 키 `seven-steps-cleared`(쉼표 목록)는 처음 읽을 때 `ProgressData.cleared`로 옮긴다.
 - `ProgressData`: `cleared`(클리어한 스테이지, 0부터), `bestStage`/`bestBodies`(스테이지별 최소 몸 수), `lastStage`. `MarkCleared(stage, bodiesUsed)`.
 - `SettingsData`: `masterVolume`, `sfxVolume`, `musicVolume`(0~1), `telemetryChoice`(0 미선택=기본값 따름, 1 동의, 2 거부), `playerId`(익명 무작위 ID, 거부하면 지움), `language`.
-- 저장 시점: 클리어할 때, 설정 패널을 닫을 때. 매 걸음 저장하지 않는다. `SaveSettings()`는 `SettingsChanged`를 발생시켜 오디오 음량과 텔레메트리 사용 여부를 바로 반영한다.
+- 저장 시점: 클리어할 때, 스테이지 선택으로 나갈 때, **설정 값을 바꿀 때마다**(씬 플로우 S4: 패널이 Esc·버튼·씬 전환 어느 쪽으로 닫혀도 값이 남는다). 매 걸음 저장하지 않는다. `SaveSettings()`는 `SettingsChanged`를 발생시켜 오디오 음량과 텔레메트리 사용 여부를 바로 반영한다.
+- **설정 명령(2026-11-09)**: 설정 패널 컨트롤러는 필드를 직접 바꾸지 않고 이것을 부른다(9장 MVC). 모두 바로 저장하고 `SettingsChanged`를 낸다.
+  - `SetMasterVolume(v)`, `SetSfxVolume(v)`: 0.1 단위로 반올림, 0~1로 자름(+를 1에서 눌러도 1). NaN은 예외.
+  - `SetTelemetryChoice(on)`: 켬 = 1, 끔 = 2 + `playerId` 지움(다시 켜면 텔레메트리 시작 때 새 ID).
+  - `TelemetryOn(onByDefault)`: 토글 표시값(명시 선택, 없으면 빌드 기본값). `TelemetryAllowed(config)`와 같은 판단.
+- `SaveSystem(store)`: `store`가 null이면 `ArgumentNullException`.
 
 ### 11.4 텔레메트리 (`ITelemetry`, 스키마 v1)
 
@@ -577,6 +583,8 @@ else flow.Go(AppState.Title);
 | `AppConfig.chapters[]` | 첫 항목이 기본 | `AppConfig.Chapter(id)`: 빈 id = 첫 챕터, 챕터 없음 = null, 모르는 id = 예외 |
 | `levels.json` `chapter` + `chapters.json` | 문자열 id, 챕터 정보·`artPreset`은 `chapters.json`(6.4) | `LevelDto`에만 둔다(Core `Level`은 모름). `LevelCatalog.ChapterOf(stage)` → `ChapterInfo` → `AppConfig.Chapter(info.ArtPreset)` |
 
+**UI 테마는 챕터에 넣지 않는다(2026-11-09 결정)**: `UiTheme`(Game 어셈블리, 씬 플로우 S6)은 `GameAssets.uiTheme` 하나로 게임 전체에 쓴다. `ChapterPreset`(Contracts)은 Game 타입을 참조할 수 없고(2장), UI 모양은 게임 전체의 정체성이다. 챕터 분위기는 보드·조명·하늘과 챕터 전환 카드(`GameFlowController.ChapterEntering`)가 맡는다. 챕터별 강조색이 필요해지면 `ChapterPreset.uiAccent`(Color) 하나만 추가한다.
+
 **보드 세트 결정 순서**: `AppConfig.tileSet`(설정되어 있으면 디버그·전환용 덮어쓰기) → 스테이지 챕터의 `tileSet` → `GameAssets.tileSet`. 지금(챕터 에셋 전)은 `AppConfig.tileSet = RuinsHenge_Chapter01`. 챕터 에셋이 생기면 `chapters[0]`에 유적 챕터를 넣고 `AppConfig.tileSet`은 비운다.
 
 **적용 (게임플레이/UI, Game 씬 연결은 씬 플로우)**:
@@ -627,3 +635,6 @@ else flow.Go(AppState.Title);
 | 2026-11-09 | 아키텍트 | 6.3 진흙 `m`(2걸음, 남은 1걸음이면 막힘, 얼음 미끄러짐 멈춤, 새 이벤트 없음) 고지, `TileKind.Mud`(끝에 추가)·`TileId.FromChar('m')`·`TileSet.mud`(없으면 바닥, 검사기 경고). 6.4 `chapter` = 문자열 id + `chapters.json`(`id`, `planet`, `concept`, `intro`, `artPreset`), `story`, export 검증은 첫 묶음부터, `ChapterInfo`/`ChapterFileDto`(Contracts). 12.8 표 갱신 |
 | 2026-11-09 | 코어·아키텍트 | 6.3 진흙 코어 구현(feat/core 6ae58e2): `Rules.IsMud(char)`, SWITCH 출발점 가능, 막히면 `Bump`(진흙 칸). `Mud` 이벤트는 넣지 않음. 골든 트레이스 id가 스테이지 이름 기준으로 바뀜(`server/fixtures` 재생성) |
 | 2026-11-09 | 아키텍트 | 11.1·11.2 씬 플로우 S2 반영(feat/scene-flow f08f4d6, 검토 승인): **`AppFlow(ISceneLoader, int stageCount)` 생성자 변경**, `StageCount`, `GoToGame` 범위 예외, `TryGetBackTarget`/`CanBack`/`CanGoToGame`, `IsLoading` + **`ISceneLoader.Loaded` 추가**(로드 중 전이 예외), `Changed` 시점 명시, `EntryTracker`(Game, `Services` 등록), `Bootstrap.Run(config, assets, ...)`, 범위 밖 `-level`은 경고 후 마지막 스테이지. `AppFlow`를 직접 만들거나 `ISceneLoader`를 구현하던 코드(테스트 가짜 로더 포함)는 고쳐야 한다 |
+| 2026-11-09 | 아키텍트 | 11.3 `SaveSystem` 설정 명령 `SetMasterVolume`/`SetSfxVolume`/`SetTelemetryChoice`/`TelemetryOn` 추가(씬 플로우 S4 `SettingsController`용), 설정은 바꿀 때마다 저장, 생성자 null 검사. EditMode `SaveSettingsCommandTests` |
+| 2026-11-09 | 아키텍트 | 12.8 결정: 챕터별 `UiTheme`은 `ChapterPreset`에 넣지 않음(의존 방향·일관성·비용), 필요하면 `uiAccent` 색 하나. 씬 플로우 S6 검토 승인 |
+| 2026-11-09 | 아키텍트 | 씬 플로우 S5 반영(feat/scene-flow 1f9f462, 승인): 11.1 로드 실패 시 `AppFlow` 되돌림·`SceneLoader` 사전 거부·페이드 경로, 8장 DDOL 문구를 `TelemetryRunner` + `SceneFader` 두 개로 수정 |

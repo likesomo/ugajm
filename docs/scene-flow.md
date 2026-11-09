@@ -375,6 +375,19 @@ S2·S3 커밋마다 `unity.sh test`(텔레메트리 골든)를 돌린다. 골든
 | S1 단정화 | 923a1a6 | compile OK, test 230/230(+6), build-win + smoke 7/7 OK, 타이틀 스모크(`-screenshot -stageselect -credits`) OK, 잘못된 `-level abc`는 경고 로그 | 아키텍트 승인(2026-11-09, 11.2 반영 feat/architecture 8914e53) |
 | (배정) `AppConfig.tileSet` → RuinsHenge_Chapter01 | 7300d9d | tileset-validate(2세트 0오류), scene-validate, test 232/232, build-win + smoke 7/7, build-webgl + smoke-webgl 1/8/13 OK. 방향광 조정 없음 | — |
 | S2 `AppFlow` 계약 + `EntryTracker` | f08f4d6 | compile OK, test 242/242(+10), scene-validate OK, build-win + smoke 7/7, 타이틀 스모크(Boot→Title 로드 후 StageSelect 전이로 `Loaded` 해제 확인), `-level 99`는 경고 후 17 | 아키텍트 승인(2026-11-09, 11.1·11.2 반영 feat/architecture 332b634). Title→Game·Game→StageSelect 실제 씬 전환은 입력이 필요해서 수동 확인(S0 ②와 함께) |
+| (요청) `LevelCatalog.ChapterIdOf` | 9f3d109, e83bb64 | test +2. core b5c4464 뒤 `LevelDto.chapter`를 읽음 | — |
+| S3a `ResultView`/`ResultModel` | 83a55d6 | test 242, build-win + smoke 7/7. 결과 패널은 EditMode로 확인(리플레이는 끝 상태로 바로 가서 패널을 열지 않음, 7lucky도 같음) | — |
+| S3b `HudView` 이벤트화, TileSet 주입 | 70ccc03 | test 242, build-win + smoke 7/7. feat/view eafd97b(BodyLook)를 먼저 합친 뒤 주입으로 바꿈 | — |
+| S3c Game 씬 분리 | 0fc35a3 | test 249, build-win + smoke 7/7. `GameController`=씬 루트(클래스·guid·필드 유지: Game.unity, Art/Test/Game.unity, 아트 빌더 그대로), `BoardController`=보드, `Flow/GameFlowController`=흐름(`IStageBoard`/`IResultPanel`) | 아키텍트 승인(2026-11-09, 42613fb). 보드 쪽 정리는 게임플레이/UI. `GameController.LevelIndex`/`Levels`(아트 프리뷰용)는 12.8 이전 때 삭제 |
+| S3d Title 씬 분리 | 18029f4 | test 253, build-win + smoke 7/7, 타이틀 스모크, **build-webgl(Mobile_RPAsset) + smoke-webgl 1/8/13 OK**(33381/27627/24738, 콘솔 0). 64bb47f에서 7lucky 81262de 합친 뒤 test 253, build-win + smoke 7/7 | Title→Game 실제 클릭은 수동 확인 |
+| S4 오버레이·뒤로 가기·챕터 자리 | 753fc60 | test 258/258(+5), scene-validate OK, build-win + smoke 7/7, 타이틀 스모크(크레딧을 오버레이로 띄움) OK. `AppInput`은 만들지 않음(키 읽기는 씬 루트 두 곳뿐이라 필요 없음). 챕터 전환 카드·테마 프리셋은 `GameFlowController.ChapterEntering`에 구독만 붙이면 된다. **chapters.json이 생기면** 비교 전에 `ChapterFileDto.Get(id).id`로 정규화한다(""와 첫 챕터 id를 같은 챕터로, 아키텍트 S4 메모) | 아키텍트 승인. 리드 WebGL 수동 확인(클리어→결과→다음, 설정·크레딧 Esc) 완료 |
+| (후속) `SettingsController` → `SaveSystem` 설정 명령 | 625e258 | test 260, build-win + smoke 7/7 | — |
+| S6a `UiTheme`(글꼴·색) 에셋 | 07927a9 | test 260, scene-validate, build-win + smoke 7/7, build-webgl + smoke-webgl OK. `Data/UiTheme_Default.asset`(v0 값), `GameAssets.uiTheme`, `Ui` 색·글꼴은 테마에서 읽음 | 챕터별 테마 프리셋 연결은 12.8(`ChapterPreset`이 Contracts라 아키텍트와 형식 결정) |
+| S6b Settings·Result 프리팹 | 0b3d260 | test 262, scene-validate, build-win + smoke 7/7, 타이틀 스모크, build-webgl + smoke-webgl OK. `UI/Prefabs/SettingsPanel.prefab`, `ResultPanel.prefab`(UiBuilder가 v0 레이아웃으로 처음 생성, 이후 프리팹 편집), 직렬화 참조 + `Validate`(OnValidate·Awake·검증기) | 설정·결과 패널 실제 화면 확인은 수동(스모크 경로 없음). HUD·Title·Credits 프리팹은 게임플레이/UI(아트 테마 확정 뒤) |
+| (후속) 음량을 `GameAudio.ApplyMaster`로 | 899f8c8 | test 262, build-win + smoke 7/7 | — |
+| S5 페이드 전환 | 1f9f462 | test 263, build-win + smoke 7/7, 타이틀 스모크, build-webgl + smoke-webgl OK. `SceneLoader`가 LoadSceneAsync + 페이드(0.15초), DDOL `SceneFader`. 로드 실패는 Load에서 예외, `AppFlow`가 상태를 되돌림 | 아키텍트 승인(2026-11-09, DDOL 8장 문구·11.1 반영). 메모: LoadSceneAsync null 경로는 State와 씬이 어긋나지만 사전 검사 뒤라 둠, 씬 경계 level_leave가 0.15초 늦어짐(순서·값 동일). WebGL 페이드 체감은 리드가 합칠 때 확인 |
+
+**대기 중: 12.8 챕터 연결(게임플레이/UI 요청, feat/view 6aac6e5, 2026-11-09)**. 시기는 레벨 묶음(chapters.json) 반영 때, 리드와 맞춘다. Game 씬 루트에서 할 일: (1) Game 씬에 방향광 3개(키·필·림, 그림자는 키만) (2) `GameController.Awake`에서 `board.Init` 뒤 `board.UseChapters(new ChapterStage(cam, key, fill, rim, transform), stage => 챕터 프리셋, cfg.tileSet)`. 프리셋은 `LevelCatalog.ChapterIdOf` → chapters.json `ChapterInfo.ArtPreset` → `AppConfig.Chapter`, 챕터가 없으면 null (3) `ChapterEntering`의 id를 `ChapterFileDto.Get(id).id`로 정규화 (4) S5 페이드가 생기면 `LoadStage`를 페이드 뒤에 둔다(챕터 교체가 가려짐).
 
 챕터 방향(2026-11-08 사용자): 챕터 = 우주 속 행성, 주인공 세쌍둥이. S4에서 `GameFlowController`에 챕터 전환 연출 자리(다음 스테이지의 chapter가 바뀌면 전환 오버레이), S6에서 `UiTheme`·조명·하늘을 챕터별 프리셋으로 고를 자리를 남긴다. 레벨 데이터 chapter 필드는 레벨 담당이 추가한다.
 
@@ -446,3 +459,11 @@ Open Project 1은 미러의 파일 목록과 커밋 메시지만 확인했다(�
 | 2026-11-09 | 4.7: HudView에 TileSet 주입(S3). AppConfig.tileSet RuinsHenge_Chapter01. origin/7lucky 6cf3de4 합침 |
 | 2026-11-09 | S2 커밋 f08f4d6, 4.7 확정안, 5.2 갱신 |
 | 2026-11-09 | S2 아키텍트 승인, S5에 로드 실패 경로 조건 추가. origin/7lucky 0ca8ae6 합침 |
+| 2026-11-09 | S3 완료(83a55d6, 70ccc03, 0fc35a3, 18029f4), 5.2 갱신. origin/7lucky 81262de 합침 |
+| 2026-11-09 | S4 커밋 753fc60, 5.2 갱신 |
+| 2026-11-09 | S3 아키텍트 승인(42613fb) |
+| 2026-11-09 | S4 승인, SettingsController가 SaveSystem 명령 사용, ChapterEntering 정규화 메모. origin/7lucky 6b9c419 합침 |
+| 2026-11-09 | S6 씬 플로우 몫 완료(07927a9, 0b3d260), 5.2 갱신 |
+| 2026-11-09 | 12.8 챕터 연결 요청(게임플레이/UI)을 대기 항목으로 기록 |
+| 2026-11-09 | S5 페이드, GameAudio 음량, 5.2 갱신. origin/7lucky 0c62e54 합침 |
+| 2026-11-09 | S5 아키텍트 승인. 씬 플로우 S0~S6 완료, 12.8 챕터 연결 대기 |

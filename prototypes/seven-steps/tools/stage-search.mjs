@@ -7,6 +7,7 @@
 //   node prototypes/seven-steps/tools/stage-search.mjs --list            (recipes)
 //   options: --core <rules.js> (experiment rules), --switch yes|no|any (SWITCH required?), --moves 10-30,
 //            --json reports/stage-search/<recipe>.json (default), --budget 3 (body cap, triplets)
+//            --flips N (shortest answer pulls a lever at least N times)
 //
 // Hard filters for every candidate:
 //   - solvable with the budget (default 3 bodies = the triplets), minimum bodies within --min..--max
@@ -38,6 +39,13 @@ const RECIPES = {
   'pit-plate':   { w: [6, 9], h: [4, 6], walls: 0.3, place: { o: [1, 2], a: [1, 1], A: [1, 1] } },
   'gate':        { w: [5, 9], h: [3, 5], walls: 0.3, place: { gate: [1, 3] } },
   'gate-plate':  { w: [6, 9], h: [3, 6], walls: 0.3, place: { gate: [1, 2], a: [1, 1], A: [1, 1] } },
+  'ice-plate':   { w: [6, 9], h: [4, 6], walls: 0.25, place: { iceRun: [1, 2], a: [1, 1], A: [1, 1] } },
+  'ice-pit':     { w: [6, 9], h: [4, 6], walls: 0.25, place: { iceRun: [1, 2], o: [1, 2] } },
+  'gate-pit-plate': { w: [6, 10], h: [4, 6], walls: 0.3, place: { gate: [1, 1], o: [1, 1], a: [1, 1], A: [1, 1] } },
+  'lever-plate': { w: [6, 10], h: [4, 6], walls: 0.3, place: { L: [1, 1], R: [1, 2], a: [1, 1], A: [1, 1] } },
+  'lever-ice-plate': { w: [7, 10], h: [4, 7], walls: 0.25, place: { L: [1, 1], R: [0, 1], r: [0, 1], iceRun: [1, 1], a: [1, 1], A: [1, 1] } },
+  'lever2':      { w: [6, 10], h: [4, 6], walls: 0.3, place: { L: [2, 2], R: [1, 2], r: [1, 2] } },
+  'lever-ice2':  { w: [5, 8], h: [4, 6], walls: 0.2, place: { L: [1, 1], R: [0, 1], r: [1, 1], iceRun: [1, 2] } },
   'gate-pit':    { w: [6, 9], h: [3, 6], walls: 0.3, place: { gate: [1, 2], o: [1, 2] } },
   'ice':         { w: [6, 9], h: [4, 6], walls: 0.2, place: { iceRun: [1, 2] } },
   'gate-ice':    { w: [6, 9], h: [4, 6], walls: 0.25, place: { iceRun: [1, 2], gate: [1, 2] } },
@@ -69,6 +77,7 @@ const MIN = Number(arg('min', 1));
 const MAX = Number(arg('max', BUDGET));
 const TOP = Number(arg('top', 8));
 const SW = arg('switch', 'any');
+const FLIPS = arg('flips') === undefined ? -1 : Number(arg('flips')); // lever pulls in the shortest answer (-1 = any)
 const [MOVES_LO, MOVES_HI] = (arg('moves', '7-60')).split('-').map(Number);
 let seed = Number(arg('seed', Date.now() % 1e9));
 const SEED0 = seed;
@@ -164,6 +173,11 @@ function evaluate(def) {
   if (SW === 'no' && switchNeeded) return null;
   const present = Object.entries(CLASSES).filter(([, chars]) => def.map.some((r) => new RegExp(`[${chars}]`).test(r)));
   for (const [, chars] of present) if (!classNeeded(def, chars, best)) return null;
+  if (FLIPS >= 0) {
+    let st = newState(level), flips = 0;
+    for (const a of best.path) { const r = dispatch(st, a === 'keep' || a === 'switch' ? { type: a } : { type: 'move', dir: a }); flips += r.events.filter((e) => e.type === 'flip').length; st = r.state; }
+    if (flips < FLIPS) return null;
+  }
   const search = searchSize(level, best.bodies);
   const keeps = best.path.filter((a) => a === 'keep').length, switches = best.path.filter((a) => a === 'switch').length;
   // Rank: prefer more search (thinking), then fewer wall cells (readable), then compact boards.
