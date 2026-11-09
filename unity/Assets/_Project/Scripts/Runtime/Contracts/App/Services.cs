@@ -5,7 +5,7 @@ namespace SevenSteps.Contracts
 {
     /// <summary>
     /// Minimal service locator. Only the Boot bootstrap (and tests) register; everyone else reads.
-    /// Registered services: ISaveStore, SaveSystem, ITelemetry, AppFlow, LaunchOptions, AppConfig (docs/architecture.md 11장).
+    /// Registered services: ISaveStore, SaveSystem, ITelemetry, AppFlow, LaunchOptions, AppConfig, and the Game assembly's EntryTracker (docs/architecture.md 11장).
     /// Rule: Core never touches this. Look services up once (Awake/Start), not every frame.
     /// </summary>
     public static class Services
