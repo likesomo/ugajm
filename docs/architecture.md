@@ -420,9 +420,10 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 ```
 Boot ──▶ Title ⇄ StageSelect ──▶ Game ⇄ Result
   └───────(?level= / -level)──────▶ Game        Game/Result ──▶ StageSelect
+           Title ──(시작 = 1스테이지 / 이어하기 = 마지막 스테이지, S7a)──▶ Game
 ```
 
-- 상태: `AppState { Boot, Title, StageSelect, Game, Result }` (끝에만 추가). 허용 전이는 `AppFlow.CanGo`가 정한다. 허용되지 않은 전이는 예외.
+- 상태: `AppState { Boot, Title, StageSelect, Game, Result }` (끝에만 추가). 허용 전이는 `AppFlow.CanGo`가 정한다. 허용되지 않은 전이는 예외. **Title → Game**(2026-11-10, feat/scene-flow 19554a3): 타이틀의 시작·이어하기. 이 전이가 없어서 버튼이 `CanGoToGame` false로 조용히 무시되던 버그(플레이테스트 리허설에서 발견). 뒤로 대상은 그대로(Game → StageSelect).
 - 상태 → 씬: `AppScenes.For(state)`. 같은 씬 안의 상태 변경(Title⇄StageSelect, Game⇄Result, Game→Game 스테이지 변경)은 씬을 다시 읽지 않고 `AppFlow.Changed(from, to)`로 패널만 바꾼다.
 - 스테이지 선택: `flow.GoToGame(stage)` (0부터). 클리어 시 `GameController`가 `flow.Go(AppState.Result)`, 결과 패널의 다음/재시도는 `flow.GoToGame(...)`.
 - 씬 로드: `ISceneLoader`(`Current`, `Load(name)`, `event Action<string> Loaded`)를 Game 어셈블리 `SceneLoader`가 `SceneManager.LoadScene`으로 구현(씬 플로우). `Loaded`는 `SceneManager.sceneLoaded`에서 낸다(새 씬의 Awake 뒤, Start 전). 로드 대기 중에만 구독한다(도메인 리로드 꺼짐에서 누수 없음). 테스트는 가짜 로더(`Load` 안에서 `Loaded`를 내도 된다).
@@ -787,3 +788,4 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 | 2026-11-10 | 씬 플로우·아키텍트 | 11장 `LaunchOptions.LoadDelay`(`-loadDelay`/`?loadDelay=`, 개발용, feat/scene-flow 3f6671f 검토 승인). 13.3 언어 선택 로직이 `LanguageController`(Title·Game 공용)로 옮겨지고 설정 언어 버튼이 선택 화면을 연다. `LocalizationCheck.KoreanLiteralsAreErrors = true` |
 | 2026-11-10 | 씬 플로우·아키텍트 | 11장 `LaunchOptions.FlowCheck`(`-flowcheck`/`?flowcheck=1`, 개발·스모크용, feat/scene-flow 0bcade4 검토 승인), `unity.sh smoke` 흐름 단계 |
 | 2026-11-10 | 게임플레이/UI·아키텍트 | 11장 `LaunchOptions.OpenSettings`(`-settings`/`?settings=1`, feat/view 6a6056d 검토 승인). 영향: 씬 플로우(`TitleScreen` 한 줄) |
+| 2026-11-10 | 씬 플로우·아키텍트 | 11.1 `AppFlow.CanGo`에 (Title, Game) 추가(feat/scene-flow 19554a3, 검토 승인). 타이틀 시작·이어하기가 조용히 막히던 버그 수정. 뒤로 표 변경 없음 |
