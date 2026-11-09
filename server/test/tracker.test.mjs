@@ -70,9 +70,11 @@ test('levelKey is stable and matches the golden file', () => {
   const keys = LEVELS.map((d) => levelKey(parseLevel(d)));
   assert.equal(new Set(keys).size, LEVELS.length);
   const golden = JSON.parse(readFileSync(join(here, '../fixtures/telemetry.golden.json'), 'utf8'));
-  for (const t of golden.traces.filter((x) => x.id.startsWith('manual-'))) {
-    assert.equal(t.levelKey, keys[t.level - 1], t.id);
-  }
+  // Manual scenarios on a stage carry that stage's key; the ones with their own map (" (골든 전용)") are not stages.
+  const onStages = golden.traces.filter((x) => x.id.startsWith('manual-') && !x.levelName.endsWith('(골든 전용)'));
+  assert.ok(onStages.length >= 5);
+  for (const t of onStages) assert.equal(t.levelKey, keys[t.level - 1], t.id);
+  for (const t of golden.traces.filter((x) => x.levelName.endsWith('(골든 전용)'))) assert.equal(keys.includes(t.levelKey), false, t.id);
 });
 
 test('golden file is up to date with telemetry.js', () => {
