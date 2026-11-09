@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using SevenSteps.Contracts;
 using UnityEngine;
 
 namespace SevenSteps.Game.UI
@@ -9,6 +11,24 @@ namespace SevenSteps.Game.UI
     /// editing view code. Code-built UI (HUD, Title, Credits until they become prefabs) reads it through <see cref="Ui"/>.
     /// Default: Data/UiTheme_Default.asset (made by Seven Steps > Scene Flow > Build UI, same values as v0).
     /// </summary>
+    /// <summary>What a Text is for, which picks its font (docs/architecture.md 13.4). Numbers use one font in every language.</summary>
+    public enum FontRole { Title, Body, Number }
+
+    /// <summary>Title and body fonts of one language (13.4). Scales and spacing: 0 = 1 (script fonts have a small x-height).</summary>
+    [Serializable]
+    public struct LanguageFonts
+    {
+        public Language language;
+        public Font title, body;
+        public float titleScale, bodyScale;
+        [Tooltip("Body line spacing; 0 = 1. Art preview: en 0.90, ko 1.10")]
+        public float bodyLineSpacing;
+
+        public float TitleScale => titleScale > 0 ? titleScale : 1f;
+        public float BodyScale => bodyScale > 0 ? bodyScale : 1f;
+        public float BodyLineSpacing => bodyLineSpacing > 0 ? bodyLineSpacing : 1f;
+    }
+
     [CreateAssetMenu(menuName = "Seven Steps/UI Theme", fileName = "UiTheme")]
     public sealed class UiTheme : ScriptableObject
     {
@@ -37,6 +57,29 @@ namespace SevenSteps.Game.UI
         [Tooltip("Optional: chapter card shown when a new chapter starts (gameplay/UI prefab). Empty = no card.")]
         public ChapterCardView chapterCard;
 
+        [Header("Fonts per language and role (docs/architecture.md 13.4, design/art/fonts.md)")]
+        [Tooltip("One entry per language in Languages.All: title and body fonts")]
+        public LanguageFonts[] languages = new LanguageFonts[0];
+        [Tooltip("Number role, the same in every language (board labels, steps, bodies, statue count, stars). v0: Jua")]
+        public Font number;
+
+        /// The fonts of a language. A language without an entry throws (SceneFlowValidator catches it before a build).
+        public LanguageFonts FontsFor(Language lang)
+        {
+            foreach (var l in languages ?? new LanguageFonts[0])
+                if (l.language == lang) return l;
+            throw new KeyNotFoundException($"UiTheme {name}: no fonts for {Languages.Code(lang)}");
+        }
+
+        /// The font for a role in a language. Number ignores the language.
+        public Font FontFor(Language lang, FontRole role)
+        {
+            if (role == FontRole.Number) return number != null ? number : throw new InvalidOperationException($"UiTheme {name}: number font is not set");
+            var fonts = FontsFor(lang);
+            var font = role == FontRole.Title ? fonts.title : fonts.body;
+            return font != null ? font : throw new InvalidOperationException($"UiTheme {name}: {Languages.Code(lang)} {role} font is not set");
+        }
+
         /// Missing required parts, one line each (SceneFlowValidator, and Ui.Theme at runtime).
         public void Validate(List<string> issues)
         {
@@ -48,6 +91,17 @@ namespace SevenSteps.Game.UI
             if (hud == null) issues.Add($"UiTheme {name}: hud prefab is not set");
             else hud.Validate(issues);
             if (chapterCard != null) chapterCard.Validate(issues);
+            if (number == null) issues.Add($"UiTheme {name}: number font is not set");
+            var seen = new HashSet<Language>();
+            foreach (var l in languages ?? new LanguageFonts[0])
+            {
+                if (!seen.Add(l.language)) issues.Add($"UiTheme {name}: fonts for {Languages.Code(l.language)} appear twice");
+                if (l.title == null) issues.Add($"UiTheme {name}: {Languages.Code(l.language)} title font is not set");
+                if (l.body == null) issues.Add($"UiTheme {name}: {Languages.Code(l.language)} body font is not set");
+                if (l.titleScale < 0 || l.bodyScale < 0 || l.bodyLineSpacing < 0) issues.Add($"UiTheme {name}: {Languages.Code(l.language)} scales must be 0 (= 1) or more");
+            }
+            foreach (var lang in Languages.All)
+                if (!seen.Contains(lang)) issues.Add($"UiTheme {name}: no fonts for {Languages.Code(lang)}");
         }
     }
 

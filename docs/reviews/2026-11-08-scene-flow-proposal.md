@@ -161,3 +161,15 @@ EditMode + 가짜 로더 + `smoke`/`smoke-webgl`로 S0~S4를 덮을 수 있다. 
 - `BodiesUsed`가 코어 `Stars.BodiesUsed`로 통일.
 - 사소: `clearStars`는 `OnWon`에서만 갱신된다. 지금 흐름(Won → WinPresented → Result)에서는 맞다. `Enter`에서 0으로 돌려 두면 다른 경로가 생겨도 이전 스테이지 별이 보이지 않는다.
 - 남은 것: restarts 기준 통일(telemetry.js + `TelemetryTracker` + 골든)은 리드 결정대로 다음 묶음.
+
+## 검토: feat/scene-flow 8481e5c (f4ce5cc 포함: Localizer 등록, 설정 언어 토글, UiTheme 13.4 글꼴, 2026-11-10)
+
+**결론: 승인.** 13.3·13.4 그대로.
+- `Bootstrap`: `Localizer.FromAssets(assets.strings, launch.Language ?? save.Language)`를 텔레메트리보다 먼저 등록(텔레메트리가 `Current`·`Changed`로 `lang`을 따름). `-lang`은 저장하지 않음.
+- `SettingsController`: 토글 = 표가 있는 다음 언어(Ko→En→Ko), `save.SetLanguage` 후 `localizer.Set`(→ `Changed`로 뷰 갱신). `-lang` 덮어쓰기는 플레이어 선택으로 바뀐다(맞음).
+- `SettingsPanel`: 언어 이름은 표 문자열이 아니라 `NativeName`(각 언어 고유 이름)을 그 언어 본문 글꼴로, `Redraw`에서도 갱신. 토글·라벨은 선택 참조(프리팹에 생길 때까지).
+- `UiTheme`: `FontRole{Title, Body, Number}`, `LanguageFonts{language, title, body, 크기·줄간격(0 = 1)}`, 테마 공통 `number`, `FontsFor`/`FontFor`(없으면 예외), `Validate`가 언어 누락·중복·빈 글꼴·음수 크기를 검사. 두 테마(Default, RuinsHenge)에 값.
+
+### 권장 (사소)
+- 저장된 언어(`save.Language`)는 플레이어 데이터라 외부 입력이다. 그 언어의 표가 빌드에 없으면 지금은 `Localizer` 생성자가 예외를 던져 부트가 멈춘다. `assets.strings`에 없으면 ko로 + 경고(9장 외부 입력 규칙). 지금은 두 표가 다 있어 실제로는 안 일어난다.
+- `NativeName`("한국어", "English")은 GlyphCheck가 테마 기본 글꼴(Jua)로만 검사한다. 언어별 GlyphCheck(13.6)에서 "각 언어 이름은 그 언어 본문 글꼴"로 검사 대상에 넣을 것.
