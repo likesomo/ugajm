@@ -389,6 +389,7 @@ S2·S3 커밋마다 `unity.sh test`(텔레메트리 골든)를 돌린다. 골든
 | (리드 a) 모든 UiTheme 검사 | 9eab620 | 빈 임시 테마로 오류 3개 확인 후 제거. scene-validate OK | — |
 | (리드 b) 챕터 진입 연출 틀 | 58b311f | test 273(+5), scene-validate, build-win + smoke 7/7. `ChapterIntroController`(ChapterEntering → 카드 오버레이), `ChapterCardView` 계약, `UiTheme.chapterCard`(선택), `GameAssets.chaptersJson`, `LevelCatalog.ChapterOf/ChapterKeyOf/ChapterCard`("" = 첫 챕터 정규화) | 카드 프리팹은 게임플레이/UI. chapters.json이 들어오면 동작 |
 | (리드 c) 12.8 챕터 연결 | 481e953 | Game.unity 키·필·림 조명(GameSceneLights), `GameController.UseChapters`, `GameAssets.chaptersJson`, GlyphCheck story·chapters 문구. scene-validate·test·build-win + smoke·build-webgl + smoke-webgl 1/29/50 OK | AppConfig.chapters가 비어 있어 아직 모습 변화 없음(아트 챕터 에셋 대기) |
+| (리드 d) 별 3개 흐름 쪽 | 7028a00 | e173f86(게임플레이/UI 셈) 위. OnWon에서 `Stars.Of` → `MarkCleared(level, bodies, stars)`, `ResultModel.Stars/BestStars`. test 731, scene-validate, build-win + smoke OK. 별 정의는 6.5 하나(리드 결정, 시작 상태 R 제외, 텔레메트리도 맞춤) | 아키텍트 검토(리드 요청). 별 그리기는 게임플레이/UI |
 
 **12.8 챕터 연결: 481e953에서 끝(아래 목록은 기록용)**. 시기는 레벨 묶음(chapters.json) 반영 때, 리드와 맞춘다. Game 씬 루트에서 할 일: (1) Game 씬에 방향광 3개(키·필·림, 그림자는 키만) (2) `GameController.Awake`에서 `board.Init` 뒤 `board.UseChapters(new ChapterStage(cam, key, fill, rim, transform), stage => 챕터 프리셋, cfg.tileSet)`. 프리셋은 `LevelCatalog.ChapterIdOf` → chapters.json `ChapterInfo.ArtPreset` → `AppConfig.Chapter`, 챕터가 없으면 null (3) ~~`ChapterEntering` id 정규화~~ 58b311f에서 끝(`LevelCatalog.ChapterKeyOf`), chapters.json을 `GameAssets.chaptersJson`에 연결만 하면 됨 (4) S5 페이드가 생기면 `LoadStage`를 페이드 뒤에 둔다(챕터 교체가 가려짐) (5) R1(스테이지 1-20, chapters.json) 반영 때 함께: `GlyphCheck`에 levels.json `story`와 chapters.json 문구(planet·concept·intro) 추가. smoke 리플레이 목록은 리드가 rollout-50.md 5장 기준으로 갱신. 아트 RuinsHengeTheme(UiTheme)·행성 환경 프리팹은 코디네이터 경유로 받는다.
 
@@ -473,3 +474,4 @@ Open Project 1은 미러의 파일 목록과 커밋 메시지만 확인했다(�
 | 2026-11-09 | 진행 기록 v2(아키텍트 5065603) 검토 OK, R1 대기 항목 추가 |
 | 2026-11-09 | 리드 a(모든 UiTheme 검사)·b(챕터 진입 연출 틀) 완료. 별 3개 B안·다국어는 50스테이지 반영 뒤 |
 | 2026-11-09 | (c) 12.8 챕터 연결 481e953. 남은 것: 별 3개(아키텍트 계약 뒤), 다국어 |
+| 2026-11-10 | (d) 별 3개 흐름 쪽 7028a00, HUD 프리팹(a68ee8b) 검토 OK |

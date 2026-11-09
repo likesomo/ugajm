@@ -136,11 +136,25 @@ namespace SevenSteps.Game.Flow
             save.Progress.SetLastStage(board.State.Level); // saved with the next progress save (clear, stage select)
         }
 
+        /// Stars of the clear being shown (0 = unknown minimum), set on Won for the result panel.
+        int clearStars;
+
         void OnWon(State s)
         {
             if (flow.State != AppState.Game) return;
-            save.Progress.MarkCleared(s.Level, BodiesUsed(s));
+            // 3 stars (docs/architecture.md 6.5): judged by Core, counts from the board's attempt.
+            var a = board.Attempt;
+            clearStars = Stars.Of(BodiesUsed(s), MinBodies(s), a.Hints, a.Undos, a.Restarts);
+            if (clearStars > 0) save.Progress.MarkCleared(s.Level, BodiesUsed(s), clearStars);
+            else save.Progress.MarkCleared(s.Level, BodiesUsed(s)); // unknown minimum: no stars
             save.SaveProgress();
+        }
+
+        /// The solver's fewest bodies for the stage on the board; 0 (unknown) when it does not fit this stage's bodies.
+        int MinBodies(State s)
+        {
+            int min = minBodies(flow.Stage);
+            return min > s.Level.Bodies ? 0 : min;
         }
 
         void OnWinPresented(State s)
@@ -159,15 +173,13 @@ namespace SevenSteps.Game.Flow
         {
             var s = board.State ?? throw new InvalidOperationException("Result without a board state");
             int stage = flow.Stage, bodies = s.Level.Bodies;
-            int min = minBodies(stage);
             int best = save.Progress.BestBodies(s.Level); // 0 = none, other map or out of range (11.3.1)
-            // The solver's number is external to this build's stage: out of range = unknown.
-            if (min > bodies) min = 0;
-            result.Show(ResultModel.Clear(stage, bodies, BodiesUsed(s), min, best, IsLast));
+            result.Show(ResultModel.Clear(stage, bodies, BodiesUsed(s), MinBodies(s), best, IsLast,
+                clearStars, save.Progress.BestStars(s.Level)));
         }
 
         bool IsLast => flow.Stage == flow.StageCount - 1;
 
-        static int BodiesUsed(State s) => s.Level.Bodies - s.Bodies + 1;
+        static int BodiesUsed(State s) => Stars.BodiesUsed(s);
     }
 }
