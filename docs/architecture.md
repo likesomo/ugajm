@@ -480,6 +480,7 @@ else flow.Go(AppState.Title);
 - **`LoadDelay`**(2026-11-10, 씬 플로우 S7c, 개발용): `-loadDelay 1.5` / `?loadDelay=1.5`(초, 0..10, 범위 밖·숫자 아님은 `Warnings`, 0 = 끔). `SceneLoader`가 매 씬 로드를 그 시간만큼 `allowSceneActivation = false`로 붙잡아 로딩 화면을 확인할 수 있게 한다. 공개 빌드에서도 읽히지만 최대 10초 지연뿐이라 막지 않는다.
 - **`FlowCheck`**(2026-11-10, 씬 플로우 S8, 개발·스모크용): `-flowcheck` / `?flowcheck=1|true`, `-level N -replay R`와 함께. `Game/App/FlowCheck`가 리플레이 마지막 수를 실제로 보내 이기고 Result 문구(`chapter_done`/`journey_done`)·Next·챕터 진입 카드·`ChapterStage.Current`를 검사, `[SevenSteps] Flow check stage N: OK|FAIL` 로그 후 종료. `unity.sh smoke`의 흐름 단계(`Tools/flow-stages.mjs`: 행성마다 마지막 스테이지 + 중간 대조 2개)가 쓴다. 일반 실행 영향 없음.
 - **`OpenSettings`**(2026-11-10, feat/view 6a6056d, 리드 결정, 개발·스크린샷용): `-settings` / `?settings=1|true`(`0|false` 끔, 그 밖 `Warnings`). 첫 화면(타이틀 또는 `-level` 게임)에서 설정 패널을 연 채로 시작. 저장 변경 없음.
+- **`TitleCheck`**(2026-11-10, 씬 플로우 S8, 개발·스모크용): `-titlecheck begin|continue|map` / `?titlecheck=`(그 밖 `Warnings`, "" = 꺼짐, `-level` 없이). 타이틀이 그 경로의 실제 버튼을 누르고(`onClick.Invoke`), 게임 씬이 `Title check X: arrived stage N via V`를 로그하고 종료(10초 안에 타이틀을 못 떠나면 FAIL). `unity.sh smoke`의 타이틀 단계가 쓴다. 일반 실행 영향 없음.
 - 바꿀 수 있는 곳은 두 메서드뿐: `TakeReplay()`(리플레이를 한 번만 꺼내고 비움), `UseEditorStart(level, replay)`(에디터에서 Game 씬 직접 Play: 실행 인자·URL이 없을 때만 인스펙터 값을 씀, 인스펙터 레벨을 썼으면 true, `level < 1`이면 예외).
 - 잘못된 값은 외부 입력이라 예외가 아니다: 숫자가 아니거나 1 미만인 `level`, 값이 없는 플래그, `off`/`0`/http(s)가 아닌 `telemetry`는 버리고 `Warnings`에 한 줄씩 남긴다. Contracts는 로그하지 않고 `Bootstrap`이 로그한다. 알 수 없는 인자·URL 키는 조용히 무시한다(Unity 자체 인자, `artfx` 등). 스테이지 수를 넘는 `level`은 S2에서 부트스트랩이 경고 후 보정한다.
 
@@ -790,3 +791,4 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 | 2026-11-10 | 게임플레이/UI·아키텍트 | 11장 `LaunchOptions.OpenSettings`(`-settings`/`?settings=1`, feat/view 6a6056d 검토 승인). 영향: 씬 플로우(`TitleScreen` 한 줄) |
 | 2026-11-10 | 씬 플로우·아키텍트 | 11.1 `AppFlow.CanGo`에 (Title, Game) 추가(feat/scene-flow 19554a3, 검토 승인). 타이틀 시작·이어하기가 조용히 막히던 버그 수정. 뒤로 표 변경 없음 |
 | 2026-11-10 | 씬 플로우·아키텍트 | 11.2 `EntryTracker.TakeVia`: 알린 via가 첫 진입보다 앞섬(지도·목록·타이틀 시작 = select, 이어하기 = 첫 진입이면 boot), `TitleFlowController(…, EntryTracker)` 생성자 인자 추가(feat/scene-flow c474b03 검토 승인, telemetry.md v1 via 정의 e953eb0). 텔레메트리 골든은 트레이스 `via`로 첫 `level_start` |
+| 2026-11-10 | 씬 플로우·아키텍트 | 11장 `LaunchOptions.TitleCheck`(`-titlecheck begin, continue, map`, 개발·스모크용, feat/scene-flow 78e81ee 검토 승인), `GameFlowController.LastVia`, `unity.sh smoke` 타이틀 단계 |
