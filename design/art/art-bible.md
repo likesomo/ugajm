@@ -1,5 +1,7 @@
 # Seven Steps 아트 바이블 — 유적×선돌×오리엔탈
 
+> Unity 프리뷰 연결 완료(2026-11-09):23프리팹·6재질·RuinsHenge_Chapter01 세트, Windows1스테이지와 WebGL1/8/13 화면 검증 완료. 공용 AppConfig 전환·몸 인덱스별 A/B/C 선택은 아직 적용하지 않았다. [연결/검증 문서](unity-integration.md)를 따른다. 기존 ‘Unity 미검증’ 문구는 당시 모델 전달 단계 기록이다.
+
 > 2026-11-09 사용자 확정: **세쌍둥이는 A안 색 구분**(청록 #568C88·황토 #B99A57·적갈 #B96C59). 같은 메시·실루엣·0.88m를 유지한다. B안 동일 외형은 기록만 남긴다. 챕터는 현재5행성 유지하며 레벨 디자이너의50스테이지/6–8행성 계획이 확정되기 전 확장하지 않는다.
 
 > 품질 보강 후 현행값:23종(석재 블록 V2/V3 추가), 배경 포함20,202tris,6재질. Blender 원본·백업과 보고서는 Assets 밖 `C:/unityjam/shared-assets/seven-steps/Source/Blender/`에 둔다. Assets에는 FBX·PNG만(관련 .meta 포함). Chapter01 제작 팔레트의 밝은 바닥 #DEDAC8/보조돌 #A7AD98/목재 #846147을 사용하며 아래 장별 팔레트는 분위기 목표다. 세부 내역·전후 비교는 [파이프라인](blender-pipeline.md) 첫 장을 따른다.
