@@ -88,3 +88,16 @@ EditMode + 가짜 로더 + `smoke`/`smoke-webgl`로 S0~S4를 덮을 수 있다. 
 - `GameController.LevelIndex`/`Levels` 공개 속성은 아트 프리뷰 `RuinsHengeEnvironment`가 `FindFirstObjectByType<GameController>`로 읽기 때문에 남았다. 12.8 `IStageEnvironment.Fit`으로 옮기면 지운다.
 - Esc·설정 패널 처리가 아직 `GameController.Update`/`TitleScreen`에 있다 → S4(`OverlayStack` + `BackNavigator`).
 - `BoardController`의 문구 표·힌트·사운드 정리는 게임플레이/UI 몫(리드 배분, 동시 수정 금지 순서대로).
+
+## S4 검토: feat/scene-flow 614236b (753fc60, 2026-11-09)
+
+**결론: 승인.** 코드 읽기(테스트는 씬 플로우 보고).
+- `OverlayStack`(순수 C#, `Game/Flow/` — 위치 결정대로): 열린 것 다시 열기·맨 위가 아닌 것 닫기는 예외, 닫기 버튼 구독을 스택이 관리해 해제 누락 없음. "열려 있나"의 기준이 스택 하나뿐(`Count`).
+- `BackNavigator`: Esc = 맨 위 오버레이 닫기, 없으면 흐름 Back(`TryGetBackTarget`). Esc 처리가 루트 `Update` 한 곳. 로드 중에는 루트가 먼저 돌아간다.
+- 오버레이 중 보드 입력 차단(`InputBlocked = IsLoading || overlays.Count > 0`), `Time.timeScale` 안 씀.
+- `SettingsPanel` = `IOverlay` 뷰(이벤트만, `Services` 조회 제거), `SettingsController`가 바꾸고 저장. 바꿀 때마다 저장은 PlayerPrefs 쓰기가 버튼 클릭당 한 번이라 문제 없음.
+- `ChapterEntering(from, to, stage)`: 보드 로드 전에 한 번, 첫 진입은 `from` = null. 12.8 챕터 프리셋 적용과 전환 카드가 여기 붙는다.
+
+### 후속
+- **아키텍트 할 일 끝냄**: `SaveSystem` 명령 `SetMasterVolume`/`SetSfxVolume`/`SetTelemetryChoice`/`TelemetryOn`(11.3, feat/architecture). `SettingsController`는 필드 직접 수정 대신 이것을 쓰도록 다음 커밋에서 바꿀 것(`Step`의 반올림·자르기·playerId 지우기가 그대로 들어 있다).
+- `ChapterEntering`의 챕터 비교는 문자열 그대로라 `""`(챕터 없음 = 첫 챕터)와 첫 챕터 id(`"moss"`)가 다르게 보인다. `chapters.json`이 생기면 `ChapterFileDto.Get(id)`로 정규화한 id를 비교할 것(6.4).

@@ -461,7 +461,12 @@ else flow.Go(AppState.Title);
 - 값이 없거나 깨졌으면 기본값으로 시작한다(예외로 멈추지 않음). v0 키 `seven-steps-cleared`(쉼표 목록)는 처음 읽을 때 `ProgressData.cleared`로 옮긴다.
 - `ProgressData`: `cleared`(클리어한 스테이지, 0부터), `bestStage`/`bestBodies`(스테이지별 최소 몸 수), `lastStage`. `MarkCleared(stage, bodiesUsed)`.
 - `SettingsData`: `masterVolume`, `sfxVolume`, `musicVolume`(0~1), `telemetryChoice`(0 미선택=기본값 따름, 1 동의, 2 거부), `playerId`(익명 무작위 ID, 거부하면 지움), `language`.
-- 저장 시점: 클리어할 때, 설정 패널을 닫을 때. 매 걸음 저장하지 않는다. `SaveSettings()`는 `SettingsChanged`를 발생시켜 오디오 음량과 텔레메트리 사용 여부를 바로 반영한다.
+- 저장 시점: 클리어할 때, 스테이지 선택으로 나갈 때, **설정 값을 바꿀 때마다**(씬 플로우 S4: 패널이 Esc·버튼·씬 전환 어느 쪽으로 닫혀도 값이 남는다). 매 걸음 저장하지 않는다. `SaveSettings()`는 `SettingsChanged`를 발생시켜 오디오 음량과 텔레메트리 사용 여부를 바로 반영한다.
+- **설정 명령(2026-11-09)**: 설정 패널 컨트롤러는 필드를 직접 바꾸지 않고 이것을 부른다(9장 MVC). 모두 바로 저장하고 `SettingsChanged`를 낸다.
+  - `SetMasterVolume(v)`, `SetSfxVolume(v)`: 0.1 단위로 반올림, 0~1로 자름(+를 1에서 눌러도 1). NaN은 예외.
+  - `SetTelemetryChoice(on)`: 켬 = 1, 끔 = 2 + `playerId` 지움(다시 켜면 텔레메트리 시작 때 새 ID).
+  - `TelemetryOn(onByDefault)`: 토글 표시값(명시 선택, 없으면 빌드 기본값). `TelemetryAllowed(config)`와 같은 판단.
+- `SaveSystem(store)`: `store`가 null이면 `ArgumentNullException`.
 
 ### 11.4 텔레메트리 (`ITelemetry`, 스키마 v1)
 
@@ -627,3 +632,4 @@ else flow.Go(AppState.Title);
 | 2026-11-09 | 아키텍트 | 6.3 진흙 `m`(2걸음, 남은 1걸음이면 막힘, 얼음 미끄러짐 멈춤, 새 이벤트 없음) 고지, `TileKind.Mud`(끝에 추가)·`TileId.FromChar('m')`·`TileSet.mud`(없으면 바닥, 검사기 경고). 6.4 `chapter` = 문자열 id + `chapters.json`(`id`, `planet`, `concept`, `intro`, `artPreset`), `story`, export 검증은 첫 묶음부터, `ChapterInfo`/`ChapterFileDto`(Contracts). 12.8 표 갱신 |
 | 2026-11-09 | 코어·아키텍트 | 6.3 진흙 코어 구현(feat/core 6ae58e2): `Rules.IsMud(char)`, SWITCH 출발점 가능, 막히면 `Bump`(진흙 칸). `Mud` 이벤트는 넣지 않음. 골든 트레이스 id가 스테이지 이름 기준으로 바뀜(`server/fixtures` 재생성) |
 | 2026-11-09 | 아키텍트 | 11.1·11.2 씬 플로우 S2 반영(feat/scene-flow f08f4d6, 검토 승인): **`AppFlow(ISceneLoader, int stageCount)` 생성자 변경**, `StageCount`, `GoToGame` 범위 예외, `TryGetBackTarget`/`CanBack`/`CanGoToGame`, `IsLoading` + **`ISceneLoader.Loaded` 추가**(로드 중 전이 예외), `Changed` 시점 명시, `EntryTracker`(Game, `Services` 등록), `Bootstrap.Run(config, assets, ...)`, 범위 밖 `-level`은 경고 후 마지막 스테이지. `AppFlow`를 직접 만들거나 `ISceneLoader`를 구현하던 코드(테스트 가짜 로더 포함)는 고쳐야 한다 |
+| 2026-11-09 | 아키텍트 | 11.3 `SaveSystem` 설정 명령 `SetMasterVolume`/`SetSfxVolume`/`SetTelemetryChoice`/`TelemetryOn` 추가(씬 플로우 S4 `SettingsController`용), 설정은 바꿀 때마다 저장, 생성자 null 검사. EditMode `SaveSettingsCommandTests` |
