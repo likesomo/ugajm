@@ -676,12 +676,13 @@ else flow.Go(AppState.Title);
 ### 13.2 문자열 테이블
 - 파일: `Assets/_Project/Data/Strings/ko.json`, `en.json`(텍스트, 커밋). 형식 `{ "entries": [ { "key": "hud.undo", "text": "되돌리기 Z" }, ... ] }`(JsonUtility가 딕셔너리를 못 읽으므로 배열). 키: 소문자·점 구분(`화면.요소`), 바꾸지 않는다.
 - 기준 언어 = ko. 모든 키가 ko에 있어야 하고, en에 없는 키는 **빌드 전 검증 오류**(13.6).
-- 런타임(Contracts, 아키텍트): `Language` enum(`Ko`, `En`, 끝에 추가), `StringTable`(키→문자열, `Get(key)` 없으면 예외, `Format(key, args)`), `Localizer`(현재 언어, `Changed` 이벤트). 코드에서 UI 문구 리터럴을 쓰지 않고 `loc.Get("hud.undo")`. 문구 표(`MessagePresenter` 등)는 키 표가 된다.
+- 런타임(Contracts `Localization/`, 아키텍트, **구현됨 2026-11-10**): `Language` enum(`Ko`, `En`, 끝에 추가)과 `Languages`(`Base` = Ko, `All`, `Code`, `TryParse`, `FromSystem`). `StringTable`(`FromJson(lang, json)`, `Get(key)` 없으면 `KeyNotFoundException`, `Has`, `Format(key, args)`, 중복 키·빈 키는 예외). `Localizer`(`FromAssets(GameAssets.strings, current)`, ko 표 필수, `Current`, `Set(lang)`(없는 언어 예외), `Changed`, `Get`/`Format`). 부트스트랩이 만들어 `Services`에 등록(씬 플로우).
+- **테이블 슬롯**: `GameAssets.strings` = `StringTableAsset[]`(`language`, `json`) — 언어가 늘어도 필드를 바꾸지 않는다. 지금 `Data/Strings/ko.json`·`en.json`(빈 틀 `{"entries":[]}`) 연결됨. `LocalizationCheck`는 이 배열 기준(ko 필수, 언어 중복 금지, 키 대칭). 코드에서 UI 문구 리터럴을 쓰지 않고 `loc.Get("hud.undo")`. 문구 표(`MessagePresenter` 등)는 키 표가 된다.
 - 동적 문구(`몸 {0}개`)는 `{0}` 치환. 조사(을/를 등)는 문장을 키마다 통째로 둬서 피한다.
 
 ### 13.3 언어 설정
-- `SettingsData.language`(이미 있음, 기본 "ko") → 값은 `"ko"`/`"en"`. **첫 실행**(저장 없음): `Application.systemLanguage`가 Korean이면 ko, 그 밖은 en. 설정 패널에 언어 토글(`SaveSystem.SetLanguage(lang)` 명령 추가, 바로 저장 + `SettingsChanged`).
-- 실행 인자 `-lang en`/URL `?lang=en`(플레이테스트·스모크용, `LaunchOptions.Language`, 저장하지 않음).
+- `SettingsData.language` 값은 `"ko"`/`"en"`. **첫 실행**(설정 저장 없음): `SaveSystem`이 `Application.systemLanguage`로 정한다(Korean → ko, 그 밖 en). 읽기는 `SaveSystem.Language`(모르는 값이면 ko), 바꾸기는 `SaveSystem.SetLanguage(lang)`(바로 저장 + `SettingsChanged`). 구현됨.
+- 실행 인자 `-lang en`/URL `?lang=en`(플레이테스트·스모크용, `LaunchOptions.Language`(`Language?`, null = 저장된 설정), 저장하지 않음, 잘못된 값은 `Warnings`). 구현됨. 이번 실행의 언어 = `launch.Language ?? save.Language`.
 - 바꾸면 즉시 반영: `Localizer.Changed` → 뷰가 다시 그린다(코드 생성 UI는 `Refresh`, 프리팹 뷰는 텍스트 갱신 메서드). 씬 다시 읽기 없음.
 
 ### 13.4 글꼴 (UiTheme 언어·역할별 세트, 2026-11-09 아트 제안 반영)
@@ -710,7 +711,7 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 
 ### 13.5 레벨·챕터 텍스트
 - `levels.js`/`levels.json`: 기존 `name`/`hint`/`story`는 **ko 그대로**(그리고 `name`은 저장 키, 11.3.1 — 번역해도 키는 ko 이름). 번역은 `text` 배열: `"text": [ { "lang": "en", "name": "...", "hint": "...", "story": "..." } ]`. `LevelDto.text`(코어), `LevelCatalog.NameOf(stage, lang)` 등(게임플레이/UI·씬 플로우).
-- `chapters.json`: 같은 방식 `"text": [ { "lang": "en", "planet": "...", "concept": "...", "intro": "..." } ]`. `ChapterInfo.text`(아키텍트).
+- `chapters.json`: 같은 방식 `"text": [ { "lang": "en", "planet": "...", "concept": "...", "intro": "..." } ]`. `ChapterInfo.text`(`ChapterText[]`), `Planet(lang)`/`Concept(lang)`/`Intro(lang)`(ko는 기본 필드, 다른 언어 번역이 없으면 `KeyNotFoundException` — 검사가 빌드 전에 잡는다). 구현됨.
 - 텔레메트리는 ko 이름(키)을 그대로 보낸다(분석이 이름으로 묶음). `session_start`에 `lang`을 실을지는 백엔드.
 
 ### 13.6 누락 검사
@@ -762,3 +763,4 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 | 2026-11-09 | 아키텍트 | 6.5 3별 계약(B안): 시도 정의, 셈 규칙(undos/restarts/hintUsed), Core `Scoring.Stars(AttemptStats)`(코어), 셈은 `BoardController`(게임플레이/UI)·`IStageBoard` 노출(씬 플로우), 저장 `ProgressData.MarkCleared(level, bodies, stars)`/`BestStars`(Contracts, 구현). 13장 다국어 설계: 자체 경량 JSON 문자열 테이블(Unity Localization 기각: WebGL 용량·비동기 초기화·병합), 언어 설정·첫 실행 시스템 언어, UiTheme 언어별 글꼴, levels/chapters `text` 배열, 누락 검사 |
 | 2026-11-09 | 코어·아키텍트 | 6.5 판정 API를 코어 구현에 맞춤: `Scoring.Stars(AttemptStats)` 대신 `SevenSteps.Core.Stars.Of(bodiesUsed, minBodies, hints, undos, restarts)`(0 = 판정 불가), `Stars.Max`, `Stars.BodiesUsed(State)`. 의미는 같음(★2는 최소 몸 이하·힌트 0, ★3은 Z·R 0) |
 | 2026-11-09 | 아키텍트 | 13.4 UiTheme 글꼴을 아트 제안(fonts.md, ui-theme.md)과 맞춤: `LanguageFonts{language, title, body, 크기·줄간격}` + 테마 공통 `number`, `FontFor(lang, role)`, `symbolFallbackFont` 없음(레거시 Text는 에셋 간 대체 불가). 6.4 `artPreset` ↔ `AppConfig.chapters` 검사 켬 |
+| 2026-11-10 | 아키텍트 | 13장 1번 구현: `Language`/`Languages`(93347db), `StringTable`/`StringTableAsset`/`Localizer`, `SaveSystem.Language`/`SetLanguage`·첫 실행 시스템 언어, `LaunchOptions.Language`(`-lang`/`?lang`), `ChapterInfo.text`/`ChapterText`, `GameAssets.strings` + `Data/Strings/ko.json`·`en.json` 빈 틀. EditMode `LocalizationContractTests` |

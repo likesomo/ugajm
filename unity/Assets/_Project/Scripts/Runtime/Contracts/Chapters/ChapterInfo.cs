@@ -37,6 +37,32 @@ namespace SevenSteps.Contracts
         /// ChapterPreset.id in AppConfig.chapters. Empty = same as id.
         public string artPreset = "";
 
+        /// Translations (docs/architecture.md 13.5). The base fields above are ko.
+        public ChapterText[] text = new ChapterText[0];
+
         public string ArtPreset => string.IsNullOrEmpty(artPreset) ? id : artPreset;
+
+        public string Planet(Language lang) => lang == Languages.Base ? planet : Text(lang).planet;
+        public string Concept(Language lang) => lang == Languages.Base ? concept : Text(lang).concept;
+        public string Intro(Language lang) => lang == Languages.Base ? intro : Text(lang).intro;
+
+        /// The translation for a non-base language. Missing = data error (export and LocalizationCheck catch it), so it throws.
+        public ChapterText Text(Language lang)
+        {
+            string code = Languages.Code(lang);
+            if (text != null) foreach (var t in text) if (t != null && t.lang == code) return t;
+            throw new System.Collections.Generic.KeyNotFoundException($"chapters.json {id}: no \"{code}\" text");
+        }
+    }
+
+    /// <summary>One translation of a chapter (chapters.json "text" entry).</summary>
+    [Serializable]
+    public sealed class ChapterText
+    {
+        /// "en" (Languages.Code).
+        public string lang = "";
+        public string planet = "";
+        public string concept = "";
+        public string intro = "";
     }
 }

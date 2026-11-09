@@ -15,6 +15,8 @@ namespace SevenSteps.Game
         public TextAsset levelsJson;
         [Tooltip("Data/chapters.json (docs/architecture.md 6.4). Empty until the chapters land: every stage is the first chapter.")]
         public TextAsset chaptersJson;
+        [Tooltip("UI string tables per language, Data/Strings/<code>.json (docs/architecture.md 13.2). ko is required.")]
+        public SevenSteps.Contracts.StringTableAsset[] strings = new SevenSteps.Contracts.StringTableAsset[0];
         public Font font;
         [Tooltip("UI look: font, colors, panel prefabs (docs/scene-flow.md S6). Default Data/UiTheme_Default.asset")]
         public UI.UiTheme uiTheme;

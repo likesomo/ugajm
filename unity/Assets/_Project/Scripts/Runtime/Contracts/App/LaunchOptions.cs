@@ -25,6 +25,8 @@ namespace SevenSteps.Contracts
         /// Smoke tests with -screenshot and no -level: open Stage Select / Credits on the title screen first.
         public bool OpenStageSelect { get; private set; }
         public bool OpenCredits { get; private set; }
+        /// UI language for this run only (-lang en / ?lang=en, docs 13.3; not saved). Null = the saved setting.
+        public Language? Language { get; private set; }
 
         readonly List<string> warnings = new List<string>();
         /// What was ignored while parsing, one line each. Empty when everything parsed.
@@ -57,6 +59,12 @@ namespace SevenSteps.Contracts
             else warnings.Add($"{source}: level \"{v}\" is not a stage number (1 or more); ignored");
         }
 
+        void SetLanguage(string source, string v)
+        {
+            if (Languages.TryParse(v, out var lang)) Language = lang;
+            else warnings.Add($"{source}: lang \"{v}\" is not ko or en; ignored");
+        }
+
         void SetTelemetry(string source, string v)
         {
             if (v == "off" || v == "0") TelemetryOff = true;
@@ -74,7 +82,7 @@ namespace SevenSteps.Contracts
                     {
                         case "-stageselect": o.OpenStageSelect = true; continue;
                         case "-credits": o.OpenCredits = true; continue;
-                        case "-level": case "-replay": case "-screenshot": case "-telemetry": break;
+                        case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": break;
                         default: continue;
                     }
                     if (k + 1 >= args.Length || args[k + 1].StartsWith("-", StringComparison.Ordinal))
@@ -89,6 +97,7 @@ namespace SevenSteps.Contracts
                         case "-replay": o.Replay = v; break;
                         case "-screenshot": o.Screenshot = v; break;
                         case "-telemetry": o.SetTelemetry("command line", v); break;
+                        case "-lang": o.SetLanguage("command line", v); break;
                     }
                 }
 
@@ -104,6 +113,7 @@ namespace SevenSteps.Contracts
                     case "level": o.SetLevel("url", v); break;
                     case "replay": o.Replay = v; break;
                     case "telemetry": o.SetTelemetry("url", v); break;
+                    case "lang": o.SetLanguage("url", v); break;
                 }
             }
             return o;

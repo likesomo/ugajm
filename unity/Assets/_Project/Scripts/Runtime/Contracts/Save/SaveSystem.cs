@@ -73,7 +73,12 @@ namespace SevenSteps.Contracts
         {
             this.store = store ?? throw new ArgumentNullException(nameof(store));
             Progress = LoadProgress(out progressReadOnly);
-            Settings = Read<SettingsData>(SettingsKey) ?? new SettingsData();
+            Settings = Read<SettingsData>(SettingsKey);
+            if (Settings == null)
+            {
+                // First run (13.3): the UI language follows the system (Korean → ko, otherwise en).
+                Settings = new SettingsData { language = Languages.Code(Languages.FromSystem(Application.systemLanguage)) };
+            }
         }
 
         public void SaveProgress()
@@ -104,6 +109,16 @@ namespace SevenSteps.Contracts
         {
             Settings.telemetryChoice = on ? 1 : 2;
             if (!on) Settings.playerId = "";
+            SaveSettings();
+        }
+
+        /// UI language from the settings. A value this build does not know (newer save, hand edit) reads as the base language.
+        public Language Language => Languages.TryParse(Settings.language, out var lang) ? lang : Languages.Base;
+
+        /// Language toggle in settings (13.3). Saves and raises SettingsChanged (views redraw through the Localizer).
+        public void SetLanguage(Language language)
+        {
+            Settings.language = Languages.Code(language);
             SaveSettings();
         }
 
