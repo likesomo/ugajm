@@ -1,7 +1,7 @@
 // HTTP handler: event intake, stats API, dashboard, the web prototype at /play/ and the Unity WebGL build at /webgl/
 // (same-origin playtests).
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, stat, open } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { join, normalize, extname, dirname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +16,40 @@ const MIME = {
   '.ico': 'image/x-icon', '.wasm': 'application/wasm', '.data': 'application/octet-stream', '.unityweb': 'application/octet-stream',
 };
 export const WEBGL_DIR = join(here, '../../Builds/WebGL');
+
+// Precompressed files: Unity WebGL builds (gzip + decompression fallback) name them *.unityweb, others use *.gz / *.br.
+// Content-Type comes from the inner extension (WebGL.wasm.unityweb -> application/wasm, so the browser can compile
+// while streaming), and the encoding is declared only when the file really is compressed that way and the client
+// accepts it. Without the header the bytes go out as they are and Unity's JS fallback unpacks them, so both paths load.
+const COMPRESSED = { '.unityweb': null, '.gz': 'gzip', '.br': 'br' };
+const GZIP_MAGIC = [0x1f, 0x8b];
+
+async function sniffGzip(file) {
+  const fh = await open(file, 'r');
+  try {
+    const { buffer, bytesRead } = await fh.read(Buffer.alloc(2), 0, 2, 0);
+    return bytesRead === 2 && buffer[0] === GZIP_MAGIC[0] && buffer[1] === GZIP_MAGIC[1];
+  } finally {
+    await fh.close();
+  }
+}
+
+const accepts = (req, enc) => (req.headers['accept-encoding'] ?? '').split(',').some((p) => {
+  const [name, ...params] = p.trim().toLowerCase().split(';');
+  return (name === enc || name === '*') && !params.some((q) => /^\s*q=0(\.0*)?\s*$/.test(q));
+});
+
+// { type, encoding } for a file to serve. encoding is null when the bytes go out unchanged.
+export async function fileHeaders(file, req) {
+  const outer = extname(file).toLowerCase();
+  if (!(outer in COMPRESSED)) return { type: MIME[outer] ?? 'application/octet-stream', encoding: null };
+  const inner = extname(file.slice(0, -outer.length)).toLowerCase();
+  const type = MIME[inner] ?? 'application/octet-stream';
+  // .unityweb may be gzip, Brotli or uncompressed depending on the build setting: only gzip has a magic number.
+  // Brotli .unityweb gets no header (the fallback handles it; br also needs HTTPS in browsers).
+  const enc = COMPRESSED[outer] ?? ((await sniffGzip(file)) ? 'gzip' : null);
+  return { type, encoding: enc && accepts(req, enc) ? enc : null };
+}
 
 const DEFAULT_ORIGINS = [
   /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/,
@@ -137,14 +171,20 @@ export function createApp({ store, token, levels = [], allowedOrigins = [], trus
     return send(res, 200, { ...r, rejected }, cors);
   }
 
-  // Streams a file under root. The Unity build uses gzip with the decompression fallback, so no Content-Encoding.
+  // Streams a file under root. Precompressed files (WebGL build) get Content-Encoding when possible, see fileHeaders.
   async function serveStatic(req, res, rel, root) {
     const file = normalize(join(root, rel || 'index.html'));
     if (!file.startsWith(normalize(root) + sep) && file !== normalize(root)) return send(res, 404, 'not found');
     let st;
     try { st = await stat(file); } catch { return send(res, 404, 'not found'); }
     if (st.isDirectory()) return serveStatic(req, res, join(rel, 'index.html'), root);
-    res.writeHead(200, { 'Content-Type': MIME[extname(file)] ?? 'application/octet-stream', 'Content-Length': st.size, 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
+    const { type, encoding } = await fileHeaders(file, req);
+    const compressed = extname(file).toLowerCase() in COMPRESSED;
+    res.writeHead(200, {
+      'Content-Type': type, 'Content-Length': st.size, 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff',
+      ...(encoding ? { 'Content-Encoding': encoding } : {}),
+      ...(compressed ? { Vary: 'Accept-Encoding' } : {}),
+    });
     if (req.method === 'HEAD') return res.end();
     await new Promise((ok) => createReadStream(file).on('error', () => { res.destroy(); ok(); }).on('end', ok).pipe(res));
   }

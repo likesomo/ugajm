@@ -110,7 +110,7 @@ DB_PATH=server/data/playtest-$(date +%F).sqlite node server/src/index.mjs
 | `POST /v1/events` | 없음 | 배치 수신. `application/json` 또는 `text/plain`(sendBeacon). 최대 100건·64KB. `(sessionId, seq)` 중복은 무시 |
 | `GET /healthz` | 없음 | `{"ok":true}` |
 | `GET /play/` | 없음 | 웹 프로토타입 |
-| `GET /webgl/` | 없음 | Unity WebGL 빌드 (`WEBGL_DIR`). `telemetry` 파라미터가 없으면 이 서버 주소를 붙여 302 |
+| `GET /webgl/` | 없음 | Unity WebGL 빌드 (`WEBGL_DIR`). `telemetry` 파라미터가 없으면 이 서버 주소를 붙여 302. 미리 압축된 파일(`.unityweb`은 실제 gzip일 때, `.gz`)은 브라우저가 gzip을 받으면 `Content-Encoding: gzip`, Content-Type은 안쪽 확장자(`.wasm` → `application/wasm` 스트리밍 컴파일, `.data` → octet-stream, `.js`). 아니면 그대로 보내고 Unity JS 폴백이 푼다 |
 | `GET /dashboard` | 페이지는 공개, 데이터는 토큰 | 대시보드 (`#token=…`로 한 번 열면 브라우저에 기억) |
 | `GET /api/levels` | 토큰 | 현재 빌드 레벨 맵, `levelKey`, 최단 이동 수 |
 | `GET /api/stats/overview` | 토큰 | 합계, 빌드·클라이언트 목록, 언어별 세션 수(`langs`) |

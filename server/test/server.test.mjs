@@ -163,6 +163,69 @@ test('WebGL build at /webgl/: adds ?telemetry=<this server>, streams the files',
   }
 });
 
+test('WebGL precompressed files: Content-Encoding for real gzip, Content-Type from the inner extension', async () => {
+  const { mkdtempSync, mkdirSync, writeFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { gzipSync } = await import('node:zlib');
+  const { request } = await import('node:http');
+  const dir = mkdtempSync(join(tmpdir(), 'webgl-gz-'));
+  mkdirSync(join(dir, 'Build'));
+  const wasm = Buffer.from([0x00, 0x61, 0x73, 0x6d, 1, 0, 0, 0, ...Array(500).fill(9)]);
+  const gz = gzipSync(wasm);
+  writeFileSync(join(dir, 'Build', 'WebGL.wasm.unityweb'), gz);
+  writeFileSync(join(dir, 'Build', 'WebGL.data.unityweb'), gzipSync(Buffer.alloc(800, 3)));
+  writeFileSync(join(dir, 'Build', 'WebGL.framework.js.unityweb'), gzipSync('var x = 1;'));
+  writeFileSync(join(dir, 'Build', 'Plain.data.unityweb'), Buffer.alloc(300, 7)); // uncompressed (or Brotli) build
+  writeFileSync(join(dir, 'Build', 'WebGL.wasm.gz'), gz);
+  writeFileSync(join(dir, 'Build', 'WebGL.loader.js'), 'loader();');
+  // Raw response (node:http does not decompress), so the test sees the bytes on the wire.
+  const raw = (url, acceptEncoding) => new Promise((ok, fail) => {
+    const req = request(url, { headers: acceptEncoding == null ? {} : { 'Accept-Encoding': acceptEncoding } }, (res) => {
+      const chunks = [];
+      res.on('data', (c) => chunks.push(c)).on('end', () => ok({ headers: res.headers, body: Buffer.concat(chunks) }));
+    });
+    req.on('error', fail).end();
+  });
+  const s = await startServer({ webglDir: dir });
+  try {
+    const B = `${s.url}/webgl/Build/`;
+    const w = await raw(`${B}WebGL.wasm.unityweb`, 'gzip, deflate, br');
+    assert.equal(w.headers['content-encoding'], 'gzip');
+    assert.equal(w.headers['content-type'], 'application/wasm', 'wasm streaming compile needs application/wasm');
+    assert.equal(w.headers.vary, 'Accept-Encoding');
+    assert.equal(w.headers['content-length'], String(gz.length));
+    assert.deepEqual(w.body, gz, 'the file is sent as stored; the browser unpacks it');
+    // fetch() unpacks Content-Encoding like a browser: Unity then sees plain wasm (its fallback skips non-gzip data).
+    assert.deepEqual(Buffer.from(await (await fetch(`${B}WebGL.wasm.unityweb`)).arrayBuffer()), wasm);
+
+    const d = await raw(`${B}WebGL.data.unityweb`, 'gzip');
+    assert.equal(d.headers['content-encoding'], 'gzip');
+    assert.equal(d.headers['content-type'], 'application/octet-stream');
+    const f = await raw(`${B}WebGL.framework.js.unityweb`, 'gzip');
+    assert.equal(f.headers['content-encoding'], 'gzip');
+    assert.match(f.headers['content-type'], /^text\/javascript/);
+    assert.equal((await raw(`${B}WebGL.wasm.gz`, 'gzip')).headers['content-type'], 'application/wasm');
+
+    // Fallback paths: the client does not take gzip, or the file is not gzip -> no header, bytes unchanged (Unity unpacks in JS).
+    for (const ae of [null, 'identity', 'gzip;q=0, br']) {
+      const n = await raw(`${B}WebGL.wasm.unityweb`, ae);
+      assert.equal(n.headers['content-encoding'], undefined, `Accept-Encoding ${ae}`);
+      assert.equal(n.headers['content-type'], 'application/wasm');
+      assert.deepEqual(n.body, gz);
+    }
+    const p = await raw(`${B}Plain.data.unityweb`, 'gzip');
+    assert.equal(p.headers['content-encoding'], undefined, 'non-gzip .unityweb is not labelled gzip');
+    assert.equal(p.body.length, 300);
+    const l = await raw(`${B}WebGL.loader.js`, 'gzip');
+    assert.equal(l.headers['content-encoding'], undefined);
+    assert.equal(l.headers.vary, undefined);
+    assert.match(l.headers['content-type'], /^text\/javascript/);
+  } finally {
+    await s.close();
+  }
+});
+
 test('language: carried forward within a session across batches, filterable, listed in the overview', async () => {
   const w = await startServer();
   try {
