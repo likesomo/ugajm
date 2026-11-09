@@ -68,5 +68,35 @@ namespace SevenSteps.Tests
                 Object.DestroyImmediate(set);
             }
         }
+
+        [Test]
+        public void KeepLookNeutralIgnoresStatueBodies()
+        {
+            var set = ScriptableObject.CreateInstance<TileSet>();
+            var plain = new GameObject("Menhir");
+            var ta = new GameObject("MenhirA");
+            var tb = new GameObject("MenhirB");
+            try
+            {
+                set.statue = new TileVisual { prefab = plain };
+                set.statueBodies = new[] { new TileVisual { prefab = ta }, new TileVisual { prefab = tb } };
+                Assert.AreEqual(KeepLook.Neutral, set.keepLook, "default is the art bible neutral menhir");
+                Assert.AreSame(plain, set.StatueFor(1).prefab, "Neutral -> statue for every body");
+                Assert.AreSame(plain, set.StatueFor(-1).prefab);
+
+                set.keepLook = KeepLook.SiblingTrace;
+                Assert.AreSame(ta, set.StatueFor(0).prefab);
+                Assert.AreSame(tb, set.StatueFor(1).prefab);
+                Assert.AreSame(ta, set.StatueFor(2).prefab, "cycles by array length");
+                Assert.AreSame(plain, set.StatueFor(-1).prefab, "no owner -> statue");
+            }
+            finally
+            {
+                Object.DestroyImmediate(plain);
+                Object.DestroyImmediate(ta);
+                Object.DestroyImmediate(tb);
+                Object.DestroyImmediate(set);
+            }
+        }
     }
 }
