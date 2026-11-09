@@ -1,70 +1,804 @@
 {
   "note": "50-stage plan (draft for lead approval). D = target difficulty (same scale as level-metrics D). A = planned aha (judgement scale). tags = planned gimmick tags (interest-model.md 2). src: keep = existing stage as is, edit = existing stage changed, redo = existing idea rebuilt for 3 bodies, new = new stage, exp = experiment sketch. Rendered by prototypes/seven-steps/tools/plan-curve.mjs.",
   "chapters": [
-    { "id": 1, "key": "moss", "planet": "이끼의 궤도", "concept": "고향. 잘린 석주와 이끼 덮인 작은 관측 유적", "gimmick": "7걸음, 돌아가기, KEEP + 발판", "beat": "세쌍둥이가 하늘 지도에 그려진 원형 제단을 보고 길을 나선다" },
-    { "id": 2, "key": "hollow", "planet": "별구멍 달", "concept": "표면 곳곳이 뚫려 아래로 별이 보이는 달", "gimmick": "SWITCH, 구멍 다리", "beat": "길이 끊긴 달. 형제가 엎드린 선돌이 되어 다리를 놓고, 바통을 넘겨 멀리 간다" },
-    { "id": 3, "key": "carved", "planet": "새김돌 행성", "concept": "기둥마다 숫자가 새겨진 계산의 행성", "gimmick": "숫자 문", "beat": "옛 관측자가 남긴 숫자를 읽는 법을 배운다. 둘째는 처음부터 다시 센다" },
-    { "id": 4, "key": "frost", "planet": "서리 위성", "concept": "얼어붙은 위성, 목재 난간과 서리 낀 석재", "gimmick": "얼음, 홀짝, 석상 멈춤벽", "beat": "미끄러운 길. 7은 홀수라는 것을 몸으로 안다" },
-    { "id": 5, "key": "joinery", "planet": "결구의 행성", "concept": "나무 결구와 놋쇠 레버로 움직이는 벽의 행성", "gimmick": "레버, 뒤집힘 벽", "beat": "7번째 걸음이 장치를 돌린다. 한 번 당긴 레버는 되돌릴 수 없다" },
-    { "id": 6, "key": "crumble", "planet": "무너지는 행성", "concept": "금 간 바닥과 석상 수를 세는 문이 있는 부서지는 행성", "gimmick": "금 간 바닥, 석상 수 문", "beat": "남길 수 있는 형제의 수가 정해진 곳. 몇이 남아야 하나" },
-    { "id": 7, "key": "altar", "planet": "원형 제단", "concept": "선돌 원형 제단이 있는 마지막 행성, 이끼 늪", "gimmick": "진흙(새 기믹), 종합", "beat": "제단에 닿는다. 두 형제가 선돌로 서고 마지막 형제의 7번째 걸음이 원을 완성한다" }
+    {
+      "id": 1,
+      "key": "moss",
+      "planet": "이끼의 궤도",
+      "concept": "고향. 잘린 석주와 이끼 덮인 작은 관측 유적",
+      "gimmick": "7걸음, 돌아가기, KEEP + 발판",
+      "beat": "세쌍둥이가 하늘 지도에 그려진 원형 제단을 보고 길을 나선다"
+    },
+    {
+      "id": 2,
+      "key": "hollow",
+      "planet": "별구멍 달",
+      "concept": "표면 곳곳이 뚫려 아래로 별이 보이는 달",
+      "gimmick": "SWITCH, 구멍 다리",
+      "beat": "길이 끊긴 달. 형제가 엎드린 선돌이 되어 다리를 놓고, 바통을 넘겨 멀리 간다"
+    },
+    {
+      "id": 3,
+      "key": "carved",
+      "planet": "새김돌 행성",
+      "concept": "기둥마다 숫자가 새겨진 계산의 행성",
+      "gimmick": "숫자 문",
+      "beat": "옛 관측자가 남긴 숫자를 읽는 법을 배운다. 둘째는 처음부터 다시 센다"
+    },
+    {
+      "id": 4,
+      "key": "frost",
+      "planet": "서리 위성",
+      "concept": "얼어붙은 위성, 목재 난간과 서리 낀 석재",
+      "gimmick": "얼음, 홀짝, 석상 멈춤벽",
+      "beat": "미끄러운 길. 7은 홀수라는 것을 몸으로 안다"
+    },
+    {
+      "id": 5,
+      "key": "joinery",
+      "planet": "결구의 행성",
+      "concept": "나무 결구와 놋쇠 레버로 움직이는 벽의 행성",
+      "gimmick": "레버, 뒤집힘 벽",
+      "beat": "7번째 걸음이 장치를 돌린다. 한 번 당긴 레버는 되돌릴 수 없다"
+    },
+    {
+      "id": 6,
+      "key": "crumble",
+      "planet": "무너지는 행성",
+      "concept": "금 간 바닥과 석상 수를 세는 문이 있는 부서지는 행성",
+      "gimmick": "금 간 바닥, 석상 수 문",
+      "beat": "남길 수 있는 형제의 수가 정해진 곳. 몇이 남아야 하나"
+    },
+    {
+      "id": 7,
+      "key": "altar",
+      "planet": "원형 제단",
+      "concept": "선돌 원형 제단이 있는 마지막 행성, 이끼 늪",
+      "gimmick": "진흙(새 기믹), 종합",
+      "beat": "제단에 닿는다. 두 형제가 선돌로 서고 마지막 형제의 7번째 걸음이 원을 완성한다"
+    }
   ],
   "stages": [
-    { "n": 1, "ch": 1, "role": "소개", "title": "일곱 걸음", "src": "keep 1", "tags": ["walk7"], "D": 0.15, "A": 0.3, "aha": "출구는 7번째 걸음에만 열린다" },
-    { "n": 2, "ch": 1, "role": "응용", "title": "늦게 도착하기", "src": "keep 2", "tags": ["detour"], "D": 0.15, "A": 0.5, "aha": "일부러 돌아가 걸음을 맞춘다" },
-    { "n": 3, "ch": 1, "role": "응용", "title": "두 갈래 길", "src": "new", "tags": ["detour", "route"], "D": 0.22, "A": 0.4, "aha": "갈림길에서 길이를 세어 7이 되는 쪽을 고른다" },
-    { "n": 4, "ch": 1, "role": "소개", "title": "남는 형제", "src": "keep 3 (돌이 된 몸)", "tags": ["keep", "plate"], "D": 0.3, "A": 0.6, "aha": "형제 하나가 선돌로 남아 발판을 눌러 준다" },
-    { "n": 5, "ch": 1, "role": "응용", "title": "문 앞의 선돌", "src": "new", "tags": ["keep", "plate", "detour"], "D": 0.3, "A": 0.4, "aha": "발판까지 7걸음이 되도록 돌아가 선다" },
-    { "n": 6, "ch": 1, "role": "반전", "title": "길을 막는 선돌", "src": "new", "tags": ["keep", "plate", "statueBlock"], "D": 0.34, "A": 0.6, "aha": "선돌은 벽이기도 하다. 남길 자리를 잘못 고르면 길이 막힌다" },
-    { "n": 7, "ch": 1, "role": "피날레", "title": "두 개의 문", "src": "edit 12", "tags": ["keep", "plate", "multiStatue", "detour"], "D": 0.4, "A": 0.4, "aha": "두 형제를 모두 선돌로 남기고 셋째가 지나간다" },
-
-    { "n": 8, "ch": 2, "role": "소개", "title": "새 출발점", "src": "keep 4 (예산 3으로)", "tags": ["switch"], "D": 0.3, "A": 0.6, "aha": "SWITCH: 남기지 않고 바통을 넘긴다" },
-    { "n": 9, "ch": 2, "role": "응용", "title": "바통 넘기기", "src": "new", "tags": ["switch", "relay"], "D": 0.35, "A": 0.4, "aha": "두 번 넘겨 21걸음 너머에 닿는다" },
-    { "n": 10, "ch": 2, "role": "소개", "title": "몸으로 놓는 다리", "src": "keep 5", "tags": ["pit", "bridge"], "D": 0.28, "A": 0.5, "aha": "구멍에 7번째로 떨어진 형제가 다리가 된다" },
-    { "n": 11, "ch": 2, "role": "응용", "title": "다리냐 선돌이냐", "src": "new (pit-plate)", "tags": ["pit", "bridge", "keep", "plate"], "D": 0.38, "A": 0.5, "aha": "형제 둘을 어디에 쓸지 나눈다: 다리 하나, 발판 하나" },
-    { "n": 12, "ch": 2, "role": "반전", "title": "건너편에서 깨어나기", "src": "new (pit-switch)", "tags": ["pit", "switch"], "D": 0.4, "A": 0.6, "aha": "구멍을 메우지 않고 건너편 자리로 바통을 넘긴다" },
-    { "n": 13, "ch": 2, "role": "응용", "title": "구멍 둘, 형제 셋", "src": "new (pit)", "tags": ["pit", "bridge", "multiBridge"], "D": 0.42, "A": 0.4, "aha": "다리 둘을 놓는 순서" },
-    { "n": 14, "ch": 2, "role": "피날레", "title": "떠나온 자리", "src": "edit 17 (복도 단축, 몸 3)", "tags": ["switch", "switchBack", "plate", "keep"], "D": 0.45, "A": 0.6, "aha": "멀리 넘긴 출발점에서 다시 돌아와야 한다" },
-
-    { "n": 15, "ch": 3, "role": "소개", "title": "숫자 문", "src": "edit 6 (문이 해를 바꾸게)", "tags": ["gate"], "D": 0.2, "A": 0.4, "aha": "숫자 번째 걸음에만 지나간다" },
-    { "n": 16, "ch": 3, "role": "응용", "title": "두 숫자", "src": "new (gate)", "tags": ["gate", "detour"], "D": 0.3, "A": 0.4, "aha": "두 문을 순서대로 맞추려면 그 사이를 세어 늘린다" },
-    { "n": 17, "ch": 3, "role": "응용", "title": "갈림길의 숫자", "src": "new (gate)", "tags": ["gate", "route"], "D": 0.35, "A": 0.4, "aha": "숫자가 맞는 길이 출구까지 7이 되는 길" },
-    { "n": 18, "ch": 3, "role": "응용", "title": "문 너머의 발판", "src": "new (gate+plate)", "tags": ["gate", "keep", "plate"], "D": 0.4, "A": 0.5, "aha": "숫자 문을 지나 7번째에 발판에 선다" },
-    { "n": 19, "ch": 3, "role": "반전", "title": "처음부터 다시 세기", "src": "new (gate+switch)", "tags": ["gate", "switch"], "D": 0.42, "A": 0.7, "aha": "둘째 형제는 1부터 센다. 넘길 자리가 숫자를 맞춘다" },
-    { "n": 20, "ch": 3, "role": "응용", "title": "숫자와 구멍", "src": "new (gate-pit)", "tags": ["gate", "pit", "bridge"], "D": 0.45, "A": 0.4, "aha": "다리를 놓은 뒤의 길이로 숫자를 맞춘다" },
-    { "n": 21, "ch": 3, "role": "피날레", "title": "새김돌의 계산", "src": "new (gate+pit+plate)", "tags": ["gate", "pit", "keep", "plate"], "D": 0.5, "A": 0.5, "aha": "세 형제의 쓰임을 숫자로 맞춘다" },
-
-    { "n": 22, "ch": 4, "role": "소개", "title": "미끄러운 첫걸음", "src": "new (ice)", "tags": ["ice"], "D": 0.2, "A": 0.4, "aha": "얼음은 몇 칸을 가도 한 걸음" },
-    { "n": 23, "ch": 4, "role": "응용", "title": "홀수의 저주", "src": "keep 7", "tags": ["ice", "parity"], "D": 0.3, "A": 0.8, "aha": "바닥만으로는 7이 안 되는 칸, 얼음이 홀짝을 바꾼다" },
-    { "n": 24, "ch": 4, "role": "응용", "title": "얼음 위의 숫자", "src": "new (gate-ice)", "tags": ["ice", "gate"], "D": 0.38, "A": 0.5, "aha": "미끄럼 한 번이 숫자 하나" },
-    { "n": 25, "ch": 4, "role": "반전", "title": "멈춰 세우는 석상", "src": "keep 9", "tags": ["ice", "keep", "statueStopper"], "D": 0.42, "A": 0.7, "aha": "선돌이 얼음을 멈추는 벽이 된다" },
-    { "n": 26, "ch": 4, "role": "반전", "title": "미끄럼을 막는 형제", "src": "new (ice-statue)", "tags": ["ice", "keep", "statueStopper", "statueBlock"], "D": 0.45, "A": 0.5, "aha": "멈춤벽이 다음 미끄럼도 막는다. 세울 자리를 고른다" },
-    { "n": 27, "ch": 4, "role": "응용", "title": "얼음 끝의 구멍", "src": "new (ice-pit)", "tags": ["ice", "pit", "bridge"], "D": 0.5, "A": 0.5, "aha": "미끄러져 7번째에 구멍에 닿으면 다리" },
-    { "n": 28, "ch": 4, "role": "피날레", "title": "서리의 길목", "src": "new (ice+plate+switch)", "tags": ["ice", "plate", "keep", "switch"], "D": 0.55, "A": 0.5, "aha": "얼음, 선돌, 바통을 한 판에서" },
-
-    { "n": 29, "ch": 5, "role": "소개", "title": "내리는 벽", "src": "keep 8", "tags": ["lever"], "D": 0.32, "A": 0.5, "aha": "7번째 걸음이 레버를 당겨 벽을 내린다" },
-    { "n": 30, "ch": 5, "role": "응용", "title": "열면 닫힌다", "src": "exp lever 응용", "tags": ["lever", "switch"], "D": 0.4, "A": 0.6, "aha": "레버는 한 길을 열고 다른 길을 닫는다" },
-    { "n": 31, "ch": 5, "role": "반전", "title": "올려서 멈추기", "src": "keep 10", "tags": ["lever", "ice", "wallStopper"], "D": 0.42, "A": 0.7, "aha": "벽을 올려 미끄럼을 멈춘다" },
-    { "n": 32, "ch": 5, "role": "응용", "title": "두 번 당기기", "src": "new (lever+switch)", "tags": ["lever", "switch", "switchBack"], "D": 0.48, "A": 0.6, "aha": "출발점을 옮겨 레버를 다시 당긴다" },
-    { "n": 33, "ch": 5, "role": "응용", "title": "레버와 숫자", "src": "new (lever-gate)", "tags": ["lever", "gate"], "D": 0.5, "A": 0.4, "aha": "벽이 내려간 뒤의 길이로 숫자를 맞춘다" },
-    { "n": 34, "ch": 5, "role": "반전", "title": "레버 위의 선돌", "src": "new (lever+keep)", "tags": ["lever", "keep", "plate"], "D": 0.52, "A": 0.6, "aha": "레버에 남은 선돌은 발판도 누르지만 다시 당길 수 없다" },
-    { "n": 35, "ch": 5, "role": "피날레", "title": "결구의 장치", "src": "new (lever+ice+plate)", "tags": ["lever", "ice", "plate", "keep"], "D": 0.58, "A": 0.5, "aha": "벽, 얼음, 발판을 한 번의 레버로" },
-
-    { "n": 36, "ch": 6, "role": "소개", "title": "한 번만 버티는 바닥", "src": "keep 11", "tags": ["cracked", "seal", "plate"], "D": 0.38, "A": 0.5, "aha": "지나간 바닥은 무너지고, 7번째에 서면 굳는다" },
-    { "n": 37, "ch": 6, "role": "응용", "title": "무너진 길 위의 다리", "src": "new (cracked-pit)", "tags": ["cracked", "seal", "pit", "bridge"], "D": 0.42, "A": 0.4, "aha": "무너질 길과 메울 구멍의 순서" },
-    { "n": 38, "ch": 6, "role": "소개", "title": "하나만 남겨라", "src": "keep 13", "tags": ["statueDoor", "keep"], "D": 0.36, "A": 0.5, "aha": "문의 숫자 = 서 있는 선돌 수" },
-    { "n": 39, "ch": 6, "role": "응용", "title": "열쇠가 되는 형제", "src": "redo 14 (몸 3)", "tags": ["statueDoor", "plate", "statueKey"], "D": 0.48, "A": 0.6, "aha": "쓸모없어 보이는 자리에 선돌을 세워 문을 연다" },
-    { "n": 40, "ch": 6, "role": "반전", "title": "남기기 전에 지나가라", "src": "edit 15 (예산 4→3)", "tags": ["statueDoor", "emptyDoor", "switch"], "D": 0.5, "A": 0.7, "aha": "0 문: 선돌을 세우면 닫힌다" },
-    { "n": 41, "ch": 6, "role": "반전", "title": "선돌 아닌 흔적", "src": "new (qdoor-cracked)", "tags": ["statueDoor", "cracked", "seal"], "D": 0.55, "A": 0.6, "aha": "굳은 바닥과 다리는 선돌로 세지 않는다" },
-    { "n": 42, "ch": 6, "role": "피날레", "title": "무너지는 계산", "src": "new (qdoor+cracked+pit)", "tags": ["statueDoor", "cracked", "pit", "bridge"], "D": 0.6, "A": 0.5, "aha": "몇을 세우고 몇을 다리로 쓸지" },
-
-    { "n": 43, "ch": 7, "role": "소개", "title": "한 칸에 두 걸음", "src": "new (진흙 소개, exp mud 1)", "tags": ["mud"], "D": 0.22, "A": 0.6, "aha": "진흙은 두 걸음. 짝수 거리에 7번째로 닿는 두 번째 방법" },
-    { "n": 44, "ch": 7, "role": "응용", "title": "진흙과 숫자", "src": "new (exp mud 2)", "tags": ["mud", "gate", "switch"], "D": 0.45, "A": 0.5, "aha": "진흙을 지나면 숫자가 하나 건너뛴다" },
-    { "n": 45, "ch": 7, "role": "반전", "title": "얼음과 진흙", "src": "new (exp mud 3)", "tags": ["mud", "ice", "parity", "switch"], "D": 0.48, "A": 0.6, "aha": "여러 칸에 한 걸음, 한 칸에 두 걸음을 섞어 맞춘다" },
-    { "n": 46, "ch": 7, "role": "응용", "title": "칠칠의 방", "src": "redo 16 (몸 3)", "tags": ["pit", "plate", "gate", "ice", "keep"], "D": 0.58, "A": 0.5, "aha": "다섯 기믹을 형제 셋으로" },
-    { "n": 47, "ch": 7, "role": "응용", "title": "레버와 선돌의 수", "src": "new (lever+qdoor)", "tags": ["lever", "statueDoor", "keep"], "D": 0.6, "A": 0.5, "aha": "벽을 내린 선돌 하나가 문의 수를 맞춘다" },
-    { "n": 48, "ch": 7, "role": "반전", "title": "길이 된 형제들", "src": "new (bridge+seal)", "tags": ["pit", "bridge", "cracked", "seal", "statueDoor", "emptyDoor"], "D": 0.62, "A": 0.6, "aha": "선돌 없이(0 문) 두 형제가 모두 길이 된다" },
-    { "n": 49, "ch": 7, "role": "응용", "title": "일곱의 일곱", "src": "new (7×7)", "tags": ["mud", "lever", "gate", "keep", "switch"], "D": 0.68, "A": 0.5, "aha": "7×7 방 전체를 센다" },
-    { "n": 50, "ch": 7, "role": "피날레", "title": "원형 제단", "src": "new (최종장)", "tags": ["statueDoor", "keep", "multiStatue", "plate", "ice"], "D": 0.7, "A": 0.8, "aha": "두 형제가 원의 선돌로 서고, 셋째의 7번째 걸음이 제단 가운데에 닿는다" }
+    {
+      "n": 1,
+      "ch": 1,
+      "role": "소개",
+      "title": "일곱 걸음",
+      "src": "keep 1",
+      "tags": [
+        "walk7"
+      ],
+      "D": 0.15,
+      "A": 0.3,
+      "aha": "출구는 7번째 걸음에만 열린다"
+    },
+    {
+      "n": 2,
+      "ch": 1,
+      "role": "응용",
+      "title": "늦게 도착하기",
+      "src": "keep 2",
+      "tags": [
+        "detour"
+      ],
+      "D": 0.15,
+      "A": 0.5,
+      "aha": "일부러 돌아가 걸음을 맞춘다"
+    },
+    {
+      "n": 3,
+      "ch": 1,
+      "role": "응용",
+      "title": "딱 맞는 길",
+      "src": "new (batch1)",
+      "tags": [
+        "route"
+      ],
+      "D": 0.22,
+      "A": 0.4,
+      "aha": "출구까지 꼭 7인 길은 하나. 막다른 길을 세어 거른다"
+    },
+    {
+      "n": 4,
+      "ch": 1,
+      "role": "소개",
+      "title": "남는 형제",
+      "src": "keep 3 (돌이 된 몸)",
+      "tags": [
+        "keep",
+        "plate"
+      ],
+      "D": 0.3,
+      "A": 0.6,
+      "aha": "형제 하나가 선돌로 남아 발판을 눌러 준다"
+    },
+    {
+      "n": 5,
+      "ch": 1,
+      "role": "응용",
+      "title": "가까운 발판",
+      "src": "new (batch1)",
+      "tags": [
+        "keep",
+        "plate",
+        "plateChoice"
+      ],
+      "D": 0.3,
+      "A": 0.5,
+      "aha": "가까운 발판은 짝수 거리라 7번째에 설 수 없다"
+    },
+    {
+      "n": 6,
+      "ch": 1,
+      "role": "반전",
+      "title": "길을 막는 선돌",
+      "src": "new",
+      "tags": [
+        "keep",
+        "plate",
+        "statueBlock"
+      ],
+      "D": 0.34,
+      "A": 0.6,
+      "aha": "선돌은 벽이기도 하다. 남길 자리를 잘못 고르면 길이 막힌다"
+    },
+    {
+      "n": 7,
+      "ch": 1,
+      "role": "피날레",
+      "title": "두 개의 문",
+      "src": "edit 12",
+      "tags": [
+        "keep",
+        "plate",
+        "multiStatue",
+        "detour"
+      ],
+      "D": 0.4,
+      "A": 0.4,
+      "aha": "두 형제를 모두 선돌로 남기고 셋째가 지나간다"
+    },
+    {
+      "n": 8,
+      "ch": 2,
+      "role": "소개",
+      "title": "새 출발점",
+      "src": "keep 4 (예산 3으로)",
+      "tags": [
+        "switch"
+      ],
+      "D": 0.3,
+      "A": 0.6,
+      "aha": "SWITCH: 남기지 않고 바통을 넘긴다"
+    },
+    {
+      "n": 9,
+      "ch": 2,
+      "role": "응용",
+      "title": "바통 넘기기",
+      "src": "new",
+      "tags": [
+        "switch",
+        "relay"
+      ],
+      "D": 0.35,
+      "A": 0.4,
+      "aha": "두 번 넘겨 21걸음 너머에 닿는다"
+    },
+    {
+      "n": 10,
+      "ch": 2,
+      "role": "소개",
+      "title": "몸으로 놓는 다리",
+      "src": "keep 5",
+      "tags": [
+        "pit",
+        "bridge"
+      ],
+      "D": 0.28,
+      "A": 0.5,
+      "aha": "구멍에 7번째로 떨어진 형제가 다리가 된다"
+    },
+    {
+      "n": 11,
+      "ch": 2,
+      "role": "응용",
+      "title": "다리냐 선돌이냐",
+      "src": "new (pit-plate)",
+      "tags": [
+        "pit",
+        "bridge",
+        "keep",
+        "plate"
+      ],
+      "D": 0.38,
+      "A": 0.5,
+      "aha": "형제 둘을 어디에 쓸지 나눈다: 다리 하나, 발판 하나"
+    },
+    {
+      "n": 12,
+      "ch": 2,
+      "role": "반전",
+      "title": "건너편에서 깨어나기",
+      "src": "new (pit-switch)",
+      "tags": [
+        "pit",
+        "switch"
+      ],
+      "D": 0.4,
+      "A": 0.6,
+      "aha": "구멍을 메우지 않고 건너편 자리로 바통을 넘긴다"
+    },
+    {
+      "n": 13,
+      "ch": 2,
+      "role": "응용",
+      "title": "구멍 둘, 형제 셋",
+      "src": "new (pit)",
+      "tags": [
+        "pit",
+        "bridge",
+        "multiBridge"
+      ],
+      "D": 0.42,
+      "A": 0.4,
+      "aha": "다리 둘을 놓는 순서"
+    },
+    {
+      "n": 14,
+      "ch": 2,
+      "role": "피날레",
+      "title": "떠나온 자리",
+      "src": "edit 17 (복도 단축, 몸 3)",
+      "tags": [
+        "switch",
+        "switchBack",
+        "plate",
+        "keep"
+      ],
+      "D": 0.45,
+      "A": 0.6,
+      "aha": "멀리 넘긴 출발점에서 다시 돌아와야 한다"
+    },
+    {
+      "n": 15,
+      "ch": 3,
+      "role": "소개",
+      "title": "숫자 문",
+      "src": "edit 6 (문이 해를 바꾸게)",
+      "tags": [
+        "gate"
+      ],
+      "D": 0.2,
+      "A": 0.4,
+      "aha": "숫자 번째 걸음에만 지나간다"
+    },
+    {
+      "n": 16,
+      "ch": 3,
+      "role": "응용",
+      "title": "두 숫자",
+      "src": "new (gate)",
+      "tags": [
+        "gate",
+        "detour"
+      ],
+      "D": 0.3,
+      "A": 0.4,
+      "aha": "두 문을 순서대로 맞추려면 그 사이를 세어 늘린다"
+    },
+    {
+      "n": 17,
+      "ch": 3,
+      "role": "응용",
+      "title": "갈림길의 숫자",
+      "src": "new (gate)",
+      "tags": [
+        "gate",
+        "route"
+      ],
+      "D": 0.35,
+      "A": 0.4,
+      "aha": "숫자가 맞는 길이 출구까지 7이 되는 길"
+    },
+    {
+      "n": 18,
+      "ch": 3,
+      "role": "응용",
+      "title": "문 너머의 발판",
+      "src": "new (gate+plate)",
+      "tags": [
+        "gate",
+        "keep",
+        "plate"
+      ],
+      "D": 0.4,
+      "A": 0.5,
+      "aha": "숫자 문을 지나 7번째에 발판에 선다"
+    },
+    {
+      "n": 19,
+      "ch": 3,
+      "role": "반전",
+      "title": "처음부터 다시 세기",
+      "src": "new (gate+switch)",
+      "tags": [
+        "gate",
+        "switch"
+      ],
+      "D": 0.42,
+      "A": 0.7,
+      "aha": "둘째 형제는 1부터 센다. 넘길 자리가 숫자를 맞춘다"
+    },
+    {
+      "n": 20,
+      "ch": 3,
+      "role": "응용",
+      "title": "숫자와 구멍",
+      "src": "new (gate-pit)",
+      "tags": [
+        "gate",
+        "pit",
+        "bridge"
+      ],
+      "D": 0.45,
+      "A": 0.4,
+      "aha": "다리를 놓은 뒤의 길이로 숫자를 맞춘다"
+    },
+    {
+      "n": 21,
+      "ch": 3,
+      "role": "피날레",
+      "title": "새김돌의 계산",
+      "src": "new (gate+pit+plate)",
+      "tags": [
+        "gate",
+        "pit",
+        "keep",
+        "plate"
+      ],
+      "D": 0.5,
+      "A": 0.5,
+      "aha": "세 형제의 쓰임을 숫자로 맞춘다"
+    },
+    {
+      "n": 22,
+      "ch": 4,
+      "role": "소개",
+      "title": "미끄러운 첫걸음",
+      "src": "new (ice)",
+      "tags": [
+        "ice"
+      ],
+      "D": 0.2,
+      "A": 0.4,
+      "aha": "얼음은 몇 칸을 가도 한 걸음"
+    },
+    {
+      "n": 23,
+      "ch": 4,
+      "role": "응용",
+      "title": "홀수의 저주",
+      "src": "keep 7",
+      "tags": [
+        "ice",
+        "parity"
+      ],
+      "D": 0.3,
+      "A": 0.8,
+      "aha": "바닥만으로는 7이 안 되는 칸, 얼음이 홀짝을 바꾼다"
+    },
+    {
+      "n": 24,
+      "ch": 4,
+      "role": "응용",
+      "title": "얼음 위의 숫자",
+      "src": "new (gate-ice)",
+      "tags": [
+        "ice",
+        "gate"
+      ],
+      "D": 0.38,
+      "A": 0.5,
+      "aha": "미끄럼 한 번이 숫자 하나"
+    },
+    {
+      "n": 25,
+      "ch": 4,
+      "role": "반전",
+      "title": "멈춰 세우는 석상",
+      "src": "keep 9",
+      "tags": [
+        "ice",
+        "keep",
+        "statueStopper"
+      ],
+      "D": 0.42,
+      "A": 0.7,
+      "aha": "선돌이 얼음을 멈추는 벽이 된다"
+    },
+    {
+      "n": 26,
+      "ch": 4,
+      "role": "반전",
+      "title": "미끄럼을 막는 형제",
+      "src": "new (ice-statue)",
+      "tags": [
+        "ice",
+        "keep",
+        "statueStopper",
+        "statueBlock"
+      ],
+      "D": 0.45,
+      "A": 0.5,
+      "aha": "멈춤벽이 다음 미끄럼도 막는다. 세울 자리를 고른다"
+    },
+    {
+      "n": 27,
+      "ch": 4,
+      "role": "응용",
+      "title": "얼음 끝의 구멍",
+      "src": "new (ice-pit)",
+      "tags": [
+        "ice",
+        "pit",
+        "bridge"
+      ],
+      "D": 0.5,
+      "A": 0.5,
+      "aha": "미끄러져 7번째에 구멍에 닿으면 다리"
+    },
+    {
+      "n": 28,
+      "ch": 4,
+      "role": "피날레",
+      "title": "서리의 길목",
+      "src": "new (ice+plate+switch)",
+      "tags": [
+        "ice",
+        "plate",
+        "keep",
+        "switch"
+      ],
+      "D": 0.55,
+      "A": 0.5,
+      "aha": "얼음, 선돌, 바통을 한 판에서"
+    },
+    {
+      "n": 29,
+      "ch": 5,
+      "role": "소개",
+      "title": "내리는 벽",
+      "src": "keep 8",
+      "tags": [
+        "lever"
+      ],
+      "D": 0.32,
+      "A": 0.5,
+      "aha": "7번째 걸음이 레버를 당겨 벽을 내린다"
+    },
+    {
+      "n": 30,
+      "ch": 5,
+      "role": "응용",
+      "title": "열면 닫힌다",
+      "src": "exp lever 응용",
+      "tags": [
+        "lever",
+        "switch"
+      ],
+      "D": 0.4,
+      "A": 0.6,
+      "aha": "레버는 한 길을 열고 다른 길을 닫는다"
+    },
+    {
+      "n": 31,
+      "ch": 5,
+      "role": "반전",
+      "title": "올려서 멈추기",
+      "src": "keep 10",
+      "tags": [
+        "lever",
+        "ice",
+        "wallStopper"
+      ],
+      "D": 0.42,
+      "A": 0.7,
+      "aha": "벽을 올려 미끄럼을 멈춘다"
+    },
+    {
+      "n": 32,
+      "ch": 5,
+      "role": "응용",
+      "title": "두 번 당기기",
+      "src": "new (lever+switch)",
+      "tags": [
+        "lever",
+        "switch",
+        "switchBack"
+      ],
+      "D": 0.48,
+      "A": 0.6,
+      "aha": "출발점을 옮겨 레버를 다시 당긴다"
+    },
+    {
+      "n": 33,
+      "ch": 5,
+      "role": "응용",
+      "title": "레버와 숫자",
+      "src": "new (lever-gate)",
+      "tags": [
+        "lever",
+        "gate"
+      ],
+      "D": 0.5,
+      "A": 0.4,
+      "aha": "벽이 내려간 뒤의 길이로 숫자를 맞춘다"
+    },
+    {
+      "n": 34,
+      "ch": 5,
+      "role": "반전",
+      "title": "레버 위의 선돌",
+      "src": "new (lever+keep)",
+      "tags": [
+        "lever",
+        "keep",
+        "plate"
+      ],
+      "D": 0.52,
+      "A": 0.6,
+      "aha": "레버에 남은 선돌은 발판도 누르지만 다시 당길 수 없다"
+    },
+    {
+      "n": 35,
+      "ch": 5,
+      "role": "피날레",
+      "title": "결구의 장치",
+      "src": "new (lever+ice+plate)",
+      "tags": [
+        "lever",
+        "ice",
+        "plate",
+        "keep"
+      ],
+      "D": 0.58,
+      "A": 0.5,
+      "aha": "벽, 얼음, 발판을 한 번의 레버로"
+    },
+    {
+      "n": 36,
+      "ch": 6,
+      "role": "소개",
+      "title": "한 번만 버티는 바닥",
+      "src": "keep 11",
+      "tags": [
+        "cracked",
+        "seal",
+        "plate"
+      ],
+      "D": 0.38,
+      "A": 0.5,
+      "aha": "지나간 바닥은 무너지고, 7번째에 서면 굳는다"
+    },
+    {
+      "n": 37,
+      "ch": 6,
+      "role": "응용",
+      "title": "무너진 길 위의 다리",
+      "src": "new (cracked-pit)",
+      "tags": [
+        "cracked",
+        "seal",
+        "pit",
+        "bridge"
+      ],
+      "D": 0.42,
+      "A": 0.4,
+      "aha": "무너질 길과 메울 구멍의 순서"
+    },
+    {
+      "n": 38,
+      "ch": 6,
+      "role": "소개",
+      "title": "하나만 남겨라",
+      "src": "keep 13",
+      "tags": [
+        "statueDoor",
+        "keep"
+      ],
+      "D": 0.36,
+      "A": 0.5,
+      "aha": "문의 숫자 = 서 있는 선돌 수"
+    },
+    {
+      "n": 39,
+      "ch": 6,
+      "role": "응용",
+      "title": "열쇠가 되는 형제",
+      "src": "redo 14 (몸 3)",
+      "tags": [
+        "statueDoor",
+        "plate",
+        "statueKey"
+      ],
+      "D": 0.48,
+      "A": 0.6,
+      "aha": "쓸모없어 보이는 자리에 선돌을 세워 문을 연다"
+    },
+    {
+      "n": 40,
+      "ch": 6,
+      "role": "반전",
+      "title": "남기기 전에 지나가라",
+      "src": "edit 15 (예산 4→3)",
+      "tags": [
+        "statueDoor",
+        "emptyDoor",
+        "switch"
+      ],
+      "D": 0.5,
+      "A": 0.7,
+      "aha": "0 문: 선돌을 세우면 닫힌다"
+    },
+    {
+      "n": 41,
+      "ch": 6,
+      "role": "반전",
+      "title": "선돌 아닌 흔적",
+      "src": "new (qdoor-cracked)",
+      "tags": [
+        "statueDoor",
+        "cracked",
+        "seal"
+      ],
+      "D": 0.55,
+      "A": 0.6,
+      "aha": "굳은 바닥과 다리는 선돌로 세지 않는다"
+    },
+    {
+      "n": 42,
+      "ch": 6,
+      "role": "피날레",
+      "title": "무너지는 계산",
+      "src": "new (qdoor+cracked+pit)",
+      "tags": [
+        "statueDoor",
+        "cracked",
+        "pit",
+        "bridge"
+      ],
+      "D": 0.6,
+      "A": 0.5,
+      "aha": "몇을 세우고 몇을 다리로 쓸지"
+    },
+    {
+      "n": 43,
+      "ch": 7,
+      "role": "소개",
+      "title": "한 칸에 두 걸음",
+      "src": "new (진흙 소개, exp mud 1)",
+      "tags": [
+        "mud"
+      ],
+      "D": 0.22,
+      "A": 0.6,
+      "aha": "진흙은 두 걸음. 짝수 거리에 7번째로 닿는 두 번째 방법"
+    },
+    {
+      "n": 44,
+      "ch": 7,
+      "role": "응용",
+      "title": "진흙과 숫자",
+      "src": "new (exp mud 2)",
+      "tags": [
+        "mud",
+        "gate",
+        "switch"
+      ],
+      "D": 0.45,
+      "A": 0.5,
+      "aha": "진흙을 지나면 숫자가 하나 건너뛴다"
+    },
+    {
+      "n": 45,
+      "ch": 7,
+      "role": "반전",
+      "title": "얼음과 진흙",
+      "src": "new (exp mud 3)",
+      "tags": [
+        "mud",
+        "ice",
+        "parity",
+        "switch"
+      ],
+      "D": 0.48,
+      "A": 0.6,
+      "aha": "여러 칸에 한 걸음, 한 칸에 두 걸음을 섞어 맞춘다"
+    },
+    {
+      "n": 46,
+      "ch": 7,
+      "role": "응용",
+      "title": "칠칠의 방",
+      "src": "redo 16 (몸 3)",
+      "tags": [
+        "pit",
+        "plate",
+        "gate",
+        "ice",
+        "keep"
+      ],
+      "D": 0.58,
+      "A": 0.5,
+      "aha": "다섯 기믹을 형제 셋으로"
+    },
+    {
+      "n": 47,
+      "ch": 7,
+      "role": "응용",
+      "title": "레버와 선돌의 수",
+      "src": "new (lever+qdoor)",
+      "tags": [
+        "lever",
+        "statueDoor",
+        "keep"
+      ],
+      "D": 0.6,
+      "A": 0.5,
+      "aha": "벽을 내린 선돌 하나가 문의 수를 맞춘다"
+    },
+    {
+      "n": 48,
+      "ch": 7,
+      "role": "반전",
+      "title": "길이 된 형제들",
+      "src": "new (bridge+seal)",
+      "tags": [
+        "pit",
+        "bridge",
+        "cracked",
+        "seal",
+        "statueDoor",
+        "emptyDoor"
+      ],
+      "D": 0.62,
+      "A": 0.6,
+      "aha": "선돌 없이(0 문) 두 형제가 모두 길이 된다"
+    },
+    {
+      "n": 49,
+      "ch": 7,
+      "role": "응용",
+      "title": "일곱의 일곱",
+      "src": "new (7×7)",
+      "tags": [
+        "mud",
+        "lever",
+        "gate",
+        "keep",
+        "switch"
+      ],
+      "D": 0.68,
+      "A": 0.5,
+      "aha": "7×7 방 전체를 센다"
+    },
+    {
+      "n": 50,
+      "ch": 7,
+      "role": "피날레",
+      "title": "원형 제단",
+      "src": "new (최종장)",
+      "tags": [
+        "statueDoor",
+        "keep",
+        "multiStatue",
+        "plate",
+        "ice"
+      ],
+      "D": 0.7,
+      "A": 0.8,
+      "aha": "두 형제가 원의 선돌로 서고, 셋째의 7번째 걸음이 제단 가운데에 닿는다"
+    }
   ]
 }
