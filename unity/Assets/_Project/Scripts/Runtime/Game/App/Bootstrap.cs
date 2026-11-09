@@ -50,6 +50,8 @@ namespace SevenSteps.Game
             Services.Register(telemetry);
             Services.Register(flow);
             Services.Register(EntryTracker.ForLaunch(launch.DirectToGame && !levelFromEditor));
+            // UI language for this run (docs/architecture.md 13.3): -lang / ?lang= wins over the saved setting, and is not saved.
+            Services.Register(Localizer.FromAssets(assets.strings, launch.Language ?? save.Language));
             HasRunThisPlay = true;
 
             if (!enterFirstScreen) return;
