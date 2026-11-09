@@ -31,6 +31,8 @@ namespace SevenSteps.Game.Flow
             this.flow = flow ?? throw new ArgumentNullException(nameof(flow));
             this.save = save ?? throw new ArgumentNullException(nameof(save));
             this.panels = panels ?? throw new ArgumentNullException(nameof(panels));
+            if (levels.Count != flow.StageCount)
+                throw new ArgumentException($"{levels.Count} stages but AppFlow has {flow.StageCount}: pass the levels.json list", nameof(levels));
             flow.Changed += OnFlowChanged;
         }
 
