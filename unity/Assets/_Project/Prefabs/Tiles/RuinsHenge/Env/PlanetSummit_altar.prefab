@@ -44,9 +44,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f65bc34a575f681448db1a8bce45bce9, type: 3}
   m_Name:
   m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.RuinsHengePlanet
-  surface: {fileID: 2100000, guid: c38ccdba49b258446a7b458cfb37786b, type: 2}
+  surface: {fileID: 2100000, guid: df9ffb1a77172904393efba61f862de0, type: 2}
   chapterId: altar
-  summitTint: {r: 0.8509804, g: 0.87058824, b: 0.78431374, a: 1}
-  rimTint: {r: 0.3764706, g: 0.45882353, b: 0.40784314, a: 1}
-  rockTint: {r: 0.32156864, g: 0.41960785, b: 0.41568628, a: 1}
-  moonTint: {r: 0.3764706, g: 0.45882353, b: 0.40784314, a: 1}
+  summitTint: {r: 0.78039217, g: 0.6431373, b: 0.29411766, a: 1}
+  rimTint: {r: 0.85882354, g: 0.70980394, b: 0.29411766, a: 1}
+  rockTint: {r: 0.72156864, g: 0.5529412, b: 0.16078432, a: 1}
+  moonTint: {r: 0.9764706, g: 0.85490197, b: 0.47843137, a: 1}

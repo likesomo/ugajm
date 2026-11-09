@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1e045bfebbc4947bb857f650805529c, type: 3}
   m_Name: Sky_moss
   m_EditorClassIdentifier: SevenSteps.Contracts::SevenSteps.Contracts.SkyPreset
-  background: {r: 0.0627451, g: 0.10980392, b: 0.19607843, a: 1}
+  background: {r: 0.07058824, g: 0.20784314, b: 0.18431373, a: 1}
   skyPrefab: {fileID: 461189920289116349, guid: 4b4f2e65337e7c14a9fb27f048cb0aaa, type: 3}
   planetPrefab: {fileID: 6539723966283603918, guid: f77e16ae8ee727a4985de7601432cb2d, type: 3}

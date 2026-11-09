@@ -15,6 +15,8 @@ MonoBehaviour:
   id: carved
   displayName: Carved Stone World
   tileSet: {fileID: 11400000, guid: d5840d2071f7eb24f85c080dffcfcb06, type: 2}
-  materialOverrides: []
+  materialOverrides:
+  - from: {fileID: 2100000, guid: c38ccdba49b258446a7b458cfb37786b, type: 2}
+    to: {fileID: 2100000, guid: 06654d197714637409779ac6f6a4a9ad, type: 2}
   lighting: {fileID: 11400000, guid: 10000e85e1cf58244ba423cfd34b0f36, type: 2}
   sky: {fileID: 11400000, guid: 8e26ab2400a003f49b27a62de6afe2cd, type: 2}
