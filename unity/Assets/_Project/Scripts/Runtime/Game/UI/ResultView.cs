@@ -72,6 +72,9 @@ namespace SevenSteps.Game.UI
         public GameObject overlay;
         public Text title, body;
         public Button next, again, select, undo, restart;
+        [Tooltip("3 stars of this clear (docs/architecture.md 6.5), revealed one by one; the row hides for a loss or unknown stars")]
+        public Image[] stars = new Image[Core.Stars.Max];
+        public Sprite starEmpty, starFilled;
 
         public event Action NextRequested, RetryRequested, StageSelectRequested;
         /// Loss only: the board actions stay available on the panel (Z / R also work, the loss is not an overlay).
@@ -86,6 +89,9 @@ namespace SevenSteps.Game.UI
             Need(overlay, nameof(overlay)); Need(title, nameof(title)); Need(body, nameof(body));
             Need(next, nameof(next)); Need(again, nameof(again)); Need(select, nameof(select));
             Need(undo, nameof(undo)); Need(restart, nameof(restart));
+            if (stars == null || stars.Length != Core.Stars.Max) issues.Add($"ResultView {name}: stars needs {Core.Stars.Max} entries");
+            else for (int k = 0; k < stars.Length; k++) Need(stars[k], $"stars[{k}]");
+            Need(starEmpty, nameof(starEmpty)); Need(starFilled, nameof(starFilled));
         }
 
         void OnValidate()
@@ -125,6 +131,7 @@ namespace SevenSteps.Game.UI
                 if (m.BestBodies > 0) detail += (detail.Length > 0 ? " · " : "") + $"최고 기록 {m.BestBodies}개";
                 title.text = "클리어";
                 body.text = $"몸 {m.BodiesUsed}개" + (detail.Length > 0 ? $" ({detail})" : "") + (m.IsLast ? "\n모든 스테이지를 끝냈다. 고맙습니다!" : "");
+                if (m.BestStars > m.Stars) body.text += $"\n최고 기록 별 {m.BestStars}개";
             }
             else
             {
@@ -137,12 +144,46 @@ namespace SevenSteps.Game.UI
             undo.gameObject.SetActive(!m.Cleared);
             restart.gameObject.SetActive(!m.Cleared);
             overlay.SetActive(true);
+            ShowStars(m.Cleared ? m.Stars : 0);
         }
 
         public void Hide()
         {
             Wire();
+            if (reveal != null) { StopCoroutine(reveal); reveal = null; }
             overlay.SetActive(false);
+        }
+
+        Coroutine reveal;
+
+        /// 0 hides the row (loss, or no minimum to judge by). Otherwise all three start empty and the earned ones fill in
+        /// order with a small pop (unscaled time; outside play mode they are set at once).
+        void ShowStars(int earned)
+        {
+            if (reveal != null) { StopCoroutine(reveal); reveal = null; }
+            var row = stars[0].transform.parent.gameObject;
+            row.SetActive(earned > 0);
+            if (earned <= 0) return;
+            foreach (var s in stars) { s.sprite = starEmpty; s.rectTransform.localScale = Vector3.one; }
+            if (Application.isPlaying && isActiveAndEnabled) reveal = StartCoroutine(Reveal(earned));
+            else for (int k = 0; k < earned; k++) stars[k].sprite = starFilled;
+        }
+
+        System.Collections.IEnumerator Reveal(int earned)
+        {
+            for (int k = 0; k < earned; k++)
+            {
+                for (float t = 0; t < 0.25f; t += Time.unscaledDeltaTime) yield return null; // pause before each star
+                stars[k].sprite = starFilled;
+                var r = stars[k].rectTransform;
+                for (float t = 0; t < 0.22f; t += Time.unscaledDeltaTime)
+                {
+                    r.localScale = Vector3.one * (1f + 0.45f * Mathf.Sin(t / 0.22f * Mathf.PI));
+                    yield return null;
+                }
+                r.localScale = Vector3.one;
+            }
+            reveal = null;
         }
 
         /// Places the theme's result prefab (its own canvas) in the current scene.

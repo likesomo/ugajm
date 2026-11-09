@@ -77,15 +77,17 @@ namespace SevenSteps.Art
         }
         static T Panel<T>(GameObject source,string name,Dictionary<string,Sprite> sprites,UiTheme theme) where T:Component
         {
-            var go=PrefabUtility.LoadPrefabContents(AssetDatabase.GetAssetPath(source));
+            // A variant of the shared UI/Prefabs panel (lead 2026-11-09): layout/content changes there reach this skin; only the look is overridden here.
+            var go=(GameObject)PrefabUtility.InstantiatePrefab(source);
             foreach(var text in go.GetComponentsInChildren<Text>(true)){text.font=theme.font;text.color=theme.ink;}
             foreach(var button in go.GetComponentsInChildren<Button>(true))
             {
                 var image=button.GetComponent<Image>();if(image){image.sprite=sprites["button_default"];image.type=Image.Type.Sliced;image.color=Color.white;}
                 button.transition=Selectable.Transition.SpriteSwap;button.spriteState=new SpriteState{highlightedSprite=sprites["button_hover"],pressedSprite=sprites["button_pressed"],disabledSprite=sprites["button_disabled"],selectedSprite=sprites["button_hover"]};
             }
-            foreach(var image in go.GetComponentsInChildren<Image>(true))if(!image.GetComponent<Button>()&&image.rectTransform.rect.width>500){image.sprite=sprites["panel_stone"];image.type=Image.Type.Sliced;image.color=Color.white;}
-            var saved=PrefabUtility.SaveAsPrefabAsset(go,Root+"/"+name+".prefab");PrefabUtility.UnloadPrefabContents(go);return saved.GetComponent<T>();
+            // The panel body only (both shared panels name it "Panel"). Width tests caught the full-screen dim in a scene instance.
+            foreach(var image in go.GetComponentsInChildren<Image>(true))if(!image.GetComponent<Button>()&&image.name=="Panel"){image.sprite=sprites["panel_stone"];image.type=Image.Type.Sliced;image.color=Color.white;}
+            var saved=PrefabUtility.SaveAsPrefabAsset(go,Root+"/"+name+".prefab");UnityEngine.Object.DestroyImmediate(go);return saved.GetComponent<T>();
         }
     }
 }
