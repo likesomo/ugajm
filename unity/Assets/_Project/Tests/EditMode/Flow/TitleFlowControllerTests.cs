@@ -74,6 +74,30 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void TitleBeginAndContinueLoadTheGame()
+        {
+            ctl.Start();
+            Assert.IsFalse(ctl.CanContinue, "nothing played yet");
+            ctl.ContinueJourney();                    // off without a last stage
+            Assert.AreEqual(AppState.Title, flow.State);
+            ctl.BeginJourney();
+            Assert.AreEqual(AppState.Game, flow.State, "Title -> Game (playtest rehearsal 2026-11-10: was refused)");
+            Assert.AreEqual(0, flow.Stage);
+            Assert.AreEqual(AppScenes.Game, scenes.Pending);
+        }
+
+        [Test]
+        public void TitleContinuePlaysTheLastStage()
+        {
+            save.Progress.lastStage = "s5";
+            ctl.Start();
+            Assert.IsTrue(ctl.CanContinue);
+            ctl.ContinueJourney();
+            Assert.AreEqual(AppState.Game, flow.State);
+            Assert.AreEqual(5, flow.Stage);
+        }
+
+        [Test]
         public void EnterPlaysTheLastStageByName()
         {
             save.Progress.lastStage = "s5";
