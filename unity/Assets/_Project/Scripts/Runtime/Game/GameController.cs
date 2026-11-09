@@ -65,7 +65,7 @@ namespace SevenSteps.Game
             var save = Services.Get<SaveSystem>();
             var cfg = Services.Get<AppConfig>();
 
-            Ui.Font = assets.font;
+            Ui.Theme = assets.uiTheme; // before any view or the board label layer is built
             var levels = LevelCatalog.Load(assets);
             var cam = Camera.main;
             if (cam == null) throw new MissingReferenceException("[SevenSteps] Game scene has no MainCamera-tagged camera (unity.sh scene-validate)");
@@ -80,8 +80,8 @@ namespace SevenSteps.Game
             // Views
             board = gameObject.AddComponent<BoardController>();
             hud = new HudView(board, tiles, levels.Length);
-            var result = new ResultView();
-            var settings = new SettingsPanel(OverlayCanvas(), save, cfg.telemetryOnByDefault);
+            var result = ResultView.Create();
+            var settings = SettingsPanel.Create(OverlayCanvas(), save, cfg.telemetryOnByDefault);
             settingsController = new SettingsController(save, settings, cfg.telemetryOnByDefault);
             overlays = new OverlayStack();
 

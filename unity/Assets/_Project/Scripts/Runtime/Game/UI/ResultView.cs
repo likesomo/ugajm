@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace SevenSteps.Game.UI
 {
@@ -48,62 +50,62 @@ namespace SevenSteps.Game.UI
     }
 
     /// <summary>
-    /// Clear / loss panel (view only, docs/scene-flow.md 4.7). Shows a <see cref="ResultModel"/> and raises button events;
-    /// the flow controller decides what they do. Built from code on its own canvas above the HUD (S6 moves it to a prefab).
+    /// Clear / loss panel (view only, docs/scene-flow.md 4.7, S6). Prefab UI/Prefabs/ResultPanel.prefab (its own canvas,
+    /// sorting 5, above the HUD), referenced by UiTheme.resultPanel. Shows a <see cref="ResultModel"/> and raises button
+    /// events; the flow controller decides what they do. Layout lives in the prefab (first built by UiBuilder).
     /// </summary>
-    public sealed class ResultView : Flow.IResultPanel
+    public sealed class ResultView : MonoBehaviour, Flow.IResultPanel
     {
-        readonly GameObject root;
-        readonly Text title, body;
-        readonly GameObject next, again, select, undo, restart;
+        [Tooltip("Dim + panel, toggled by Show/Hide (the canvas itself stays active). Saved inactive in the prefab.")]
+        public GameObject overlay;
+        public Text title, body;
+        public Button next, again, select, undo, restart;
 
         public event Action NextRequested, RetryRequested, StageSelectRequested;
         /// Loss only: the board actions stay available on the panel (Z / R also work, the loss is not an overlay).
         public event Action UndoRequested, RestartRequested;
 
-        public bool IsShown => root.activeSelf;
+        public bool IsShown => overlay.activeSelf;
 
-        public ResultView()
+        /// Required references missing in the prefab, one line each (OnValidate, Awake, SceneFlowValidator).
+        public void Validate(List<string> issues)
         {
-            var canvasGo = new GameObject("Result", typeof(RectTransform));
-            canvasGo.layer = 5;
-            var canvas = canvasGo.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 5; // above the HUD canvas (0)
-            var scaler = canvasGo.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1280, 720);
-            scaler.matchWidthOrHeight = 0.5f;
-            canvasGo.AddComponent<GraphicRaycaster>();
+            void Need(Object o, string field) { if (o == null) issues.Add($"ResultView {name}: {field} is not set"); }
+            Need(overlay, nameof(overlay)); Need(title, nameof(title)); Need(body, nameof(body));
+            Need(next, nameof(next)); Need(again, nameof(again)); Need(select, nameof(select));
+            Need(undo, nameof(undo)); Need(restart, nameof(restart));
+        }
 
-            var dim = Ui.MakeImage(canvasGo.transform, new Color(0, 0, 0, 0.55f), null, "Overlay");
-            dim.rectTransform.Stretch();
-            dim.raycastTarget = true;
-            root = dim.gameObject;
-            var panel = Ui.MakeImage(dim.transform, Ui.PanelBg, null, "Panel");
-            panel.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(460, 330));
-            title = Ui.Label(panel.transform, "", 40, Ui.Gold, TextAnchor.MiddleCenter, "Title");
-            title.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -24), new Vector2(420, 50));
-            body = Ui.Label(panel.transform, "", 20, Ui.Ink, TextAnchor.MiddleCenter, "Body");
-            body.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -84), new Vector2(420, 50));
-            var col = Ui.Rect("Buttons", panel.transform);
-            col.Place(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 20), new Vector2(300, 150));
-            var v = col.gameObject.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 10;
-            v.childAlignment = TextAnchor.LowerCenter;
-            v.childControlWidth = v.childControlHeight = false;
-            v.childForceExpandWidth = v.childForceExpandHeight = false;
-            next = Button(col, "다음 스테이지 (Enter)", () => NextRequested?.Invoke());
-            again = Button(col, "다시 하기 (R)", () => RetryRequested?.Invoke());
-            select = Button(col, "스테이지 선택 (Esc)", () => StageSelectRequested?.Invoke());
-            undo = Button(col, "한 걸음 되돌리기 (Z)", () => UndoRequested?.Invoke());
-            restart = Button(col, "다시 시작 (R)", () => RestartRequested?.Invoke());
-            root.SetActive(false);
+        void OnValidate()
+        {
+            var issues = new List<string>();
+            Validate(issues);
+            foreach (var i in issues) Debug.LogError("[SevenSteps] " + i, this);
+        }
+
+        bool wired;
+
+        void Awake() => Wire();
+
+        /// Checks the references and connects the buttons once (also from Show/Hide: Awake does not run in edit-mode tests).
+        void Wire()
+        {
+            if (wired) return;
+            var issues = new List<string>();
+            Validate(issues);
+            if (issues.Count > 0) throw new MissingReferenceException("[SevenSteps] " + string.Join("; ", issues));
+            next.onClick.AddListener(() => NextRequested?.Invoke());
+            again.onClick.AddListener(() => RetryRequested?.Invoke());
+            select.onClick.AddListener(() => StageSelectRequested?.Invoke());
+            undo.onClick.AddListener(() => UndoRequested?.Invoke());
+            restart.onClick.AddListener(() => RestartRequested?.Invoke());
+            wired = true;
         }
 
         public void Show(ResultModel m)
         {
             if (m == null) throw new ArgumentNullException(nameof(m));
+            Wire();
             if (m.Cleared)
             {
                 // "몸 2개 (최소 1개 · 최고 기록 2개)". Minimum = JS solver's expected.minBodies.
@@ -117,21 +119,28 @@ namespace SevenSteps.Game.UI
                 title.text = "몸을 모두 잃었다";
                 body.text = "되돌리거나 처음부터 다시.";
             }
-            next.SetActive(m.Cleared && !m.IsLast);
-            again.SetActive(m.Cleared);
-            select.SetActive(true);
-            undo.SetActive(!m.Cleared);
-            restart.SetActive(!m.Cleared);
-            root.SetActive(true);
+            next.gameObject.SetActive(m.Cleared && !m.IsLast);
+            again.gameObject.SetActive(m.Cleared);
+            select.gameObject.SetActive(true);
+            undo.gameObject.SetActive(!m.Cleared);
+            restart.gameObject.SetActive(!m.Cleared);
+            overlay.SetActive(true);
         }
 
-        public void Hide() => root.SetActive(false);
-
-        static GameObject Button(Transform parent, string label, Action onClick)
+        public void Hide()
         {
-            var b = Ui.MakeButton(parent, label, 18, onClick, out _, label);
-            ((RectTransform)b.transform).sizeDelta = new Vector2(300, 40);
-            return b.gameObject;
+            Wire();
+            overlay.SetActive(false);
+        }
+
+        /// Places the theme's result prefab (its own canvas) in the current scene.
+        public static ResultView Create()
+        {
+            var prefab = Ui.Theme.resultPanel != null ? Ui.Theme.resultPanel
+                : throw new MissingReferenceException($"[SevenSteps] UiTheme {Ui.Theme.name}: resultPanel is not set (Seven Steps > Scene Flow > Build UI)");
+            var view = Instantiate(prefab);
+            view.name = prefab.name;
+            return view;
         }
     }
 }
