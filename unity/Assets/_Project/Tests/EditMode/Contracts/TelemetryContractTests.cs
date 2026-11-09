@@ -65,9 +65,11 @@ namespace SevenSteps.Tests
         public void AttemptCountsPerStage()
         {
             var p = new ProgressData();
-            Assert.AreEqual(1, p.CountStart(4));
-            Assert.AreEqual(2, p.CountStart(4));
-            Assert.AreEqual(1, p.CountStart(0));
+            var a = Level.Parse("a", "", 3, new[] { "#####", "#S.E#", "#####" });
+            var b = Level.Parse("b", "", 3, new[] { "#####", "#S.E#", "#####" });
+            Assert.AreEqual(1, p.CountStart(a));
+            Assert.AreEqual(2, p.CountStart(a));
+            Assert.AreEqual(1, p.CountStart(b));
         }
     }
 }

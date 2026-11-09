@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5286448772362583186}
+  - component: {fileID: 1936299762271051878}
   m_Layer: 0
   m_Name: Wall
   m_TagString: Untagged
@@ -32,6 +33,22 @@ Transform:
   - {fileID: 7982486971967062891}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1936299762271051878
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1033269922490403285}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6eb3148eb5e6cb444853ff41fce48e57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SevenSteps.Art.RuinsWallVariations
+  alternatives:
+  - {fileID: 8840176183337418817, guid: e90b5c0b0351296439e5bce012360e82, type: 3}
+  - {fileID: 7720015797388766959, guid: bdd3a3a832c06444bb67af5f6ac0ae6c, type: 3}
+  - {fileID: 6234732082674246339, guid: 00d7d59c4a2fd7344ba8935697daa7f4, type: 3}
 --- !u!1 &5225863550070425296
 GameObject:
   m_ObjectHideFlags: 0
@@ -238,7 +255,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 0.75, z: 1}
+  m_LocalScale: {x: 1, y: 0.75688076, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 677045108374125111}

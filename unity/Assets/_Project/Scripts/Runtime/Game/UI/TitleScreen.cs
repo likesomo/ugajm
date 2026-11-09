@@ -61,7 +61,7 @@ namespace SevenSteps.Game.UI
             creditsPanel = new CreditsPanel(root, credits, licenses);
             overlays = new OverlayStack();
 
-            flowController = new TitleFlowController(flow, save, this);
+            flowController = new TitleFlowController(flow, save, this, levels);
             back = new BackNavigator(overlays, flowController.Back);
             titleView.StartRequested += flowController.OpenStageSelect;
             titleView.SettingsRequested += () => Open(settings);
@@ -85,7 +85,7 @@ namespace SevenSteps.Game.UI
             {
                 if (launch.OpenStageSelect) flowController.OpenStageSelect();
                 if (launch.OpenCredits) Open(creditsPanel);
-                StartCoroutine(ScreenshotOnce.Run(launch.Screenshot, () => $"{flow.State}, cleared {save.Progress.cleared.Count}"));
+                StartCoroutine(ScreenshotOnce.Run(launch.Screenshot, () => $"{flow.State}, cleared {save.Progress.ClearedCount}"));
             }
         }
 

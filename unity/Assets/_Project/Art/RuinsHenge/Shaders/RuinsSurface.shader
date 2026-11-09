@@ -5,6 +5,7 @@ Shader "SevenSteps/RuinsSurface"
   _UseAtlas("Use Atlas",Float)=1 _UseMoss("Vertex R Moss",Float)=0
   _MossColor("Moss",Color)=(0.435,0.545,0.306,1)
   _WallColor("Cut Slate",Color)=(.33,.41,.49,1)
+  _AmbientFloor("Shadow Floor",Float)=.3
   _UseVertexColor("Vertex Color",Float)=0 _Unlit("Unlit",Float)=0
  }
  SubShader {
@@ -23,7 +24,7 @@ Shader "SevenSteps/RuinsSurface"
    TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
    CBUFFER_START(UnityPerMaterial)
    float4 _BaseMap_ST,_BaseColor,_MossColor,_WallColor;
-   float _UseAtlas,_UseMoss,_UseVertexColor,_Unlit;
+   float _UseAtlas,_UseMoss,_UseVertexColor,_Unlit,_AmbientFloor;
    CBUFFER_END
    struct Attributes {float4 positionOS:POSITION;float3 normalOS:NORMAL;float2 uv:TEXCOORD0;float2 style:TEXCOORD1;float4 color:COLOR;};
    struct Varyings {float4 positionCS:SV_POSITION;float3 normalWS:TEXCOORD0;float2 uv:TEXCOORD1;float4 color:COLOR;float3 positionWS:TEXCOORD2;float fog:TEXCOORD3;float2 style:TEXCOORD4;half3 fill:TEXCOORD5;};
@@ -32,12 +33,18 @@ Shader "SevenSteps/RuinsSurface"
     half3 color=lerp(half3(1,1,1),SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,i.uv).rgb,_UseAtlas)*_BaseColor.rgb;
     color*=lerp(half3(1,1,1),i.color.rgb,_UseVertexColor);
     color=lerp(color,_MossColor.rgb,saturate(i.color.r*_UseMoss)*(1-step(.5,i.style.x)));
-    if(i.style.x>.5&&i.style.x<1.5)color=_WallColor.rgb*lerp(.72,1.28,saturate(i.style.y));
-    if(i.style.x>1.5)color=i.color.rgb;
+    if(i.style.x>.5&&i.style.x<1.5){
+     float noise=frac(sin(dot(floor(i.positionWS.xz*8),float2(12.9898,78.233)))*43758.5453);
+     float edge=step(.38,max(abs(frac(i.positionWS.x+.5)-.5),abs(frac(i.positionWS.z+.5)-.5)));
+     color=_WallColor.rgb*lerp(.68,1.28,saturate(i.style.y))*(.97+.06*noise);
+     color=lerp(color,_MossColor.rgb,edge*step(.62,i.style.y)*smoothstep(.6,.9,noise)*.35);
+    }
+    if(i.style.x>1.5&&i.style.x<2.5)color=i.color.rgb;
+    if(i.style.x>2.5)color=lerp(color,half3(.70,.66,.56),step(.70,i.style.y)*.85);
     Light l=GetMainLight(TransformWorldToShadowCoord(i.positionWS));
     half3 n=normalize(i.normalWS);
     half3 lighting=SampleSH(n)+i.fill+l.color*saturate(dot(n,l.direction))*l.shadowAttenuation;
-    color*=lerp(max(lighting,half3(.3,.3,.3)),half3(1,1,1),_Unlit);
+    color*=lerp(max(lighting,_AmbientFloor.xxx),half3(1,1,1),_Unlit);
     return half4(MixFog(color,i.fog),1);
    }
    ENDHLSL

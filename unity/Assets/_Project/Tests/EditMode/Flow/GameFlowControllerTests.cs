@@ -76,7 +76,7 @@ namespace SevenSteps.Tests
             ctl.Start(1);
             Assert.AreEqual(AppState.Game, flow.State);
             CollectionAssert.AreEqual(new[] { (1, TelemetryNames.Via.Boot) }, board.Loads);
-            Assert.AreEqual(1, save.Progress.lastStage);
+            Assert.AreEqual("seven", save.Progress.lastStage, "last stage saved by name (11.3.1)");
         }
 
         [Test]
@@ -96,7 +96,7 @@ namespace SevenSteps.Tests
             Make(3, false);
             ctl.Start(0);
             board.Win();
-            Assert.IsTrue(save.Progress.IsCleared(0));
+            Assert.IsTrue(save.Progress.IsCleared(Seven));
             Assert.AreEqual(AppState.Result, flow.State);
             Assert.IsNotNull(panel.Shown);
             Assert.IsTrue(panel.Shown.Cleared);

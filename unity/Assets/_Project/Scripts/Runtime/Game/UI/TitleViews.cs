@@ -88,14 +88,15 @@ namespace SevenSteps.Game.UI
         {
             if (progress == null) throw new ArgumentNullException(nameof(progress));
             panel.SetActive(true);
+            int last = progress.LastStageIndex(levels);
             for (int k = 0; k < levels.Length; k++)
             {
-                bool done = progress.IsCleared(k);
-                int b = progress.bestStage.IndexOf(k);
-                string best = b >= 0 ? $"  · 몸 {progress.bestBodies[b]}" : "";
+                bool done = progress.IsCleared(levels[k]);
+                int b = progress.BestBodies(levels[k]);
+                string best = b > 0 ? $"  · 몸 {b}" : "";
                 stageTexts[k].text = $"{k + 1}. {levels[k].Name}\n<size=14>{(done ? "클리어" + best : "")}</size>";
                 stageTexts[k].color = done ? Ui.Gold : Ui.Ink;
-                if (k == progress.lastStage) stageButtons[k].Select();
+                if (k == last) stageButtons[k].Select();
             }
         }
 

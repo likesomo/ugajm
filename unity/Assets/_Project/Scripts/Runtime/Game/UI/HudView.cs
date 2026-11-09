@@ -31,6 +31,7 @@ namespace SevenSteps.Game.UI
         /// the set given at construction is enough (docs/scene-flow.md 4.7).
         readonly TileSet bodyLook;
         readonly MonoBehaviour coroutines;
+        readonly IReadOnlyList<Level> levels;
 
         // View events (docs/scene-flow.md 4.7): the HUD only reports; controllers decide.
         /// Stage list buttons (0-based). Flow controller.
@@ -44,8 +45,11 @@ namespace SevenSteps.Game.UI
 
 
         /// <param name="coroutines">Runs the KEEP/SWITCH shake (the HUD is not a MonoBehaviour).</param>
-        public HudView(MonoBehaviour coroutines, TileSet bodyLook, int levelCount)
+        /// <param name="levels">levels.json stages (stage buttons; cleared marks come from progress by stage name, 11.3.1).</param>
+        public HudView(MonoBehaviour coroutines, TileSet bodyLook, IReadOnlyList<Level> levels)
         {
+            this.levels = levels ?? throw new ArgumentNullException(nameof(levels));
+            int levelCount = levels.Count;
             this.coroutines = coroutines != null ? coroutines : throw new ArgumentNullException(nameof(coroutines));
             this.bodyLook = bodyLook != null ? bodyLook : throw new ArgumentNullException(nameof(bodyLook));
             if (levelCount < 1) throw new ArgumentOutOfRangeException(nameof(levelCount), levelCount, "at least one stage");
@@ -194,7 +198,7 @@ namespace SevenSteps.Game.UI
             {
                 bool cur = k == levelIdx;
                 levelButtons[k].color = cur ? Ui.Gold : Ui.ButtonBg;
-                levelTexts[k].color = cur ? new Color32(0x22, 0x22, 0x22, 0xff) : progress.IsCleared(k) ? Ui.Gold : Ui.Ink;
+                levelTexts[k].color = cur ? new Color32(0x22, 0x22, 0x22, 0xff) : progress.IsCleared(levels[k]) ? Ui.Gold : Ui.Ink;
             }
 
             message.text = msg ?? throw new System.ArgumentNullException(nameof(msg)); // "" = empty line (MessagePresenter)
