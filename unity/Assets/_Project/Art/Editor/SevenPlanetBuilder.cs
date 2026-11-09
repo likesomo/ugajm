@@ -92,7 +92,7 @@ namespace SevenSteps.Art
                 string[] ids={"moss","hollow","carved","frost","joinery","crumble","altar"};review.chapters=new ChapterPreset[7];
                 for(int i=0;i<7;i++)review.chapters[i]=AssetDatabase.LoadAssetAtPath<ChapterPreset>(Art+"/Chapter_"+ids[i]+".asset");
                 const string path="Assets/_Project/Art/Test/PlanetReview.unity";UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene,path);
-                var report=UnityEditor.BuildPipeline.BuildPlayer(new UnityEditor.BuildPlayerOptions{scenes=new[]{path,"Assets/_Project/Art/Test/HandwrittenUI.unity"},target=UnityEditor.BuildTarget.StandaloneWindows64,locationPathName="../Builds/PlanetReview/Windows/PlanetReview.exe"});
+                var report=UnityEditor.BuildPipeline.BuildPlayer(new UnityEditor.BuildPlayerOptions{scenes=new[]{path,"Assets/_Project/Art/Test/HandwrittenUI.unity"},extraScriptingDefines=new[]{"SEVENSTEPS_ART_PREVIEW"},target=UnityEditor.BuildTarget.StandaloneWindows64,locationPathName="../Builds/PlanetReview/Windows/PlanetReview.exe"});
                 Debug.Log("[PlanetReview] Build "+report.summary.result+" errors="+report.summary.totalErrors);EditorApplication.Exit(report.summary.result==UnityEditor.Build.Reporting.BuildResult.Succeeded?0:1);
             }
             catch(Exception e){Debug.LogException(e);EditorApplication.Exit(1);}

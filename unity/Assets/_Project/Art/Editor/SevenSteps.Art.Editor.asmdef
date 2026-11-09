@@ -3,6 +3,7 @@
     "rootNamespace": "SevenSteps.Art",
     "references": [
         "SevenSteps.Art",
+        "SevenSteps.Art.Preview",
         "SevenSteps.Core",
         "SevenSteps.Contracts",
         "SevenSteps.Game",
