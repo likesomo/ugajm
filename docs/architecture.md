@@ -32,15 +32,17 @@ SevenSteps.Contracts   Scripts/Runtime/Contracts   UnityEngine 사용     (아�
    ▲
 SevenSteps.Game        Scripts/Runtime/Game        + InputSystem, uGUI  (게임플레이/UI)  화면·입력·사운드·HUD
    ▲
-SevenSteps.Art         Art/                        + uGUI, URP          (아트)  행성·하늘 환경, 벽 변형, UI 리소스, 프리뷰 스크립트
+SevenSteps.Art         Art/                        + uGUI, URP          (아트)  행성·하늘 환경, 벽 변형, UI 리소스
+SevenSteps.Art.Preview Art/Test                    UNITY_EDITOR || SEVENSTEPS_ART_PREVIEW → Art  (아트)  프리뷰·캡처 스크립트, 정식 빌드 제외
    ▲
 SevenSteps.Editor      Scripts/Editor              Editor 전용          (여러 소유자, 파일 단위)
-SevenSteps.Art.Editor  Art/Editor                  Editor 전용 → Art, Editor  (아트)  세트·환경·UI 생성기
+SevenSteps.Art.Editor  Art/Editor                  Editor 전용 → Art, Art.Preview, Editor  (아트)  세트·환경·UI 생성기
 
 SevenSteps.Tests.EditMode  Tests/EditMode          Editor 전용, UNITY_INCLUDE_TESTS → Core, Contracts, Game
 ```
 
 - `SevenSteps.Art`(2026-11-09): 아트 런타임 스크립트가 정식 Game 씬 프리팹에 들어가므로 Assembly-CSharp에서 분리. Core·Contracts·Game·uGUI·URP를 참조하고, Game·Contracts는 Art를 모른다(보드는 `IStageEnvironment` 같은 Contracts 인터페이스로만 부른다). `autoReferenced: false`. 스크립트 GUID는 그대로라 프리팹 참조는 유지된다. `Art/` 아래 새 런타임 스크립트는 자동으로 이 어셈블리, `Art/Editor/` 아래는 `SevenSteps.Art.Editor`.
+- `SevenSteps.Art.Preview`(2026-11-10, 93477aa 검토 P1): `Art/Test/`의 프리뷰·캡처 스크립트(`PlanetReviewCapture`, `RuinsHengeEnvironment`, `RuinsHengeProbe`). `defineConstraints: UNITY_EDITOR || SEVENSTEPS_ART_PREVIEW` → 에디터에서는 항상 컴파일, **정식 빌드(BuildTools)에는 들어가지 않는다**(파일 IO·화면 캡처·명령줄 읽기 코드가 플레이어에서 빠짐). 아트 프리뷰 플레이어 빌드(`RuinsHengeBuilder.BuildPlayer`, `SevenPlanetBuilder.ReviewWindows`)는 `BuildPlayerOptions.extraScriptingDefines = { "SEVENSTEPS_ART_PREVIEW" }`를 넣어야 이 스크립트가 들어간다(없으면 프리뷰 씬의 스크립트가 빠진다). `Art/Test/` 아래 새 스크립트는 자동으로 이 어셈블리. 정식 게임 코드(Art·Game)는 이 어셈블리를 참조하지 않는다.
 - 화살표 방향으로만 참조한다. `Core`는 아무것도 참조하지 않는다. `Contracts`는 `Game`을 모른다. 테스트 어셈블리는 Core·Contracts·Game을 참조할 수 있다(반대 방향 참조는 없음).
 - UI(HUD, 패널)는 별도 어셈블리로 나누지 않고 `SevenSteps.Game` 안의 `Game/UI/` 폴더, 네임스페이스 `SevenSteps.Game.UI`로 둔다. 잼 규모에서는 컴파일 시간 이득이 없고, `GameController` ↔ HUD 순환을 막으려면 어차피 같은 어셈블리여야 한다. HUD는 `GameSession.Updated`와 `State`만 읽는다.
 - 새 asmdef가 필요하면 아키텍트에게 요청한다. asmdef 파일은 아키텍트 소유다 (위치한 폴더의 소유자와 무관).
@@ -771,3 +773,4 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 | 2026-11-10 | 아키텍트 | 12.6 아트 확정 계약: `KeepLook`(Contracts enum `Neutral`/`SiblingTrace`), `TileSet.keepLook`(끝에 추가, 기본 Neutral). **`TileSet.StatueFor` 동작 변경**: Neutral이면 `statueBodies`를 보지 않고 `statue`. 지금 RuinsHenge는 `statueBodies`가 모두 중성 `Statue`라 화면 변화 없음. 검사기: 세쌍둥이 프리팹 중복 경고, SiblingTrace인데 `statueBodies` 없음 오류. `AppConfig.tileSet` = `RuinsHenge_Chapter01`은 7300d9d에서 이미 전환됨(변경 없음). 영향: 게임플레이/UI(`BoardView`는 이미 `StatueFor`만 부르므로 코드 변경 없음, HUD는 `BodyColor` 그대로), 씬 플로우(없음, `UiTheme`과 무관), 아트(흔적 채택 시 `keepLook`과 `statueBodies`=Menhir_A/B/C 설정, `RuinsHengeBuilder`가 값을 쓴다면 같이) |
 | 2026-11-10 | 아키텍트 | 6.4·13.5 `chapters.json` `tagline`(행성 선택 한 줄, 리드 요청): `ChapterInfo.tagline`/`ChapterText.tagline`/`Tagline(lang)`(ko가 비면 모든 언어 `""`). export: 한 챕터라도 ko tagline이 있으면 모든 챕터 ko + 모든 번역 tagline 필수, 없으면 경고. `Data/chapters.json`에 빈 `tagline` 필드가 생김. 영향: 레벨 디자인(`design/levels/chapters.json` 값 채움, ko·en 함께), 씬 플로우(행성 선택 표시, `LocalizationCheck` 글꼴 검사에 tagline 추가), 게임플레이/UI 없음. EditMode `ChapterTaglineIsOptionalUntilFilled` |
 | 2026-11-10 | 아키텍트 | 12.8 챕터 프리셋 적용 반영(feat/view 5e0a1cb 검토 승인): `AppConfig.chapters` 7개 + `AppConfig.tileSet` 비움, 첫 세트 `TileSetFor`, 검증기 조건. 공용 API 변경 없음 |
+| 2026-11-10 | 아키텍트 | 2장 `SevenSteps.Art.Preview`(`Art/Test/`, defineConstraints `UNITY_EDITOR || SEVENSTEPS_ART_PREVIEW`) 추가, `SevenSteps.Art.Editor`가 참조. 정식 Windows 빌드 Managed에 Preview dll 없음 확인. 영향: 아트(프리뷰 플레이어 빌드 두 곳에 `extraScriptingDefines` 한 줄 필요) |
