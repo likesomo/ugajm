@@ -469,7 +469,7 @@ else flow.Go(AppState.Title);
   - `TelemetryOn(onByDefault)`: 토글 표시값(명시 선택, 없으면 빌드 기본값). `TelemetryAllowed(config)`와 같은 판단.
 - `SaveSystem(store)`: `store`가 null이면 `ArgumentNullException`.
 
-#### 11.3.1 진행 기록 v2: 스테이지 이름 기준 (2026-11-09 결정, 구현 전)
+#### 11.3.1 진행 기록 v2: 스테이지 이름 기준 (2026-11-09 결정·구현, `Contracts/Save/Progress.cs`)
 
 문제(`design/levels/rollout-50.md` 4장 "저장 데이터"): `ProgressData`의 `cleared`·`bestStage`·`starts`·`lastStage`가 **스테이지 번호(0부터)**라 50스테이지 반영(삽입·순서 변경) 때 옛 기록이 다른 스테이지에 붙는다.
 
@@ -491,6 +491,7 @@ else flow.Go(AppState.Title);
 - 이전 전 원본은 `seven-steps.progress.v1` 키에 복사해 둔다(되돌릴 수 있게).
 - `version`이 2보다 크면(더 새 빌드의 저장) 덮어쓰지 않고 기본값으로 시작 + 경고(외부 입력 규칙).
 - 같은 이름이 `levels.json`에 둘 이상이면 `LevelCatalog.Load`가 예외(이름 = 저장 키).
+- 호출부: 마지막 스테이지는 `GameFlowController`가 보드 로드 뒤 `SetLastStage(level)`, 클리어는 `MarkCleared(s.Level, ...)`, 결과 화면 최고 기록은 `BestBodies(level)`. `TitleFlowController(flow, save, panels, levels)`의 `PlayLastStage`는 `LastStageIndex`. `HudView(coroutines, tileSet, levels)`(stage 수 대신 목록). 텔레메트리 `attempt`는 `CountStart(LevelCatalog.At(level - 1))`, `session_start.cleared`는 `ClearedCount`. 테스트 `ProgressV2Tests`(이름 따라감, 맵 변경, v1 이전·백업, 미래 버전).
 
 **구현 담당 제안**: 아키텍트가 Contracts(`ProgressData` v2, `StageRecord`, `ProgressMigration`, EditMode 테스트: v0·v1 이전, `levelKey` 불일치, 미래 버전)와 **호출부 기계적 수정을 한 커밋에** 넣는다(공용 API가 바뀌어 나눠 넣으면 7lucky 컴파일이 깨짐). 호출부: `GameFlowController`·`TitleFlowController`(씬 플로우), `TitleViews`·`HudView`·`TelemetryRunner`(게임플레이/UI), `LevelCatalog` 이름 중복 검사(씬 플로우). 각 소유자가 자기 파일을 검토한다. **R1(첫 50스테이지 묶음) 합류 전에** 들어가야 한다.
 
@@ -664,3 +665,4 @@ else flow.Go(AppState.Title);
 | 2026-11-09 | 아키텍트 | 12.8 결정: 챕터별 `UiTheme`은 `ChapterPreset`에 넣지 않음(의존 방향·일관성·비용), 필요하면 `uiAccent` 색 하나. 씬 플로우 S6 검토 승인 |
 | 2026-11-09 | 아키텍트 | 씬 플로우 S5 반영(feat/scene-flow 1f9f462, 승인): 11.1 로드 실패 시 `AppFlow` 되돌림·`SceneLoader` 사전 거부·페이드 경로, 8장 DDOL 문구를 `TelemetryRunner` + `SceneFader` 두 개로 수정 |
 | 2026-11-09 | 아키텍트 | 11.3.1 진행 기록 v2 결정(구현 전): 키 = 스테이지 이름, `StageRecord`(`levelKey`로 맵 변경 감지 → 최소 몸 기록만 버림), v0·v1은 고정 이름표(17스테이지)로 이전, 원본 백업 키, 미래 버전은 덮어쓰지 않음, 이름 중복 예외. 구현은 아키텍트(Contracts + 호출부 한 커밋, 소유자 검토), R1 전 |
+| 2026-11-09 | 아키텍트 | 11.3.1 진행 기록 v2 구현: `ProgressData`(v2, `stages`/`lastStage` 이름), `StageRecord`, `ProgressMigration`(v0·v1 → v2, 고정 17스테이지 이름표), `SaveSystem` 이전·백업 키 `seven-steps.progress.v1`·미래 버전 읽기 전용, `LevelCatalog.At`·이름 중복 예외. **`ProgressData` 공개 API 변경**(번호 → `Level`): 호출부 함께 수정 |
