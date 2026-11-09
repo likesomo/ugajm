@@ -20,6 +20,9 @@ const levels = LEVELS.map((def) => {
     hint: def.hint ?? '',
     bodies: level.bodies,
     statueCount: level.statueCount,
+    // docs/architecture.md 6.4: chapter id and one-line story, written only when the stage has them.
+    ...(def.chapter ? { chapter: def.chapter } : {}),
+    ...(def.story ? { story: def.story } : {}),
     map: def.map,
     expected: {
       minBodies: best.bodies,

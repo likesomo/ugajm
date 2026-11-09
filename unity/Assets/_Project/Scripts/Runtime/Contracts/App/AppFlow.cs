@@ -20,29 +20,48 @@ namespace SevenSteps.Contracts
         };
     }
 
-    /// <summary>Loads a scene by name. Implemented in SevenSteps.Game with SceneManager; a fake in tests.</summary>
+    /// <summary>
+    /// Loads a scene by name. Implemented in SevenSteps.Game with SceneManager; a fake in tests.
+    /// Raises <see cref="Loaded"/> with the scene name once that scene is loaded (its Awake has run, its Start has not).
+    /// A fake may raise it inside Load.
+    /// </summary>
     public interface ISceneLoader
     {
         string Current { get; }
         void Load(string sceneName);
+        event Action<string> Loaded;
     }
 
     /// <summary>
     /// App-level state machine: Boot → Title → StageSelect → Game ⇄ Result. Pure C#.
     /// Changing state loads the hosting scene only if it differs from the current one;
     /// screens inside a scene listen to <see cref="Changed"/> and show/hide their panels.
+    /// Assertive (docs/architecture.md 9, docs/scene-flow.md S2): a transition outside <see cref="CanGo"/>, a stage out of
+    /// range, or any transition while a scene is loading throws. Input handlers ask first (<see cref="IsLoading"/>,
+    /// <see cref="CanBack"/>, <see cref="CanGoToGame"/>) and ignore the key when the answer is no.
     /// </summary>
     public sealed class AppFlow
     {
         readonly ISceneLoader scenes;
+        string loadingScene;
 
-        public AppFlow(ISceneLoader scenes) { this.scenes = scenes; }
+        public AppFlow(ISceneLoader scenes, int stageCount)
+        {
+            this.scenes = scenes ?? throw new ArgumentNullException(nameof(scenes));
+            if (stageCount < 1) throw new ArgumentOutOfRangeException(nameof(stageCount), stageCount, "at least one stage");
+            StageCount = stageCount;
+            scenes.Loaded += OnSceneLoaded;
+        }
 
         public AppState State { get; private set; } = AppState.Boot;
         /// 0-based stage the Game state plays. Set by GoToGame.
         public int Stage { get; private set; }
+        /// Number of stages (levels.json). GoToGame accepts 0 .. StageCount - 1.
+        public int StageCount { get; }
+        /// A scene load was requested and has not finished. No transition is allowed until it has.
+        public bool IsLoading => loadingScene != null;
 
-        /// (from, to). Raised after the scene load was requested.
+        /// (from, to). Raised after the scene load was requested (the old scene is still loaded).
         public event Action<AppState, AppState> Changed;
 
         public static bool CanGo(AppState from, AppState to) => (from, to) switch
@@ -60,20 +79,56 @@ namespace SevenSteps.Contracts
             _ => false,
         };
 
+        /// Where Back (Esc) goes from a state, if anywhere. Every pair is also allowed by CanGo. Boot and Title have none.
+        public static bool TryGetBackTarget(AppState from, out AppState to)
+        {
+            switch (from)
+            {
+                case AppState.StageSelect: to = AppState.Title; return true;
+                case AppState.Game: to = AppState.StageSelect; return true;
+                case AppState.Result: to = AppState.StageSelect; return true;
+                default: to = from; return false;
+            }
+        }
+
+        public bool TryGetBackTarget(out AppState to) => TryGetBackTarget(State, out to);
+        /// Back would do something now: a back target exists and no scene is loading.
+        public bool CanBack => !IsLoading && TryGetBackTarget(State, out _);
+        /// GoToGame(stage) would succeed now.
+        public bool CanGoToGame(int stage) => !IsLoading && stage >= 0 && stage < StageCount && CanGo(State, AppState.Game);
+
         public void GoToGame(int stage)
         {
+            if (stage < 0 || stage >= StageCount)
+                throw new ArgumentOutOfRangeException(nameof(stage), stage, $"AppFlow: stage must be 0..{StageCount - 1}");
+            ThrowIfCannotGo(AppState.Game);
             Stage = stage;
             Go(AppState.Game);
         }
 
         public void Go(AppState to)
         {
+            ThrowIfCannotGo(to);
             var from = State;
-            if (!CanGo(from, to)) throw new InvalidOperationException($"AppFlow: {from} -> {to} is not allowed");
             State = to;
             string scene = AppScenes.For(to);
-            if (scenes != null && scenes.Current != scene) scenes.Load(scene);
+            if (scenes.Current != scene)
+            {
+                loadingScene = scene; // set first: a fake loader may report Loaded inside Load
+                scenes.Load(scene);
+            }
             Changed?.Invoke(from, to);
+        }
+
+        void ThrowIfCannotGo(AppState to)
+        {
+            if (IsLoading) throw new InvalidOperationException($"AppFlow: {State} -> {to} while scene {loadingScene} is loading");
+            if (!CanGo(State, to)) throw new InvalidOperationException($"AppFlow: {State} -> {to} is not allowed");
+        }
+
+        void OnSceneLoaded(string sceneName)
+        {
+            if (sceneName == loadingScene) loadingScene = null;
         }
     }
 }

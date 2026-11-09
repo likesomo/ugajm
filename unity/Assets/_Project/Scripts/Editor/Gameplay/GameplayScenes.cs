@@ -39,6 +39,7 @@ namespace SevenSteps.EditorTools
             var boot = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var b = new GameObject("Boot").AddComponent<BootScreen>();
             b.config = config;
+            b.assets = assets;
             EditorSceneManager.SaveScene(boot, BootPath);
 
             // Title: camera (for the background color and the AudioListener) + TitleScreen.

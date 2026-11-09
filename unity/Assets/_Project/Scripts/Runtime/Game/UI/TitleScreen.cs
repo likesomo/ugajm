@@ -38,7 +38,7 @@ namespace SevenSteps.Game.UI
         {
             if (assets == null) throw new MissingReferenceException($"[SevenSteps] {name}: TitleScreen.assets is not set (unity.sh scene-validate)");
             if (config == null) throw new MissingReferenceException($"[SevenSteps] {name}: TitleScreen.config is not set (unity.sh scene-validate)");
-            if (!Bootstrap.HasRunThisPlay) Bootstrap.Run(config, null, enterFirstScreen: false);
+            if (!Bootstrap.HasRunThisPlay) Bootstrap.Run(config, assets, null, enterFirstScreen: false);
             flow = Services.Get<AppFlow>();
             save = Services.Get<SaveSystem>();
             Ui.Font = assets.font;
@@ -75,6 +75,18 @@ namespace SevenSteps.Game.UI
 
         void OnFlowChanged(AppState from, AppState to) => Show(to);
 
+        // Player actions: ignored while a scene is loading or when the flow does not allow them from the current state.
+        void Go(AppState to)
+        {
+            if (flow.IsLoading || !AppFlow.CanGo(flow.State, to)) return;
+            flow.Go(to);
+        }
+
+        void PlayStage(int stage)
+        {
+            if (flow.CanGoToGame(stage)) flow.GoToGame(stage);
+        }
+
         void Show(AppState s)
         {
             if (titlePanel == null) throw new InvalidOperationException("[SevenSteps] TitleScreen.Show before BuildUi (or after the scene unloaded without unsubscribing)");
@@ -96,13 +108,13 @@ namespace SevenSteps.Game.UI
                 return;
             }
             var kb = Keyboard.current;
-            if (kb == null) return;
+            if (kb == null || flow.IsLoading) return;
             if (flow.State == AppState.Title && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame))
-                flow.Go(AppState.StageSelect);
-            else if (flow.State == AppState.StageSelect && kb.escapeKey.wasPressedThisFrame)
-                flow.Go(AppState.Title);
+                Go(AppState.StageSelect);
+            else if (flow.State == AppState.StageSelect && kb.escapeKey.wasPressedThisFrame && flow.TryGetBackTarget(out var back))
+                Go(back);
             else if (flow.State == AppState.StageSelect && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame))
-                flow.GoToGame(Mathf.Clamp(save.Progress.lastStage, 0, levels.Length - 1));
+                PlayStage(Mathf.Clamp(save.Progress.lastStage, 0, levels.Length - 1)); // save data is external input: clamp
         }
 
         void BuildUi()
@@ -127,7 +139,7 @@ namespace SevenSteps.Game.UI
             sub.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 76), new Vector2(400, 36));
             var tag = Ui.Label(t, "한 몸에 딱 일곱 걸음. 일곱 번째 걸음은 행운이다.", 20, Ui.Ink, TextAnchor.MiddleCenter, "Tagline");
             tag.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 30), new Vector2(800, 30));
-            startButton = Ui.MakeButton(t, "시작 (Enter)", 24, () => flow.Go(AppState.StageSelect), out _, "Start");
+            startButton = Ui.MakeButton(t, "시작 (Enter)", 24, () => Go(AppState.StageSelect), out _, "Start");
             ((RectTransform)startButton.transform).Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(260, 54));
             var set = Ui.MakeButton(t, "설정", 20, () => settings.Open(), out _, "Settings");
             ((RectTransform)set.transform).Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -126), new Vector2(260, 44));
@@ -154,10 +166,10 @@ namespace SevenSteps.Game.UI
             for (int k = 0; k < levels.Length; k++)
             {
                 int idx = k;
-                stageButtons[k] = Ui.MakeButton(grid, "", 18, () => flow.GoToGame(idx), out stageTexts[k], $"Stage {k + 1}");
+                stageButtons[k] = Ui.MakeButton(grid, "", 18, () => PlayStage(idx), out stageTexts[k], $"Stage {k + 1}");
                 stageTexts[k].horizontalOverflow = HorizontalWrapMode.Wrap;
             }
-            var back = Ui.MakeButton(s, "뒤로 (Esc)", 18, () => flow.Go(AppState.Title), out _, "Back");
+            var back = Ui.MakeButton(s, "뒤로 (Esc)", 18, () => Go(AppState.Title), out _, "Back");
             ((RectTransform)back.transform).Place(new Vector2(0, 0), new Vector2(0, 0), new Vector2(110, 40), new Vector2(180, 44));
             var set2 = Ui.MakeButton(s, "설정", 18, () => settings.Open(), out _, "Settings");
             ((RectTransform)set2.transform).Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-110, 40), new Vector2(180, 44));
