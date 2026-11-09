@@ -1,41 +1,58 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using SevenSteps.Contracts;
 using SevenSteps.Core;
 using UnityEngine;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace SevenSteps.Game.UI
 {
     /// <summary>
-    /// Screen UI built from code: stage list, 7 step pips, bodies, message, buttons, KEEP/SWITCH choice, (the clear/loss panel is ResultView).
-    /// Layout is in 1280x720 reference pixels. Same information as the web prototype's HUD.
+    /// Game HUD (view only, docs/scene-flow.md 4.7, S6 pattern). Prefab UI/Prefabs/Hud.prefab (its own canvas), referenced by
+    /// UiTheme.hud; first built by Seven Steps > Gameplay > Build HUD (HudBuilder), then edited as a prefab.
+    /// Layout follows the art UI kit (design/art/ui-theme.md, game-hud-v2): stage box and hint top left, the Big Dipper step
+    /// counter top centre (stars 1-6 light up; the lines turn gold only when the 7th step completes), the three travellers
+    /// top right (state written out: 사용 중 / 남음 / 선돌, not by colour alone), message, KEEP/SWITCH and the footer.
+    /// Reads State only; raises button events, controllers decide.
     /// </summary>
-    public sealed class HudView
+    public sealed class HudView : MonoBehaviour
     {
-        public readonly RectTransform LabelLayer;
+        [Header("Board labels (step numbers, gate digits) are placed here by BoardView")]
+        public RectTransform labelLayer;
 
-        readonly Text stageTitle, stageHint, nextText, message, statueText;
-        Level countLevel;
-        bool levelHasCountDoor;
-        readonly Image[] pips = new Image[Rules.Steps];
-        readonly Text[] pipTexts = new Text[Rules.Steps];
-        readonly RectTransform bodiesRow;
-        readonly List<Image> bodyIcons = new List<Image>();
-        readonly Image[] levelButtons;
-        readonly Text[] levelTexts;
-        readonly GameObject choicePanel;
-        readonly RectTransform choiceRect;
+        [Header("Stage")]
+        public Text stageNumber;
+        public Text stageName, stageHint;
 
-        /// Body colors for the HUD icons (TileSet.BodyColor, docs 12.6). Every chapter set uses the same three colors, so
-        /// the set given at construction is enough (docs/scene-flow.md 4.7).
-        readonly TileSet bodyLook;
-        readonly MonoBehaviour coroutines;
-        readonly IReadOnlyList<Level> levels;
+        [Header("Big Dipper step counter: index 0..6 = step 1..7")]
+        public Image[] stars = new Image[Rules.Steps];
+        public Text[] starNumbers = new Text[Rules.Steps];
+        [Tooltip("Lines 1-2, 2-3, 3-4, 4-1 (bowl), 4-5, 5-6, 6-7 (handle)")]
+        public Image[] lines = new Image[Rules.Steps];
+        public Sprite starEmpty, starFilled;
+        public Color lineDim = new Color(0.79f, 0.67f, 0.42f, 0.35f);
+        public Color lineGold = new Color(0.95f, 0.78f, 0.36f, 1f);
+        public Text nextStep;
+
+        [Header("Travellers (one slot per body; extra bodies clone the first slot)")]
+        public BodySlot[] bodySlots = new BodySlot[3];
+        [Tooltip("Body A, B, C portraits (cycled for more bodies)")]
+        public Sprite[] bodySprites = new Sprite[3];
+        public Sprite bodyStone;
+
+        [Header("Messages and choice")]
+        public Text statues;
+        public Text message;
+        public RectTransform choice;
+        public Button keep, switchBody;
+
+        [Header("Footer")]
+        public Button undo;
+        public Button restart, hint, stageSelect, settings;
 
         // View events (docs/scene-flow.md 4.7): the HUD only reports; controllers decide.
-        /// Stage list buttons (0-based). Flow controller.
-        public event Action<int> StageClicked;
         /// Footer "스테이지" button. Flow controller.
         public event Action StageSelectRequested;
         /// Footer "설정" button. Scene root (opens the settings overlay).
@@ -43,169 +60,192 @@ namespace SevenSteps.Game.UI
         /// Board actions. Board controller.
         public event Action UndoRequested, RestartRequested, HintRequested, KeepRequested, SwitchRequested;
 
+        static readonly string[] TravellerNames = { "청록 여행자", "황토 여행자", "적갈 여행자" };
+        const string Playing = "사용 중", Waiting = "남음", Stone = "선돌", Spent = "다 씀";
 
-        /// <param name="coroutines">Runs the KEEP/SWITCH shake (the HUD is not a MonoBehaviour).</param>
-        /// <param name="levels">levels.json stages (stage buttons; cleared marks come from progress by stage name, 11.3.1).</param>
-        public HudView(MonoBehaviour coroutines, TileSet bodyLook, IReadOnlyList<Level> levels)
+        /// Body colors (TileSet.BodyColor, docs 12.6); the same three in every chapter set, so the one from Create is enough.
+        TileSet bodyLook;
+        readonly List<BodySlot> slots = new List<BodySlot>();
+        readonly List<int> statueOwners = new List<int>();
+        Level countLevel;
+        bool levelHasCountDoor, dipperComplete, wired;
+
+        public RectTransform LabelLayer => labelLayer;
+
+        [Serializable]
+        public sealed class BodySlot
         {
-            this.levels = levels ?? throw new ArgumentNullException(nameof(levels));
-            int levelCount = levels.Count;
-            this.coroutines = coroutines != null ? coroutines : throw new ArgumentNullException(nameof(coroutines));
-            this.bodyLook = bodyLook != null ? bodyLook : throw new ArgumentNullException(nameof(bodyLook));
-            if (levelCount < 1) throw new ArgumentOutOfRangeException(nameof(levelCount), levelCount, "at least one stage");
-            var canvasGo = new GameObject("HUD", typeof(RectTransform));
-            canvasGo.layer = 5;
-            var canvas = canvasGo.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            var scaler = canvasGo.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1280, 720);
-            scaler.matchWidthOrHeight = 0.5f;
-            canvasGo.AddComponent<GraphicRaycaster>();
-            var root = canvasGo.transform;
+            public GameObject root;
+            public Image portrait;
+            public Text name, state;
+            public Image stateBg;
+        }
 
-            // World-anchored labels (step numbers, gate digits) live behind the HUD.
-            LabelLayer = Ui.Rect("WorldLabels", root).Stretch();
+        /// Places the theme's HUD prefab (its own canvas) in the current scene. LabelLayer is valid on return.
+        public static HudView Create(TileSet bodyLook)
+        {
+            if (bodyLook == null) throw new ArgumentNullException(nameof(bodyLook));
+            var prefab = Ui.Theme.hud != null ? Ui.Theme.hud
+                : throw new MissingReferenceException($"[SevenSteps] UiTheme {Ui.Theme.name}: hud is not set (Seven Steps > Gameplay > Build HUD)");
+            var view = Instantiate(prefab);
+            view.name = prefab.name;
+            view.bodyLook = bodyLook;
+            view.Wire();
+            return view;
+        }
 
-            // Header
-            var title = Ui.Label(root, "일곱 걸음", 30, Ui.Ink, TextAnchor.UpperLeft, "Title");
-            title.rectTransform.Place(new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -12), new Vector2(200, 40));
-            var sub = Ui.Label(root, "Seven Steps", 14, Ui.Dim, TextAnchor.UpperLeft, "Subtitle");
-            sub.rectTransform.Place(new Vector2(0, 1), new Vector2(0, 1), new Vector2(170, -26), new Vector2(160, 20));
-
-            var levelRow = Row(root, "Levels", 4, TextAnchor.MiddleRight);
-            levelRow.Place(new Vector2(1, 1), new Vector2(1, 1), new Vector2(-20, -14), new Vector2(levelCount * 38, 34));
-            levelButtons = new Image[levelCount];
-            levelTexts = new Text[levelCount];
-            for (int k = 0; k < levelCount; k++)
+        /// Required references missing in the prefab, one line each (OnValidate, Wire, SceneFlowValidator via UiTheme).
+        public void Validate(List<string> issues)
+        {
+            void Need(Object o, string field) { if (o == null) issues.Add($"HudView {name}: {field} is not set"); }
+            Need(labelLayer, nameof(labelLayer));
+            Need(stageNumber, nameof(stageNumber)); Need(stageName, nameof(stageName)); Need(stageHint, nameof(stageHint));
+            if (stars == null || stars.Length != Rules.Steps) issues.Add($"HudView {name}: stars needs {Rules.Steps} entries");
+            else for (int k = 0; k < Rules.Steps; k++) Need(stars[k], $"stars[{k}]");
+            if (starNumbers == null || starNumbers.Length != Rules.Steps) issues.Add($"HudView {name}: starNumbers needs {Rules.Steps} entries");
+            else for (int k = 0; k < Rules.Steps; k++) Need(starNumbers[k], $"starNumbers[{k}]");
+            if (lines == null || lines.Length != Rules.Steps) issues.Add($"HudView {name}: lines needs {Rules.Steps} entries (1-2, 2-3, 3-4, 4-1, 4-5, 5-6, 6-7)");
+            else for (int k = 0; k < Rules.Steps; k++) Need(lines[k], $"lines[{k}]");
+            Need(starEmpty, nameof(starEmpty)); Need(starFilled, nameof(starFilled)); Need(nextStep, nameof(nextStep));
+            if (bodySlots == null || bodySlots.Length == 0) issues.Add($"HudView {name}: bodySlots needs at least one slot");
+            else for (int k = 0; k < bodySlots.Length; k++)
             {
-                int idx = k;
-                var b = Ui.MakeButton(levelRow, (k + 1).ToString(), 16, () => StageClicked?.Invoke(idx), out levelTexts[k], $"Level {k + 1}");
-                ((RectTransform)b.transform).sizeDelta = new Vector2(34, 34);
-                levelButtons[k] = b.GetComponent<Image>();
+                var b = bodySlots[k];
+                if (b == null) { issues.Add($"HudView {name}: bodySlots[{k}] is not set"); continue; }
+                Need(b.root, $"bodySlots[{k}].root"); Need(b.portrait, $"bodySlots[{k}].portrait");
+                Need(b.name, $"bodySlots[{k}].name"); Need(b.state, $"bodySlots[{k}].state"); Need(b.stateBg, $"bodySlots[{k}].stateBg");
             }
+            if (bodySprites == null || bodySprites.Length == 0) issues.Add($"HudView {name}: bodySprites needs at least one sprite");
+            else for (int k = 0; k < bodySprites.Length; k++) Need(bodySprites[k], $"bodySprites[{k}]");
+            Need(bodyStone, nameof(bodyStone));
+            Need(statues, nameof(statues)); Need(message, nameof(message)); Need(choice, nameof(choice));
+            Need(keep, nameof(keep)); Need(switchBody, nameof(switchBody));
+            Need(undo, nameof(undo)); Need(restart, nameof(restart)); Need(hint, nameof(hint));
+            Need(stageSelect, nameof(stageSelect)); Need(settings, nameof(settings));
+        }
 
-            // Status row
-            stageTitle = Ui.Label(root, "", 22, Ui.Ink, TextAnchor.MiddleLeft, "StageTitle");
-            stageTitle.rectTransform.Place(new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -64), new Vector2(360, 40));
-            // The stage hint stays under the title for the whole stage (the bottom message changes with every step).
-            stageHint = Ui.Label(root, "", 15, Ui.Dim, TextAnchor.UpperLeft, "StageHint");
-            stageHint.horizontalOverflow = HorizontalWrapMode.Wrap;
-            // StageTitle spans y -64..-104 (top-left pivot), so the hint starts below it at -106.
-            // 400 wide x 60 high = 3 wrapped lines at size 15, enough for the longest levels.js hint (~56 chars).
-            stageHint.rectTransform.Place(new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -106), new Vector2(400, 60));
+        void OnValidate()
+        {
+            var issues = new List<string>();
+            Validate(issues);
+            foreach (var i in issues) Debug.LogError("[SevenSteps] " + i, this);
+        }
 
-            var pipRow = Row(root, "Pips", 8, TextAnchor.MiddleCenter);
-            pipRow.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -60), new Vector2(Rules.Steps * 48, 42));
-            for (int k = 0; k < Rules.Steps; k++)
-            {
-                var pip = Ui.MakeImage(pipRow, Color.white, Ui.Circle, $"Pip {k + 1}");
-                pip.rectTransform.sizeDelta = new Vector2(40, 40);
-                pips[k] = pip;
-                pipTexts[k] = Ui.Label(pip.transform, (k + 1).ToString(), 20, Ui.Ink);
-                pipTexts[k].rectTransform.Stretch();
-            }
-            nextText = Ui.Label(root, "", 17, Ui.Dim, TextAnchor.MiddleCenter, "NextStep");
-            nextText.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -106), new Vector2(400, 24));
+        void Awake() => Wire();
 
-            bodiesRow = Row(root, "Bodies", 5, TextAnchor.MiddleRight);
-            bodiesRow.Place(new Vector2(1, 1), new Vector2(1, 1), new Vector2(-24, -66), new Vector2(300, 36));
-            var bodiesLabel = Ui.Label(bodiesRow, "몸", 18, Ui.Dim);
-            bodiesLabel.rectTransform.sizeDelta = new Vector2(26, 30);
-
-            // Statue-count door stages: statues standing now / the N that opens the Q doors.
-            statueText = Ui.Label(root, "", 18, Ui.Ink, TextAnchor.MiddleRight, "Statues");
-            statueText.rectTransform.Place(new Vector2(1, 1), new Vector2(1, 1), new Vector2(-24, -100), new Vector2(300, 28));
-
-            // Message
-            message = Ui.Label(root, "", 20, Ui.Ink, TextAnchor.MiddleCenter, "Message");
-            message.rectTransform.Place(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 70), new Vector2(1200, 30));
-
-            // Footer buttons and key help
-            var footer = Row(root, "Footer", 8, TextAnchor.MiddleLeft);
-            footer.Place(new Vector2(0, 0), new Vector2(0, 0), new Vector2(20, 16), new Vector2(720, 40));
-            FooterButton(footer, "되돌리기 Z", () => UndoRequested?.Invoke());
-            FooterButton(footer, "재시작 R", () => RestartRequested?.Invoke());
-            FooterButton(footer, "풀이 보기 H", () => HintRequested?.Invoke());
-            FooterButton(footer, "스테이지 Esc", () => StageSelectRequested?.Invoke());
-            FooterButton(footer, "설정", () => SettingsRequested?.Invoke());
-            var keys = Ui.Label(root, "이동: 방향키 / WASD / 옆 칸 클릭 · 7걸음 후: K / X · 스테이지: [ ]", 14, Ui.Dim, TextAnchor.MiddleRight, "Keys");
-            keys.rectTransform.Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-24, 24), new Vector2(520, 24));
-
-            // KEEP / SWITCH
-            choiceRect = Row(root, "Choice", 24, TextAnchor.MiddleCenter);
-            choiceRect.Place(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 108), new Vector2(640, 88));
-            choicePanel = choiceRect.gameObject;
-            ChoiceButton(choiceRect, "KEEP (K)", "여기에 석상을 남긴다\n다음 몸은 지금 출발점에서", Ui.Stone, () => KeepRequested?.Invoke());
-            ChoiceButton(choiceRect, "SWITCH (X)", "석상을 남기지 않는다\n여기가 새 출발점이 된다", Ui.Gold, () => SwitchRequested?.Invoke());
-
+        /// Checks the references and connects the buttons once (Create calls it: Awake does not run in edit-mode tests).
+        void Wire()
+        {
+            if (wired) return;
+            var issues = new List<string>();
+            Validate(issues);
+            if (issues.Count > 0) throw new MissingReferenceException("[SevenSteps] " + string.Join("; ", issues));
+            undo.onClick.AddListener(() => UndoRequested?.Invoke());
+            restart.onClick.AddListener(() => RestartRequested?.Invoke());
+            hint.onClick.AddListener(() => HintRequested?.Invoke());
+            stageSelect.onClick.AddListener(() => StageSelectRequested?.Invoke());
+            settings.onClick.AddListener(() => SettingsRequested?.Invoke());
+            keep.onClick.AddListener(() => KeepRequested?.Invoke());
+            switchBody.onClick.AddListener(() => SwitchRequested?.Invoke());
+            slots.AddRange(bodySlots);
+            wired = true;
         }
 
         /// A move was pressed while KEEP/SWITCH is pending: shake the choice buttons.
         public void NudgeChoice()
         {
-            if (choicePanel.activeInHierarchy) coroutines.StartCoroutine(Shake(choiceRect));
+            if (choice.gameObject.activeInHierarchy) StartCoroutine(Shake(choice));
         }
 
-        static System.Collections.IEnumerator Shake(RectTransform r)
+        /// Redraws from the state. <paramref name="msg"/> is the message line ("" = empty, MessagePresenter).
+        public void Refresh(State s, int levelIdx, string msg)
         {
-            Vector2 home = r.anchoredPosition;
-            for (float t = 0; t < 0.3f; t += Time.unscaledDeltaTime)
-            {
-                r.anchoredPosition = home + new Vector2(Mathf.Sin(t * 60f) * 8f * (1 - t / 0.3f), 0);
-                yield return null;
-            }
-            r.anchoredPosition = home;
-        }
-
-        public void Refresh(State s, int levelIdx, int levelCount, string msg, ProgressData progress)
-        {
-            stageTitle.text = $"{levelIdx + 1}. {s.Level.Name}";
-            stageHint.text = s.Level.Hint; // levels.js hint as written (level design); the solution (H) stays separate
-            int next = s.Used + 1;
-            for (int k = 0; k < Rules.Steps; k++)
-            {
-                int n = k + 1;
-                bool used = n <= s.Used;
-                bool isNext = n == next && s.Status == Status.Play;
-                bool lucky = n == Rules.Steps;
-                pips[k].color = used ? (lucky ? Ui.Gold : Ui.Dim) : isNext ? (lucky ? Ui.Gold : Ui.Ink) : new Color(1, 1, 1, 0.12f);
-                pipTexts[k].color = used || isNext ? new Color32(0x22, 0x1f, 0x2b, 0xff) : lucky ? Ui.Gold : Ui.Ink;
-            }
-            nextText.text = s.Status == Status.Choose ? "<color=#f2c14e>KEEP</color> 또는 <color=#f2c14e>SWITCH</color>"
-                : s.Status == Status.Play ? (next == Rules.Steps ? "다음 걸음이 <color=#f2c14e>행운의 7번째</color>" : $"다음 걸음: <color=#f2c14e>{next}번째</color>")
-                : "";
-
-            while (bodyIcons.Count < s.Level.Bodies)
-            {
-                var icon = Ui.MakeImage(bodiesRow, Ui.Ink, Ui.Circle, "Body");
-                icon.rectTransform.sizeDelta = new Vector2(18, 18);
-                bodyIcons.Add(icon);
-            }
-            // One icon per body in play order (A, B, C), in that body's color (TileSet.BodyColor, docs 12.6):
-            // spent bodies faded, the body now playing larger, bodies still waiting at normal size.
-            int spent = s.Level.Bodies - s.Bodies; // index of the body now playing; all spent after Lose (Bodies = 0)
-            for (int k = 0; k < bodyIcons.Count; k++)
-            {
-                bodyIcons[k].gameObject.SetActive(k < s.Level.Bodies);
-                var c = bodyLook.BodyColor(k);
-                if (k < spent) c.a = 0.25f;
-                bodyIcons[k].color = c;
-                bodyIcons[k].rectTransform.sizeDelta = k == spent && s.Status != Status.Lose ? new Vector2(26, 26) : new Vector2(18, 18);
-            }
-
-            for (int k = 0; k < levelCount; k++)
-            {
-                bool cur = k == levelIdx;
-                levelButtons[k].color = cur ? Ui.Gold : Ui.ButtonBg;
-                levelTexts[k].color = cur ? new Color32(0x22, 0x22, 0x22, 0xff) : progress.IsCleared(levels[k]) ? Ui.Gold : Ui.Ink;
-            }
-
-            message.text = msg ?? throw new System.ArgumentNullException(nameof(msg)); // "" = empty line (MessagePresenter)
-            choicePanel.SetActive(s.Status == Status.Choose);
+            if (s == null) throw new ArgumentNullException(nameof(s));
+            if (bodyLook == null) throw new InvalidOperationException("HudView.Refresh before Create");
+            stageNumber.text = $"스테이지 {levelIdx + 1:00}";
+            stageName.text = s.Level.Name;
+            stageHint.text = s.Level.Hint; // levels.js hint as written (level design); the solution (H) is the message line
+            RefreshDipper(s);
+            RefreshBodies(s);
+            message.text = msg ?? throw new ArgumentNullException(nameof(msg));
+            choice.gameObject.SetActive(s.Status == Status.Choose);
             RefreshStatues(s);
         }
 
+        /// Stars 1..Used filled, the next one larger; the 7th step (choice or clear) turns the lines gold with a short flash.
+        void RefreshDipper(State s)
+        {
+            int next = s.Used + 1;
+            bool complete = s.Used >= Rules.Steps;
+            for (int k = 0; k < Rules.Steps; k++)
+            {
+                int n = k + 1;
+                bool lit = n <= s.Used;
+                bool isNext = n == next && s.Status == Status.Play;
+                stars[k].sprite = lit ? starFilled : starEmpty;
+                stars[k].rectTransform.localScale = Vector3.one * (isNext ? 1.25f : 1f);
+                starNumbers[k].color = lit || isNext ? Ui.Gold : Ui.Dim;
+            }
+            foreach (var l in lines) l.color = complete ? lineGold : lineDim;
+            if (complete && !dipperComplete && isActiveAndEnabled) StartCoroutine(Flash());
+            dipperComplete = complete;
+
+            nextStep.text = s.Status == Status.Choose ? "KEEP 또는 SWITCH"
+                : s.Status == Status.Play ? (next == Rules.Steps ? "다음 걸음 7 · 행운" : $"다음 걸음 {next}")
+                : "";
+        }
+
+        /// One slot per body in play order (A, B, C). State in words, portrait in the body's look, KEEP statues as 선돌.
+        void RefreshBodies(State s)
+        {
+            int count = s.Level.Bodies;
+            while (slots.Count < count) slots.Add(CloneSlot(slots[0], slots.Count));
+            int playing = s.Level.Bodies - s.Bodies; // index of the body now playing; all spent after Lose (Bodies = 0)
+
+            // Owners of the statues standing now (walks the Undo chain; Refresh runs once per state change, docs 12.6).
+            statueOwners.Clear();
+            foreach (int cell in s.Statues) statueOwners.Add(BodyIndex.OfStatue(s, cell));
+
+            for (int k = 0; k < slots.Count; k++)
+            {
+                var slot = slots[k];
+                slot.root.SetActive(k < count);
+                if (k >= count) continue;
+                var color = bodyLook.BodyColor(k);
+                slot.name.text = TravellerNames[k % TravellerNames.Length];
+                bool current = k == playing && s.Status != Status.Lose;
+                bool stone = k < playing && statueOwners.Contains(k);
+                slot.state.text = current ? Playing : k > playing ? Waiting : stone ? Stone : Spent;
+                slot.portrait.sprite = stone ? bodyStone : bodySprites[k % bodySprites.Length];
+                slot.portrait.color = k < playing && !stone ? new Color(1, 1, 1, 0.35f) : Color.white;
+                slot.stateBg.color = current ? color : new Color(color.r, color.g, color.b, 0.25f);
+                slot.state.color = current ? Ui.Ink : Ui.Dim;
+            }
+        }
+
+        BodySlot CloneSlot(BodySlot template, int index)
+        {
+            var go = Instantiate(template.root, template.root.transform.parent);
+            go.name = $"Body {index + 1}";
+            // Same child paths as the template.
+            Transform Find(Component c) => go.transform.Find(PathFrom(template.root.transform, c.transform));
+            return new BodySlot
+            {
+                root = go,
+                portrait = Find(template.portrait).GetComponent<Image>(),
+                name = Find(template.name).GetComponent<Text>(),
+                state = Find(template.state).GetComponent<Text>(),
+                stateBg = Find(template.stateBg).GetComponent<Image>(),
+            };
+        }
+
+        static string PathFrom(Transform root, Transform t)
+        {
+            if (t == root) throw new ArgumentException("body slot parts must be children of the slot root");
+            string path = t.name;
+            for (var p = t.parent; p != null && p != root; p = p.parent) path = p.name + "/" + path;
+            return path;
+        }
 
         /// "석상 2 / 3" on stages with statue-count doors (Q). Values come from Rules.StatueCount and Level.StatueCount.
         void RefreshStatues(State s)
@@ -217,41 +257,37 @@ namespace SevenSteps.Game.UI
                 for (int i = 0; i < s.Level.Count && !levelHasCountDoor; i++)
                     levelHasCountDoor = TileId.At(s, i).Kind == TileKind.CountDoor;
             }
-            statueText.gameObject.SetActive(levelHasCountDoor);
+            statues.gameObject.SetActive(levelHasCountDoor);
             if (!levelHasCountDoor) return;
             int now = Rules.StatueCount(s), need = s.Level.StatueCount;
             bool open = Rules.DoorOpen(s, 'Q');
-            statueText.text = $"석상 <color={(open ? "#f2c14e" : "#ece6d6")}>{now}</color> / {need}" + (open ? "  문 열림" : "");
+            statues.text = $"석상 <color={(open ? "#f2c14e" : "#ece6d6")}>{now}</color> / {need}" + (open ? "  문 열림" : "");
         }
 
-        static RectTransform Row(Transform parent, string name, float spacing, TextAnchor align)
+        /// 7th step: the lines and the 7th star pop once.
+        IEnumerator Flash()
         {
-            var r = Ui.Rect(name, parent);
-            var h = r.gameObject.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = spacing;
-            h.childAlignment = align;
-            h.childControlWidth = h.childControlHeight = false;
-            h.childForceExpandWidth = h.childForceExpandHeight = false;
-            return r;
+            var seventh = stars[Rules.Steps - 1].rectTransform;
+            for (float t = 0; t < 0.35f; t += Time.unscaledDeltaTime)
+            {
+                float k = Mathf.Sin(t / 0.35f * Mathf.PI);
+                seventh.localScale = Vector3.one * (1f + 0.5f * k);
+                foreach (var l in lines) l.color = Color.Lerp(lineGold, Color.white, k * 0.6f);
+                yield return null;
+            }
+            seventh.localScale = Vector3.one;
+            foreach (var l in lines) l.color = dipperComplete ? lineGold : lineDim;
         }
 
-        static void FooterButton(Transform parent, string label, System.Action onClick)
+        static IEnumerator Shake(RectTransform r)
         {
-            var b = Ui.MakeButton(parent, label, 16, onClick, out _, label);
-            ((RectTransform)b.transform).sizeDelta = new Vector2(132, 40);
-        }
-
-        static void ChoiceButton(Transform parent, string title, string desc, Color accent, System.Action onClick)
-        {
-            var b = Ui.MakeButton(parent, title, 24, onClick, out var titleText, title);
-            ((RectTransform)b.transform).sizeDelta = new Vector2(300, 88);
-            titleText.color = accent;
-            titleText.alignment = TextAnchor.UpperCenter;
-            titleText.rectTransform.offsetMax = new Vector2(0, -8);
-            var d = Ui.Label(b.transform, desc, 15, Ui.Dim, TextAnchor.LowerCenter, "Desc");
-            d.rectTransform.Stretch();
-            d.rectTransform.offsetMin = new Vector2(0, 8);
-            d.lineSpacing = 1.1f;
+            Vector2 home = r.anchoredPosition;
+            for (float t = 0; t < 0.3f; t += Time.unscaledDeltaTime)
+            {
+                r.anchoredPosition = home + new Vector2(Mathf.Sin(t * 60f) * 8f * (1 - t / 0.3f), 0);
+                yield return null;
+            }
+            r.anchoredPosition = home;
         }
     }
 }

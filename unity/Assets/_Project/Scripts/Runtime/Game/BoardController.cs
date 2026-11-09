@@ -243,6 +243,6 @@ namespace SevenSteps.Game
             return -1;
         }
 
-        void Refresh() => hud.Refresh(session.State, loadedStage, levels.Length, messages.Current, save.Progress);
+        void Refresh() => hud.Refresh(session.State, loadedStage, messages.Current);
     }
 }
