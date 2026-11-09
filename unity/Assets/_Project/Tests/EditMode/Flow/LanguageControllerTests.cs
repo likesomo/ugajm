@@ -87,6 +87,17 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void TitleCheckParses()
+        {
+            Assert.AreEqual("map", LaunchOptions.Parse(new[] { "x.exe", "-titlecheck", "map" }, "").TitleCheck);
+            Assert.AreEqual("begin", LaunchOptions.Parse(null, "http://h/?titlecheck=begin").TitleCheck);
+            Assert.AreEqual("", LaunchOptions.Parse(null, "").TitleCheck, "off by default");
+            var bad = LaunchOptions.Parse(new[] { "x.exe", "-titlecheck", "start" }, "");
+            Assert.AreEqual("", bad.TitleCheck);
+            Assert.AreEqual(1, bad.Warnings.Count);
+        }
+
+        [Test]
         public void FlowCheckParses()
         {
             Assert.IsTrue(LaunchOptions.Parse(new[] { "x.exe", "-flowcheck" }, "").FlowCheck);

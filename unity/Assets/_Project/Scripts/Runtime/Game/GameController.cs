@@ -158,6 +158,15 @@ namespace SevenSteps.Game
             flowController.Start(launch.DirectToGame ? Bootstrap.FirstStage(launch, flow.StageCount) : 0);
             if (launch.OpenSettings && !overlays.Contains(settingsPanel)) overlays.Push(settingsPanel); // -settings / ?settings=1
 
+            if (launch.TitleCheck != "" && !launch.DirectToGame)
+            {
+                // -titlecheck (S8): arrived from the Title buttons. Save progress like a return to stage select would, so the
+                // next run's Continue has this stage, then log and quit.
+                Services.Get<SaveSystem>().SaveProgress();
+                Debug.Log($"[SevenSteps] Title check {launch.TitleCheck}: arrived stage {flow.Stage + 1} via {flowController.LastVia}");
+                Application.Quit();
+                return;
+            }
             if (launch.FlowCheck && !string.IsNullOrEmpty(launch.Replay) && launch.DirectToGame)
             {
                 // -flowcheck: the replay wins for real, then Result -> Next -> chapter entry are checked (S8).

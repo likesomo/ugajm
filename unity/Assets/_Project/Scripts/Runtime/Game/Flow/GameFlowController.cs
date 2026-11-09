@@ -138,9 +138,13 @@ namespace SevenSteps.Game.Flow
             string chapter = chapterOf(stage) ?? "";
             if (enteredChapter == null || chapter != enteredChapter) ChapterEntering?.Invoke(enteredChapter, chapter, stage);
             enteredChapter = chapter;
-            board.LoadStage(stage, entries.TakeVia());
+            LastVia = entries.TakeVia();
+            board.LoadStage(stage, LastVia);
             save.Progress.SetLastStage(board.State.Level); // saved with the next progress save (clear, stage select)
         }
+
+        /// level_start.via of the last stage entry (-titlecheck logs it).
+        public string LastVia { get; private set; } = "";
 
         /// Stars of the clear being shown (0 = unknown minimum), set on Won for the result panel.
         int clearStars;

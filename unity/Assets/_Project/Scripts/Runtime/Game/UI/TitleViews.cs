@@ -18,7 +18,12 @@ namespace SevenSteps.Game.UI
     {
         readonly GameObject panel;
         readonly Text name, tagline, begin, cont, stages, settings, credits, language;
-        readonly Button beginButton, continueButton;
+        readonly Button beginButton, continueButton, stagesButton;
+
+        /// The menu buttons (-titlecheck presses them; read only).
+        public Button BeginButton => beginButton;
+        public Button ContinueButton => continueButton;
+        public Button StagesButton => stagesButton;
 
         public event Action BeginRequested, ContinueRequested, StagesRequested, SettingsRequested, CreditsRequested, LanguageRequested;
 
@@ -41,7 +46,7 @@ namespace SevenSteps.Game.UI
             }
             beginButton = Menu(0, () => BeginRequested?.Invoke(), out begin, "Begin");
             continueButton = Menu(1, () => ContinueRequested?.Invoke(), out cont, "Continue");
-            Menu(2, () => StagesRequested?.Invoke(), out stages, "Stages");
+            stagesButton = Menu(2, () => StagesRequested?.Invoke(), out stages, "Stages");
             Menu(3, () => SettingsRequested?.Invoke(), out settings, "Settings");
             Menu(4, () => CreditsRequested?.Invoke(), out credits, "Credits");
             begin.color = Ui.Gold;
@@ -273,6 +278,9 @@ namespace SevenSteps.Game.UI
 
         public void Focus(int planet) => cards[Mathf.Clamp(planet, 0, cards.Length - 1)].Select();
 
+        /// A planet's card (-titlecheck presses it; read only).
+        public Button Card(int planet) => cards[planet];
+
         public void Hide() => panel.SetActive(false);
     }
 
@@ -379,6 +387,9 @@ namespace SevenSteps.Game.UI
         }
 
         int focusSlot;
+
+        /// The card in a slot (-titlecheck presses it; read only).
+        public Button Card(int slot) => cards[slot];
 
         public void Show()
         {
