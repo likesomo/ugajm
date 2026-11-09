@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seven Steps Interest Curve</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#22211f;--muted:#6b6862;--grid:#e3e0d9;--d:#c2571a;--i:#2b6cb0;--base:#8a8580;--drop:rgba(214,69,65,.12);--intro:#3f8f5a;--insert:#d64541;--card:#fff;--line:#e8e5de}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1a1917;--fg:#ece9e3;--muted:#a19d96;--grid:#34322e;--d:#f08a4b;--i:#6aa9ee;--base:#8f8a83;--drop:rgba(240,100,95,.16);--intro:#6cc28a;--insert:#f06c66;--card:#22211e;--line:#33312d}}
+:root[data-theme="dark"]{--bg:#1a1917;--fg:#ece9e3;--muted:#a19d96;--grid:#34322e;--d:#f08a4b;--i:#6aa9ee;--base:#8f8a83;--drop:rgba(240,100,95,.16);--intro:#6cc28a;--insert:#f06c66;--card:#22211e;--line:#33312d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI","Malgun Gothic",sans-serif}
+main{max-width:1040px;margin:0 auto;padding:24px 16px 48px}h1{font-size:22px;margin:0 0 4px}p.sub{color:var(--muted);margin:0 0 16px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted);margin:0 0 8px}.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px}
+svg{width:100%;height:auto;display:block}.grid{stroke:var(--grid)}.grid.zero{stroke:var(--muted);stroke-dasharray:2 3}.tick{fill:var(--muted);font-size:12px}
+.baseline{stroke:var(--base);stroke-width:1.5;stroke-dasharray:6 4}.baselabel{fill:var(--base);font-size:12px}
+.lineD{fill:none;stroke:var(--d);stroke-width:2.5}.lineI{fill:none;stroke:var(--i);stroke-width:3}.dotD{fill:var(--d)}.ghostD,.ghostI{fill:none;stroke-width:2;stroke-dasharray:5 4;opacity:.45}.ghostD{stroke:var(--d)}.ghostI{stroke:var(--i)}.dotI{fill:var(--i)}
+.drop{fill:var(--drop)}.intro{stroke:var(--intro);stroke-dasharray:3 3}.introlabel{fill:var(--intro);font-size:11px}.insert path{fill:var(--insert)}
+.tablewrap{overflow-x:auto;margin-top:20px}table{border-collapse:collapse;font-size:13px;min-width:900px;width:100%}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--muted);font-weight:600}
+td:nth-child(2){white-space:nowrap}td.num{text-align:right;font-variant-numeric:tabular-nums}td.strong{font-weight:700}tr.is-drop td{background:var(--drop)}.new{color:var(--intro)}.reason{color:var(--muted);max-width:280px}
+</style></head><body><main>
+<h1>일곱 걸음 — 난이도·흥미도 곡선</h1>
+<p class="sub">50스테이지 묶음 1 (1-10) 후보 · 10개 스테이지. 모델: design/levels/interest-model.md · 생성: tools/level-metrics.mjs</p>
+<div class="legend"><span><i style="background:var(--d)"></i>난이도 D</span><span><i style="background:var(--i)"></i>흥미도 I</span>
+<span><i style="background:var(--base)"></i>기준선</span><span><i style="background:var(--drop);height:10px"></i>흥미도 하락 구간</span>
+<span><i style="background:var(--intro)"></i>새 요소 등장</span><span><i style="background:var(--insert);height:8px;width:8px"></i>새 기믹 투입 지점</span></div>
+<div class="card"><svg viewBox="0 0 960 440" role="img" aria-label="스테이지별 난이도와 흥미도 곡선">
+  <line x1="56" x2="936" y1="376" y2="376" class="grid"/><text x="48" y="380" class="tick" text-anchor="end">-0.2</text><line x1="56" x2="936" y1="324" y2="324" class="grid zero"/><text x="48" y="328" class="tick" text-anchor="end">0.0</text><line x1="56" x2="936" y1="272" y2="272" class="grid"/><text x="48" y="276" class="tick" text-anchor="end">0.2</text><line x1="56" x2="936" y1="220" y2="220" class="grid"/><text x="48" y="224" class="tick" text-anchor="end">0.4</text><line x1="56" x2="936" y1="168" y2="168" class="grid"/><text x="48" y="172" class="tick" text-anchor="end">0.6</text><line x1="56" x2="936" y1="115.99999999999999" y2="115.99999999999999" class="grid"/><text x="48" y="119.99999999999999" class="tick" text-anchor="end">0.8</text><line x1="56" x2="936" y1="64" y2="64" class="grid"/><text x="48" y="68" class="tick" text-anchor="end">1.0</text><rect x="593.7777777777777" y="64" width="97.77777777777777" height="312" class="drop"><title>7. 두 개의 문: 흥미도 하락 (I=0.4)</title></rect><rect x="789.3333333333333" y="64" width="97.77777777777777" height="312" class="drop"><title>9. 바통 넘기기: 흥미도 하락 (I=0.47)</title></rect><line x1="56" x2="56" y1="58" y2="376" class="intro"/><text x="56" y="52" class="introlabel" text-anchor="start">7걸음</text><line x1="153.77777777777777" x2="153.77777777777777" y1="42" y2="376" class="intro"/><text x="153.77777777777777" y="36" class="introlabel" text-anchor="middle">돌아가기</text><line x1="251.55555555555554" x2="251.55555555555554" y1="58" y2="376" class="intro"/><text x="251.55555555555554" y="52" class="introlabel" text-anchor="middle">route</text><line x1="349.3333333333333" x2="349.3333333333333" y1="42" y2="376" class="intro"/><text x="349.3333333333333" y="36" class="introlabel" text-anchor="middle">KEEP 석상·발판·문</text><line x1="447.1111111111111" x2="447.1111111111111" y1="58" y2="376" class="intro"/><text x="447.1111111111111" y="52" class="introlabel" text-anchor="middle">plateChoice</text><line x1="544.8888888888889" x2="544.8888888888889" y1="42" y2="376" class="intro"/><text x="544.8888888888889" y="36" class="introlabel" text-anchor="middle">statueBlock</text><line x1="642.6666666666666" x2="642.6666666666666" y1="58" y2="376" class="intro"/><text x="642.6666666666666" y="52" class="introlabel" text-anchor="middle">석상 여러 개</text><line x1="740.4444444444445" x2="740.4444444444445" y1="42" y2="376" class="intro"/><text x="740.4444444444445" y="36" class="introlabel" text-anchor="middle">SWITCH</text><line x1="838.2222222222222" x2="838.2222222222222" y1="58" y2="376" class="intro"/><text x="838.2222222222222" y="52" class="introlabel" text-anchor="middle">relay</text><line x1="936" x2="936" y1="42" y2="376" class="intro"/><text x="936" y="36" class="introlabel" text-anchor="end">몸 다리·구덩이</text>
+  <line x1="56" x2="936" y1="233.00000000000003" y2="233.00000000000003" class="baseline"/>
+  <text x="936" y="227.00000000000003" class="baselabel" text-anchor="end">기준선 0.35</text>
+  <path d="M56.0,279.8 L153.8,282.4 L251.6,272.0 L349.3,222.6 L447.1,238.2 L544.9,230.4 L642.7,207.0 L740.4,227.8 L838.2,191.4 L936.0,248.6" class="lineD"/><path d="M56.0,214.8 L153.8,160.2 L251.6,175.8 L349.3,188.8 L447.1,168.0 L544.9,165.4 L642.7,220.0 L740.4,121.2 L838.2,201.8 L936.0,134.2" class="lineI"/>
+  <circle cx="56" cy="279.79999999999995" r="5" class="dotD"><title>1. 일곱 걸음
+D 0.17  I 0.42
+N 0.7  A 0.3  C 0.3  F 0
+7걸음</title></circle><circle cx="153.77777777777777" cy="282.4" r="5" class="dotD"><title>2. 늦게 도착하기
+D 0.16  I 0.63
+N 0.7  A 0.5  C 0.68  F 0
+돌아가기, 7걸음</title></circle><circle cx="251.55555555555554" cy="272" r="5" class="dotD"><title>3. 딱 맞는 길
+D 0.2  I 0.57
+N 0.7  A 0.3  C 0.67  F 0
+route, 7걸음</title></circle><circle cx="349.3333333333333" cy="222.6" r="5" class="dotD"><title>4. 돌이 된 몸
+D 0.39  I 0.52
+N 1  A 0.6  C 0.14  F 0.04
+돌아가기, KEEP 석상, 발판·문, 7걸음</title></circle><circle cx="447.1111111111111" cy="238.2" r="5" class="dotD"><title>5. 가까운 발판
+D 0.33  I 0.6
+N 0.7  A 0.5  C 0.76  F 0.17
+돌아가기, KEEP 석상, 발판·문, plateChoice, 7걸음</title></circle><circle cx="544.8888888888889" cy="230.4" r="5" class="dotD"><title>6. 길을 막는 선돌
+D 0.36  I 0.61
+N 0.7  A 0.6  C 0.75  F 0.21
+돌아가기, KEEP 석상, 발판·문, statueBlock, 7걸음</title></circle><circle cx="642.6666666666666" cy="207.00000000000003" r="5" class="dotD"><title>7. 두 개의 문
+D 0.45  I 0.4
+N 0.7  A 0.3  C 0.49  F 0.25
+돌아가기, KEEP 석상, 석상 여러 개, 발판·문, 7걸음</title></circle><circle cx="740.4444444444445" cy="227.8" r="5" class="dotD"><title>8. 새 출발점
+D 0.37  I 0.78
+N 0.7  A 0.6  C 0.98  F 0
+SWITCH, 7걸음</title></circle><circle cx="838.2222222222222" cy="191.4" r="5" class="dotD"><title>9. 바통 넘기기
+D 0.51  I 0.47
+N 0.7  A 0.4  C 0.45  F 0.1
+돌아가기, relay, SWITCH, 7걸음</title></circle><circle cx="936" cy="248.6" r="5" class="dotD"><title>10. 몸으로 놓는 다리
+D 0.29  I 0.73
+N 1  A 0.5  C 0.76  F 0.05
+몸 다리, 돌아가기, 구덩이, 7걸음</title></circle><circle cx="56" cy="214.80000000000004" r="5" class="dotI"><title>1. 일곱 걸음
+D 0.17  I 0.42
+N 0.7  A 0.3  C 0.3  F 0
+7걸음</title></circle><circle cx="153.77777777777777" cy="160.2" r="5" class="dotI"><title>2. 늦게 도착하기
+D 0.16  I 0.63
+N 0.7  A 0.5  C 0.68  F 0
+돌아가기, 7걸음</title></circle><circle cx="251.55555555555554" cy="175.8" r="5" class="dotI"><title>3. 딱 맞는 길
+D 0.2  I 0.57
+N 0.7  A 0.3  C 0.67  F 0
+route, 7걸음</title></circle><circle cx="349.3333333333333" cy="188.8" r="5" class="dotI"><title>4. 돌이 된 몸
+D 0.39  I 0.52
+N 1  A 0.6  C 0.14  F 0.04
+돌아가기, KEEP 석상, 발판·문, 7걸음</title></circle><circle cx="447.1111111111111" cy="168" r="5" class="dotI"><title>5. 가까운 발판
+D 0.33  I 0.6
+N 0.7  A 0.5  C 0.76  F 0.17
+돌아가기, KEEP 석상, 발판·문, plateChoice, 7걸음</title></circle><circle cx="544.8888888888889" cy="165.4" r="5" class="dotI"><title>6. 길을 막는 선돌
+D 0.36  I 0.61
+N 0.7  A 0.6  C 0.75  F 0.21
+돌아가기, KEEP 석상, 발판·문, statueBlock, 7걸음</title></circle><circle cx="642.6666666666666" cy="220" r="5" class="dotI"><title>7. 두 개의 문
+D 0.45  I 0.4
+N 0.7  A 0.3  C 0.49  F 0.25
+돌아가기, KEEP 석상, 석상 여러 개, 발판·문, 7걸음</title></circle><circle cx="740.4444444444445" cy="121.19999999999999" r="5" class="dotI"><title>8. 새 출발점
+D 0.37  I 0.78
+N 0.7  A 0.6  C 0.98  F 0
+SWITCH, 7걸음</title></circle><circle cx="838.2222222222222" cy="201.8" r="5" class="dotI"><title>9. 바통 넘기기
+D 0.51  I 0.47
+N 0.7  A 0.4  C 0.45  F 0.1
+돌아가기, relay, SWITCH, 7걸음</title></circle><circle cx="936" cy="134.20000000000002" r="5" class="dotI"><title>10. 몸으로 놓는 다리
+D 0.29  I 0.73
+N 1  A 0.5  C 0.76  F 0.05
+몸 다리, 돌아가기, 구덩이, 7걸음</title></circle><text x="56" y="394" class="tick" text-anchor="middle">1</text><text x="153.77777777777777" y="394" class="tick" text-anchor="middle">2</text><text x="251.55555555555554" y="394" class="tick" text-anchor="middle">3</text><text x="349.3333333333333" y="394" class="tick" text-anchor="middle">4</text><text x="447.1111111111111" y="394" class="tick" text-anchor="middle">5</text><text x="544.8888888888889" y="394" class="tick" text-anchor="middle">6</text><text x="642.6666666666666" y="394" class="tick" text-anchor="middle">7</text><text x="740.4444444444445" y="394" class="tick" text-anchor="middle">8</text><text x="838.2222222222222" y="394" class="tick" text-anchor="middle">9</text><text x="936" y="394" class="tick" text-anchor="middle">10</text>
+  <text x="496" y="434" class="tick" text-anchor="middle">스테이지</text>
+</svg></div>
+<div class="tablewrap"><table><thead><tr><th>#</th><th>이름</th><th>몸(최소/제한)</th><th>걸음</th><th>탐색 상태</th><th>희소도</th><th>함정 비율</th>
+<th>D</th><th>N</th><th>A</th><th>C</th><th>F</th><th>I</th><th>기믹 조합</th><th>깨달음 근거</th></tr></thead><tbody><tr class="">
+    <td class="num">1</td><td>일곱 걸음</td><td class="num">1/3</td><td class="num">7</td><td class="num">16</td><td class="num">1.54</td><td class="num">0.75</td>
+    <td class="num">0.17</td><td class="num">0.7</td><td class="num">0.3</td><td class="num">0.3</td><td class="num">0</td><td class="num strong">0.42</td>
+    <td>7걸음 <span class="new">새: 7걸음</span></td>
+    <td class="reason">출구까지 정확히 7칸. 규칙을 확인하는 단계라 발견은 작다</td></tr><tr class="">
+    <td class="num">2</td><td>늦게 도착하기</td><td class="num">1/3</td><td class="num">7</td><td class="num">36</td><td class="num">0.86</td><td class="num">0.68</td>
+    <td class="num">0.16</td><td class="num">0.7</td><td class="num">0.5</td><td class="num">0.68</td><td class="num">0</td><td class="num strong">0.63</td>
+    <td>돌아가기 <span class="new">새: 돌아가기</span></td>
+    <td class="reason">일찍 밟으면 소용없다 → 일부러 돌아간다. 세는 퍼즐의 첫 발견</td></tr><tr class="">
+    <td class="num">3</td><td>딱 맞는 길</td><td class="num">1/3</td><td class="num">7</td><td class="num">27</td><td class="num">2.15</td><td class="num">0.81</td>
+    <td class="num">0.2</td><td class="num">0.7</td><td class="num">0.3</td><td class="num">0.67</td><td class="num">0</td><td class="num strong">0.57</td>
+    <td>route <span class="new">새: route</span></td>
+    <td class="reason">출구까지 정확히 7, 길은 하나. 막다른 길 둘을 세어 거른다(여유 걸음 없음 = 2의 반대)</td></tr><tr class="">
+    <td class="num">4</td><td>돌이 된 몸</td><td class="num">2/3</td><td class="num">15</td><td class="num">241</td><td class="num">3.43</td><td class="num">0.96</td>
+    <td class="num">0.39</td><td class="num">1</td><td class="num">0.6</td><td class="num">0.14</td><td class="num">0.04</td><td class="num strong">0.52</td>
+    <td>돌아가기, KEEP 석상, 발판·문 <span class="new">새: KEEP 석상, 발판·문</span></td>
+    <td class="reason">다 쓴 몸이 석상이 되어 발판을 눌러 준다. '흔적이 도구다'의 첫 체험</td></tr><tr class="">
+    <td class="num">5</td><td>가까운 발판</td><td class="num">2/3</td><td class="num">15</td><td class="num">118</td><td class="num">1.82</td><td class="num">0.87</td>
+    <td class="num">0.33</td><td class="num">0.7</td><td class="num">0.5</td><td class="num">0.76</td><td class="num">0.17</td><td class="num strong">0.6</td>
+    <td>돌아가기, KEEP 석상, 발판·문, plateChoice <span class="new">새: plateChoice</span></td>
+    <td class="reason">가까운 발판은 짝수 걸음 거리라 7번째에 설 수 없다. 먼 발판을 고르는 작은 홀짝 발견(23 홀수의 저주의 예고)</td></tr><tr class="">
+    <td class="num">6</td><td>길을 막는 선돌</td><td class="num">2/3</td><td class="num">15</td><td class="num">147</td><td class="num">2.64</td><td class="num">0.97</td>
+    <td class="num">0.36</td><td class="num">0.7</td><td class="num">0.6</td><td class="num">0.75</td><td class="num">0.21</td><td class="num strong">0.61</td>
+    <td>돌아가기, KEEP 석상, 발판·문, statueBlock <span class="new">새: statueBlock</span></td>
+    <td class="reason">발판 위 선돌이 지름길을 막는다. 문을 연 대가로 돌아가는 길을 찾는다</td></tr><tr class="is-drop">
+    <td class="num">7</td><td>두 개의 문</td><td class="num">3/3</td><td class="num">23</td><td class="num">499</td><td class="num">2.43</td><td class="num">0.91</td>
+    <td class="num">0.45</td><td class="num">0.7</td><td class="num">0.3</td><td class="num">0.49</td><td class="num">0.25</td><td class="num strong">0.4</td>
+    <td>돌아가기, KEEP 석상, 석상 여러 개, 발판·문 <span class="new">새: 석상 여러 개</span></td>
+    <td class="reason">석상 두 개로 발판 두 개. 3스테이지를 두 번 하는 것이라 새 발견이 거의 없다</td></tr><tr class="">
+    <td class="num">8</td><td>새 출발점</td><td class="num">2/3 X</td><td class="num">15</td><td class="num">159</td><td class="num">3.57</td><td class="num">0.9</td>
+    <td class="num">0.37</td><td class="num">0.7</td><td class="num">0.6</td><td class="num">0.98</td><td class="num">0</td><td class="num strong">0.78</td>
+    <td>SWITCH <span class="new">새: SWITCH</span></td>
+    <td class="reason">7칸보다 먼 출구. SWITCH로 출발점을 옮겨야 닿는다</td></tr><tr class="is-drop">
+    <td class="num">9</td><td>바통 넘기기</td><td class="num">3/3 X</td><td class="num">23</td><td class="num">1050</td><td class="num">4.42</td><td class="num">0.93</td>
+    <td class="num">0.51</td><td class="num">0.7</td><td class="num">0.4</td><td class="num">0.45</td><td class="num">0.1</td><td class="num strong">0.47</td>
+    <td>돌아가기, relay, SWITCH <span class="new">새: relay</span></td>
+    <td class="reason">SWITCH를 두 번 이어 혼자 못 닿는 거리를 간다(4의 응용)</td></tr><tr class="">
+    <td class="num">10</td><td>몸으로 놓는 다리</td><td class="num">2/3</td><td class="num">14</td><td class="num">70</td><td class="num">1.13</td><td class="num">0.8</td>
+    <td class="num">0.29</td><td class="num">1</td><td class="num">0.5</td><td class="num">0.76</td><td class="num">0.05</td><td class="num strong">0.73</td>
+    <td>몸 다리, 돌아가기, 구덩이 <span class="new">새: 몸 다리, 구덩이</span></td>
+    <td class="reason">구덩이에 7번째로 떨어지면 몸이 다리. 손해처럼 보이는 행동이 답</td></tr></tbody></table></div>
+</main></body></html>

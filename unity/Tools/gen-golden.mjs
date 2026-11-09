@@ -195,6 +195,16 @@ const EDGE = [
   { id: 'edge-lever-last-body', map: ['##########', '#S......L#', '##########'], bodies: 1, cmds: 'RRRRRRR', expect: 'flip stone lose' },
   { id: 'edge-lever-undo', map: ['##########', '#S......L#', '#R########', '##########'], bodies: 3,
     cmds: 'RRRRRRR' + 'Z' + 'R' + 'K' + 'ZZ' + 'R' + 'X' + '*' + 'D', expect: 'flip choose undo flip choose stone undo undo flip choose switch respawn restart bump' },
+  // Mud m: stepping into it costs 2 steps (blocked with one step left); an ice slide stops on it at no extra cost.
+  { id: 'edge-mud-costs-two', map: ['#########', '#S.m....#', '#########'], bodies: 2, cmds: 'RRZRRRRR', expect: 'step step undo step step step step choose' },
+  { id: 'edge-mud-blocks-seventh', map: ['##########', '#S......m#', '##########'], bodies: 2, cmds: 'RRRRRR' + 'R' + 'L', expect: 'bump choose' },
+  { id: 'edge-mud-seventh-ends-on-mud', map: ['#########', '#S.....m#', '#########'], bodies: 3, cmds: 'RRRRRR' + 'K' + 'RRRRRR', expect: 'choose stone respawn bump' },
+  { id: 'edge-ice-slide-stops-on-mud', map: ['#########', '#S~~m...#', '#########'], bodies: 2, cmds: 'RRL', expect: 'slide step step' },
+  { id: 'edge-mud-then-gate', map: ['#########', '#Sm3....#', '#########'], bodies: 2, cmds: 'RR', expect: 'step step' },
+  { id: 'edge-mud-gate-missed', map: ['#########', '#Sm2....#', '#########'], bodies: 2, cmds: 'RR', expect: 'step bump' },
+  // SWITCH on mud makes it the start; walking back into it costs 2, so 6 moves can end there (vanish).
+  { id: 'edge-mud-start-vanish', map: ['##########', '#S.....m.#', '##########'], bodies: 3,
+    cmds: 'RRRRRR' + 'X' + 'LLLRRR', expect: 'choose switch respawn vanish respawn' },
   { id: 'edge-win-ends-input', map: ['#########', '#S......E', '#########'], bodies: 3, cmds: 'RRRRRRR' + 'RLKXZR', expect: 'win undo win' },
 ];
 
@@ -222,30 +232,38 @@ const LEVER_SKETCH = [
   { name: '올려서 멈추기', bodies: 3, map: ['##########', '#S....L..#', '#.########', '#.########', '#.~~~~r..#', '#####E####', '##########'] },
 ];
 
+// Mud sketch stages (design/levels/stage-plan-50.md 5, experiments/mud/stages.mjs @ 7lucky 6cf3de4).
+const MUD_SKETCH = [
+  { name: '진흙 소개: 한 칸에 두 걸음', bodies: 3, map: ['#########', '#S..m..E#', '#########'] },
+  { name: '진흙과 숫자 문', bodies: 3, map: ['########', '##..m..#', '####.#.#', '#...#.S#', '#E#3##5#', '##....m#', '#......#', '########'] },
+  { name: '진흙과 얼음', bodies: 3, map: ['#########', '#E.#..###', '#..#...##', '##~..#.##', '#.~..#m.#', '#.~#.m..#', '#.~#.S..#', '#########'] },
+];
+
+// Trace ids and random seeds come from the stage name, not its number: inserting or reordering stages
+// leaves every other stage's traces unchanged. Names must be unique.
+function fnv1a(text) {
+  let h = 0x811c9dc5;
+  for (const ch of text) {
+    h ^= ch.codePointAt(0);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h;
+}
 const traces = [];
-LEVELS.forEach((def, idx) => {
+const usedNames = new Set();
+const sameMap = (a, b) => a.bodies === b.bodies && (a.statueCount ?? 0) === (b.statueCount ?? 0) && a.map.join('\n') === b.map.join('\n');
+function stageTraces(prefix, def) {
+  const id = `${prefix}:${def.name}`;
+  if (usedNames.has(id)) throw new Error(`duplicate stage name "${def.name}": trace ids need unique names`);
+  usedNames.add(id);
   const best = minBodies(parseLevel(def));
-  traces.push(trace(`stage-${idx + 1}-solution`, 'solution', def, letters(best.path)));
-  for (const seed of [1, 2, 3]) {
-    traces.push(trace(`stage-${idx + 1}-random-${seed}`, 'random', def, randomCommands(1000 * (idx + 1) + seed, 120)));
-  }
-});
-SKETCH.forEach((def, idx) => {
-  const best = minBodies(parseLevel(def));
-  if (!best) throw new Error(`sketch "${def.name}" has no solution`);
-  traces.push(trace(`sketch-count-door-${idx + 1}-solution`, 'solution', def, letters(best.path)));
-  for (const seed of [1, 2]) {
-    traces.push(trace(`sketch-count-door-${idx + 1}-random-${seed}`, 'random', def, randomCommands(9000 + 10 * idx + seed, 120)));
-  }
-});
-LEVER_SKETCH.forEach((def, idx) => {
-  const best = minBodies(parseLevel(def));
-  if (!best) throw new Error(`sketch "${def.name}" has no solution`);
-  traces.push(trace(`sketch-lever-${idx + 1}-solution`, 'solution', def, letters(best.path)));
-  for (const seed of [1, 2]) {
-    traces.push(trace(`sketch-lever-${idx + 1}-random-${seed}`, 'random', def, randomCommands(9500 + 10 * idx + seed, 120)));
-  }
-});
+  if (!best) throw new Error(`${id} has no solution`);
+  traces.push(trace(`${id}:solution`, 'solution', def, letters(best.path)));
+  for (const seed of [1, 2]) traces.push(trace(`${id}:random-${seed}`, 'random', def, randomCommands(fnv1a(id) + seed, 120)));
+}
+LEVELS.forEach((def) => stageTraces('stage', def));
+// Sketches already shipped in levels.js (same map, bodies and N) are covered above.
+for (const def of [...SKETCH, ...LEVER_SKETCH, ...MUD_SKETCH]) if (!LEVELS.some((l) => sameMap(l, def))) stageTraces('sketch', def);
 for (const e of EDGE) {
   const t = trace(e.id, 'edge', { name: e.id, map: e.map, bodies: e.bodies, statueCount: e.statueCount }, e.cmds);
   checkExpect(t, e.expect);

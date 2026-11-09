@@ -1,3 +1,4 @@
+using System;
 using SevenSteps.Contracts;
 using SevenSteps.Core;
 using UnityEngine;
@@ -35,6 +36,8 @@ namespace SevenSteps.Game.UI
 
         void Awake()
         {
+            if (assets == null) throw new MissingReferenceException($"[SevenSteps] {name}: TitleScreen.assets is not set (unity.sh scene-validate)");
+            if (config == null) throw new MissingReferenceException($"[SevenSteps] {name}: TitleScreen.config is not set (unity.sh scene-validate)");
             if (!Bootstrap.HasRunThisPlay) Bootstrap.Run(config, null, enterFirstScreen: false);
             flow = Services.Get<AppFlow>();
             save = Services.Get<SaveSystem>();
@@ -59,9 +62,8 @@ namespace SevenSteps.Game.UI
             var launch = Services.Get<LaunchOptions>();
             if (!string.IsNullOrEmpty(launch.Screenshot))
             {
-                if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-stageselect") >= 0 && flow.State == AppState.Title)
-                    flow.Go(AppState.StageSelect);
-                if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-credits") >= 0) creditsPanel.Open();
+                if (launch.OpenStageSelect && flow.State == AppState.Title) flow.Go(AppState.StageSelect);
+                if (launch.OpenCredits) creditsPanel.Open();
                 StartCoroutine(ScreenshotOnce.Run(launch.Screenshot, () => $"{flow.State}, cleared {save.Progress.cleared.Count}"));
             }
         }
@@ -75,7 +77,7 @@ namespace SevenSteps.Game.UI
 
         void Show(AppState s)
         {
-            if (titlePanel == null) return;
+            if (titlePanel == null) throw new InvalidOperationException("[SevenSteps] TitleScreen.Show before BuildUi (or after the scene unloaded without unsubscribing)");
             titlePanel.SetActive(s == AppState.Title);
             selectPanel.SetActive(s == AppState.StageSelect);
             if (s == AppState.StageSelect) RefreshStages();

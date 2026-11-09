@@ -328,7 +328,7 @@ Scene root (MonoBehaviour 하나, 조립만)
 |---|---|---|---|
 | `ResultView` | `Show(ResultModel)`, `Hide()`. 이벤트 `NextRequested`, `RetryRequested`, `StageSelectRequested` | `GameFlowController` | 클리어와 실패(몸을 모두 잃음)를 한 뷰로 그린다. 열림 여부의 기준은 흐름 쪽: 클리어 = `AppFlow.State == Result`, 실패 = 보드 상태 Lost(`AppState`는 Game 그대로, 2.4 결정). 실패일 때는 `NextRequested`를 내지 않는다. `Show`/`Hide`를 부르는 쪽은 `GameFlowController` 하나다. 실패는 보드 컨트롤러의 이벤트 `BoardLost(State)`/`BoardRecovered`(코어 `Status.Lose`를 그대로 전달)로 받는다. 실패 결과는 **오버레이가 아니다**(`OverlayStack`에 넣지 않음). 그래서 Z(되돌리기)·R(다시 시작) 보드 입력이 살아 있고, 상태가 Lose를 벗어나면 `BoardRecovered`로 `Hide` |
 | `ResultModel` (읽기 전용) | `stage`, `cleared`, `bodiesUsed`, `minBodies`, `bestBodies`, `isLast` | — | 생성자 검사: `stage >= 0`, `cleared`일 때만 `1 <= bodiesUsed <= level.Bodies`(스테이지별 2~5), `minBodies`는 0(모름) 또는 `1..Bodies`, `bestBodies`는 0(기록 없음) 또는 `1..Bodies`. chapter 필드가 들어오면 `nextChapterChanges` 추가 자리 |
-| `HudView` | `Refresh(State, HudModel{stageIdx, stageCount, message, progress})`. 이벤트 `StageSelectRequested`, `SettingsRequested`, `StageClicked(int)` / `UndoRequested`, `RestartRequested`, `HintRequested` | 앞 3개는 흐름 컨트롤러, 뒤 3개는 보드 컨트롤러 | `GameController` 직접 참조 제거. `NudgeChoice()`와 보드 피드백 메서드는 보드 컨트롤러 전용. 세쌍둥이 몸 아이콘 외형은 `HudModel`이 아니라 `HudView`가 TileSet/GameAssets에서 읽음(아키텍트 설계 대기) |
+| `HudView` | `Refresh(State, HudModel{stageIdx, stageCount, message, progress})`. 이벤트 `StageSelectRequested`, `SettingsRequested`, `StageClicked(int)` / `UndoRequested`, `RestartRequested`, `HintRequested` | 앞 3개는 흐름 컨트롤러, 뒤 3개는 보드 컨트롤러 | `GameController` 직접 참조 제거. `NudgeChoice()`와 보드 피드백 메서드는 보드 컨트롤러 전용. 세쌍둥이 몸 아이콘 외형(`TileSet.BodyColor`)은 `HudModel`이 아니라 `HudView`가 읽는다. **S3에서 `TileSet`을 생성자/Init으로 주입**하고, 임시 조회 `HudView.BodyLook`(`GetComponent<BoardView>().TileSet`, feat/view eafd97b)는 게임플레이/UI가 지운다 |
 | `IOverlay` (설정, 크레딧, 이후 확인 창·챕터 전환) | `Show()`, `Hide()`, `event CloseRequested` | `BackNavigator` | 뷰는 스스로 닫지 않고 `CloseRequested`만 낸다. 열림 여부는 `OverlayStack`(`Contains`, `Count`) 하나가 가진다. 설정 저장은 `Hide`가 아니라 값이 바뀔 때 컨트롤러가 `SaveSystem` 명령으로 한다(Pop 경로와 무관) |
 | 보드 입력 차단 | `BoardInput`이 `OverlayStack.Count > 0`이면 보드 이벤트를 내지 않음 | 보드 컨트롤러 | — |
 
@@ -372,6 +372,7 @@ S2·S3 커밋마다 `unity.sh test`(텔레메트리 골든)를 돌린다. 골든
 | S0 ③ `SceneFlowValidator` + `unity.sh scene-validate` | 971ae2f | scene-validate OK(0 오류). 첫 실행에서 `GameAssets.font` 누락을 잡음: 이 작업 공간에 `Assets/Shared` 정션이 없었다(`tools/link-shared-assets.ps1`로 해결). 즉 정션 없는 작업 공간의 빌드는 글자가 빠진 채 smoke를 통과한다 | 리드 검토(`unity.sh` 줄). `BuildTools` 빌드 전에 검증기 호출은 제안만(소유자 결정) |
 | S0 ④ `SampleScene` 삭제, `templateDefaultScene` → Boot | feb8fcb | 정션 연결 후 다시 compile·test 224/224·build-win·smoke 7/7 OK, 스크린샷에 글자 표시 확인 | `CLAUDE.md` "시작 씬" 줄 정리(리드) |
 | S0 ② 에디터 Play 두 번 재현(3.3 표) | — | 배치로는 Play 모드를 재현할 수 없어 미실시. 정적 초기화 자체는 `PlayResetTests`가 고정한다 | 에디터에서 Title·Game을 두 번씩 Play해 확인(사용자 또는 리드, 수동) |
+| S1 단정화 | 923a1a6 | compile OK, test 230/230(+6), build-win + smoke 7/7 OK, 타이틀 스모크(`-screenshot -stageselect -credits`) OK, 잘못된 `-level abc`는 경고 로그 | 아키텍트 검토(`LaunchOptions`, `Services`, API 고지) |
 
 챕터 방향(2026-11-08 사용자): 챕터 = 우주 속 행성, 주인공 세쌍둥이. S4에서 `GameFlowController`에 챕터 전환 연출 자리(다음 스테이지의 chapter가 바뀌면 전환 오버레이), S6에서 `UiTheme`·조명·하늘을 챕터별 프리셋으로 고를 자리를 남긴다. 레벨 데이터 chapter 필드는 레벨 담당이 추가한다.
 
@@ -439,3 +440,5 @@ Open Project 1은 미러의 파일 목록과 커밋 메시지만 확인했다(�
 | 2026-11-09 | 4.7 뷰 공개 면 합의 초안(게임플레이/UI), 5.1/5.2 순서 정리 |
 | 2026-11-09 | 4.7: 실패 결과도 ResultView(NextRequested 없음, bodiesUsed 검사는 클리어일 때만). S0-1 아키텍트 승인, 971ae2f 확인(변경 없음) |
 | 2026-11-09 | 4.7: 실패 결과는 오버레이 아님, BoardLost/BoardRecovered → GameFlowController가 ResultView 표시/숨김 |
+| 2026-11-09 | S1 커밋 923a1a6, 5.2 갱신 |
+| 2026-11-09 | 4.7: HudView에 TileSet 주입(S3). AppConfig.tileSet RuinsHenge_Chapter01. origin/7lucky 6cf3de4 합침 |

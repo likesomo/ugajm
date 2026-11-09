@@ -43,3 +43,22 @@ EditMode + 가짜 로더 + `smoke`/`smoke-webgl`로 S0~S4를 덮을 수 있다. 
 - 씬 소유: 7lucky 29b1f4a README 소유권 표에서 `Scenes/**`·`Game/App/**`가 씬 플로우로 정해졌다. 아키텍처 8장 표의 소유자 열은 아키텍트가 이에 맞춰 고쳤다.
 - S3의 `GameController` 분리는 두 담당이 같은 파일을 고치게 된다. 먼저 씬 플로우가 흐름 부분을 빼는 커밋을 합치고, 그 뒤 게임플레이/UI가 보드 부분을 정리하는 순서로(동시 작업 금지).
 - 텔레메트리 시점 보존(5.1) 좋다. `level_start.via` 골든 외에 씬을 넘는 `level_leave`는 S3 EditMode 테스트로 고정하는 안 그대로 진행.
+
+---
+
+## S0-1 검토: feat/scene-flow 5fdaf49 (Services.cs, 2026-11-09)
+
+**결론: 승인.** 8장·9장 계약과 위 승인 조건 그대로다.
+- `Services.ResetForPlay()`: `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]`, `map.Clear()`. `Clear()`는 테스트용으로 남김. 공개 API 추가뿐이고 기존 호출 영향 없음.
+- 직접 Play 판단: `Bootstrap.HasRunThisPlay`(Run 끝에서 true, 같은 훅으로 false). `GameController`·`TitleScreen`이 `Services.Has<AppFlow>()` 대신 이것을 본다(8장 문장과 일치). `Run`이 중간에 던지면 플래그가 false로 남아 다음 진입에서 다시 시도한다(맞는 동작).
+- 런타임 정적 필드 전수 확인: `Services.map`, `Bootstrap.HasRunThisPlay`, `LevelCatalog`(cached/source/minBodies), `GameController.FirstEntryPending`, `Ui.Font`/`circle` 모두 초기화됨. 나머지는 `static readonly` 상수 표(`Messages`)와 매번 비우는 임시 목록(`BoardView` Ints)이라 문제 없음.
+- 테스트: `PlayResetTests`(5개 타입에 훅이 정확히 하나)는 리플렉션이지만 에디터 전용 테스트라 9장 "리플렉션 금지"(런타임·스트리핑)와 무관. 새 정적 보유 타입을 만들면 이 목록에 추가할 것.
+
+## S1 검토: feat/scene-flow 923a1a6 (LaunchOptions, Services, 2026-11-09)
+
+**결론: 승인.** 조건(읽기 전용 속성, `TakeReplay`, `-stageselect`/`-credits` 흡수, `Warnings` 목록 + 부트스트랩 로그, 텔레메트리 필드 읽기 호환, 중복 등록 예외) 모두 지켰다. 11장·변경 기록 반영함.
+- `LaunchOptions.Parse`: 알 수 없는 인자는 `continue`라 Unity 자체 인자(`-batchmode`, `-logFile -`, `-screen-width 1280`)와 섞여도 안전. 값이 `-`로 시작하면 "값 없음" 경고 — 예전에는 `-replay`만 그렇게 했고 `-level -3` 같은 값도 이제 경고로 버려진다(맞음).
+- `UseEditorStart`: 공유 객체를 바꾸는 예외적 메서드지만 에디터 직접 Play 한 곳만 쓰고, 실행 인자 우선이 명시돼 있다. 인자 오류(`level < 1`)는 코드 쪽 실수라 예외 — 9장과 맞다.
+- `Bootstrap.Run`: 경고 로그 → `Services.Clear()` → 등록 순서. 중간에 던진 Run 뒤 재시도도 `Clear`로 깨끗하다.
+- 사소: `Warnings`가 내부 `List`를 `IReadOnlyList`로 그대로 내보낸다(형 변환하면 수정 가능). 지금은 문제 없음.
+- 다른 에이전트 영향: `LaunchOptions` 필드에 대입하던 코드는 컴파일 오류가 난다. 7lucky 기준 대입은 `GameController` 두 곳뿐이고 이 커밋이 고쳤다. 다른 브랜치(feat/view 등)에서 새로 대입하면 `UseEditorStart`/`TakeReplay`로.
