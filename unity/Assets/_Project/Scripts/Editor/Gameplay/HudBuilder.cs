@@ -141,6 +141,7 @@ namespace SevenSteps.EditorTools
             next.anchoredPosition = new Vector2(0, -150);
             hud.nextStep = Label(next, "다음 걸음 1", 20, Brass, TextAnchor.MiddleCenter, "Text", new Vector2(.5f, .5f), Vector2.zero, new Vector2(230, 36));
             hud.nextStep.rectTransform.pivot = new Vector2(.5f, .5f);
+            hud.nextStepBox = next.gameObject;
 
             // Travellers, top right: one slot per body (A, B, C), state written out
             var bodies = Panel("Travellers", root, "panel_stone", new Vector2(1, 1), new Vector2(-20, -16), new Vector2(380, 150));
@@ -171,6 +172,8 @@ namespace SevenSteps.EditorTools
             hud.choice = Row("Choice", root, 24, new Vector2(.5f, 0), new Vector2(0, 140), new Vector2(640, 88));
             hud.keep = ChoiceButton(hud.choice, "KEEP (K)", "여기에 석상을 남긴다\n다음 몸은 지금 출발점에서", Hex("B9BFC0"));
             hud.switchBody = ChoiceButton(hud.choice, "SWITCH (X)", "석상을 남기지 않는다\n여기가 새 출발점이 된다", Brass);
+            hud.keepDesc = hud.keep.transform.Find("Desc").GetComponent<Text>();
+            hud.switchDesc = hud.switchBody.transform.Find("Desc").GetComponent<Text>();
             hud.choice.gameObject.SetActive(false);
 
             var footer = Row("Footer", root, 12, new Vector2(.5f, 0), new Vector2(0, 14), new Vector2(940, 52));
@@ -182,6 +185,7 @@ namespace SevenSteps.EditorTools
             var keys = Label(root, "이동: 방향키 / WASD / 옆 칸 클릭 · 7걸음 후: K / X · 스테이지: [ ]", 13, Dim, TextAnchor.MiddleCenter, "Keys",
                 new Vector2(.5f, 0), new Vector2(0, 70), new Vector2(700, 22));
             keys.rectTransform.pivot = new Vector2(.5f, 0);
+            hud.keys = keys;
             return go;
         }
 

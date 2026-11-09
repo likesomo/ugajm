@@ -37,8 +37,11 @@ namespace SevenSteps.Tests
             TestTheme.Use();
             var view = ResultView.Create(); // the theme's prefab (UI/Prefabs/ResultPanel.prefab)
             var canvas = view.gameObject;
+            var loc = GameStrings();
             try
             {
+                Assert.Throws<InvalidOperationException>(() => view.Show(ResultModel.Loss(0, 3, false)), "words before Show");
+                view.Apply(loc);
                 Assert.IsFalse(view.IsShown);
                 view.Show(ResultModel.Clear(0, 3, 2, 1, 2, isLast: false));
                 Assert.IsTrue(view.IsShown);
@@ -61,10 +64,30 @@ namespace SevenSteps.Tests
                 Assert.IsTrue(Button(canvas, "다시 시작 (R)").activeSelf);
                 Assert.AreEqual("몸을 모두 잃었다", Text(canvas, "Title"));
 
+                // Language switch while open: the panel rewords itself (docs/architecture.md 13.3).
+                loc.Set(SevenSteps.Contracts.Language.En);
+                view.Apply(loc);
+                Assert.AreEqual("Every body is lost", Text(canvas, "Title"));
+                Assert.AreEqual("Restart (R)", Button(canvas, "다시 시작 (R)").GetComponentInChildren<UnityEngine.UI.Text>().text);
+
                 view.Hide();
                 Assert.IsFalse(view.IsShown);
             }
             finally { UnityEngine.Object.DestroyImmediate(canvas); }
+        }
+
+        /// The game's tables (GameAssets.strings files), ko first.
+        static SevenSteps.Contracts.Localizer GameStrings()
+        {
+            SevenSteps.Contracts.StringTable Load(SevenSteps.Contracts.Language lang)
+            {
+                string path = $"Assets/_Project/Data/Strings/{SevenSteps.Contracts.Languages.Code(lang)}.json";
+                var json = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.TextAsset>(path);
+                Assert.IsNotNull(json, path);
+                return SevenSteps.Contracts.StringTable.FromJson(lang, json.text);
+            }
+            return new SevenSteps.Contracts.Localizer(new[] { Load(SevenSteps.Contracts.Language.Ko), Load(SevenSteps.Contracts.Language.En) },
+                SevenSteps.Contracts.Language.Ko);
         }
 
         static UnityEngine.GameObject Button(UnityEngine.GameObject canvas, string name)

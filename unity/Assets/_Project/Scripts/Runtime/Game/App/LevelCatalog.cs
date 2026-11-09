@@ -13,6 +13,7 @@ namespace SevenSteps.Game
         static TextAsset source;
         static int[] minBodies;
         static string[] chapterIds;
+        static LevelDto[] dtos; // stage texts per language (LevelDto.TextFor, 13.5)
         static ChapterFileDto chapters; // null = no chapters.json yet
 
         /// Domain reload is disabled in the editor: parse levels.json again on every Play so edits to it show up.
@@ -23,6 +24,7 @@ namespace SevenSteps.Game
             source = null;
             minBodies = null;
             chapterIds = null;
+            dtos = null;
             chapters = null;
         }
 
@@ -39,6 +41,7 @@ namespace SevenSteps.Game
                 if (!names.Add(l.Name)) throw new InvalidOperationException($"[SevenSteps] levels.json: stage name \"{l.Name}\" is used twice (it is the save key)");
             cached = parsed;
             minBodies = file.levels.Select(d => d.expected != null ? d.expected.minBodies : 0).ToArray();
+            dtos = file.levels;
             chapterIds = file.levels.Select(d => d.chapter ?? "").ToArray(); // LevelDto.chapter (6.4), not part of Core Level
             chapters = assets.chaptersJson != null ? JsonUtility.FromJson<ChapterFileDto>(assets.chaptersJson.text) : null;
             if (chapters != null && (chapters.chapters == null || chapters.chapters.Length == 0)) chapters = null;
@@ -52,6 +55,15 @@ namespace SevenSteps.Game
         public static int MinBodies(int stage)
         {
             return minBodies != null && stage >= 0 && stage < minBodies.Length ? minBodies[stage] : 0;
+        }
+
+        /// Name, hint and story of a stage in a language (levels.json text, docs/architecture.md 13.5): ko = the base fields,
+        /// a missing translation throws KeyNotFoundException (the export check catches it before a build). Call after Load.
+        public static LevelTextDto TextOf(int stage, Language lang)
+        {
+            if (dtos == null) throw new InvalidOperationException("LevelCatalog.TextOf before Load");
+            if (stage < 0 || stage >= dtos.Length) throw new ArgumentOutOfRangeException(nameof(stage), stage, $"stage must be 0..{dtos.Length - 1}");
+            return dtos[stage].TextFor(Languages.Code(lang));
         }
 
         /// The stage at a 0-based index. Call after Load; a stage outside levels.json throws.

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SevenSteps.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
@@ -120,24 +121,58 @@ namespace SevenSteps.Game.UI
             wired = true;
         }
 
+        Localizer loc;
+        ResultModel shown;
+
+        /// Words and fonts in <paramref name="localizer"/>'s current language (result.*, docs/architecture.md 13.2, 13.4).
+        /// Call once before Show, then on Localizer.Changed; an open panel is redrawn in the new language.
+        public void Apply(Localizer localizer)
+        {
+            loc = localizer ?? throw new ArgumentNullException(nameof(localizer));
+            Wire();
+            Set(Label(next), "result.next");
+            Set(Label(again), "result.again");
+            Set(Label(select), "result.select");
+            Set(Label(undo), "result.undo");
+            Set(Label(restart), "result.restart");
+            title.font = Ui.Theme.FontFor(loc.Current, FontRole.Title);
+            body.font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
+            if (shown != null && IsShown) Show(shown);
+        }
+
+        void Set(Text text, string key)
+        {
+            text.text = loc.Get(key);
+            text.font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
+        }
+
+        static Text Label(Button b) =>
+            b.GetComponentInChildren<Text>(true) ?? throw new MissingReferenceException($"[SevenSteps] ResultView: button {b.name} has no Text label");
+
         public void Show(ResultModel m)
         {
             if (m == null) throw new ArgumentNullException(nameof(m));
+            if (loc == null) throw new InvalidOperationException("ResultView.Show before Apply(Localizer)");
             Wire();
+            bool redraw = ReferenceEquals(m, shown) && IsShown; // language change: keep the stars as they are
+            shown = m;
             if (m.Cleared)
             {
-                // "몸 2개 (최소 1개 · 최고 기록 2개)". Minimum = JS solver's expected.minBodies.
-                string detail = m.MinBodies > 0 ? $"최소 {m.MinBodies}개" : "";
-                if (m.BestBodies > 0) detail += (detail.Length > 0 ? " · " : "") + $"최고 기록 {m.BestBodies}개";
-                title.text = "클리어";
-                body.text = $"몸 {m.BodiesUsed}개" + (detail.Length > 0 ? $" ({detail})" : "") + (m.IsLast ? "\n모든 스테이지를 끝냈다. 고맙습니다!" : "");
-                if (m.BestStars > m.Stars) body.text += $"\n최고 기록 별 {m.BestStars}개";
+                // "Bodies 2 (fewest 1, your best 2)". Minimum = JS solver's expected.minBodies.
+                string detail = m.MinBodies > 0 && m.BestBodies > 0 ? loc.Format("result.detail_both", m.MinBodies, m.BestBodies)
+                    : m.MinBodies > 0 ? loc.Format("result.detail_min", m.MinBodies)
+                    : m.BestBodies > 0 ? loc.Format("result.detail_best", m.BestBodies)
+                    : "";
+                title.text = loc.Get("result.clear");
+                body.text = loc.Format("result.bodies", m.BodiesUsed) + detail + (m.IsLast ? "\n" + loc.Get("result.all_done") : "");
+                if (m.BestStars > m.Stars) body.text += "\n" + loc.Format("result.best_stars", m.BestStars);
             }
             else
             {
-                title.text = "몸을 모두 잃었다";
-                body.text = "되돌리거나 처음부터 다시.";
+                title.text = loc.Get("result.lost_title");
+                body.text = loc.Get("result.lost_body");
             }
+            if (redraw) return;
             next.gameObject.SetActive(m.Cleared && !m.IsLast);
             again.gameObject.SetActive(m.Cleared);
             select.gameObject.SetActive(true);

@@ -4503,6 +4503,7 @@ MonoBehaviour:
   lineDim: {r: 0.79, g: 0.67, b: 0.42, a: 0.35}
   lineGold: {r: 0.95, g: 0.78, b: 0.36, a: 1}
   nextStep: {fileID: 6422114031393564118}
+  nextStepBox: {fileID: 2200783333699789169}
   bodySlots:
   - root: {fileID: 3450589198517754113}
     portrait: {fileID: 6158487967539666663}
@@ -4529,11 +4530,14 @@ MonoBehaviour:
   choice: {fileID: 351223547672327216}
   keep: {fileID: 6550510784566470351}
   switchBody: {fileID: 6743359892959894351}
+  keepDesc: {fileID: 4613314055222044173}
+  switchDesc: {fileID: 8445913112769841181}
   undo: {fileID: 5312330527162066030}
   restart: {fileID: 974306953033828025}
   hint: {fileID: 800789031126727566}
   stageSelect: {fileID: 3508776659087290944}
   settings: {fileID: 7329552411381871019}
+  keys: {fileID: 5693484645296776946}
 --- !u!1 &6915418176972972058
 GameObject:
   m_ObjectHideFlags: 0
