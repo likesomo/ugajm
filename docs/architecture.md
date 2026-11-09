@@ -506,35 +506,47 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 - **TileSet 필드(끝에 추가)**: `playerBodies[]`, `statueBodies[]`. 조회는 `tileSet.PlayerFor(bodyIndex)`, `tileSet.StatueFor(bodyIndex)`. 배열이 비었거나 그 칸에 프리팹이 없으면 기존 `player`/`statue`로 돌아간다(임시 세트는 그대로 동작). 인덱스는 **배열 길이로 나머지 순환**한다(몸이 4~5개인 스테이지: A, B, C, A, ...).
 - 다리(구덩이를 메운 석상)·봉인(금 간 바닥)은 타일(`Bridge`)이라 몸별 외형이 없다. 필요하면 아트가 요청한다.
 - **보드(게임플레이/UI 구현)**: 플레이어 인스턴스는 `BodyIndex.Current`가 바뀌면(`Respawn`, Undo, Restart) 프리팹을 바꿔 다시 만든다. 석상은 `Draw`에서 칸마다 `StatueFor(BodyIndex.OfStatue(s, i))`로 만들고, 같은 칸의 주인이 바뀌면(Undo 후 다른 몸이 KEEP) 다시 만든다. 플레이어 머리 위 숫자 위치는 `PlayerFor(k).labelOffset`.
-- **검사**: `TileSetValidator`가 두 배열의 각 항목에 프리팹이 있는지 보고(오류), 길이가 3이 아니면 경고한다.
+- **검사**: `TileSetValidator`가 두 배열의 각 항목에 프리팹이 있는지 보고(오류), 길이가 3이 아니면 경고한다. `bodyColors`가 3개가 아니면 경고. EditMode `BodyIndexTests`(KEEP 주인, Undo, Restart, 대체·순환).
 - **아트**: `playerBodies` = PlayerA/B/C, `statueBodies` = 형제 색 흔적이 있는 석상 3개(지금 세트에는 중성 석상 하나뿐이라 새로 필요).
-- 열린 문제(리드·레벨 디자인): 지금 레벨의 몸 수는 2~5개다(14~17스테이지 4~5개). 세쌍둥이 설정과 맞추려면 몸 수를 3 이하로 줄일지, 순환(A, B, C, A)을 허용할지 정한다. 계약은 둘 다 지원한다.
+- **몸 수 상한 3**(사용자 결정 2026-11-09). 지금 4~5개인 14~17스테이지는 레벨 디자인이 고친다. `levels.js`·`LevelVerifier`에 `bodies <= 3` 검사를 넣는다(레벨 디자인·코어). 순환은 안전장치로만 남는다.
+- **HUD 몸 아이콘 3색**: `TileSet.bodyColors[3]`(기본값 청록 `#568C88`, 황토 `#B99A57`, 적갈 `#B96C59`, 아트 바이블 머플러 색), 조회 `tileSet.BodyColor(k)`. HUD는 남은 몸·쓴 몸을 이 색 아이콘으로 그린다(쓴 몸은 흐리게, 지금 몸은 강조). 색은 캐릭터 고유라 챕터가 바뀌어도 같은 값을 쓴다(세트마다 같은 값을 넣는다).
 
 ### 12.7 TileSet 위치와 검사 범위
 
 - **정식 위치: 아트 세트는 `Assets/_Project/Art/<세트>/<세트>.asset`**(머티리얼·메시·셰이더와 같은 폴더, 아트 소유). `Data/TileSets/`에는 임시 세트 `TopDown_Placeholder`만 둔다.
 - `TileSetValidator`는 `Assets/_Project` 전체에서 TileSet을 찾는다. 위 두 곳 밖에 있으면 오류. 새 검사: 메시·머티리얼 슬롯이 비었거나 셰이더가 없으면 **오류**(공유 폴더 미연결·GUID 깨짐), 벽·문·석상 수 문·올라간 뒤집힘 벽이 0.6칸보다 높으면 경고.
-- 프리뷰 씬은 `Art/Test/`에 둘 수 있지만 **씬 이름이 `AppScenes`(Boot/Title/Game)와 같으면 안 된다**(이름으로 로드하므로 혼동, `SceneFlowValidator` 규칙). 프리뷰용 런타임 스크립트는 `Assets/_Project/Art/**`에 asmdef 없이 두면 플레이어 빌드(Assembly-CSharp)에 들어간다. 정식 환경은 12.8의 `IStageEnvironment`로 옮긴다.
+- 프리뷰 씬은 `Art/Test/`에 둔다. `Art/Test/Game.unity`는 아트 프리뷰 빌드용 별칭(공용 `SceneLoader`가 이름 `Game`으로 로드하므로)이라 **빌드 목록(`EditorBuildSettings`)에 넣지 않는 조건으로** 둔다. `SceneFlowValidator`의 이름 중복 검사는 빌드 목록 기준. 정식 Game 씬이 챕터 프리셋을 쓰게 되면(12.8) 별칭과 프리뷰 씬을 지운다. 프리뷰용 런타임 스크립트는 `Assets/_Project/Art/**`에 asmdef 없이 두면 플레이어 빌드(Assembly-CSharp)에 들어간다. 정식 환경은 12.8의 `IStageEnvironment`로 옮긴다.
 
-### 12.8 챕터 프리셋 (설계, 구현 전)
+### 12.8 챕터 프리셋 (2026-11-09 타입 추가, 적용은 게임플레이/UI)
 
-사용자 결정: 이끼 유적 × 선돌 × 동양 석재·목재, 우주 행성 챕터(행성마다 한 챕터). 챕터 = 스테이지 묶음 + 그 묶음의 아트 세트.
+사용자 결정: 이끼 유적 × 선돌 × 동양 석재·목재, 챕터 = 작은 행성, 전체 50스테이지. 챕터 = 스테이지 묶음 + 그 묶음의 보드 세트·머티리얼·조명·하늘. 타입은 Contracts `Chapters/`(아키텍트), 에셋은 아트(`Art/<세트>/`).
 
-| 무엇 | 형태 | 소유 |
+| 타입 | 필드 | 뜻 |
 |---|---|---|
-| `ChapterPreset` | ScriptableObject(Contracts): `id`(문자열), `displayName`, `tileSet`, `environment`(프리팹), `ambient`(색), `background`(카메라 배경색) | 타입 아키텍트, 에셋 아트(`Art/<세트>/Chapter_<id>.asset`) |
-| `environment` 프리팹 | 조명(키·필·림), 후처리 `Volume`, 하늘, 행성 정상부·장식. 루트에 `IStageEnvironment` 구현 컴포넌트(선택) | 아트 |
-| `IStageEnvironment` | Contracts 인터페이스 `void Fit(BoardGrid grid, Level level)`. 스테이지가 바뀔 때 컨트롤러가 한 번 부른다(행성 정상부를 W×H에 맞춤). `GameController`를 찾거나 매 프레임 폴링하지 않는다 | 타입 아키텍트, 구현 아트 |
-| `AppConfig.chapters` | `ChapterPreset[]`, 첫 항목이 기본. `AppConfig.tileSet`은 디버그용 덮어쓰기로 남긴다(설정되면 모든 챕터의 세트를 대신함) | 아키텍트(타입), 씬 플로우(에셋) |
-| `levels.json` `chapter` | 레벨마다 챕터 `id`(문자열). 없으면 첫 챕터. `LevelDto`에만 있고 Core `Level`에는 넣지 않는다(규칙과 무관). 조회 `LevelCatalog.ChapterOf(stage)` | 레벨 디자인 제안 → 코어(`LevelDto`) |
+| `ChapterPreset` (SO) | `id`, `displayName`, `tileSet`, `materialOverrides[]`(`from`→`to`), `lighting`, `sky` | 한 챕터. `Override(Material)`로 교체 머티리얼 조회. 여러 챕터가 같은 `tileSet`을 쓰고 머티리얼만 바꿀 수 있다(행성마다 이끼·돌 색) |
+| `LightingPreset` (SO) | `key`/`fill`/`rim`(`LightRig`: `enabled`, `color`, `intensity`, `euler`, `shadows`), `ambient` | 조명 값. 그림자는 키 라이트만(WebGL Mobile 예산) |
+| `SkyPreset` (SO) | `background`, `skyPrefab`, `planetPrefab` | 카메라 배경색, 카메라를 따라가는 하늘(성운·별·먼 행성, 후처리 `Volume` 가능), 보드 아래 행성 정상부·장식 |
+| `IStageEnvironment` | `Fit(BoardGrid grid)` | `planetPrefab` 루트가 구현. 스테이지 진입 때 한 번 불려 정상부를 W×H에 맞춘다. 게임 오브젝트 찾기·폴링·명령줄 읽기 금지 |
+| `AppConfig.chapters[]` | 첫 항목이 기본 | `AppConfig.Chapter(id)`: 빈 id = 첫 챕터, 챕터 없음 = null, 모르는 id = 예외 |
+| `levels.json` `chapter` | 문자열 id, 없으면 첫 챕터 | `LevelDto`에만 둔다(Core `Level`은 모름). 조회 `LevelCatalog.ChapterOf(stage)`. 레벨 디자인 제안 → 코어(`LevelDto`)·게임플레이/UI(`LevelCatalog`) |
 
-- **적용(씬 플로우 + 게임플레이/UI)**: Game 씬 루트가 스테이지 진입 때 챕터가 바뀌었으면 환경 프리팹을 바꾸고(이전 것 파괴), `RenderSettings.ambientLight`·카메라 배경색을 적용하고, `BoardView.Init(새 세트)` 후 다시 그린다. 같은 챕터면 `Fit`만 부른다. S5 페이드가 있으면 그 뒤에 숨긴다. Game 씬 자체의 조명은 챕터가 생기면 없앤다(조명은 환경 프리팹 몫). 임시 세트용 `Default` 챕터를 하나 둔다.
-- **아트 프리뷰 이전**: `RuinsHengeEnvironment`(지금 `FindFirstObjectByType<GameController>` + `LateUpdate` 폴링 + 명령줄 직접 파싱)를 `IStageEnvironment.Fit`으로 바꾼다. `artfx=off`/`-artfxoff`는 `LaunchOptions`가 흡수(씬 플로우 S1).
-- **WebGL 예산**: 챕터 에셋은 `AppConfig.chapters` 참조로 모두 빌드에 들어간다(Addressables 안 씀). 챕터를 늘리면 빌드 크기를 본다. 1280×720 기준 draw call 400 안팎(유적 세트 레벨 8: 403). 바닥·벽은 SRP Batcher, 장식은 결합 메시. 후처리는 Mobile 렌더러에서 Bloom·톤매핑까지.
-- **검사**: `TileSetValidator`에 챕터 검사를 더한다(아키텍트): 각 `ChapterPreset`의 세트 통과, `levels.json`의 `chapter` id가 모두 `AppConfig.chapters`에 있음.
-- 구현 순서(제안): ① 레벨 디자인이 `chapter` 필드 제안 ② 아키텍트가 `ChapterPreset`/`IStageEnvironment`/`AppConfig.chapters` 추가(고지) ③ 아트가 유적 프리뷰를 프리셋 + 환경 프리팹으로 옮김 ④ 씬 플로우·게임플레이/UI가 적용 코드.
+**보드 세트 결정 순서**: `AppConfig.tileSet`(설정되어 있으면 디버그·전환용 덮어쓰기) → 스테이지 챕터의 `tileSet` → `GameAssets.tileSet`. 지금(챕터 에셋 전)은 `AppConfig.tileSet = RuinsHenge_Chapter01`. 챕터 에셋이 생기면 `chapters[0]`에 유적 챕터를 넣고 `AppConfig.tileSet`은 비운다.
 
-### 12.9 smoke-webgl 판정 (팔레트 무관, 제안)
+**적용 (게임플레이/UI, Game 씬 연결은 씬 플로우)**:
+- 스테이지 진입 때 챕터가 바뀌었으면: 하늘·행성 인스턴스 교체(이전 것 파괴), `LightingPreset` 값을 씬의 방향광 3개(키·필·림)에 복사, `RenderSettings.ambientLight`, 카메라 배경색, `BoardView.Init(새 세트)` 후 다시 그리기. 같은 챕터면 `IStageEnvironment.Fit`만.
+- 머티리얼 교체는 보드가 프리팹을 만들 때 한 번(`renderer.sharedMaterials`를 `chapter.Override`로 바꾼 배열). 매 프레임·`material`(인스턴스 복제) 금지.
+- Game 씬의 조명은 방향광 3개만 두고 값은 프리셋이 정한다. 챕터가 없을 때(임시 세트)는 씬의 현재 값 그대로.
+- S5 페이드가 있으면 챕터 교체를 그 뒤에 숨긴다.
+
+**아트 프리뷰 이전**: `RuinsHengeEnvironment`(지금 `FindFirstObjectByType<GameController>` + `LateUpdate` 폴링 + 명령줄 직접 파싱 + 하늘을 카메라에 맞춰 매 프레임 크기 조정)를 `SkyPreset.skyPrefab`과 `planetPrefab`(`IStageEnvironment.Fit`)으로 나눈다. `artfx=off`/`-artfxoff`는 `LaunchOptions`가 흡수(씬 플로우 S1). 프리뷰 조명 값(키 `#FFE2B9` 2.0, 필 `#A8CFFA` 0.55, 림 `#E4CEFF` 0.28)은 `LightingPreset` 에셋으로.
+
+**검사**: `TileSetValidator`가 `ChapterPreset`도 본다: id 비었거나 중복이면 오류, `tileSet` 없으면 오류, 빈 머티리얼 교체 오류, `lighting`·`sky` 없음 경고, `planetPrefab` 루트에 `IStageEnvironment` 없으면 경고. `levels.json` `chapter` id가 `AppConfig.chapters`에 다 있는지는 필드가 생기면 추가.
+
+**WebGL 예산**: 챕터 에셋은 `AppConfig.chapters` 참조로 모두 빌드에 들어간다(Addressables 안 씀). 행성을 늘리면 빌드 크기를 잰다. 1280×720 draw call 400 안팎(유적 레벨 8: 403). 바닥·벽은 SRP Batcher, 하늘·장식은 결합 메시. 후처리는 Bloom·톤매핑까지(Mobile 렌더러).
+
+### 12.9 smoke-webgl 판정 (팔레트 무관, 리드가 구현)
+
+리드가 `unity.sh`·`board-pixels.ps1`을 고친다. 아래는 아키텍트 의견이다.
 
 지금 `board-pixels.ps1`은 옛 보라색 바닥만 센다. 유적 세트에서는 보드가 보여도 실패한다(아트 측정: 0~90픽셀).
 
@@ -563,3 +575,4 @@ flow.Go(launch.DirectToGame ? /* GoToGame(launch.Level - 1) */ : AppState.Title)
 | 2026-11-08 | 아키텍트 | 9장에 구조 원칙(OOP·MVC·단정적, 사용자 지시) 추가: scene-flow.md 1.4 문안을 조정해 반영(GameSession→IBoardPresenter 예외, 규칙상 안 되는 명령은 예외 아님, Core에 Debug.Assert 금지, WebGL 예외 설정, 참조 방향 정정). 8장 직접 Play 판단을 "이번 Play에서 부트스트랩이 돌았는가"로 수정 |
 | 2026-11-08 | 아키텍트 | 8장 씬 소유자를 README(7lucky 29b1f4a)에 맞춰 씬 플로우로 변경 |
 | 2026-11-09 | 아키텍트 | 12.6 몸별 외형 계약: `BodyIndex.Current`/`OfStatue`(Contracts, Undo 사슬에서 계산, Core 변경 없음), `TileSet.playerBodies[]`/`statueBodies[]`(끝에 추가)·`PlayerFor`/`StatueFor`(비면 기존 필드, 인덱스 순환). 12.7 TileSet 정식 위치 `Art/<세트>/`, 검사기 범위 `Assets/_Project`·메시/머티리얼 누락 오류·벽 높이 경고. 12.8 챕터 프리셋 설계(`ChapterPreset`, `IStageEnvironment`, `AppConfig.chapters`, `levels.json` `chapter`). 12.9 smoke-webgl 팔레트 무관 판정 제안. 게임플레이/UI가 보드에 적용 |
+| 2026-11-09 | 아키텍트 | 12.6 몸 수 상한 3(사용자 결정), `TileSet.bodyColors[3]`/`BodyColor(k)`(HUD 몸 아이콘, 머플러 3색), `BodyIndexTests`. 12.7 `Art/Test/Game.unity` 별칭은 빌드 목록 밖 조건으로 허용. 12.8 챕터 프리셋 타입 추가: `ChapterPreset`(`materialOverrides`), `LightingPreset`(`LightRig`), `SkyPreset`, `IStageEnvironment.Fit(BoardGrid)`, `AppConfig.chapters`/`Chapter(id)`, 세트 결정 순서, 검사기 챕터 검사. 12.9 리드 구현. 적용은 게임플레이/UI |
