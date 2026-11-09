@@ -121,7 +121,7 @@ namespace SevenSteps.EditorTools
         {
             var l = Ui.Label(parent, label, 20, Ui.Ink, TextAnchor.MiddleLeft, label);
             l.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(-110, y), new Vector2(240, 40));
-            down = Ui.MakeButton(parent, "−", 22, Nothing, out _, label + " -");
+            down = Ui.MakeButton(parent, "-", 22, Nothing, out _, label + " -"); // ASCII: Jua has no U+2212 (WebGL showed nothing)
             ((RectTransform)down.transform).Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(70, y), new Vector2(44, 40));
             var value = Ui.Label(parent, "", 20, Ui.Gold, TextAnchor.MiddleCenter, label + " value");
             value.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(140, y), new Vector2(80, 40));
