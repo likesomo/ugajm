@@ -28,7 +28,7 @@ namespace SevenSteps.EditorTools
         const string CodeRoot = "Assets/_Project/Scripts/Runtime/Game";
 
         /// Flip to true when the UI text has moved to the string tables (gameplay/UI tells scene flow).
-        public static bool KoreanLiteralsAreErrors = false;
+        public static bool KoreanLiteralsAreErrors = true;
 
         /// Characters shown with the number role in every language (board labels, steps, bodies, statues, stars).
         public const string NumberRoleCharacters = "0123456789/·★"; // not U+00D7 "×": Jua has none (write "x")
@@ -57,7 +57,7 @@ namespace SevenSteps.EditorTools
                 string src = File.ReadAllText(file);
                 foreach (Match m in KeyCall.Matches(StripComments(src)))
                     if (!ko.Has(m.Groups[1].Value)) issues.Add($"ERROR strings: {rel} uses key {m.Groups[1].Value}, not in ko.json");
-                int korean = GlyphCheck.StringLiterals(src).Count(l => l.text.Any(IsHangul));
+                int korean = GlyphCheck.StringLiterals(src).Count(l => l.text.Any(IsHangul) && !NativeNames.Contains(l.text));
                 if (korean > 0) koreanFiles.Add($"{rel} ({korean})");
             }
             if (koreanFiles.Count > 0)
@@ -162,6 +162,10 @@ namespace SevenSteps.EditorTools
                 }
             }
         }
+
+        /// Language names in their own language (SettingsPanel.NativeName): code, not table strings, because they read the
+        /// same in every UI language (13.4). Not counted as Korean UI literals (gameplay/UI request, 93a3a89).
+        static readonly HashSet<string> NativeNames = new HashSet<string>(Languages.All.Select(SettingsPanel.NativeName));
 
         static bool IsHangul(char c) => (c >= '가' && c <= '힣') || (c >= 'ㄱ' && c <= 'ㆎ');
 

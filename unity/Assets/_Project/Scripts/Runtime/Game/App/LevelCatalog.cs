@@ -94,6 +94,24 @@ namespace SevenSteps.Game
         /// levels.json value when there is no chapters.json. Used by GameFlowController.ChapterEntering.
         public static string ChapterKeyOf(int stage) => ChapterOf(stage)?.id ?? ChapterIdOf(stage);
 
+        /// chapters.json chapters in order (planet select). Empty when there is no chapters.json. Call after Load.
+        public static System.Collections.Generic.IReadOnlyList<ChapterInfo> Chapters
+        {
+            get
+            {
+                if (cached == null) throw new InvalidOperationException("LevelCatalog.Chapters before Load");
+                return chapters != null ? chapters.chapters : new ChapterInfo[0];
+            }
+        }
+
+        /// 0-based stages of a chapter key (ChapterKeyOf), in levels.json order. Call after Load.
+        public static int[] StagesOf(string chapterKey)
+        {
+            if (chapterKey == null) throw new ArgumentNullException(nameof(chapterKey));
+            if (cached == null) throw new InvalidOperationException("LevelCatalog.StagesOf before Load");
+            return Enumerable.Range(0, cached.Length).Where(k => ChapterKeyOf(k) == chapterKey).ToArray();
+        }
+
         /// What the chapter card shows for a chapter key, in a language (ChapterInfo.Planet/Intro(lang), 13.5); null when there
         /// is no chapters.json or no planet name. A missing translation throws (export and LocalizationCheck catch it).
         public static Flow.ChapterCardModel ChapterCard(string chapterKey, Language lang)
@@ -102,7 +120,8 @@ namespace SevenSteps.Game
             var info = chapters.Get(chapterKey);
             if (info == null || string.IsNullOrEmpty(info.planet)) return null;
             int number = Array.IndexOf(chapters.chapters, info) + 1;
-            return new Flow.ChapterCardModel(info.id, number, info.Planet(lang), info.Intro(lang));
+            var planets = chapters.chapters.Select(c => c.Planet(lang)).ToArray();
+            return new Flow.ChapterCardModel(info.id, number, info.Planet(lang), info.Intro(lang), planets);
         }
     }
 }

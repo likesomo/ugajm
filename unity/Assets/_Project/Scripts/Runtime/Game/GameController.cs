@@ -45,6 +45,7 @@ namespace SevenSteps.Game
         HudView hud;
         GameFlowController flowController;
         SettingsController settingsController;
+        LanguageController languageController;
         OverlayStack overlays;
         BackNavigator back;
         ChapterIntroController chapterIntro;
@@ -96,13 +97,20 @@ namespace SevenSteps.Game
             var result = ResultView.Create();
             result.Apply(localizer);
             this.localizer = localizer;
-            applyResultLanguage = _ => result.Apply(localizer); // the HUD and board redraw in BoardController
-            localizer.Changed += applyResultLanguage;
             var overlayCanvas = OverlayCanvas();
             var settings = SettingsPanel.Create(overlayCanvas, save, cfg.telemetryOnByDefault, localizer);
-            var chapterCard = ChapterCardView.CreateOptional(overlayCanvas); // null when the theme has no card
+            var languagePanel = new LanguagePanel(overlayCanvas); // opened from the settings language button
+            languagePanel.Apply(localizer);
+            applyResultLanguage = _ => { result.Apply(localizer); languagePanel.Apply(localizer); }; // the HUD and board redraw in BoardController
+            localizer.Changed += applyResultLanguage;
+            // The theme's card prefab, else the code-built chapter entry screen (art concept chapter-entry). None in smoke /
+            // replay runs: the screenshot must show the board.
+            IChapterCard chapterCard = launch.SmokeView != SmokeView.None || !string.IsNullOrEmpty(launch.Replay) ? null
+                : (IChapterCard)ChapterCardView.CreateOptional(overlayCanvas) ?? ChapterEntryView.Create(overlayCanvas, localizer);
             settingsController = new SettingsController(save, settings, cfg.telemetryOnByDefault, localizer);
             overlays = new OverlayStack();
+            languageController = new LanguageController(languagePanel, overlays, localizer, save, launch.Language);
+            settingsController.OpenLanguage = languageController.Open;
 
             // Board controller, then the flow controller on top of it
             board.Init(assets, levels, save, hud, cam, tiles, overrideCamera ? cameraRig : (CameraRig?)null, Services.Get<ITelemetry>(), localizer);
@@ -152,6 +160,7 @@ namespace SevenSteps.Game
         {
             flowController?.Dispose();
             settingsController?.Dispose();
+            languageController?.Dispose();
             chapterIntro?.Dispose();
             if (localizer != null) localizer.Changed -= applyResultLanguage;
         }

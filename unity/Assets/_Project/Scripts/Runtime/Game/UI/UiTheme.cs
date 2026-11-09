@@ -63,6 +63,33 @@ namespace SevenSteps.Game.UI
         [Tooltip("Number role, the same in every language (board labels, steps, bodies, statue count, stars). v0: Jua")]
         public Font number;
 
+        [Header("Menu skin (Title, planet select, loading; optional: empty = flat colors)")]
+        [Tooltip("Full-screen UI background prefab (a stretched Image), behind the menu screens. Art/UI/MenhirJoineryBackground")]
+        public GameObject menuBackground;
+        [Tooltip("9-sliced button states. All four or none")]
+        public Sprite buttonNormal, buttonHover, buttonPressed, buttonDisabled;
+        [Tooltip("9-sliced frame of large panels (title menu, stage list)")]
+        public Sprite panel;
+        [Tooltip("9-sliced frame of small cards (planets, stages)")]
+        public Sprite card;
+        [Tooltip("Star icons (planet and stage stars). Both or none")]
+        public Sprite starFilled, starEmpty;
+        [Tooltip("Big Dipper star positions, 7 points normalized (0..1, y down): planet map and loading. Empty = DefaultDipper")]
+        public Vector2[] dipper = new Vector2[0];
+
+        /// The art Dipper (RuinsHengeUiResources.dipper, design/art/ui-theme.md): bowl 1-2-3-4-1, handle 4-5-6-7.
+        public static readonly Vector2[] DefaultDipper =
+        {
+            new Vector2(.12f, .12f), new Vector2(.10f, .36f), new Vector2(.35f, .40f), new Vector2(.42f, .18f),
+            new Vector2(.62f, .12f), new Vector2(.79f, .20f), new Vector2(.98f, .28f),
+        };
+
+        /// Lines of the Dipper as point index pairs.
+        public static readonly (int a, int b)[] DipperEdges = { (0, 1), (1, 2), (2, 3), (3, 0), (3, 4), (4, 5), (5, 6) };
+
+        public Vector2[] Dipper => dipper != null && dipper.Length == 7 ? dipper : DefaultDipper;
+        public bool HasButtonSkin => buttonNormal != null;
+
         /// The fonts of a language. A language without an entry throws (SceneFlowValidator catches it before a build).
         public LanguageFonts FontsFor(Language lang)
         {
@@ -92,6 +119,11 @@ namespace SevenSteps.Game.UI
             else hud.Validate(issues);
             if (chapterCard != null) chapterCard.Validate(issues);
             if (number == null) issues.Add($"UiTheme {name}: number font is not set");
+            int buttons = (buttonNormal != null ? 1 : 0) + (buttonHover != null ? 1 : 0) + (buttonPressed != null ? 1 : 0) + (buttonDisabled != null ? 1 : 0);
+            if (buttons != 0 && buttons != 4) issues.Add($"UiTheme {name}: set all four button sprites or none ({buttons} set)");
+            if ((starFilled == null) != (starEmpty == null)) issues.Add($"UiTheme {name}: set both star sprites or none");
+            if (dipper != null && dipper.Length != 0 && dipper.Length != 7) issues.Add($"UiTheme {name}: dipper needs 7 points or none ({dipper.Length})");
+            if (menuBackground != null && menuBackground.GetComponent<RectTransform>() == null) issues.Add($"UiTheme {name}: menuBackground must be a UI prefab (RectTransform)");
             var seen = new HashSet<Language>();
             foreach (var l in languages ?? new LanguageFonts[0])
             {
