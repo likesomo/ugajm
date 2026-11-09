@@ -79,7 +79,9 @@ namespace SevenSteps.Game.UI
             // The stage hint stays under the title for the whole stage (the bottom message changes with every step).
             stageHint = Ui.Label(root, "", 15, Ui.Dim, TextAnchor.UpperLeft, "StageHint");
             stageHint.horizontalOverflow = HorizontalWrapMode.Wrap;
-            stageHint.rectTransform.Place(new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -86), new Vector2(400, 60));
+            // StageTitle spans y -64..-104 (top-left pivot), so the hint starts below it at -106.
+            // 400 wide x 60 high = 3 wrapped lines at size 15, enough for the longest levels.js hint (~56 chars).
+            stageHint.rectTransform.Place(new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -106), new Vector2(400, 60));
 
             var pipRow = Row(root, "Pips", 8, TextAnchor.MiddleCenter);
             pipRow.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -60), new Vector2(Rules.Steps * 48, 42));
@@ -215,7 +217,8 @@ namespace SevenSteps.Game.UI
                 levelTexts[k].color = cur ? new Color32(0x22, 0x22, 0x22, 0xff) : progress.IsCleared(k) ? Ui.Gold : Ui.Ink;
             }
 
-            message.text = msg ?? "";
+            // The hint has its own label under the title. Stage start sends the hint as the message; do not show it twice.
+            message.text = msg == null || msg == s.Level.Hint ? "" : msg;
             choicePanel.SetActive(s.Status == Status.Choose);
             RefreshStatues(s);
 
