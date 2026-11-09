@@ -28,10 +28,13 @@ namespace SevenSteps.Game.UI
         public int Stars { get; }
         /// Best stars recorded for the stage, 0..3, at least <see cref="Stars"/> (the clear is saved first).
         public int BestStars { get; }
+        /// The planet this clear finishes (its last stage, not the final stage), null otherwise: the panel says goodbye to it.
+        public ChapterInfo FinishedChapter { get; }
 
         public ResultModel(int stage, bool cleared, int levelBodies, int bodiesUsed, int minBodies, int bestBodies, bool isLast,
-            int stars = 0, int bestStars = 0)
+            int stars = 0, int bestStars = 0, ChapterInfo finishedChapter = null)
         {
+            if (!cleared && finishedChapter != null) throw new ArgumentException("a loss finishes no planet", nameof(finishedChapter));
             if (stars < 0 || stars > Core.Stars.Max) throw new ArgumentOutOfRangeException(nameof(stars), stars, $"0..{Core.Stars.Max}");
             if (bestStars < 0 || bestStars > Core.Stars.Max) throw new ArgumentOutOfRangeException(nameof(bestStars), bestStars, $"0..{Core.Stars.Max}");
             if (!cleared && stars != 0) throw new ArgumentOutOfRangeException(nameof(stars), stars, "a loss has no stars");
@@ -52,11 +55,12 @@ namespace SevenSteps.Game.UI
             IsLast = isLast;
             Stars = stars;
             BestStars = bestStars;
+            FinishedChapter = finishedChapter;
         }
 
         public static ResultModel Clear(int stage, int levelBodies, int bodiesUsed, int minBodies, int bestBodies, bool isLast,
-            int stars = 0, int bestStars = 0) =>
-            new ResultModel(stage, true, levelBodies, bodiesUsed, minBodies, bestBodies, isLast, stars, bestStars);
+            int stars = 0, int bestStars = 0, ChapterInfo finishedChapter = null) =>
+            new ResultModel(stage, true, levelBodies, bodiesUsed, minBodies, bestBodies, isLast, stars, bestStars, finishedChapter);
 
         public static ResultModel Loss(int stage, int levelBodies, bool isLast) =>
             new ResultModel(stage, false, levelBodies, 0, 0, 0, isLast);
@@ -76,6 +80,8 @@ namespace SevenSteps.Game.UI
         [Tooltip("3 stars of this clear (docs/architecture.md 6.5), revealed one by one; the row hides for a loss or unknown stars")]
         public Image[] stars = new Image[Core.Stars.Max];
         public Sprite starEmpty, starFilled;
+        [Tooltip("What each star asks (result.star1..3, under the stars); earned ones in ink, the rest dimmed. Hidden with the stars.")]
+        public Text[] starLabels = new Text[Core.Stars.Max];
 
         public event Action NextRequested, RetryRequested, StageSelectRequested;
         /// Loss only: the board actions stay available on the panel (Z / R also work, the loss is not an overlay).
@@ -93,6 +99,8 @@ namespace SevenSteps.Game.UI
             if (stars == null || stars.Length != Core.Stars.Max) issues.Add($"ResultView {name}: stars needs {Core.Stars.Max} entries");
             else for (int k = 0; k < stars.Length; k++) Need(stars[k], $"stars[{k}]");
             Need(starEmpty, nameof(starEmpty)); Need(starFilled, nameof(starFilled));
+            if (starLabels == null || starLabels.Length != Core.Stars.Max) issues.Add($"ResultView {name}: starLabels needs {Core.Stars.Max} entries");
+            else for (int k = 0; k < starLabels.Length; k++) Need(starLabels[k], $"starLabels[{k}]");
         }
 
         void OnValidate()
@@ -164,7 +172,8 @@ namespace SevenSteps.Game.UI
                     : m.BestBodies > 0 ? loc.Format("result.detail_best", m.BestBodies)
                     : "";
                 title.text = loc.Get("result.clear");
-                body.text = loc.Format("result.bodies", m.BodiesUsed) + detail + (m.IsLast ? "\n" + loc.Get("result.all_done") : "");
+                body.text = loc.Format("result.bodies", m.BodiesUsed) + detail + (m.IsLast ? "\n" + loc.Get("result.journey_done")
+                    : m.FinishedChapter != null ? "\n" + loc.Format("result.chapter_done", m.FinishedChapter.Planet(loc.Current)) : "");
                 if (m.BestStars > m.Stars) body.text += "\n" + loc.Format("result.best_stars", m.BestStars);
             }
             else
@@ -172,6 +181,7 @@ namespace SevenSteps.Game.UI
                 title.text = loc.Get("result.lost_title");
                 body.text = loc.Get("result.lost_body");
             }
+            ShowStarLabels(m);
             if (redraw) return;
             next.gameObject.SetActive(m.Cleared && !m.IsLast);
             again.gameObject.SetActive(m.Cleared);
@@ -193,6 +203,24 @@ namespace SevenSteps.Game.UI
 
         /// 0 hides the row (loss, or no minimum to judge by). Otherwise all three start empty and the earned ones fill in
         /// order with a small pop (unscaled time; outside play mode they are set at once).
+        /// The three criteria (docs/architecture.md 6.5) under the stars: clear / no solution shown and at most the fewest
+        /// brothers / no undo or restart. Words only; whether a star was earned comes from the model.
+        void ShowStarLabels(ResultModel m)
+        {
+            bool on = m.Cleared && m.Stars > 0;
+            starLabels[0].transform.parent.gameObject.SetActive(on);
+            if (!on) return;
+            var font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
+            starLabels[0].text = loc.Get("result.star1");
+            starLabels[1].text = loc.Format(m.MinBodies == 1 ? "result.star2_one" : "result.star2_many", m.MinBodies);
+            starLabels[2].text = loc.Get("result.star3");
+            for (int k = 0; k < starLabels.Length; k++)
+            {
+                starLabels[k].font = font;
+                starLabels[k].color = k < m.Stars ? Ui.Ink : Ui.Dim;
+            }
+        }
+
         void ShowStars(int earned)
         {
             if (reveal != null) { StopCoroutine(reveal); reveal = null; }
