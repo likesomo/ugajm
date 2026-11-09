@@ -190,7 +190,14 @@ let LEVELS = [];
 let STATS = [];
 let CHAPTERS = [];
 const HAS_CH = () => LEVELS.some((l) => l.chapter);
-const chName = (c) => (c ? c : '챕터 없음');
+// "3. 조각의 행성 (carved)": order and planet name from the current build's levels (chapters.json), id when unknown.
+const chName = (c) => {
+  if (!c) return '챕터 없음';
+  const ids = [...new Set(LEVELS.map((l) => l.chapter).filter(Boolean))];
+  const planet = LEVELS.find((l) => l.chapter === c && l.planet)?.planet;
+  const i = ids.indexOf(c);
+  return `${i >= 0 ? `${i + 1}. ` : ''}${planet ? `${planet} (${c})` : c}`;
+};
 const stageNo = (s) => (s.level == null ? '이전 맵' : s.level);
 // Stats rows shown under the chapter filter (old maps only under "전체").
 const visible = (stats) => {
@@ -209,7 +216,7 @@ function renderChapters() {
     const y = i * rowH + 4;
     const tipText = `${chName(c.chapter)} (스테이지 ${c.firstLevel}–${c.lastLevel}, ${c.stages}개)\n시작 ${c.players}명 (전체의 ${pct(c.playerShare)})\n마지막 스테이지 시작 ${c.reachedLast}명 · 전부 클리어 ${c.clearedAll}명 (${pct(c.clearedAllRate)})\n여기서 그만둠 ${c.quitPlayers}명 (${pct(c.quitRate)}) · 시도 ${c.attempts}회`;
     g += `<g data-tip="${esc(tipText)}"><rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/>
-      <text x="${left - 8}" y="${y + 18}" text-anchor="end">${esc(chName(c.chapter).slice(0, 20))} · ${c.firstLevel}–${c.lastLevel}</text>
+      <text x="${left - 8}" y="${y + 18}" text-anchor="end">${esc(chName(c.chapter).replace(/ \([^)]*\)$/, '').slice(0, 16))} · ${c.firstLevel}–${c.lastLevel}</text>
       <rect x="${left}" y="${y + 4}" width="${Math.max(sx(c.playerShare ?? 0), c.players ? 2 : 0)}" height="10" rx="2" fill="var(--s-start)"/>
       <rect x="${left}" y="${y + 16}" width="${Math.max(sx(c.players ? (c.playerShare ?? 0) * (c.clearedAll / c.players) : 0), c.clearedAll ? 2 : 0)}" height="8" rx="2" fill="var(--s-clear)"/>
       <text x="${W - right + 8}" y="${y + 18}" style="fill:var(--text-primary)">시작 ${c.players}명 (${pct(c.playerShare)}) · 끝 스테이지 ${c.reachedLast} · 전부 클리어 ${c.clearedAll} · 그만둠 ${pct(c.quitRate)}</text></g>`;
@@ -230,7 +237,7 @@ function renderFunnel(stats) {
   const rows = stats.filter((s) => s.players || (!s.old && LEVELS.some((l) => l.n === s.level)));
   if (!rows.length) { $('funnel').innerHTML = '<p class="empty">데이터 없음</p>'; return; }
   const max = Math.max(1, ...rows.map((s) => s.players));
-  const W = 560, rowH = 24, left = 150, right = 70, headH = 22;
+  const W = 560, rowH = 24, left = 150, right = 100, headH = 22; // right: room for "119/120 · 100%"
   // Group headers: a chapter change (when the levels have chapters) and the start of the old maps.
   const items = [];
   let prev;
@@ -246,7 +253,7 @@ function renderFunnel(stats) {
   let y = 4;
   for (const s of items) {
     if (s.head) { g += `<text x="0" y="${y + 15}" style="font-weight:600;fill:var(--text-primary)">${esc(s.head)}</text>`; y += headH; continue; }
-    const tipText = `${stageNo(s)}. ${s.name}${s.chapter ? ` (${s.chapter})` : ''}\n시작 ${s.players}명 · 클리어 ${s.clearPlayers}명 (${pct(s.clearRate)})\n시도 ${s.attempts}회${s.old ? `\n맵 ${s.levelKey}` : ''}`;
+    const tipText = `${stageNo(s)}. ${s.name}${s.chapter ? ` (${chName(s.chapter)})` : ''}\n시작 ${s.players}명 · 클리어 ${s.clearPlayers}명 (${pct(s.clearRate)})\n시도 ${s.attempts}회${s.old ? `\n맵 ${s.levelKey}` : ''}`;
     g += `<g data-tip="${esc(tipText)}">
       <rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/>
       <text x="${left - 8}" y="${y + 15}" text-anchor="end">${s.old ? '' : s.level + '. '}${esc(s.name.slice(0, 12))}</text>
@@ -275,6 +282,12 @@ function renderDropoff(stats) {
   }
   const worst = [...rows].sort((a, b) => (b.playerQuitRate ?? 0) - (a.playerQuitRate ?? 0)).slice(0, 3);
   const every = rows.length > 25 ? 5 : 1; // 50 stages: label every 5th (and the worst ones)
+  // Axis labels: every 5th, plus the worst stages unless that would sit next to another label (48, 49, 50 overlap).
+  const labeled = new Set(rows.map((s, i) => (s.old || every === 1 || s.level % every === 0 ? i : -1)).filter((i) => i >= 0));
+  for (const s of worst) {
+    const i = rows.indexOf(s);
+    if (![...labeled].some((j) => Math.abs(j - i) < 2)) labeled.add(i);
+  }
   rows.forEach((s, i) => {
     const v = s.playerQuitRate ?? 0;
     const x = left + i * bw + bw * 0.2;
@@ -286,7 +299,7 @@ function renderDropoff(stats) {
     g += `<g data-tip="${esc(tipText)}"><rect x="${left + i * bw}" y="${top}" width="${bw}" height="${H - top - bottom}" fill="transparent"/>
       <path d="${path}" fill="var(--s-quit)" opacity="${worst.includes(s) ? 1 : 0.55}"/>
       ${worst.includes(s) && v > 0 ? `<text x="${x + w / 2}" y="${y - 4}" text-anchor="middle" style="fill:var(--text-primary)">${pct(v)}</text>` : ''}
-      ${s.old ? `<text x="${x + w / 2}" y="${H - bottom + 16}" text-anchor="middle">구</text>` : (s.level % every === 0 || every === 1 || worst.includes(s)) ? `<text x="${x + w / 2}" y="${H - bottom + 16}" text-anchor="middle">${s.level}</text>` : ''}</g>`;
+      ${s.old ? `<text x="${x + w / 2}" y="${H - bottom + 16}" text-anchor="middle">구</text>` : labeled.has(i) ? `<text x="${x + w / 2}" y="${H - bottom + 16}" text-anchor="middle">${s.level}</text>` : ''}</g>`;
   });
   $('dropoff').innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="스테이지별 이탈률">${g}<line x1="${left}" x2="${W}" y1="${H - bottom}" y2="${H - bottom}" stroke="var(--text-muted)"/></svg>`;
 }
@@ -313,7 +326,7 @@ function renderMetrics(stats) {
   const ch = HAS_CH();
   const head = ['스테이지', '이름', ...(ch ? ['챕터'] : []), '시작', '클리어율', '별 ★1·★2·★3', '★3 비율', '이탈률', '세션 종료율', '클리어 시간 중앙', '상위 25%', '클리어 이동 중앙', '시도', '되돌리기/시도', '재시작/시도', '힌트 본 비율', '실패', '몸 낭비', '오래 멈춤', '몸 사용 사유'];
   const rows = stats.filter((s) => s.attempts).map((s) => `<tr>
-    <td class="l">${stageNo(s)}</td><td class="l name" title="${esc(s.namesSeen.join(' / '))}">${esc(s.name)}</td>${ch ? `<td class="l">${esc(s.chapter)}</td>` : ''}
+    <td class="l">${stageNo(s)}</td><td class="l name" title="${esc(s.namesSeen.join(' / '))}">${esc(s.name)}</td>${ch ? `<td class="l" title="${esc(chName(s.chapter))}">${esc(s.planet || s.chapter)}</td>` : ''}
     <td>${s.players}</td><td>${pct(s.clearRate)}</td><td>${starBar(s)}</td><td>${pct(s.star3Rate)}</td><td>${pct(s.playerQuitRate)}</td><td>${pct(s.sessionEndRate)}</td>
     <td>${sec(s.clearMsMedian)}</td><td>${sec(s.clearMsP75)}</td><td>${num(s.clearMovesMedian)}</td>
     <td>${s.attempts}</td><td>${num(s.undosPerAttempt)}</td><td>${num(s.restartsPerAttempt)}</td><td>${pct(s.hintPlayerRate)}</td>
