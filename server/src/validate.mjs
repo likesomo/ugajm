@@ -7,6 +7,8 @@ export const CLIENTS = ['web-proto', 'unity-webgl', 'unity-desktop'];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Tile names (docs/telemetry.md 2): floor exit pit ice cracked bridge plate door gate wall start edge statue mud lever
 // flip_up flip_down. New mechanics add names, so any short lowercase name is accepted rather than a fixed list.
+// UI language: "ko", "en", or a region form like "pt-BR".
+const lang = (v) => typeof v === 'string' && /^[a-z]{2,3}(-[A-Za-z0-9]{2,4})?$/.test(v);
 const tile = (v) => typeof v === 'string' && /^[a-z_]{1,20}$/.test(v);
 
 const int = (min = 0, max = 1e12) => (v) => Number.isInteger(v) && v >= min && v <= max;
@@ -21,8 +23,8 @@ const WHERE = { ...AT, step: int(0, 7) };
 
 // type -> [required, optional]
 export const EVENTS = {
-  session_start: [{}, { firstTime: bool, cleared: int(0, 999), resumed: bool }],
-  level_start: [{ ...LEVEL, attempt: int(1, 1e6) }, { levelName: str(80), chapter: str(40), levelKey: (v) => typeof v === 'string' && /^[0-9a-f]{8}$/.test(v), via: oneOf('boot', 'url', 'next', 'select', 'again'), bodies: int(1, 99) }],
+  session_start: [{}, { firstTime: bool, cleared: int(0, 999), resumed: bool, lang }],
+  level_start: [{ ...LEVEL, attempt: int(1, 1e6) }, { levelName: str(80), chapter: str(40), lang, levelKey: (v) => typeof v === 'string' && /^[0-9a-f]{8}$/.test(v), via: oneOf('boot', 'url', 'next', 'select', 'again'), bodies: int(1, 99) }],
   move: [{
     ...LEVEL, body: int(1, 99), step: int(1, 7), dir: oneOf('up', 'down', 'left', 'right'), from: xy, to: xy,
     result: oneOf('moved', 'blocked', 'slid', 'fell', 'bridged', 'door', 'gate'),
