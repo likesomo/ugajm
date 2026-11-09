@@ -261,7 +261,7 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
   ] }
   ```
   `id`: 소문자·하이픈, 바꾸지 않는다(텔레메트리·저장이 기댈 수 있음). `artPreset`: `ChapterPreset.id`(12.8). 비면 `id`와 같다. 여러 챕터가 한 프리셋을 같이 쓸 수 있다.
-- 런타임 형식: `Contracts/Chapters/ChapterInfo.cs`의 `ChapterFileDto`/`ChapterInfo`(아키텍트). 읽기는 `GameAssets.chaptersJson`(TextAsset) → `LevelCatalog`(게임플레이/UI): `ChapterOf(stage)` → `ChapterInfo`, 아트는 `AppConfig.Chapter(info.ArtPreset)`.
+- 런타임 형식: `Contracts/Chapters/ChapterInfo.cs`의 `ChapterFileDto`/`ChapterInfo`(아키텍트). 읽기는 `GameAssets.chaptersJson`(TextAsset) → `LevelCatalog`: `ChapterIdOf(stage)`(구현됨, 7lucky 9f3d109, 텔레메트리 `level_start` 챕터용) → `ChapterFileDto.Get(id)` → `ChapterInfo`(chapters.json이 생기면), 아트는 `AppConfig.Chapter(info.ArtPreset)`. `LevelDto.chapter`/`story`는 코어 b5c4464에서 추가됨.
 - export 단정 검증(`unity/Tools/export-levels.mjs`, 실패하면 파일을 쓰지 않고 exit 1, 레벨 디자인 제안 그대로): 모든 스테이지에 `chapter`가 있고 `chapters.json`에 있다, 스테이지 순서대로 챕터가 `chapters.json` 순서를 거스르지 않고 이어진다, 모든 `bodies <= 3`, 모두 솔버로 풀리고 최소 몸 수 <= 3, 이름 중복 없음. **지금 17스테이지(챕터 없음, 14~17 몸 4~5)는 플레이테스트 1차까지 그대로**이므로 검증은 형식 도입 커밋(첫 묶음)부터 켠다. 그 전까지 런타임은 `chapter`가 없으면 첫 챕터, 몸 4~5는 외형 순환(A, B, C, A)으로 임시 허용(12.6).
 - Unity 검사: `TileSetValidator`가 `Data/chapters.json`의 `artPreset`이 모두 `AppConfig.chapters`에 있는지 본다(파일과 챕터 에셋이 생기면 아키텍트가 켬).
 - 담당: 레벨 디자인(`chapters.json`, `chapter`/`story` 채우기, export 검증), 코어(`LevelDto` 필드), 아키텍트(`ChapterInfo`, 이 절, 검사기), 게임플레이/UI(`LevelCatalog`·진입 문구 표시), 씬 플로우(챕터가 바뀔 때의 흐름·`ResultModel.nextChapterChanges`), 백엔드/분석(이벤트에 챕터 id를 실을지).
