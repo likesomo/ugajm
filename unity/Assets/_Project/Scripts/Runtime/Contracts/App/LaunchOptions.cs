@@ -5,8 +5,8 @@ namespace SevenSteps.Contracts
 {
     /// <summary>
     /// Start options from the command line (desktop) or the page URL (WebGL). Same format as the web prototype:
-    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-lang en] [-smoke board|empty] [-newplayer]
-    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1   (docs/telemetry.md section 4)
+    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-lang en] [-smoke board|empty] [-newplayer] [-loadDelay 1.5]
+    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1&amp;loadDelay=1.5   (docs/telemetry.md section 4)
     /// Pure parsing: the caller passes Environment.GetCommandLineArgs() and Application.absoluteURL.
     /// Bad values are not exceptions (external input): they are skipped and described in <see cref="Warnings"/>,
     /// which the bootstrap logs (Contracts does not log). Read-only after parsing, except the two editor/once-only changes below.
@@ -35,6 +35,9 @@ namespace SevenSteps.Contracts
         /// Smoke check view (-smoke board|empty / ?smoke=): draws differently, plays the same (no change to state, replay or
         /// telemetry). See <see cref="Contracts.SmokeView"/>.
         public SmokeView SmokeView { get; private set; }
+        /// Development only (-loadDelay 1.5 / ?loadDelay=1.5): every scene load is held this many extra seconds behind the
+        /// loading screen, so the loading screen can be seen and checked (docs/scene-flow.md S7b). 0 = off; 0..10.
+        public float LoadDelay { get; private set; }
 
         readonly List<string> warnings = new List<string>();
         /// What was ignored while parsing, one line each. Empty when everything parsed.
@@ -80,6 +83,12 @@ namespace SevenSteps.Contracts
             else warnings.Add($"{source}: smoke \"{v}\" is not board or empty; ignored");
         }
 
+        void SetLoadDelay(string source, string v)
+        {
+            if (float.TryParse(v, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float s) && s >= 0 && s <= 10) LoadDelay = s;
+            else warnings.Add($"{source}: loadDelay \"{v}\" is not 0..10 seconds; ignored");
+        }
+
         void SetTelemetry(string source, string v)
         {
             if (v == "off" || v == "0") TelemetryOff = true;
@@ -98,7 +107,7 @@ namespace SevenSteps.Contracts
                         case "-stageselect": o.OpenStageSelect = true; continue;
                         case "-credits": o.OpenCredits = true; continue;
                         case "-newplayer": o.NewPlayer = true; continue;
-                        case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": break;
+                        case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": case "-loadDelay": break;
                         default: continue;
                     }
                     if (k + 1 >= args.Length || args[k + 1].StartsWith("-", StringComparison.Ordinal))
@@ -115,6 +124,7 @@ namespace SevenSteps.Contracts
                         case "-telemetry": o.SetTelemetry("command line", v); break;
                         case "-lang": o.SetLanguage("command line", v); break;
                         case "-smoke": o.SetSmoke("command line", v); break;
+                        case "-loadDelay": o.SetLoadDelay("command line", v); break;
                     }
                 }
 
@@ -132,6 +142,7 @@ namespace SevenSteps.Contracts
                     case "telemetry": o.SetTelemetry("url", v); break;
                     case "lang": o.SetLanguage("url", v); break;
                     case "smoke": o.SetSmoke("url", v); break;
+                    case "loadDelay": o.SetLoadDelay("url", v); break;
                     case "newplayer":
                         if (v == "1" || v == "true") o.NewPlayer = true;
                         else if (v != "0" && v != "false") o.warnings.Add($"url: newplayer \"{v}\" is not 1 or 0; ignored");

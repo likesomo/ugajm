@@ -20,3 +20,8 @@ e487ebc 이후 들어온 feat/view 93a3a89·db530fa(설정·크레딧 문구, �
 
 ## N1 (권장) 언어 미리보기 뒤 Esc
 언어 버튼은 `localizer.Set`으로 바로 미리 보여 주고 저장은 "계속"에서 한다. 선택 화면을 Esc로 닫으면 미리 본 언어가 이번 실행 동안 남고 저장은 안 된다(다음 실행엔 다시 선택 화면, 그 사이 텔레메트리 `lang`도 미리 본 언어). Esc로 닫을 때 `localizer.Set(launch.Language ?? save.Language)`로 되돌리면 "Esc = 저장 안 함"이 화면에도 맞는다.
+
+## 재확인: 0d163b2 (M1·N1 반영) — 승인, 병합 가능
+- M1: Strings 합집합(93키), `ApplyText()`에 `creditsPanel.Apply(localizer)` — 해결.
+- N1: `OnOverlaysChanged`에서 언어 패널이 "계속" 없이 닫히면 `launch.Language ?? save.Language`로 되돌림 — 해결.
+- 직접 확인(임시 브랜치 = 최신 7lucky 016893c + feat/scene-flow 0d163b2, 충돌 없음): EditMode 757/757, scene-validate OK(ERROR 0, WARN 1 = `SettingsPanel` NativeName "한국어", 의도된 예외).

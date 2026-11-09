@@ -12,8 +12,10 @@ namespace SevenSteps.Game.Flow
         public string Planet { get; }
         /// Line shown when the chapter is entered (may be empty).
         public string Intro { get; }
+        /// Every planet name in chapter order (the card's planet row; Number - 1 is this one). Empty when not given.
+        public System.Collections.Generic.IReadOnlyList<string> Planets { get; }
 
-        public ChapterCardModel(string chapterId, int number, string planet, string intro)
+        public ChapterCardModel(string chapterId, int number, string planet, string intro, System.Collections.Generic.IReadOnlyList<string> planets = null)
         {
             if (string.IsNullOrEmpty(chapterId)) throw new ArgumentException("chapter id is empty", nameof(chapterId));
             if (number < 1) throw new ArgumentOutOfRangeException(nameof(number), number, "1-based chapter number");
@@ -22,6 +24,9 @@ namespace SevenSteps.Game.Flow
             Number = number;
             Planet = planet;
             Intro = intro ?? "";
+            Planets = planets ?? new string[0];
+            if (Planets.Count > 0 && (number > Planets.Count || Planets[number - 1] != planet))
+                throw new ArgumentException($"chapter {chapterId}: planet list does not have {planet} at {number}", nameof(planets));
         }
     }
 

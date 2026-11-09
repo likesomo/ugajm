@@ -160,6 +160,7 @@ namespace SevenSteps.EditorTools
                 case TitleScreen title:
                     Require(name, "TitleScreen.config", title.config, issues);
                     RequireAssets(name, "TitleScreen.assets", title.assets, issues);
+                    if (title.assets != null && title.assets.uiTheme != null) RequireFontLicenses(name, title.assets.uiTheme, title.licenses, issues);
                     return title.config;
                 case GameController game:
                     Require(name, "GameController.config", game.config, issues);
@@ -173,6 +174,23 @@ namespace SevenSteps.EditorTools
                     return game.config;
                 default:
                     throw new InvalidOperationException($"Root type {rootType.Name} has no reference checks");
+            }
+        }
+
+        /// Every font the theme uses ships its OFL text in the credits (TitleScreen.licenses; itch.io release, architect a4cadfb L1).
+        /// Font "Gaegu-Regular" needs a license TextAsset named "Gaegu-OFL" (Shared/Fonts/<Family>-OFL.txt).
+        static void RequireFontLicenses(string scene, UiTheme theme, TextAsset[] licenses, List<string> issues)
+        {
+            var have = new HashSet<string>();
+            foreach (var l in licenses ?? new TextAsset[0]) if (l != null) have.Add(l.name);
+            var fonts = new HashSet<Font> { theme.font, theme.number };
+            foreach (var l in theme.languages ?? new LanguageFonts[0]) { fonts.Add(l.title); fonts.Add(l.body); }
+            foreach (var font in fonts)
+            {
+                if (font == null) continue;
+                int dash = font.name.IndexOf('-');
+                string license = (dash > 0 ? font.name.Substring(0, dash) : font.name) + "-OFL";
+                if (!have.Contains(license)) issues.Add($"ERROR {scene}: TitleScreen.licenses has no {license} for font {font.name} (UiTheme {theme.name})");
             }
         }
 

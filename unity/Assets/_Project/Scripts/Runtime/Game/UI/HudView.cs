@@ -202,6 +202,20 @@ namespace SevenSteps.Game.UI
             b.GetComponentInChildren<Text>(true) ?? throw new MissingReferenceException($"[SevenSteps] HudView: button {b.name} has no Text label");
 
         /// A move was pressed while KEEP/SWITCH is pending: shake the choice buttons.
+        /// Smoke checks (LaunchOptions.SmokeView): every HUD graphic off except the board's world labels (labelLayer, which
+        /// BoardView shows or hides itself), so only the 3D board and its numbers are measured. Re-applied each frame
+        /// because the HUD toggles its pieces while playing; smoke runs only.
+        public void HideForSmoke() => smokeHidden = true;
+
+        bool smokeHidden;
+
+        void LateUpdate()
+        {
+            if (!smokeHidden) return;
+            foreach (var g in GetComponentsInChildren<Graphic>(true))
+                if (!g.transform.IsChildOf(labelLayer)) g.enabled = false;
+        }
+
         public void NudgeChoice()
         {
             if (choice.gameObject.activeInHierarchy) StartCoroutine(Shake(choice));

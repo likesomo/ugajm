@@ -203,7 +203,17 @@ namespace SevenSteps.Game.UI
             view.MasterVolumeStepped += StepMaster;
             view.SfxVolumeStepped += StepSfx;
             view.TelemetryToggled += ToggleTelemetry;
-            view.LanguageToggled += ToggleLanguage;
+            view.LanguageToggled += OnLanguageButton;
+        }
+
+        /// The settings language button opens the language picker (lead decision 2026-11-10) when the scene root sets this;
+        /// without it the button switches to the next language (ToggleLanguage).
+        public Action OpenLanguage { get; set; }
+
+        void OnLanguageButton()
+        {
+            if (OpenLanguage != null) OpenLanguage();
+            else ToggleLanguage();
         }
 
         public void Dispose()
@@ -211,7 +221,7 @@ namespace SevenSteps.Game.UI
             view.MasterVolumeStepped -= StepMaster;
             view.SfxVolumeStepped -= StepSfx;
             view.TelemetryToggled -= ToggleTelemetry;
-            view.LanguageToggled -= ToggleLanguage;
+            view.LanguageToggled -= OnLanguageButton;
         }
 
         void StepMaster(float delta) { save.SetMasterVolume(save.Settings.masterVolume + Step(delta)); Saved(); }
@@ -220,7 +230,7 @@ namespace SevenSteps.Game.UI
 
         /// Next language that has a table (Ko -> En -> Ko). Saved (SetLanguage) and applied now (Localizer.Changed redraws
         /// the views and updates telemetry lang); a -lang launch override is replaced by the player's choice.
-        void ToggleLanguage()
+        public void ToggleLanguage()
         {
             var next = NextLanguage(localizer.Current);
             save.SetLanguage(next);

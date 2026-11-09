@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using SevenSteps.Contracts;
+using SevenSteps.Core;
 using SevenSteps.Game.Flow;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -10,10 +12,12 @@ using UnityEngine.UI;
 namespace SevenSteps.Game.UI
 {
     /// <summary>
-    /// Title scene root (states Title and StageSelect, docs/scene-flow.md 4.1, S3). Composition only: bootstraps when the scene
-    /// is played directly, builds the views (TitleView, StageSelectView, settings, credits), creates the
-    /// <see cref="TitleFlowController"/> and wires view events to it. Reads the flow keys (Enter / Space / Esc).
-    /// Settings and credits stay here until S4 (OverlayStack + BackNavigator).
+    /// Title scene root (states Title and StageSelect, docs/scene-flow.md 4.1, S3, S7). Composition only: bootstraps when the
+    /// scene is played directly, builds the views (menu background, TitleView, PlanetMapView, the planet stage list, the
+    /// language picker, settings, credits), creates the <see cref="TitleFlowController"/> and wires view events to it.
+    /// Keys: Esc here (top overlay first, then AppFlow back); arrows / Enter are uGUI navigation and submit.
+    /// First run (docs/architecture.md 13.3): the language picker opens over the title when the player never chose a
+    /// language and the run has no -lang / ?lang=.
     /// </summary>
     public sealed class TitleScreen : MonoBehaviour, ITitlePanels
     {
@@ -27,14 +31,21 @@ namespace SevenSteps.Game.UI
 
         AppFlow flow;
         SaveSystem save;
+        Localizer localizer;
+        Level[] levels;
+        List<PlanetEntry> planets;
         TitleView titleView;
-        StageSelectView stageSelectView;
+        PlanetMapView planetMap;
+        PlanetStagesPanel planetStages;
+        LanguagePanel languagePanel;
         SettingsPanel settings;
         CreditsPanel creditsPanel;
         TitleFlowController flowController;
         SettingsController settingsController;
         OverlayStack overlays;
         BackNavigator back;
+        int openPlanet = -1;
+        LanguageController language;
 
         void Awake()
         {
@@ -43,8 +54,9 @@ namespace SevenSteps.Game.UI
             if (!Bootstrap.HasRunThisPlay) Bootstrap.Run(config, assets, null, enterFirstScreen: false);
             flow = Services.Get<AppFlow>();
             save = Services.Get<SaveSystem>();
+            localizer = Services.Get<Localizer>();
             Ui.Theme = assets.uiTheme;
-            var levels = LevelCatalog.Load(assets);
+            levels = LevelCatalog.Load(assets);
 
             var cam = Camera.main;
             if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = assets.background; }
@@ -53,29 +65,36 @@ namespace SevenSteps.Game.UI
                 new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
             var root = BuildCanvas();
+            Ui.MenuBackground(root); // null when the theme has none: the camera color shows
             titleView = new TitleView(root);
-            stageSelectView = new StageSelectView(root, levels);
+            planets = PlanetEntry.FromCatalog(levels.Length);
+            planetMap = new PlanetMapView(root, planets, levels);
+            planetStages = new PlanetStagesPanel(root);
+            languagePanel = new LanguagePanel(root);
             bool telemetryDefault = Services.Get<AppConfig>().telemetryOnByDefault;
-            var localizer = Services.Get<Localizer>();
             settings = SettingsPanel.Create(root, save, telemetryDefault, localizer);
             settingsController = new SettingsController(save, settings, telemetryDefault, localizer);
             creditsPanel = new CreditsPanel(root, credits, licenses);
-            // Text in the current language; redraw when the settings toggle changes it (docs/architecture.md 13.3).
-            this.localizer = localizer;
-            titleView.Apply(localizer);
-            stageSelectView.Apply(localizer);
-            creditsPanel.Apply(localizer);
-            localizer.Changed += OnLanguageChanged;
+            BuildLanguageBadge(root);
             overlays = new OverlayStack();
+            // Text in the current language; redraw when the language changes (docs/architecture.md 13.3).
+            ApplyText();
+            localizer.Changed += OnLanguageChanged;
 
             flowController = new TitleFlowController(flow, save, this, levels);
             back = new BackNavigator(overlays, flowController.Back);
-            titleView.StartRequested += flowController.OpenStageSelect;
+            titleView.BeginRequested += flowController.BeginJourney;
+            titleView.ContinueRequested += flowController.ContinueJourney;
+            titleView.StagesRequested += flowController.OpenStageSelect;
             titleView.SettingsRequested += () => Open(settings);
             titleView.CreditsRequested += () => Open(creditsPanel);
-            stageSelectView.StageClicked += flowController.PlayStage;
-            stageSelectView.BackRequested += flowController.Back;
-            stageSelectView.SettingsRequested += () => Open(settings);
+            titleView.LanguageRequested += OpenLanguage;
+            planetMap.PlanetClicked += OpenPlanet;
+            planetMap.BackRequested += flowController.Back;
+            planetStages.StageClicked += flowController.PlayStage;
+            language = new LanguageController(languagePanel, overlays, localizer, save, Services.Get<LaunchOptions>().Language);
+            settingsController.OpenLanguage = OpenLanguage; // the settings language button opens the picker
+            overlays.Changed += OnOverlaysChanged;
         }
 
         void Open(IOverlay overlay)
@@ -86,8 +105,9 @@ namespace SevenSteps.Game.UI
         void Start()
         {
             flowController.Start();
-            // Smoke test without -level: "-screenshot title.png" [-stageselect] [-credits] opens that panel first.
             var launch = Services.Get<LaunchOptions>();
+            if (!save.LanguageChosen && launch.Language == null && flow.State == AppState.Title) OpenLanguage();
+            // Smoke test without -level: "-screenshot title.png" [-stageselect] [-credits] opens that panel first.
             if (!string.IsNullOrEmpty(launch.Screenshot))
             {
                 if (launch.OpenStageSelect) flowController.OpenStageSelect();
@@ -96,40 +116,72 @@ namespace SevenSteps.Game.UI
             }
         }
 
-        Localizer localizer;
+        void OpenPlanet(int planet)
+        {
+            if (overlays.Count > 0) return;
+            planetStages.Bind(planets[planet], save.Progress, levels, localizer);
+            openPlanet = planet;
+            Open(planetStages);
+        }
 
-        void OnLanguageChanged(Language lang)
+        void OpenLanguage() => language.Open();
+
+        /// An overlay opened or closed: when none is left, give the keyboard focus back to the screen under it.
+        void OnOverlaysChanged()
+        {
+            if (overlays.Count > 0) return;
+            if (flow.State == AppState.StageSelect && openPlanet >= 0) planetMap.Focus(openPlanet);
+            else if (!flow.IsLoading) Show(flow.State);
+            openPlanet = -1;
+        }
+
+        /// "EN / KO" at the top right: switches to the next language and saves it (SettingsController).
+        void BuildLanguageBadge(Transform root)
+        {
+            var badge = Ui.MakeButton(root, "EN / KO", 20, () => settingsController.ToggleLanguage(), out var text, "LanguageBadge");
+            ((Image)badge.targetGraphic).color = new Color(0, 0, 0, 0);
+            ((RectTransform)badge.transform).TopLeft(1130, 18, 120, 34);
+            text.color = Ui.Gold;
+            text.alignment = TextAnchor.MiddleRight;
+            text.font = Ui.Theme.FontFor(localizer.Current, FontRole.Number); // Latin only: the number font in every language
+        }
+
+        void ApplyText()
         {
             titleView.Apply(localizer);
-            stageSelectView.Apply(localizer);
+            planetMap.Apply(localizer);
+            languagePanel.Apply(localizer);
             creditsPanel.Apply(localizer);
+            if (overlays.Contains(planetStages) && openPlanet >= 0)
+                planetStages.Bind(planets[openPlanet], save.Progress, levels, localizer);
         }
+
+        void OnLanguageChanged(Language lang) => ApplyText();
 
         void OnDestroy()
         {
             flowController?.Dispose();
             settingsController?.Dispose();
+            language?.Dispose();
             if (localizer != null) localizer.Changed -= OnLanguageChanged;
+            if (overlays != null) overlays.Changed -= OnOverlaysChanged;
         }
 
         /// ITitlePanels: the flow controller shows the panel for the state.
         public void Show(AppState state)
         {
             if (titleView == null) throw new InvalidOperationException("[SevenSteps] TitleScreen.Show before Awake");
-            if (state == AppState.Title) titleView.Show(); else titleView.Hide();
-            if (state == AppState.StageSelect) stageSelectView.Show(save.Progress); else stageSelectView.Hide();
+            if (state == AppState.Title) titleView.Show(flowController.CanContinue); else titleView.Hide();
+            if (state == AppState.StageSelect) planetMap.Show(save.Progress, -1); else planetMap.Hide();
         }
 
-        /// Flow keys. Esc in one place: the top overlay closes first, otherwise AppFlow's back target (BackNavigator).
+        /// Esc in one place: the top overlay closes first, otherwise AppFlow's back target (BackNavigator). Arrows and Enter
+        /// are uGUI navigation / submit on the selected button (every screen selects one when it shows).
         void Update()
         {
             var kb = Keyboard.current;
             if (kb == null || flow.IsLoading) return;
-            if (kb.escapeKey.wasPressedThisFrame) { back.Back(); return; }
-            if (overlays.Count > 0) return;
-            bool enter = kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame;
-            if (flow.State == AppState.Title && (enter || kb.spaceKey.wasPressedThisFrame)) flowController.OpenStageSelect();
-            else if (flow.State == AppState.StageSelect && enter) flowController.PlayLastStage();
+            if (kb.escapeKey.wasPressedThisFrame) back.Back();
         }
 
         static Transform BuildCanvas()
