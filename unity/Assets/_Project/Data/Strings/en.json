@@ -6,6 +6,7 @@
     { "key": "title.start", "text": "Start (Enter)" },
     { "key": "title.settings", "text": "Settings" },
     { "key": "title.credits", "text": "Credits" },
+
     { "key": "stageselect.head", "text": "Select Stage" },
     { "key": "stageselect.back", "text": "Back (Esc)" },
     { "key": "stageselect.settings", "text": "Settings" },
@@ -77,6 +78,19 @@
     { "key": "result.chapter_done", "text": "Leaving {0}" },
     { "key": "result.journey_done", "text": "The three brothers reached the stone circle" },
 
-    { "key": "board.exit", "text": "EXIT" }
+    { "key": "board.exit", "text": "EXIT" },
+
+    { "key": "settings.title", "text": "Settings" },
+    { "key": "settings.master", "text": "Master volume" },
+    { "key": "settings.sfx", "text": "Sound effects" },
+    { "key": "settings.telemetry", "text": "Send play data" },
+    { "key": "settings.telemetry_note", "text": "Only anonymous play data (moves, clears) is sent. No names or accounts." },
+    { "key": "settings.on", "text": "On" },
+    { "key": "settings.off", "text": "Off" },
+    { "key": "settings.close", "text": "Close (Esc)" },
+
+    { "key": "credits.title", "text": "Credits" },
+    { "key": "credits.game", "text": "Seven Steps" },
+    { "key": "credits.close", "text": "Close (Esc)" }
   ]
 }
