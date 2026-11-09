@@ -49,7 +49,8 @@ namespace SevenSteps.Game.Telemetry
         void OnStageEntered(int stage, string via)
         {
             var s = session.State;
-            Tracker.LevelStart(s, stage + 1, s.Level.Name, via);
+            // chapter: levels.json "chapter" id; "" (no chapter) is not sent (docs/telemetry.md level_start).
+            Tracker.LevelStart(s, stage + 1, s.Level.Name, via, LevelCatalog.ChapterIdOf(stage));
         }
 
         void OnHint() { if (session.State != null) Tracker.Hint(session.State); }

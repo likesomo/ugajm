@@ -58,6 +58,7 @@ main { position: relative; margin-top: 6px; }
 .cell.pit { background: radial-gradient(circle, #000 40%, #1a1724 75%); }
 .cell.bridge { background: #4c463f; }
 .cell.ice { background: linear-gradient(135deg, #a8d8ea 0%, #6fb3cf 100%); }
+.cell.mud { background: repeating-linear-gradient(45deg, #7a5c3a 0 4px, #8d6b45 4px 8px); }
 .cell.cracked { background: #2b2838 repeating-linear-gradient(60deg, transparent 0 9px, #5d5670 9px 11px); }
 .cell.exit { background: #3b3424; }
 .cell.exit.ready { box-shadow: 0 0 14px var(--gold), inset 0 0 0 2px var(--gold); }

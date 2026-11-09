@@ -54,14 +54,16 @@ namespace SevenSteps.Game.Telemetry
             Emit(e);
         }
 
-        public void LevelStart(State state, int level, string levelName, string via)
+        /// <param name="chapter">levels.json stage "chapter" id (docs/telemetry.md level_start), or null/empty when the stage has none (then not sent).</param>
+        public void LevelStart(State state, int level, string levelName, string via, string chapter = null)
         {
             int attempt = nextAttempt(level);
             run = new Run { Level = level, T0 = now() };
             lastInput = now();
-            Emit(new TelemetryEvent(N.Types.LevelStart).With("level", level).With("levelName", levelName)
-                .With("levelKey", TelemetryJson.LevelKey(state.Level)).With("attempt", attempt).With("via", via)
-                .With("bodies", state.Level.Bodies));
+            var e = new TelemetryEvent(N.Types.LevelStart).With("level", level).With("levelName", levelName)
+                .With("levelKey", TelemetryJson.LevelKey(state.Level));
+            if (!string.IsNullOrEmpty(chapter)) e.With("chapter", chapter); // same place as telemetry.js: right after levelKey
+            Emit(e.With("attempt", attempt).With("via", via).With("bodies", state.Level.Bodies));
         }
 
         TelemetryEvent Where(TelemetryEvent e, State s) =>
@@ -108,9 +110,12 @@ namespace SevenSteps.Game.Telemetry
 
             if (cmd.Type == CommandType.Move)
             {
-                int step = before.Used + 1;
+                int first = Rules.Neighbor(before.Level, before.Pos, cmd.Dir);
+                bool blocked = Has(r, GameEventType.Bump);
+                // step = the step count after this move: entering mud costs 2 (core rule). A blocked move reports Used + 1 (telemetry.js).
+                int step = before.Used + (!blocked && first >= 0 && Rules.TileAt(before, first) == 'm' ? 2 : 1);
                 string dir = DirName(cmd.Dir);
-                if (Has(r, GameEventType.Bump))
+                if (blocked)
                 {
                     int at = EvAt(r, GameEventType.Bump);
                     string blockedBy = at >= 0 && Rules.Contains(before.Statues, at) ? N.Tile.Statue : TileKind(before, at);
@@ -119,7 +124,6 @@ namespace SevenSteps.Game.Telemetry
                 }
                 run.Moves++;
                 land = FirstAt(r);
-                int first = Rules.Neighbor(before.Level, before.Pos, cmd.Dir);
                 string firstTile = TileKind(before, first);
                 string result = N.MoveResult.Moved;
                 if (Has(r, GameEventType.Fall)) result = N.MoveResult.Fell;
@@ -135,8 +139,11 @@ namespace SevenSteps.Game.Telemetry
                     string effect = Has(r, GameEventType.Win) ? N.Effect.Win : Has(r, GameEventType.Bridge) ? N.Effect.Bridge
                         : Has(r, GameEventType.Seal) ? N.Effect.Seal : Has(r, GameEventType.Vanish) ? N.Effect.Vanish
                         : Has(r, GameEventType.Choose) ? N.Effect.Choose : N.Effect.Statue;
-                    Emit(new TelemetryEvent(N.Types.SeventhStep).With("level", L).With("body", BodyNo(before)).WithCell("at", land, w)
-                        .With("tile", TileKind(before, land)).With("effect", effect));
+                    // tile is the landing cell before the step (a lever, not the walls it flips); flipped: the lever flipped the walls.
+                    var seventh = new TelemetryEvent(N.Types.SeventhStep).With("level", L).With("body", BodyNo(before)).WithCell("at", land, w)
+                        .With("tile", TileKind(before, land)).With("effect", effect);
+                    if (Has(r, GameEventType.Flip)) seventh.With("flipped", true);
+                    Emit(seventh);
                 }
             }
             else if (cmd.Type == CommandType.Keep || cmd.Type == CommandType.Switch)
@@ -247,7 +254,7 @@ namespace SevenSteps.Game.Telemetry
             _ => null,
         };
 
-        /// telemetry.js tileKind. 'Q' (statue-count door) falls to "floor" there too, until docs/telemetry.md names it.
+        /// telemetry.js tileKind. Flip walls are read through Rules.TileAt, so they report the current state (R up/blocks, r down/open).
         public static string TileKind(State s, int i)
         {
             if (i < 0) return N.Tile.Edge;
@@ -259,6 +266,7 @@ namespace SevenSteps.Game.Telemetry
             return t switch
             {
                 '#' => N.Tile.Wall, 'E' => N.Tile.Exit, 'o' => N.Tile.Pit, '~' => N.Tile.Ice, 'x' => N.Tile.Cracked, '=' => N.Tile.Bridge,
+                'm' => N.Tile.Mud, 'Q' => N.Tile.Door, 'L' => N.Tile.Lever, 'R' => N.Tile.FlipUp, 'r' => N.Tile.FlipDown,
                 _ => N.Tile.Floor,
             };
         }

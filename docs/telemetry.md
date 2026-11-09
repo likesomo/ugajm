@@ -53,8 +53,8 @@
 <행2>…`(각 행은 레벨 폭까지 `#`으로 채우고 출발점은 `S`)의 FNV-1a 32비트. 맵이나 몸 수가 바뀌면 달라지고 순서만 바뀌면 같다. 기준 구현 `telemetry.js` `levelKey()`, 예: 스테이지 1 → 골든 파일 참고
 - `chapter`: `levels.json`/`levels.js` 스테이지의 `chapter` 값(문자열 id, `docs/architecture.md` 12.8) 그대로. 없으면 보내지 않는다. 서버는 현재 빌드 레벨 데이터의 챕터를 우선 쓰고, 이 값은 지금 빌드에 없는 맵의 챕터를 알 때만 쓴다
 - `body`: 이번 스테이지에서 몇 번째 몸인지 (1부터). `level.bodies - state.bodies + 1`
-- `step`: 그 이동이 몇 번째 걸음인지 (1~7). `state.used + 1`
-- `tile` 종류: `floor` `exit` `pit` `ice` `cracked` `bridge` `plate` `door` `gate` `wall` `start`(현재 출발점 칸)
+- `step`: 그 이동이 몇 번째 걸음인지 (1~7). `state.used + 1`. 단 진흙(`m`)에 들어가는 `move`는 2걸음이 들어 `state.used + 2`(막힌 이동은 항상 `used + 1`). 그래서 진흙을 지나면 `step`이 하나 건너뛰고, 진흙으로 7걸음이 되면 `seventh_step`이 나온다
+- `tile` 종류: `floor` `exit` `pit` `ice` `cracked` `bridge` `plate` `door`(A~C와 석상 수 문 `Q`) `gate` `wall` `start`(현재 출발점 칸) `mud`(`m`) `lever`(`L`) `flip_up`(지금 올라와 막는 뒤집힘 벽) `flip_down`(지금 내려가 지나갈 수 있는 뒤집힘 벽). 뒤집힘 벽은 그 순간의 상태로 적는다. 새 기믹은 소문자 이름을 더한다(서버는 목록이 아니라 `[a-z_]` 20자 이내인지만 본다)
 
 ## 3. 이벤트
 
@@ -65,7 +65,7 @@
 | `session_start` | 게임을 켰을 때, 숨긴 탭이 다시 보일 때 | `firstTime`(이 기기에서 처음), `cleared`(저장된 클리어 스테이지 수), `resumed`(탭 복귀면 true) |
 | `level_start` | 스테이지 진입·클리어 뒤 재시작 | `level`, `levelName`, `levelKey`(선택), `chapter`(선택, 챕터 문자열 id ≤40자, 스테이지에 챕터가 있을 때만), `attempt`(이 기기에서 이 스테이지를 시작한 횟수, 1부터), `via`: `boot` \| `url` \| `next` \| `select` \| `again`, `bodies`(몸 수) |
 | `move` | 방향 입력 하나 (막혀도 보낸다) | `level`, `body`, `step`, `dir`: `up` \| `down` \| `left` \| `right`, `from`, `to`(멈춘 칸, 막혔으면 막은 칸), `result`: `moved` \| `blocked` \| `slid` \| `fell` \| `bridged` \| `door` \| `gate`, 선택: `blockedBy`(막은 tile 종류 또는 `statue` `edge`), `crumbled`(지나온 금 간 바닥이 무너졌으면 true) |
-| `seventh_step` | 7번째 걸음이 어딘가에 닿았을 때 (`move` 바로 뒤) | `level`, `body`, `at`, `tile`, `effect`: `win` \| `bridge` \| `seal` \| `vanish` \| `choose` \| `statue`(마지막 몸이라 자동 석상) |
+| `seventh_step` | 7번째 걸음이 어딘가에 닿았을 때 (`move` 바로 뒤) | `level`, `body`, `at`, `tile`, `effect`: `win` \| `bridge` \| `seal` \| `vanish` \| `choose` \| `statue`(마지막 몸이라 자동 석상), 선택: `flipped`(레버를 밟아 뒤집힘 벽이 바뀌었으면 true) |
 | `keep` | KEEP 선택 | `level`, `body`, `at` |
 | `switch` | SWITCH 선택 | `level`, `body`, `at` |
 | `undo` | 되돌리기 (되돌릴 게 있을 때만) | `level`, `body`, `step`(되돌리기 전 쓴 걸음 수), `at`(되돌리기 전 위치), `status`(되돌리기 전 `play` \| `choose` \| `lose` \| `win`) |
@@ -119,4 +119,5 @@
 |---|---|---|
 | 2026-11-07 | v1 | 최초 확정 |
 | 2026-11-07 | v1 | `level_start.levelKey`(선택) 추가 — 레벨 디자인 요청. 선택 필드라 버전은 그대로 |
+| 2026-11-09 | v1 | 진흙·레버 반영(코어 6ae58e2 뒤): 진흙에 들어가는 `move.step`은 `used + 2`, 진흙으로 7걸음이 되면 `seventh_step`. `tile`에 `mud` `lever` `flip_up` `flip_down`, `Q` 문은 `door`(그래서 Q 문을 지나는 `move.result`도 `door`). `seventh_step.flipped`(선택). 서버는 칸 이름을 형식으로 검사. 골든 재생성(125개 중 44개 트레이스 변경). Unity `TelemetryTracker`도 같은 규칙으로 맞춰야 골든 테스트가 통과한다 |
 | 2026-11-09 | v1 | `level_start.chapter`(선택) 추가 — 50스테이지·챕터 대비. 선택 필드라 버전은 그대로. 웹 `Tracker.levelStart(state, level, name, via, chapter)`. Unity `TelemetryTracker`는 `LevelCatalog.ChapterOf`가 생기면 같은 자리(`levelKey` 다음)에 넣는다. 챕터 없는 지금 스테이지에서는 이벤트가 같으므로 골든 변화 없음 |
