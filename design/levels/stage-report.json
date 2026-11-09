@@ -1,0 +1,1437 @@
+{
+  "generated": "2026-11-09",
+  "stateLimit": 600000,
+  "problems": [],
+  "rows": [
+    {
+      "stage": 1,
+      "name": "일곱 걸음",
+      "chapter": "moss",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 1,
+      "minPath": "RRRRRRR",
+      "minInputs": 7,
+      "minDirInputs": 7,
+      "shortestPath": "RRRRRRR",
+      "shortestInputs": 7,
+      "shortestBodies": 1,
+      "winBodies": [
+        1,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 429,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 2,
+      "name": "늦게 도착하기",
+      "chapter": "moss",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 1,
+      "minPath": "UDUDRRR",
+      "minInputs": 7,
+      "minDirInputs": 7,
+      "shortestPath": "UDUDRRR",
+      "shortestInputs": 7,
+      "shortestBodies": 1,
+      "winBodies": [
+        1,
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 4620,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 3,
+      "name": "딱 맞는 길",
+      "chapter": "moss",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 1,
+      "minPath": "RRDDRRR",
+      "minInputs": 7,
+      "minDirInputs": 7,
+      "shortestPath": "RRDDRRR",
+      "shortestInputs": 7,
+      "shortestBodies": 1,
+      "winBodies": [
+        1,
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 3438,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 4,
+      "name": "돌이 된 몸",
+      "chapter": "moss",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "DURRRRRKDDRRRRR",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "DURRRRRKDDRRRRR",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 1418,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 5,
+      "name": "가까운 발판",
+      "chapter": "moss",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "LLRRRRRKLRRDDDL",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "LLRRRRRKLRRDDDL",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 501,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 6,
+      "name": "길을 막는 선돌",
+      "chapter": "moss",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "DUDUDURKDDRRUUR",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "DUDUDURKDDRRUUR",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2
+      ],
+      "star2Splits": false,
+      "needsSwitch": false,
+      "states": 550,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 7,
+      "name": "두 개의 문",
+      "chapter": "moss",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "DUDUDULKDUDURRRKDUDDDDR",
+      "minInputs": 23,
+      "minDirInputs": 21,
+      "shortestPath": "DUDUDULKDUDURRRKDUDDDDR",
+      "shortestInputs": 23,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": false,
+      "states": 499,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 8,
+      "name": "새 출발점",
+      "chapter": "hollow",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "RRRRRRDXDLLLLLL",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "RRRRRRDXDLLLLLL",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": true,
+      "states": 985,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 9,
+      "name": "바통 넘기기",
+      "chapter": "hollow",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "RLRRRRRXRRRRDDLXLLLLLLL",
+      "minInputs": 23,
+      "minDirInputs": 21,
+      "shortestPath": "RLRRRRRXRRRRDDLXLLLLLLL",
+      "shortestInputs": 23,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": true,
+      "states": 1050,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 10,
+      "name": "몸으로 놓는 다리",
+      "chapter": "hollow",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "RLRLRRRRLRRRRR",
+      "minInputs": 14,
+      "minDirInputs": 14,
+      "shortestPath": "RLRLRRRRLRRRRR",
+      "shortestInputs": 14,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 158,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 11,
+      "name": "다리냐 선돌이냐",
+      "chapter": "hollow",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "RLRLRRRRLRRRRRKRRRRDDD",
+      "minInputs": 22,
+      "minDirInputs": 21,
+      "shortestPath": "RLRLRRRRLRRRRRKRRRRDDD",
+      "shortestInputs": 22,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": false,
+      "states": 190,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 12,
+      "name": "건너편에서 깨어나기",
+      "chapter": "hollow",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "RLRLRRRRLRLRLRXRRRDDLL",
+      "minInputs": 22,
+      "minDirInputs": 21,
+      "shortestPath": "RLRLRRRRLRLRLRXRRRDDLL",
+      "shortestInputs": 22,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": true,
+      "states": 241,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 13,
+      "name": "구멍 둘, 형제 셋",
+      "chapter": "hollow",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "UDUDUDRUDUDRRRUDRRRDD",
+      "minInputs": 21,
+      "minDirInputs": 21,
+      "shortestPath": "UDUDUDRUDUDRRRUDRRRDD",
+      "shortestInputs": 21,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": false,
+      "states": 129,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 14,
+      "name": "떠나온 자리",
+      "chapter": "hollow",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "LLLRRRRXRRRRRRRKLLLLLLL",
+      "minInputs": 23,
+      "minDirInputs": 21,
+      "shortestPath": "LLLRRRRXRRRRRRRKLLLLLLL",
+      "shortestInputs": 23,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": true,
+      "states": 1701,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 15,
+      "name": "숫자 문",
+      "chapter": "carved",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 1,
+      "minPath": "UDRRRRR",
+      "minInputs": 7,
+      "minDirInputs": 7,
+      "shortestPath": "UDRRRRR",
+      "shortestInputs": 7,
+      "shortestBodies": 1,
+      "winBodies": [
+        1,
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 81,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 16,
+      "name": "문 너머의 발판",
+      "chapter": "carved",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "RRRRRLRKRDUDUDD",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "RRRRRLRKRDUDUDD",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2
+      ],
+      "star2Splits": false,
+      "needsSwitch": false,
+      "states": 127,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 17,
+      "name": "갈림길의 숫자",
+      "chapter": "carved",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "LLRLRRRXRUURRDD",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "LLRLRRRXRUURRDD",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": true,
+      "states": 3779,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 18,
+      "name": "처음부터 다시 세기",
+      "chapter": "carved",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "RLRLRRRXRRRRLRR",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "RLRLRRRXRRRRLRR",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": true,
+      "states": 228,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 19,
+      "name": "숫자와 구멍",
+      "chapter": "carved",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "UDUDUDRRRRRRLR",
+      "minInputs": 14,
+      "minDirInputs": 14,
+      "shortestPath": "UDUDUDRRRRRRLR",
+      "shortestInputs": 14,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 123,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 20,
+      "name": "두 숫자",
+      "chapter": "carved",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "LUUDUURXRRDDDUD",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "LUUDUURXRRDDDUD",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": true,
+      "states": 4721,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 21,
+      "name": "새김돌의 계산",
+      "chapter": "carved",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "RLRRRRUKUUDUDUDXUDLLLUU",
+      "minInputs": 23,
+      "minDirInputs": 21,
+      "shortestPath": "RLRRRRUKUUDUDUDXUDLLLUU",
+      "shortestInputs": 23,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": true,
+      "states": 1229,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 22,
+      "name": "미끄러운 첫걸음",
+      "chapter": "frost",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 1,
+      "minPath": "RDDLLLL",
+      "minInputs": 7,
+      "minDirInputs": 7,
+      "shortestPath": "RDDLLLL",
+      "shortestInputs": 7,
+      "shortestBodies": 1,
+      "winBodies": [
+        1,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 468,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 23,
+      "name": "홀수의 저주",
+      "chapter": "frost",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 1,
+      "minPath": "DUDURDD",
+      "minInputs": 7,
+      "minDirInputs": 7,
+      "shortestPath": "DUDURDD",
+      "shortestInputs": 7,
+      "shortestBodies": 1,
+      "winBodies": [
+        1,
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 23677,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 24,
+      "name": "얼음 위의 숫자",
+      "chapter": "frost",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "DUDUDUDXLULULLU",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "DUDUDUDXLULULLU",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": true,
+      "states": 35637,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 25,
+      "name": "멈춰 세우는 석상",
+      "chapter": "frost",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "LRRRRDDKLLDDRDD",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "LRRRRDDKLLDDRDD",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 3881,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 26,
+      "name": "미끄럼을 막는 형제",
+      "chapter": "frost",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "RUUUDLLKRUULLUU",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "RUUUDLLKRUULLUU",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 10998,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 27,
+      "name": "얼음 끝의 구멍",
+      "chapter": "frost",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "UDDLLULDLLULUU",
+      "minInputs": 14,
+      "minDirInputs": 14,
+      "shortestPath": "UDDLLULDLLULUU",
+      "shortestInputs": 14,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 24161,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 28,
+      "name": "서리의 길목",
+      "chapter": "frost",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "DUDUDRUKRDLDDRR",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "DUDUDRUKRDLDDRR",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 25322,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 29,
+      "name": "내리는 벽",
+      "chapter": "joinery",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "DURRRRRKDDRRRRR",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "DURRRRRKDDRRRRR",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 1079,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 30,
+      "name": "열면 닫힌다",
+      "chapter": "joinery",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "DUDUDUDXURRRRRRKDRRRRRR",
+      "minInputs": 23,
+      "minDirInputs": 21,
+      "shortestPath": "DUDUDUDXURRRRRRKDRRRRRR",
+      "shortestInputs": 23,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": true,
+      "states": 1723,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 31,
+      "name": "올려서 멈추기",
+      "chapter": "joinery",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "DURRRRRKDUDDDRD",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "DURRRRRKDUDDDRD",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 2511,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 32,
+      "name": "레버와 발판",
+      "chapter": "joinery",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "DDDDLLUKDDLLLLD",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "DDDDLLUKDDLLLLD",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 5597,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 33,
+      "name": "레버와 숫자",
+      "chapter": "joinery",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "UUDUDUDXDDDRRUUKURRRDUD",
+      "minInputs": 23,
+      "minDirInputs": 21,
+      "shortestPath": "UUDUDUDXDDDRRUUKURRRDUD",
+      "shortestInputs": 23,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": true,
+      "states": 8404,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 34,
+      "name": "레버와 바통",
+      "chapter": "joinery",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "UDUDUDUXDUDUDDRXLULLULL",
+      "minInputs": 23,
+      "minDirInputs": 21,
+      "shortestPath": "UDUDUDUXDUDUDDRXLULLULL",
+      "shortestInputs": 23,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": true,
+      "states": 15219,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 35,
+      "name": "결구의 장치",
+      "chapter": "joinery",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "UDUDULRXUDLDDRRKRRUDDDR",
+      "minInputs": 23,
+      "minDirInputs": 21,
+      "shortestPath": "UDUDULRXUDLDDRRKRRUDDDR",
+      "shortestInputs": 23,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": true,
+      "states": 11963,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 36,
+      "name": "한 번만 버티는 바닥",
+      "chapter": "crumble",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "RLRLRRRRLRRRRRKRRRRDDR",
+      "minInputs": 22,
+      "minDirInputs": 21,
+      "shortestPath": "RLRLRRRRLRRRRRKRRRRDDR",
+      "shortestInputs": 22,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": false,
+      "states": 399,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 37,
+      "name": "무너진 길 위의 구멍",
+      "chapter": "crumble",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "LRRLRLRXRDDLLLDXLLLUULU",
+      "minInputs": 23,
+      "minDirInputs": 21,
+      "shortestPath": "LRRLRLRXRDDLLLDXLLLUULU",
+      "shortestInputs": 23,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": true,
+      "states": 4685,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 38,
+      "name": "하나만 남겨라",
+      "chapter": "crumble",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "DUDUDURKDDRRRRR",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "DUDUDURKDDRRRRR",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2
+      ],
+      "star2Splits": false,
+      "needsSwitch": false,
+      "states": 1268,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 39,
+      "name": "열쇠가 되는 형제",
+      "chapter": "crumble",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "UDUDUDUKDURRRRRKDDRRRRR",
+      "minInputs": 23,
+      "minDirInputs": 21,
+      "shortestPath": "UDUDUDUKDURRRRRKDDRRRRR",
+      "shortestInputs": 23,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": false,
+      "states": 497,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 40,
+      "name": "남기기 전에 지나가라",
+      "chapter": "crumble",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "RLRRRRRXLLLLLRRKRDUDUDD",
+      "minInputs": 23,
+      "minDirInputs": 21,
+      "shortestPath": "RLRRRRRXLLLLLRRKRDUDUDD",
+      "shortestInputs": 23,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": true,
+      "states": 612,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 41,
+      "name": "선돌 아닌 흔적",
+      "chapter": "crumble",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "LUURRRDLUURRRDXDRRDDRR",
+      "minInputs": 22,
+      "minDirInputs": 21,
+      "shortestPath": "LUURRRDLUURRRDXDRRDDRR",
+      "shortestInputs": 22,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": true,
+      "states": 2981,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 42,
+      "name": "무너지는 계산",
+      "chapter": "crumble",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "RUULLLUXULLLDDDDLLLDDR",
+      "minInputs": 22,
+      "minDirInputs": 21,
+      "shortestPath": "RUULLLUXULLLDDDDLLLDDR",
+      "shortestInputs": 22,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": true,
+      "states": 14821,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 43,
+      "name": "한 칸에 두 걸음",
+      "chapter": "altar",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 1,
+      "minPath": "RRRRRR",
+      "minInputs": 6,
+      "minDirInputs": 6,
+      "shortestPath": "RRRRRR",
+      "shortestInputs": 6,
+      "shortestBodies": 1,
+      "winBodies": [
+        1,
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 718,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 44,
+      "name": "진흙과 숫자",
+      "chapter": "altar",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "UUDDDDXDUDULXLLUULLD",
+      "minInputs": 20,
+      "minDirInputs": 18,
+      "shortestPath": "UUDDDDXDUDULXLLUULLD",
+      "shortestInputs": 20,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": true,
+      "states": 2715,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 45,
+      "name": "얼음과 진흙",
+      "chapter": "altar",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "UDULUXULLDUUL",
+      "minInputs": 13,
+      "minDirInputs": 12,
+      "shortestPath": "UDULUXULLDUUL",
+      "shortestInputs": 13,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": true,
+      "states": 62913,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 46,
+      "name": "칠칠의 방",
+      "chapter": "altar",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "UDURRDDUDUDUDUXRRDDDDL",
+      "minInputs": 22,
+      "minDirInputs": 21,
+      "shortestPath": "UDURRDDUDUDUDUXRRDDDDL",
+      "shortestInputs": 22,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": true,
+      "states": 2764,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 47,
+      "name": "레버와 선돌의 수",
+      "chapter": "altar",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 2,
+      "minPath": "DUDDDDRKRRRDDRR",
+      "minInputs": 15,
+      "minDirInputs": 14,
+      "shortestPath": "DUDDDDRKRRRDDRR",
+      "shortestInputs": 15,
+      "shortestBodies": 2,
+      "winBodies": [
+        2,
+        3
+      ],
+      "star2Splits": true,
+      "needsSwitch": false,
+      "states": 5323,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": true,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 48,
+      "name": "길이 된 형제들",
+      "chapter": "altar",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "LLDURRRLRRDDRRRDDRRDD",
+      "minInputs": 21,
+      "minDirInputs": 21,
+      "shortestPath": "LLDURRRLRRDDRRRDDRRDD",
+      "shortestInputs": 21,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": false,
+      "states": 7127,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 49,
+      "name": "일곱의 일곱",
+      "chapter": "altar",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "LDUDDDDXRLRRUXURRRRDD",
+      "minInputs": 21,
+      "minDirInputs": 19,
+      "shortestPath": "LDUDDDDXRLRRUXURRRRDD",
+      "shortestInputs": 21,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": true,
+      "states": 28672,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    },
+    {
+      "stage": 50,
+      "name": "원형 제단",
+      "chapter": "altar",
+      "bodies": 3,
+      "ok": true,
+      "minBodies": 3,
+      "minPath": "UUUDURUKDRRRUUKDRRDLUU",
+      "minInputs": 22,
+      "minDirInputs": 20,
+      "shortestPath": "UUUDURUKDRRRUUKDRRDLUU",
+      "shortestInputs": 22,
+      "shortestBodies": 3,
+      "winBodies": [
+        3
+      ],
+      "star2Splits": false,
+      "needsSwitch": false,
+      "states": 21650,
+      "capped": false,
+      "levelsJsonMatches": true,
+      "stars": {
+        "star3": true,
+        "star2WithUndo": true,
+        "star1WithExtraBody": null,
+        "star1WithHint": true
+      }
+    }
+  ]
+}

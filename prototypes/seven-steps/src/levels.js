@@ -548,9 +548,9 @@ export const LEVELS = [
     name: '한 번만 버티는 바닥',
     chapter: 'crumble',
     story: '지나간 바닥은 무너진다. 서서 멈추면 굳는다.',
-    hint: '금 간 바닥은 한 번 지나가면 무너진다. 7번째 걸음으로 그 위에 서면 바닥이 굳어 영원히 길이 된다.',
+    hint: '금 간 바닥은 지나가면 무너진다. 7번째 걸음으로 그 위에 서면 굳어서 길이 된다.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Floor That Holds Once', hint: 'Cracked floor breaks once you walk over it. Stop on it with your 7th step and it seals into a path for good.', story: 'The floor behind you crumbles. Stop on it, and it sets.' }],
+    text: [{ lang: 'en', name: 'Floor That Holds Once', hint: 'Cracked floor breaks after you cross it. End your 7th step on it and it seals into a path.', story: 'The floor behind you crumbles. Stop on it, and it sets.' }],
     map: [
       '#########',
       '#S..x.a.#',
