@@ -372,6 +372,7 @@ S2·S3 커밋마다 `unity.sh test`(텔레메트리 골든)를 돌린다. 골든
 | S0 ③ `SceneFlowValidator` + `unity.sh scene-validate` | 971ae2f | scene-validate OK(0 오류). 첫 실행에서 `GameAssets.font` 누락을 잡음: 이 작업 공간에 `Assets/Shared` 정션이 없었다(`tools/link-shared-assets.ps1`로 해결). 즉 정션 없는 작업 공간의 빌드는 글자가 빠진 채 smoke를 통과한다 | 리드 검토(`unity.sh` 줄). `BuildTools` 빌드 전에 검증기 호출은 제안만(소유자 결정) |
 | S0 ④ `SampleScene` 삭제, `templateDefaultScene` → Boot | feb8fcb | 정션 연결 후 다시 compile·test 224/224·build-win·smoke 7/7 OK, 스크린샷에 글자 표시 확인 | `CLAUDE.md` "시작 씬" 줄 정리(리드) |
 | S0 ② 에디터 Play 두 번 재현(3.3 표) | — | 배치로는 Play 모드를 재현할 수 없어 미실시. 정적 초기화 자체는 `PlayResetTests`가 고정한다 | 에디터에서 Title·Game을 두 번씩 Play해 확인(사용자 또는 리드, 수동) |
+| S1 단정화 | 923a1a6 | compile OK, test 230/230(+6), build-win + smoke 7/7 OK, 타이틀 스모크(`-screenshot -stageselect -credits`) OK, 잘못된 `-level abc`는 경고 로그 | 아키텍트 검토(`LaunchOptions`, `Services`, API 고지) |
 
 챕터 방향(2026-11-08 사용자): 챕터 = 우주 속 행성, 주인공 세쌍둥이. S4에서 `GameFlowController`에 챕터 전환 연출 자리(다음 스테이지의 chapter가 바뀌면 전환 오버레이), S6에서 `UiTheme`·조명·하늘을 챕터별 프리셋으로 고를 자리를 남긴다. 레벨 데이터 chapter 필드는 레벨 담당이 추가한다.
 
@@ -439,3 +440,4 @@ Open Project 1은 미러의 파일 목록과 커밋 메시지만 확인했다(�
 | 2026-11-09 | 4.7 뷰 공개 면 합의 초안(게임플레이/UI), 5.1/5.2 순서 정리 |
 | 2026-11-09 | 4.7: 실패 결과도 ResultView(NextRequested 없음, bodiesUsed 검사는 클리어일 때만). S0-1 아키텍트 승인, 971ae2f 확인(변경 없음) |
 | 2026-11-09 | 4.7: 실패 결과는 오버레이 아님, BoardLost/BoardRecovered → GameFlowController가 ResultView 표시/숨김 |
+| 2026-11-09 | S1 커밋 923a1a6, 5.2 갱신 |
