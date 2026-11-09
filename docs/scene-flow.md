@@ -375,6 +375,11 @@ S2·S3 커밋마다 `unity.sh test`(텔레메트리 골든)를 돌린다. 골든
 | S1 단정화 | 923a1a6 | compile OK, test 230/230(+6), build-win + smoke 7/7 OK, 타이틀 스모크(`-screenshot -stageselect -credits`) OK, 잘못된 `-level abc`는 경고 로그 | 아키텍트 승인(2026-11-09, 11.2 반영 feat/architecture 8914e53) |
 | (배정) `AppConfig.tileSet` → RuinsHenge_Chapter01 | 7300d9d | tileset-validate(2세트 0오류), scene-validate, test 232/232, build-win + smoke 7/7, build-webgl + smoke-webgl 1/8/13 OK. 방향광 조정 없음 | — |
 | S2 `AppFlow` 계약 + `EntryTracker` | f08f4d6 | compile OK, test 242/242(+10), scene-validate OK, build-win + smoke 7/7, 타이틀 스모크(Boot→Title 로드 후 StageSelect 전이로 `Loaded` 해제 확인), `-level 99`는 경고 후 17 | 아키텍트 승인(2026-11-09, 11.1·11.2 반영 feat/architecture 332b634). Title→Game·Game→StageSelect 실제 씬 전환은 입력이 필요해서 수동 확인(S0 ②와 함께) |
+| (요청) `LevelCatalog.ChapterIdOf` | 9f3d109, e83bb64 | test +2. core b5c4464 뒤 `LevelDto.chapter`를 읽음 | — |
+| S3a `ResultView`/`ResultModel` | 83a55d6 | test 242, build-win + smoke 7/7. 결과 패널은 EditMode로 확인(리플레이는 끝 상태로 바로 가서 패널을 열지 않음, 7lucky도 같음) | — |
+| S3b `HudView` 이벤트화, TileSet 주입 | 70ccc03 | test 242, build-win + smoke 7/7. feat/view eafd97b(BodyLook)를 먼저 합친 뒤 주입으로 바꿈 | — |
+| S3c Game 씬 분리 | 0fc35a3 | test 249, build-win + smoke 7/7. `GameController`=씬 루트(클래스·guid·필드 유지: Game.unity, Art/Test/Game.unity, 아트 빌더 그대로), `BoardController`=보드, `Flow/GameFlowController`=흐름(`IStageBoard`/`IResultPanel`) | 보드 쪽 정리는 게임플레이/UI |
+| S3d Title 씬 분리 | 18029f4 | test 253, build-win + smoke 7/7, 타이틀 스모크, **build-webgl(Mobile_RPAsset) + smoke-webgl 1/8/13 OK**(33381/27627/24738, 콘솔 0). 64bb47f에서 7lucky 81262de 합친 뒤 test 253, build-win + smoke 7/7 | Title→Game 실제 클릭은 수동 확인 |
 
 챕터 방향(2026-11-08 사용자): 챕터 = 우주 속 행성, 주인공 세쌍둥이. S4에서 `GameFlowController`에 챕터 전환 연출 자리(다음 스테이지의 chapter가 바뀌면 전환 오버레이), S6에서 `UiTheme`·조명·하늘을 챕터별 프리셋으로 고를 자리를 남긴다. 레벨 데이터 chapter 필드는 레벨 담당이 추가한다.
 
@@ -446,3 +451,4 @@ Open Project 1은 미러의 파일 목록과 커밋 메시지만 확인했다(�
 | 2026-11-09 | 4.7: HudView에 TileSet 주입(S3). AppConfig.tileSet RuinsHenge_Chapter01. origin/7lucky 6cf3de4 합침 |
 | 2026-11-09 | S2 커밋 f08f4d6, 4.7 확정안, 5.2 갱신 |
 | 2026-11-09 | S2 아키텍트 승인, S5에 로드 실패 경로 조건 추가. origin/7lucky 0ca8ae6 합침 |
+| 2026-11-09 | S3 완료(83a55d6, 70ccc03, 0fc35a3, 18029f4), 5.2 갱신. origin/7lucky 81262de 합침 |
