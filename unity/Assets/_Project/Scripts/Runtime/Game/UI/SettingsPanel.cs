@@ -72,7 +72,7 @@ namespace SevenSteps.Game.UI
             var s = save.Settings;
             masterText.text = $"{Mathf.RoundToInt(s.masterVolume * 100)}%";
             sfxText.text = $"{Mathf.RoundToInt(s.sfxVolume * 100)}%";
-            bool on = SettingsController.TelemetryOn(s, telemetryOnByDefault);
+            bool on = save.TelemetryOn(telemetryOnByDefault);
             telemetryText.text = on ? "켜짐" : "꺼짐";
             telemetryText.color = on ? Ui.Gold : Ui.Dim;
             telemetryNote.text = "익명 플레이 기록(이동·클리어)만 보냅니다. 이름이나 계정은 보내지 않습니다.";
@@ -93,9 +93,9 @@ namespace SevenSteps.Game.UI
     }
 
     /// <summary>
-    /// Settings panel controller (docs/scene-flow.md 4.7, S4): changes <see cref="SaveSystem.Settings"/> and saves at every
-    /// change, so the value is kept however the panel closes (Esc, button, scene change). Saving raises SettingsChanged:
-    /// audio and telemetry react. Until the architect adds SaveSystem commands (SetVolume ...), it edits the fields directly.
+    /// Settings panel controller (docs/scene-flow.md 4.7, S4): turns panel events into SaveSystem commands (SetMasterVolume,
+    /// SetSfxVolume, SetTelemetryChoice, docs/architecture.md 11.3), which save at once, so the value is kept however the
+    /// panel closes (Esc, button, scene change). Saving raises SettingsChanged: audio and telemetry react.
     /// </summary>
     public sealed class SettingsController : IDisposable
     {
@@ -120,32 +120,20 @@ namespace SevenSteps.Game.UI
             view.TelemetryToggled -= ToggleTelemetry;
         }
 
-        /// What the consent button shows: an explicit choice (1 on, 2 off), or the build default when none was made.
-        public static bool TelemetryOn(SettingsData s, bool onByDefault) =>
-            s.telemetryChoice == 1 || (s.telemetryChoice == 0 && onByDefault);
+        void StepMaster(float delta) { save.SetMasterVolume(save.Settings.masterVolume + Step(delta)); Saved(); }
+        void StepSfx(float delta) { save.SetSfxVolume(save.Settings.sfxVolume + Step(delta)); Saved(); }
+        void ToggleTelemetry() { save.SetTelemetryChoice(!save.TelemetryOn(telemetryOnByDefault)); Saved(); }
 
-        void StepMaster(float delta) { save.Settings.masterVolume = Step(save.Settings.masterVolume, delta); Saved(); }
-        void StepSfx(float delta) { save.Settings.sfxVolume = Step(save.Settings.sfxVolume, delta); Saved(); }
-
-        void ToggleTelemetry()
-        {
-            var s = save.Settings;
-            bool on = TelemetryOn(s, telemetryOnByDefault);
-            s.telemetryChoice = on ? 2 : 1;
-            if (s.telemetryChoice == 2) s.playerId = ""; // opt-out forgets the anonymous id (11.3)
-            Saved();
-        }
-
-        static float Step(float value, float delta)
+        static float Step(float delta)
         {
             if (Math.Abs(Math.Abs(delta) - SettingsPanel.VolumeStep) > 1e-4f) throw new ArgumentOutOfRangeException(nameof(delta), delta, "one volume step");
-            return Mathf.Clamp01(Mathf.Round((value + delta) * 10f) / 10f);
+            return delta;
         }
 
+        /// The SaveSystem command already saved and raised SettingsChanged (audio and telemetry react).
         void Saved()
         {
             AudioListener.volume = save.Settings.masterVolume; // live preview in scenes without an audio controller (Title)
-            save.SaveSettings(); // raises SettingsChanged: volume + telemetry on/off
             view.Redraw();
         }
     }
