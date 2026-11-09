@@ -86,6 +86,7 @@ namespace SevenSteps.Tests
         [Test]
         public void ServicesResetForPlayDropsPreviousPlay()
         {
+            Services.Clear();
             Services.Register<ITelemetry>(new NullTelemetry());
             Services.ResetForPlay();
             Assert.IsFalse(Services.Has<ITelemetry>());

@@ -15,7 +15,9 @@ namespace SevenSteps.Contracts
         public static void Register<T>(T service) where T : class
         {
             if (service == null) throw new ArgumentNullException(nameof(service));
-            map[typeof(T)] = service;
+            if (map.ContainsKey(typeof(T)))
+                throw new InvalidOperationException($"Service {typeof(T).Name} already registered (one bootstrap per Play; tests call Clear first)");
+            map.Add(typeof(T), service);
         }
 
         public static T Get<T>() where T : class =>
