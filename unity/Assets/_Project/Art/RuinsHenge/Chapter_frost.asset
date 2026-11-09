@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8458c87a00c94381b96c312a1c592bd3, type: 3}
+  m_Name: Chapter_frost
+  m_EditorClassIdentifier: SevenSteps.Contracts::SevenSteps.Contracts.ChapterPreset
+  id: frost
+  displayName: Frost Moon
+  tileSet: {fileID: 11400000, guid: d5840d2071f7eb24f85c080dffcfcb06, type: 2}
+  materialOverrides: []
+  lighting: {fileID: 11400000, guid: 477a93e3b4550e447a5e812dbce3de73, type: 2}
+  sky: {fileID: 11400000, guid: 5a0462f037fafc449b6a28022f98e3ef, type: 2}

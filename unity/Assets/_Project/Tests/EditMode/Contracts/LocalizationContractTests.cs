@@ -84,5 +84,17 @@ namespace SevenSteps.Tests
             Assert.AreEqual("Moss Orbit", c.Get("moss").Planet(Language.En));
             Assert.Throws<KeyNotFoundException>(() => c.Get("hollow").Planet(Language.En));
         }
+
+        [Test]
+        public void ChapterTaglineIsOptionalUntilFilled()
+        {
+            var c = JsonUtility.FromJson<ChapterFileDto>(
+                "{\"chapters\":[{\"id\":\"moss\",\"planet\":\"가\",\"tagline\":\"작은 이끼 행성\",\"text\":[{\"lang\":\"en\",\"planet\":\"A\",\"tagline\":\"A small moss planet\"}]}," +
+                "{\"id\":\"hollow\",\"planet\":\"나\"},{\"id\":\"carved\",\"planet\":\"다\",\"tagline\":\"새긴 달\"}]}");
+            Assert.AreEqual("작은 이끼 행성", c.Get("moss").Tagline(Language.Ko));
+            Assert.AreEqual("A small moss planet", c.Get("moss").Tagline(Language.En));
+            Assert.AreEqual("", c.Get("hollow").Tagline(Language.En), "no tagline yet: empty in every language, no throw");
+            Assert.Throws<KeyNotFoundException>(() => c.Get("carved").Tagline(Language.En), "ko tagline without a translation");
+        }
     }
 }

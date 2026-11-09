@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6539723966283603918
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4282735370785787855}
+  - component: {fileID: 3352744593797018176}
+  m_Layer: 0
+  m_Name: PlanetSummit_moss
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4282735370785787855
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6539723966283603918}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3352744593797018176
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6539723966283603918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f65bc34a575f681448db1a8bce45bce9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.RuinsHengePlanet
+  surface: {fileID: 2100000, guid: c38ccdba49b258446a7b458cfb37786b, type: 2}
+  chapterId: moss
+  summitTint: {r: 0.7764706, g: 0.7921569, b: 0.7137255, a: 1}
+  rimTint: {r: 0.45490196, g: 0.5529412, b: 0.34117648, a: 1}
+  rockTint: {r: 0.34509805, g: 0.41960785, b: 0.5019608, a: 1}
+  moonTint: {r: 0.45490196, g: 0.5529412, b: 0.34117648, a: 1}

@@ -4,6 +4,9 @@ using UnityEngine;
 namespace SevenSteps.Art {
  public sealed class RuinsHengePlanet : MonoBehaviour, IStageEnvironment {
   public Material surface;
+  public string chapterId="moss";
+  public Color summitTint=new Color32(198,202,182,255),rimTint=new Color32(116,141,87,255),rockTint=new Color32(88,107,128,255),moonTint=new Color32(126,172,178,255);
+  Color Tint(Color value)=>QualitySettings.activeColorSpace==ColorSpace.Linear?value.linear:value;
   GameObject terrain,decor;
   static Color C(string hex){ColorUtility.TryParseHtmlString("#"+hex,out var c);return QualitySettings.activeColorSpace==ColorSpace.Linear?c.linear:c;}
   public void Fit(BoardGrid grid){transform.position=grid.Origin;transform.localScale=Vector3.one*grid.CellSize;Rebuild(grid.W,grid.H);}
@@ -23,27 +26,37 @@ namespace SevenSteps.Art {
             if(terrain){Destroy(terrain.GetComponent<MeshFilter>().sharedMesh);Destroy(terrain);}if(decor){Destroy(decor.GetComponent<MeshFilter>().sharedMesh);Destroy(decor);}
 
             const int n=48;float rx=w*.5f+.6f,rz=h*.5f+1.2f,centerZ=-.5f;
-            var v=new List<Vector3>{new Vector3(0,-.12f,centerZ)};var t=new List<int>();var colors=new List<Color>{C("C6CAB6")};
+            var v=new List<Vector3>{new Vector3(0,-.12f,centerZ)};var t=new List<int>();var colors=new List<Color>{Tint(summitTint)};
             float depth=Mathf.Clamp(w*.28f,1.7f,3.4f);
             float[] ys={-.12f,-.3f,-.75f,-depth*.65f,-depth,-depth*1.2f};float[] scales={1,1.035f,1.02f,.9f,.56f,.01f};
             for(int ring=0;ring<ys.Length;ring++)for(int i=0;i<n;i++)
             {
                 float a=i*Mathf.PI*2/n,c=Mathf.Cos(a),s=Mathf.Sin(a);
                 float x=Mathf.Sign(c)*Mathf.Sqrt(Mathf.Abs(c))*rx*scales[ring],z=Mathf.Sign(s)*Mathf.Sqrt(Mathf.Abs(s))*rz*scales[ring];
+                if(chapterId=="crumble"&&ring>0){x*=1+.08f*Mathf.Sin(i*3.7f);z*=1+.08f*Mathf.Cos(i*2.9f);}
+                if(chapterId=="carved"&&ring%2==1){x*=.95f;z*=.95f;}
                 v.Add(new Vector3(x,ys[ring],z+centerZ));
-                colors.Add(ring==0?C("748D57"):Color.Lerp(C("586B80"),C("A5AC9B"),(.5f+.5f*Mathf.Sin(i*2.71f+ring))* .65f));
+                colors.Add(ring==0?Tint(rimTint):Color.Lerp(Tint(rockTint),C("A5AC9B"),(.5f+.5f*Mathf.Sin(i*2.71f+ring))* .65f));
             }
             for(int i=0;i<n;i++)t.AddRange(new[]{0,1+(i+1)%n,1+i});
-            for(int j=0;j<ys.Length-1;j++)for(int i=0;i<n;i++){int a=1+j*n+i,b=1+j*n+(i+1)%n;t.AddRange(new[]{a,b,a+n,a+n,b,b+n});}
+            for(int j=0;j<ys.Length-1;j++)for(int i=0;i<n;i++){if(chapterId=="hollow"&&j>0&&(i%12<3))continue;int a=1+j*n+i,b=1+j*n+(i+1)%n;t.AddRange(new[]{a,b,a+n,a+n,b,b+n});}
             terrain=Draw("StageSized_RockPlanet",Mesh(v,t,colors),surface);
             v=new List<Vector3>();t=new List<int>();colors=new List<Color>();
-            for(int i=0;i<74;i++)
+            for(int i=0;i<(chapterId=="frost"?0:74);i++)
             {
                 float a=i*Mathf.PI*2/74,c=Mathf.Cos(a),s=Mathf.Sin(a);
                 var p=new Vector3(Mathf.Sign(c)*Mathf.Sqrt(Mathf.Abs(c))*rx*.99f,-.1f,centerZ+Mathf.Sign(s)*Mathf.Sqrt(Mathf.Abs(s))*rz*.99f);
                 float ht=.10f+.07f*(i%3);int k=v.Count;
-                v.AddRange(new[]{p+new Vector3(-.05f,0,0),p+new Vector3(.05f,0,0),p+new Vector3(.035f,ht,.02f)});t.AddRange(new[]{k,k+2,k+1});for(int q=0;q<3;q++)colors.Add(C(i%2==0?"879B58":"B2AF6C"));
+                v.AddRange(new[]{p+new Vector3(-.05f,0,0),p+new Vector3(.05f,0,0),p+new Vector3(.035f,ht,.02f)});t.AddRange(new[]{k,k+2,k+1});for(int q=0;q<3;q++)colors.Add(Color.Lerp(Tint(rimTint),C("B2AF6C"),i%2==0?0:.3f));
                 if(i%4==0)Rock(p+new Vector3(0,-.04f,0),v,t,colors,i);
+            }
+            // All chapter props stay beyond the board edge.
+            for(int i=0;i<7;i++)
+            {
+                float a=i*Mathf.PI*2/7;
+                var p=new Vector3(Mathf.Cos(a)*(rx+.08f),-.04f,centerZ+Mathf.Sin(a)*(rz+.08f));
+                int tiers=chapterId=="altar"?6:chapterId=="carved"?4:chapterId=="frost"?2:1;
+                for(int tier=0;tier<tiers;tier++)Rock(p+Vector3.up*tier*.12f,v,t,colors,i);
             }
             decor=Draw("MossRim_GrassAndRock",Mesh(v,t,colors),surface);
             foreach(var moon in GetComponentsInChildren<RuinsMoon>()){Destroy(moon.GetComponent<MeshFilter>().sharedMesh);Destroy(moon.gameObject);}
@@ -67,7 +80,7 @@ namespace SevenSteps.Art {
             Vector3[] p={Vector3.up,Vector3.down,Vector3.left,Vector3.right,Vector3.forward,Vector3.back};
             int[] faces={0,4,3,0,2,4,0,5,2,0,3,5,1,3,4,1,4,2,1,2,5,1,5,3};
             for(int i=0;i<faces.Length;i+=3){Vector3 a=p[faces[i]],b=p[faces[i+1]],c=p[faces[i+2]];Tri(a,(a+b).normalized,(a+c).normalized);Tri((a+b).normalized,b,(b+c).normalized);Tri((a+c).normalized,(b+c).normalized,c);Tri((a+b).normalized,(b+c).normalized,(a+c).normalized);}
-            void Tri(Vector3 a,Vector3 b,Vector3 c){int k=v.Count;v.AddRange(new[]{a,b,c});t.AddRange(new[]{k,k+1,k+2});var color=C(variant==0?"7EACB2":variant==1?"B39A69":"9A8DB8")*(.8f+.2f*(k%7)/6f);colors.AddRange(new[]{color,color,color});}
+            void Tri(Vector3 a,Vector3 b,Vector3 c){int k=v.Count;v.AddRange(new[]{a,b,c});t.AddRange(new[]{k,k+1,k+2});var color=Color.Lerp(Tint(moonTint),C(variant==1?"B39A69":"9A8DB8"),variant==0?0:.35f)*(.8f+.2f*(k%7)/6f);colors.AddRange(new[]{color,color,color});}
             return Mesh(v,t,colors);
         }
 

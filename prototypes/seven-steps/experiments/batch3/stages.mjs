@@ -46,7 +46,7 @@ export const STAGES = [
       '#########',
     ],
   },
-  old(9, { gimmickTiles: '~' }),               // 25 멈춰 세우는 석상 (keep 9)
+  old(9, { gimmickTiles: '~', name: '멈춰 세우는 선돌' }), // 25 멈춰 세우는 선돌 (keep 9, renamed from 석상 2026-11-10)
   {
     name: '미끄럼을 막는 형제', // 26 polish (stage-search ice-statue --strict on a skeleton, seed 133): the statue stops the slide; 2 bodies, D 0.56 -> 0.40
     hint: '석상은 미끄럼을 멈추지만 길도 막는다. 어디에 세울까?',

@@ -363,7 +363,7 @@ export const LEVELS = [
     ],
   },
   {
-    name: '멈춰 세우는 석상',
+    name: '멈춰 세우는 선돌',
     chapter: 'frost',
     story: '벽이 없으면, 형이 벽이 된다.',
     hint: '얼음은 벽에 닿아야 멈춘다. 선돌도 벽이다.',
