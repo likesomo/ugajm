@@ -21,10 +21,12 @@ namespace SevenSteps.Game.UI
 
         public Text masterText, sfxText, telemetryText, telemetryNote;
         public Button masterDown, masterUp, sfxDown, sfxUp, telemetryToggle, close;
-        [Tooltip("Optional until the prefab has it: language toggle (docs/architecture.md 13.3)")]
+        [Tooltip("Opens the language picker (scene-flow S7c); its label says settings.language_change")]
         public Button languageToggle;
-        [Tooltip("Optional: the current language's own name, drawn in that language's body font (13.4)")]
+        [Tooltip("The current language's own name, small beside the button, in that language's body font (13.4)")]
         public Text languageText;
+        [Tooltip("Row label for the language button (settings.language)")]
+        public Text languageLabel;
         [Tooltip("Fixed labels worded from the string table (settings.*, 13.2)")]
         public Text titleText, masterLabel, sfxLabel, telemetryLabel;
 
@@ -48,6 +50,7 @@ namespace SevenSteps.Game.UI
             Need(telemetryToggle, nameof(telemetryToggle)); Need(close, nameof(close));
             Need(titleText, nameof(titleText)); Need(masterLabel, nameof(masterLabel));
             Need(sfxLabel, nameof(sfxLabel)); Need(telemetryLabel, nameof(telemetryLabel));
+            Need(languageToggle, nameof(languageToggle)); Need(languageText, nameof(languageText)); Need(languageLabel, nameof(languageLabel));
         }
 
         void OnValidate()
@@ -151,6 +154,9 @@ namespace SevenSteps.Game.UI
             Set(telemetryNote, "settings.telemetry_note");
             Set(telemetryText, on ? "settings.on" : "settings.off");
             Set(close.GetComponentInChildren<Text>(true), "settings.close");
+            if (languageLabel != null) Set(languageLabel, "settings.language");
+            // The button opens the language picker (scene-flow S7c): it says what it does, the current language sits beside it.
+            if (languageToggle != null) Set(languageToggle.GetComponentInChildren<Text>(true), "settings.language_change");
             if (languageText != null)
             {
                 // The language's own name in its own body font, whatever the UI language is (13.4).
