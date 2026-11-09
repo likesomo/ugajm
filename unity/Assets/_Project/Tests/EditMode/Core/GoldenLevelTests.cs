@@ -60,6 +60,21 @@ namespace SevenSteps.Tests
             Assert.AreEqual(g.minBodies, g.bodies - s.Bodies + 1, "bodies used");
         }
 
+        /// docs/architecture.md 6.4: chapter and story are optional strings in levels.json; a stage without them still loads.
+        [Test]
+        public void LevelDtoReadsOptionalChapterAndStory()
+        {
+            var f = JsonUtility.FromJson<LevelFileDto>(
+                "{\"steps\":7,\"levels\":[" +
+                "{\"name\":\"a\",\"hint\":\"\",\"bodies\":3,\"chapter\":\"moss\",\"story\":\"첫째가 먼저 간다\",\"map\":[\"#S.E#\"]}," +
+                "{\"name\":\"b\",\"hint\":\"\",\"bodies\":3,\"map\":[\"#S.E#\"]}]}");
+            Assert.AreEqual("moss", f.levels[0].chapter);
+            Assert.AreEqual("첫째가 먼저 간다", f.levels[0].story);
+            Assert.IsTrue(string.IsNullOrEmpty(f.levels[1].chapter));
+            Assert.IsTrue(string.IsNullOrEmpty(f.levels[1].story));
+            Assert.AreEqual(3, f.levels[0].ToLevel().Bodies, "chapter/story do not touch the rules");
+        }
+
         /// levels.json is the level designer's export; the golden data is the core's. If a stage changed, both must be regenerated.
         [Test]
         public void ShippedLevelsMatchGolden()
