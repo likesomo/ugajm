@@ -352,14 +352,14 @@
       "ch": 3,
       "role": "피날레",
       "title": "새김돌의 계산",
-      "src": "new (gate+pit+plate)",
+      "src": "new (batch3, 탐색 후보)",
       "tags": [
         "gate",
-        "pit",
         "keep",
-        "plate"
+        "plate",
+        "switch"
       ],
-      "D": 0.5,
+      "D": 0.45,
       "A": 0.5,
       "aha": "세 형제의 쓰임을 숫자로 맞춘다"
     },
@@ -368,11 +368,11 @@
       "ch": 4,
       "role": "소개",
       "title": "미끄러운 첫걸음",
-      "src": "new (ice)",
+      "src": "new (batch3)",
       "tags": [
         "ice"
       ],
-      "D": 0.2,
+      "D": 0.17,
       "A": 0.4,
       "aha": "얼음은 몇 칸을 가도 한 걸음"
     },
@@ -395,12 +395,13 @@
       "ch": 4,
       "role": "응용",
       "title": "얼음 위의 숫자",
-      "src": "new (gate-ice)",
+      "src": "new (batch3, 탐색 후보)",
       "tags": [
         "ice",
-        "gate"
+        "gate",
+        "switch"
       ],
-      "D": 0.38,
+      "D": 0.37,
       "A": 0.5,
       "aha": "미끄럼 한 번이 숫자 하나"
     },
@@ -424,14 +425,15 @@
       "ch": 4,
       "role": "반전",
       "title": "미끄럼을 막는 형제",
-      "src": "new (ice-statue)",
+      "src": "new (batch3, 탐색 후보)",
       "tags": [
         "ice",
         "keep",
         "statueStopper",
-        "statueBlock"
+        "statueBlock",
+        "switch"
       ],
-      "D": 0.45,
+      "D": 0.56,
       "A": 0.5,
       "aha": "멈춤벽이 다음 미끄럼도 막는다. 세울 자리를 고른다"
     },
@@ -440,13 +442,13 @@
       "ch": 4,
       "role": "응용",
       "title": "얼음 끝의 구멍",
-      "src": "new (ice-pit)",
+      "src": "new (batch3, 탐색 후보)",
       "tags": [
         "ice",
         "pit",
         "bridge"
       ],
-      "D": 0.5,
+      "D": 0.43,
       "A": 0.5,
       "aha": "미끄러져 7번째에 구멍에 닿으면 다리"
     },
@@ -455,16 +457,15 @@
       "ch": 4,
       "role": "피날레",
       "title": "서리의 길목",
-      "src": "new (ice+plate+switch)",
+      "src": "new (batch3, 탐색 후보)",
       "tags": [
         "ice",
         "plate",
-        "keep",
-        "switch"
+        "keep"
       ],
-      "D": 0.55,
+      "D": 0.44,
       "A": 0.5,
-      "aha": "얼음, 선돌, 바통을 한 판에서"
+      "aha": "미끄럼으로 발판에 닿아 선돌을 세우고 둘째가 문을 지난다"
     },
     {
       "n": 29,
@@ -489,7 +490,7 @@
         "lever",
         "switch"
       ],
-      "D": 0.4,
+      "D": 0.5,
       "A": 0.6,
       "aha": "레버는 한 길을 열고 다른 길을 닫는다"
     },
