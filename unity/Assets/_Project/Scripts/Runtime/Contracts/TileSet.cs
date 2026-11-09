@@ -74,6 +74,36 @@ namespace SevenSteps.Contracts
         [Tooltip("Lucky 7th step stamp.")]
         public TileVisual luckyRing;
 
+        [Header("Per body (triplets, docs/architecture.md 12.6)")]
+        [Tooltip("Player look per body index: 0 = first body (A), 1 = B, 2 = C. Cycles when a stage has more bodies. Empty or no prefab = player.")]
+        public TileVisual[] playerBodies = new TileVisual[0];
+        [Tooltip("Statue left by KEEP (or by the last body), per body index: stone with that sibling's trace. Cycles like playerBodies. Empty or no prefab = statue.")]
+        public TileVisual[] statueBodies = new TileVisual[0];
+        [Tooltip("HUD body icon color per body index (A teal #568C88, B ochre #B99A57, C rust #B96C59; docs 12.6). Cycles like playerBodies.")]
+        public Color[] bodyColors =
+        {
+            new Color(0x56 / 255f, 0x8C / 255f, 0x88 / 255f),
+            new Color(0xB9 / 255f, 0x9A / 255f, 0x57 / 255f),
+            new Color(0xB9 / 255f, 0x6C / 255f, 0x59 / 255f),
+        };
+
+        /// HUD icon color for a body index. White when no colors are set.
+        public Color BodyColor(int bodyIndex) =>
+            bodyColors == null || bodyColors.Length == 0 || bodyIndex < 0 ? Color.white : bodyColors[bodyIndex % bodyColors.Length];
+
+        /// Player look for a body index (<see cref="BodyIndex.Current"/>). Falls back to <see cref="player"/>.
+        public TileVisual PlayerFor(int bodyIndex) => Cycle(playerBodies, bodyIndex, player);
+
+        /// Statue look for the body that left it (<see cref="BodyIndex.OfStatue"/>). Falls back to <see cref="statue"/>.
+        public TileVisual StatueFor(int bodyIndex) => Cycle(statueBodies, bodyIndex, statue);
+
+        static TileVisual Cycle(TileVisual[] arr, int k, TileVisual fallback)
+        {
+            if (arr == null || arr.Length == 0 || k < 0) return fallback;
+            var v = arr[k % arr.Length];
+            return v.HasPrefab ? v : fallback;
+        }
+
         public BoardGrid GridFor(SevenSteps.Core.Level level) => new BoardGrid(level, cellSize);
 
         public TileVisual Get(TileId id)

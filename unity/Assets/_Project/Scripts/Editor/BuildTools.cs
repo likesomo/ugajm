@@ -39,6 +39,12 @@ public static class BuildTools
         if (scenes.Length == 0) throw new Exception("[BuildTools] No enabled scenes in Build Settings.");
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output)) ?? ".");
 
+        // Refuse to build a player that cannot work: wrong build list, missing scene roots/references, or a missing
+        // shared-asset junction (font/sfx references empty -> a build without text that still passes smoke).
+        int sceneErrors = SevenSteps.EditorTools.SceneFlowValidator.ValidateAll(out string sceneReport);
+        Debug.Log(sceneReport);
+        if (sceneErrors > 0) throw new Exception($"[BuildTools] scene-validate found {sceneErrors} error(s); not building");
+
         // Build on the active target. URP collects the pipeline assets for shader stripping from the active
         // target; building WebGL while Standalone is active strips the wrong variants (UI drawn, no 3D board).
         if (EditorUserBuildSettings.activeBuildTarget != target)

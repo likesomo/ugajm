@@ -1,5 +1,11 @@
 # 일곱 걸음 — 리소스 출처 및 채택 상태
 
+Unity 연결 후속: 자체 FBX·아틀라스를 재사용했고 색 링/평탄 정상부/위성 메시와 작은 URP 이끼·마커 셰이더는 자체 생성 코드다. 기존 Unity URP Simple Lit과 Jua 폰트를 사용하며 새 외부 팩·유료 에셋·텍스처를 다운로드하지 않았다. 생성된 프리팹/재질/ScriptableObject/메시 YAML·.meta와 스크립트만 커밋하고 FBX/PNG/Blender 원본·스크린샷은 공유 폴더에 둔다.
+
+2026-11-09 A안 확정 후 `RH_Atlas512_Triplets.png`를 기존 자체 팔레트에서 복사·가공했다. 상단 패치의 청록 #568C88/황토 #B99A57/적갈 #B96C59와 중성 화강암 #B9BFC0은 자체 색상 데이터이며 외부 텍스처를 쓰지 않았다. Blender 실제 전후·KEEP 비교 렌더만 추가했고 GPT 시안은 새로 생성하지 않았다. B안 동일 외형 모델은 Source/Blender/Archive로 보관한다.
+
+세쌍둥이·행성 후속: GPT 캐릭터 시트1/행성 보드5/여정 지도1/타이틀1은 참고 시안이다. `build_ruins_planets.py`의 후드·망토·발·머플러와 저폴리 행성은 자체 절차 생성이며 외부 모델/텍스처/HDRI·스카이박스를 다운로드하지 않았다. 기존 자체 RH_Atlas512를 재사용하고 바이너리는 공유 폴더에만 둔다.
+
 갱신: 2026-11-07, Phase 1. **후보와 실제 제작물을 구분**한다. 이번 작업에서는 외부 팩을 다운로드하거나 Unity에 임포트하지 않았다. 무료만 사용하며, CC0/OFL/GPT 생성물까지 모든 바이너리를 git에서 제외한다. 아래는 기존 v0 전체를 감사한 목록이 아니라 이번 아트 작업의 출처 장부다.
 
 ## 실제 제작물
@@ -8,6 +14,15 @@
 |---|---|---|
 | 테스트 7 메달, UI 스킨, 몸·발자국·숫자 문, 행운 도장 | OpenAI GPT 이미지 생성, Codex 내장 image_gen, 2026-11-07. 외부 입력 이미지 없음. CC0/OFL/Asset Store 에셋으로 표시하지 않음 | `C:\unityjam\shared-assets\seven-steps\concepts\`의 PNG 4장. 콘셉트만 생성, 게임 반영 전. 프롬프트는 [README](concepts/README.md) |
 | 문화의 일곱 테마 시안 5종, 추천 2종 HUD, 카메라 3시점 비교 및 보드 수정안 | OpenAI GPT 이미지 생성, Codex 내장 image_gen, 2026-11-08. 자체 생성 보드만 수정 참조로 사용; 외부 게임·문화재 이미지 입력 없음. 생성물을 CC0로 표시하지 않음 | `C:/unityjam/shared-assets/seven-steps/concepts/themes/` 및 `concepts/camera-styles.png`. 게임 미반영. 목록·문헌은 [theme-research.md](theme-research.md), 전체 프롬프트는 공유 폴더 `themes/generation-manifest.json` |
+| 북두칠성 동서양 퓨전 3변형: 보드·일곱째 연출·타이틀 각 1장과 추천안 오브젝트 시트 (최종 10장) | OpenAI GPT 이미지 생성, Codex 내장 image_gen, 2026-11-08. 이번 자체 생성 보드·시트만 수정 참조, 외부 이미지 입력 없음. 별자리 구조는 IAU·홍콩우주박물관·NASA 문헌으로 확인 | `C:/unityjam/shared-assets/seven-steps/concepts/themes/dipper-fusion/`. 게임 미반영. 최종 파일·비율·추천은 [북두칠성 퓨전](theme-research.md#북두칠성-퓨전--사용자-선택-방향의-후속-시안), 전체 프롬프트는 공유 폴더 `dipper-fusion/generation-manifest.json`. SVG 진행 기준은 자체 코드 도식 |
+
+## Blender 3D 재설계 생성물
+
+2026-11-08 Blender 재설계: GPT 3D 보드·키트3쌍, 추천안 턴어라운드·재질 보드의 최종8장은 `C:/unityjam/shared-assets/seven-steps/concepts/themes/dipper-3d/`에 있다. 내장 image_gen으로 생성했고 외부 이미지 입력 없이 이번 자체 생성 키트만 추가 시안의 참조로 사용했다. 실제 Blender 렌더가 아닌 제작 목표 시안이며 CC0라고 표시하지 않는다. [제작 파이프라인](blender-pipeline.md)과 [리서치](theme-research.md)에 분담·예산·설치 미완료로 실렌더를 생략한 상태를 기록했다. Python 생성 스크립트는 자체 제작 텍스트 소스이며 바이너리 에셋을 포함하지 않는다.
+
+## 다수 시안과 실제 Blender 결과
+
+후속 다수 시안(2026-11-08): 사용자 요청으로 서로 다른5개 보드와 상위3개 연출을 최종 선정했다. GPT 이미지8장은 `C:/unityjam/shared-assets/seven-steps/concepts/themes/dipper-3d-variants/<번호-slug>/`에 있다. 자체 고정 SVG/PNG로 정확한 국자 연결을 참조했으며 외부 그림 입력은 없다. Blender5.2.3 LTS의 실제 블록아웃 `.blend`·EEVEE PNG·팔레트·FBX17개는 같은 공유 루트 `blender/`에 있다. Python 소스와 구름문 trim 생성은 자체 제작, Blender 프로그램 및 외부 에셋 바이너리는 커밋하지 않는다. 프롬프트는 공유 `generation-manifest.json`, 제작·검증 근거는 [리서치](theme-research.md)와 [파이프라인](blender-pipeline.md)에 기록했다.
 
 ## 권장 무료 출처 (아직 미채택)
 
@@ -52,3 +67,10 @@ CC0 크레딧은 자발적으로 표시한다. OFL 폰트를 실제로 배포할
 ```
 Font: Jua by The Jua Project Authors (SIL Open Font License 1.1)
 ```
+# 유적×선돌×오리엔탈 — 2026-11-08
+
+Unity2차(2026-11-09)의 행성 외피·풀 카드·돌·원경 행성·성운·별은 `RuinsHengeEnvironment.cs`가 절차적으로 만든 메시/버텍스 색이다. 벽 스타일 Mesh와 확대 링도 자체 생성이며 추가 외부 에셋·텍스처는 사용하지 않았다.
+
+이번 제작의23모듈(초기21종+석재V2/V3)·RH_Atlas512.png는 `design/art/blender/build_ruins_henge.py`로 자체 생성했다. GPT 시안9종은 제작 참고이며 외부 CC0 에셋으로 분류하지 않는다. 외부 텍스처·모델 다운로드와 사용은 없었다.
+
+후보(미사용): [Mossy Rock](https://polyhaven.com/a/mossy_rock), [Leafy Grass](https://polyhaven.com/a/leafy_grass), [Stone Floor](https://polyhaven.com/a/stone_floor), [Weathered Brown Planks](https://polyhaven.com/a/weathered_brown_planks)는 [Poly Haven CC0](https://polyhaven.com/license), [WoodFloor051](https://ambientcg.com/view?id=WoodFloor051)은 [ambientCG CC0](https://docs.ambientcg.com/license/)이다. 상업 사용 가능하고 출처 표시 의무는 없으나 실제 사용 시 파일명·가공·다운로드 날짜를 이 문서에 추가한다.
