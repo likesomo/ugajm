@@ -55,6 +55,9 @@ namespace SevenSteps.Game
         Localizer localizer;
         Action<Language> applyResultLanguage;
         SettingsPanel settingsPanel;
+        IChapterCard chapterCard;
+
+        bool OnlyChapterCard() => chapterCard != null && overlays.Count == 1 && overlays.Top == chapterCard;
 
         /// The board controller (tests, tools).
         public BoardController Board => board;
@@ -111,6 +114,7 @@ namespace SevenSteps.Game
             // replay runs: the screenshot must show the board.
             IChapterCard chapterCard = launch.SmokeView != SmokeView.None || (!string.IsNullOrEmpty(launch.Replay) && !launch.FlowCheck) ? null
                 : (IChapterCard)ChapterCardView.CreateOptional(overlayCanvas) ?? ChapterEntryView.Create(overlayCanvas, localizer);
+            this.chapterCard = chapterCard;
             settingsController = new SettingsController(save, settings, cfg.telemetryOnByDefault, localizer);
             overlays = new OverlayStack();
             languageController = new LanguageController(languagePanel, overlays, localizer, save, launch.Language);
@@ -136,7 +140,8 @@ namespace SevenSteps.Game
             chapterIntro = new ChapterIntroController(flowController, overlays, chapterCard, key => LevelCatalog.ChapterCard(key, localizer.Current));
             this.result = result;
             presetFor = ChapterPresetFor(cfg);
-            board.InputBlocked = () => flow.IsLoading || overlays.Count > 0;
+            // The chapter card alone does not hold the board: a board key closes it and plays (Update below).
+            board.InputBlocked = () => flow.IsLoading || (overlays.Count > 0 && !OnlyChapterCard());
             board.FlowTakes = flowController.TakesCommand;
 
             hud.StageSelectRequested += flowController.OpenStageSelect;
@@ -187,6 +192,8 @@ namespace SevenSteps.Game
             if (kb == null || flow.IsLoading) return;
             // Esc in one place: the top overlay closes first, otherwise AppFlow's back target (BackNavigator).
             if (kb.escapeKey.wasPressedThisFrame) { back.Back(); return; }
+            // Chapter card: a board key dismisses it and still counts as a move (rehearsal 2026-11-10: the first arrow was lost).
+            if (OnlyChapterCard() && BoardController.AnyBoardKeyPressed(kb)) back.Back();
             if (overlays.Count > 0) return;
             if (kb.leftBracketKey.wasPressedThisFrame) flowController.SelectStage(flow.Stage - 1);
             else if (kb.rightBracketKey.wasPressedThisFrame) flowController.SelectStage(flow.Stage + 1);
