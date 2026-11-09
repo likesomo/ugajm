@@ -95,12 +95,13 @@ namespace SevenSteps.Game
         void Awake()
         {
             Application.targetFrameRate = 60;
+            if (assets == null) throw new MissingReferenceException($"[SevenSteps] {name}: GameController.assets is not set (unity.sh scene-validate)");
+            if (config == null) throw new MissingReferenceException($"[SevenSteps] {name}: GameController.config is not set (unity.sh scene-validate)");
             if (!Bootstrap.HasRunThisPlay)
             {
                 // Played directly in the editor: same bootstrap as the Boot scene, with this object's debug start values.
                 var opts = Bootstrap.ReadLaunchOptions();
-                if (!opts.DirectToGame) { opts.Level = Mathf.Max(1, startLevel); levelFromInspector = true; }
-                if (string.IsNullOrEmpty(opts.Replay)) opts.Replay = replay ?? "";
+                levelFromInspector = opts.UseEditorStart(Mathf.Max(1, startLevel), replay);
                 Bootstrap.Run(config, opts, enterFirstScreen: false);
             }
             flow = Services.Get<AppFlow>();
@@ -153,10 +154,7 @@ namespace SevenSteps.Game
             FirstEntryPending = false;
 
             if (!string.IsNullOrEmpty(launch.Replay) && launch.DirectToGame && flow.Stage == launch.Level - 1)
-            {
-                session.Replay(launch.Replay);
-                launch.Replay = ""; // once per launch
-            }
+                session.Replay(launch.TakeReplay()); // once per launch
 
             if (!string.IsNullOrEmpty(launch.Screenshot))
                 StartCoroutine(ScreenshotOnce.Run(launch.Screenshot, () =>
