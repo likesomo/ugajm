@@ -55,6 +55,19 @@ restore_urp_settings() {
   return 1
 }
 
+# Unity re-serializes these with only whitespace changed (a trailing space after "m_EditorClassIdentifier:" and
+# "m_Values:") on every batch run. Put the committed file back only when the change is whitespace-only, so a real
+# edit (art tuning the pipeline asset) is never thrown away.
+WS_ONLY_ASSETS=("unity/Assets/Settings/Mobile_RPAsset.asset")
+restore_whitespace_only() {
+  local f
+  for f in "${WS_ONLY_ASSETS[@]}"; do
+    (cd "$REPO" && ! git diff --quiet -- "$f" && git diff -w --quiet -- "$f") || continue
+    (cd "$REPO" && git checkout -- "$f") && echo "[unity.sh] restored $f (whitespace-only re-serialization)"
+  done
+  return 0
+}
+
 run_unity() {
   local name="$1" method="$2"
   # Open the editor on the build's own target. URP's build step picks the pipeline assets for shader stripping
@@ -78,7 +91,9 @@ batch() {
   # the next Windows build needs). After: put the committed file back. Rebuild only when Unity emptied the
   # whole m_RuntimeSettings list during this run (cause unknown, so stay conservative).
   restore_urp_settings > /dev/null || true
+  restore_whitespace_only > /dev/null
   run_unity "$name" "$method" || code=$?
+  restore_whitespace_only
   URP_EMPTIED=0
   if restore_urp_settings && [ "$URP_EMPTIED" = "1" ] && [ "$code" -eq 0 ] && [[ "$name" == build-* ]]; then
     echo "[unity.sh] $name: rebuilding (m_RuntimeSettings was emptied during the build)"
@@ -114,6 +129,7 @@ case "$cmd" in
     (cd "$REPO" && "$U" -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode \
       -testResults "$(cygpath -w "$REPO/reports/editmode-results.xml")" -logFile unity/Logs/batch-test.log) || code=$?
     restore_urp_settings || true
+    restore_whitespace_only
     summary="$(grep -o '<test-run [^>]*' "$REPO/reports/editmode-results.xml" 2>/dev/null | grep -o '\(total\|passed\|failed\|skipped\)="[0-9]*"' | tr '\n' ' ')"
     echo "[unity.sh] test: ${summary:-no results}"
     grep -o '<test-case [^>]*result="Failed"[^>]*' "$REPO/reports/editmode-results.xml" 2>/dev/null | grep -o 'fullname="[^"]*"' || true
