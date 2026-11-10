@@ -89,6 +89,18 @@ namespace SevenSteps.Art
                         string name=chapter.id+"-"+size.x+"x"+size.y+(proposed?"-proposed":"-ortho")+".png";
                         string file=Path.Combine(output,name);ScreenCapture.CaptureScreenshot(file);yield return new WaitForSeconds(.3f);
                         if(!File.Exists(file))throw new IOException("Unity screenshot was not saved: "+file);
+                        if(proposed&&size==new Vector2Int(8,6))
+                        {
+                            // Actual Unity close-up: worn block, slab tops and rough sides.
+                            // Hide screen labels calculated for the previous camera projection.
+                            canvas.SetActive(false);camera.orthographicSize=1.65f;
+                            var focus=grid.CellToWorld(0,0)+new Vector3(.65f,.10f,-.55f);
+                            camera.transform.position=focus-camera.transform.forward*cameraRig.distance;
+                            yield return new WaitForEndOfFrame();
+                            var detail=Path.Combine(output,chapter.id+"-stone-closeup.png");
+                            ScreenCapture.CaptureScreenshot(detail);yield return new WaitForSeconds(.3f);
+                            if(!File.Exists(detail))throw new IOException("Missing actual Unity stone close-up: "+detail);
+                        }
                         Destroy(canvas);Destroy(sky);Destroy(root);yield return null;
                     }
                 }

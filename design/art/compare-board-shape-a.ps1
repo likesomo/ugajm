@@ -1,4 +1,4 @@
-param([string]$Root='C:/unityjam/shared-assets/seven-steps/concepts/themes/board-shape-2026-11-10-r2',[string]$Output='', [string]$Before='')
+param([string]$Root='C:/unityjam/shared-assets/seven-steps/concepts/themes/board-shape-2026-11-10-r2',[string]$Output='', [string]$Before='',[string]$BeforeLabel='Before / 0e32fd3')
 Add-Type -AssemblyName System.Drawing
 $bsaFont=New-Object Drawing.Font('Arial',18)
 function Draw-Panel($Graphics,[string]$Path,[int]$X,[int]$Y,[int]$W,[int]$H,[string]$Label) {
@@ -46,7 +46,7 @@ if($Before) {
     $bsaCompare=New-Object Drawing.Bitmap(1792,1240)
     $bsaGraphics=[Drawing.Graphics]::FromImage($bsaCompare)
     $bsaGraphics.Clear([Drawing.Color]::FromArgb(7,14,28))
-    Draw-Panel $bsaGraphics "$Before/seven-planets-unity.png" 0 0 1792 580 'Before / 0e32fd3'
+    Draw-Panel $bsaGraphics "$Before/seven-planets-unity.png" 0 0 1792 580 $BeforeLabel
     Draw-Panel $bsaGraphics "$bsaOutput/seven-planets-unity.png" 0 610 1792 580 'After / distinct silhouettes, sky and distant worlds'
     $bsaCompare.Save("$bsaOutput/seven-planets-before-after.png")
     $bsaGraphics.Dispose();$bsaCompare.Dispose()

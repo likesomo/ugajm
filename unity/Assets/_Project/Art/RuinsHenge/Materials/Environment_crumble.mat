@@ -43,7 +43,8 @@ Material:
     m_Floats:
     - _AmbientFloor: 0.3
     - _BoardMoss: 0.25
-    - _BoardNormalStrength: 0.16
+    - _BoardNormalStrength: 0.42
+    - _BoardStoneSlot: 12
     - _DstBlend: 0
     - _EnvironmentDetail: 1
     - _EnvironmentMoss: 0.3
@@ -57,7 +58,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _BoardRockTint: {r: 0.7137255, g: 0.6039216, b: 0.5647059, a: 1}
+    - _BoardRockTint: {r: 1, g: 1, b: 1, a: 1}
     - _MossColor: {r: 0.54901963, g: 0.5019608, b: 0.45882353, a: 1}
     - _WallColor: {r: 0.6101961, g: 0.58, b: 0.55529416, a: 1}
     - _WeatherTint: {r: 0.34901962, g: 0.4, b: 0.30980393, a: 1}

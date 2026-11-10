@@ -16,6 +16,7 @@ Shader "SevenSteps/RuinsSurface"
   _BoardRockTint("BoardShapeA rock tint",Color)=(1,1,1,1)
   _BoardMoss("BoardShapeA seam moss",Range(0,1))=1
   _BoardNormalStrength("BoardShapeA normal strength",Range(0,1))=.45
+  _BoardStoneSlot("Stone recipe (0 granite, 8 basalt, 9 sandstone, 10 marble, 11 slate, 12 limestone, 13 sarsen)",Float)=0
   _SurfaceAlpha("Surface opacity (independent of packed shadow alpha)",Range(0,1))=1
   [HideInInspector] _SrcBlend("Source blend",Float)=1
   [HideInInspector] _DstBlend("Destination blend",Float)=0
@@ -43,7 +44,7 @@ Shader "SevenSteps/RuinsSurface"
    CBUFFER_START(UnityPerMaterial)
    float4 _BaseMap_ST,_BaseColor,_MossColor,_WallColor,_WeatherTint;
    float4 _BoardRockTint;
-   float _BoardMoss,_BoardNormalStrength,_SurfaceAlpha;
+   float _BoardMoss,_BoardNormalStrength,_SurfaceAlpha,_BoardStoneSlot;
    float _EnvironmentDetail,_EnvironmentWood,_EnvironmentMoss;
    float _UseAtlas,_UseMoss,_UseVertexColor,_Unlit,_AmbientFloor;
    CBUFFER_END
@@ -68,7 +69,7 @@ Shader "SevenSteps/RuinsSurface"
      else if(max(abs(q.x),abs(q.y))<.5)
      {
       float slot=profile.x;
-      float2 uv=(float2(fmod(slot,4),floor(slot/4))+q+.5)/float2(4,2);
+      float2 uv=(float2(fmod(slot,4),floor(slot/4))+q+.5)/4;
       shade=max(shade,SAMPLE_TEXTURE2D(_BoardShapeMap,sampler_BoardShapeMap,uv).a*profile.y);
      }
     }
@@ -76,21 +77,37 @@ Shader "SevenSteps/RuinsSurface"
    }
    struct Attributes {float4 positionOS:POSITION;float3 normalOS:NORMAL;float4 tangentOS:TANGENT;float2 uv:TEXCOORD0;float2 style:TEXCOORD1;float4 color:COLOR;};
    struct Varyings {float4 positionCS:SV_POSITION;float3 normalWS:TEXCOORD0;float2 uv:TEXCOORD1;float4 color:COLOR;float3 positionWS:TEXCOORD2;float fog:TEXCOORD3;float2 style:TEXCOORD4;half3 fill:TEXCOORD5;float4 tangentWS:TEXCOORD6;};
-   Varyings Vert(Attributes a){Varyings o;VertexPositionInputs p=GetVertexPositionInputs(a.positionOS.xyz);o.positionCS=p.positionCS;o.positionWS=p.positionWS;o.normalWS=TransformObjectToWorldNormal(a.normalOS);o.tangentWS=float4(TransformObjectToWorldDir(a.tangentOS.xyz),a.tangentOS.w*GetOddNegativeScale());o.uv=TRANSFORM_TEX(a.uv,_BaseMap);o.color=a.color;o.style=a.style;o.fill=VertexLighting(p.positionWS,o.normalWS);o.fog=ComputeFogFactor(p.positionCS.z);return o;}
+   Varyings Vert(Attributes a){Varyings o;VertexPositionInputs p=GetVertexPositionInputs(a.positionOS.xyz);o.positionCS=p.positionCS;o.positionWS=p.positionWS;o.normalWS=TransformObjectToWorldNormal(a.normalOS);o.tangentWS=float4(TransformObjectToWorldDir(a.tangentOS.xyz),a.tangentOS.w*GetOddNegativeScale());o.uv=TRANSFORM_TEX(a.uv,_BaseMap);o.color=a.color;o.style=a.style;if(a.style.x>3.5){float3 origin=TransformObjectToWorld(float3(0,0,0));o.style.y=frac(a.style.y+frac(sin(dot(origin.xz,float2(12.9898,78.233)))*43758.5453));}o.fill=VertexLighting(p.positionWS,o.normalWS);o.fog=ComputeFogFactor(p.positionCS.z);return o;}
    half4 Frag(Varyings i):SV_Target {
     half3 color;
     half3 n=normalize(i.normalWS);
+    half stoneRoughness=.72;
     if(i.style.x>3.5)
     {
      float2 uv=i.uv;
-     // Frost replaces the shared narrow moss swatch, including every floor seam.
-     bool seam=uv.y>.5&&uv.x>.5&&uv.x<.75;
+     float sourceSlot=floor(uv.x*4)+floor(uv.y*4)*4;
+     bool seam=sourceSlot==6;
      if(seam&&_BoardMoss<.01)uv.x+=.25;
+     bool stone=sourceSlot<2||sourceSlot>=8;
+     if(stone)
+     {
+      float slot=_BoardStoneSlot>0?_BoardStoneSlot:sourceSlot;
+      float2 q=frac(uv*4);
+      // Capped crop/offset avoids seams and palette bleed. Joined blocks carry
+      // distinct UV2 seeds; individual tiles also get an object-origin seed.
+      q=clamp((q-.5)*.85+.5+float2(i.style.y,frac(i.style.y*7.13))*.12-.06,.015,.985);
+      uv=(float2(fmod(slot,4),floor(slot/4))+q)/4;
+     }
      half4 baked=SAMPLE_TEXTURE2D(_BoardShapeMap,sampler_BoardShapeMap,uv);
      color=baked.rgb*i.color.rgb;
-     if(i.uv.y<.5&&i.uv.x<.5){color*=lerp(half3(1,1,1),_BoardRockTint.rgb,i.uv.x>.25?1:.38);}
+     if(stone)color*=_BoardRockTint.rgb;
      if(seam&&_BoardMoss>.01)color=lerp(half3(.34,.36,.30),color,_BoardMoss);
-     half3 detail=UnpackNormalScale(SAMPLE_TEXTURE2D(_BoardShapeNormal,sampler_BoardShapeNormal,uv),_BoardNormalStrength);
+     // Linear packed RG tangent normal, B roughness, A AO. No importer swizzle.
+     half4 surface=SAMPLE_TEXTURE2D(_BoardShapeNormal,sampler_BoardShapeNormal,uv);
+     half2 normalXY=(surface.rg*2-1)*_BoardNormalStrength;
+     half3 detail=half3(normalXY,sqrt(saturate(1-dot(normalXY,normalXY))));
+     stoneRoughness=saturate(surface.b+lerp(.20,-.12,saturate(i.normalWS.y)));
+     color*=lerp(.80,1,surface.a);
      half3 tangent=normalize(i.tangentWS.xyz);
      n=normalize(tangent*detail.x+cross(n,tangent)*i.tangentWS.w*detail.y+n*detail.z);
     }
@@ -122,7 +139,7 @@ Shader "SevenSteps/RuinsSurface"
     if(i.style.x>3.5){lighting=half3(.14,.17,.22)+i.fill*.20+l.color*(1.05*saturate(dot(n,l.direction)));color*=lerp(.48,1,saturate(n.y*1.2));if(i.normalWS.y>.4)color*=BoardShadow(i.positionWS);}
     half floorValue=i.style.x>3.5?.12:_AmbientFloor;
     color*=lerp(max(lighting,floorValue.xxx),half3(1,1,1),_Unlit);
-    if(i.style.x>3.5){half3 v=GetWorldSpaceNormalizeViewDir(i.positionWS);half spec=pow(saturate(dot(n,normalize(v+l.direction))),24);color+=l.color*spec*.065;}
+    if(i.style.x>3.5){half3 v=GetWorldSpaceNormalizeViewDir(i.positionWS);half spec=pow(saturate(dot(n,normalize(v+l.direction))),lerp(88,8,stoneRoughness));color+=l.color*spec*(1-stoneRoughness)*.14;}
     return half4(MixFog(color,i.fog),_SurfaceAlpha);
    }
    ENDHLSL

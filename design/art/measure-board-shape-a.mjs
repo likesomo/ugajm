@@ -17,6 +17,8 @@ ws.addEventListener('message',event=>{
 function call(method,params={}){return new Promise((resolve,reject)=>{const id=++next;pending.set(id,{resolve,reject});ws.send(JSON.stringify({id,method,params}));});}
 function on(method,fn){handlers.set(method,[...(handlers.get(method)||[]),fn]);}
 await call('Page.enable');await call('Runtime.enable');
+const {windowId}=await call('Browser.getWindowForTarget');
+await call('Browser.setWindowBounds',{windowId,bounds:{windowState:'normal'}});
 // The game canvas is fixed identically in both players; retain the host's real DPR.
 await call('Page.addScriptToEvaluateOnNewDocument',{source:`
 window.__bsaDraws=[];window.__bsaCalls=0;
