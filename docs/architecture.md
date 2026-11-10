@@ -841,15 +841,15 @@ namespace SevenSteps.Game.UI {
 | `_StarTrailMap` | Texture2D | 15.2 배치. RGBA32, **linear**(sRGB 아님), Point, Clamp, 밉 없음, 크기 (2W)×H |
 | `_StarTrailWorldToCell` | float4x4 | 월드 위치 → (cx, cy). 칸 (x, y) 중심이 정수 (x, y)이고 cy는 맵 아래로 커진다(levels.json 행). `StarTrailMap.WorldToCell(BoardGrid)` |
 | `_StarTrailParams` | float4 | (W, H, 켜짐 0/1, 페이드 0..1). 설정 안 된 전역은 0이라, 뷰가 없으면(타이틀, 아트 리뷰 씬) 셰이더가 아무것도 그리지 않는다 |
-| `_StarTrailPulse` | float4 | (최신 칸 맥동 0..1, 일곱째 각성 0..1, 0, 0). 뷰가 프레임마다 애니메이션 |
-| `_StarTrailState` | float4 | (현재 형제 0..2, 단계 0 진행 / 1 선택 / 2 승리 / 3 패배, 피날레 0..1, 0), 15.5 |
+| `_StarTrailPulse` | float4 | (최신 칸 맥동 0..1, 일곱째 각성 0..1, 마지막 한 걸음 고리 맥동 0..1, 0). 뷰가 프레임마다 애니메이션 |
+| `_StarTrailState` | float4 | (현재 형제 0..2, 단계 0 진행 / 1 선택 / 2 승리 / 3 패배, 피날레 0..1, 쓴 걸음 0..7), 15.5·15.6 |
 | `_StarTrailColors` | float4[3] | 형제 0·1·2의 linear 색. HUD 형제 색과 같은 출처(gameplay-ui) |
 
 ### 15.2 텍스처 배치 (칸마다 텍셀 2개, 행 y = 맵 행 y)
 - **층 0** `(2x, y)`
   - R·G·B = 형제 0·1·2(`BodyIndex`). 비트 k−1(k = 1..7) = 그 형제의 k번째 걸음이 이 칸에 닿음. 진흙처럼 한 칸에 두 걸음이면 두 비트가 다 켜진다.
   - 비트 7 = 그 형제의 KEEP 선돌이 이 칸에 서 있음(`BodyIndex.OfStatue`).
-  - A 비트 0 = 가장 최근 걸음 칸(맥동). 나머지 비트는 0(예약).
+  - A 비트 0 = 가장 최근 걸음 칸(맥동), 비트 1 = 걷는 형제가 선 칸(별 일곱 고리의 중심, 15.6). 나머지 비트는 0(예약).
 - **층 1** `(2x+1, y)`
   - R·G·B = 형제 0·1·2의 경로 변. 비트 0은 x+1, 비트 1은 x−1, 비트 2는 y+1(맵 아래), 비트 3은 y−1 쪽 변이다.
   - 연속한 두 발자국 사이의 경로는 양 끝 칸의 마주 보는 변을 켜고, 사이 칸(얼음 미끄러짐)은 양쪽 변을 다 켠다(`AddPath`).
@@ -905,6 +905,12 @@ namespace SevenSteps.Game.UI {
 - **검사**: `tileset-validate`가 `ChapterPreset.starTrail`이 있으면 `StarTrailPreset.Validate()` 범위를 오류로 검사한다. 비어 있으면 검사하지 않는다(기본값).
   - 범위: 크기 0.01~0.2이고 최소 ≤ 최대, 불투명도 0~1, 발광 0~1.5이고 각성 ≥ 기본, 섞는 양 ≤ 0.5, 시간 0~2초(피날레 0~5), 입자 0~12, 마스크 0~3.
 - **임시 렌더**: 셰이더 마스크(아트)가 오기 전, gameplay-ui의 결합 quad 메시 1개(+1 드로우, 코드 생성 아틀라스)는 개발용으로 허용한다. 최종은 15.2 전역 텍스처(추가 드로우 0)다. 아트 v2 시안에서 배치(비트)를 바꿔야 하면 아키텍트가 15.2와 `StarTrailMap`을 함께 고친다.
+
+### 15.6 형제 발치의 별 일곱 고리 (2026-11-10, 리드 지시 ui-minimal 예고, feat/view 535e775)
+- 걷는 중(`Status.Play`)인 형제 발치에 별 일곱 개가 고리로 놓인다. k걸음을 쓰면 k번째 별이 꺼진다. 그래서 켜진 별이 남은 걸음이고, 6걸음 뒤에는 7번째 별이 맥동한다.
+- **데이터**: 위치는 층 0 A 비트 1(`StarTrailMap.SetPlayer(State.Pos)`), 쓴 걸음은 `_StarTrailState.w`(`StateVector(..., used)`), 맥동은 `_StarTrailPulse.z`다. 선택·승리·패배 단계에서는 비트를 쓰지 않는다(고리 없음).
+- 같은 State에서 다시 계산하므로 Undo·Restart가 저절로 맞는다. 이동 중에는 고리가 도착 칸에 있다(Present 뒤 갱신).
+- 임시 quad가 그리는 동안(`StarTrailView.UseQuad`)은 뷰가 같은 값으로 그린다. 셰이더가 그리게 되면 셰이더가 이 세 값만 읽는다.
 
 ## 변경 기록
 
@@ -966,3 +972,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-10 | 씬 플로우·아키텍트 | Game: `AttemptCounts.After(SessionUpdate)`(6.5 Undo·Restart 세기, `BoardController`와 QA 리플레이가 공유), `Game.Flow.QaReplay`(attempts.jsonl 교차 검사, 재시작 글자·해시는 docs/qa-attempts.md 확정 전 임시). feat/scene-flow 332498f 검토 승인 |
 | 2026-11-10 | 아키텍트 | 15장 별 흔적 셰이더 입력: 전역 `_StarTrailMap`((2W)×H RGBA32, 층 0 걸음·선돌·최신, 층 1 경로 변)·`_StarTrailWorldToCell`·`_StarTrailParams`·`_StarTrailPulse`·`_StarTrailColors`, Contracts `StarTrailMap`(배치·쓰기 도우미·`WorldToCell`). 추가 드로우 0, State에서 매번 다시 채움 |
 | 2026-11-10 | 아키텍트·게임플레이/UI | 15.5 별 흔적 상태 머신(층 1 A 끝난 방식 비트, 전역 `_StarTrailState`)과 행성별 값 `StarTrailPreset`(Contracts SO, `ChapterPreset.starTrail`, 비면 Default, `SetGlobals` → `_StarTrailStyleA/B/C`·`_StarTrailTint`, `tileset-validate` 범위 검사) |
+| 2026-11-10 | 아키텍트·게임플레이/UI | 15.6 별 일곱 고리: 층 0 A 비트 1(`SetPlayer`), `_StarTrailState.w` = 쓴 걸음, `_StarTrailPulse.z` = 마지막 걸음 고리 맥동. feat/view 535e775 검토 |

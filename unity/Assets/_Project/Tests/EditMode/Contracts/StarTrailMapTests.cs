@@ -75,6 +75,10 @@ namespace SevenSteps.Tests
             Assert.AreEqual(StarTrailMap.EndSwitch | StarTrailMap.EndBridge, m.Bytes[m.Index(4, 1, 3)]);
             Assert.AreEqual(0, m.Bytes[m.Index(4, 0, 3)], "layer 0 alpha untouched");
             Assert.AreEqual(new Vector4(2, (int)SevenSteps.Core.Status.Win, 1, 0), StarTrailMap.StateVector(2, (int)SevenSteps.Core.Status.Win, 3f));
+            Assert.AreEqual(new Vector4(0, 0, 0, 6), StarTrailMap.StateVector(0, 0, 0f, 6), "w = steps used");
+            m.SetPlayer(4);
+            m.SetNewest(4);
+            Assert.AreEqual(StarTrailMap.NewestBit | StarTrailMap.PlayerBit, m.Bytes[m.Index(4, 0, 3)]);
         }
 
         [Test]
