@@ -578,24 +578,26 @@ namespace SevenSteps.Game
             cam.transform.rotation = rot;
             cam.orthographic = rig.orthographic;
 
-            // Board extents (with a little height for actors) in camera space.
+            // The projected box of the padded board and its actors (tiles at y 0 to ActorHeight) in camera space: min / max,
+            // not a symmetric half-size, since actor height makes it reach further up than down (the back row stands up).
             var b = grid.Bounds;
             float pad = rig.padding * grid.CellSize;
             Vector3 ext = new Vector3(b.extents.x + pad, 0, b.extents.z + pad);
             var inv = Quaternion.Inverse(rot);
-            float halfX = 0, halfY = 0;
+            Vector2 min = new Vector2(float.MaxValue, float.MaxValue), max = new Vector2(float.MinValue, float.MinValue);
             for (int k = 0; k < 8; k++)
             {
                 var p = new Vector3((k & 1) == 0 ? -ext.x : ext.x, (k & 2) == 0 ? 0 : ActorHeight * grid.CellSize, (k & 4) == 0 ? -ext.z : ext.z);
                 var q = inv * p;
-                halfX = Mathf.Max(halfX, Mathf.Abs(q.x));
-                halfY = Mathf.Max(halfY, Mathf.Abs(q.y));
+                min = Vector2.Min(min, q);
+                max = Vector2.Max(max, q);
             }
-            // Inside the HUD's board frame (docs/architecture.md 14.6): half-heights in the frame's share of the screen.
+            // Inside the HUD's board frame (docs/architecture.md 14.6): the box's half-sizes in the frame's share of the screen.
             var frame = HudView.BoardViewport(cam.aspect);
-            float needH = Mathf.Max(3.2f, halfY / frame.height, halfX / frame.width / cam.aspect);
-            Vector3 center = b.center + Vector3.up * 0.3f;
-            // Camera moved so the board centre lands on the frame centre (viewport 0.5 = camera axis).
+            Vector2 half = (max - min) * 0.5f, mid = (max + min) * 0.5f;
+            float needH = Mathf.Max(3.2f, half.y / frame.height, half.x / frame.width / cam.aspect);
+            // The camera axis goes through the box centre, then moves so that centre lands on the frame centre.
+            Vector3 center = b.center + rot * new Vector3(mid.x, mid.y, 0);
             float shiftX = (frame.center.x - 0.5f) * 2f * needH * cam.aspect;
             float lift = (frame.center.y - 0.5f) * 2f * needH;
             float dist = Mathf.Max(rig.distance, 1f);
