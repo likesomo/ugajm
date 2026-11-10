@@ -194,6 +194,8 @@ namespace SevenSteps.EditorTools
                 if (c.tileSet == null) { issues.Add("ERROR no tileSet"); e++; }
                 if (c.lighting == null) issues.Add("WARN no lighting (scene keeps its current lights)");
                 if (c.sky == null) issues.Add("WARN no sky");
+                if (c.starTrail != null)
+                    foreach (var p in c.starTrail.Validate()) { issues.Add($"ERROR starTrail {c.starTrail.name}: {p} (docs 15.5)"); e++; }
                 if (c.materialOverrides != null)
                     for (int k = 0; k < c.materialOverrides.Length; k++)
                         if (c.materialOverrides[k].from == null || c.materialOverrides[k].to == null)

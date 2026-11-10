@@ -831,6 +831,81 @@ namespace SevenSteps.Game.UI {
 
 ---
 
+## 15. 별 흔적 셰이더 입력 (2026-11-10, 사용자 승인 `production/star-trail-plan.md`)
+
+시안과 기술 메모는 `design/art/star-trail.md`(origin/feat/art-world 3c870b9)다. 기본안은 **추가 드로우콜 0**이다. 공유 타일 셰이더(아트, `RuinsSurface`)가 전역 보드 데이터 텍스처 하나를 읽어 별 발자국·경로·선돌 별을 그린다. 렌더러마다 머티리얼이나 `MaterialPropertyBlock`을 붙이지 않는다(URP SRP Batcher 유지). 타일 메시가 공유 에셋이라 vertex color 방식은 칸마다 메시 복사가 필요하므로 쓰지 않는다.
+
+### 15.1 전역 프로퍼티 (`Contracts.StarTrailMap`의 상수)
+| 이름 | 형 | 뜻 |
+|---|---|---|
+| `_StarTrailMap` | Texture2D | 15.2 배치. RGBA32, **linear**(sRGB 아님), Point, Clamp, 밉 없음, 크기 (2W)×H |
+| `_StarTrailWorldToCell` | float4x4 | 월드 위치 → (cx, cy). 칸 (x, y) 중심이 정수 (x, y)이고 cy는 맵 아래로 커진다(levels.json 행). `StarTrailMap.WorldToCell(BoardGrid)` |
+| `_StarTrailParams` | float4 | (W, H, 켜짐 0/1, 페이드 0..1). 설정 안 된 전역은 0이라, 뷰가 없으면(타이틀, 아트 리뷰 씬) 셰이더가 아무것도 그리지 않는다 |
+| `_StarTrailPulse` | float4 | (최신 칸 맥동 0..1, 일곱째 각성 0..1, 0, 0). 뷰가 프레임마다 애니메이션 |
+| `_StarTrailState` | float4 | (현재 형제 0..2, 단계 0 진행 / 1 선택 / 2 승리 / 3 패배, 피날레 0..1, 0), 15.5 |
+| `_StarTrailColors` | float4[3] | 형제 0·1·2의 linear 색. HUD 형제 색과 같은 출처(gameplay-ui) |
+
+### 15.2 텍스처 배치 (칸마다 텍셀 2개, 행 y = 맵 행 y)
+- **층 0** `(2x, y)`
+  - R·G·B = 형제 0·1·2(`BodyIndex`). 비트 k−1(k = 1..7) = 그 형제의 k번째 걸음이 이 칸에 닿음. 진흙처럼 한 칸에 두 걸음이면 두 비트가 다 켜진다.
+  - 비트 7 = 그 형제의 KEEP 선돌이 이 칸에 서 있음(`BodyIndex.OfStatue`).
+  - A 비트 0 = 가장 최근 걸음 칸(맥동). 나머지 비트는 0(예약).
+- **층 1** `(2x+1, y)`
+  - R·G·B = 형제 0·1·2의 경로 변. 비트 0은 x+1, 비트 1은 x−1, 비트 2는 y+1(맵 아래), 비트 3은 y−1 쪽 변이다.
+  - 연속한 두 발자국 사이의 경로는 양 끝 칸의 마주 보는 변을 켜고, 사이 칸(얼음 미끄러짐)은 양쪽 변을 다 켠다(`AddPath`).
+  - 나머지 비트는 0(예약). A는 형제가 끝난 방식이다(15.5).
+- 셰이더 읽기(아트):
+  - 표본 위치는 `cell = floor(c + 0.5)`, `local = c − cell`(−0.5..0.5, x 오른쪽, y 맵 아래), `uv = ((2·cell.x + 층 + 0.5) / (2W), (cell.y + 0.5) / H)`이다.
+  - 표본은 `SAMPLE_TEXTURE2D_LOD(..., point clamp, 0)`으로 읽는다.
+  - 바이트 값은 `floor(v·255 + 0.5)`이고, 비트는 `fmod(floor(b / 2^k), 2)`로 꺼낸다(GLES3 정수 연산에 기대지 않음).
+  - 켜짐이 0이거나 보드 밖이면 건너뛴다.
+  - 전역은 `UnityPerMaterial` 밖에 선언한다.
+  - 숫자 영역(칸 중앙 40%)·기믹 실루엣 보호, 겹친 림 분할, 밝기 상한(시안 메모: 기본 0.8, 각성 1.2, 흰 HUD의 65% 이하)은 셰이더 쪽 규칙이다.
+
+### 15.3 쓰는 쪽 (gameplay-ui `StarTrailView`, Game)
+- **원칙**: `GameSession.Updated`의 Present·Snap·Rebuild마다 `State`에서 **처음부터 다시 채운다**(`Clear` 후 기록). 이벤트를 누적하지 않으므로 Undo·Restart·리플레이가 저절로 맞는다. Feedback(막힘)은 상태가 그대로라 건너뛴다. 큐에 있던 명령을 지우는 Undo는 업데이트를 내지 않으므로 흔적도 그대로다(이것이 맞다).
+- **형제별 경로**:
+  - 현재 형제는 `State.Trail`(`Footprint.Cell`, `Step`)이다.
+  - 앞선 형제는 `State.Prev` 사슬을 거슬러 `Bodies`가 바뀌기 직전 상태의 `Trail`을 쓴다. KEEP·SWITCH로 끝난 형제는 Choose 상태에 일곱 걸음이 다 있다.
+  - 형제 번호는 `BodyIndex.Current(그 상태)`다.
+  - 1~6걸음에 떨어진 형제의 마지막 칸(구멍)은 어느 `State`에도 없다. 그리려면 직전 상태에서 네 방향 `Rules.Dispatch`를 해 보고 `Rules.Key`가 다음 상태와 같은 결과의 `Path`·`Fall` 이벤트를 쓴다(순수 함수, 저렴, 리플레이에도 맞음). v1에서는 그리지 않아도 된다.
+- **최신 칸**은 Present일 때 결과 상태의 마지막 발자국이고, Snap·Rebuild에서는 끈다.
+- **각성·맥동**은 `StepResult.Events`(StepIdx 7, Choose·Win)로 시작해 `_StarTrailPulse`만 움직인다. 입력이나 상태 반영을 연출 때문에 늦추지 않는다.
+- **Restart 잔광**: 이전 텍스처를 0.25초 `페이드`로 줄인 뒤 새 상태로 다시 채운다. 상태는 이미 바뀌어 있고, 다음 업데이트가 오면 바로 덮는다.
+- **텍스처 관리**: 보드 크기가 바뀔 때(Load) 만들고, 갱신은 `SetPixelData(Bytes)` + `Apply(false)`로 한다(할당 없음). 비활성·파괴 시 `켜짐 = 0`과 텍스처 `Destroy`. 프레임마다 다시 계산하지 않는다(업데이트 때만).
+- 비용: 가장 큰 판 17×9는 34×9 텍셀(1.2KB)이다. `Prev` 사슬 걷기는 업데이트마다 명령 수만큼이다(`BodyIndex`와 같은 비용).
+
+### 15.4 아트 쪽 (Codex, `Art/**`)
+- `RuinsSurface`(타일·선돌)가 15.1~15.2를 읽는다. 별 모양은 아틀라스 남는 채널이나 공용 R8 마스크를 쓴다. 추가 라이트·드로우 0.
+- 머티리얼 수치(밝기, 별 크기)는 머티리얼 프로퍼티(아트)에 둔다. 형제 색은 15.1 전역에서 읽는다(HUD와 한 출처).
+- `TileVisual`/`TileSet` 확장이 필요하면 0/null이면 기존 동작인 선택 필드로 더하고 `tileset-validate` 검사를 붙인다(7.2 `labelScale`와 같은 방식).
+- 확인: `scene-validate`(보드 대비·UiLayoutCheck 보드 영역), 표준 Chrome 1/29/50에서 60 FPS, 드로우 수 그대로.
+
+### 15.5 상태 머신과 행성별 값 (`StarTrailPreset`, 2026-11-10 리드 추가 지시, gameplay-ui와 합의)
+- **상태 판정**은 View 쪽 순수 C# `StarTrail.Of(State)`(gameplay-ui)에서 한다.
+  - 입력은 `Trail`과 `Prev` 사슬이다.
+  - 끝난 형제는 끝난 방식으로 나눈다: 낙하, 다리, 봉인, 사라짐, 선돌(KEEP), SWITCH, 승리.
+  - 한 이동 안에서 끝난 형제의 마지막 칸은 Present의 `StepResult` 캐시에서 얻고, 캐시가 없으면 15.3의 네 방향 재실행으로 얻는다.
+  - 규칙 코드는 그대로다.
+- **셰이더에 넘기는 것**:
+  - 층 1 A에 끝난 방식 비트를 둔다: 0 SWITCH 바통 이음매(새 출발점), 1 다리·봉인(`State.Bridges`, 가라앉은 별), 2 낙하(구멍), 3 사라짐(출발점에서 일곱째). 비트의 주인은 그 칸에 7번째(또는 마지막) 걸음이 있는 형제다.
+  - 전역 `_StarTrailState`는 (현재 형제 0..2, 단계 0 진행 / 1 선택 / 2 승리 / 3 패배 = Core `Status` 순서, 피날레 0..1, 0)이다.
+  - 셰이더는 현재 형제보다 앞선 형제를 "굳은 별자리"(실선, 선돌 별)로, 현재 형제를 "진행 중"(걸음마다 커지는 점)으로 그린다. 승리 단계에서는 피날레 값에 따라 세 색 별자리를 함께 밝힌다.
+  - Undo·Restart는 15.3대로 다시 채우고 페이드한다.
+- **행성별 값**은 `Contracts.StarTrailPreset`(ScriptableObject)에 둔다.
+  - `ChapterPreset.starTrail`이 이것을 참조한다(조명·하늘과 같은 방식). 비어 있으면 `StarTrailPreset.Default`(필드 기본값 = 시안 메모 초기값)를 쓴다.
+  - 아트가 `Art/<Set>/StarTrail_<id>.asset` 7개를 채운다.
+  - 셰이더 값은 `StarTrailPreset.SetGlobals(preset)`이 챕터가 바뀔 때 전역 네 개로 넘긴다.
+    - `_StarTrailStyleA` = (점 크기 최소, 최대, 불투명도 최소, 최대)
+    - `_StarTrailStyleB` = (발광, 각성 발광, 선 굵기, 선 불투명도)
+    - `_StarTrailStyleC` = (선돌 별 크기, 이음매 굵기, 가라앉음, 음각 깊이)
+    - `_StarTrailTint` = (석질 색조 linear rgb, 섞는 양)
+  - View만 쓰는 값: 시간(각성 0.18, Undo 0.12, 실패 0.20, Restart 0.25, 피날레 1.2초), 불꽃 입자 수(0..12, 공유 풀), 모양 마스크 번호(0..3).
+  - 형제 색은 프리셋에 두지 않는다(HUD와 한 출처, 15.1).
+- **검사**: `tileset-validate`가 `ChapterPreset.starTrail`이 있으면 `StarTrailPreset.Validate()` 범위를 오류로 검사한다. 비어 있으면 검사하지 않는다(기본값).
+  - 범위: 크기 0.01~0.2이고 최소 ≤ 최대, 불투명도 0~1, 발광 0~1.5이고 각성 ≥ 기본, 섞는 양 ≤ 0.5, 시간 0~2초(피날레 0~5), 입자 0~12, 마스크 0~3.
+- **임시 렌더**: 셰이더 마스크(아트)가 오기 전, gameplay-ui의 결합 quad 메시 1개(+1 드로우, 코드 생성 아틀라스)는 개발용으로 허용한다. 최종은 15.2 전역 텍스처(추가 드로우 0)다. 아트 v2 시안에서 배치(비트)를 바꿔야 하면 아키텍트가 15.2와 `StarTrailMap`을 함께 고친다.
+
 ## 변경 기록
 
 | 날짜 | 누가 | 내용 |
@@ -889,3 +964,5 @@ namespace SevenSteps.Game.UI {
 | 2026-11-10 | 씬 플로우·아키텍트 | 14.6 보드 영역 검사 구현: `BoardView.Fit` public static(게임과 검사기가 같은 맞춤 식), `BoardView.ActorHeight`, `UiLayoutRule.Board` 면제. feat/scene-flow 17cbddf 검토 승인(B1: Choose 상태·긴 메시지 HUD 변형 추가 요청) |
 | 2026-11-10 | 게임플레이/UI·씬 플로우·아키텍트 | 14.9 HUD·결과 위반도 오류(`UiLayoutCheck.HudResultAreErrors = true`, HUD/결과 0건 달성, feat/view d170385 검토 승인). 이제 14장 위반은 모든 화면에서 빌드를 막는다 |
 | 2026-11-10 | 씬 플로우·아키텍트 | Game: `AttemptCounts.After(SessionUpdate)`(6.5 Undo·Restart 세기, `BoardController`와 QA 리플레이가 공유), `Game.Flow.QaReplay`(attempts.jsonl 교차 검사, 재시작 글자·해시는 docs/qa-attempts.md 확정 전 임시). feat/scene-flow 332498f 검토 승인 |
+| 2026-11-10 | 아키텍트 | 15장 별 흔적 셰이더 입력: 전역 `_StarTrailMap`((2W)×H RGBA32, 층 0 걸음·선돌·최신, 층 1 경로 변)·`_StarTrailWorldToCell`·`_StarTrailParams`·`_StarTrailPulse`·`_StarTrailColors`, Contracts `StarTrailMap`(배치·쓰기 도우미·`WorldToCell`). 추가 드로우 0, State에서 매번 다시 채움 |
+| 2026-11-10 | 아키텍트·게임플레이/UI | 15.5 별 흔적 상태 머신(층 1 A 끝난 방식 비트, 전역 `_StarTrailState`)과 행성별 값 `StarTrailPreset`(Contracts SO, `ChapterPreset.starTrail`, 비면 Default, `SetGlobals` → `_StarTrailStyleA/B/C`·`_StarTrailTint`, `tileset-validate` 범위 검사) |
