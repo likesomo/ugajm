@@ -86,7 +86,56 @@ namespace SevenSteps.Game.UI
             var r = telemetryStatus.rectTransform;
             r.anchoredPosition -= new Vector2(0, telemetryNote.rectTransform.rect.height + 2);
             telemetryStatus.text = "";
+            Layout();
             wired = true;
+        }
+
+        /// Row layout in code over the prefab's rects (docs/architecture.md 14): 680x500 panel, 24-size rows, the consent
+        /// note and the status line as 18-size secondary text, everything 44 inside the panel edge.
+        void Layout()
+        {
+            if (!(masterLabel.transform.parent is RectTransform panel)) return;
+            panel.anchorMin = panel.anchorMax = panel.pivot = new Vector2(0.5f, 0.5f);
+            panel.anchoredPosition = Vector2.zero;
+            panel.sizeDelta = new Vector2(680, 620);
+            void Put(Component c, float x, float y, float w, float h)
+            {
+                if (c == null) return;
+                if (c.transform.parent != panel) c.transform.SetParent(panel, false);
+                ((RectTransform)c.transform).TopLeft(x, y, w, h);
+            }
+            void Size(Text t, int size) { if (t != null) t.fontSize = size; }
+            void ButtonText(Button b, int size)
+            {
+                if (b == null) return;
+                Ui.FitButtonSkin(b); // frame border 8 + label padding 8 (gameplay-ui, 14.4)
+                foreach (var t in b.GetComponentsInChildren<Text>(true)) { t.resizeTextForBestFit = false; t.fontSize = size; }
+            }
+            Put(titleText, 44, 30, 592, 60); Size(titleText, 40); titleText.alignment = TextAnchor.MiddleCenter;
+            float y = 104;
+            foreach (var (label, down, value, up) in new[] { (masterLabel, masterDown, masterText, masterUp), (sfxLabel, sfxDown, sfxText, sfxUp) })
+            {
+                Put(label, 44, y + 11, 330, 48); Size(label, 24);
+                Put(down, 388, y + 3, 64, 64); ButtonText(down, 24);
+                Put(value, 456, y + 11, 116, 48); Size(value, 24); value.alignment = TextAnchor.MiddleCenter;
+                Put(up, 576, y + 3, 64, 64); ButtonText(up, 24);
+                y += 76;
+            }
+            Put(telemetryLabel, 44, y + 11, 330, 48); Size(telemetryLabel, 24);
+            Put(telemetryToggle, 388, y, 252, 72); ButtonText(telemetryToggle, 24);
+            y += 76;
+            Put(languageLabel, 44, y + 11, 200, 48); Size(languageLabel, 24);
+            Put(languageText, 240, y + 11, 140, 48); Size(languageText, 22);
+            if (languageText != null) { languageText.alignment = TextAnchor.MiddleRight; languageText.color = Ui.Ink; } // Dim was 3.7:1
+            Put(languageToggle, 388, y, 252, 72); ButtonText(languageToggle, 22);
+            y += 80;
+            Put(telemetryNote, 44, y, 592, 50); Size(telemetryNote, 18);
+            telemetryNote.horizontalOverflow = HorizontalWrapMode.Wrap;
+            telemetryNote.alignment = TextAnchor.MiddleCenter;
+            Ui.Secondary(telemetryNote);
+            Put(telemetryStatus, 44, y + 50, 592, 28); Size(telemetryStatus, 18);
+            Ui.Secondary(telemetryStatus);
+            Put(close, 240, 532, 200, 72); ButtonText(close, 24);
         }
 
         Text telemetryStatus;

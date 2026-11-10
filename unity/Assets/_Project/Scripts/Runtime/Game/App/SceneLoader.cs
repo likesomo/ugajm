@@ -89,12 +89,9 @@ namespace SevenSteps.Game
         /// Full-screen image on a top canvas that survives scene loads; runs the fade coroutines and the loading screen.
         sealed class Fader : MonoBehaviour
         {
-            const int Tips = 3;
             CanvasGroup group, loading;
-            Text head, count, tip;
-            Image[] stars;
+            LoadingView view;
             float loadingSince = -1;
-            int lit = -1;
 
             public static Fader Create()
             {
@@ -116,59 +113,36 @@ namespace SevenSteps.Game
                 img.color = Ui.HasTheme ? new Color(Ui.PanelBg.r, Ui.PanelBg.g, Ui.PanelBg.b, 1f) : Color.black;
                 var f = go.AddComponent<Fader>();
                 f.group = go.AddComponent<CanvasGroup>();
-                if (Ui.HasTheme) f.BuildLoading(go.transform);
+                if (Ui.HasTheme)
+                {
+                    f.view = new LoadingView(go.transform);
+                    f.loading = f.view.Root.gameObject.AddComponent<CanvasGroup>();
+                    f.loading.alpha = 0f;
+                    f.loading.blocksRaycasts = false;
+                }
                 f.Set(0f);
                 return f;
-            }
-
-            /// Loading screen (art layout: title top left, Dipper at 420,290 in a 330x150 box, "n / 7", tip line).
-            void BuildLoading(Transform root)
-            {
-                var r = Ui.Rect("Loading", root).Stretch();
-                loading = r.gameObject.AddComponent<CanvasGroup>();
-                loading.alpha = 0f;
-                loading.blocksRaycasts = false;
-                head = Ui.Label(r, "", 48, Ui.Ink, TextAnchor.MiddleLeft, "Head");
-                head.rectTransform.TopLeft(40, 30, 1070, 72);
-                var dipper = Ui.Theme.Dipper;
-                Vector2 P(int i) => new Vector2(420 + dipper[i].x * 330, 290 + dipper[i].y * 150);
-                foreach (var (a, b) in UiTheme.DipperEdges) Ui.Line(r, P(a), P(b), Ui.Dim, "Edge");
-                stars = new Image[7];
-                for (int i = 0; i < 7; i++)
-                {
-                    stars[i] = Ui.Star(r, false, "Star " + (i + 1));
-                    stars[i].rectTransform.TopLeft(P(i).x - 12, P(i).y - 12, 24, 24);
-                }
-                count = Ui.Label(r, "", 34, Ui.Gold, TextAnchor.MiddleCenter, "Count");
-                count.rectTransform.TopLeft(540, 425, 200, 48);
-                tip = Ui.Label(r, "", 29, Ui.Ink, TextAnchor.MiddleCenter, "Tip");
-                tip.rectTransform.TopLeft(190, 543, 900, 84);
-                tip.horizontalOverflow = HorizontalWrapMode.Wrap;
             }
 
             /// The scene load starts behind the dark screen: text in the current language, a random tip, hidden for now.
             public void BeginLoading()
             {
-                if (loading == null || !Services.TryGet<Localizer>(out var loc)) return;
-                var lang = loc.Current;
-                UiText.Set(head, loc, "loading.title", FontRole.Title);
-                UiText.Set(tip, loc, "loading.tip." + UnityEngine.Random.Range(1, Tips + 1), FontRole.Body);
-                count.font = Ui.Theme.FontFor(lang, FontRole.Number);
-                lit = -1;
-                Progress(0f);
+                if (view == null || !Services.TryGet<Localizer>(out var loc)) return;
+                view.Begin(loc, UnityEngine.Random.Range(1, LoadingView.Tips + 1));
                 loadingSince = Time.unscaledTime;
             }
 
-            /// Load progress 0..1: lights that many of the 7 stars; shows the screen once the load is slower than LoadingDelay.
+            /// Load progress 0..1 (LoadingView); shows the screen once the load is slower than LoadingDelay.
             public void Progress(float t)
             {
-                if (loading == null || loadingSince < 0) return;
+                if (view == null || loadingSince < 0) return;
                 if (Time.unscaledTime - loadingSince >= LoadingDelay) loading.alpha = 1f;
-                int n = Mathf.Clamp(Mathf.RoundToInt(Mathf.Clamp01(t) * 7), 0, 7);
-                if (n == lit) return;
-                lit = n;
-                for (int i = 0; i < 7; i++) Ui.SetStar(stars[i], i < n);
-                count.text = $"{n} / 7";
+                view.Progress(t);
+            }
+
+            void Update()
+            {
+                if (view != null && loadingSince >= 0) view.Animate(Time.unscaledTime);
             }
 
             public void EndLoading()

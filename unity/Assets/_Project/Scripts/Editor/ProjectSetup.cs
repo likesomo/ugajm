@@ -394,6 +394,7 @@ namespace SevenSteps.EditorTools
             PlayerSettings.defaultWebScreenHeight = 720;
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
             PlayerSettings.WebGL.decompressionFallback = true;
+            PlayerSettings.WebGL.template = "PROJECT:SevenSteps"; // Assets/WebGLTemplates/SevenSteps: 16:9 fit, navy page (ui-layout-fix)
         }
 
         static void EnsureFolder(string path)
