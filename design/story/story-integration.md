@@ -10,6 +10,23 @@
 - (b) 글자 수 한도의 최종 판정은 `UiLayoutCheck`다: 3.3
 - (c) `ksx1001` 검사를 돌릴 곳: 3.4
 
+**아키텍트 S0 검토 반영** (`docs/reviews/2026-11-10-story-integration-s0.md`, 조건부 승인 A1~A13. 2026-11-11 이 문서에 반영)
+
+| # | 결정 | 반영한 곳 |
+|---|---|---|
+| A1 | 네임스페이스는 평평한 `SevenSteps.Contracts`(폴더만 `Contracts/Story/`) | 5.1 |
+| A2 | `StoryCue.Brother` = `BodyIndex` + 1, 변환은 `StoryRules` 한 곳 | 4.1-3, 5.1 |
+| A3 | `StoryRules`는 상태 없음. `seventhFirst` 거르기와 시도당 1회는 Director. `TryMoment(SessionUpdate, out)` | 4.2, 5.1 |
+| A4·A9 | 피날레 스테이지와 행성 완성은 `ChapterKeyOf` 경계와 `Progress`로. 클리어는 스테이지 이름 키 | 0.5, 2.3, 4.2 |
+| A5·A12 | 저장은 `SaveSystem.Story`, 키 `seven-steps.story`. `CarvingSeen`은 챕터 id 목록, `-newplayer`가 지움 | 0.5, 5.1, 5.4 |
+| A6 | 결과 패널은 `Presented` 뒤 그대로(별 흔적이 피날레를 기다림) | 4.3 |
+| A7 | `StoryImageSet.required`로 경고/오류 | 3.2 |
+| A8 | Boot 로드 실패면 이야기만 끄고 계속 | 3.2 |
+| A10 | 다 모음 = `Truths == 챕터 수` | 0.5 |
+| A11 | `StoryCue.After`, 카드 3 `allTruths` | 0.5, 2.2, 2.3, 3.1, 5.1 |
+| A13 | 별지도 선 모양은 `story.json` `dipper` 배열 | 0.5, 2.2, 3.1 #14 |
+| B1~B4 | 리드·레벨 디자인·gameplay-ui 몫(QA 금지 파일, `levels` 실패 처리, `ResultModel` 위치, HUD 판) | B3은 5.4에 적음 |
+
 ---
 
 ## 0. 최소 UI 개정 메모 (2026-11-10, 4단계 전, `production/ui-minimal-plan.md`)
@@ -68,19 +85,19 @@
 **원칙**
 - **규칙 코드와 레벨은 바꾸지 않는다.** View, 데이터(`story.json`), 저장만 쓴다.
 - **새 저장 필드는 거의 없다.** 판정은 이미 저장된 스테이지 클리어 기록에서 나온다.
-  - `FinaleCleared(k)`: 행성 k의 마지막 스테이지(행성 안 7번째. altar는 49)를 깬 기록이 있는가.
-  - `Truths`: `FinaleCleared`가 참인 행성 수(0~7). "얻은 새김 수"이자 "드러난 진실 수"다.
+  - `FinaleCleared(chapterId)`(A9): 그 챕터의 **피날레 스테이지**를 깬 기록이 있는가. 피날레 스테이지는 숫자로 굳히지 않고 `LevelCatalog.ChapterKeyOf` 경계로 정한다. 챕터의 마지막 스테이지이고, 마지막 챕터만 게임의 마지막 스테이지(50) 바로 앞이다. 지금 데이터로는 7·14·…·49다. 클리어 여부는 `ProgressData.IsCleared(level)`(스테이지 **이름** 키)로 본다. 저장하지 않는 순수 함수다(`StoryTruths`, Game `LevelCatalog` 옆).
+  - `Truths`: `FinaleCleared`가 참인 챕터 수. "얻은 새김 수"이자 "드러난 진실 수"다. **다 모음 = `Truths == 챕터 수`**(A10, `chapters.json`). 별지도·타이틀의 별 개수도 챕터 목록을 따른다.
 - **어느 순서로 깨도 같은 그림이 나온다.** 스테이지 선택에 잠금이 없기 때문이다. 0.4의 "깬 순서대로 선"은 아래 2번으로 바꾼다.
 
 | # | 장치 | 보이는 것 | 판정 | 담당 | 새 작업 |
 |---|---|---|---|---|---|
-| 1 | **별지도 새김 표식** (목표물) | 행성 k 노드에 관측자의 새김 그림 하나. 처음 생길 때 별지도에 들어오면 한 번 떠오른다 | `FinaleCleared(k)`. "처음"은 `StoryProgress.CarvingSeen(k)` | scene-flow, 아트(새김 그림 7) | 예 |
-| 2 | **별지도 선** (다음 별 단서) | `FinaleCleared(k)`이면 k→k+1 선. frost(4)는 4→1(국자가 닫힘)과 4→5 둘. altar(7)는 7→원(50) | 같음 | scene-flow | 예(0.4의 선 7개와 같은 작업) |
+| 1 | **별지도 새김 표식** (목표물) | 행성 k 노드에 관측자의 새김 그림 하나. 처음 생길 때 별지도에 들어오면 한 번 떠오른다 | `FinaleCleared(id)`. "처음"은 `StoryProgress.CarvingSeen`(챕터 id 목록, A12) | scene-flow, 아트(새김 그림 7) | 예 |
+| 2 | **별지도 선** (다음 별 단서) | `story.json` `dipper` 배열의 선 가운데 `from` 챕터의 `FinaleCleared`가 참인 것을 그린다. 지금 데이터: moss→hollow→carved→frost, frost→moss(국자가 닫힘), frost→joinery→crumble→altar, altar→circle(50). 모양은 코드 분기가 아니라 데이터다(A13) | `FinaleCleared` + `dipper` | scene-flow | 예(0.4의 선 7개와 같은 작업) |
 | 3 | **진실 다시 보기** | 새김 표식을 누르면 그 행성의 피날레 한 줄(= 진실)이 별지도 위 잠깐 줄 판에 다시 나온다 | `story.json` `finale` entry | scene-flow | 예(작음) |
-| 4 | **타이틀 하늘** (위기와 복원) | 타이틀 배경의 일곱 별. 처음엔 꺼질 듯 희미하고, `FinaleCleared(k)`마다 k번 별이 또렷해진다. 엔딩을 보면 타이틀 한 줄이 `after "ending"` 줄로 바뀐다 | `FinaleCleared`, `StoryProgress.EndingSeen` | scene-flow, 아트(별 두 상태) | 예 |
+| 4 | **타이틀 하늘** (위기와 복원) | 타이틀 배경의 일곱 별. 처음엔 꺼질 듯 희미하고, `FinaleCleared(id)`인 챕터의 별이 또렷해진다(별 개수 = 챕터 수). 엔딩을 보면 타이틀 한 줄이 `after "ending"` 줄로 바뀐다 | `FinaleCleared`, `StoryProgress.EndingSeen` | scene-flow, 아트(별 두 상태) | 예 |
 | 5 | **기한 그림** | 별지도 배경에서 국자 끝이 선돌의 원 쪽으로 기울어 있다. 움직이지 않는다 | 없음(정적 아트) | 아트 | 예(그림 한 장) |
 | 6 | **행성 완료 보상** | 피날레를 깨면 한꺼번에 생긴다. 피날레 한 줄(진실) → 결과 화면(★) → 별지도에 새김과 선(1·2) → 타이틀 별(4). ★ 보상과는 별개다. ★는 "얼마나 잘", 새김은 "무엇을 알았나" | 위와 같음 | 위 담당들 | — |
-| 7 | **엔딩 조건과 갈래** | 엔딩은 지금처럼 50 클리어 때 나온다. 카드 3이 `Truths == 7`이면 마지막 진실("지도는 셋에게 건네진 것이었다"), 아니면 "아직 흐린 새김이 있다". `Truths`가 7이 되었는데 마지막 진실을 아직 못 봤으면, 별지도의 북극성(50) 노드에 표식을 띄워 엔딩 다시 보기를 이끈다 | `Truths`, `StoryProgress.FinalTruthSeen` | scene-flow | 예(작음) |
+| 7 | **엔딩 조건과 갈래** | 엔딩은 지금처럼 50 클리어 때 나온다. 카드 3이 `Truths == 챕터 수`이면 마지막 진실("지도는 셋에게 건네진 것이었다"), 아니면 "아직 흐린 새김이 있다". `Truths`가 챕터 수가 되었는데 마지막 진실을 아직 못 봤으면, 별지도의 북극성(50) 노드에 표식을 띄워 엔딩 다시 보기를 이끈다 | `Truths`, `StoryProgress.FinalTruthSeen` | scene-flow | 예(작음) |
 | 8 | **발치 일곱 별(HUD)은 걸음 수 전용** | 수집 상태를 넣지 않는다 | — | — | 아니오 |
 
 - 8번의 이유: 발치 별에 "행성 별"의 뜻을 섞으면 걸음 세기가 흐려진다. 걸음 세기는 이 게임의 핵심 판단이다. 수집과 복원은 별지도와 타이틀에서만 보인다.
@@ -88,11 +105,12 @@
 **데이터와 계약 변경** (2~5장보다 우선, 아키텍트 검토)
 - `story.json` `ending`: 카드 1은 `brother` 1~3. 카드 2는 `stones` 0~2(귀환과 흔적을 합침). 카드 3은 `after ""`와 `after "allTruths"` 두 entry. 카드 4는 고정 1개. 검사 3.1의 "필요한 entry"를 이것으로 바꾼다.
 - `finale` 7개 entry가 곧 일곱 진실이다. 새 `on` 값은 만들지 않는다.
-- `StoryRules.Ending(State win, int card)` → `Ending(State win, int card, int truths)`. `EndingModel`에 `Truths`를 넣는다(scene-flow가 저장에서 센다).
-- `StoryProgress`(저장 키 `story.v1`)에 `CarvingSeen(chapter)`, `FinalTruthSeen`을 더한다. 둘 다 연출을 한 번만 하기 위한 플래그다. 없어져도 진행에는 문제가 없다.
-- 텔레메트리 `ending_view`에 `truths`(0~7)를 더한다. 피날레를 다 깨고 엔딩에 오는 비율을 본다.
+- `StoryRules.Ending(State win, int card)` → `Ending(State win, int card, int truths, int chapterCount)`. 카드 3에서 `truths == chapterCount`이면 `StoryCue.After = "allTruths"`를 넣는다(A11). `EndingModel`에 `Truths`를 넣는다(scene-flow가 저장에서 센다).
+- `StoryProgress`는 `SaveSystem.Story`(키 `seven-steps.story`, A5·A12)에 `CarvingSeen`(챕터 id `string[]`)과 `FinalTruthSeen`(bool)을 더한다. 둘 다 연출을 한 번만 하기 위한 플래그다. `-newplayer`가 지우고, 손상되면 기본값(아무것도 안 봄)으로 돌아가 한 번 더 보여 줄 뿐이다.
+- `story.json`에 `dipper` 배열(A13)을 둔다: `[{"from":"moss","to":"hollow"}, …, {"from":"altar","to":"circle"}]`. `to`는 챕터 id 또는 `"circle"`(마지막 스테이지 노드). `beats`와 따로 두고 런타임에 쓴다.
+- 텔레메트리 `ending_view`에 `truths`(0~챕터 수)를 더한다. 백엔드 스키마와 골든(`unity.sh golden`)을 같이 바꾼다. 피날레를 다 깨고 엔딩에 오는 비율을 본다.
 - 아트(6.1에 더함):
-  - `carving.moss` … `carving.altar`: 새김 표식 7종. 작은 단색 그림이고, 글자와 숫자는 넣지 않는다.
+  - `carving.<챕터 id>`: 새김 표식 7종(`StoryImageSet`, 키 목록은 챕터 id에서 만든다). 작은 단색 그림이고, 글자와 숫자는 넣지 않는다.
   - `ending.3`: "흔적"에서 **"건네진 지도"**로 바꾼다. 옛 선돌의 원에서 돌마다 새김이 빛나는 그림이다.
   - 별지도 배경에 국자의 기울기를 그린다.
   - 타이틀 별 두 상태(희미함, 또렷함)를 둔다.
@@ -111,7 +129,7 @@ Assets/_Project/Data/story.json ──────────────┐   
                      ┌──────────── Model (Contracts/Story, 순수 C#) ────────────┐
                      │ StoryCatalog  : 로드·단정 검증, Lines(cue)                │
                      │ StoryRules    : SessionUpdate·State → StoryCue (순수 함수)│
-                     │ StoryProgress : 본 횟수·엔딩 봄 (SaveSystem 키 story.v1)  │
+                     │ StoryProgress : 본 횟수·엔딩·새김 (seven-steps.story)     │
                      └───────────────────────────────────────────────────────────┘
                                               ▲ 읽기
   GameSession.Updated / Presented ──► StoryDirector (Controller, Game/Story) ──► Views
@@ -152,7 +170,10 @@ Assets/_Project/Data/story.json ──────────────┐   
   "beats": [
     { "chapter": "moss", "star": 1, "part": "bowl", "beat": "departure", "focus": 1 }
   ],
-  "images": ["card.moss", "ending.1", "ending.2", "ending.3", "ending.4", "title.key"],
+  "images": ["card.moss", "carving.moss", "ending.1", "ending.2", "ending.3", "ending.4", "title.key"],
+  "dipper": [
+    { "from": "moss", "to": "hollow" }, { "from": "frost", "to": "moss" }, { "from": "altar", "to": "circle" }
+  ],
   "entries": [
     {
       "id": "moment.keep.b1",
@@ -182,12 +203,13 @@ Assets/_Project/Data/story.json ──────────────┐   
   | `brother` | 1~3, 0 = 아무나 |
   | `stones` | 0~2, −1 = 아무거나 |
   | `card` | 엔딩 카드 1~4, 0 = 해당 없음 |
-  | `after` | `""`, `"ending"`(엔딩을 본 뒤), `"allStars"`(150별) |
+  | `after` | `""`, `"ending"`(엔딩을 본 뒤), `"allStars"`(150별), `"allTruths"`(피날레를 다 깸, 엔딩 카드 3) |
 
 - 고르는 법은 `StoryCatalog.Find(cue)`가 맡는다.
   - 한정자가 모두 맞는 entry 가운데 **가장 구체적인 것**(빈 값이 아닌 한정자가 가장 많은 것)을 고른다.
   - 같은 구체성의 entry가 둘이면 검사 오류다(3.1).
 - **줄 고르기**는 난수 없이 `lines[StoryProgress.Count(entry.id) % lines.Length]`다. 보여 줄 때 센다. 직전 줄은 다시 나오지 않는다(풀이 2개 이상이면 저절로 그렇다). 같은 저장 상태에서는 같은 줄이 나온다.
+- `dipper`(A13)는 별지도 선의 모양이다. 런타임에 쓴다(0.5 표 2번).
 - `beats`는 런타임에 쓰지 않는다. 텔레메트리 분석과 문서 대조용 메타데이터다(행성 = 별, 국자/자루, 비트, 중심 형제).
 - 변수: 문장 안 치환은 `{brother}` 하나만 허용한다(`narrative-structure.md` 4.4). 숫자 치환은 쓰지 않는다.
 
@@ -202,9 +224,9 @@ Assets/_Project/Data/story.json ──────────────┐   
 | `keep` `switch` `bridge` | 7 순간 문구 | `brother` | 각 형제 1~3, 줄 2개 이상 |
 | `seal` `fall` `vanish` | 7 순간 문구 | `brother` | 각 1개 이상 (`brother 0` 허용) |
 | `lose` | 12 실패 | — | 1개 (제목·본문은 줄 2개: `id` `title`, `body`) |
-| `finale` | 8 피날레 결과 | `chapter` | 7챕터 각 1개 (`altar`는 49) |
+| `finale` | 8 피날레 한 줄 = 진실 | `chapter` | 챕터마다 1개 (피날레 스테이지는 `ChapterKeyOf` 경계, A4·A9) |
 | `constellation` | 9 별자리 완성 | `chapter` | 7챕터 각 1개 |
-| `ending` | 10 엔딩 | `card`, `brother`, `stones` | 카드 1: 형제 1~3. 카드 2·3: 선돌 0~2. 카드 4: 1개 |
+| `ending` | 10 엔딩 | `card`, `brother`, `stones`, `after` | 카드 1: 형제 1~3. 카드 2: 선돌 0~2. 카드 3: `after ""`와 `"allTruths"`. 카드 4: 1개 (0.5) |
 | `stillStar` | 엔딩 뒤 북극성 줄 | `after "allStars"` | 1개 |
 
 스테이지 한 줄(지점 5)과 행성 카드(4)·행성 설명(3)은 `levels.js`/`chapters.json`에 있다. 같은 검사 도구가 그 파일들의 해당 필드에도 글자 수와 글자 검사를 한다(3.1).
@@ -224,11 +246,12 @@ Assets/_Project/Data/story.json ──────────────┐   
 | 5 | ko 한글 음절이 모두 KS X 1001 2,350자 안 (`ksx1001.mjs`) | Gaegu에 없는 글자 |
 | 6 | 허용 기호만 씀 (`… · , . ? ! “ ” ‘ ’` 와 공백), 아라비아 숫자 없음 | `~`, `7` |
 | 7 | 금지어 없음 (`narrative-structure.md` 4.2 목록, ko/en) | "희생" |
-| 8 | `on`이 2.3 표에 있음. 한정자 범위가 맞음: `chapter`가 `chapters.json` id, `brother` 0~3, `stones` −1~2, `card` 0~4, `after` 값 | 없는 챕터 |
+| 8 | `on`이 2.3 표에 있음. 한정자 범위가 맞음: `chapter`가 `chapters.json` id, `brother` 0~3, `stones` −1~2, `card` 0~4, `after` 값(`allTruths` 포함, A11) | 없는 챕터 |
 | 9 | 2.3 "필요한 entry"가 모두 있음(갈래가 빠짐없이 채워짐) | 엔딩 카드 2 선돌 0 갈래 없음 |
 | 10 | 같은 (`on`, 한정자) 조합이 둘 이상 없음 | 모호한 트리거 |
 | 11 | 치환은 `{brother}`만. ko `brothers[].name`이 모두 받침 없음(`(code − 0xAC00) % 28 == 0`) | 받침 있는 호칭 |
 | 12 | `image` 키가 `images` 목록에 있음 | 오타 |
+| 14 | `dipper`: `from`은 챕터 id, `to`는 챕터 id 또는 `circle`, 같은 선 중복 없음, 모든 챕터가 `from`에 한 번 이상(A13) | 없는 챕터 id |
 | 13 | (레벨 데이터) `levels.js` `story`, `chapters.json` `intro`·`tagline`에 4~7번 검사를 적용함. 지금 데이터는 **경고**로 시작하고, 4단계 원고 반영 뒤 오류로 바꿈 | — |
 
 ### 3.2 Unity 쪽 (scene-flow `SceneFlowValidator`, 빌드 전 오류)
@@ -237,7 +260,8 @@ Assets/_Project/Data/story.json ──────────────┐   
   - 2.3 필수 entry, 한정자 범위, 번역 누락을 검사하고, 어기면 `InvalidDataException`(메시지에 entry id와 이유)을 던진다.
   - EditMode 테스트가 실제 `Data/story.json`을 로드한다.
 - `LocalizationCheck` 범위에 `story.json`을 더한다. 각 언어의 모든 line을 그 언어 **제목·본문 글꼴 둘 다**의 cmap으로 검사한다(GlyphCheck, 13.4).
-- `StoryImageSet`은 `images`의 키마다 Sprite가 있는지 본다. 아트 납품 전에는 경고, 납품 뒤에는 오류다(아키텍트가 정하는 플래그).
+- `StoryImageSet`은 `images`의 키마다 Sprite가 있는지 본다. `StoryImageSet.required`(기본 false)가 거짓이면 경고, 참이면 오류다. 아트가 다 채우고 켠다(A7).
+- Boot에서 `FromJson`이 실패하면 오류 로그를 남기고 **이야기만 끄고** 게임은 계속한다(A8). 빌드 전 `scene-validate`가 이미 거른다.
 
 ### 3.3 글자 수의 최종 판정 = `UiLayoutCheck` (리드 요청 b)
 
@@ -273,8 +297,8 @@ Assets/_Project/Data/story.json ──────────────┐   
 ### 4.1 원칙 (리드 요청 a)
 
 1. **판정 입력은 `SessionUpdate`(Kind, Command, Prev, State, Result.Events)와 `State`뿐이다.** 그 밖의 입력은 흐름 쪽 사실(챕터 진입, 클리어 기록, 로딩)뿐이다. 규칙 코드와 `core.js`는 그대로 둔다.
-2. 판정은 **순수 함수** `StoryRules`(Contracts/Story)가 한다. 화면, 시간, 난수를 모른다. 출력은 문자열이 아니라 `StoryCue`(on, chapter, brother, stones, card)다. 문자열은 `StoryCatalog` + `Localizer`가 만든다.
-3. **형제 번호**는 `BodyIndex.Current(update.Prev)`다. 명령을 낸 몸, 1부터 센다. 선돌 형제는 `BodyIndex.OfStatue`다. 별 흔적(`architecture.md` 15.3)과 같은 함수이므로 색과 목소리가 어긋나지 않는다.
+2. 판정은 **순수 함수** `StoryRules`(Contracts/Story)가 한다. 화면, 시간, 난수를 모른다. 출력은 문자열이 아니라 `StoryCue`(on, chapter, brother, stones, card, after)다. 문자열은 `StoryCatalog` + `Localizer`가 만든다.
+3. **형제 번호**는 `BodyIndex.Current(update.Prev)`다. 명령을 낸 몸이다. `StoryCue.Brother`는 1~3(0 = 아무나) = `BodyIndex` + 1이고, 변환은 `StoryRules` 한 곳에서만 한다(A2). 별 흔적과 `BodyIndex`는 0부터 센다. 선돌 형제는 `BodyIndex.OfStatue`다. 별 흔적(`architecture.md` 15.3)과 같은 함수이므로 색과 목소리가 어긋나지 않는다.
 4. **보여 주는 때는 연출 뒤다.** `Updated(Present)`에서 cue를 만들어 토큰과 함께 보류하고, `GameSession.Presented`가 오면 보여 준다. 결과 패널과 같은 규칙이다(4.2).
 5. **숨기는 규칙**
    - `Snap`(Undo, Restart, Replay), `Rebuild`(Load)가 오면 보류 중인 cue를 버리고 보이는 순간 문구를 즉시 숨긴다.
@@ -292,7 +316,7 @@ Assets/_Project/Data/story.json ──────────────┐   
 |---|---|---|---|---|---|
 | `Rebuild` (Load) | 스테이지 n, 챕터 | 스테이지 한 줄(`levels.json` story) | 즉시, HUD 왼쪽 | 텍스처 새로 만들기 | 보류 cue 버림 |
 | `Present`, `Step` StepIdx 1~6 | 없음 | — | — | 별 점 커밋, 최신 칸 맥동 | 글 없음 |
-| `Present`, StepIdx 7 이벤트(`Choose`·`Win`·`Bridge`·`Seal`·`Vanish`·`Stone`), 게임 전체 처음 | `StoryProgress.Count("seventhFirst") == 0` | `seventhFirst` | Presented 뒤 2초 | 일곱째 각성(0.18초) | 글은 각성이 끝난 뒤에만 |
+| `Present`, StepIdx 7 이벤트(`Choose`·`Win`·`Bridge`·`Seal`·`Vanish`·`Stone`), 게임 전체 처음 | `StoryRules`는 늘 cue를 내고, `StoryDirector`가 `StoryProgress.Count("seventhFirst") == 0`으로 거른다(A3) | `seventhFirst` | Presented 뒤 2초 | 일곱째 각성(0.18초) | 글은 각성이 끝난 뒤에만 |
 | `Present`, Command Keep → `Stone` | 형제 = `BodyIndex.Current(Prev)` | `keep` | Presented 뒤 | 선돌 위 고정 별(`OfStatue`), 굳은 별자리 | 선돌 별은 별 흔적만 그린다. 글은 HUD 칸에만 |
 | `Present`, Command Switch → `Switch` | 형제 | `switch` | Presented 뒤 | 바통 이음매 비트(층 1 A 비트 0) | 같음 |
 | `Present`, `Bridge` | 형제 | `bridge` | Presented 뒤 | 가라앉은 별(층 1 A 비트 1) | 같음 |
@@ -301,8 +325,8 @@ Assets/_Project/Data/story.json ──────────────┐   
 | `Present`, `Vanish` | 형제 | `vanish` | Presented 뒤 | 사라짐(비트 3) | 같음 |
 | `Present`, `Stone` 자동(마지막 몸) → `Lose` | 없음(순간 문구 안 냄) | `lose` 문구는 실패 패널이 냄 | 실패 패널 | 패배 단계(0.20초 풀림) | 실패 패널 하나만 |
 | `Present`, `Win` (보통 스테이지) | 없음 | — (결과 화면의 기존 문구) | — | 승리 단계, 세 색 별자리 피날레(1.2초) | — |
-| `Present`, `Win`, **행성 마지막 스테이지** (7·14·21·28·35·42·49) | 챕터 | `finale` | 결과 패널(피날레 별자리 연출이 끝난 뒤 열림, 4.3) | 피날레 별자리 | 별자리는 보드에, 문구는 결과 패널에 |
-| 위 + 이번 클리어로 그 행성 7스테이지 모두 클리어 | `GameFlowController.OnWon`의 `Progress`로 판정해 넘김 | `constellation` | 결과 패널, 피날레 문구 아래 | (행성 별 밝기는 별지도가 그림) | — |
+| `Present`, `Win`, **피날레 스테이지** (`ChapterKeyOf` 경계, A4) | 챕터 | `finale` | 최소 UI: 보드 별자리 피날레 동안 잠깐 줄(0.2) | 피날레 별자리 | 별자리는 보드에, 진실 한 줄은 잠깐 줄에 |
+| 위 + 이번 클리어로 그 챕터의 모든 스테이지 클리어(`Progress`, A4) | `GameFlowController.OnWon`의 `Progress`로 판정해 넘김 | `constellation` | 결과 패널, 피날레 문구 아래 | (행성 별 밝기는 별지도가 그림) | — |
 | `Present`, `Win`, **스테이지 50** | 갈래: 형제 = `BodyIndex.Current(State)`, 선돌 = `min(2, State.Statues.Length)` | `ending` 카드 1~4 | 결과 패널(`journey_done`) → 엔딩 | 피날레 별자리 | 엔딩 카드 3의 별자리 장면은 정지 이미지다. 보드 연출과 섞지 않는다 |
 | `Snap` (Undo·Restart·Replay) | 없음 | 숨김 | 즉시 | 다시 채우기, Undo 0.12·Restart 0.25초 | 순간 문구 숨김 |
 | `Feedback` (Bump) | 없음 | — | — | 없음 | — |
@@ -313,11 +337,9 @@ Assets/_Project/Data/story.json ──────────────┐   
 
 ### 4.3 순서와 보류
 
-- 결과 패널은 지금 `Presented` 뒤에 열린다. **행성 마지막 스테이지와 50**에서는 별 흔적 피날레(`StarTrailPreset` 피날레 시간, 기본 1.2초)를 막(알파 0.6) 아래에서 가리지 않도록 결과 패널을 그 시간만큼 늦게 연다.
-  - 늦추는 쪽은 `GameFlowController`(씬 플로우)다.
-  - 시간 값은 `StarTrailPreset`에서 읽는다.
-  - 입력은 막지 않는다. Enter를 누르면 바로 연다.
-  - 별 흔적 기능이 없는 빌드에서는 0초다.
+- 결과 패널은 **`Presented` 뒤에 연다(지금 그대로, A6).** 별 흔적 v1이 승리 피날레(`finaleSeconds`)를 보드 Present 안에서 기다리므로, `Presented`와 결과 패널은 저절로 그 뒤에 온다. `GameFlowController`가 따로 늦추지 않는다.
+  - 피날레 한 줄은 `Updated(Present, Win)`에서 보류했다가 피날레 연출과 함께 보이고, 결과 패널이 열리면 사라진다(0.2).
+  - 피날레 중 Enter·클릭 건너뛰기와 리플레이·smoke 단축은 별 흔적 쪽(gameplay-ui) 일이다.
 - 순간 문구는 한 번에 하나다. 새 cue가 오면 앞의 것을 바꿔 쓴다(큐에 쌓지 않음).
 
 ## 5. 코드 구조 제안 (`architecture.md` 9장: MVC, 단정적 프로그래밍)
@@ -325,12 +347,13 @@ Assets/_Project/Data/story.json ──────────────┐   
 ### 5.1 Model — `Contracts/Story/` (아키텍트, 순수 C#, 엔진 없는 부분은 EditMode 테스트)
 
 ```csharp
-namespace SevenSteps.Contracts.Story {
+namespace SevenSteps.Contracts {                                              // 폴더는 Contracts/Story/, 네임스페이스는 평평하게(A1)
     public enum StoryOn { Title, Map, Loading, SeventhFirst, Keep, Switch, Bridge, Seal, Fall, Vanish, Lose,
                           Finale, Constellation, Ending, StillStar }          // 끝에만 추가
     public readonly struct StoryCue {                                         // 무엇을 보여 줄지 (문자열 아님)
         public readonly StoryOn On; public readonly string Chapter;           // "" = 아무거나
-        public readonly int Brother, Stones, Card;                            // 0 / -1 / 0 = 아무거나
+        public readonly int Brother, Stones, Card;                            // 0 / -1 / 0 = 아무거나. Brother = BodyIndex + 1 (A2)
+        public readonly string After;                                         // "" = 아무거나, "ending"/"allStars"/"allTruths" (A11)
     }
     public sealed class StoryCatalog {
         public static StoryCatalog FromJson(string json, IReadOnlyList<string> chapterIds); // 단정 검사(3.2), 실패 = InvalidDataException
@@ -339,20 +362,24 @@ namespace SevenSteps.Contracts.Story {
         public IReadOnlyList<string> ImageKeys { get; }
     }
     public static class StoryRules {                                          // 순수 함수, 상태 없음
-        public static bool TryMoment(in SessionUpdate u, out StoryCue cue);   // 4.2 Present 행
-        public static StoryCue Ending(State win, int card);                   // 50 갈래: 형제·선돌 수
+        public static bool TryMoment(SessionUpdate u, out StoryCue cue);      // 4.2 Present 행 (A3: 저장 상태 조건 없음)
+        public static StoryCue Ending(State win, int card, int truths, int chapterCount); // 50 갈래: 형제·선돌 수·allTruths
         public static StoryCue Finale(string chapterId);
     }
-    public sealed class StoryProgress {                                       // 저장: SaveSystem 키 "story.v1" (JSON)
+    public sealed class StoryProgress {                                       // SaveSystem.Story, 키 "seven-steps.story" (A5·A12)
         public int Count(string entryId); public void MarkShown(string entryId);
         public bool EndingSeen { get; } public void MarkEndingSeen();
+        public bool CarvingSeen(string chapterId); public void MarkCarvingSeen(string chapterId); // string[] 저장
+        public bool FinalTruthSeen { get; } public void MarkFinalTruthSeen();
     }
 }
 ```
 
-- `StoryProgress`는 기존 `ProgressData`를 바꾸지 않도록 **따로 저장 키**(`story.v1`)를 쓰자고 제안한다.
-  - 손상된 값은 기본값으로 돌리고 경고 로그를 낸다(외부 입력 예외 규칙).
-  - 키 이름과 `SaveSystem` API는 아키텍트가 정한다.
+- `StoryProgress`는 `SaveSystem` 안에 둔다(`SaveSystem.Story`, `SaveStory()`, 키 `seven-steps.story`, A5).
+  - 값: `{ "version": 1, "counts": [{"id","n"}], "endingSeen": false, "carvingSeen": [], "finalTruthSeen": false }`.
+  - 같은 `ISaveStore`(`-savekey` 접미사)를 쓰고, `-newplayer`가 지운다. 손상·새 버전 처리는 `ProgressData`와 같다.
+  - `MarkShown` 등은 메모리만 바꾼다. `SaveStory()`는 결과 패널, 엔딩 끝, 별지도 새김 연출 끝, 앱 종료 때 부른다(WebGL `PlayerPrefs.Save` = IndexedDB 쓰기).
+- `FinaleCleared`·`Truths`는 저장하지 않는 순수 함수 `StoryTruths`(Game, `LevelCatalog` 옆)다(A9·A10).
 - `StoryRules`는 Core의 `State`, `GameEventType`, `BodyIndex`만 쓴다. 엔진과 Localizer를 모른다.
 
 ### 5.2 Controller — `Game/Story/StoryDirector` (게임플레이/UI)
@@ -378,8 +405,9 @@ namespace SevenSteps.Contracts.Story {
 
 1. 새 `Contracts/Story/*`(5.1)와 `SevenSteps.Contracts` asmdef 안 폴더
 2. `GameAssets.storyJson`(TextAsset), `GameAssets.storyImages`(`StoryImageSet`)
-3. `SaveSystem`에 `story.v1` 키(또는 아키텍트가 정하는 다른 위치)
-4. `ResultModel`에 `FinaleLine`, `ConstellationLine`, (50) `EndingModel` 넘기기 (씬 플로우)
+3. `SaveSystem.Story`(키 `seven-steps.story`, A5·A12)
+4. (최소 UI) `ResultModel`의 `FinaleLine`·`ConstellationLine`은 만들지 않는다(0.3). `ResultModel`은 Game/UI라 Contracts 변경이 아니다(B3). (50) `EndingModel { …, Truths }` 넘기기(씬 플로우)
+6. `story.json` `dipper` 배열, `StoryCue.After`, `StoryRules.Ending` 인자(A11·A13)
 5. `unity.sh`에 `story-check`(리드), `export-levels.mjs`가 `story.json` 복사·검사 호출(레벨 디자인)
 
 ## 6. 화면별 배치
