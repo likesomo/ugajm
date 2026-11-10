@@ -54,7 +54,16 @@ namespace SevenSteps.Game.UI
         public static Image Panel(Transform parent, string name = "Panel") => Framed(parent, Theme.panel, PanelBg, name);
 
         /// A small framed card (planets, stages), or the flat button color.
-        public static Image Card(Transform parent, string name = "Card") => Framed(parent, Theme.card, ButtonBg, name);
+        public static Image Card(Transform parent, string name = "Card")
+        {
+            var img = Framed(parent, Theme.card, ButtonBg, name);
+            if (img.sprite != null) img.pixelsPerUnitMultiplier = Mathf.Max(1f, img.sprite.border.w / CardBorder); // 14.4
+            return img;
+        }
+
+        /// Card frame border in reference pixels: the card sprite (panel_wood, border 32 with a grain line 23-25 px in) is
+        /// drawn smaller so its border is 12 and the grain stays inside the border, clear of the card text (docs/architecture.md 14.4).
+        public const float CardBorder = 12f;
 
         /// Applies the theme's button sprites (sprite swap, 9-sliced) to a button made by MakeButton, then
         /// <see cref="FitButtonSkin"/>. No skin: unchanged.
