@@ -27,16 +27,24 @@ Material:
         m_Texture: {fileID: 2800000, guid: 773abee6046fe864cbb0461b0108f731, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _WeatherMap:
+        m_Texture: {fileID: 2800000, guid: fe2bb985ec15c734dba497ce54ee9a1a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _AmbientFloor: 0.3
+    - _EnvironmentDetail: 1
+    - _EnvironmentMoss: 0.3
+    - _EnvironmentWood: 0
     - _Unlit: 0
     - _UseAtlas: 1
     - _UseMoss: 0
     - _UseVertexColor: 0
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _MossColor: {r: 0.85882354, g: 0.70980394, b: 0.29411766, a: 1}
-    - _WallColor: {r: 0.80509806, g: 0.68705887, b: 0.41254902, a: 1}
+    - _MossColor: {r: 0.6392157, g: 0.5803922, b: 0.43529412, a: 1}
+    - _WallColor: {r: 0.69254905, g: 0.65137255, b: 0.55803925, a: 1}
+    - _WeatherTint: {r: 0.34901962, g: 0.4, b: 0.30980393, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
