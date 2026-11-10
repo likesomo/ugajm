@@ -57,9 +57,14 @@ namespace SevenSteps.Game.UI
                 chips[i] = Ui.Card(root, "Planet " + (i + 1));
                 chipNames[i] = Ui.Label(chips[i].transform, "", 21, Ui.Ink, TextAnchor.MiddleCenter, "Name");
                 chipNames[i].rectTransform.Stretch();
-                chipNames[i].rectTransform.offsetMin = new Vector2(6, 6);
-                chipNames[i].rectTransform.offsetMax = new Vector2(-6, -6);
+                // between the card sprite's two rules; long names (en) shrink to one line instead of crossing them
+                chipNames[i].rectTransform.offsetMin = new Vector2(7, 22);
+                chipNames[i].rectTransform.offsetMax = new Vector2(-7, -22);
                 chipNames[i].horizontalOverflow = HorizontalWrapMode.Wrap;
+                chipNames[i].verticalOverflow = VerticalWrapMode.Truncate;
+                chipNames[i].resizeTextForBestFit = true;
+                chipNames[i].resizeTextMinSize = 14;
+                chipNames[i].resizeTextMaxSize = 21;
             }
             intro = Ui.Label(root, "", 28, Ui.Ink, TextAnchor.MiddleCenter, "Intro");
             intro.rectTransform.TopLeft(150, 543, 980, 90);
@@ -78,7 +83,7 @@ namespace SevenSteps.Game.UI
             intro.text = model.Intro;
             intro.font = Ui.Theme.FontFor(lang, FontRole.Body);
             int n = model.Planets.Count;
-            float step = n > 0 ? Mathf.Min(174f, 1168f / n) : 0;
+            float step = n > 0 ? Mathf.Min(174f, 1220f / n) : 0;
             float width = Mathf.Min(145f, step - 12);
             float x0 = (1280 - (n - 1) * step - width) / 2;
             var body = Ui.Theme.FontFor(lang, FontRole.Body);

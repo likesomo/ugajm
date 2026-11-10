@@ -319,8 +319,8 @@ namespace SevenSteps.Game.UI
             tagline.horizontalOverflow = HorizontalWrapMode.Wrap;
             grid = Ui.Rect("Grid", frame).TopLeft(40, 156, 920, 340);
             var g = grid.gameObject.AddComponent<GridLayoutGroup>();
-            g.cellSize = new Vector2(214, 96);
-            g.spacing = new Vector2(16, 14);
+            g.cellSize = new Vector2(214, 108); // the card sprite's two rules sit ~22 px inside: text and stars go between them
+            g.spacing = new Vector2(16, 10);
             g.childAlignment = TextAnchor.UpperCenter;
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             g.constraintCount = Columns;
@@ -335,13 +335,13 @@ namespace SevenSteps.Game.UI
                 cards[k].colors = colors;
                 cards[k].onClick.AddListener(() => StageClicked?.Invoke(cardStage[slot]));
                 labels[k] = Ui.Label(card.transform, "", 22, Ui.Ink, TextAnchor.UpperLeft, "Label");
-                labels[k].rectTransform.TopLeft(16, 10, 120, 32);
+                labels[k].rectTransform.TopLeft(16, 26, 120, 30);
                 numbers[k] = Ui.Label(card.transform, "", 28, Ui.Gold, TextAnchor.UpperRight, "Number");
-                numbers[k].rectTransform.TopLeft(120, 8, 80, 36);
+                numbers[k].rectTransform.TopLeft(120, 23, 80, 36);
                 for (int st = 0; st < ProgressData.MaxStars; st++)
                 {
                     stars[k, st] = Ui.Star(card.transform, false, "Star " + (st + 1));
-                    stars[k, st].rectTransform.TopLeft(16 + st * 32, 56, 24, 24);
+                    stars[k, st].rectTransform.TopLeft(16 + st * 32, 58, 24, 24);
                 }
             }
             var backButton = Ui.MenuButton(frame, 25, () => CloseRequested?.Invoke(), out back, "Back");

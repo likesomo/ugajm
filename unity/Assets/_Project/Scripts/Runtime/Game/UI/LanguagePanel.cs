@@ -32,6 +32,9 @@ namespace SevenSteps.Game.UI
             panel = Ui.Rect("Language", root).Stretch().gameObject;
             var blocker = Ui.Wash(panel.transform, 0.94f, "Blocker");
             blocker.raycastTarget = true;
+            // Own screen over the menu background, dimmed as the loading screen (art concept language.png): the screen
+            // under it does not show through. No background in the theme: the dark blocker alone.
+            if (Ui.MenuBackground(panel.transform) != null) blocker.color = new Color(blocker.color.r, blocker.color.g, blocker.color.b, 0.76f);
             var s = panel.transform;
             head = Ui.Label(s, "", 48, Ui.Ink, TextAnchor.MiddleLeft, "Head");
             head.rectTransform.TopLeft(40, 30, 1070, 72);

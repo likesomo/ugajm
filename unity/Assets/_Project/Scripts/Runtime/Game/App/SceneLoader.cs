@@ -128,7 +128,9 @@ namespace SevenSteps.Game
                 loading = r.gameObject.AddComponent<CanvasGroup>();
                 loading.alpha = 0f;
                 loading.blocksRaycasts = false;
-                head = Ui.Label(r, "", 48, Ui.Ink, TextAnchor.MiddleLeft, "Head");
+                // The menu background under a wash, as on the chapter card (art concept loading.png); none = plain panel color.
+                if (Ui.MenuBackground(r) != null) Ui.Wash(r, 0.76f).transform.SetSiblingIndex(1);
+                head =Ui.Label(r, "", 48, Ui.Ink, TextAnchor.MiddleLeft, "Head");
                 head.rectTransform.TopLeft(40, 30, 1070, 72);
                 var dipper = Ui.Theme.Dipper;
                 Vector2 P(int i) => new Vector2(420 + dipper[i].x * 330, 290 + dipper[i].y * 150);
@@ -138,6 +140,9 @@ namespace SevenSteps.Game
                 {
                     stars[i] = Ui.Star(r, false, "Star " + (i + 1));
                     stars[i].rectTransform.TopLeft(P(i).x - 12, P(i).y - 12, 24, 24);
+                    var number = Ui.Label(r, (i + 1).ToString(), 18, Ui.Ink, TextAnchor.MiddleCenter, "Number " + (i + 1));
+                    number.rectTransform.TopLeft(P(i).x - 18, P(i).y + 12, 24, 24);
+                    number.font = Ui.Theme.FontFor(Language.En, FontRole.Number); // digits only: the number font in every language
                 }
                 count = Ui.Label(r, "", 34, Ui.Gold, TextAnchor.MiddleCenter, "Count");
                 count.rectTransform.TopLeft(540, 425, 200, 48);
