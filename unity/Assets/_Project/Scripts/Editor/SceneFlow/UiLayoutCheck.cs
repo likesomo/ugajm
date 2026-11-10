@@ -119,6 +119,7 @@ namespace SevenSteps.EditorTools
                             CheckScreen(label, res.Units, modal, ctx, found, exemptions, res == Resolutions[0]);
                             screensBuilt++;
                         }
+                        catch (Skipped e) { found.Add(e.Message); }
                         catch (Exception e)
                         {
                             found.Add($"cannot build in Edit Mode: {e.GetType().Name}: {e.Message.Split('\n')[0]}");
@@ -202,6 +203,21 @@ namespace SevenSteps.EditorTools
                 int s = stage;
                 yield return (new Screen { Name = "HUD", GameplayUi = true, Build = (c, root) => { BuildHud(c, s); c.Board = BoardArea(c, s); return null; } }, $"stage {s + 1}");
             }
+            // Side column (statues, message, KEEP / SWITCH; review B1): the first choice of a statue-door stage, longest message.
+            // The longest message is the longest msg.* line or the H hint of the longest solution (review B3).
+            int? chooser = Enumerable.Range(0, levels.Length).Where(i => levels[i].StatueCount > 0).Concat(Enumerable.Range(0, levels.Length))
+                .Cast<int?>().FirstOrDefault(i => ChooseState(levels[i.Value]) != null);
+            int longestRoute = LongestRoute(levels);
+            yield return (new Screen { Name = "HUD", GameplayUi = true, Build = (c, root) =>
+            {
+                if (chooser == null) throw new Skipped("no stage reaches a KEEP / SWITCH choice within 7 moves: the side column is not checked");
+                int st = chooser.Value;
+                string hint = new HintProvider(c.Levels, c.Loc).For(longestRoute);
+                string msg = LongestMessage(c.Loc);
+                BuildHud(c, st, ChooseState(c.Levels[st]), hint.Length > msg.Length ? hint : msg);
+                c.Board = BoardArea(c, st);
+                return null;
+            } }, chooser != null ? $"stage {chooser + 1} choose" : "choose");
             yield return (new Screen { Name = "Result", GameplayUi = true, Build = (c, root) =>
             {
                 BuildHud(c, longestHint);
@@ -229,11 +245,14 @@ namespace SevenSteps.EditorTools
             map.Show(FullProgress(c.Levels), -1);
         }
 
-        static void BuildHud(Ctx c, int stage)
+        static HudView BuildHud(Ctx c, int stage) => BuildHud(c, stage, Rules.NewState(c.Levels[stage]), "");
+
+        static HudView BuildHud(Ctx c, int stage, State state, string message)
         {
             var set = c.Assets.tileSet != null ? c.Assets.tileSet : AssetDatabase.FindAssets("t:TileSet").Select(g => AssetDatabase.LoadAssetAtPath<TileSet>(AssetDatabase.GUIDToAssetPath(g))).FirstOrDefault(t => t != null);
             var hud = HudView.Create(set, c.Loc);
-            hud.Refresh(Rules.NewState(c.Levels[stage]), stage, LevelCatalog.TextOf(stage, c.Lang), "");
+            hud.Refresh(state, stage, LevelCatalog.TextOf(stage, c.Lang), message);
+            return hud;
         }
 
         /// 14.6 board area: the board cells and actors (height BoardView.ActorHeight) through the camera BoardView.Fit gives
@@ -264,6 +283,49 @@ namespace SevenSteps.EditorTools
             }
             finally { Object.DestroyImmediate(go); }
         }
+
+        /// The first KEEP / SWITCH choice (Status.Choose) reachable by moves, depth first; null when none within 7 moves.
+        static State ChooseState(Level level)
+        {
+            State Walk(State s, int depth)
+            {
+                if (s.Status == Status.Choose) return s;
+                if (depth == 0 || s.Status != Status.Play) return null;
+                foreach (Dir d in Enum.GetValues(typeof(Dir)))
+                {
+                    var next = Rules.Dispatch(s, Command.Move(d)).State;
+                    if (ReferenceEquals(next, s)) continue;
+                    var found = Walk(next, depth - 1);
+                    if (found != null) return found;
+                }
+                return null;
+            }
+            return Walk(Rules.NewState(level), Rules.Steps);
+        }
+
+        /// A screen that can not be set up for a stated reason (reported as is, not as an Edit Mode build failure).
+        sealed class Skipped : Exception { public Skipped(string message) : base(message) { } }
+
+        static int longestRouteStage = -1;
+        static Level[] longestRouteOf;
+
+        /// The stage whose shortest solution (Solver, the H hint) is the longest; solved once per level set.
+        static int LongestRoute(Level[] levels)
+        {
+            if (longestRouteOf == levels && longestRouteStage >= 0) return longestRouteStage;
+            int best = 0, len = -1;
+            for (int i = 0; i < levels.Length; i++)
+            {
+                int n = Solver.Solve(levels[i])?.Path.Count ?? 0;
+                if (n > len) { len = n; best = i; }
+            }
+            longestRouteOf = levels;
+            return longestRouteStage = best;
+        }
+
+        /// The longest message line (msg.* table strings) in the current language.
+        static string LongestMessage(Localizer loc) =>
+            loc.Table.Keys.Where(k => k.StartsWith("msg.", StringComparison.Ordinal)).Select(k => loc.Get(k)).OrderByDescending(m => m.Length).FirstOrDefault() ?? "";
 
         /// Every stage cleared with 3 stars: the longest star counts ("150 / 150").
         static ProgressData FullProgress(Level[] levels)
