@@ -25,10 +25,7 @@
   - 키는 기존 이름 규칙에 따라 `seven-steps.story`, 값은 JSON `{ "version": 1, "counts": [{"id","n"}], "endingSeen": false }`. 문서의 `story.v1` 대신이다.
   - 이유: 같은 `ISaveStore`(`SaveStores.For(launch)`, `-savekey` 접미사)를 쓰고, `StartNewPlayer`(`-newplayer`)가 이 값도 지우게 하려는 것이다. 다음 테스터가 엔딩 뒤 갈래로 시작하지 않는다. 손상·새 버전 처리는 `ProgressData`와 같다(기본값과 경고, 새 버전은 덮어쓰지 않음).
   - 쓰기 시점: `MarkShown`은 메모리만 바꾼다. `SaveStory()`는 결과 패널, 엔딩 끝, 앱 종료 때 부른다. WebGL에서 `PlayerPrefs.Save`는 IndexedDB 쓰기라 순간 문구마다 하지 않는다.
-- **A6 결과 패널 지연(4.3)**:
-  - `GameFlowController`가 `ChapterPreset.starTrail ?? StarTrailPreset.Default`의 `finaleSeconds`를 읽는다(15.5).
-  - 리플레이·`-flowcheck`·smoke·`ArtPerf`에서는 0초라 기존 smoke 시간과 FlowCheck가 그대로다.
-  - Enter·클릭은 지연을 건너뛴다. 별 흔적 쪽 요청은 이것 하나로 충분하다.
+- **A6 결과 패널 지연(4.3), feat/view 26f01e0 뒤 수정**: 별 흔적 v1이 승리 피날레(`finaleSeconds`)를 보드 Present 안에서 기다린다. 그래서 `Presented`와 결과 패널이 저절로 그 뒤에 열리므로 `GameFlowController`가 따로 늦출 필요가 없다. 4.3은 "Presented 뒤에 연다(지금 그대로)"로 고친다. 피날레 중 Enter·클릭으로 건너뛰기와 리플레이·smoke 단축은 별 흔적 쪽(gameplay-ui) 일이다.
 - **A7 `GameAssets` 필드와 이미지**:
   - `GameAssets.storyJson`(TextAsset)과 `storyImages`(`StoryImageSet`, Contracts SO: `Entry[] { key, Sprite }`)를 둔다.
   - "납품 전 경고, 뒤 오류"는 `StoryImageSet.required`(bool, 기본 false) 하나로 정한다. 아트가 다 채우고 켠다.
