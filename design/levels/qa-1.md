@@ -28,11 +28,11 @@ node prototypes/seven-steps/tools/level-metrics.mjs --json reports/level-metrics
 **지표 정의**
 | 지표 | 계산 |
 |---|---|
-| 시도 횟수 | 테스터·스테이지별 시도 줄 수(`attempt` 최댓값과 큰 쪽). 재시작·추락·몸 소진이 각각 한 시도 |
+| 시도 횟수 | 테스터·스테이지별 시도 줄 수. 재시작·추락·몸 소진이 각각 한 시도. 포기 표시 줄(`gave_up`이고 steps+keeps+switches+undos+hints = 0)은 세지 않는다 |
 | 첫 시도 클리어 | 그 스테이지 첫 시도의 outcome = `clear`인 테스터 비율 |
 | 포기 | `gave_up`(15회 초과)이 있는 테스터 수 |
 | 실패 원인 | `clear`가 아닌 시도의 `outcome[:failReason]` 개수 |
-| 입력/최소 | 클리어한 시도의 입력 수(U D L R K X, 되돌리기 제외) ÷ 최소 몸 해의 입력 수(`stage-report.json` minInputs) |
+| 입력/최소 | 클리어한 판의 입력 수(`inputs`의 마지막 `!` 뒤 U D L R K X, 되돌리기·힌트 제외) ÷ 최소 몸 해의 입력 수(`stage-report.json` minInputs) |
 | ★ 분포 | 테스터별 클리어 시도의 별 |
 | 풀이 보기 | `hints > 0`인 시도가 있는 테스터 비율 |
 

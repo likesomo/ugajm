@@ -1,5 +1,5 @@
 // Play-QA aggregate report (production/qa-play-plan.md section 5, level design).
-// Input : reports/qa/attempts.jsonl (one line per attempt, written by unity/Tools/qa-play.mjs; format docs/qa-attempts.md)
+// Input : reports/qa/attempts.jsonl (one line per attempt, written by unity/Tools/qa-play.mjs; format docs/qa-attempts.md v1, feat/core d7402f2)
 //         reports/qa/notes-<tester>.md (one note line per stage; lines starting with the stage number are picked up)
 //         reports/level-metrics.json (model prediction; run tools/level-metrics.mjs first)
 //         design/levels/stage-report.json (min-body solution: minBodies, minInputs; chapter per stage)
@@ -72,7 +72,9 @@ if (existsSync(NOTES_DIR)) {
 // ---- Per stage ----
 const r2 = (v) => (v === null || v === undefined || Number.isNaN(v) ? null : Math.round(v * 100) / 100);
 const mean = (xs) => (xs.length ? xs.reduce((s, v) => s + v, 0) / xs.length : null);
-const inputCount = (s) => String(s ?? '').replace(/[^UDLRKX]/gi, '').length; // Z (undo) marks are not counted
+// inputs run from the stage session start, earlier tries and restarts (!) included (docs/qa-attempts.md 3).
+// The cleared run itself is what follows the last "!"; only U D L R K X count (Z undo, H hint do not).
+const inputCount = (s) => { s = String(s ?? ''); return s.slice(s.lastIndexOf('!') + 1).replace(/[^UDLRKX]/g, '').length; };
 
 const levels = stageRows.map((st, k) => {
   const level = k + 1;
@@ -81,8 +83,9 @@ const levels = stageRows.map((st, k) => {
   const perTester = testers.map((t) => {
     const xs = mine.filter((a) => a.tester === t).sort((a, b) => (a.attempt ?? a.line) - (b.attempt ?? b.line));
     if (!xs.length) return null;
-    const played = xs.filter((a) => a.outcome !== 'gave_up' || (a.inputs ?? '') !== '');
-    // A gave_up line with no inputs only marks the stop; it is not a try of its own.
+    // docs/qa-attempts.md 4: a gave_up line where nothing was done since the previous line only marks the stop; not a try.
+    const isMarker = (a) => a.outcome === 'gave_up' && ['steps', 'keeps', 'switches', 'undos', 'hints'].every((k) => !(a[k] ?? 0));
+    const played = xs.filter((a) => !isMarker(a));
     const tries = Math.max(played.length, ...played.map((a) => a.attempt ?? 0));
     const clear = xs.find((a) => a.outcome === 'clear');
     return {
@@ -131,7 +134,7 @@ const levels = stageRows.map((st, k) => {
 const warnings = [];
 const played = levels.filter((l) => l.testers > 0);
 for (const l of played) {
-  if (l.gaveUp) warnings.push({ level: l.level, kind: 'gave_up', text: `${l.gaveUp}/${l.testers}명 포기 (${Q.maxAttempts}회 초과)` });
+  if (l.gaveUp) warnings.push({ level: l.level, kind: 'gave_up', text: `${l.gaveUp}/${l.testers}명 포기 (상한 ${Q.maxAttempts}회)` });
   if (l.ratioToPredicted !== null && l.ratioToPredicted >= Q.tooHardRatio)
     warnings.push({ level: l.level, kind: 'too_hard', text: `평균 ${l.meanTries}회, 예측 ${l.predictedTries}회의 ${l.ratioToPredicted}배` });
   if (l.testers === testers.length && l.maxTries === 1 && l.clearRate === 1)
