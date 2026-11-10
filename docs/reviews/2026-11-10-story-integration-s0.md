@@ -46,3 +46,22 @@
 - **B3 `ResultModel`**: `ResultModel`은 Game/UI(`ResultView.cs`)에 있다. `FinaleLine`·`ConstellationLine` 추가는 gameplay-ui·씬 플로우 사이의 변경 고지면 되고 Contracts 변경이 아니다.
 - **B4 HUD 순간 문구 판**: 14장 대상이다. `UiLayoutCheck`의 HUD 변형에 "가장 긴 순간 문구"를 넣는 것(3.3 표)이 오류 판정의 근거가 된다. 풀이 메시지가 보이는 동안 숨기는 규칙도 좋다.
 - **9장 열린 질문**: 1(다음 → 끝까지 보기), 3(잼 동안 덮기만), 4(번갈아)는 제안대로 동의. 2는 사용자 판단.
+
+## 추가분 (2026-11-11): 0.5 플레이 목적 장치 (스토리 디렉터 dca699f, 7lucky 91bf521)
+
+**결론: 조건부 승인(A1~A8에 이어 A9~A13).** 판정을 이미 있는 클리어 기록에서 끌어내고 새 저장은 연출 플래그 둘만 두는 방향이 좋다. HUD 발치 고리를 걸음 수 전용으로 두는 8번은 15.6과 맞는다.
+
+- **A9 `FinaleCleared(k)`는 데이터 경계로 정한다(A4와 같다).**
+  - 문서의 "행성 안 7번째, altar는 49"는 숫자를 굳힌 것이다. 피날레 스테이지는 `LevelCatalog.ChapterKeyOf` 경계에서 정한다: 챕터의 마지막 스테이지이고, 마지막 챕터만 게임의 마지막 스테이지(50) 바로 앞이다. 지금 데이터로는 7·14·21·28·35·42·49가 나와 문서와 같지만, 스테이지 수가 바뀌어도 맞는다.
+  - 클리어 여부는 `ProgressData.IsCleared(level)`(스테이지 이름 키, 11.3.1)로 본다. 번호가 아니라 이름이라 레벨 순서가 바뀌어도 기록이 맞다.
+  - 순수 함수로 둔다(Game `LevelCatalog` 옆 또는 `StoryTruths`). 저장하지 않는다.
+- **A10 `Truths == 7`도 숫자로 쓰지 않는다**: `Truths == 챕터 수`로 쓴다(chapters.json). 별지도·타이틀의 별 7개도 챕터 목록을 따른다.
+- **A11 `StoryCue`에 `After`가 필요하다.** 5.1의 `StoryCue`에는 `On`/`Chapter`/`Brother`/`Stones`/`Card`만 있는데, `title`/`map`/`stillStar`와 이번 카드 3(`after "allTruths"`)은 `after` 한정자로 고른다.
+  - `StoryCue.After`(string, `""` = 아무거나)를 더하고, `StoryRules.Ending(win, card, truths)`는 카드 3에서 `truths == 챕터 수`이면 `After = "allTruths"`를 넣는다.
+  - `check-story.mjs`의 `after` 허용값에 `allTruths`를 더한다.
+- **A12 저장(A5 확인)**: `CarvingSeen`과 `FinalTruthSeen`은 `SaveSystem.Story`(키 `seven-steps.story`, 문서의 `story.v1` 대신)에 둔다.
+  - `CarvingSeen`은 챕터 **id 목록**(`string[]`)이다. 번호 k가 아니므로 챕터 순서가 바뀌어도 맞다.
+  - `-newplayer`가 이 값도 지운다. 연출 플래그라 손상되면 기본값(아무것도 안 봄)으로 돌아가고, 다시 한 번 보여 주는 것뿐이다.
+- **A13 별지도 선의 모양은 데이터로**: "k→k+1, frost는 4→1과 4→5, altar는 7→원"을 scene-flow 코드에 분기로 넣지 말고 `story.json`에 둔다. 예: `"dipper": [{"from":"moss","to":"hollow"}, …, {"from":"altar","to":"circle"}]`. `beats`는 런타임에 안 쓴다고 했으니 별도 배열로 두고, `check-story.mjs`가 챕터 id를 검사한다.
+- **텔레메트리 `ending_view.truths`**: 백엔드 스키마와 골든(`unity.sh golden`)을 같이 바꾼다. 막을 일은 없다.
+- **이미지 키**: `carving.<id>` 7개는 A7의 `StoryImageSet`에 들어간다. 키 목록은 챕터 id에서 만들고, 검사는 `images` 목록 대조(3.1 #12)로 충분하다.
