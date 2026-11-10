@@ -46,7 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.RuinsHengePlanet
   surface: {fileID: 2100000, guid: eaddc396ec4cc024aa8570bb790a51e2, type: 2}
   chapterId: crumble
-  summitTint: {r: 0.5882353, g: 0.5176471, b: 0.47058824, a: 1}
-  rimTint: {r: 0.5764706, g: 0.49411765, b: 0.47058824, a: 1}
-  rockTint: {r: 0.44313726, g: 0.38039216, b: 0.35686275, a: 1}
+  summitTint: {r: 0.63529414, g: 0.59607846, b: 0.5529412, a: 1}
+  rimTint: {r: 0.54901963, g: 0.5019608, b: 0.45882353, a: 1}
+  rockTint: {r: 0.44313726, g: 0.4, b: 0.3647059, a: 1}
   moonTint: {r: 0.7176471, g: 0.6313726, b: 0.5882353, a: 1}

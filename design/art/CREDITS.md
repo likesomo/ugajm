@@ -86,3 +86,8 @@ Unity2차(2026-11-09)의 행성 외피·풀 카드·돌·원경 행성·성운·
 ## 2026-11-10 seven planets / UI joinery
 
 `build_seven_environments.py` creates original procedural Blender geometry and renders in the shared folder. No third-party model, image, texture or paid asset was added. Existing OFL fonts and shared RuinsHenge materials retain their earlier license records.
+
+
+## 2026-11-10 weather map and low-spec sky
+
+RH_Weather256 is an original procedural tileable RGB data texture generated with the Python standard library by build-weather-texture.py (stone wear, irregular moss mask, warped timber grain). No third-party asset was used; PNG and its GUID metadata remain in shared assets. RuinsSkyLow is original URP vertex-color code.
