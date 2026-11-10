@@ -38,6 +38,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   floorAlt:
     prefab: {fileID: 7487609426890607446, guid: b35147f0641dbe048be2e54aa50801e6, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -55,6 +56,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   wall:
     prefab: {fileID: 1033269922490403285, guid: a97415f64344074428413266f5f2fc3c, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -72,6 +74,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   pit:
     prefab: {fileID: 8339349496867902, guid: 7f0455b478e710e4481a7e8802810be8, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -89,6 +92,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   ice:
     prefab: {fileID: 1576790558526462336, guid: 42501bd9288ad974f8e9759c70dcad81, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -106,6 +110,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   cracked:
     prefab: {fileID: 2976323754339304207, guid: 8c767d189c8432646bb1339d7036445a, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -123,6 +128,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   bridge:
     prefab: {fileID: 3053369141699125513, guid: 34c019acdab47d645a64b1a48e421419, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -140,6 +146,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   exit:
     prefab: {fileID: 8554882829770782739, guid: fdd0849635f60d34aa4e692eeabb196f, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -157,6 +164,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0.12, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   gate:
     prefab: {fileID: 2465246284119688325, guid: 29fbdc0af3f94b94a8f0247527ac8b75, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -172,8 +180,9 @@ MonoBehaviour:
     vanishTrigger:
     activateTrigger:
     deactivateTrigger:
-    labelOffset: {x: 0, y: 0.31, z: -0.15}
+    labelOffset: {x: 0, y: 0.43, z: -0.18}
     activeLabelOffset: {x: 0, y: 0.1, z: 0}
+    labelScale: 0.64
   plates:
   - prefab: {fileID: 4632874159605898388, guid: e0da7049a075ab54199f562baf8501c0, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -191,6 +200,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0.1, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   - prefab: {fileID: 4632874159605898388, guid: e0da7049a075ab54199f562baf8501c0, type: 3}
     offset: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0}
@@ -207,6 +217,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0.1, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   - prefab: {fileID: 4632874159605898388, guid: e0da7049a075ab54199f562baf8501c0, type: 3}
     offset: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0}
@@ -223,6 +234,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0.1, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   doors:
   - prefab: {fileID: 3758314307773898452, guid: 44820b367ddf2fd499319c9fff6dc15c, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -238,8 +250,9 @@ MonoBehaviour:
     vanishTrigger:
     activateTrigger:
     deactivateTrigger:
-    labelOffset: {x: 0, y: 0.31, z: -0.15}
+    labelOffset: {x: 0, y: 0.43, z: -0.18}
     activeLabelOffset: {x: 0, y: 0.1, z: 0}
+    labelScale: 0.64
   - prefab: {fileID: 3758314307773898452, guid: 44820b367ddf2fd499319c9fff6dc15c, type: 3}
     offset: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0}
@@ -254,8 +267,9 @@ MonoBehaviour:
     vanishTrigger:
     activateTrigger:
     deactivateTrigger:
-    labelOffset: {x: 0, y: 0.31, z: -0.15}
+    labelOffset: {x: 0, y: 0.43, z: -0.18}
     activeLabelOffset: {x: 0, y: 0.1, z: 0}
+    labelScale: 0.64
   - prefab: {fileID: 3758314307773898452, guid: 44820b367ddf2fd499319c9fff6dc15c, type: 3}
     offset: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0}
@@ -270,8 +284,9 @@ MonoBehaviour:
     vanishTrigger:
     activateTrigger:
     deactivateTrigger:
-    labelOffset: {x: 0, y: 0.31, z: -0.15}
+    labelOffset: {x: 0, y: 0.43, z: -0.18}
     activeLabelOffset: {x: 0, y: 0.1, z: 0}
+    labelScale: 0.64
   countDoor:
     prefab: {fileID: 2190066906777382831, guid: daaf362564a157e419dfa2785c295118, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -287,8 +302,9 @@ MonoBehaviour:
     vanishTrigger:
     activateTrigger:
     deactivateTrigger:
-    labelOffset: {x: 0, y: 0.31, z: -0.15}
+    labelOffset: {x: 0, y: 0.43, z: -0.18}
     activeLabelOffset: {x: 0, y: 0.1, z: 0}
+    labelScale: 0.64
   lever:
     prefab: {fileID: 4898971436050853154, guid: 321530670955d7c42bea7f61e2785621, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -306,6 +322,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0.15, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   flipWalls:
   - prefab: {fileID: 3193218326652454568, guid: f33ade307b262d54ca5670981917069f, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -323,6 +340,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   - prefab: {fileID: 3138634961435411407, guid: 00e5881e1449f2a478281646ccff550c, type: 3}
     offset: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0}
@@ -339,6 +357,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   mud:
     prefab: {fileID: 1082224659519973441, guid: 2aeeec7d49c71e9428fe2b9ca1a8cae2, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -356,6 +375,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   player:
     prefab: {fileID: 7492479727465727844, guid: 904b9ce5725326b44b8d9ff428e54d7e, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -373,6 +393,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 1.04, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   statue:
     prefab: {fileID: 1447245662685483513, guid: e31e5d2a20f82124f91cfbefb1bb045f, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -390,6 +411,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   startMarker:
     prefab: {fileID: 5875284546942982138, guid: 8f4ebe778a9d6f944a8c55a7e556b537, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -407,6 +429,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   oldStartMarker:
     prefab: {fileID: 6776306859696829760, guid: b6060bbcae556b54d9ebaf74eeace083, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -424,6 +447,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   footprint:
     prefab: {fileID: 1549037887016082672, guid: 7c5c0ac8873fc0843a9b37656be6e660, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -441,6 +465,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0.035, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   luckyRing:
     prefab: {fileID: 6878982484437537914, guid: 9e3ae77a369735b43a93f28b2f491442, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -458,6 +483,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   playerBodies:
   - prefab: {fileID: 7492479727465727844, guid: 904b9ce5725326b44b8d9ff428e54d7e, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -475,6 +501,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 1.04, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   - prefab: {fileID: 4785607976043798300, guid: cc24480b19c697749b73f5d48da2499b, type: 3}
     offset: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0}
@@ -491,6 +518,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 1.04, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   - prefab: {fileID: 6758376875444796199, guid: 0d2b6d6f7bc6a514ebf5cbe0de340ba4, type: 3}
     offset: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0}
@@ -507,6 +535,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 1.04, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   statueBodies:
   - prefab: {fileID: 1447245662685483513, guid: e31e5d2a20f82124f91cfbefb1bb045f, type: 3}
     offset: {x: 0, y: 0, z: 0}
@@ -524,6 +553,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   - prefab: {fileID: 1447245662685483513, guid: e31e5d2a20f82124f91cfbefb1bb045f, type: 3}
     offset: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0}
@@ -540,6 +570,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   - prefab: {fileID: 1447245662685483513, guid: e31e5d2a20f82124f91cfbefb1bb045f, type: 3}
     offset: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0}
@@ -556,6 +587,7 @@ MonoBehaviour:
     deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
+    labelScale: 0
   bodyColors:
   - {r: 0.3372549, g: 0.54901963, b: 0.53333336, a: 1}
   - {r: 0.7254902, g: 0.6039216, b: 0.34117648, a: 1}

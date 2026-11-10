@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1e045bfebbc4947bb857f650805529c, type: 3}
   m_Name: Sky_crumble
   m_EditorClassIdentifier: SevenSteps.Contracts::SevenSteps.Contracts.SkyPreset
-  background: {r: 0.02745098, g: 0.06666667, b: 0.14901961, a: 1}
+  background: {r: 0.1254902, g: 0.08235294, b: 0.11372549, a: 1}
   skyPrefab: {fileID: 3476505455435315015, guid: 9da6cd60d2544364394cd8cef319e1bf, type: 3}
   planetPrefab: {fileID: 2170302913168506093, guid: 9466aae7167e8004a8b154af629b5283, type: 3}

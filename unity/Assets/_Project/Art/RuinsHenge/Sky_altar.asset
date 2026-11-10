@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1e045bfebbc4947bb857f650805529c, type: 3}
   m_Name: Sky_altar
   m_EditorClassIdentifier: SevenSteps.Contracts::SevenSteps.Contracts.SkyPreset
-  background: {r: 0.02745098, g: 0.06666667, b: 0.14901961, a: 1}
+  background: {r: 0.12941177, g: 0.101960786, b: 0.047058824, a: 1}
   skyPrefab: {fileID: 4481767691817295880, guid: 6939cef5eb89903438f079cd9dde4759, type: 3}
   planetPrefab: {fileID: 8037505254425040199, guid: ab3208ca2a07c4a42b09bee93db23513, type: 3}

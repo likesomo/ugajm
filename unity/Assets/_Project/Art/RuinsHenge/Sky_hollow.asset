@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1e045bfebbc4947bb857f650805529c, type: 3}
   m_Name: Sky_hollow
   m_EditorClassIdentifier: SevenSteps.Contracts::SevenSteps.Contracts.SkyPreset
-  background: {r: 0.02745098, g: 0.06666667, b: 0.14901961, a: 1}
+  background: {r: 0.09019608, g: 0.050980393, b: 0.1764706, a: 1}
   skyPrefab: {fileID: 6409220495396757245, guid: eda2c37378b5e224c91fb846b3d52863, type: 3}
   planetPrefab: {fileID: 5099963721630612887, guid: e30b136d26033c4419814be4a0b5a42e, type: 3}

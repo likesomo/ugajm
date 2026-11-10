@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1e045bfebbc4947bb857f650805529c, type: 3}
   m_Name: Sky_frost
   m_EditorClassIdentifier: SevenSteps.Contracts::SevenSteps.Contracts.SkyPreset
-  background: {r: 0.02745098, g: 0.06666667, b: 0.14901961, a: 1}
+  background: {r: 0.03137255, g: 0.101960786, b: 0.2, a: 1}
   skyPrefab: {fileID: 7152193508508650641, guid: a9bc8163354da674db4c2fa0e0c7400f, type: 3}
   planetPrefab: {fileID: 1197290073064724128, guid: 50b4e5833ed4ca64bb947156a6c68769, type: 3}
