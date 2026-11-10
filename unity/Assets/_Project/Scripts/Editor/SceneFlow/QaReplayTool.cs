@@ -9,7 +9,7 @@ using UnityEngine;
 namespace SevenSteps.EditorTools
 {
     /// <summary>
-    /// QA cross-check in batchmode (production/qa-play-plan.md 3): reports/qa/attempts.jsonl → QaReplay (C# Core + GameSession)
+    /// QA cross-check in batchmode (production/qa-play-plan.md 3, format docs/qa-attempts.md v1): reports/qa/attempts.jsonl → QaReplay (C# Core + GameSession)
     /// → reports/qa/unity-replay.json. Exit 1 when any attempt differs from the JS harness record, or the input is missing.
     /// Batch: -executeMethod BuildTools.QaReplay [-qaAttempts path] [-qaOut path] (paths relative to the repo root).
     /// </summary>
@@ -42,7 +42,7 @@ namespace SevenSteps.EditorTools
             var levels = file.levels.Select(d => d.ToLevel()).ToArray();
             var minBodies = file.levels.Select(d => d.expected != null ? d.expected.minBodies : 0).ToArray();
             var records = QaReplay.ParseJsonl(File.ReadAllText(input));
-            var report = QaReplay.Check(levels, i => minBodies[i], records);
+            var report = QaReplay.Check(levels, i => minBodies[i], records, i => file.levels[i].map);
 
             Directory.CreateDirectory(Path.GetDirectoryName(output) ?? ".");
             File.WriteAllText(output, JsonUtility.ToJson(report, true));
