@@ -18,14 +18,17 @@
 
 `number-chemical` 에이전트는 종료한다. 작업 공간과 브랜치는 남긴다.
 
-## 현재 상태 (2026-11-07 기준)
+## 현재 상태 (2026-11-10 기준)
 
-사용자 지시로 리드(7lucky 에이전트)가 첫 플레이 가능 버전(v0)을 만드는 중이다. 이 v0가 모든 에이전트의 출발점이다.
+v0(2026-11-07)에서 시작해 2.5·4단계까지 끝났고, 3단계(플레이테스트 1차)는 사용자 결정(장소·인원·회전 배치)만 남았다 (`production/playtest-1-prep.md`).
 
-- `SevenSteps.Core` (asmdef, `noEngineReferences`): `Rules.cs`, `State.cs`, `Level.cs`, `Solver.cs`. `core.js`를 옮긴 것
-- `SevenSteps.Game` (asmdef): `GameController`, `BoardView`, `HudView`, `Ui`, `GameAssets`. UI를 코드로 생성
-- 데이터: `unity/Assets/_Project/Data/levels.json` (`unity/Tools/export-levels.mjs`로 `levels.js`에서 변환)
-- 효과음: `unity/Tools/gen-sfx.mjs`로 생성한 wav 11개 → `Assets/Shared/Audio`, 폰트: Jua (OFL) → `Assets/Shared/Fonts` (둘 다 git 밖 공유 폴더, 아래 "에셋 규칙")
+- **스테이지**: 50개, 7행성(moss·hollow·carved·frost·joinery·crumble·altar, 행성당 7개, 마지막 altar 8개). 형제(몸) 1~3. 기준 데이터 `unity/Assets/_Project/Data/levels.json`·`chapters.json`, 표는 `design/gdd/seven-steps-concept.md`
+- **별 3개 (B안)**: ★1 클리어, ★2 풀이를 보지 않고 최소 형제 수, ★3 거기에 되돌리기·재시작 없이 (`docs/architecture.md` 6.5)
+- **다국어**: 한국어·영어 (`Data/Strings/ko.json`·`en.json`, `Localizer`). 런타임 코드의 한국어 문자열은 `LocalizationCheck`가 오류로 잡는다. 글꼴 ko Gaegu, en Kaushan Script·Patrick Hand, 숫자 Jua
+- **아트**: RuinsHenge 타일 세트와 행성 7개 `ChapterPreset`(`AppConfig.chapters`), 세쌍둥이 A/B/C 색과 중성 KEEP 선돌, 메뉴 배경 `MenhirJoineryBackground`(선돌+곧은 결구 들보). 붉은 문(도리이 닮은 것)은 폐기
+- **흐름**: Boot → Title(타이틀·행성 지도·스테이지 목록·설정·언어) → Game(챕터 진입·로딩·HUD·결과) (`docs/scene-flow.md`)
+- **검증**: `unity/Tools/unity.sh` test · verify(50/50) · scene-validate · tileset-validate · smoke(리플레이·행성 경계 흐름·타이틀 경로) · smoke-webgl(보드 픽셀, empty 대조)
+- **텔레메트리**: `server/`(수집·대시보드·내보내기), WebGL은 `/webgl/`로 제공 (`docs/telemetry.md`)
 
 **v0가 `7lucky`에 커밋·푸시된 뒤에** 다른 에이전트의 작업 공간을 만든다. 그래야 모두 같은 코드에서 시작한다.
 
@@ -38,7 +41,7 @@
 | 2. 병렬 개발 | 코어, 게임플레이/UI, 아트, 레벨 디자인, 백엔드/분석 | 각자 브랜치에서 작업, 아키텍트 검토 후 리드가 합침 |
 | 2.5 정리 | 리드 | 모든 기능 브랜치의 미합류 커밋이 `7lucky`에 모이고 WebGL 빌드가 브라우저에서 정상 동작 |
 | 3. 플레이테스트 1차 | 리드, 레벨 디자인, 백엔드/분석 | Unity WebGL로 5명 이상 테스트, 대시보드로 흥미도 모델 보정 (`production/playtest-1-prep.md`). 원격 공개는 사용자 승인 후 |
-| 4. 아트 확정 (2.5 다음에 바로 시작, 3과 병행) | 아트(Codex), 아키텍트, 게임플레이/UI, 씬 플로우 | 확정 테마 세트가 정식 `AppConfig.tileSet`으로 바뀌고, 세쌍둥이 3색·KEEP 선돌·챕터(행성) 프리셋이 Unity에 적용됨. WebGL 스모크 통과 |
+| 4. 아트 확정 (2.5 다음에 바로 시작, 3과 병행) — 2026-11-10 완료 | 아트(Codex), 아키텍트, 게임플레이/UI, 씬 플로우 | 확정 테마 세트가 정식 `AppConfig.tileSet`으로 바뀌고, 세쌍둥이 3색·KEEP 선돌·챕터(행성) 프리셋이 Unity에 적용됨. WebGL 스모크 통과 |
 | 5. 50스테이지·다듬기 | 전원 | 몸 3개 기준 50스테이지(6~8챕터), 챕터 전환 연출, 쿼터뷰, itch.io 업로드(사용자 승인) |
 
 1단계 동안 아트 에이전트는 무료 에셋 후보 조사와 GPT 생성 시안 작업만 하고 프로젝트에는 아직 넣지 않는다.
@@ -58,7 +61,9 @@
 
 - 테마: 이끼 낀 유적 × 선돌(스톤헨지 서사) × 동양 석재·목재 블록. 챕터 = 우주 속 작은 행성, 챕터마다 컨셉이 바뀐다
 - 주인공: 선돌 원형 제단을 찾아가는 세쌍둥이 방랑자, A안(같은 실루엣, 머플러 1번 청록 #568C88 / 2번 황토 #B99A57 / 3번 적갈 #B96C59). KEEP한 몸 = 중성 화강암 선돌
-- 몸 상한 3, 전체 50스테이지 (`design/gdd/seven-steps-concept.md`)
+- 몸(형제) 상한 3, 전체 50스테이지·7행성 (`design/gdd/seven-steps-concept.md`, `chapters.json`)
+- 확정 상태(2026-11-10): RuinsHenge 타일 세트, 7행성 프리셋(행성마다 다른 외곽·팔레트·조명, 보드 주변 1칸 장식 금지), 세쌍둥이 A/B/C, KEEP 중성 선돌, 메뉴 배경 `MenhirJoineryBackground`. 붉은 칠 문·휜 쌍 상인방(도리이 닮은 것)은 금지
+- UI: 패널·버튼 스킨 `Art/UI/RuinsHengeTheme.asset`(`GameAssets.uiTheme`), 화면 시안 `C:/unityjam/shared-assets/seven-steps/concepts/ui/en-ko.html`(ko/en 실제 글꼴 렌더)
 - **시안과 아트 제작은 아트(Codex 워커)만 한다.** Claude 에이전트는 이미지·아트 디자인을 만들지 않는다. 아트의 Unity 작업 결과는 코디네이터가 받아 리드에게 넘긴다
 
 ## 파일 소유권 (충돌 방지 규칙)

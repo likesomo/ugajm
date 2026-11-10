@@ -12,7 +12,7 @@
 - [x] 7lucky에서 `compile` · `test`(769/769) · `verify`(50/50) · `scene-validate`(0/0) · `tileset-validate` 통과 — 후보 빌드 `e6dda07` (2026-11-10)
 - [x] `build-webgl` → `smoke-webgl`(1, 29, 50) 통과: board 28738/25992/22581, empty 대조 0, 콘솔 예외 0, Mobile_RPAsset 확인 (`e6dda07`)
 - [x] `build-win` → `smoke` 통과: 리플레이 7/7, 행성 경계 흐름 9/9(별 3), 타이틀 경로 3/3(시작→1 select, 지도→8 select, 이어하기→8 boot) (`e6dda07`)
-- [ ] 테스트 빌드 커밋 해시를 이 문서와 `design/levels/playtest-guide.md`에 적는다
+- [ ] 테스트 빌드 커밋 해시를 이 문서와 `design/levels/playtest-guide.md`에 적는다 (사용자 결정 뒤 최종 빌드 때)
 - [x] 7행성 피날레 확인(smoke 흐름 단계가 자동으로 함: 7·14·…·50 ★3, 결과 문구, 챕터 카드, 프리셋 교체): `stage-report.md`의 리플레이로 7, 14, 21, 28, 35, 42, 50을 `?level=N&replay=…`로 돌려 결과 화면에 ★3이 나오는지. 8·15·22·29·36·43(행성 첫 스테이지)에서 챕터 카드가 나오는지
 - [x] 한국어·영어 각 1회 (scene-flow 리허설, 영어 이름·챕터 카드·설정 스크린샷): `?lang=en`으로 타이틀 → 행성 선택 → 1번 → 결과 화면까지 한국어가 섞이지 않는지 (아래 E-2가 끝나야 통과)
 - [x] 별 저장 (WebGL 새로고침 후 유지, `?newplayer=1` 초기화 확인): ★1로 깬 뒤 ★3으로 다시 깨면 ★3, 반대 순서면 ★3 유지
@@ -46,24 +46,26 @@
 - [x] `playtest-guide.md` 50스테이지 기준, 관찰표·메모 양식 `playtest/TEMPLATE-notes.md`
 - [x] `stage-report.md` (막힌 테스터 상태 확인, 피날레 리플레이) (feat/levels b028d15)
 - [x] 스테이지 문구 점검: 용어 선돌/형제, 25 이름 '멈춰 세우는 선돌' (845387c, 487c981, a805d9e)
-- [ ] 행성 한 줄(`chapters.json` tagline, ko/en 7개) 채우기 (형식: feat/architecture 9c3dfc1)
+- [x] 행성 한 줄(`chapters.json` tagline, ko/en 7개) 채우기 (395f0f3)
 - [ ] 테스트 뒤: `tools/calibrate.mjs` → `interest-curve.html` 실측 겹치기 → 행성별 보정안. 표본 5명 이상만, D 가중치는 1~21에서만 ±0.1
 
 ## E. 게임 화면 (게임플레이/UI, 씬 플로우)
 
 - [x] 결과 화면 별 3개 연출 (feat/view 0d30f0f)
-- [ ] E-1 결과 화면 조건 문구(초안 5.3 `result.*`), 못 채운 별은 흐리게, 조건 문구는 늘 보이게 — 게임플레이/UI
-- [ ] E-2 **영어에서 한국어가 나오는 곳**: 행성 선택 스테이지 이름(F1, Patrick Hand에 한글 없음 → WebGL 빈칸)·챕터 카드 `LevelCatalog.ChapterCard` — 씬 플로우 / `MessagePresenter`·`ChooseNudge` 한국어 상수 → `msg.*` — 게임플레이/UI
-- [ ] E-3 용어: 메시지 "석상"→"선돌", "몸"→"형제", `stageselect.best_bodies` "형제 {0}명" / "{0} brothers"
-- [ ] E-4 가장 긴 힌트(23번, ko 56자 / en 97자)가 두 줄 안에 들어가는지 1280×720과 WebGL 기본 창에서
-- [ ] Codex UI 시안(`C:/unityjam/shared-assets/seven-steps/concepts/ui/en-ko.html`) 적용: 타이틀·행성 선택·로딩/챕터 진입·설정(씬 플로우), 결과·HUD(게임플레이/UI). 테스트를 막지는 않는다
-- [ ] 첫 실행 시 텔레메트리 동의/전송 상태가 화면에 보이는지, 테스터별 플레이어 ID 분리(시크릿 창이면 충분한지)
+- [x] E-1 결과 화면 조건 문구(초안 5.3 `result.*`), 못 채운 별은 흐리게, 조건 문구는 늘 보이게 — 게임플레이/UI (cf65d84, ResultView 못 채운 별·조건 Dim)
+- [x] E-2 **영어에서 한국어가 나오는 곳**: 행성 선택 스테이지 이름(F1, Patrick Hand에 한글 없음 → WebGL 빈칸)·챕터 카드 `LevelCatalog.ChapterCard` — 씬 플로우 / `MessagePresenter`·`ChooseNudge` 한국어 상수 → `msg.*` — 게임플레이/UI (a06ea19 스테이지 이름·챕터 카드, 46d4ec3 hud/msg/hint/result 문자열 표, 3f6671f 한국어 리터럴 오류 검사)
+- [x] E-3 용어: 메시지 "석상"→"선돌", "몸"→"형제", `stageselect.best_bodies` "형제 {0}명" / "{0} brothers" (845387c, cf65d84)
+- [x] E-4 가장 긴 힌트(23번, ko 56자 / en 97자)가 두 줄 안에 들어가는지 1280×720과 WebGL 기본 창에서 (db530fa, 넘치면 줄여 맞춤)
+- [ ] Codex UI 시안(`C:/unityjam/shared-assets/seven-steps/concepts/ui/en-ko.html`) 적용: 타이틀·행성 선택·로딩/챕터 진입·설정(씬 플로우 181753a 등), 결과·HUD(게임플레이/UI 7ae849d, cf65d84). 메뉴 배경 `MenhirJoineryBackground`는 `GameAssets.uiTheme`(RuinsHengeTheme)로 타이틀·행성 선택·챕터 진입에 연결됨, 행성 지도 연결선 1-2-3-4-1·4-5-6-7 시안과 같음. **2026-11-10 시안과 화면 나란히 비교 중**(씬 플로우: 타이틀·행성 선택·로딩·챕터 진입·언어 / 게임플레이/UI: HUD·결과·설정). 테스트를 막지는 않는다
+- [x] 첫 실행 시 텔레메트리 동의/전송 상태가 화면에 보이는지 (db530fa 설정 상태 줄, 01795d3 `?newplayer=1`), 테스터별 플레이어 ID 분리(시크릿 창이면 충분한지)
 
 ## F. 아트 (Codex 워커, 코디네이터 경유)
 
-- [x] 방향 확정(`design/art/art-bible.md`), RuinsHenge 세트가 `AppConfig.tileSet`, KEEP 외형 기본 중성 선돌 (feat/architecture d5a2be8)
-- [ ] 7행성 `ChapterPreset`(id = `chapters.json` artPreset: moss/hollow/carved/frost/joinery/crumble/altar) — Codex 제작 → 게임플레이/UI 적용(docs 12.8) 후 리드가 `AppConfig.chapters`를 한 번에 채움. **테스트를 막지 않는다** (지금 상태로 진행 가능). 바뀌면 `tileset-validate`·`smoke-webgl` 필수
-- [ ] 도리이 닮은 붉은 문 교체 (Codex)
+- [x] 방향 확정(`design/art/art-bible.md`), RuinsHenge 세트(행성 프리셋의 tileSet으로 적용, `AppConfig.tileSet`은 비워 둠), KEEP 외형 기본 중성 선돌 (feat/architecture d5a2be8)
+- [x] 7행성 `ChapterPreset`(moss/hollow/carved/frost/joinery/crumble/altar) — Codex 034c910·93477aa, 게임플레이/UI 적용 5e0a1cb·cfde7f2, `AppConfig.chapters` 7개 등록. tileset-validate·smoke-webgl 통과(e6dda07)
+- [x] 도리이 닮은 붉은 문 교체 → 선돌 + 곧은 결구 들보 `MenhirJoineryBackground` (2af01c4)
+- [x] `agents/README.md`·`agents/art.md`를 50스테이지·7행성·3별·ko/en·확정 아트 기준으로 갱신 (2026-11-10)
+- [ ] 성능 세 가지(`_UNLIT` 키워드, 장식 그림자 끄기, HDR 끄기) — 코디네이터가 Codex에 전달. **테스트를 막지 않는다**. 바뀌면 `tileset-validate`·`smoke-webgl` 필수
 
 ## G. 1차 테스트에서 답을 얻을 질문
 
