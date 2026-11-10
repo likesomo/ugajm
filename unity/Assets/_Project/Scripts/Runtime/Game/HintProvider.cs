@@ -35,15 +35,21 @@ namespace SevenSteps.Game
             return path == null ? loc.Get("hint.not_found") : loc.Format("hint.route", Describe(path));
         }
 
+        /// The route in words, repeated moves grouped ("Right x6, Down, SWITCH, Left x6"; hint.repeat), so the longest
+        /// solution still fits the HUD side column next to KEEP / SWITCH (docs/architecture.md 14, UiLayoutCheck B3).
         string Describe(List<Act> path)
         {
             // Words, not arrow symbols: the UI fonts (no fallback in WebGL) have no U+2190-2193, so arrows drew nothing.
             string up = loc.Get("hint.up"), down = loc.Get("hint.down"), left = loc.Get("hint.left"), right = loc.Get("hint.right");
             var sb = new StringBuilder();
-            for (int i = 0; i < path.Count; i++)
+            for (int i = 0; i < path.Count;)
             {
-                if (i > 0) sb.Append(' ');
-                sb.Append(path[i] switch { Act.Up => up, Act.Down => down, Act.Left => left, Act.Right => right, Act.Keep => "KEEP", _ => "SWITCH" });
+                int run = 1;
+                while (i + run < path.Count && path[i + run] == path[i]) run++;
+                if (sb.Length > 0) sb.Append(", ");
+                string word = path[i] switch { Act.Up => up, Act.Down => down, Act.Left => left, Act.Right => right, Act.Keep => "KEEP", _ => "SWITCH" };
+                sb.Append(run == 1 ? word : loc.Format("hint.repeat", word, run));
+                i += run;
             }
             return sb.ToString();
         }
