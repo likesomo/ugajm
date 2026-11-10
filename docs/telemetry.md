@@ -148,9 +148,11 @@ DB_PATH=server/data/playtest-$(date +%F).sqlite node server/src/index.mjs
 | Unity WebGL (테스터) | `http://localhost:8787/webgl/` (전송 주소 `?telemetry=`를 서버가 자동으로 붙인다. 스테이지 지정 `?level=29`, 영어 `?lang=en`) |
 | 웹 프로토타입 (테스터) | `http://localhost:8787/play/` |
 | 대시보드 (진행자) | `http://localhost:8787/dashboard#token=<토큰>` |
-| 같은 와이파이의 다른 PC | `localhost` 대신 이 PC의 IP. 방화벽은 "개인 네트워크"만 허용 |
+| 같은 와이파이의 휴대폰·PC (테스터) | `http://<이 PC의 IP>:8787/webgl/`. 서버가 켜질 때 `[server] LAN http://192.168.….:8787/webgl/` 줄로 알려 준다(모든 주소에서 받음). `?telemetry=`는 그 IP 주소로 붙고, 같은 주소로 오는 전송은 허용 목록 없이 받는다 |
 
-**3. 시작 전 확인** (2분): `curl http://localhost:8787/healthz` → `{"ok":true}`. 테스터 주소로 1스테이지를 깨고 5~10초 뒤 대시보드 "새로고침" → 빌드 목록에 새 빌드(`0.1.0+<커밋>`)와 `unity-webgl`이 보이면 된다. 확인 기록은 "기간" 필터로 빼거나, 서버를 끄고 그날 DB 파일을 지운 뒤 다시 켠다.
+**방화벽** (같은 와이파이 기기를 받을 때만): 서버를 처음 켤 때 Windows가 "Node.js 액세스 허용"을 물으면 **허용**. 현장 와이파이는 보통 "공용 네트워크"로 잡히므로(`Get-NetConnectionProfile`의 `NetworkCategory`) 그 종류에 체크한다. 창을 놓쳤거나 휴대폰에서 안 열리면 관리자 PowerShell에서 `New-NetFirewallRule -DisplayName "Seven Steps 8787" -Direction Inbound -Protocol TCP -LocalPort 8787 -Action Allow`, 끝나면 `Remove-NetFirewallRule -DisplayName "Seven Steps 8787"`. 공유기 밖(인터넷)으로는 열리지 않는다. 손님용 와이파이는 기기끼리 막혀 있을 수 있다(그때는 진행자 PC로만).
+
+**3. 시작 전 확인** (2분): `curl http://localhost:8787/healthz` → `{"ok":true}`. 휴대폰을 쓰면 휴대폰에서 LAN 주소로 한 번 열어 본다. 테스터 주소로 1스테이지를 깨고 5~10초 뒤 대시보드 "새로고침" → 빌드 목록에 새 빌드(`0.1.0+<커밋>`)와 `unity-webgl`이 보이면 된다. 확인 기록은 "기간" 필터로 빼거나, 서버를 끄고 그날 DB 파일을 지운 뒤 다시 켠다.
 
 **4. 대시보드에서 보는 것** (자동 갱신 없음, "새로고침")
 - 필터: 클라이언트, 빌드, 언어(`ko`/`en`, `lang`), 기간, 챕터(행성 7개)
@@ -177,6 +179,7 @@ for f in attempts.csv levels.csv events.jsonl; do curl -sH "Authorization: Beare
 | 날짜 | 버전 | 내용 |
 |---|---|---|
 | 2026-11-07 | v1 | 최초 확정 |
+| 2026-11-10 | v1 | 이벤트 변화 없음. 6장: 같은 와이파이 기기 주소·방화벽. 서버: 같은 주소(LAN IP로 연 `/webgl/`)에서 오는 전송을 허용 목록과 관계없이 받음(전에는 403), 시작할 때 LAN 주소 출력 |
 | 2026-11-10 | v1 | `level_start.via` 정의 확정(3장 아래): 지도·목록에서 고른 진입은 앱 첫 진입이어도 `select`, `boot`은 고르지 않은 바로 진입(실행 인자로 바로 게임, 자동 이어가기)만, `url`은 그대로. 이벤트 형식은 같음. 골든에 `manual-first-entry-select` 추가(213 트레이스) — Unity `TelemetryGoldenTests`는 첫 `LevelStart`에 트레이스의 `via`를 써야 통과. 서버: `since`/`to` 날짜를 서버 시간대(또는 `tz`)로 해석, epoch ms 필터 버그 수정(대시보드 "기간"이 걸러지지 않던 문제), 몸 사용 사유 표시 석상 → 선돌 |
 | 2026-11-10 | v1 | 이벤트 변화 없음. 6장 로컬 플레이테스트 절차 추가. 서버 내보내기: `attempts`에 `lang`·`planet` 열(끝에 추가), `levels`·`chapters`에 `planet`(design/levels/chapters.json). 대시보드 챕터 이름을 행성 이름으로 |
 | 2026-11-07 | v1 | `level_start.levelKey`(선택) 추가 — 레벨 디자인 요청. 선택 필드라 버전은 그대로 |

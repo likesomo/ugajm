@@ -62,7 +62,7 @@ DB_PATH=server/data/playtest-$(date +%F).sqlite node server/src/index.mjs
 - `/webgl/`이 `?telemetry=`를 자동으로 붙이므로 주소를 그대로 주면 된다. 특정 스테이지부터: `/webgl/?level=8`, 웹은 `/play/?level=8`
 - 다른 서버에서 연 빌드는 직접 붙인다: WebGL `?telemetry=http://localhost:8787`, 데스크톱 `"Seven Steps.exe" -telemetry http://localhost:8787`, 웹 프로토타입 `?telemetry=http://localhost:8787`(브라우저에 기억됨)
 - 끄기: `?telemetry=off` (Unity는 설정 화면의 동의 항목, 웹은 화면 아래 "기록 전송")
-- 같은 와이파이: 서버는 모든 주소(`HOST=0.0.0.0`)에서 받는다. Windows 방화벽이 8787 포트를 물어보면 "개인 네트워크"만 허용. 다른 기기에서 Unity WebGL은 아직 확인하지 않았다(휴대폰은 조작이 맞지 않을 수 있음)
+- 같은 와이파이: 서버는 모든 주소(`HOST=0.0.0.0`)에서 받고, 켤 때 LAN 주소를 출력한다. `/webgl/`의 `?telemetry=`는 요청한 주소(그 IP)로 붙고, 같은 주소에서 오는 전송은 `ALLOWED_ORIGINS` 없이 받는다. Windows 방화벽 허용은 `docs/telemetry.md` 6장 "방화벽"(현장 와이파이는 보통 공용 네트워크). 휴대폰은 조작이 맞지 않을 수 있음
 - 원격 테스터용 임시 터널(계정 없이, 실행마다 주소가 바뀜): 서버를 `TRUST_PROXY=1`로 띄우고 다른 터미널에서 `cloudflared tunnel --url http://localhost:8787` → 출력된 `https://….trycloudflare.com`. `TRUST_PROXY=1`이어야 `/webgl/`이 `https://` 주소를 붙인다. **외부 공개라 사용자 승인 후에만** 한다 (아래 "배포 선택지")
 
 **4. 시작 전 확인** (2분)

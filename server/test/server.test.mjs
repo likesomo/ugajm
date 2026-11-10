@@ -32,6 +32,16 @@ test('intake: text/plain (sendBeacon), CORS allow list, errors', async () => {
   assert.equal(res.headers.get('access-control-allow-origin'), 'https://someone.itch.io');
   res = await post(srv.url, envelope([events[0]]), { Origin: 'https://evil.example' });
   assert.equal(res.status, 403);
+  // Same origin is allowed whatever the address: a phone on the LAN plays http://<PC IP>:8787/webgl/.
+  // fetch ignores a Host header: send it with node:http.
+  const { request } = await import('node:http');
+  const lan = await new Promise((ok, fail) => {
+    const body = JSON.stringify(envelope([events[0]], { sessionId: sid }));
+    request(`${srv.url}/v1/events`, { method: 'POST', headers: { 'Content-Type': 'text/plain', Host: '192.168.0.10:8787', Origin: 'http://192.168.0.10:8787' } }, (r) => { r.resume(); ok(r.statusCode); }).on('error', fail).end(body);
+  });
+  assert.equal(lan, 200);
+  res = await post(srv.url, envelope([events[0]]), { Origin: 'http://192.168.0.10:8787' });
+  assert.equal(res.status, 403, 'a LAN origin other than this server is still refused');
   res = await fetch(`${srv.url}/v1/events`, { method: 'OPTIONS', headers: { Origin: 'http://localhost:8777' } });
   assert.equal(res.status, 204);
   assert.equal(res.headers.get('access-control-allow-origin'), 'http://localhost:8777');
