@@ -65,6 +65,8 @@ namespace SevenSteps.EditorTools
             float cs = ts.cellSize;
             void Check(string name, TileVisual v, bool required, bool flatTop, bool fitsCell, bool wallHeight = false)
             {
+                if (!TileVisual.IsValidLabelScale(v.labelScale))
+                { issues.Add($"ERROR {name}: labelScale {v.labelScale:0.###} must be 0 (default) or {TileVisual.LabelScaleMin}-{TileVisual.LabelScaleMax} (docs 7.2)"); errors++; }
                 if (!v.HasPrefab)
                 {
                     if (required) { issues.Add($"ERROR {name}: no prefab"); errors++; }
