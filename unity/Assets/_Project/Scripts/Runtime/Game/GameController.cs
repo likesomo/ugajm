@@ -115,6 +115,8 @@ namespace SevenSteps.Game
             IChapterCard chapterCard = launch.SmokeView != SmokeView.None || (!string.IsNullOrEmpty(launch.Replay) && !launch.FlowCheck) ? null
                 : (IChapterCard)ChapterCardView.CreateOptional(overlayCanvas) ?? ChapterEntryView.Create(overlayCanvas, localizer);
             this.chapterCard = chapterCard;
+            // Win finale (star trail) at a quarter of its length in dev runs, so replays and smoke reach the result quickly.
+            StarTrailView.FinaleSpeed = launch.SmokeView != SmokeView.None || launch.FlowCheck || !string.IsNullOrEmpty(launch.Replay) ? 4f : 1f;
             settingsController = new SettingsController(save, settings, cfg.telemetryOnByDefault, localizer);
             overlays = new OverlayStack();
             languageController = new LanguageController(languagePanel, overlays, localizer, save, launch.Language);

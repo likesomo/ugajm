@@ -83,7 +83,8 @@ namespace SevenSteps.Tests
             Assert.IsEmpty(Of(m, TrailMarkKind.StoneStar));
             Assert.AreEqual(7, Of(m, TrailMarkKind.Seventh).Single().Cell);
             Assert.AreEqual(TrailEnd.Walking, StarTrail.Of(back).Bodies.Single().End);
-            Assert.IsEmpty(Marks(Run(s0, "RRRRRRRK" + "DRR" + "N")), "Restart: nothing left");
+            var fresh = Marks(Run(s0, "RRRRRRRK" + "DRR" + "N"));
+            Assert.IsTrue(fresh.Count == Rules.Steps && fresh.All(x => x.Kind == TrailMarkKind.Ring && x.Body == 0 && !x.Dim), "Restart: only the first brother's full ring");
         }
 
         [Test]
@@ -188,6 +189,25 @@ namespace SevenSteps.Tests
             StarTrail.Of(Run(Rules.NewState(pit), "RR")).Write(map, false);
             Assert.AreEqual(1 << 1, Byte(map, 2, 0, 0), "the fall's step on the pit");
             Assert.AreEqual(StarTrailMap.EndFell, Byte(map, 2, 1, 3));
+        }
+
+        [Test]
+        public void RingOfSevenStarsCountsTheStepsLeft()
+        {
+            var level = Map(3, Field);
+            var s = Run(Rules.NewState(level), "RRR");
+            var ring = Of(Marks(s), TrailMarkKind.Ring);
+            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 5, 6, 7 }, ring.Select(m => m.Aux));
+            Assert.IsTrue(ring.All(m => m.Cell == s.Pos && m.Body == 0));
+            CollectionAssert.AreEqual(new[] { true, true, true, false, false, false, false }, ring.Select(m => m.Dim), "3 spent, 4 left");
+
+            var six = Run(s, "RRR");
+            Assert.AreEqual(6, six.Used);
+            Assert.IsFalse(Of(Marks(six), TrailMarkKind.Ring).Last().Dim, "one left: star 7 lit (the view pulses it)");
+            Assert.IsEmpty(Of(Marks(Run(six, "R")), TrailMarkKind.Ring), "choosing KEEP / SWITCH: no ring");
+            var next = Of(Marks(Run(six, "RK")), TrailMarkKind.Ring);
+            Assert.IsTrue(next.All(m => m.Body == 1 && m.Cell == level.Start && !m.Dim), "the next brother wakes with seven");
+            Assert.IsEmpty(Of(Marks(Run(Rules.NewState(Map(1, "S......E")), "RRRRRRR")), TrailMarkKind.Ring), "won: no ring");
         }
 
         [Test]

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using SevenSteps.Contracts;
 using SevenSteps.Core;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace SevenSteps.Game
 {
@@ -27,6 +28,8 @@ namespace SevenSteps.Game
         const float LineTrim = 0.22f;              // lines stop outside the centre 40 % (numbers)
         const float RimInset = 0.07f;              // each further body's rim sits this much further in
         const float GlyphSize = 0.6f;
+        // Ring of seven stars at the walking body's feet (steps left; star 7 pulses after the 6th step).
+        const float RingLift = 0.1f, RingRadius = 0.46f, RingSize = 0.2f, RingLastSize = 0.28f, RingSpentSize = 0.14f, RingAlpha = 0.85f, RingSpentAlpha = 0.6f;
         const float AppearSeconds = 0.18f, FellDim = 0.35f;
         /// Quad size per core diameter: the star texture's core is about a sixth of the quad (the rest is rays and glow).
         const float StarQuadPerCore = 6f;
@@ -74,6 +77,13 @@ namespace SevenSteps.Game
         float newestStart = -1f, awakenStart = -1f, fadeStart = -1f, finale;
         StarTrail pendingRefill; // Restart: the old map fades out first, then this is written
         int currentBody, phase;
+        bool lastStepPulse; // one step left: ring star 7 pulses (and _StarTrailPulse.z)
+
+        /// Interim quad renderer on. Turn off when the art tile shader draws _StarTrailMap, or the trail is drawn twice
+        /// (architect N2 on 26f01e0); the map and globals are written either way.
+        public static bool UseQuad = true;
+        /// Finale speed-up for dev runs (replay, smoke, flow check), set by GameController; 1 in play.
+        public static float FinaleSpeed = 1f;
 
         static Material material;
         static Texture2D atlas;
@@ -162,6 +172,7 @@ namespace SevenSteps.Game
 
             currentBody = Mathf.Clamp(BodyIndex.Current(s), 0, StarTrailMap.MaxBodies - 1);
             phase = (int)s.Status;
+            lastStepPulse = trail.Ring && trail.Used == Rules.Steps - 1;
             finale = 0f;
             SetState();
             if (restart && !animate)
@@ -207,17 +218,26 @@ namespace SevenSteps.Game
             items.AddRange(next);
             byMark.Clear();
             foreach (var it in items) if (!it.Leaving) byMark[it.Mark] = it;
-            if (newestStart >= 0 || awakenStart >= 0) animating = true;
+            if (newestStart >= 0 || awakenStart >= 0 || lastStepPulse) animating = true;
             Rebuild(now);
         }
 
         /// Win finale (finaleSeconds): each body's path brightens in turn and _StarTrailState.z rises 0 -> 1, so the three
-        /// colours join into one constellation before the result.
+        /// colours join into one constellation before the result. Enter, Space, a click or a tap skips to the end (N1).
         public IEnumerator Finale(float speed)
         {
+            bool Skip()
+            {
+                var kb = Keyboard.current;
+                if (kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame)) return true;
+                var mouse = Mouse.current;
+                if (mouse != null && mouse.leftButton.wasPressedThisFrame) return true;
+                var touch = Touchscreen.current;
+                return touch != null && touch.primaryTouch.press.wasPressedThisFrame;
+            }
             int bodies = 0;
             foreach (var it in items) bodies = Mathf.Max(bodies, it.Mark.Body + 1);
-            float total = preset.finaleSeconds / Mathf.Max(speed, 0.01f);
+            float total = preset.finaleSeconds / Mathf.Max(speed * FinaleSpeed, 0.01f);
             float per = total / Mathf.Max(bodies + 1, 1);
             float start = Time.time;
             for (int b = 0; b < bodies; b++)
@@ -230,9 +250,22 @@ namespace SevenSteps.Game
                         it.Pulse = 1f; it.Start = now; it.Duration = per * 2f;
                     }
                 animating = true;
-                for (float t = 0; t < per; t += Time.deltaTime) { finale = Mathf.Clamp01((Time.time - start) / total); SetState(); yield return null; }
+                for (float t = 0; t < per; t += Time.deltaTime)
+                {
+                    finale = Mathf.Clamp01((Time.time - start) / total);
+                    SetState();
+                    yield return null;
+                    if (Skip()) goto done;
+                }
             }
-            for (float t = 0; t < per; t += Time.deltaTime) { finale = Mathf.Clamp01((Time.time - start) / total); SetState(); yield return null; }
+            for (float t = 0; t < per; t += Time.deltaTime)
+            {
+                finale = Mathf.Clamp01((Time.time - start) / total);
+                SetState();
+                yield return null;
+                if (Skip()) break;
+            }
+            done:
             finale = 1f;
             SetState();
         }
@@ -248,9 +281,13 @@ namespace SevenSteps.Game
             float k = it.Duration > 0 ? Mathf.Clamp01((Time.time - it.Start) / it.Duration) : 1f;
             float a = Mathf.Lerp(it.From, it.To, k);
             // A fall's star dims as it lets go; a bridge's 7th star sinks (bridgeSink).
-            if (it.Mark.Dim) a *= Mathf.Lerp(1f, it.Mark.Kind == TrailMarkKind.Seventh ? 1f - 0.8f * preset.bridgeSink : FellDim, k);
+            if (it.Mark.Dim && it.Mark.Kind != TrailMarkKind.Ring) a *= Mathf.Lerp(1f, it.Mark.Kind == TrailMarkKind.Seventh ? 1f - 0.8f * preset.bridgeSink : FellDim, k);
             return a;
         }
+
+        /// 0..1, about one beat a second: the last step's star breathing.
+        static float RingPulse(float now) => 0.5f + 0.5f * Mathf.Sin(now * 2f * Mathf.PI / RingBeat);
+        const float RingBeat = 0.9f;
 
         static float PulseNow(Item it)
         {
@@ -285,7 +322,9 @@ namespace SevenSteps.Game
                 float k = (now - awakenStart) / Mathf.Max(preset.awakenSeconds, 0.001f);
                 if (k < 1) { awaken = Mathf.Sin(k * Mathf.PI); still = true; } else awakenStart = -1;
             }
-            Shader.SetGlobalVector(StarTrailMap.PulseId, new Vector4(newest, awaken, 0, 0));
+            float ring = lastStepPulse ? RingPulse(now) : 0f;
+            if (lastStepPulse) still = true;
+            Shader.SetGlobalVector(StarTrailMap.PulseId, new Vector4(newest, awaken, ring, 0));
             if (fadeStart >= 0)
             {
                 float k = (now - fadeStart) / Mathf.Max(preset.restartSeconds, 0.001f);
@@ -321,7 +360,7 @@ namespace SevenSteps.Game
             mesh.SetColors(colors);
             mesh.SetTriangles(tris, 0);
             mesh.RecalculateBounds();
-            rend.enabled = items.Count > 0;
+            rend.enabled = UseQuad && items.Count > 0;
         }
 
         void WriteColors()
@@ -338,7 +377,10 @@ namespace SevenSteps.Game
         Color ColorNow(Item it)
         {
             var c = it.Color;
-            c.a = Mathf.Clamp01(c.a * Alpha(it) * (1f + 0.25f * PulseNow(it)));
+            float gain = 1f + 0.25f * PulseNow(it);
+            // The last step's ring star breathes between 60 % and full.
+            if (lastStepPulse && it.Mark.Kind == TrailMarkKind.Ring && it.Mark.Aux == Rules.Steps && !it.Mark.Dim) gain = 0.6f + 0.4f * RingPulse(Time.time);
+            c.a = Mathf.Clamp01(c.a * Alpha(it) * gain);
             return c;
         }
 
@@ -383,6 +425,15 @@ namespace SevenSteps.Game
                     uv = Region(0, 0);
                     break;
                 }
+                case TrailMarkKind.Ring:
+                {
+                    // Seven stars round the feet, star 1 at the top (away from the camera), clockwise.
+                    float a = Mathf.PI * 0.5f - (m.Aux - 1) * 2f * Mathf.PI / Rules.Steps;
+                    center += new Vector3(Mathf.Cos(a) * RingRadius, RingLift, Mathf.Sin(a) * RingRadius) * cs;
+                    w = h = m.Dim ? RingSpentSize : m.Aux == Rules.Steps ? RingLastSize : RingSize;
+                    uv = Region(0, 0);
+                    break;
+                }
                 default: // StoneStar: faces the camera on top of the statue
                 {
                     var v = set != null ? set.StatueFor(m.Body) : default;
@@ -416,6 +467,13 @@ namespace SevenSteps.Game
                 case TrailMarkKind.Line: { var c = Color.Lerp(body, Color.white, 0.35f); c.a = preset.lineOpacity; return c; }
                 case TrailMarkKind.Seventh: { var c = GlyphColor; c.a = GlyphAlpha; return c; }
                 case TrailMarkKind.Star: { var c = StarColor; c.a = Mathf.Clamp01(StarAlpha(m.Step)); return c; }
+                case TrailMarkKind.Ring:
+                {
+                    // Lit = a step left, in the star colour; spent = the brother's colour, faint.
+                    var c = m.Dim ? body : StarColor;
+                    c.a = m.Dim ? RingSpentAlpha : RingAlpha;
+                    return c;
+                }
                 default: { var c = StarColor; c.a = StoneAlpha; return c; }
             }
         }
