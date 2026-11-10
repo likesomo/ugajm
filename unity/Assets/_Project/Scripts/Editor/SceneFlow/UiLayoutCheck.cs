@@ -41,7 +41,7 @@ namespace SevenSteps.EditorTools
         public const float BodyMin = 22, SecondaryMin = 18, PlatePad = 8, TextMargin = 4, Safe = 24;
         public const float PlateAlpha = 0.75f, ScrimAlpha = 0.6f, TextContrast = 4.5f, LineContrast = 3f, LineMin = 2;
         /// HUD / Result findings: warnings first (shared with gameplay-ui), errors once both are fixed (lead).
-        public static bool HudResultAreErrors = false;
+        public static bool HudResultAreErrors = true;
         /// Glyph quads carry the font's side bearing (hand fonts: up to ~2 units past the pen position).
         const float GlyphSlack = 2f;
 

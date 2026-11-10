@@ -21,9 +21,11 @@ namespace SevenSteps.EditorTools
     {
         const string PrefabPath = "Assets/_Project/UI/Prefabs/Hud.prefab";
         /// Safe area (14.6) and the plates' inside padding: 8 required + 4 so the 22 px glyph boxes clear it comfortably.
-        const float Safe = 24, Pad = 12, TitleW = 412;
-        static readonly Vector2 ButtonSize = new Vector2(220, 60);
-        static readonly Vector2 ChoiceSize = new Vector2(252, 120);
+        const float Safe = 24, Pad = 12, TitleW = 376; // title plate clear of the Dipper plate down to 16:10 (canvas 1214 wide)
+        static readonly Vector2 ButtonSize = new Vector2(220, 64);
+        /// KEEP / SWITCH: title on top, then 2 lines of 22 px description (the table strings break once) (UiLayoutCheck "choose", stage 38).
+        static readonly Vector2 ChoiceSize = new Vector2(252, 136);
+        const float ChoiceTitleH = 30, ChoiceGap = 6;
 
         public static void BatchBuild()
         {
@@ -47,9 +49,9 @@ namespace SevenSteps.EditorTools
                 // docs/architecture.md 14 (ui-layout-fix, 2026-11-10): every word over the 3D scene sits on a plate (flat panel
                 // colour, alpha 0.9, 8+ clear inside), body text 22+, secondary 18+, nothing in the 24 px edge or in
                 // HudView.BoardFrame (where BoardView fits the board). Areas, top-left reference pixels:
-                //   title plate 24,24 412x72 | Dipper plate (Dipper + next step) centre top | travellers plate top right
+                //   title plate 24,24 376x72 | Dipper plate (Dipper + next step) centre top | travellers plate top right
                 //   left column 24,112 276x508: story, hint, controls | right column 980,112 276 wide: statues, message, KEEP/SWITCH
-                //   footer 5 buttons 220x60 at the bottom (y 636..696)
+                //   footer 5 buttons 220x64 at the bottom (y 632..696)
                 foreach (var t in root.GetComponentsInChildren<Outline>(true)) Object.DestroyImmediate(t); // plates instead
                 var bar = root.transform.Find("HintBar");
                 if (bar != null) bar.gameObject.SetActive(false);
@@ -97,7 +99,9 @@ namespace SevenSteps.EditorTools
                 foreach (var t in new[] { story, hud.stageHint, hud.keys }) Flow(t);
 
                 // Right column: statues count, the message line (also the H solution), KEEP / SWITCH; hidden while empty
-                var right = Column(root.transform, "SideColumn", 1280 - Safe - 276, 112, 276, 508);
+                // From under the travellers plate (ends at 92) to just above the footer (632): statues + the longest message + both choices fit.
+                var right = Column(root.transform, "SideColumn", 1280 - Safe - 276, 100, 276, 524);
+                Place(right, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-Safe, -100), new Vector2(276, 524)); // pinned to the right edge (16:10 too)
                 var fit = right.GetComponent<ContentSizeFitter>() ?? right.gameObject.AddComponent<ContentSizeFitter>();
                 fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                 hud.statues.transform.SetParent(right, false);
@@ -120,15 +124,20 @@ namespace SevenSteps.EditorTools
                 {
                     ((RectTransform)b.transform).sizeDelta = new Vector2(choiceSize.x, ChoiceSize.y);
                     Ui.FitButtonSkin(b);
-                    var title = b.GetComponentInChildren<Text>(true);
+                    var title = System.Array.Find(b.GetComponentsInChildren<Text>(true), t => t != desc);
                     title.fontSize = 22;
-                    title.alignment = TextAnchor.UpperCenter;
+                    title.alignment = TextAnchor.MiddleCenter;
+                    // Inside the frame border + 8, plus 4 more at the top: the hand fonts draw a little above the line box.
                     var inset = Ui.FrameBorder((Image)b.targetGraphic) + Vector4.one * Ui.LabelPadding;
+                    var tr = title.rectTransform;
+                    tr.anchorMin = new Vector2(0, 1); tr.anchorMax = Vector2.one; tr.pivot = new Vector2(.5f, 1);
+                    tr.offsetMin = new Vector2(inset.x, -(inset.w + 4 + ChoiceTitleH));
+                    tr.offsetMax = new Vector2(-inset.z, -(inset.w + 4));
                     var d = desc.rectTransform;
                     d.anchorMin = Vector2.zero; d.anchorMax = Vector2.one;
                     d.offsetMin = new Vector2(inset.x, inset.y);
-                    d.offsetMax = new Vector2(-inset.z, -(inset.w + 30));
-                    Style(desc, 22, Ui.Ink, TextAnchor.LowerCenter);
+                    d.offsetMax = new Vector2(-inset.z, -(inset.w + 4 + ChoiceTitleH + ChoiceGap));
+                    Style(desc, 22, Ui.Ink, TextAnchor.UpperCenter);
                     desc.lineSpacing = 1f;
                     desc.horizontalOverflow = HorizontalWrapMode.Wrap;
                     desc.verticalOverflow = VerticalWrapMode.Overflow;
@@ -146,14 +155,24 @@ namespace SevenSteps.EditorTools
                 // 1 left, 2 left, 3 right-down, 4 right-down, 5 down, 6 left-down, 7 down (between the lines at each star)
                 var numberAt = new[] { new Vector2(-1, 0), new Vector2(-1, 0), new Vector2(1, -.5f), new Vector2(.7f, -.7f), new Vector2(0, -1),
                     new Vector2(-.5f, -.87f), new Vector2(0, -1) };
-                const float starHalf = 15, numHalf = 12, numDist = 32, grow = 1.25f; // the next star (and its number) grows 1.25x
+                const float starHalf = 15, numHalf = 12, grow = 1.25f; // the next star grows 1.25x (its number does not)
+                // Numbers are the Dipper's own children (not the stars'), so each stays inside its parent (14.5 overflow), and
+                // sit far enough along their direction that the glyph box clears the grown star + 4 (glyphs about 14 x 21).
+                Vector2 NumberOffset(int k)
+                {
+                    var d = numberAt[k].normalized;
+                    float clearX = starHalf * grow + 4 + 7 + 1, clearY = starHalf * grow + 4 + 11 + 1;
+                    float dist = Mathf.Min(Mathf.Abs(d.x) > 0.01f ? clearX / Mathf.Abs(d.x) : float.MaxValue,
+                        Mathf.Abs(d.y) > 0.01f ? clearY / Mathf.Abs(d.y) : float.MaxValue);
+                    return d * dist;
+                }
                 var bounds = new Rect();
                 for (int k = 0; k < Rules.Steps; k++)
                 {
                     var s = P(k);
-                    var n = s + numberAt[k].normalized * numDist * grow;
-                    var rr = Rect.MinMaxRect(Mathf.Min(s.x - starHalf * grow, n.x - numHalf * grow), Mathf.Min(s.y - starHalf * grow, n.y - numHalf * grow),
-                        Mathf.Max(s.x + starHalf * grow, n.x + numHalf * grow), Mathf.Max(s.y + starHalf * grow, n.y + numHalf * grow));
+                    var n = s + NumberOffset(k);
+                    var rr = Rect.MinMaxRect(Mathf.Min(s.x - starHalf * grow, n.x - numHalf), Mathf.Min(s.y - starHalf * grow, n.y - numHalf),
+                        Mathf.Max(s.x + starHalf * grow, n.x + numHalf), Mathf.Max(s.y + starHalf * grow, n.y + numHalf));
                     bounds = k == 0 ? rr : Rect.MinMaxRect(Mathf.Min(bounds.xMin, rr.xMin), Mathf.Min(bounds.yMin, rr.yMin),
                         Mathf.Max(bounds.xMax, rr.xMax), Mathf.Max(bounds.yMax, rr.yMax));
                 }
@@ -166,9 +185,10 @@ namespace SevenSteps.EditorTools
                     var star = hud.stars[k].rectTransform;
                     Place(star, new Vector2(.5f, .5f), new Vector2(.5f, .5f), Q(k), new Vector2(2 * starHalf, 2 * starHalf));
                     var n = hud.starNumbers[k];
+                    n.transform.SetParent(dipper, false);
                     Style(n, 18, n.color, TextAnchor.MiddleCenter);
                     Ui.Secondary(n);
-                    Place(n.rectTransform, new Vector2(.5f, .5f), new Vector2(.5f, .5f), numberAt[k].normalized * numDist, new Vector2(2 * numHalf, 2 * numHalf));
+                    Place(n.rectTransform, new Vector2(.5f, .5f), new Vector2(.5f, .5f), Q(k) + NumberOffset(k), new Vector2(2 * numHalf, 2 * numHalf));
                 }
                 for (int e = 0; e < HudBuilder.Edges.Length; e++)
                 {

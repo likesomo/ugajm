@@ -24,7 +24,7 @@ namespace SevenSteps.EditorTools
 
         static readonly Vector2 PanelSize = new Vector2(860, 560);
         const float StarSize = 80, Column = 250; // star and label columns share centres
-        static readonly Vector2 ButtonSize = new Vector2(252, 60);
+        static readonly Vector2 ButtonSize = new Vector2(252, 64);
         /// Modal scrim over the HUD (docs/architecture.md 14.7: alpha 0.6 or more over the whole screen).
         const float ScrimAlpha = 0.72f;
 
@@ -54,7 +54,7 @@ namespace SevenSteps.EditorTools
                 scrim.color = new Color(0.02f, 0.04f, 0.08f, ScrimAlpha);
                 scrim.raycastTarget = true;
 
-                Top(view.title.rectTransform, -36, new Vector2(660, 76));
+                Top(view.title.rectTransform, -68, new Vector2(660, 64)); // glyphs 8+ inside the panel frame (border 32)
                 view.title.fontSize = 46;
                 view.title.alignment = TextAnchor.MiddleCenter;
                 view.title.horizontalOverflow = HorizontalWrapMode.Wrap;

@@ -89,7 +89,7 @@ namespace SevenSteps.Game.UI
 
         /// Where the board goes (docs/architecture.md 14.6): the part of the 1280 x 720 reference canvas no HUD piece uses,
         /// top-left origin. Left column ends at 300, right column starts at 980, the Dipper plate ends at 214, the footer
-        /// starts at 636; 16 / 8 clear of each. BoardView fits the camera so the board (with its padding) stays inside.
+        /// starts at 632; 16 / 8 / 12 clear of each. BoardView fits the camera so the board (with its padding) stays inside.
         public static readonly Rect BoardFrame = new Rect(316, 222, 648, 398);
 
         /// <see cref="BoardFrame"/> as viewport fractions (x right, y up) on a screen of <paramref name="aspect"/> (width / height).

@@ -170,7 +170,7 @@ namespace SevenSteps.EditorTools
             hud.message.rectTransform.pivot = new Vector2(.5f, 0);
             Ui.AddOutline(hud.message, new Color(0, 0, 0, .6f));
             hud.choice = Row("Choice", root, 24, new Vector2(.5f, 0), new Vector2(0, 140), new Vector2(640, 88));
-            hud.keep = ChoiceButton(hud.choice, "KEEP (K)", "여기에 선돌을 남긴다\n다음 형제는 지금 출발점에서", Hex("B9BFC0"));
+            hud.keep = ChoiceButton(hud.choice, "KEEP (K)", "여기에 선돌을 남긴다\n다음 형제는 출발점에서", Hex("B9BFC0"));
             hud.switchBody = ChoiceButton(hud.choice, "SWITCH (X)", "선돌을 남기지 않는다\n여기가 새 출발점이 된다", Brass);
             hud.keepDesc = hud.keep.transform.Find("Desc").GetComponent<Text>();
             hud.switchDesc = hud.switchBody.transform.Find("Desc").GetComponent<Text>();
