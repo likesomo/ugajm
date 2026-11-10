@@ -888,3 +888,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-10 | 아키텍트 | 11장 SaveKey 연결: `Bootstrap`(SaveSystem)·`TelemetryRunner.CreateTelemetry`(큐)가 `SaveStores.For(launch)` (리드 지시로 아키텍트가 소유자 대신 두 줄 수정, 리드가 씬 플로우·게임플레이/UI에 알림). `unity.sh smoke -savekey`는 코어 |
 | 2026-11-10 | 씬 플로우·아키텍트 | 14.6 보드 영역 검사 구현: `BoardView.Fit` public static(게임과 검사기가 같은 맞춤 식), `BoardView.ActorHeight`, `UiLayoutRule.Board` 면제. feat/scene-flow 17cbddf 검토 승인(B1: Choose 상태·긴 메시지 HUD 변형 추가 요청) |
 | 2026-11-10 | 게임플레이/UI·씬 플로우·아키텍트 | 14.9 HUD·결과 위반도 오류(`UiLayoutCheck.HudResultAreErrors = true`, HUD/결과 0건 달성, feat/view d170385 검토 승인). 이제 14장 위반은 모든 화면에서 빌드를 막는다 |
+| 2026-11-10 | 씬 플로우·아키텍트 | Game: `AttemptCounts.After(SessionUpdate)`(6.5 Undo·Restart 세기, `BoardController`와 QA 리플레이가 공유), `Game.Flow.QaReplay`(attempts.jsonl 교차 검사, 재시작 글자·해시는 docs/qa-attempts.md 확정 전 임시). feat/scene-flow 332498f 검토 승인 |
