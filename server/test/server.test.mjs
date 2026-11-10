@@ -25,6 +25,23 @@ test('intake: stores valid events, ignores duplicates, reports bad ones', async 
   assert.equal(JSON.parse(row.data).dir, 'right');
 });
 
+test('intake same-origin through a tunnel: X-Forwarded-Host counts only with trustProxy', async () => {
+  const tunnel = { 'Content-Type': 'text/plain', Origin: 'https://x.trycloudflare.com', 'X-Forwarded-Proto': 'https', 'X-Forwarded-Host': 'x.trycloudflare.com' };
+  const body = (sessionId) => envelope([events[0]], { sessionId });
+  const proxied = await startServer({ trustProxy: true });
+  const direct = await startServer();
+  try {
+    const ok = await post(proxied.url, body('44444444-4444-4444-8444-444444444444'), tunnel);
+    assert.equal(ok.status, 200, 'trustProxy: the forwarded host is this server, so the tunnel origin is same-origin');
+    assert.equal(ok.headers.get('access-control-allow-origin'), 'https://x.trycloudflare.com');
+    // Without trustProxy anyone could send X-Forwarded-Host to pass as same-origin: it is ignored.
+    assert.equal((await post(direct.url, body('55555555-5555-4555-8555-555555555555'), tunnel)).status, 403);
+  } finally {
+    await proxied.close();
+    await direct.close();
+  }
+});
+
 test('intake: text/plain (sendBeacon), CORS allow list, errors', async () => {
   const sid = '33333333-3333-4333-8333-333333333333';
   let res = await post(srv.url, envelope([events[0]], { sessionId: sid }), { 'Content-Type': 'text/plain', Origin: 'https://someone.itch.io' });
@@ -32,6 +49,16 @@ test('intake: text/plain (sendBeacon), CORS allow list, errors', async () => {
   assert.equal(res.headers.get('access-control-allow-origin'), 'https://someone.itch.io');
   res = await post(srv.url, envelope([events[0]]), { Origin: 'https://evil.example' });
   assert.equal(res.status, 403);
+  // Same origin is allowed whatever the address: a phone on the LAN plays http://<PC IP>:8787/webgl/.
+  // fetch ignores a Host header: send it with node:http.
+  const { request } = await import('node:http');
+  const lan = await new Promise((ok, fail) => {
+    const body = JSON.stringify(envelope([events[0]], { sessionId: sid }));
+    request(`${srv.url}/v1/events`, { method: 'POST', headers: { 'Content-Type': 'text/plain', Host: '192.168.0.10:8787', Origin: 'http://192.168.0.10:8787' } }, (r) => { r.resume(); ok(r.statusCode); }).on('error', fail).end(body);
+  });
+  assert.equal(lan, 200);
+  res = await post(srv.url, envelope([events[0]]), { Origin: 'http://192.168.0.10:8787' });
+  assert.equal(res.status, 403, 'a LAN origin other than this server is still refused');
   res = await fetch(`${srv.url}/v1/events`, { method: 'OPTIONS', headers: { Origin: 'http://localhost:8777' } });
   assert.equal(res.status, 204);
   assert.equal(res.headers.get('access-control-allow-origin'), 'http://localhost:8777');

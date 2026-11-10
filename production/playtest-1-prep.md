@@ -20,26 +20,27 @@
 - [x] 리허설(scene-flow, 2026-11-10): 테스터 2명 흉내로 서버→/webgl/?newplayer=1→대시보드→내보내기까지. 발견한 타이틀 '시작' 먹통(19554a3), via 규칙, since 시간대, 기간 필터 버그(e953eb0), 첫 방향키(365d5bb) 모두 수정·병합
 - [ ] 테스트 빌드 해시를 `design/levels/playtest-guide.md`에 적기 (테스트 직전 최종 7lucky로)
 
-## B. 테스트 대상 결정 (사용자)
+## B. 테스트 대상 결정 (사용자, 2026-11-10 확정)
 
-- [ ] **무엇으로**: Unity WebGL(권장) / 웹 프로토타입(`/play/`). 같은 텔레메트리 스키마
-- [ ] **어디서**: 진행자 PC 현장(외부 공개 불필요) / 원격 테스터(→ 서버 외부 공개, 사용자 승인)
-- [ ] 테스터 인원·일정 (목표 5명 이상)
-- [ ] **세션 길이**: 50스테이지 전체는 2~3시간 → 회전 배치(모두 1~14, 각자 15/22/29/36/43부터, 행성마다 2명 이상, 1인 50~60분)를 쓸지
-- [ ] **언어**: 대부분 한국어, 영어는 1명이 1~2장만(문구 길이·잘림 확인). 기록은 `lang`으로 나눠 본다
+- [x] **무엇으로**: Unity WebGL, 서버의 `/webgl/`
+- [x] **어디서**: 진행자 PC 현장. 외부 공개·터널 없음. 같은 와이파이의 다른 기기가 진행자 PC IP로 `/webgl/`에 접속하는 것까지 허용
+- [x] **세션 길이**: 회전 배치. 모두 1~14, 이후 각자 15/22/29/36/43부터 시작, 행성마다 2명 이상, 1인 50~60분. 테스터 번호별 시작 행성은 `design/levels/playtest-guide.md` 배정표 (레벨 디자인)
+- [ ] 테스터 인원·일정: 미정, 목표 5명 이상으로 준비. 정해지면 코디네이터가 전달
+- [x] **언어**(리드): 대부분 한국어, 영어는 1명이 1~2장만(문구 길이·잘림 확인). 기록은 `lang`으로 나눠 본다
+- 최종 빌드: `production/ui-layout-fix.md`가 병합된 뒤의 7lucky로 만들고 해시를 A절과 `playtest-guide.md`에 적는다
 
 ## C. 수집 서버 (백엔드/분석) — 당일 절차 `docs/telemetry.md` 6장
 
 - [x] 대시보드 50스테이지·7행성 이름·별 분포·`lang` 필터, 내보내기에 `lang`·`planet` 열 (feat/server 725dac2)
 - [x] 서버가 WebGL 빌드를 `/webgl/`로 제공하고 `?telemetry=`를 붙인다 (d6296cf)
-- [ ] 새 WebGL 빌드로 `/webgl/` 다시 확인
+- [ ] 새 WebGL 빌드로 `/webgl/` 다시 확인 (진행자 PC의 `localhost`와 같은 와이파이 기기의 PC IP 둘 다. 서버가 LAN 주소에서 받는지, Windows 방화벽 허용이 필요한지 백엔드가 확인)
 - 당일 순서:
   1. 전날: `build-webgl` → `smoke-webgl` 통과, `node --test server/test/` 통과
   2. 서버: `STATS_TOKEN` 랜덤 생성·기록 후 `DB_PATH=server/data/playtest-<날짜>.sqlite node server/src/index.mjs` (테스트 내내 터미널 유지)
   3. 시작 2분 전: `curl localhost:8787/healthz` = ok, 테스터 주소 `http://localhost:8787/webgl/`(같은 와이파이는 PC IP)로 1스테이지 클리어 → 대시보드(`/dashboard#token=<토큰>`)에 새 빌드·unity-webgl이 보이면 OK. 확인 기록은 기간 필터로 제외
   4. 진행 중: 대시보드 수동 새로고침, 필터(클라이언트·빌드·언어·기간·행성)로 퍼널·이탈률·별·히트맵·타임라인
   5. 끝: 서버 Ctrl+C, DB 파일 보관(git 제외), `attempts.csv`·`levels.csv`·`events.jsonl`을 `?since=<날짜>`로 내보내 레벨 디자인에 전달
-- [ ] **사용자 결정**: itch.io 빌드는 iframe이라 `?telemetry=`를 줄 수 없다 → `AppConfig.telemetryEndpoint`에 고정 HTTPS 주소 필요. 원격 테스터는 터널 1개(`TRUST_PROXY=1`)로 `/webgl/`·`/play/` 둘 다 (`server/README.md`)
+- [-] **보류 (이번 테스트에 불필요, 2026-11-10 사용자)**: itch.io 빌드는 iframe이라 `?telemetry=`를 줄 수 없다 → `AppConfig.telemetryEndpoint`에 고정 HTTPS 주소 필요. 원격 테스터는 터널 1개(`TRUST_PROXY=1`)로 `/webgl/`·`/play/` 둘 다 (`server/README.md`)
 
 ## D. 진행 안내 (레벨 디자인)
 

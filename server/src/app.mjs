@@ -210,7 +210,9 @@ export function createApp({ store, token, levels = [], allowedOrigins = [], trus
     const origin = req.headers.origin;
     try {
       if (path === '/v1/events') {
-        if (origin && !allowOrigin(origin)) return send(res, 403, { error: 'origin not allowed' });
+        // Same origin (the build served from /webgl/ on this server, e.g. a phone on the LAN via http://<PC IP>:8787)
+        // is always allowed: browsers send Origin on every POST, and a LAN address is not on the allow list.
+        if (origin && origin !== selfOrigin(req) && !allowOrigin(origin)) return send(res, 403, { error: 'origin not allowed' });
         const cors = origin ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : {};
         if (req.method === 'OPTIONS') {
           return send(res, 204, '', { ...cors, 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Max-Age': '86400' });
