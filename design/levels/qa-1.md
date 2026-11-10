@@ -32,7 +32,7 @@ node prototypes/seven-steps/tools/level-metrics.mjs --json reports/level-metrics
 | 첫 시도 클리어 | 그 스테이지 첫 시도의 outcome = `clear`인 테스터 비율 |
 | 포기 | `gave_up`(15회 초과)이 있는 테스터 수 |
 | 실패 원인 | `clear`가 아닌 시도의 `outcome[:failReason]` 개수 |
-| 입력/최소 | 클리어한 판의 입력 수(`inputs`의 마지막 `!` 뒤 U D L R K X, 되돌리기·힌트 제외) ÷ 최소 몸 해의 입력 수(`stage-report.json` minInputs) |
+| 입력/최소 | 클리어한 판의 입력 수(`inputs`의 마지막 `!` 뒤 U D L R K X, 되돌리기·힌트 제외) ÷ 최소 몸 해의 입력 수(`stage-report.json` minInputs). **같은 척도가 아니다**: 마지막 `!` 뒤에는 그 판에서 진 뒤 `Z`로 이어 간 이동과 되돌려 취소된 이동도 들어가므로, 1에 가까울수록 헤맴이 적다는 정도로만 읽고 1 미만이 나올 수 없다는 것 외에는 해석하지 않는다 |
 | ★ 분포 | 테스터별 클리어 시도의 별 |
 | 풀이 보기 | `hints > 0`인 시도가 있는 테스터 비율 |
 
