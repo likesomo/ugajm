@@ -58,6 +58,7 @@ namespace SevenSteps.Game
         readonly List<GameObject> transients = new List<GameObject>();
         readonly StringBuilder sb = new StringBuilder(16);
         GameObject player, startMarker, oldStartMarker;
+        StarTrailView trail;
         WorldLabel playerLabel;
         int playerBody = -1; // BodyIndex.Current of the player instance on the board; -1 before Rebuild
         bool choosing;
@@ -111,6 +112,10 @@ namespace SevenSteps.Game
             grid = set.GridFor(level);
             root = new GameObject("Board").transform;
             root.SetParent(transform, false);
+            trail = new GameObject("Star Trail").AddComponent<StarTrailView>();
+            trail.transform.SetParent(root, false);
+            trail.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity); // marks are built in world space
+            trail.Init(grid, set, cam, chapter != null ? chapter.starTrail : null); // planet look (docs 15.5)
             int n = level.Count;
             cells = new Cell[n];
             feet = new GameObject[n];
@@ -237,8 +242,10 @@ namespace SevenSteps.Game
                 }
             }
 
+            trail.Remember(r);
             Draw(r.State, true, prev);
             if (r.Has(GameEventType.Respawn)) Tween(player.transform, PlayerScale);
+            if (r.State.Status == Status.Win) yield return trail.Finale(Speed); // the paths join up before the result
             anim = null;
             done?.Invoke();
         }
@@ -357,6 +364,9 @@ namespace SevenSteps.Game
             playerLabel.Text.text = left.ToString();
             choosing = s.Status == Status.Choose;
             playerLabel.Text.color = choosing || left == 1 ? Ui.Gold : Ui.Ink;
+
+            // Star trail (design/art/star-trail.md): rebuilt from s, lights up new marks only after Present.
+            trail.Show(s, pop);
         }
 
         /// Flip event: rebuild the flip-wall cells whose shape changed and show the lever as pulled.
