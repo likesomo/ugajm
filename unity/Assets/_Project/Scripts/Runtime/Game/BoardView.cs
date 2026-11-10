@@ -581,7 +581,7 @@ namespace SevenSteps.Game
                 halfY = Mathf.Max(halfY, Mathf.Abs(q.y));
             }
             // Inside the HUD's board frame (docs/architecture.md 14.6): half-heights in the frame's share of the screen.
-            var frame = HudView.BoardViewport;
+            var frame = HudView.BoardViewport(cam.aspect);
             float needH = Mathf.Max(3.2f, halfY / frame.height, halfX / frame.width / cam.aspect);
             Vector3 center = b.center + Vector3.up * 0.3f;
             // Camera moved so the board centre lands on the frame centre (viewport 0.5 = camera axis).

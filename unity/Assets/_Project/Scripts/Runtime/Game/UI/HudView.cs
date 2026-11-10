@@ -92,8 +92,17 @@ namespace SevenSteps.Game.UI
         /// starts at 636; 16 / 8 clear of each. BoardView fits the camera so the board (with its padding) stays inside.
         public static readonly Rect BoardFrame = new Rect(316, 222, 648, 398);
 
-        /// <see cref="BoardFrame"/> as viewport fractions (x right, y up), for 16:9 screens (CanvasScaler match 0.5).
-        public static Rect BoardViewport => new Rect(BoardFrame.x / 1280f, 1f - BoardFrame.yMax / 720f, BoardFrame.width / 1280f, BoardFrame.height / 720f);
+        /// <see cref="BoardFrame"/> as viewport fractions (x right, y up) on a screen of <paramref name="aspect"/> (width / height).
+        /// The canvas (ScaleWithScreenSize 1280 x 720, match 0.5) is sqrt(921600 x aspect) x sqrt(921600 / aspect) units; the
+        /// columns are pinned to the left / right edges, the Dipper to the top and the footer to the bottom, so the frame keeps
+        /// its margins in units and stretches with the canvas (16:9 gives BoardFrame itself; architect N2).
+        public static Rect BoardViewport(float aspect)
+        {
+            if (!(aspect > 0)) throw new ArgumentOutOfRangeException(nameof(aspect), aspect, "width / height");
+            float w = Mathf.Sqrt(1280f * 720f * aspect), h = Mathf.Sqrt(1280f * 720f / aspect);
+            float right = 1280f - BoardFrame.xMax, bottom = 720f - BoardFrame.yMax;
+            return Rect.MinMaxRect(BoardFrame.xMin / w, bottom / h, 1f - right / w, 1f - BoardFrame.yMin / h);
+        }
 
         [Header("Side column (statues, message, KEEP / SWITCH): shown only while it has something in it")]
         public GameObject sidePanel;
