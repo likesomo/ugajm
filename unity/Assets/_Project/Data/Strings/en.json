@@ -40,7 +40,7 @@
     { "key": "hud.next_choose", "text": "KEEP or SWITCH" },
     { "key": "hud.statues", "text": "Stones {0} / {1}" },
     { "key": "hud.statues_open", "text": "Stones {0} / {1}  gate open" },
-    { "key": "hud.keep_desc", "text": "Leave a stone here.\nThe next starts over." },
+    { "key": "hud.keep_desc", "text": "Leave a stone here.\nNext brother, same start." },
     { "key": "hud.switch_desc", "text": "Leave no stone.\nStart again from here." },
     { "key": "hud.keys", "text": "Move: arrows / WASD / click a next tile - after 7 steps: K / X - stages: [ ]" },
     { "key": "hud.undo", "text": "Undo Z" },
