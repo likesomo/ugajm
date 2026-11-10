@@ -5,6 +5,7 @@
 // Proposals (experimental rules / another stage order), paths relative to the repo root:
 //   --core <rules.js> --levels <module exporting LEVELS> --html <out.html> --json <out.json>
 //   --title <text> --compare <earlier level-metrics.json>   (draws that run's D/I faintly, matched by stage name)
+//   --qa <reports/qa/qa-report.json>   (tools/qa-report.mjs: measured mean tries per stage on a right-hand axis, matched by stage name)
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -20,6 +21,7 @@ const OUT_JSON = fromRoot(arg('json', 'reports/level-metrics.json'));
 const OUT_HTML = fromRoot(arg('html', 'design/levels/interest-curve.html'));
 const TITLE = arg('title', '');
 const COMPARE = arg('compare') ? JSON.parse(readFileSync(fromRoot(arg('compare')), 'utf8')).rows : null;
+const QA = arg('qa') ? JSON.parse(readFileSync(fromRoot(arg('qa')), 'utf8')) : null;
 const { parseLevel, newState, step, choose, actions, dispatch, minBodies, solve } = await import(pathToFileURL(CORE));
 const { LEVELS } = await import(pathToFileURL(LEVELS_FILE));
 
@@ -264,7 +266,7 @@ console.log(`\n→ ${OUT_HTML}\n→ ${OUT_JSON}`);
 // ---- HTML (inline SVG, no libraries) ----
 function renderHtml(rows) {
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-  const W = 960, H = 440, L = 56, R = 24, T = 64, B = 64;
+  const W = 960, H = 440, L = 56, R = QA ? 44 : 24, T = 64, B = 64;
   const n = rows.length;
   const x = (i) => L + (n === 1 ? 0 : (i * (W - L - R)) / (n - 1));
   const yMin = -0.2, yMax = 1;
@@ -289,6 +291,25 @@ function renderHtml(rows) {
     rows.forEach((r, i) => { const o = byName.get(r.name); if (!o) { pen = 'M'; return; } d += `${pen}${x(i).toFixed(1)},${y(o[key]).toFixed(1)} `; pen = 'L'; });
     return `<path d="${d}" class="ghost${key}"><title>이전 ${key}</title></path>`;
   };
+  // Play QA (--qa): mean tries per tester, 1 try = 0.0 and 15 tries = 1.0 on the left scale, own ticks on the right.
+  const qaY = (t) => y((t - 1) / 14);
+  const qaByName = QA ? new Map(QA.levels.map((l) => [l.name, l])) : null;
+  const qaLayer = () => {
+    if (!QA) return '';
+    let d = '', pen = 'M', marks = '';
+    rows.forEach((r, i) => {
+      const q = qaByName.get(r.name);
+      if (!q || q.meanTries === null) { pen = 'M'; return; }
+      d += `${pen}${x(i).toFixed(1)},${qaY(q.meanTries).toFixed(1)} `; pen = 'L';
+      const warn = QA.warnings.filter((w) => w.level === q.level);
+      marks += `<rect x="${x(i) - 4}" y="${qaY(q.meanTries) - 4}" width="8" height="8" class="dotQ${warn.length ? ' warnQ' : ''}"><title>${esc(`${r.idx}. ${r.name}
+QA 평균 ${q.meanTries}회 (최대 ${q.maxTries}, 예측 ${q.predictedTries})
+첫 시도 클리어 ${Math.round((q.firstTryClearRate ?? 0) * 100)}%  포기 ${q.gaveUp}${warn.map((w) => `
+! ${w.text}`).join('')}`)}</title></rect>`;
+    });
+    const ticks = [1, 4, 8, 12, 15].map((t) => `<text x="${W - R + 4}" y="${qaY(t) + 4}" class="tick qtick">${t}</text>`).join('');
+    return `<path d="${d}" class="lineQ"/>${marks}${ticks}<text x="${W - R + 4}" y="${T - 10}" class="tick qtick">시도</text>`;
+  };
   const dots = (key, cls) => rows.map((r, i) =>
     `<circle cx="${x(i)}" cy="${y(r[key])}" r="5" class="${cls}"><title>${esc(`${r.idx}. ${r.name}\nD ${r.D}  I ${r.I}\nN ${r.N}  A ${r.A}  C ${r.C}  F ${r.F}\n${r.tags.map(ko).join(', ')}`)}</title></circle>`).join('');
   const xLabels = rows.map((r, i) =>
@@ -299,7 +320,7 @@ function renderHtml(rows) {
   <line x1="${L}" x2="${W - R}" y1="${y(M.baseline)}" y2="${y(M.baseline)}" class="baseline"/>
   <text x="${W - R}" y="${y(M.baseline) - 6}" class="baselabel" text-anchor="end">기준선 ${M.baseline}</text>
   ${ghost('D')}${ghost('I')}<path d="${line('D')}" class="lineD"/><path d="${line('I')}" class="lineI"/>
-  ${dots('D', 'dotD')}${dots('I', 'dotI')}${xLabels}${inserts}
+  ${dots('D', 'dotD')}${dots('I', 'dotI')}${qaLayer()}${xLabels}${inserts}
   <text x="${(L + W - R) / 2}" y="${H - 6}" class="tick" text-anchor="middle">스테이지</text>
 </svg>`;
 
@@ -314,16 +335,16 @@ function renderHtml(rows) {
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Seven Steps Interest Curve</title>
 <style>
-:root{--bg:#fbfaf7;--fg:#22211f;--muted:#6b6862;--grid:#e3e0d9;--d:#c2571a;--i:#2b6cb0;--base:#8a8580;--drop:rgba(214,69,65,.12);--intro:#3f8f5a;--insert:#d64541;--card:#fff;--line:#e8e5de}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1a1917;--fg:#ece9e3;--muted:#a19d96;--grid:#34322e;--d:#f08a4b;--i:#6aa9ee;--base:#8f8a83;--drop:rgba(240,100,95,.16);--intro:#6cc28a;--insert:#f06c66;--card:#22211e;--line:#33312d}}
-:root[data-theme="dark"]{--bg:#1a1917;--fg:#ece9e3;--muted:#a19d96;--grid:#34322e;--d:#f08a4b;--i:#6aa9ee;--base:#8f8a83;--drop:rgba(240,100,95,.16);--intro:#6cc28a;--insert:#f06c66;--card:#22211e;--line:#33312d}
+:root{--bg:#fbfaf7;--fg:#22211f;--muted:#6b6862;--grid:#e3e0d9;--d:#c2571a;--i:#2b6cb0;--base:#8a8580;--drop:rgba(214,69,65,.12);--intro:#3f8f5a;--insert:#d64541;--card:#fff;--line:#e8e5de;--q:#6b4fa0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1a1917;--fg:#ece9e3;--muted:#a19d96;--grid:#34322e;--d:#f08a4b;--i:#6aa9ee;--base:#8f8a83;--drop:rgba(240,100,95,.16);--intro:#6cc28a;--insert:#f06c66;--card:#22211e;--line:#33312d;--q:#b59be6}}
+:root[data-theme="dark"]{--bg:#1a1917;--fg:#ece9e3;--muted:#a19d96;--grid:#34322e;--d:#f08a4b;--i:#6aa9ee;--base:#8f8a83;--drop:rgba(240,100,95,.16);--intro:#6cc28a;--insert:#f06c66;--card:#22211e;--line:#33312d;--q:#b59be6}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI","Malgun Gothic",sans-serif}
 main{max-width:1040px;margin:0 auto;padding:24px 16px 48px}h1{font-size:22px;margin:0 0 4px}p.sub{color:var(--muted);margin:0 0 16px}
 .legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted);margin:0 0 8px}.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px}
 svg{width:100%;height:auto;display:block}.grid{stroke:var(--grid)}.grid.zero{stroke:var(--muted);stroke-dasharray:2 3}.tick{fill:var(--muted);font-size:12px}
 .baseline{stroke:var(--base);stroke-width:1.5;stroke-dasharray:6 4}.baselabel{fill:var(--base);font-size:12px}
-.lineD{fill:none;stroke:var(--d);stroke-width:2.5}.lineI{fill:none;stroke:var(--i);stroke-width:3}.dotD{fill:var(--d)}.ghostD,.ghostI{fill:none;stroke-width:2;stroke-dasharray:5 4;opacity:.45}.ghostD{stroke:var(--d)}.ghostI{stroke:var(--i)}.dotI{fill:var(--i)}
+.lineD{fill:none;stroke:var(--d);stroke-width:2.5}.lineI{fill:none;stroke:var(--i);stroke-width:3}.dotD{fill:var(--d)}.ghostD,.ghostI{fill:none;stroke-width:2;stroke-dasharray:5 4;opacity:.45}.ghostD{stroke:var(--d)}.ghostI{stroke:var(--i)}.dotI{fill:var(--i)}.lineQ{fill:none;stroke:var(--q);stroke-width:2.5;stroke-dasharray:1 0}.dotQ{fill:var(--q)}.warnQ{stroke:var(--insert);stroke-width:2.5}.qtick{fill:var(--q)}
 .drop{fill:var(--drop)}.intro{stroke:var(--intro);stroke-dasharray:3 3}.introlabel{fill:var(--intro);font-size:11px}.insert path{fill:var(--insert)}
 .tablewrap{overflow-x:auto;margin-top:20px}table{border-collapse:collapse;font-size:13px;min-width:900px;width:100%}
 th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--muted);font-weight:600}
@@ -332,7 +353,7 @@ td:nth-child(2){white-space:nowrap}td.num{text-align:right;font-variant-numeric:
 <h1>일곱 걸음 — 난이도·흥미도 곡선</h1>
 <p class="sub">${TITLE ? `${esc(TITLE)} · ` : ''}${n}개 스테이지. 모델: design/levels/interest-model.md · 생성: tools/level-metrics.mjs</p>
 <div class="legend"><span><i style="background:var(--d)"></i>난이도 D</span><span><i style="background:var(--i)"></i>흥미도 I</span>
-<span><i style="background:var(--base)"></i>기준선</span>${COMPARE ? '<span><i style="background:var(--muted);opacity:.5"></i>점선: 비교 대상(같은 이름 스테이지, 값이 같으면 겹쳐 안 보임)</span>' : ''}<span><i style="background:var(--drop);height:10px"></i>흥미도 하락 구간</span>
+<span><i style="background:var(--base)"></i>기준선</span>${QA ? `<span><i style="background:var(--q)"></i>QA 실측 평균 시도(오른쪽 눈금, 테스터 ${QA.source.testers.length}명 AI, 빨간 테두리 = 경고)</span>` : ''}${COMPARE ? '<span><i style="background:var(--muted);opacity:.5"></i>점선: 비교 대상(같은 이름 스테이지, 값이 같으면 겹쳐 안 보임)</span>' : ''}<span><i style="background:var(--drop);height:10px"></i>흥미도 하락 구간</span>
 <span><i style="background:var(--intro)"></i>새 요소 등장</span><span><i style="background:var(--insert);height:8px;width:8px"></i>새 기믹 투입 지점</span></div>
 <div class="card">${svg}</div>
 <div class="tablewrap"><table><thead><tr><th>#</th><th>이름</th><th>몸(최소/제한)</th><th>걸음</th><th>탐색 상태</th><th>희소도</th><th>함정 비율</th>
