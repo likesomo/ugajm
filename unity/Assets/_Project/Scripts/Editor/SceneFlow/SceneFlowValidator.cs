@@ -99,7 +99,7 @@ namespace SevenSteps.EditorTools
             {
                 ValidateThemes(gameAssets, issues);
                 LocalizationCheck.Check(gameAssets, issues); // 13.6: tables, keys in code, glyphs per language
-                UiLayoutCheck.Check(gameAssets, issues); // 14: text size, plates, overlaps on screens built in Edit Mode
+                UiLayoutCheck.Check(gameAssets, sharedConfig, issues); // 14: text size, plates, overlaps on screens built in Edit Mode
             }
 
             int errors = issues.Count(i => i.StartsWith("ERROR", StringComparison.Ordinal));
