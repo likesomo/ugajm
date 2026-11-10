@@ -33,3 +33,6 @@
 - **S4** `ChapterEntryView`의 자체 `Plate`(알파 0.85)는 feat/view f525128의 `Ui.Plate`(0.9)와 중복. cd4ba4e를 받은 뒤 `Ui.Plate`로 통일.
 - **S5** `Ui.MenuButton`의 라벨 +2 위로 올림과 `FitButtonSkin`의 라벨 offset은 순서에 따라 결과가 달라진다(리드 공지대로 후속에서 정리). 정리 뒤 둘 중 하나만 라벨 위치를 정하게.
 - **S6** 14.6 보드 영역 검사는 `HudView.BoardFrame` 상수가 아니라 실제 HUD 사각형과 보드 투영으로(14.6에 적음).
+
+## 정정 (2026-11-10, feat/view 8426a00 검토 중)
+- 위 "14.4 판: `im.pixelsPerUnit`… 정확한 식" 은 틀렸다. `Image.pixelsPerUnit`은 스프라이트 PPU / 캔버스 기준 PPU이고 `pixelsPerUnitMultiplier`를 포함하지 않는다(uGUI `Image.cs`: 9-slice는 `border / multipliedPixelsPerUnit`). **S7**: `InnerRect`의 나눗셈을 `im.pixelsPerUnit * im.pixelsPerUnitMultiplier`로. 지금은 배율 2.5 버튼(`FitButtonSkin`)의 border를 2.5배로 잡아 버튼 라벨에 거짓 오류가 난다.
