@@ -557,7 +557,7 @@ namespace SevenSteps.Game
 
         // ---------- Camera ----------
 
-        /// Frames the board with the TileSet's CameraRig inside the band the HUD leaves free (about 52% of the height).
+        /// Frames the board with the TileSet's CameraRig inside the part of the screen the HUD leaves free (HudView.BoardFrame).
         void FitCamera()
         {
             if (cam == null || level == null) return;
@@ -580,9 +580,13 @@ namespace SevenSteps.Game
                 halfX = Mathf.Max(halfX, Mathf.Abs(q.x));
                 halfY = Mathf.Max(halfY, Mathf.Abs(q.y));
             }
-            float needH = Mathf.Max(3.2f, halfY / 0.52f, halfX / 0.9f / cam.aspect);
+            // Inside the HUD's board frame (docs/architecture.md 14.6): half-heights in the frame's share of the screen.
+            var frame = HudView.BoardViewport;
+            float needH = Mathf.Max(3.2f, halfY / frame.height, halfX / frame.width / cam.aspect);
             Vector3 center = b.center + Vector3.up * 0.3f;
-            float lift = 0.05f * 2f * needH;
+            // Camera moved so the board centre lands on the frame centre (viewport 0.5 = camera axis).
+            float shiftX = (frame.center.x - 0.5f) * 2f * needH * cam.aspect;
+            float lift = (frame.center.y - 0.5f) * 2f * needH;
             float dist = Mathf.Max(rig.distance, 1f);
             if (rig.orthographic)
             {
@@ -593,7 +597,7 @@ namespace SevenSteps.Game
                 cam.fieldOfView = rig.fieldOfView > 1f ? rig.fieldOfView : 30f;
                 dist = Mathf.Max(dist, needH / Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad));
             }
-            cam.transform.position = center - (rot * Vector3.forward) * dist - (rot * Vector3.up) * lift;
+            cam.transform.position = center - (rot * Vector3.forward) * dist - (rot * Vector3.up) * lift - (rot * Vector3.right) * shiftX;
             cam.nearClipPlane = 0.1f;
             cam.farClipPlane = dist * 2f + 50f;
         }

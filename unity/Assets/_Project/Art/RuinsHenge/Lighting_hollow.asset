@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: SevenSteps.Contracts::SevenSteps.Contracts.LightingPreset
   key:
     enabled: 1
-    color: {r: 0.8509804, g: 0.69411767, b: 1, a: 1}
+    color: {r: 0.8901961, g: 0.85882354, b: 0.92156863, a: 1}
     intensity: 1.35
     euler: {x: 48, y: -31, z: 0}
-    shadows: 1
+    shadows: 0
   fill:
     enabled: 1
     color: {r: 0.78039217, g: 0.58431375, b: 1, a: 1}

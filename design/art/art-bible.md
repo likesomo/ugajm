@@ -1,5 +1,7 @@
 # Seven Steps 아트 바이블 — 유적×선돌×오리엔탈
 
+> 2026-11-10 tone/performance follow-up: [weathered surfaces and WebGL low-spec rendering](tone-perf-2026-11-10.md). Maintain chapter hues with muted stone/timber, frost moss=0, no realtime chapter shadows, WebGL HDR off.
+
 > 2026-11-10 revision: [distinct seven-planet silhouettes, palettes and one-cell decoration clearance](seven-planets-distinct-2026-11-10.md) supersedes the initial seven similar blockouts; frost has no moss.
 
 > 2026-11-10 current scope: seven confirmed planets `moss`, `hollow`, `carved`, `frost`, `joinery`, `crumble`, `altar`; chapters.json is authoritative. Earlier five-planet limits below are historical. UI architecture now uses independent menhirs with one straight weathered timber beam, exposed tenons and wedges; paired curved lintels and red lacquer gateways are forbidden. See [seven-planet delivery](seven-planets-2026-11-10.md).

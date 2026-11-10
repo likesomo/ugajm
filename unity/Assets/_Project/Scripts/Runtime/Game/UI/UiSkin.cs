@@ -56,7 +56,8 @@ namespace SevenSteps.Game.UI
         /// A small framed card (planets, stages), or the flat button color.
         public static Image Card(Transform parent, string name = "Card") => Framed(parent, Theme.card, ButtonBg, name);
 
-        /// Applies the theme's button sprites (sprite swap, 9-sliced) to a button made by MakeButton. No skin: unchanged.
+        /// Applies the theme's button sprites (sprite swap, 9-sliced) to a button made by MakeButton, then
+        /// <see cref="FitButtonSkin"/>. No skin: unchanged.
         public static void Skin(Button b)
         {
             if (b == null) throw new ArgumentNullException(nameof(b));
@@ -72,7 +73,58 @@ namespace SevenSteps.Game.UI
                 highlightedSprite = t.buttonHover, selectedSprite = t.buttonHover,
                 pressedSprite = t.buttonPressed, disabledSprite = t.buttonDisabled,
             };
+            FitButtonSkin(b);
         }
+
+        /// Button frame scale: the atlas button (512 x 80, border 20 holding both frame lines) drawn at 1/2.5, so the border
+        /// is 8 reference pixels and the inner line sits about 4 in from the edge on any button height (docs/architecture.md 14.4).
+        public const float ButtonFrameScale = 2.5f;
+        /// Clear space between the frame's border and the label (14.4 padding).
+        public const float LabelPadding = 8f;
+
+        /// Frame border of a sliced image in reference pixels (left, bottom, right, top); zero when not sliced.
+        public static Vector4 FrameBorder(Image img)
+        {
+            if (img == null) throw new ArgumentNullException(nameof(img));
+            if (img.sprite == null || img.type != Image.Type.Sliced) return Vector4.zero;
+            // Image draws the border at sprite pixels / (sprite PPU / reference PPU 100 * multiplier).
+            float scale = img.sprite.pixelsPerUnit / 100f * img.pixelsPerUnitMultiplier;
+            return img.sprite.border / Mathf.Max(scale, 0.0001f);
+        }
+
+        /// The art button frame at <see cref="ButtonFrameScale"/>, and its label (the first Text child) stretched inside the
+        /// frame's border plus <see cref="LabelPadding"/>, so the frame lines never cross the words (ui-layout-fix "common").
+        /// Buttons need height >= 2 x (8 + 8) + the label's line height (60 for 22 px text). Icons, if any, are left alone.
+        public static void FitButtonSkin(Button b)
+        {
+            if (b == null) throw new ArgumentNullException(nameof(b));
+            if (!(b.targetGraphic is Image img)) return;
+            // Also on a flat base-prefab button: an art variant that only swaps the sprite keeps this scale.
+            img.pixelsPerUnitMultiplier = ButtonFrameScale;
+            var label = b.GetComponentInChildren<Text>(true);
+            if (label == null || label.transform.parent != b.transform) return;
+            var border = FrameBorder(img);
+            var skin = Theme != null ? Theme.buttonNormal : null;
+            if (border == Vector4.zero && skin != null) // flat base button: room for the theme frame the variant puts on
+                border = skin.border / Mathf.Max(skin.pixelsPerUnit / 100f * ButtonFrameScale, 0.0001f);
+            var r = label.rectTransform;
+            r.anchorMin = Vector2.zero;
+            r.anchorMax = Vector2.one;
+            r.offsetMin = new Vector2(Mathf.Max(r.offsetMin.x, border.x + LabelPadding), border.y + LabelPadding);
+            r.offsetMax = new Vector2(Mathf.Min(r.offsetMax.x, -(border.z + LabelPadding)), -(border.w + LabelPadding));
+        }
+
+        /// A text plate (14.4): a flat panel-colour image at alpha 0.9, no frame sprite, not a raycast target.
+        public static Image Plate(Transform parent, string name = "Plate")
+        {
+            var c = PanelBg;
+            var img = MakeImage(parent, new Color(c.r, c.g, c.b, PlateAlpha), null, name);
+            img.raycastTarget = false;
+            return img;
+        }
+
+        /// Plate alpha: 0.9 keeps gold and dim text above 4.5:1 even composited over white (14.3).
+        public const float PlateAlpha = 0.9f;
 
         /// A menu button: MakeButton + the theme skin.
         public static Button MenuButton(Transform parent, int fontSize, Action onClick, out Text text, string name = "Button")

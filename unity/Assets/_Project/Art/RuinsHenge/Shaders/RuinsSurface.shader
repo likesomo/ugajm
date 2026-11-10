@@ -6,6 +6,10 @@ Shader "SevenSteps/RuinsSurface"
   _MossColor("Moss",Color)=(0.435,0.545,0.306,1)
   _WallColor("Cut Slate",Color)=(.33,.41,.49,1)
   _AmbientFloor("Shadow Floor",Float)=.3
+  _WeatherMap("Weather: stone / moss / wood",2D)="gray"{}
+  _EnvironmentDetail("Environment detail",Range(0,1))=0
+  _EnvironmentWood("Timber",Range(0,1))=0 _EnvironmentMoss("Patina",Range(0,1))=0
+  _WeatherTint("Patina tint",Color)=(.24,.30,.21,1)
   _UseVertexColor("Vertex Color",Float)=0 _Unlit("Unlit",Float)=0
  }
  SubShader {
@@ -22,25 +26,39 @@ Shader "SevenSteps/RuinsSurface"
    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
    TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
+   TEXTURE2D(_WeatherMap); SAMPLER(sampler_WeatherMap);
    CBUFFER_START(UnityPerMaterial)
-   float4 _BaseMap_ST,_BaseColor,_MossColor,_WallColor;
+   float4 _BaseMap_ST,_BaseColor,_MossColor,_WallColor,_WeatherTint;
+   float _EnvironmentDetail,_EnvironmentWood,_EnvironmentMoss;
    float _UseAtlas,_UseMoss,_UseVertexColor,_Unlit,_AmbientFloor;
    CBUFFER_END
    struct Attributes {float4 positionOS:POSITION;float3 normalOS:NORMAL;float2 uv:TEXCOORD0;float2 style:TEXCOORD1;float4 color:COLOR;};
    struct Varyings {float4 positionCS:SV_POSITION;float3 normalWS:TEXCOORD0;float2 uv:TEXCOORD1;float4 color:COLOR;float3 positionWS:TEXCOORD2;float fog:TEXCOORD3;float2 style:TEXCOORD4;half3 fill:TEXCOORD5;};
    Varyings Vert(Attributes a){Varyings o;VertexPositionInputs p=GetVertexPositionInputs(a.positionOS.xyz);o.positionCS=p.positionCS;o.positionWS=p.positionWS;o.normalWS=TransformObjectToWorldNormal(a.normalOS);o.uv=TRANSFORM_TEX(a.uv,_BaseMap);o.color=a.color;o.style=a.style;o.fill=VertexLighting(p.positionWS,o.normalWS);o.fog=ComputeFogFactor(p.positionCS.z);return o;}
    half4 Frag(Varyings i):SV_Target {
-    half3 color=lerp(half3(1,1,1),SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,i.uv).rgb,_UseAtlas)*_BaseColor.rgb;
-    color*=lerp(half3(1,1,1),i.color.rgb,_UseVertexColor);
-    color=lerp(color,_MossColor.rgb,saturate(i.color.r*_UseMoss)*(1-step(.5,i.style.x)));
-    if(i.style.x>.5&&i.style.x<1.5){
-     float noise=frac(sin(dot(floor(i.positionWS.xz*8),float2(12.9898,78.233)))*43758.5453);
-     float edge=step(.38,max(abs(frac(i.positionWS.x+.5)-.5),abs(frac(i.positionWS.z+.5)-.5)));
-     color=_WallColor.rgb*lerp(.68,1.28,saturate(i.style.y))*(.97+.06*noise);
-     color=lerp(color,_MossColor.rgb,edge*step(.62,i.style.y)*smoothstep(.6,.9,noise)*.35);
+    half3 color;
+    if(i.style.x>1.5&&i.style.x<2.5)
+    {
+     // Environment only. Board tiles keep their existing atlas and clear numeric surfaces.
+     half4 weather=SAMPLE_TEXTURE2D(_WeatherMap,sampler_WeatherMap,i.positionWS.xz*.45);
+     half grain=lerp(weather.r,weather.b,_EnvironmentWood);
+     color=i.color.rgb*lerp(1,lerp(.52,1.20,grain),_EnvironmentDetail);
+     half patina=smoothstep(.54,.77,weather.g)*_EnvironmentMoss*saturate(i.normalWS.y)*(1-_EnvironmentWood);
+     color=lerp(color,_WeatherTint.rgb,patina);
     }
-    if(i.style.x>1.5&&i.style.x<2.5)color=i.color.rgb;
-    if(i.style.x>2.5)color=lerp(color,half3(.70,.66,.56),step(.70,i.style.y)*.85);
+    else
+    {
+     color=lerp(half3(1,1,1),SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,i.uv).rgb,_UseAtlas)*_BaseColor.rgb;
+     color*=lerp(half3(1,1,1),i.color.rgb,_UseVertexColor);
+     color=lerp(color,_MossColor.rgb,saturate(i.color.r*_UseMoss)*(1-step(.5,i.style.x)));
+     if(i.style.x>.5&&i.style.x<1.5){
+      float noise=frac(sin(dot(floor(i.positionWS.xz*8),float2(12.9898,78.233)))*43758.5453);
+      float edge=step(.38,max(abs(frac(i.positionWS.x+.5)-.5),abs(frac(i.positionWS.z+.5)-.5)));
+      color=_WallColor.rgb*lerp(.68,1.28,saturate(i.style.y))*(.97+.06*noise);
+      color=lerp(color,_MossColor.rgb,edge*step(.62,i.style.y)*smoothstep(.6,.9,noise)*.35);
+     }
+     if(i.style.x>2.5)color=lerp(color,half3(.70,.66,.56),step(.70,i.style.y)*.85);
+    }
     Light l=GetMainLight(TransformWorldToShadowCoord(i.positionWS));
     half3 n=normalize(i.normalWS);
     half3 lighting=SampleSH(n)+i.fill+l.color*saturate(dot(n,l.direction))*l.shadowAttenuation;
