@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { run, replayLine, stage, stateKey, keyHash, QaError } from './qa-play.mjs';
+import { run, replayLine, stage, stateKey, keyHash, runTokens, QaError } from './qa-play.mjs';
 import { newState, step, choose, actions, minBodies, keyOf, DIRS } from '../../prototypes/seven-steps/src/core.js';
 import { LEVELS } from '../../prototypes/seven-steps/src/levels.js';
 
@@ -143,4 +143,13 @@ test('replayLine catches tampering; finalHash is the key hash; CLI exits 2 on er
   assert.equal(cli.status, 2); assert.match(cli.stderr, /^error: no session/);
   const ok = spawnSync(process.execPath, [fileURLToPath(new URL('./qa-play.mjs', import.meta.url)), 'verify'], { env: process.env, encoding: 'utf8' });
   assert.equal(ok.status, 0); assert.match(ok.stdout, /verify OK: 1 lines/);
+});
+
+// Golden shared with C# (docs/qa-attempts.md 6): scene-flow checks the same stage, inputs, key and hash in EditMode.
+// Stage 29 with the smoke replay DURRRRRKDDR plus R ! H and Z K (CLAUDE.md lists that replay; no new solution data).
+test('golden: stage 29 "R!HDURRRRRKZKDDR" -> stateKey and stateHash', () => {
+  const r = runTokens(stage(29).level, 'R!HDURRRRRKZKDDR');
+  assert.equal(r.error, null);
+  assert.equal(stateKey(r.state), '10|29|3|2|15|||0|1');
+  assert.equal(keyHash(stateKey(r.state)), 'e57f027f');
 });

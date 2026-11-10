@@ -105,6 +105,11 @@ start|pos|used|bodies|statues|bridges|broken|status|flipped
 - `stateHash` = `stateKey`의 UTF-8 바이트에 대한 **FNV-1a 32비트**(offset 2166136261, prime 16777619), 소문자 16진 8자리.
   - C# `QaReplay.StateHash`와 같다.
   - 참고값: `keyHash("a") = e40c292c`.
+- **골든값 (JS와 C#가 바이트 단위로 같은지 확인)**: 스테이지 29에 `inputs = "R!HDURRRRRKZKDDR"`를 3·7절대로 적용하면 다음이 나와야 한다.
+  - `stateKey = 10|29|3|2|15|||0|1` (선돌 1개, 레버가 당겨진 상태)
+  - `stateHash = e57f027f`
+  - JS는 `qa-play.test.mjs`의 golden 테스트가 이 값을 고정하고, C#은 scene-flow EditMode 테스트가 같은 값을 확인한다.
+  - 스테이지 29 맵이나 규칙이 바뀌면 두 테스트를 함께 고친다.
 
 ## 7. 재생 절차 (QaReplay가 할 일)
 
