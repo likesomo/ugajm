@@ -5,7 +5,7 @@ Set BSA_BAKE=False in MCP globals for a quick blockout; default final build bake
 real high resolution relief to tangent normals and AO, exports FBX and saves .blend.
 No downloaded assets. All lengths are metres; Z=0 is the playable surface.
 """
-import bpy, math, random, json
+import bpy, math, random, json, zlib, sys, importlib
 from pathlib import Path
 from mathutils import Vector
 
@@ -13,6 +13,13 @@ ROOT = Path('C:/unityjam/shared-assets/seven-steps')
 OUT = ROOT / 'Assets/Art/RuinsHenge/BoardShapeA'
 SOURCE = ROOT / 'Source/Blender/SS_BoardShapeA.blend'
 REVIEW = ROOT / 'concepts/themes/board-shape-2026-11-10-r2/unity'
+REVIEW_TARGET=REVIEW/'stone-pass/after'
+REVIEW_TARGET.mkdir(parents=True,exist_ok=True)
+sys.dont_write_bytecode=True
+sys.path.insert(0,'C:/Users/soso1/orca/workspaces/ugajm/art/design/art/blender')
+import stone_recipes
+importlib.reload(stone_recipes)
+from stone_recipes import recipe, STONE_SLOTS
 for p in (OUT, SOURCE.parent, REVIEW): p.mkdir(parents=True, exist_ok=True)
 BAKE = globals().get('BSA_BAKE', True)
 PREVIEW_SIZE = globals().get('BSA_SIZE',(8,6))
@@ -28,9 +35,9 @@ library = bpy.data.collections.new('01_EXPORT_LIBRARY_BSA'); scene.collection.ch
 preview = bpy.data.collections.new('02_BOARD_INSTANCES_BSA'); scene.collection.children.link(preview)
 studio = bpy.data.collections.new('99_STUDIO_NO_EXPORT_BSA'); scene.collection.children.link(studio)
 
-# Eight 256px shared swatches: granite, rock, timber, bronze, teal,
-# terracotta, moss and frost. Only TWO delivered texture sheets.
-COLORS = [(0.70,.68,.65),(.58,.59,.60),(.34,.20,.105),(.60,.38,.15),(.19,.44,.42),(.65,.30,.17),(.262,.323,.060),(.66,.81,.88)]
+# Sixteen 256px swatches in TWO 1024-square sheets. The extra rows contain
+# actual geological recipes, not chapter tints of the same grey crack pattern.
+COLORS = [(.43,.45,.44),(.37,.39,.38),(.34,.20,.105),(.60,.38,.15),(.19,.44,.42),(.65,.30,.17),(.262,.323,.060),(.66,.81,.88)]+[(.5,.5,.5)]*8
 def mat():
     m = bpy.data.materials.get('SS_M_BoardShapeA') or bpy.data.materials.new('SS_M_BoardShapeA')
     m.use_nodes = True
@@ -50,14 +57,18 @@ def uv_map(obj, swatch):
             # Whole repeatable swatch with a 6px gutter; no palette bleed.
             amin=mins[axes[0]];amax=maxs[axes[0]]
             bmin=mins[axes[1]];bmax=maxs[axes[1]]
-            u = .025 + .95 * ((a-amin)/max(.001,amax-amin))
-            w = .025 + .95 * ((b-bmin)/max(.001,bmax-bmin))
-            uv.data[li].uv=((swatch%4+u)/4, (swatch//4+w)/2)
+            seed=zlib.crc32((obj.name+':'+str(poly.index)).encode())
+            u = .035 + .77 * ((a-amin)/max(.001,amax-amin))+(seed%97)/97*.16
+            w = .035 + .77 * ((b-bmin)/max(.001,bmax-bmin))+(seed%71)/71*.16
+            # Granite hairlines live only on top variants. Rough sides get no
+            # copied top-face crack, so a block cannot become a web of fissures.
+            face_swatch=1 if swatch in (0,14,15) and axis!=2 else swatch
+            uv.data[li].uv=((face_swatch%4+u)/4, (face_swatch//4+w)/4)
     mesh.materials.append(material)
     attr = mesh.color_attributes.new(name='Color',type='FLOAT_COLOR',domain='CORNER')
     for c in attr.data: c.color=(1,1,1,1)
     style=mesh.uv_layers.new(name='Style')
-    for item in style.data:item.uv=(4,0)
+    for item in style.data:item.uv=(4,(zlib.crc32(obj.name.encode())%997)/997)
     mesh.uv_layers.active=uv
     return obj
 def mesh_obj(name, verts, faces, swatch):
@@ -73,6 +84,14 @@ def box(name, size, pos=(0,0,0), swatch=0, bevel=.025):
     if bevel:
         mod=ob.modifiers.new('One broad chamfer','BEVEL');mod.width=bevel;mod.segments=1
         bpy.ops.object.modifier_apply(modifier=mod.name)
+        if swatch==0:
+            rng=random.Random(zlib.crc32(name.encode()))
+            # Asymmetric small spalls in the broad bevel, never the clean centre.
+            for vertex in ob.data.vertices:
+                if rng.random()<.22:
+                    inward=Vector((-vertex.co.x,-vertex.co.y,-vertex.co.z)).normalized()
+                    vertex.co+=inward*rng.uniform(.004,.017)
+            ob.data.update()
     uv_map(ob,swatch); return ob
 def join(name, parts):
     bpy.ops.object.select_all(action='DESELECT')
@@ -90,15 +109,16 @@ def tile(k):
     ring=[(x+rng.uniform(-.003,.003),y+rng.uniform(-.003,.003)) for x,y in ring]
     n=len(ring)
     verts=[]
-    for scale,z in [(1,-.16),(1,-.07),(.86,0)]:verts.extend([(x*scale,y*scale,z) for x,y in ring])
+    for j,(scale,z) in enumerate([(1,-.16),(1,-.07),(.86,0)]):
+        verts.extend([(x*scale,y*scale,z+(rng.uniform(-.016,.011) if j==1 else 0)) for x,y in ring])
     faces=[tuple(reversed(range(n))),tuple(range(n*2,n*3))]
     for j in range(2):
         for i in range(n): faces.append((j*n+i,j*n+(i+1)%n,(j+1)*n+(i+1)%n,(j+1)*n+i))
-    ob=mesh_obj('SS_BSA_Floor_'+str(k),verts,faces,0)
+    ob=mesh_obj('SS_BSA_Floor_'+str(k),verts,faces,[0,14,15][k])
     # Explicit bevel/edge color is a curvature mask without an extra material or sample.
     colors=ob.data.color_attributes['Color']
     for face in ob.data.polygons:
-        c=(.98,.98,.98,1) if face.index==1 or face.index>=n+2 else (.48,.40,.27,1)
+        c=(.98,.98,.98,1) if face.index==1 or face.index>=n+2 else (.64,.65,.63,1)
         for li in face.loop_indices:colors.data[li].color=c
     # Moss occupies the recessed outer seam only, never the central label area.
     parts=[ob]
@@ -385,108 +405,22 @@ def bake_mesh_ao_and_shadow_profiles():
                     phi=k*2.399963;z=(k+.5)/8;r=math.sqrt(1-z*z)
                     if tree.ray_cast(p,Vector((r*math.cos(phi),z,r*math.sin(phi))),.30)[0] is not None:contact+=1
                 result[slot//4*256+iy,slot%4*256+ix]=min(1,cast/4*.82+contact/8*.42)
-    (REVIEW/'distinct-pass/after').mkdir(parents=True,exist_ok=True)
+    (REVIEW/'stone-pass/after').mkdir(parents=True,exist_ok=True)
     image=bpy.data.images.new('BSA_Shadow_Bake_Proof',1024,512,alpha=True)
     proof=np.ones((512,1024,4),dtype=np.float32);proof[:,:,:3]=1-result[:,:,None];image.pixels.foreach_set(proof.ravel())
-    image.filepath_raw=str(REVIEW/'distinct-pass/after/blender-shadow-bake-proof.png');image.file_format='PNG';image.save()
+    image.filepath_raw=str(REVIEW/'stone-pass/after/blender-shadow-bake-proof.png');image.file_format='PNG';image.save()
     return result
 
-def bake_atlas():
-    import numpy as np
-    n=128;W,H=1024,512
-    for o in preview.objects:o.hide_render=True
-    normal=bpy.data.images.new('BSA_Normal_Roughness',width=W,height=H,alpha=True);normal.colorspace_settings.name='Non-Color'
-    ao=bpy.data.images.new('BSA_BakedAO_Temporary',width=W,height=H,alpha=True);ao.colorspace_settings.name='Non-Color'
-    material.node_tree.nodes.clear()
-    bs=material.node_tree.nodes.new('ShaderNodeBsdfPrincipled');out=material.node_tree.nodes.new('ShaderNodeOutputMaterial');material.node_tree.links.new(bs.outputs['BSDF'],out.inputs[0])
-    target=material.node_tree.nodes.new('ShaderNodeTexImage');target.image=normal;material.node_tree.nodes.active=target
-    # Relief is actual high-poly geometry: grain, shallow chipped border, recessed trim.
-    lows=[];highs=[]
-    for swatch in range(8):
-        xoff=(swatch%4)*1.2;yoff=(swatch//4)*1.2
-        low=mesh_obj('BAKE_Low_'+str(swatch),[(xoff,yoff,0),(xoff+1,yoff,0),(xoff+1,yoff+1,0),(xoff,yoff+1,0)],[(0,1,2,3)],swatch)
-        uv=low.data.uv_layers.active
-        for li,co in enumerate([(0,0),(1,0),(1,1),(0,1)]):uv.data[li].uv=((swatch%4+co[0])/4,(swatch//4+co[1])/2)
-        verts=[];faces=[];rng=random.Random(912+swatch)
-        from mathutils import noise
-        for iy in range(n+1):
-            for ix in range(n+1):
-                u=ix/n;v=iy/n
-                grain=rng.uniform(-1,1)
-                z=.0011*grain+.0010*noise.noise(Vector((u*17,v*17,swatch*3)))
-                if swatch==1:
-                    # Long vertical fissures and stone strata, not repeated diagonal hatching.
-                    crack=min(abs(u-(.24+.035*math.sin(v*11))),abs(u-(.73+.045*math.sin(v*8+2))))
-                    z-=max(0,.013-crack)*.9
-                    z+=.002*math.sin(v*35+math.sin(u*18))
-                if swatch==2:z=.004*math.sin(v*85+math.sin(u*22)*1.4)
-                if swatch in (4,5):
-                    # Recessed V chevrons share one strip; lower trim belongs at tile edges only.
-                    line=abs((u*3)%1-.5)*1.5
-                    z=-.016 if abs(v-line-.12)<.025 else z*.4
-                if swatch in (0,1):
-                    border=min(u,v,1-u,1-v)
-                    z-=max(0,.045-border)*.12*(.5+.5*math.sin(u*93+v*117)**2)
-                verts.append((xoff+u,yoff+v,z))
-        for iy in range(n):
-            for ix in range(n):
-                a=iy*(n+1)+ix;faces.append((a,a+1,a+n+2,a+n+1))
-        high=mesh_obj('BAKE_HighRelief_'+str(swatch),verts,faces,swatch)
-        lows.append(low);highs.append(high)
-    scene.render.bake.use_selected_to_active=True;scene.render.bake.cage_extrusion=.05;scene.render.bake.max_ray_distance=.12;scene.render.bake.margin=4;scene.render.bake.use_clear=False
-    for image,kind in [(normal,'NORMAL'),(ao,'AO')]:
-        target.image=image
-        for low,high in zip(lows,highs):
-            bpy.ops.object.select_all(action='DESELECT');low.hide_set(False);high.hide_set(False);low.hide_render=False;high.hide_render=False
-            low.select_set(True);high.select_set(True);bpy.context.view_layer.objects.active=low
-            bpy.ops.object.bake(type=kind)
-    a=np.array(ao.pixels[:],dtype=np.float32).reshape(H,W,4)[:,:,0]
-    pixels=np.ones((H,W,4),dtype=np.float32)
-    for swatch,c in enumerate(COLORS):
-        yy,xx=np.mgrid[0:256,0:256];rng=np.random.default_rng(410+swatch)
-        noise=rng.random((256,256));grain=(noise-.5)*.055
-        def cloudy(res):
-            coarse=rng.random((res+1,res+1));axis=np.linspace(0,res-.0001,256);cell=axis.astype(int);t=axis-cell;t=t*t*(3-2*t)
-            a=coarse[cell[:,None],cell[None,:]];b=coarse[cell[:,None],cell[None,:]+1]
-            c0=coarse[cell[:,None]+1,cell[None,:]];d=coarse[cell[:,None]+1,cell[None,:]+1]
-            top=a*(1-t[None,:])+b*t[None,:];bottom=c0*(1-t[None,:])+d*t[None,:]
-            return top*(1-t[:,None])+bottom*t[:,None]
-        cloud=(cloudy(6)-.5)*.15+(cloudy(27)-.5)*.07
-        shade=.96+grain+cloud
-        speck=(noise>.975)*.12-(noise<.025)*.14
-        if swatch in (0,1):
-            edge=np.minimum.reduce([xx,yy,255-xx,255-yy]);shade+=speck
-            shade+=np.clip((11-edge)/11,0,1)*.14
-            if swatch==1:
-                u=xx/255;v=yy/255;crack=np.minimum(np.abs(u-(.24+.035*np.sin(v*11))),np.abs(u-(.73+.045*np.sin(v*8+2))))
-                shade-=np.clip((.005-crack)/.005,0,1)*.13
-        if swatch==2:shade=.86+.18*np.sin(yy*.23+np.sin(xx*.025)*2)**2+grain
-        for channel in range(3):pixels[swatch//4*256:(swatch//4+1)*256,swatch%4*256:(swatch%4+1)*256,channel]=np.clip(c[channel]*shade,0,1)
-    pixels[:,:,:3]*=(.62+.38*a[:,:,None])
-    # AO already lives in RGB. Reuse alpha for eight actual static shadow bakes.
-    pixels[:,:,3]=bake_mesh_ao_and_shadow_profiles()
-    color=bpy.data.images.new('BSA_Color_AO',width=W,height=H,alpha=True);color.colorspace_settings.name='sRGB';color.pixels.foreach_set(pixels.ravel())
-    color.alpha_mode='CHANNEL_PACKED';color.filepath_raw=str(OUT/'BSA_ColorAO.png');color.file_format='PNG';color.save()
-    normals=np.array(normal.pixels[:],dtype=np.float32).reshape(H,W,4);normals[:,:,3]=.76
-    normal.pixels.foreach_set(normals.ravel());normal.filepath_raw=str(OUT/'BSA_NormalRough.png');normal.file_format='PNG';normal.save()
-    for low,high in zip(lows,highs):bpy.data.objects.remove(low,do_unlink=True);bpy.data.objects.remove(high,do_unlink=True)
-    for o in preview.objects:o.hide_render=False
-    # Keep the high-poly relief source reproducible in this script; bake intermediates are not exports.
-    nodes=material.node_tree.nodes;links=material.node_tree.links
-    tex=nodes.new('ShaderNodeTexImage');tex.image=color;links.new(tex.outputs['Color'],bs.inputs['Base Color']);bs.inputs['Roughness'].default_value=.76
-    vc=nodes.new('ShaderNodeVertexColor');vc.layer_name='Color'
-    mult=nodes.new('ShaderNodeMixRGB');mult.blend_type='MULTIPLY';mult.inputs[0].default_value=1
-    links.new(tex.outputs['Color'],mult.inputs[1]);links.new(vc.outputs['Color'],mult.inputs[2]);links.new(mult.outputs[0],bs.inputs['Base Color'])
-    target.image=normal;nm=nodes.new('ShaderNodeNormalMap');links.new(target.outputs['Color'],nm.inputs['Color']);links.new(nm.outputs['Normal'],bs.inputs['Normal'])
-    bpy.data.images.remove(ao)
+# The geology bake shares this owned scene/library namespace.
+exec(compile(open('C:/Users/soso1/orca/workspaces/ugajm/art/design/art/blender/stone_atlas_bake.py',encoding='utf-8').read(),'stone_atlas_bake.py','exec'))
 
 if BAKE:bake_atlas()
 else:
     # Temporary one-sheet swatches allow a clear material blockout before final bake.
     import numpy as np
-    pix=np.ones((512,1024,4),dtype=np.float32)
+    pix=np.ones((1024,1024,4),dtype=np.float32)
     for i,c in enumerate(COLORS):pix[i//4*256:(i//4+1)*256,i%4*256:(i%4+1)*256,:3]=c
-    im=bpy.data.images.new('BSA_BlockoutColors',1024,512);im.pixels.foreach_set(pix.ravel())
+    im=bpy.data.images.new('BSA_BlockoutColors',1024,1024);im.pixels.foreach_set(pix.ravel())
     nodes=material.node_tree.nodes;bs=nodes.get('Principled BSDF');tex=nodes.new('ShaderNodeTexImage');tex.image=im;material.node_tree.links.new(tex.outputs['Color'],bs.inputs['Base Color']);bs.inputs['Roughness'].default_value=.76
 
 report={}
@@ -499,8 +433,8 @@ for name,ob in modules.items():
     ob.hide_set(True);ob.hide_render=True
 preview_tris=sum(len(o.data.loop_triangles) for o in preview.objects if o.type=='MESH')
 report['preview_8x6_tris']=preview_tris;report['bake']=BAKE;report['atlas_count']=2 if BAKE else 0
-(REVIEW/'blender-kit-report.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
-scene.render.filepath=str(REVIEW/('blender-final.png' if BAKE else 'blender-blockout.png'))
+(REVIEW_TARGET/'blender-kit-report.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
+scene.render.filepath=str(REVIEW_TARGET/('blender-final.png' if BAKE else 'blender-blockout.png'))
 bpy.ops.wm.save_as_mainfile(filepath=str(SOURCE))
 bpy.ops.render.render(write_still=True)
 result={'source':str(SOURCE),'render':scene.render.filepath,'report':report}

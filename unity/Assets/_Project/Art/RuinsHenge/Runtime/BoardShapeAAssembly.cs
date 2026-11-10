@@ -126,6 +126,18 @@ namespace SevenSteps.Art
                 Add(kit.wall,new Vector3(sign*(1.70f+i),-.12f,back),new Vector3(1,1.05f+i%2*.16f,1),sign*2,true);
             var mesh=new Mesh{name="BoardShapeA_"+chapter+"_"+w+"x"+h,indexFormat=IndexFormat.UInt32};
             mesh.CombineMeshes(parts.ToArray(),true,true,false);
+            // Keep per-block UV offsets after merging into one renderer. UV2.x is
+            // the existing material tag; UV2.y carries a deterministic block seed.
+            var styles=mesh.uv2;int cursor=0;
+            for(int part=0;part<parts.Count;part++)
+            {
+                int count=parts[part].mesh.vertexCount;
+                if(cursor+count>styles.Length)throw new InvalidOperationException("BoardShapeA combine vertex order changed");
+                for(int v=0;v<count;v++)styles[cursor+v].y=Mathf.Repeat(styles[cursor+v].y+Noise(part*73+19),1);
+                cursor+=count;
+            }
+            if(cursor!=styles.Length)throw new InvalidOperationException("BoardShapeA combine lost UV seeds");
+            mesh.uv2=styles;
             if(mesh.triangles.Length/3>25000)throw new InvalidOperationException("BoardShapeA environment exceeds 25k tris");
             mesh.RecalculateBounds();mesh.UploadMeshData(true);
             var go=new GameObject("BoardShapeA_Combined",typeof(MeshFilter),typeof(MeshRenderer));

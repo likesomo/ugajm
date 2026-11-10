@@ -1,5 +1,7 @@
 # Seven Steps 아트 바이블 — 유적×선돌×오리엔탈
 
+> 2026-11-10 석재 질감: [7석종·광물 입자·물때·러프니스 베이크](stone-materials-2026-11-10.md). moss=회백 화강암, hollow=현무암/부석, carved=사암, frost=대리석/석영, joinery=점판암+목재, crumble=석회암/트래버틴, altar=사르센 사암을 쓴다. 같은 회색 크랙 무늬의 tint 변형으로 되돌리지 않는다.
+
 > 2026-11-10 R2 A 후속: [7행성 구분 복원·지각·숫자 문 보강](board-shape-a-distinct-followup-2026-11-10.md). 행성별 실루엣/하늘/원경을 유지하며, 이전의 획일적인 외피·공통 남청 하늘을 다시 적용하지 않는다.
 
 > 2026-11-10 판 형태 확정: **R2 A 직사각 석재 연석 + 깎인 암반 지각**. Blender MCP 제작·공유 노멀/AO·Unity 연결과 검토 승인된 직교 프레이밍 제안은 [BoardShapeA 전달 기록](board-shape-a-delivery-2026-11-10.md)을 따른다. 기존 원형 PlanetSummit 외피는 이 모듈 키트로 교체한다.

@@ -28,9 +28,9 @@ namespace SevenSteps.Art
         {
             m.SetTexture("_BoardShapeMap",AssetDatabase.LoadAssetAtPath<Texture2D>(Shared+"/BSA_ColorAO.png"));
             m.SetTexture("_BoardShapeNormal",AssetDatabase.LoadAssetAtPath<Texture2D>(Shared+"/BSA_NormalRough.png"));
-            m.SetFloat("_BoardNormalStrength",.16f);m.SetFloat("_BoardMoss",Moss(id));
-            string[] tint={"8BAF9D","AF8AC9","D4B47D","B9DEF6","B69A7C","B69A90","DDCB94"};
-            int k=Array.IndexOf(Ids,id);m.SetColor("_BoardRockTint",k<0?Color.white:Hex(tint[k]));
+            m.SetFloat("_BoardNormalStrength",.42f);m.SetFloat("_BoardMoss",Moss(id));
+            int k=Array.IndexOf(Ids,id);int[] slots={0,8,9,10,11,12,13};
+            m.SetFloat("_BoardStoneSlot",k<0?0:slots[k]);m.SetColor("_BoardRockTint",Color.white);
             m.enableInstancing=true;EditorUtility.SetDirty(m);
         }
         static float Moss(string id)=>id=="frost"?0:id=="moss"?1:id=="altar"?.75f:id=="joinery"?.1f:.25f;
@@ -73,8 +73,10 @@ namespace SevenSteps.Art
             foreach(string file in Directory.GetFiles(Shared,"*.png"))
             {
                 var importer=(TextureImporter)AssetImporter.GetAtPath(file.Replace('\\','/'));
-                bool normal=file.Contains("Normal");importer.textureType=normal?TextureImporterType.NormalMap:TextureImporterType.Default;
+                // RG normal + B roughness + A AO must survive import byte-for-byte.
+                bool normal=file.Contains("Normal");importer.textureType=TextureImporterType.Default;
                 importer.sRGBTexture=!normal;importer.alphaSource=TextureImporterAlphaSource.FromInput;importer.wrapMode=TextureWrapMode.Clamp;
+                importer.alphaIsTransparency=false;
                 importer.mipmapEnabled=true;importer.maxTextureSize=1024;importer.textureCompression=TextureImporterCompression.Uncompressed;importer.SaveAndReimport();
             }
             var kit=AssetDatabase.LoadAssetAtPath<BoardShapeAKit>(Art+"/BoardShapeA_Kit.asset");
@@ -134,6 +136,23 @@ namespace SevenSteps.Art
         }
         public static void Validate()
         {
+            var packedImporter=(TextureImporter)AssetImporter.GetAtPath(Shared+"/BSA_NormalRough.png");
+            if(packedImporter.textureType!=TextureImporterType.Default||packedImporter.sRGBTexture)
+                throw new Exception("RG normal / roughness / AO must remain linear RGBA data");
+            foreach(string map in new[]{"BSA_ColorAO.png","BSA_NormalRough.png"})
+            {
+                var texture=AssetDatabase.LoadAssetAtPath<Texture2D>(Shared+"/"+map);
+                if(texture.width!=1024||texture.height!=1024)throw new Exception("Expected two 1024-square geology atlases: "+map);
+            }
+            var packed=new Texture2D(2,2,TextureFormat.RGBA32,false,true);
+            try
+            {
+                if(!ImageConversion.LoadImage(packed,File.ReadAllBytes(Shared+"/BSA_NormalRough.png")))throw new Exception("Cannot read packed surface bake");
+                var pixels=packed.GetPixels();float min=1,max=0;
+                foreach(var pixel in pixels){min=Mathf.Min(min,pixel.b);max=Mathf.Max(max,pixel.b);}
+                if(min>.5f||max<.8f)throw new Exception("Roughness channel was lost or repacked as a normal Z channel");
+            }
+            finally{UnityEngine.Object.DestroyImmediate(packed);}
             // Independent conservative sightline check for the requested taller arch at pitch 50.
             // A ray from the next cell's floor centre is already above the complete door AABB.
             var door=Mesh("DoorFrame").bounds;
@@ -153,6 +172,8 @@ namespace SevenSteps.Art
                     long all=tris+size.x*size.y*(Mesh("Floor_0").GetIndexCount(0)/3);
                     if(all>50000)throw new Exception("50k board budget exceeded: "+id+" "+size+" "+all);
                     if(planet.surface.GetFloat("_BoardMoss")!=Moss(id))throw new Exception("Moss override mismatch");
+                    int[] slots={0,8,9,10,11,12,13};
+                    if(planet.surface.GetFloat("_BoardStoneSlot")!=slots[Array.IndexOf(Ids,id)])throw new Exception("Chapter stone recipe mismatch: "+id);
                     lines.Add(id+","+size.x+","+size.y+","+tris+","+all+",1");
                 }
                 finally{UnityEngine.Object.DestroyImmediate(root);}

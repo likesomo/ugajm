@@ -12,7 +12,7 @@ source=Path('C:/Users/soso1/orca/workspaces/ugajm/art/design/art/blender/build_b
 tree=ast.parse(source.read_text(encoding='utf-8'))
 definitions=[n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name in ('instance','board','setup_preview')]
 exec(compile(ast.Module(body=definitions,type_ignores=[]),str(source),'exec'))
-output=Path('C:/unityjam/shared-assets/seven-steps/concepts/themes/board-shape-2026-11-10-r2/unity/distinct-pass/after')
+output=Path('C:/unityjam/shared-assets/seven-steps/concepts/themes/board-shape-2026-11-10-r2/unity/stone-pass/after')
 BSA_STAGE='baked'
 for w,h in [(12,5),(10,3),(8,6)]:
     for ob in list(preview.objects)+list(studio.objects):bpy.data.objects.remove(ob,do_unlink=True)
