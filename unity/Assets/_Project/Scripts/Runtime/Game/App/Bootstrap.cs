@@ -38,7 +38,7 @@ namespace SevenSteps.Game
 
             Services.Clear(); // a Run that threw halfway left HasRunThisPlay false; start clean
 
-            var store = new PlayerPrefsStore();
+            var store = SaveStores.For(launch); // -savekey / ?savekey=: suffixed keys (docs/architecture.md 11)
             var save = new SaveSystem(store);
             NewPlayerLink.Apply(launch, save); // -newplayer / ?newplayer=1: fresh progress and playerId before telemetry starts
             // UI language for this run (docs/architecture.md 13.3): -lang / ?lang= wins over the saved setting, and is not saved.

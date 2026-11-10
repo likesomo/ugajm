@@ -107,5 +107,32 @@ namespace SevenSteps.Tests
             Assert.AreEqual(1, bad.Warnings.Count);
             Assert.IsFalse(LaunchOptions.Parse(null, "").ArtPerf);
         }
+
+        [Test]
+        public void SaveKeyParsesAndSeparatesSaves()
+        {
+            Assert.AreEqual("arch", LaunchOptions.Parse(new[] { "x.exe", "-savekey", "arch" }, "").SaveKey);
+            Assert.AreEqual("scene-flow_2", LaunchOptions.Parse(null, "http://h/?savekey=scene-flow_2").SaveKey);
+            Assert.AreEqual("", LaunchOptions.Parse(null, "").SaveKey);
+            foreach (var bad in new[] { "a b", "x/y", "한", new string((char)97, 33) })
+            {
+                var o = LaunchOptions.Parse(new[] { "x.exe", "-savekey", bad }, "");
+                Assert.AreEqual("", o.SaveKey, bad);
+                Assert.AreEqual(1, o.Warnings.Count, bad);
+            }
+
+            var shared = new MemoryStore();
+            var a = new SaveSystem(new SuffixedStore(shared, "a"));
+            var b = new SaveSystem(new SuffixedStore(shared, "b"));
+            a.SetMasterVolume(0.3f);
+            b.SetMasterVolume(0.7f);
+            Assert.AreEqual(0.3f, new SaveSystem(new SuffixedStore(shared, "a")).Settings.masterVolume, 1e-4f);
+            Assert.AreEqual(0.7f, new SaveSystem(new SuffixedStore(shared, "b")).Settings.masterVolume, 1e-4f);
+            Assert.IsTrue(shared.Data.ContainsKey(SaveSystem.SettingsKey + "#a"));
+            Assert.IsFalse(shared.Data.ContainsKey(SaveSystem.SettingsKey), "the normal key is untouched");
+            Assert.Throws<System.ArgumentException>(() => new SuffixedStore(shared, ""));
+            Assert.IsInstanceOf<PlayerPrefsStore>(SaveStores.For(LaunchOptions.Parse(null, "")));
+            Assert.IsInstanceOf<SuffixedStore>(SaveStores.For(LaunchOptions.Parse(new[] { "x.exe", "-savekey", "arch" }, "")));
+        }
     }
 }

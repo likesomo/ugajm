@@ -52,6 +52,10 @@ namespace SevenSteps.Contracts
         /// Development / measurement only (-artperf / ?artperf=1): the planet environment adds the art frame sampler, which
         /// logs one [ArtPerf] line (fps, median, p95) 10 s after the stage opens. Plays as usual.
         public bool ArtPerf { get; private set; }
+        /// Development / smoke only (-savekey arch / ?savekey=arch): every save key of this run gets this suffix
+        /// (SaveStores.For), so builds run from different workspaces do not share progress and settings (Windows
+        /// PlayerPrefs are one registry key per product). 1-32 of A-Z a-z 0-9 _ -. "" = the normal keys.
+        public string SaveKey { get; private set; } = "";
 
         readonly List<string> warnings = new List<string>();
         /// What was ignored while parsing, one line each. Empty when everything parsed.
@@ -116,6 +120,12 @@ namespace SevenSteps.Contracts
             else warnings.Add($"{source}: flowcheck \"{v}\" is not 1/true or 0/false; ignored");
         }
 
+        void SetSaveKey(string source, string v)
+        {
+            if (SaveStores.IsValidSuffix(v)) SaveKey = v;
+            else warnings.Add($"{source}: savekey \"{v}\" is not 1-32 of A-Z a-z 0-9 _ -; ignored");
+        }
+
         void SetArtPerf(string source, string v)
         {
             if (v == "1" || v == "true") ArtPerf = true;
@@ -144,7 +154,7 @@ namespace SevenSteps.Contracts
                         case "-newplayer": o.NewPlayer = true; continue;
                         case "-flowcheck": o.FlowCheck = true; continue;
                         case "-artperf": o.ArtPerf = true; continue;
-                        case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": case "-loadDelay": case "-titlecheck": break;
+                        case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": case "-loadDelay": case "-titlecheck": case "-savekey": break;
                         default: continue;
                     }
                     if (k + 1 >= args.Length || args[k + 1].StartsWith("-", StringComparison.Ordinal))
@@ -163,6 +173,7 @@ namespace SevenSteps.Contracts
                         case "-smoke": o.SetSmoke("command line", v); break;
                         case "-loadDelay": o.SetLoadDelay("command line", v); break;
                         case "-titlecheck": o.SetTitleCheck("command line", v); break;
+                        case "-savekey": o.SetSaveKey("command line", v); break;
                     }
                 }
 
@@ -184,6 +195,7 @@ namespace SevenSteps.Contracts
                     case "flowcheck": o.SetFlowCheck("url", v); break;
                     case "titlecheck": o.SetTitleCheck("url", v); break;
                     case "artperf": o.SetArtPerf("url", v); break;
+                    case "savekey": o.SetSaveKey("url", v); break;
                     case "newplayer":
                         if (v == "1" || v == "true") o.NewPlayer = true;
                         else if (v != "0" && v != "false") o.warnings.Add($"url: newplayer \"{v}\" is not 1 or 0; ignored");
