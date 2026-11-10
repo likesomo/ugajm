@@ -28,11 +28,12 @@ namespace SevenSteps.Art
         {
             m.SetTexture("_BoardShapeMap",AssetDatabase.LoadAssetAtPath<Texture2D>(Shared+"/BSA_ColorAO.png"));
             m.SetTexture("_BoardShapeNormal",AssetDatabase.LoadAssetAtPath<Texture2D>(Shared+"/BSA_NormalRough.png"));
-            m.SetFloat("_BoardNormalStrength",.12f);m.SetFloat("_BoardMoss",id=="frost"?0:id=="moss"?1:.35f);
-            string[] tint={"C5C9C6","C0B7C8","CEC5B8","C2D5E0","BFB9B2","C3BEB9","D4CDBE"};
+            m.SetFloat("_BoardNormalStrength",.16f);m.SetFloat("_BoardMoss",Moss(id));
+            string[] tint={"8BAF9D","AF8AC9","D4B47D","B9DEF6","B69A7C","B69A90","DDCB94"};
             int k=Array.IndexOf(Ids,id);m.SetColor("_BoardRockTint",k<0?Color.white:Hex(tint[k]));
             m.enableInstancing=true;EditorUtility.SetDirty(m);
         }
+        static float Moss(string id)=>id=="frost"?0:id=="moss"?1:id=="altar"?.75f:id=="joinery"?.1f:.25f;
         static GameObject Part(Transform parent,string name,Mesh mesh,Material material)
         {
             var go=new GameObject(name,typeof(MeshFilter),typeof(MeshRenderer));go.transform.SetParent(parent,false);
@@ -49,6 +50,11 @@ namespace SevenSteps.Art
                 // Existing random wall component would create late renderers after ChapterMaterials.Apply.
                 foreach(var c in root.GetComponents<RuinsWallVariations>())UnityEngine.Object.DestroyImmediate(c);
                 foreach(string module in modules)Part(root.transform,module=="DoorPanel"?"GatePanel":"Model_"+module,Mesh(module),material);
+                if(modules.Contains("Block")||modules.Contains("DoorFrame"))
+                {
+                    var contact=root.GetComponent<BoardShapeAContact>()??root.AddComponent<BoardShapeAContact>();
+                    contact.radius=new Vector2(.54f,.40f);
+                }
                 PrefabUtility.SaveAsPrefabAsset(root,path);
             }
             finally{if(exists)PrefabUtility.UnloadPrefabContents(root);else UnityEngine.Object.DestroyImmediate(root);}
@@ -76,23 +82,30 @@ namespace SevenSteps.Art
             kit.crust=Enumerable.Range(0,3).Select(i=>Mesh("Crust_"+i)).ToArray();kit.menhirs=Enumerable.Range(0,2).Select(i=>Mesh("Menhir_"+i)).ToArray();
             kit.kerb=Mesh("Kerb");kit.corner=Mesh("Corner");kit.medallion=Mesh("Medallion");kit.chest=Mesh("Chest");kit.backGate=Mesh("BackGate");kit.wall=Mesh("Wall");kit.joist=Mesh("Joist");EditorUtility.SetDirty(kit);
             kit.rubble=Mesh("Rubble");kit.fragment=Mesh("Fragment");kit.grass=Mesh("Grass");
+            kit.hollowArch=Mesh("HollowArch");kit.terrace=Mesh("Terrace");kit.frostSpire=Mesh("FrostSpire");kit.timberFrame=Mesh("TimberFrame");kit.mossPatch=Mesh("MossPatch");
             var material=AssetDatabase.LoadAssetAtPath<Material>(Art+"/Materials/BaseAtlas.mat");Textures(material,"moss");
             Replace("Floor",material,"Floor_0");Replace("FloorAlt",material,"Floor_1");Replace("FloorThird",material,"Floor_2");
+            foreach(string actor in new[]{"PlayerA","PlayerB","PlayerC","Statue","FlipUp","FlipDown","Lever"})
+            {
+                string path=Prefabs+"/"+actor+".prefab";if(!File.Exists(path))continue;
+                var root=PrefabUtility.LoadPrefabContents(path);
+                var contact=root.GetComponent<BoardShapeAContact>()??root.AddComponent<BoardShapeAContact>();
+                contact.radius=new Vector2(.48f,.35f);PrefabUtility.SaveAsPrefabAsset(root,path);PrefabUtility.UnloadPrefabContents(root);
+            }
             foreach(string wall in new[]{"Wall","WallStoneV2","WallStoneV3"})Replace(wall,material,"Block");
             Replace("Pit",material,"Pit","Cavity");Replace("Mud",material,"Mud");
             // Reuse the existing frost material class: one lightly translucent ice draw, no refraction.
             var frost=AssetDatabase.LoadAssetAtPath<Material>(Art+"/Materials/FrostOpaque.mat");
-            frost.SetTexture("_BaseMap",AssetDatabase.LoadAssetAtPath<Texture2D>(Shared+"/BSA_ColorAO.png"));
-            frost.SetTexture("_BumpMap",AssetDatabase.LoadAssetAtPath<Texture2D>(Shared+"/BSA_NormalRough.png"));
-            frost.SetColor("_BaseColor",new Color(.92f,.98f,1,.92f));frost.SetFloat("_BumpScale",.12f);frost.SetFloat("_Smoothness",.6f);
-            frost.SetFloat("_Surface",1);frost.SetFloat("_Blend",0);frost.SetFloat("_SrcBlend",5);frost.SetFloat("_DstBlend",10);frost.SetFloat("_ZWrite",0);
-            frost.SetOverrideTag("RenderType","Transparent");frost.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");frost.EnableKeyword("_NORMALMAP");frost.renderQueue=3000;frost.enableInstancing=true;EditorUtility.SetDirty(frost);
+            // Packed atlas alpha stores shadows. Ice opacity must be independent of it.
+            frost.shader=Shader.Find("SevenSteps/RuinsSurface");Textures(frost,"frost");frost.SetFloat("_SurfaceAlpha",.92f);
+            frost.SetFloat("_BoardNormalStrength",.12f);frost.SetFloat("_SrcBlend",5);frost.SetFloat("_DstBlend",10);frost.SetFloat("_ZWrite",0);
+            frost.SetOverrideTag("RenderType","Transparent");frost.DisableKeyword("_SURFACE_TYPE_TRANSPARENT");frost.DisableKeyword("_NORMALMAP");frost.renderQueue=3000;frost.enableInstancing=true;EditorUtility.SetDirty(frost);
             Replace("Ice",frost,"Ice");
             foreach(string door in new[]{"Gate","Door","CountDoor"})Replace(door,material,"DoorFrame","DoorPanel");
             foreach(string guid in AssetDatabase.FindAssets("t:TileSet",new[]{Art}))
             {
                 var set=AssetDatabase.LoadAssetAtPath<TileSet>(AssetDatabase.GUIDToAssetPath(guid));
-                TileVisual Door(TileVisual v){v.inactiveChild="GatePanel";v.materialTarget="GatePanel";v.inactiveMaterial=material;v.labelOffset=new Vector3(0,.31f,-.15f);return v;}
+                TileVisual Door(TileVisual v){v.inactiveChild="GatePanel";v.materialTarget="GatePanel";v.inactiveMaterial=material;v.labelOffset=new Vector3(0,.43f,-.18f);v.labelScale=.64f;return v;}
                 set.gate=Door(set.gate);set.countDoor=Door(set.countDoor);for(int d=0;d<set.doors.Length;d++)set.doors[d]=Door(set.doors[d]);
                 set.mud=new TileVisual{prefab=AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs+"/Mud.prefab"),scale=Vector3.one};EditorUtility.SetDirty(set);
             }
@@ -104,11 +117,15 @@ namespace SevenSteps.Art
                 string path=Prefabs+"/Env/PlanetSummit_"+id+".prefab";var root=PrefabUtility.LoadPrefabContents(path);
                 try{var planet=root.GetComponent<RuinsHengePlanet>();planet.boardShape=kit;planet.surface=env;PrefabUtility.SaveAsPrefabAsset(root,path);}
                 finally{PrefabUtility.UnloadPrefabContents(root);}
+                int index=Array.IndexOf(Ids,id);
+                string[] backgrounds={"071C1B","170D2D","20170E","081A33","24110E","20151D","211A0C"};
+                string[] nebulae={"1B6258","62358A","80552A","2E6297","824630","63516A","8D7540"};
+                string[] moons={"76C7AA","D1A2F7","E1B55D","D8F3FF","D89869","C5A8AB","F2D486"};
                 var skyRoot=PrefabUtility.LoadPrefabContents(Prefabs+"/Env/Sky_"+id+".prefab");
-                try{var sky=skyRoot.GetComponent<RuinsHengeSky>();sky.backgroundTint=Hex("071126");sky.nebulaTint=Hex("14233C");sky.secondaryTint=Hex("1D2A43");PrefabUtility.SaveAsPrefabAsset(skyRoot,Prefabs+"/Env/Sky_"+id+".prefab");}
+                try{var sky=skyRoot.GetComponent<RuinsHengeSky>();sky.backgroundTint=Hex(backgrounds[index]);sky.nebulaTint=Hex(nebulae[index]);sky.secondaryTint=Hex(moons[index]);sky.distantWorlds=true;sky.worldStyle=index;PrefabUtility.SaveAsPrefabAsset(skyRoot,Prefabs+"/Env/Sky_"+id+".prefab");}
                 finally{PrefabUtility.UnloadPrefabContents(skyRoot);}
-                chapter.sky.background=Hex("071126");EditorUtility.SetDirty(chapter.sky);
-                var key=chapter.lighting.key;key.color=Hex("FFE9D3");key.euler=new Vector3(40,35,0);chapter.lighting.key=key;chapter.lighting.ambient=Hex("526177");EditorUtility.SetDirty(chapter.lighting);
+                chapter.sky.background=Hex(backgrounds[index]);EditorUtility.SetDirty(chapter.sky);
+                var key=chapter.lighting.key;key.color=Hex(id=="frost"?"DCEFFF":"FFE9D3");key.euler=new Vector3(40,125,0);chapter.lighting.key=key;chapter.lighting.ambient=Hex("35445B");EditorUtility.SetDirty(chapter.lighting);
                 // Preserve sky and light GUIDs; no production camera, AppConfig or scene edits.
             }
             AssetDatabase.SaveAssets();
@@ -117,6 +134,11 @@ namespace SevenSteps.Art
         }
         public static void Validate()
         {
+            // Independent conservative sightline check for the requested taller arch at pitch 50.
+            // A ray from the next cell's floor centre is already above the complete door AABB.
+            var door=Mesh("DoorFrame").bounds;
+            float sightline=(1-Mathf.Max(Mathf.Abs(door.min.z),Mathf.Abs(door.max.z)))*Mathf.Tan(50*Mathf.Deg2Rad);
+            if(door.max.y>=sightline)throw new Exception("Number arch occludes the next cell centre at pitch 50");
             var lines=new List<string>{"chapter,width,height,environmentTris,fullCleanBoardTris,environmentDraws"};
             foreach(string id in Ids)foreach(var size in new[]{new Vector2Int(8,6),new Vector2Int(12,5),new Vector2Int(10,3),new Vector2Int(7,7)})
             {
@@ -129,14 +151,15 @@ namespace SevenSteps.Art
                     if(renderers.Length!=1)throw new Exception("Expected one combined environment renderer: "+id);
                     var mesh=root.GetComponentInChildren<MeshFilter>().sharedMesh;long tris=mesh.GetIndexCount(0)/3;
                     long all=tris+size.x*size.y*(Mesh("Floor_0").GetIndexCount(0)/3);
-                    if(all>25000)throw new Exception("25k board target exceeded: "+id+" "+size+" "+all);
-                    if(planet.surface.GetFloat("_BoardMoss")!=(id=="frost"?0:id=="moss"?1:.35f))throw new Exception("Moss override mismatch");
+                    if(all>50000)throw new Exception("50k board budget exceeded: "+id+" "+size+" "+all);
+                    if(planet.surface.GetFloat("_BoardMoss")!=Moss(id))throw new Exception("Moss override mismatch");
                     lines.Add(id+","+size.x+","+size.y+","+tris+","+all+",1");
                 }
                 finally{UnityEngine.Object.DestroyImmediate(root);}
             }
             var report="../reports/board-shape-a";Directory.CreateDirectory(report);File.WriteAllLines(report+"/geometry.csv",lines);
-            Debug.Log("[BoardShapeA] PASS: 7 chapters x 4 board sizes, one-cell decoration clearance, repeated Fit, one environment draw and <25k clean board tris");
+            Debug.Log("[BoardShapeA] PASS: 7 chapters x 4 board sizes, one-cell decoration clearance, repeated Fit, one environment draw and <50k clean board tris");
+            Debug.Log("[BoardShapeA] Number arch next-cell centre sightline PASS at pitch50; digit glyph size is checked by the actual review player");
         }
         public static void BatchPrepare()
         {

@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &316287361
+--- !u!1 &587672125
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,61 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 316287363}
-  - component: {fileID: 316287362}
-  m_Layer: 0
-  m_Name: BoardShapeAReview
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &316287362
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 316287361}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 23fe5d2433d584a47b264a05d03500db, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: SevenSteps.Art.Preview::SevenSteps.Art.BoardShapeAReviewCapture
-  chapters:
-  - {fileID: 11400000, guid: 5c9b82ef6a3bacb4ca29a8f536749e7c, type: 2}
-  - {fileID: 11400000, guid: b288f2aafc80d8e45b5be597dd361b84, type: 2}
-  - {fileID: 11400000, guid: dabaa688d67293549b0ddfe37afd3d96, type: 2}
-  - {fileID: 11400000, guid: ae58b36f5817c5e46839c1463c7a5acd, type: 2}
-  - {fileID: 11400000, guid: 329e8e1892db0cc41beab3edc51ed813, type: 2}
-  - {fileID: 11400000, guid: ef32180268af0204a98bbd60765f7302, type: 2}
-  - {fileID: 11400000, guid: 972293da18d44ac41a8748d36f931cf8, type: 2}
-  numberFont: {fileID: 12800000, guid: 6726afba0e987134bb60bf8a871ea91c, type: 3}
---- !u!4 &316287363
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 316287361}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &626657198
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 626657200}
-  - component: {fileID: 626657199}
+  - component: {fileID: 587672127}
+  - component: {fileID: 587672126}
   m_Layer: 0
   m_Name: Camera
   m_TagString: MainCamera
@@ -189,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!20 &626657199
+--- !u!20 &587672126
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 626657198}
+  m_GameObject: {fileID: 587672125}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -240,13 +187,66 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &626657200
+--- !u!4 &587672127
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 626657198}
+  m_GameObject: {fileID: 587672125}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &732123704
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 732123706}
+  - component: {fileID: 732123705}
+  m_Layer: 0
+  m_Name: BoardShapeAReview
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &732123705
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 732123704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23fe5d2433d584a47b264a05d03500db, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: SevenSteps.Art.Preview::SevenSteps.Art.BoardShapeAReviewCapture
+  chapters:
+  - {fileID: 11400000, guid: 5c9b82ef6a3bacb4ca29a8f536749e7c, type: 2}
+  - {fileID: 11400000, guid: b288f2aafc80d8e45b5be597dd361b84, type: 2}
+  - {fileID: 11400000, guid: dabaa688d67293549b0ddfe37afd3d96, type: 2}
+  - {fileID: 11400000, guid: ae58b36f5817c5e46839c1463c7a5acd, type: 2}
+  - {fileID: 11400000, guid: 329e8e1892db0cc41beab3edc51ed813, type: 2}
+  - {fileID: 11400000, guid: ef32180268af0204a98bbd60765f7302, type: 2}
+  - {fileID: 11400000, guid: 972293da18d44ac41a8748d36f931cf8, type: 2}
+  numberFont: {fileID: 12800000, guid: 6726afba0e987134bb60bf8a871ea91c, type: 3}
+--- !u!4 &732123706
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 732123704}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -259,5 +259,5 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 626657200}
-  - {fileID: 316287363}
+  - {fileID: 587672127}
+  - {fileID: 732123706}

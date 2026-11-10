@@ -8,5 +8,6 @@ namespace SevenSteps.Art
         public Mesh[] crust, menhirs;
         public Mesh kerb, corner, medallion, chest, backGate, wall, joist;
         public Mesh rubble, fragment, grass;
+        public Mesh hollowArch, terrace, frostSpire, timberFrame, mossPatch;
     }
 }
