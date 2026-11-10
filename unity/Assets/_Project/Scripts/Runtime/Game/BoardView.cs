@@ -562,7 +562,18 @@ namespace SevenSteps.Game
         {
             if (cam == null || level == null) return;
             fittedAspect = cam.aspect;
-            var rig = rigOverride ?? set.cameraRig;
+            Fit(cam, grid, rigOverride ?? set.cameraRig);
+        }
+
+        /// Actor height above the tiles that the framing keeps in view (cells).
+        public const float ActorHeight = 1.2f;
+
+        /// The camera framing for a board (rotation, projection, position) at <paramref name="cam"/>'s aspect: the board
+        /// (with the rig's padding and actor height) inside HudView.BoardViewport. Public so UiLayoutCheck (14.6) projects the
+        /// board exactly as the game does.
+        public static void Fit(Camera cam, BoardGrid grid, CameraRig rig)
+        {
+            if (cam == null) throw new ArgumentNullException(nameof(cam));
             var rot = rig.Rotation;
             cam.transform.rotation = rot;
             cam.orthographic = rig.orthographic;
@@ -575,7 +586,7 @@ namespace SevenSteps.Game
             float halfX = 0, halfY = 0;
             for (int k = 0; k < 8; k++)
             {
-                var p = new Vector3((k & 1) == 0 ? -ext.x : ext.x, (k & 2) == 0 ? 0 : 1.2f * grid.CellSize, (k & 4) == 0 ? -ext.z : ext.z);
+                var p = new Vector3((k & 1) == 0 ? -ext.x : ext.x, (k & 2) == 0 ? 0 : ActorHeight * grid.CellSize, (k & 4) == 0 ? -ext.z : ext.z);
                 var q = inv * p;
                 halfX = Mathf.Max(halfX, Mathf.Abs(q.x));
                 halfY = Mathf.Max(halfY, Mathf.Abs(q.y));

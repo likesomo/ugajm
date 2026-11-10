@@ -31,7 +31,8 @@ namespace SevenSteps.EditorTools
     ///   lines     thin Images (lines) are 2 thick and have 3:1 against what is behind them (14.3)
     ///   modal     a modal screen has a full-canvas scrim (alpha >= 0.6, raycast) under it; UI drawn before the scrim is
     ///             left out (14.7)
-    /// Not checked yet: the board area (14.6 Board rule, needs the Game camera). Glyph rects come from the text generator
+    ///   board     HUD text, plates and buttons off the board projected with BoardView.Fit (widest, tallest, longest hint / name
+    ///             stages; 14.6). Glyph rects come from the text generator
     /// (the drawn quads), plate colors from the sprite PNG under the text.
     /// HUD and Result belong to gameplay-ui: their findings are warnings until <see cref="HudResultAreErrors"/>.
     /// </summary>
@@ -73,9 +74,14 @@ namespace SevenSteps.EditorTools
             public Language Lang;
             public Level[] Levels;
             public string Variant = "";
+            public AppConfig Config;
+            public CameraRig? RigOverride;
+            public Vector2 Units;
+            /// HUD screens: the board area (14.6) in canvas units, top-left origin; null elsewhere.
+            public Rect? Board;
         }
 
-        public static void Check(GameAssets assets, List<string> issues)
+        public static void Check(GameAssets assets, AppConfig config, List<string> issues)
         {
             if (assets == null || assets.uiTheme == null) { issues.Add("ERROR UiLayoutCheck: GameAssets.uiTheme is not set"); return; }
             var tables = new List<StringTable>();
@@ -85,7 +91,13 @@ namespace SevenSteps.EditorTools
             Ui.Theme = assets.uiTheme;
             Level[] levels = LevelCatalog.Load(assets);
 
+            // The Game scene's camera choice (GameController.overrideCamera) while it is still open (ValidateAll opens it last).
+            var game = Object.FindAnyObjectByType<GameController>();
+            CameraRig? rigOverride = game != null && game.overrideCamera ? game.cameraRig : (CameraRig?)null;
+            string configPath = config != null ? AssetDatabase.GetAssetPath(config) : null;
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            // The scene's AppConfig object may be unloaded with the scene: load it again by path.
+            if (!string.IsNullOrEmpty(configPath)) config = AssetDatabase.LoadAssetAtPath<AppConfig>(configPath);
             var exemptions = new SortedDictionary<string, List<string>>();
             int screensBuilt = 0;
             foreach (var res in Resolutions)
@@ -94,7 +106,7 @@ namespace SevenSteps.EditorTools
                     var loc = new Localizer(tables, t.Language);
                     foreach (var (screen, variant) in Screens(levels, loc))
                     {
-                        var ctx = new Ctx { Assets = assets, Loc = loc, Lang = t.Language, Levels = levels, Variant = variant };
+                        var ctx = new Ctx { Assets = assets, Loc = loc, Lang = t.Language, Levels = levels, Variant = variant, Config = config, RigOverride = rigOverride, Units = res.Units };
                         string label = $"{screen.Name}{(variant == "" ? "" : " " + variant)}/{Languages.Code(t.Language)}/{res.Name}";
                         bool errors = res.Errors && (!screen.GameplayUi || HudResultAreErrors);
                         var found = new List<string>();
@@ -120,7 +132,7 @@ namespace SevenSteps.EditorTools
             decoded.Clear(); // S3: the PNG copies are big, do not keep them between runs
             foreach (var kv in exemptions)
                 issues.Add($"NOTE UiLayout exempt {kv.Value.Count}: {kv.Key}: {string.Join("; ", kv.Value.Distinct())}");
-            issues.Add($"NOTE UiLayout: {screensBuilt} screen builds checked; board area (14.6) not checked yet");
+            issues.Add($"NOTE UiLayout: {screensBuilt} screen builds checked");
         }
 
         // ---------------------------------------------------------------- screens
@@ -182,10 +194,13 @@ namespace SevenSteps.EditorTools
             }
             int longestHint = Longest(levels.Length, i => LevelCatalog.TextOf(i, loc.Current).hint);
             int longestName = Longest(levels.Length, i => LevelCatalog.TextOf(i, loc.Current).name);
-            foreach (int stage in new[] { longestHint, longestName }.Distinct())
+            // 14.6 range: the widest and the tallest board, and the longest hint / name.
+            int widest = Longest(levels.Length, i => new string('w', levels[i].W));
+            int tallest = Longest(levels.Length, i => new string('h', levels[i].H));
+            foreach (int stage in new[] { longestHint, longestName, widest, tallest }.Distinct())
             {
                 int s = stage;
-                yield return (new Screen { Name = "HUD", GameplayUi = true, Build = (c, root) => { BuildHud(c, s); return null; } }, $"stage {s + 1}");
+                yield return (new Screen { Name = "HUD", GameplayUi = true, Build = (c, root) => { BuildHud(c, s); c.Board = BoardArea(c, s); return null; } }, $"stage {s + 1}");
             }
             yield return (new Screen { Name = "Result", GameplayUi = true, Build = (c, root) =>
             {
@@ -219,6 +234,35 @@ namespace SevenSteps.EditorTools
             var set = c.Assets.tileSet != null ? c.Assets.tileSet : AssetDatabase.FindAssets("t:TileSet").Select(g => AssetDatabase.LoadAssetAtPath<TileSet>(AssetDatabase.GUIDToAssetPath(g))).FirstOrDefault(t => t != null);
             var hud = HudView.Create(set, c.Loc);
             hud.Refresh(Rules.NewState(c.Levels[stage]), stage, LevelCatalog.TextOf(stage, c.Lang), "");
+        }
+
+        /// 14.6 board area: the board cells and actors (height BoardView.ActorHeight) through the camera BoardView.Fit gives
+        /// at this canvas aspect, as a canvas rect (top-left origin) grown by 8.
+        static Rect BoardArea(Ctx c, int stage)
+        {
+            var info = LevelCatalog.ChapterOf(stage);
+            var preset = info != null && c.Config != null ? c.Config.Chapter(info.ArtPreset) : null;
+            var set = BoardController.TileSetFor(c.Config != null ? c.Config.tileSet : null, preset, c.Assets.tileSet);
+            var grid = set.GridFor(c.Levels[stage]);
+            var go = new GameObject("UiLayoutCheck Camera");
+            try
+            {
+                var cam = go.AddComponent<Camera>();
+                cam.aspect = c.Units.x / c.Units.y;
+                BoardView.Fit(cam, grid, c.RigOverride ?? set.cameraRig);
+                var b = grid.Bounds;
+                float top = BoardView.ActorHeight * grid.CellSize;
+                float x0 = float.MaxValue, y0 = float.MaxValue, x1 = float.MinValue, y1 = float.MinValue;
+                for (int k = 0; k < 8; k++)
+                {
+                    var p = b.center + new Vector3((k & 1) == 0 ? -b.extents.x : b.extents.x, (k & 2) == 0 ? 0 : top, (k & 4) == 0 ? -b.extents.z : b.extents.z);
+                    var v = cam.WorldToViewportPoint(p);
+                    float x = v.x * c.Units.x, y = (1 - v.y) * c.Units.y;
+                    x0 = Mathf.Min(x0, x); x1 = Mathf.Max(x1, x); y0 = Mathf.Min(y0, y); y1 = Mathf.Max(y1, y);
+                }
+                return Grow(Rect.MinMaxRect(x0, y0, x1, y1), 8);
+            }
+            finally { Object.DestroyImmediate(go); }
         }
 
         /// Every stage cleared with 3 stars: the longest star counts ("150 / 150").
@@ -408,6 +452,16 @@ namespace SevenSteps.EditorTools
                     if (Area(Intersect(A.Box, B.Box)) > 1f && Intersects(A.Poly, Intersect(A.Box, B.Box)) && Intersects(B.Poly, Intersect(A.Box, B.Box)))
                         found.Add($"overlap: {A.Path} {Fmt(A.Box)} and {B.Path} {Fmt(B.Box)}");
                 }
+            // 14.6 board area: HUD text, plates and buttons stay off the projected board
+            if (ctx.Board is Rect board)
+            {
+                foreach (var t in texts)
+                    if (!t.I.Is(UiLayoutRule.Board) && Area(Intersect(t.Glyphs, board)) > 0)
+                        found.Add($"board: {t.I.Path} \"{Short(t.T.text)}\" glyphs {Fmt(t.Glyphs)} on the board area {Fmt(board)}");
+                foreach (var bx in boxes)
+                    if (!bx.Is(UiLayoutRule.Board) && Area(Intersect(bx.Box, board)) > 0)
+                        found.Add($"board: {bx.Path} {Fmt(bx.Box)} on the board area {Fmt(board)}");
+            }
             // 14.3 lines: thickness and contrast
             foreach (var img in images)
             {
