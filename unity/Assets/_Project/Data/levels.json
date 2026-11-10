@@ -181,13 +181,13 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "moss",
-      "story": "둘이 문을 지키고, 셋째가 고향을 떠난다.",
+      "story": "둘이 문을 붙들고, 셋째가 길을 연다. 하늘이 셋을 다시 모은다.",
       "text": [
         {
           "lang": "en",
           "name": "Two Doors",
           "hint": "You can leave as many stones as you like, while brothers last.",
-          "story": "Two keep the doors. The third leaves home."
+          "story": "Two hold the doors. The third opens the way. The sky brings them back together."
         }
       ],
       "map": [
@@ -1370,13 +1370,13 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "altar",
-      "story": "레버를 당긴 형이 남으면 0 문이 닫힌다.",
+      "story": "레버를 당긴 형이 남는다. 0 문은 닫혀도, 길이 그 문 하나는 아니다.",
       "text": [
         {
           "lang": "en",
           "name": "Lever and the Count",
           "hint": "If the brother who pulled the lever stays as a stone, the 0 gate closes.",
-          "story": "If the one who pulled the lever stays, the zero gate shuts."
+          "story": "The one who pulled the lever stays. The 0 gate shuts, but it is not the only way."
         }
       ],
       "map": [
