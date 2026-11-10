@@ -202,6 +202,15 @@ namespace SevenSteps.EditorTools
                 int s = stage;
                 yield return (new Screen { Name = "HUD", GameplayUi = true, Build = (c, root) => { BuildHud(c, s); c.Board = BoardArea(c, s); return null; } }, $"stage {s + 1}");
             }
+            // Side column (statues, message, KEEP / SWITCH; review B1): the first choice of a statue-door stage, longest message.
+            int chooser = Enumerable.Range(0, levels.Length).Where(i => levels[i].StatueCount > 0).Concat(new[] { longestHint })
+                .FirstOrDefault(i => ChooseState(levels[i]) != null);
+            yield return (new Screen { Name = "HUD", GameplayUi = true, Build = (c, root) =>
+            {
+                var hud = BuildHud(c, chooser, ChooseState(c.Levels[chooser]), LongestMessage(c.Loc));
+                c.Board = BoardArea(c, chooser);
+                return null;
+            } }, $"stage {chooser + 1} choose");
             yield return (new Screen { Name = "Result", GameplayUi = true, Build = (c, root) =>
             {
                 BuildHud(c, longestHint);
@@ -229,11 +238,14 @@ namespace SevenSteps.EditorTools
             map.Show(FullProgress(c.Levels), -1);
         }
 
-        static void BuildHud(Ctx c, int stage)
+        static HudView BuildHud(Ctx c, int stage) => BuildHud(c, stage, Rules.NewState(c.Levels[stage]), "");
+
+        static HudView BuildHud(Ctx c, int stage, State state, string message)
         {
             var set = c.Assets.tileSet != null ? c.Assets.tileSet : AssetDatabase.FindAssets("t:TileSet").Select(g => AssetDatabase.LoadAssetAtPath<TileSet>(AssetDatabase.GUIDToAssetPath(g))).FirstOrDefault(t => t != null);
             var hud = HudView.Create(set, c.Loc);
-            hud.Refresh(Rules.NewState(c.Levels[stage]), stage, LevelCatalog.TextOf(stage, c.Lang), "");
+            hud.Refresh(state, stage, LevelCatalog.TextOf(stage, c.Lang), message);
+            return hud;
         }
 
         /// 14.6 board area: the board cells and actors (height BoardView.ActorHeight) through the camera BoardView.Fit gives
@@ -264,6 +276,29 @@ namespace SevenSteps.EditorTools
             }
             finally { Object.DestroyImmediate(go); }
         }
+
+        /// The first KEEP / SWITCH choice (Status.Choose) reachable by moves, depth first; null when none within 7 moves.
+        static State ChooseState(Level level)
+        {
+            State Walk(State s, int depth)
+            {
+                if (s.Status == Status.Choose) return s;
+                if (depth == 0 || s.Status != Status.Play) return null;
+                foreach (Dir d in Enum.GetValues(typeof(Dir)))
+                {
+                    var next = Rules.Dispatch(s, Command.Move(d)).State;
+                    if (ReferenceEquals(next, s)) continue;
+                    var found = Walk(next, depth - 1);
+                    if (found != null) return found;
+                }
+                return null;
+            }
+            return Walk(Rules.NewState(level), Rules.Steps);
+        }
+
+        /// The longest message line (msg.* table strings) in the current language.
+        static string LongestMessage(Localizer loc) =>
+            loc.Table.Keys.Where(k => k.StartsWith("msg.", StringComparison.Ordinal)).Select(k => loc.Get(k)).OrderByDescending(m => m.Length).FirstOrDefault() ?? "";
 
         /// Every stage cleared with 3 stars: the longest star counts ("150 / 150").
         static ProgressData FullProgress(Level[] levels)
