@@ -1,3 +1,4 @@
+| 2026-11-10 | 게임플레이/UI·아키텍트 | 14.6 `BoardView.Fit` 맞춤 식: 대칭 반폭 대신 투영 min/max 상자, 중심 +0.3 들어올림 제거(시그니처 그대로). feat/view 1f689b0 검토 승인 |
 # 일곱 걸음 Unity 아키텍처
 
 담당: 아키텍트 (`feat/architecture`). 기준 코드: v0 (`7lucky` 0568bfb).
@@ -788,6 +789,7 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 - 검사 범위: 가장 큰 보드(가로·세로 칸 수 최대 스테이지 각각)와 23번처럼 힌트가 가장 긴 스테이지.
 - 구현(feat/view f525128): HUD가 비워 두는 칸은 `HudView.BoardFrame`(1280×720 기준 316,222 648×398), `BoardView.FitCamera`가 보드를 그 안에 맞춘다. `UiLayoutCheck`는 이 상수를 믿지 말고 **실제 HUD 사각형과 보드 투영**을 비교한다(상수가 HUD 배치와 어긋나면 잡히도록).
 - 구현(feat/scene-flow 17cbddf): 카메라 맞춤은 `BoardView.Fit(cam, grid, rig)`(Game, public static, 게임플레이/UI 소유) 하나를 게임(`FitCamera`)과 `UiLayoutCheck`가 같이 쓴다. 시그니처를 바꿀 때는 씬 플로우와 같이 바꾼다. 배우 높이 `BoardView.ActorHeight`(1.2칸).
+- 맞춤 식(feat/view 1f689b0): 여백(`rig.padding` 칸) 포함 보드의 바닥(y 0)과 배우 높이 8모서리를 카메라 공간으로 돌린 **min/max 상자**를 `BoardViewport`의 결속 축에 꽉 채우고, 상자 중심을 틀 중심에 둔다. 직교 크기 하한 3.2. 원근은 같은 needH로 거리만 정한다(근사).
 
 ### 14.7 모달
 - Result, Settings, 언어 선택, 챕터 진입 카드, Credits, 확인 창은 모달이다. 모달이 뜨면 **화면 전체를 덮는 막(`Image`, 캔버스 전체로 늘림, 알파 0.6 이상, `raycastTarget` 켬)**이 모달 아래·다른 UI 위에 그려진다(정렬 순서가 더 높은 캔버스나 마지막 형제). 막 아래 UI는 입력을 받지 않는다.
