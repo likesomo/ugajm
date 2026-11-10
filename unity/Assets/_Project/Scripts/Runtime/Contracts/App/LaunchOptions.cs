@@ -49,6 +49,9 @@ namespace SevenSteps.Contracts
         /// (title Begin; title Continue; Stages -> planet 2 -> its first stage), the Game scene logs the stage and via it
         /// arrived at and quits (unity.sh smoke title step; docs/scene-flow.md S8). "" = off.
         public string TitleCheck { get; private set; } = "";
+        /// Development / measurement only (-artperf / ?artperf=1): the planet environment adds the art frame sampler, which
+        /// logs one [ArtPerf] line (fps, median, p95) 10 s after the stage opens. Plays as usual.
+        public bool ArtPerf { get; private set; }
 
         readonly List<string> warnings = new List<string>();
         /// What was ignored while parsing, one line each. Empty when everything parsed.
@@ -113,6 +116,13 @@ namespace SevenSteps.Contracts
             else warnings.Add($"{source}: flowcheck \"{v}\" is not 1/true or 0/false; ignored");
         }
 
+        void SetArtPerf(string source, string v)
+        {
+            if (v == "1" || v == "true") ArtPerf = true;
+            else if (v == "0" || v == "false") ArtPerf = false;
+            else warnings.Add($"{source}: artperf \"{v}\" is not 1/true or 0/false; ignored");
+        }
+
         void SetTelemetry(string source, string v)
         {
             if (v == "off" || v == "0") TelemetryOff = true;
@@ -133,6 +143,7 @@ namespace SevenSteps.Contracts
                         case "-settings": o.OpenSettings = true; continue;
                         case "-newplayer": o.NewPlayer = true; continue;
                         case "-flowcheck": o.FlowCheck = true; continue;
+                        case "-artperf": o.ArtPerf = true; continue;
                         case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": case "-loadDelay": case "-titlecheck": break;
                         default: continue;
                     }
@@ -172,6 +183,7 @@ namespace SevenSteps.Contracts
                     case "loadDelay": o.SetLoadDelay("url", v); break;
                     case "flowcheck": o.SetFlowCheck("url", v); break;
                     case "titlecheck": o.SetTitleCheck("url", v); break;
+                    case "artperf": o.SetArtPerf("url", v); break;
                     case "newplayer":
                         if (v == "1" || v == "true") o.NewPlayer = true;
                         else if (v != "0" && v != "false") o.warnings.Add($"url: newplayer \"{v}\" is not 1 or 0; ignored");

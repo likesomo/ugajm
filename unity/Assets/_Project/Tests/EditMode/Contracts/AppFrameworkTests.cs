@@ -94,5 +94,18 @@ namespace SevenSteps.Tests
             Services.ResetForPlay();
             Assert.IsFalse(Services.Has<ITelemetry>());
         }
+
+        [Test]
+        public void ArtPerfParses()
+        {
+            Assert.IsTrue(LaunchOptions.Parse(new[] { "x.exe", "-artperf" }, "").ArtPerf);
+            Assert.IsTrue(LaunchOptions.Parse(null, "http://h/?level=3&artperf=1").ArtPerf);
+            Assert.IsFalse(LaunchOptions.Parse(null, "http://h/?artperf=0").ArtPerf);
+            Assert.IsFalse(LaunchOptions.Parse(null, "http://h/?xartperf=1").ArtPerf, "whole parameter name only");
+            var bad = LaunchOptions.Parse(null, "http://h/?artperf=10");
+            Assert.IsFalse(bad.ArtPerf);
+            Assert.AreEqual(1, bad.Warnings.Count);
+            Assert.IsFalse(LaunchOptions.Parse(null, "").ArtPerf);
+        }
     }
 }
