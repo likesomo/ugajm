@@ -291,14 +291,8 @@ namespace SevenSteps.Game
             else if (s.Status != Status.Lose && lost) { lost = false; Recovered?.Invoke(); }
         }
 
-        /// docs 6.5: an Undo counts when the core went back a state (its Undo event; also after Lose). A Restart counts when
-        /// the state before it was not the stage start (the start state has no Prev: NewState, or undone back to it).
-        void CountAttempt(SessionUpdate u)
-        {
-            if (u.Result == null) return;
-            if (u.Result.Has(GameEventType.Undo)) attempt = attempt.WithUndo();
-            if (u.Result.Has(GameEventType.Restart) && u.Prev != null && u.Prev.Prev != null) attempt = attempt.WithRestart();
-        }
+        /// docs 6.5 counting rule: AttemptCounts.After (shared with the QA replay).
+        void CountAttempt(SessionUpdate u) => attempt = attempt.After(u);
 
         /// A presentation finished (docs/architecture.md 4.2). A clear shows the Result panel only now.
         void OnPresented(State s)

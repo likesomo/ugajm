@@ -27,6 +27,10 @@ public static class BuildTools
         EditorApplication.Exit(0);
     }
 
+    /// QA cross-check (production/qa-play-plan.md 3): reports/qa/attempts.jsonl replayed by the C# rules → reports/qa/unity-replay.json,
+    /// exit 1 on any difference from the JS harness. Options: -qaAttempts path, -qaOut path. See SevenSteps.EditorTools.QaReplayTool.
+    public static void QaReplay() => SevenSteps.EditorTools.QaReplayTool.Batch();
+
     [MenuItem("Tools/Build/WebGL")]
     public static void BuildWebGL() => Build(BuildTarget.WebGL, "../Builds/WebGL");
 
