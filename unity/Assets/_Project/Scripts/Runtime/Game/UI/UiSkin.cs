@@ -96,8 +96,9 @@ namespace SevenSteps.Game.UI
         {
             if (img == null) throw new ArgumentNullException(nameof(img));
             if (img.sprite == null || img.type != Image.Type.Sliced) return Vector4.zero;
-            // Image draws the border at sprite pixels / (sprite PPU / reference PPU 100 * multiplier).
-            float scale = img.sprite.pixelsPerUnit / 100f * img.pixelsPerUnitMultiplier;
+            // Image draws the border at sprite pixels / (Image.pixelsPerUnit = sprite PPU / canvas reference PPU, x multiplier),
+            // the same formula UiLayoutCheck uses (architect N1).
+            float scale = img.pixelsPerUnit * img.pixelsPerUnitMultiplier;
             return img.sprite.border / Mathf.Max(scale, 0.0001f);
         }
 
@@ -115,7 +116,10 @@ namespace SevenSteps.Game.UI
             var border = FrameBorder(img);
             var skin = Theme != null ? Theme.buttonNormal : null;
             if (border == Vector4.zero && skin != null) // flat base button: room for the theme frame the variant puts on
-                border = skin.border / Mathf.Max(skin.pixelsPerUnit / 100f * ButtonFrameScale, 0.0001f);
+            {
+                float refPpu = img.canvas != null && img.canvas.referencePixelsPerUnit > 0 ? img.canvas.referencePixelsPerUnit : 100f;
+                border = skin.border / Mathf.Max(skin.pixelsPerUnit / refPpu * ButtonFrameScale, 0.0001f);
+            }
             var r = label.rectTransform;
             r.anchorMin = Vector2.zero;
             r.anchorMax = Vector2.one;
