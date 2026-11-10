@@ -68,7 +68,7 @@
       "ko": "두 개의 문",
       "name": "Two Doors",
       "hint": "You can leave as many stones as you like, while brothers last.",
-      "story": "Two keep the doors. The third leaves home."
+      "story": "Two hold the doors. The third opens the way. The sky brings them back together."
     },
     {
       "n": 8,
@@ -348,7 +348,7 @@
       "ko": "레버와 선돌의 수",
       "name": "Lever and the Count",
       "hint": "If the brother who pulled the lever stays as a stone, the 0 gate closes.",
-      "story": "If the one who pulled the lever stays, the zero gate shuts."
+      "story": "The one who pulled the lever stays. The 0 gate shuts, but it is not the only way."
     },
     {
       "n": 48,
