@@ -796,7 +796,7 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 검사를 일부러 비켜야 하는 요소는 그 GameObject에 컴포넌트를 붙인다. 이름·경로 문자열 목록은 쓰지 않는다(코드로 만든 UI는 이름이 자주 바뀐다).
 ```csharp
 namespace SevenSteps.Game.UI {
-    [Flags] public enum UiLayoutRule { None = 0, Overlap = 1, Decoration = 2, Overflow = 4, Plate = 8, Contrast = 16, Board = 32 }
+    [Flags] public enum UiLayoutRule { None = 0, Overlap = 1, Decoration = 2, Overflow = 4, Plate = 8, Contrast = 16, Board = 32, Safe = 64 }
     [DisallowMultipleComponent]
     public sealed class UiLayout : MonoBehaviour {
         public bool secondary;          // 14.2 보조 글자(최소 18)
@@ -807,6 +807,7 @@ namespace SevenSteps.Game.UI {
 ```
 - 코드로 만드는 UI는 `Ui.Label` 등 생성 도우미에서 붙인다(`Ui.Secondary(text)`, `Ui.Exempt(go, rule, reason)` 같은 짧은 도우미 권장).
 - 최소 크기 18 미만과 모달 막(14.7)은 뺄 수 없다.
+- 규칙과 플래그는 하나씩 대응한다: 안전 영역(14.6 가장자리 24)은 `Safe`, 보드 영역은 `Board`. 다른 플래그로 대신 건너뛰지 않는다(2026-11-10 추가, scene-flow b4ed8b6 검토 S1).
 - `UiLayoutCheck`는 끝에 허용 개수를 화면별로 출력한다(`exempt 3: StageSelect/Map/BigDipper Decoration "..."`). 허용을 늘리는 커밋은 아키텍트 리뷰에서 이유를 본다.
 
 ### 14.9 검사 방법 (`UiLayoutCheck`, 씬 플로우 구현)
@@ -876,3 +877,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-10 | 아키텍트 | 14장 UI 레이아웃 규칙(사용자 지시 production/ui-layout-fix.md): 기준 1280x720 캔버스 단위, 본문 22·보조 18(`UiLayout.secondary`), 대비 4.5:1(장식 3:1, 선 2 이상), 3D 위 글자는 판(알파 0.75 이상, 안쪽 여백 8, 9-slice는 border 안쪽), 장식선은 글자 사각형을 지나지 않음, 글자·판 겹침과 넘침 금지, 안전 영역 24와 보드 영역 분리, 모달 막(알파 0.6 이상), 허용 목록은 `UiLayout` 컴포넌트(exempt 규칙 + reason 필수). 검증기 `UiLayoutCheck`(씬 플로우) ko·en, 1280x720·1920x1080 오류, 1280x800 경고. 영향: 씬 플로우(검증기, `UiLayout` 타입 추가, 소유 화면), 게임플레이/UI(HUD·결과·버튼 스킨, Edit Mode에서 만들 수 있게) |
 | 2026-11-10 | 아키텍트 | 11장 `LaunchOptions.ArtPerf`(`-artperf`, `?artperf=1`, 아트 측정용, 리드 승인). 영향: 아트(`RuinsHengePlanet.Awake`의 URL 직접 검사를 `Services.TryGet<LaunchOptions>`의 `ArtPerf`로 한 줄 교체, Codex 다음 커밋) |
 | 2026-11-10 | 게임플레이/UI·아키텍트 | 14.6 `HudView.BoardFrame`·`BoardViewport`(보드가 들어갈 HUD 빈 칸, 공개 상수), `BoardView.FitCamera`가 그 틀에 맞춤. `Ui.FitButtonSkin`·`FrameBorder`·`Plate`·`PlateAlpha`(14.4), `UiLayout`(14.8, scene-flow 37a146b) — feat/view f525128·3216c4d 검토 승인 |
+| 2026-11-10 | 아키텍트 | 14.8 `UiLayoutRule.Safe = 64` 추가(안전 영역 면제, 지금은 `Overflow`가 대신하던 것), 규칙과 플래그 1:1. 영향: 씬 플로우(`UiLayout.cs` 한 줄, `UiLayoutCheck` 안전 영역 검사가 `Safe`를 봄). feat/scene-flow b4ed8b6 검토 승인 |
