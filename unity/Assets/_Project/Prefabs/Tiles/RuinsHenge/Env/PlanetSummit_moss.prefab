@@ -46,7 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.RuinsHengePlanet
   surface: {fileID: 2100000, guid: 9e59cf32aef50ad4c97c35ea132e735c, type: 2}
   chapterId: moss
-  summitTint: {r: 0.29411766, g: 0.6039216, b: 0.5254902, a: 1}
-  rimTint: {r: 0.2509804, g: 0.65882355, b: 0.5803922, a: 1}
-  rockTint: {r: 0.078431375, g: 0.42745098, b: 0.39215687, a: 1}
+  summitTint: {r: 0.5137255, g: 0.58431375, b: 0.5411765, a: 1}
+  rimTint: {r: 0.4117647, g: 0.49803922, b: 0.4392157, a: 1}
+  rockTint: {r: 0.32156864, g: 0.41960785, b: 0.3764706, a: 1}
   moonTint: {r: 0.39607844, g: 0.7882353, b: 0.7294118, a: 1}

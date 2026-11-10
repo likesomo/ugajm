@@ -22,9 +22,11 @@ namespace SevenSteps.EditorTools
         const string PrefabPath = "Assets/_Project/UI/Prefabs/ResultPanel.prefab";
         const string AtlasPath = "Assets/Shared/UI/RuinsHenge/RH_UI_Atlas.png";
 
-        static readonly Vector2 PanelSize = new Vector2(716, 556);
-        const float StarSize = 80, Column = 210; // star and label columns share centres
-        static readonly Vector2 ButtonSize = new Vector2(198, 50);
+        static readonly Vector2 PanelSize = new Vector2(860, 560);
+        const float StarSize = 80, Column = 250; // star and label columns share centres
+        static readonly Vector2 ButtonSize = new Vector2(252, 60);
+        /// Modal scrim over the HUD (docs/architecture.md 14.7: alpha 0.6 or more over the whole screen).
+        const float ScrimAlpha = 0.72f;
 
         public static void BatchBuild()
         {
@@ -38,6 +40,9 @@ namespace SevenSteps.EditorTools
             var sprites = AssetDatabase.LoadAllAssetsAtPath(AtlasPath).OfType<Sprite>().ToDictionary(s => s.name);
             Sprite Get(string n) => sprites.TryGetValue(n, out var s) ? s : throw new InvalidOperationException($"{AtlasPath}: no slice \"{n}\"");
 
+            var assets = AssetDatabase.LoadAssetAtPath<SevenSteps.Game.GameAssets>("Assets/_Project/Data/GameAssets.asset");
+            Ui.Theme = assets != null && assets.uiTheme != null ? assets.uiTheme
+                : throw new InvalidOperationException("Assets/_Project/Data/GameAssets.asset: uiTheme is not set");
             var root = PrefabUtility.LoadPrefabContents(PrefabPath);
             try
             {
@@ -45,6 +50,9 @@ namespace SevenSteps.EditorTools
                 var panel = root.transform.Find("Overlay/Panel") as RectTransform
                     ?? throw new InvalidOperationException($"{PrefabPath}: no Overlay/Panel");
                 panel.sizeDelta = PanelSize;
+                var scrim = root.transform.Find("Overlay")?.GetComponent<Image>() ?? throw new InvalidOperationException($"{PrefabPath}: no Overlay image");
+                scrim.color = new Color(0.02f, 0.04f, 0.08f, ScrimAlpha);
+                scrim.raycastTarget = true;
 
                 Top(view.title.rectTransform, -36, new Vector2(660, 76));
                 view.title.fontSize = 46;
@@ -71,26 +79,29 @@ namespace SevenSteps.EditorTools
                 view.starFilled = Get("star");
 
                 // What each star asks, one column under each star
-                var labels = Row(panel, "StarLabels", -246, new Vector2(Column * 3, 64), 0);
+                var labels = Row(panel, "StarLabels", -258, new Vector2(Column * 3, 64), 0);
                 view.starLabels = new Text[Core.Stars.Max];
                 for (int k = 0; k < view.starLabels.Length; k++)
                 {
                     var cell = Child($"Label {k + 1}", labels);
-                    cell.sizeDelta = new Vector2(Column, 64);
+                    cell.sizeDelta = new Vector2(Column - 16, 64); // two lines of 22 (the table strings carry the line break)
                     var t = cell.gameObject.AddComponent<Text>();
                     t.font = view.body.font;
-                    t.fontSize = 20;
+                    t.fontSize = 22;
+                    t.lineSpacing = 1f;
                     t.alignment = TextAnchor.UpperCenter;
                     t.horizontalOverflow = HorizontalWrapMode.Wrap;
-                    t.verticalOverflow = VerticalWrapMode.Truncate;
+                    t.verticalOverflow = VerticalWrapMode.Overflow;
                     t.color = view.body.color;
                     t.raycastTarget = false;
                     view.starLabels[k] = t;
                 }
 
                 // Body: bodies used, records, planet finale or the journey's end (two lines at most)
-                Top(view.body.rectTransform, -326, new Vector2(640, 90));
-                view.body.fontSize = 20;
+                Top(view.body.rectTransform, -350, new Vector2(PanelSize.x - 120, 90));
+                view.body.fontSize = 22;
+                view.body.horizontalOverflow = HorizontalWrapMode.Wrap;
+                view.body.verticalOverflow = VerticalWrapMode.Overflow;
                 view.body.alignment = TextAnchor.MiddleCenter;
 
                 // Buttons: one row at the bottom (three show at a time: next / again / select, or undo / restart / select)
@@ -98,19 +109,20 @@ namespace SevenSteps.EditorTools
                 var vertical = buttons.GetComponent<VerticalLayoutGroup>();
                 if (vertical != null) Object.DestroyImmediate(vertical);
                 var h = buttons.GetComponent<HorizontalLayoutGroup>() ?? buttons.gameObject.AddComponent<HorizontalLayoutGroup>();
-                h.spacing = 20;
+                h.spacing = 16;
                 h.childAlignment = TextAnchor.MiddleCenter;
                 h.childControlWidth = h.childControlHeight = false;
                 h.childForceExpandWidth = h.childForceExpandHeight = false;
                 buttons.anchorMin = buttons.anchorMax = new Vector2(.5f, 0);
                 buttons.pivot = new Vector2(.5f, .5f);
-                buttons.anchoredPosition = new Vector2(0, 62);
+                buttons.anchoredPosition = new Vector2(0, 76);
                 buttons.sizeDelta = new Vector2(PanelSize.x - 40, ButtonSize.y);
                 foreach (var b in new[] { view.next, view.again, view.select, view.undo, view.restart })
                 {
                     ((RectTransform)b.transform).sizeDelta = ButtonSize;
                     var label = b.GetComponentInChildren<Text>(true);
-                    if (label != null) { label.fontSize = 20; label.resizeTextForBestFit = true; label.resizeTextMinSize = 14; label.resizeTextMaxSize = 20; }
+                    if (label != null) { label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero; label.fontSize = 22; label.resizeTextForBestFit = false; }
+                    Ui.FitButtonSkin(b); // frame at 1/2.5, label inside the lines
                 }
 
                 var issues = new System.Collections.Generic.List<string>();

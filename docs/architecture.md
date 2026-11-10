@@ -481,6 +481,7 @@ else flow.Go(AppState.Title);
 - **`FlowCheck`**(2026-11-10, 씬 플로우 S8, 개발·스모크용): `-flowcheck` / `?flowcheck=1|true`, `-level N -replay R`와 함께. `Game/App/FlowCheck`가 리플레이 마지막 수를 실제로 보내 이기고 Result 문구(`chapter_done`/`journey_done`)·Next·챕터 진입 카드·`ChapterStage.Current`를 검사, `[SevenSteps] Flow check stage N: OK|FAIL` 로그 후 종료. `unity.sh smoke`의 흐름 단계(`Tools/flow-stages.mjs`: 행성마다 마지막 스테이지 + 중간 대조 2개)가 쓴다. 일반 실행 영향 없음.
 - **`OpenSettings`**(2026-11-10, feat/view 6a6056d, 리드 결정, 개발·스크린샷용): `-settings` / `?settings=1|true`(`0|false` 끔, 그 밖 `Warnings`). 첫 화면(타이틀 또는 `-level` 게임)에서 설정 패널을 연 채로 시작. 저장 변경 없음.
 - **`TitleCheck`**(2026-11-10, 씬 플로우 S8, 개발·스모크용): `-titlecheck begin|continue|map` / `?titlecheck=`(그 밖 `Warnings`, "" = 꺼짐, `-level` 없이). 타이틀이 그 경로의 실제 버튼을 누르고(`onClick.Invoke`), 게임 씬이 `Title check X: arrived stage N via V`를 로그하고 종료(10초 안에 타이틀을 못 떠나면 FAIL). `unity.sh smoke`의 타이틀 단계가 쓴다. 일반 실행 영향 없음.
+- **`ArtPerf`**(2026-11-10, 아트 측정용): `-artperf` / `?artperf=1`(`0`/`false` 끔, 그 밖 `Warnings`). 행성 환경(`RuinsHengePlanet`)이 `Services`의 `LaunchOptions.ArtPerf`를 보고 `RuinsFrameSample`을 붙여 스테이지가 열리고 10초 뒤 10초 동안의 `[ArtPerf]` 한 줄(fps·중앙값·p95)을 로그한다. 플레이는 그대로. 아트가 `Application.absoluteURL`을 직접 읽던 것을 대체(feat/art 6448f82 검토 A2).
 - 바꿀 수 있는 곳은 두 메서드뿐: `TakeReplay()`(리플레이를 한 번만 꺼내고 비움), `UseEditorStart(level, replay)`(에디터에서 Game 씬 직접 Play: 실행 인자·URL이 없을 때만 인스펙터 값을 씀, 인스펙터 레벨을 썼으면 true, `level < 1`이면 예외).
 - 잘못된 값은 외부 입력이라 예외가 아니다: 숫자가 아니거나 1 미만인 `level`, 값이 없는 플래그, `off`/`0`/http(s)가 아닌 `telemetry`는 버리고 `Warnings`에 한 줄씩 남긴다. Contracts는 로그하지 않고 `Bootstrap`이 로그한다. 알 수 없는 인자·URL 키는 조용히 무시한다(Unity 자체 인자, `artfx` 등). 스테이지 수를 넘는 `level`은 S2에서 부트스트랩이 경고 후 보정한다.
 
@@ -784,6 +785,7 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 - **보드 영역**: 보드 칸과 액터의 월드 경계(`BoardGrid` 셀 전체, 높이 포함)를 Game 카메라로 화면에 투영한 사각형 + 여백 8. 카메라는 실제 게임과 같은 맞춤(`IStageEnvironment.Fit`·카메라 맞춤) 뒤의 값.
 - HUD의 글자·판·버튼은 보드 영역과 겹치지 않는다. 3D 장식(빙산·선돌·기둥)은 보드 영역 밖에 있어도 되지만, HUD 글자 뒤로 지나가면 그 글자는 판 위에 있어야 한다(14.4가 잡는다).
 - 검사 범위: 가장 큰 보드(가로·세로 칸 수 최대 스테이지 각각)와 23번처럼 힌트가 가장 긴 스테이지.
+- 구현(feat/view f525128): HUD가 비워 두는 칸은 `HudView.BoardFrame`(1280×720 기준 316,222 648×398), `BoardView.FitCamera`가 보드를 그 안에 맞춘다. `UiLayoutCheck`는 이 상수를 믿지 말고 **실제 HUD 사각형과 보드 투영**을 비교한다(상수가 HUD 배치와 어긋나면 잡히도록).
 
 ### 14.7 모달
 - Result, Settings, 언어 선택, 챕터 진입 카드, Credits, 확인 창은 모달이다. 모달이 뜨면 **화면 전체를 덮는 막(`Image`, 캔버스 전체로 늘림, 알파 0.6 이상, `raycastTarget` 켬)**이 모달 아래·다른 UI 위에 그려진다(정렬 순서가 더 높은 캔버스나 마지막 형제). 막 아래 UI는 입력을 받지 않는다.
@@ -872,3 +874,5 @@ namespace SevenSteps.Game.UI {
 | 2026-11-10 | 씬 플로우·아키텍트 | 11.2 `EntryTracker.TakeVia`: 알린 via가 첫 진입보다 앞섬(지도·목록·타이틀 시작 = select, 이어하기 = 첫 진입이면 boot), `TitleFlowController(…, EntryTracker)` 생성자 인자 추가(feat/scene-flow c474b03 검토 승인, telemetry.md v1 via 정의 e953eb0). 텔레메트리 골든은 트레이스 `via`로 첫 `level_start` |
 | 2026-11-10 | 씬 플로우·아키텍트 | 11장 `LaunchOptions.TitleCheck`(`-titlecheck begin, continue, map`, 개발·스모크용, feat/scene-flow 78e81ee 검토 승인), `GameFlowController.LastVia`, `unity.sh smoke` 타이틀 단계 |
 | 2026-11-10 | 아키텍트 | 14장 UI 레이아웃 규칙(사용자 지시 production/ui-layout-fix.md): 기준 1280x720 캔버스 단위, 본문 22·보조 18(`UiLayout.secondary`), 대비 4.5:1(장식 3:1, 선 2 이상), 3D 위 글자는 판(알파 0.75 이상, 안쪽 여백 8, 9-slice는 border 안쪽), 장식선은 글자 사각형을 지나지 않음, 글자·판 겹침과 넘침 금지, 안전 영역 24와 보드 영역 분리, 모달 막(알파 0.6 이상), 허용 목록은 `UiLayout` 컴포넌트(exempt 규칙 + reason 필수). 검증기 `UiLayoutCheck`(씬 플로우) ko·en, 1280x720·1920x1080 오류, 1280x800 경고. 영향: 씬 플로우(검증기, `UiLayout` 타입 추가, 소유 화면), 게임플레이/UI(HUD·결과·버튼 스킨, Edit Mode에서 만들 수 있게) |
+| 2026-11-10 | 아키텍트 | 11장 `LaunchOptions.ArtPerf`(`-artperf`, `?artperf=1`, 아트 측정용, 리드 승인). 영향: 아트(`RuinsHengePlanet.Awake`의 URL 직접 검사를 `Services.TryGet<LaunchOptions>`의 `ArtPerf`로 한 줄 교체, Codex 다음 커밋) |
+| 2026-11-10 | 게임플레이/UI·아키텍트 | 14.6 `HudView.BoardFrame`·`BoardViewport`(보드가 들어갈 HUD 빈 칸, 공개 상수), `BoardView.FitCamera`가 그 틀에 맞춤. `Ui.FitButtonSkin`·`FrameBorder`·`Plate`·`PlateAlpha`(14.4), `UiLayout`(14.8, scene-flow 37a146b) — feat/view f525128·3216c4d 검토 승인 |

@@ -28,12 +28,12 @@ namespace SevenSteps.EditorTools
         static readonly Color Ink = Hex("EEE6D4"), Dim = Hex("A0B0BA"), Brass = Hex("C9AB6B");
 
         // Big Dipper, normalized (y down), ui-theme.md: Dubhe .. Alkaid. Lines 1-2, 2-3, 3-4, 4-1, 4-5, 5-6, 6-7.
-        static readonly Vector2[] Dipper =
+        internal static readonly Vector2[] Dipper =
         {
             new Vector2(.12f, .12f), new Vector2(.10f, .36f), new Vector2(.35f, .40f), new Vector2(.42f, .18f),
             new Vector2(.62f, .12f), new Vector2(.79f, .20f), new Vector2(.98f, .28f),
         };
-        static readonly (int, int)[] Edges = { (0, 1), (1, 2), (2, 3), (3, 0), (3, 4), (4, 5), (5, 6) };
+        internal static readonly (int, int)[] Edges = { (0, 1), (1, 2), (2, 3), (3, 0), (3, 4), (4, 5), (5, 6) };
 
         static Dictionary<string, Sprite> sprites;
         static Font font;
@@ -170,8 +170,8 @@ namespace SevenSteps.EditorTools
             hud.message.rectTransform.pivot = new Vector2(.5f, 0);
             Ui.AddOutline(hud.message, new Color(0, 0, 0, .6f));
             hud.choice = Row("Choice", root, 24, new Vector2(.5f, 0), new Vector2(0, 140), new Vector2(640, 88));
-            hud.keep = ChoiceButton(hud.choice, "KEEP (K)", "여기에 석상을 남긴다\n다음 몸은 지금 출발점에서", Hex("B9BFC0"));
-            hud.switchBody = ChoiceButton(hud.choice, "SWITCH (X)", "석상을 남기지 않는다\n여기가 새 출발점이 된다", Brass);
+            hud.keep = ChoiceButton(hud.choice, "KEEP (K)", "여기에 선돌을 남긴다\n다음 형제는 지금 출발점에서", Hex("B9BFC0"));
+            hud.switchBody = ChoiceButton(hud.choice, "SWITCH (X)", "선돌을 남기지 않는다\n여기가 새 출발점이 된다", Brass);
             hud.keepDesc = hud.keep.transform.Find("Desc").GetComponent<Text>();
             hud.switchDesc = hud.switchBody.transform.Find("Desc").GetComponent<Text>();
             hud.choice.gameObject.SetActive(false);
@@ -182,7 +182,7 @@ namespace SevenSteps.EditorTools
             hud.hint = FooterButton(footer, "풀이 보기 H", "hint");
             hud.stageSelect = FooterButton(footer, "스테이지 Esc", null);
             hud.settings = FooterButton(footer, "설정", "settings");
-            var keys = Label(root, "이동: 방향키 / WASD / 옆 칸 클릭 · 7걸음 후: K / X · 스테이지: [ ]", 13, Dim, TextAnchor.MiddleCenter, "Keys",
+            var keys = Label(root, "이동: 방향키 / WASD / 옆 칸 클릭, 7걸음 후: K / X, 스테이지: [ ]", 13, Dim, TextAnchor.MiddleCenter, "Keys",
                 new Vector2(.5f, 0), new Vector2(0, 70), new Vector2(700, 22));
             keys.rectTransform.pivot = new Vector2(.5f, 0);
             hud.keys = keys;

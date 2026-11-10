@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using SevenSteps.Contracts;
 using UnityEngine;
 namespace SevenSteps.Art
@@ -9,6 +9,7 @@ namespace SevenSteps.Art
         public string chapterId="moss";
         public Color summitTint=new Color32(198,202,182,255),rimTint=new Color32(116,141,87,255),rockTint=new Color32(88,107,128,255),moonTint=new Color32(126,172,178,255);
         GameObject terrain,decor;
+        void Awake(){if(Application.absoluteURL.Contains("artperf=1"))gameObject.AddComponent<RuinsFrameSample>();}
         Color Tint(Color c)=>QualitySettings.activeColorSpace==ColorSpace.Linear?c.linear:c;
         static void Dispose(Object o){if(!o)return;if(Application.isPlaying)Destroy(o);else DestroyImmediate(o);}
         void OnDestroy(){foreach(var f in GetComponentsInChildren<MeshFilter>())Dispose(f.sharedMesh);}
