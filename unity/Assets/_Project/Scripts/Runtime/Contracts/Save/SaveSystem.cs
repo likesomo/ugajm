@@ -31,6 +31,42 @@ namespace SevenSteps.Contracts
         public void Flush() { }
     }
 
+    /// <summary>
+    /// Every key of <paramref name="inner"/> with "#suffix" appended (LaunchOptions.SaveKey, development / smoke only): runs
+    /// with different suffixes keep separate progress, settings and telemetry queue in the same PlayerPrefs.
+    /// </summary>
+    public sealed class SuffixedStore : ISaveStore
+    {
+        readonly ISaveStore inner;
+        readonly string suffix;
+        public SuffixedStore(ISaveStore inner, string suffix)
+        {
+            this.inner = inner ?? throw new ArgumentNullException(nameof(inner));
+            if (!SaveStores.IsValidSuffix(suffix)) throw new ArgumentException("1-32 of A-Z a-z 0-9 _ -", nameof(suffix));
+            this.suffix = "#" + suffix;
+        }
+        public string Get(string key, string fallback = "") => inner.Get(key + suffix, fallback);
+        public void Set(string key, string value) => inner.Set(key + suffix, value);
+        public void Delete(string key) => inner.Delete(key + suffix);
+        public void Flush() => inner.Flush();
+    }
+
+    /// The store a run uses: PlayerPrefs, with LaunchOptions.SaveKey as a key suffix when it is set. Every ISaveStore of a
+    /// run (SaveSystem, telemetry queue) comes from here so they agree.
+    public static class SaveStores
+    {
+        public static ISaveStore For(LaunchOptions launch) =>
+            launch == null || string.IsNullOrEmpty(launch.SaveKey) ? new PlayerPrefsStore() : (ISaveStore)new SuffixedStore(new PlayerPrefsStore(), launch.SaveKey);
+
+        public static bool IsValidSuffix(string s)
+        {
+            if (string.IsNullOrEmpty(s) || s.Length > 32) return false;
+            foreach (char c in s)
+                if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '-')) return false;
+            return true;
+        }
+    }
+
     /// User settings.
     [Serializable]
     public sealed class SettingsData
