@@ -87,6 +87,17 @@ namespace SevenSteps.Game.UI
 
         public RectTransform LabelLayer => labelLayer;
 
+        /// Where the board goes (docs/architecture.md 14.6): the part of the 1280 x 720 reference canvas no HUD piece uses,
+        /// top-left origin. Left column ends at 300, right column starts at 980, the Dipper plate ends at 214, the footer
+        /// starts at 636; 16 / 8 clear of each. BoardView fits the camera so the board (with its padding) stays inside.
+        public static readonly Rect BoardFrame = new Rect(316, 222, 648, 398);
+
+        /// <see cref="BoardFrame"/> as viewport fractions (x right, y up), for 16:9 screens (CanvasScaler match 0.5).
+        public static Rect BoardViewport => new Rect(BoardFrame.x / 1280f, 1f - BoardFrame.yMax / 720f, BoardFrame.width / 1280f, BoardFrame.height / 720f);
+
+        [Header("Side column (statues, message, KEEP / SWITCH): shown only while it has something in it")]
+        public GameObject sidePanel;
+
         [Serializable]
         public sealed class BodySlot
         {
@@ -239,8 +250,11 @@ namespace SevenSteps.Game.UI
             RefreshDipper(s);
             RefreshBodies(s);
             message.text = msg;
+            message.gameObject.SetActive(msg.Length > 0);
             choice.gameObject.SetActive(s.Status == Status.Choose);
             RefreshStatues(s);
+            if (sidePanel != null)
+                sidePanel.SetActive(msg.Length > 0 || choice.gameObject.activeSelf || statues.gameObject.activeSelf);
         }
 
         /// Stars 1..Used filled, the next one larger; the 7th step (choice or clear) turns the lines gold with a short flash.

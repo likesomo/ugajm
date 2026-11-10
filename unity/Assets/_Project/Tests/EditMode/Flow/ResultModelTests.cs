@@ -66,7 +66,7 @@ namespace SevenSteps.Tests
 
                 // Star criteria under the stars: shown with the stars, the minimum in ★2, hidden for a loss.
                 view.Show(ResultModel.Clear(0, 3, 1, 1, 0, isLast: false, stars: 2, bestStars: 2));
-                Assert.AreEqual("풀이를 보지 않고 형제 1명으로", Text(canvas, "Label 2"));
+                Assert.AreEqual("풀이를 보지 않고\n형제 1명으로", Text(canvas, "Label 2"));
                 Assert.IsTrue(view.starLabels[0].transform.parent.gameObject.activeSelf);
                 view.Show(ResultModel.Loss(4, 3, isLast: false));
                 Assert.IsFalse(view.starLabels[0].transform.parent.gameObject.activeSelf);
