@@ -16,7 +16,7 @@ namespace SevenSteps.Game
         public TrailEnd End;
     }
 
-    public enum TrailMarkKind { Rim, Line, Seventh, Star, StoneStar }
+    public enum TrailMarkKind { Rim, Line, Seventh, Star, StoneStar, Ring }
 
     /// One drawn piece of the star trail. Equal marks draw the same thing, so a view can diff two trails by value.
     public readonly struct TrailMark : IEquatable<TrailMark>
@@ -26,10 +26,11 @@ namespace SevenSteps.Game
         /// Cell of the mark; for a line, the cell it starts from.
         public readonly int Cell;
         /// Line: the cell it goes to. Rim: how many earlier bodies already ring this cell (inset). Star: slot on the cell.
+        /// Ring: the star's place 1..7 around the feet.
         public readonly int Aux;
         /// Step number (1-7); 0 for rims, lines from the wake-up cell and stone stars.
         public readonly int Step;
-        /// The star of a fall: dimmed (the step let go).
+        /// The star of a fall: dimmed (the step let go). A bridge's 7th: sunk. A ring star: spent.
         public readonly bool Dim;
 
         public TrailMark(TrailMarkKind kind, int body, int cell, int aux, int step, bool dim = false)
@@ -54,6 +55,10 @@ namespace SevenSteps.Game
         public readonly List<TrailBody> Bodies = new List<TrailBody>();
         /// Statues standing now with the body that left each (KEEP, or the last body's 7th step).
         public readonly List<(int Cell, int Body)> Stones = new List<(int, int)>();
+        /// The body playing now stands here with this many steps used (the ring of seven stars); Ring is false when no
+        /// body is walking (choosing KEEP / SWITCH, won, lost).
+        public int Pos, Used;
+        public bool Ring;
 
         static readonly Dir[] Dirs = { Dir.Up, Dir.Down, Dir.Left, Dir.Right };
 
@@ -76,6 +81,9 @@ namespace SevenSteps.Game
             if (s.Status != Status.Lose)
                 trail.Bodies.Add(new TrailBody { Index = trail.Bodies.Count, Steps = s.Trail, End = s.Status == Status.Win ? TrailEnd.Won : TrailEnd.Walking });
             foreach (int cell in s.Statues) trail.Stones.Add((cell, BodyIndex.OfStatue(s, cell)));
+            trail.Pos = s.Pos;
+            trail.Used = s.Used;
+            trail.Ring = s.Status == Status.Play;
             return trail;
         }
 
@@ -124,7 +132,9 @@ namespace SevenSteps.Game
         /// - a star for steps 1-6 where the step ended (not on the cells an ice slide glides over); a mud cell (entered
         ///   with 2 steps) gets both numbers' stars; stars on one cell take the next free slot;
         /// - the Big Dipper glyph on the 7th step's cell; the star of a fall is dim;
-        /// - a star on top of each statue.
+        /// - a star on top of each statue;
+        /// - the ring of seven stars at the walking body's feet: star k is spent (Dim) once k steps are used, so the lit
+        ///   stars are the steps left and star 7 is the last one (the view pulses it after the 6th step).
         public List<TrailMark> Marks()
         {
             var rims = new List<TrailMark>();
@@ -175,6 +185,9 @@ namespace SevenSteps.Game
             all.AddRange(sevenths);
             all.AddRange(stars);
             foreach (var (cell, body) in Stones) all.Add(new TrailMark(TrailMarkKind.StoneStar, body, cell, 0, 0));
+            var cur = Current;
+            if (Ring && cur != null)
+                for (int k = 1; k <= Rules.Steps; k++) all.Add(new TrailMark(TrailMarkKind.Ring, cur.Index, Pos, k, k, k <= Used));
             return all;
         }
 
@@ -199,6 +212,7 @@ namespace SevenSteps.Game
                     case TrailMarkKind.Star:
                     case TrailMarkKind.Seventh: map.AddStep(m.Body, m.Cell, m.Step); break;
                     case TrailMarkKind.StoneStar: map.AddStatue(m.Body, m.Cell); break;
+                    // Ring: the view draws it (feet follow the player); the shader gets steps used through the state global.
                 }
             }
             foreach (var b in Bodies)
