@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfc6feaa1939c2849a2bd26e5badb0ac, type: 3}
+  m_Name: BoardShapeA_Kit
+  m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.BoardShapeAKit
+  crust:
+  - {fileID: 3215493220475775255, guid: 99951faef0c667d4a845d7f99ef49b82, type: 3}
+  - {fileID: -1350484418270432221, guid: cf51f8a405c23944eb568080deb2021c, type: 3}
+  - {fileID: -1426948255410645305, guid: f6803d1a06c62ae4ca5b0c05fa68abcd, type: 3}
+  menhirs:
+  - {fileID: -4510477397162200456, guid: d2c4081b71f681d4b945053f65bebdab, type: 3}
+  - {fileID: 8703103834048919220, guid: 61c9e50b85053d24bb6ef672308cc467, type: 3}
+  kerb: {fileID: -7867998212604372291, guid: 259ce55c083e2ee47988d5b914843aa1, type: 3}
+  corner: {fileID: 3993233782142208818, guid: 4df01038fc4d9784daadaa78b543a4ea, type: 3}
+  medallion: {fileID: -4315219843679237468, guid: b1f1c756035e6914ba600ecf24b8168e, type: 3}
+  chest: {fileID: 9066884066910292466, guid: 88cfc509f1085fc419a43647c074a83f, type: 3}
+  backGate: {fileID: -3837283243456363371, guid: d37881cdd0abaef4a8a3642798ae7d07, type: 3}
+  wall: {fileID: 1706845085494974761, guid: f17cd7ec8bb49e34cb4b8834b05375af, type: 3}
+  joist: {fileID: -4130697691098149145, guid: 9079a123f38f5414ea73f69cb3f022dd, type: 3}
+  rubble: {fileID: 1182497776389938457, guid: 64867a9ca51288d4e85a8cd30ddc88b0, type: 3}
+  fragment: {fileID: -80577718331875683, guid: 950e18729e83b684da1264189adc76a0, type: 3}
+  grass: {fileID: -8808126164064023102, guid: 6ed28444f804f204e8eb1de987d56e0c, type: 3}

@@ -1,5 +1,7 @@
 # Seven Steps 아트 바이블 — 유적×선돌×오리엔탈
 
+> 2026-11-10 판 형태 확정: **R2 A 직사각 석재 연석 + 깎인 암반 지각**. Blender MCP 제작·공유 노멀/AO·Unity 연결과 검토 승인된 직교 프레이밍 제안은 [BoardShapeA 전달 기록](board-shape-a-delivery-2026-11-10.md)을 따른다. 기존 원형 PlanetSummit 외피는 이 모듈 키트로 교체한다.
+
 > 2026-11-10 tone/performance follow-up: [weathered surfaces and WebGL low-spec rendering](tone-perf-2026-11-10.md). Maintain chapter hues with muted stone/timber, frost moss=0, no realtime chapter shadows, WebGL HDR off.
 
 > 2026-11-10 revision: [distinct seven-planet silhouettes, palettes and one-cell decoration clearance](seven-planets-distinct-2026-11-10.md) supersedes the initial seven similar blockouts; frost has no moss.

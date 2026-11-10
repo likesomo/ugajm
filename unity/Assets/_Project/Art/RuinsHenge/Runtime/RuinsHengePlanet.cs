@@ -7,13 +7,14 @@ namespace SevenSteps.Art
     {
         public Material surface;
         public string chapterId="moss";
+        public BoardShapeAKit boardShape;
         public Color summitTint=new Color32(198,202,182,255),rimTint=new Color32(116,141,87,255),rockTint=new Color32(88,107,128,255),moonTint=new Color32(126,172,178,255);
         GameObject terrain,decor;
-        void Awake(){if(Application.absoluteURL.Contains("artperf=1"))gameObject.AddComponent<RuinsFrameSample>();}
+        void Awake(){if(Services.TryGet<LaunchOptions>(out var launch)&&launch.ArtPerf)gameObject.AddComponent<RuinsFrameSample>();}
         Color Tint(Color c)=>QualitySettings.activeColorSpace==ColorSpace.Linear?c.linear:c;
         static void Dispose(Object o){if(!o)return;if(Application.isPlaying)Destroy(o);else DestroyImmediate(o);}
         void OnDestroy(){foreach(var f in GetComponentsInChildren<MeshFilter>())Dispose(f.sharedMesh);}
-        public void Fit(BoardGrid grid){transform.position=grid.Origin;transform.localScale=Vector3.one*grid.CellSize;Rebuild(grid.W,grid.H);}
+        public void Fit(BoardGrid grid){if(grid.W<=0||grid.H<=0||grid.CellSize<=0)throw new System.ArgumentOutOfRangeException(nameof(grid));transform.position=grid.Origin;transform.localScale=Vector3.one*grid.CellSize;Rebuild(grid.W,grid.H);}
         public void Preview(int w,int h)=>Rebuild(w,h);
         Mesh Make(List<Vector3> v,List<int> t,List<Color> colors)
         {
@@ -29,6 +30,7 @@ namespace SevenSteps.Art
         void Rebuild(int w,int h)
         {
             Clear(terrain);Clear(decor);foreach(var m in GetComponentsInChildren<RuinsMoon>())Clear(m.gameObject);
+            if(boardShape){terrain=BoardShapeAAssembly.Build(transform,boardShape,surface,chapterId,w,h);decor=null;return;}
             // Flat supporting summit stays below y=0. Silhouette and strata change below it.
             const int n=64;float rx=w*.5f+2.2f,rz=h*.5f+2.2f,depth=Mathf.Clamp(w*.42f,2.5f,4);
             float[] ys={-.12f,-.35f,-.8f,-1.25f,-depth*.72f,-depth,-depth*1.2f};
