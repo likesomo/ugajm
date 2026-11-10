@@ -1,7 +1,8 @@
 # 별 발자국 (북두칠성 흔적) 구현 배분 — 2026-11-10
 
 작성: 리드. 사용자 지시: "북두칠성 컨셉이 흐려졌다. 형제들이 밟은 곳에 별의 흔적이 남도록 이펙트와 블록 변화를 추가하라."
-상태: **계획만.** Codex 시안과 `design/art/star-trail.md`가 나오고 사용자가 승인한 뒤 시작한다. 규칙 코드(`SevenSteps.Core`, `prototypes/seven-steps/src/core.js`)는 바꾸지 않는다.
+상태: **진행 중 (2026-11-10 사용자 승인).** 기준: origin/feat/art-world 3c870b9 `design/art/star-trail.md`, 시안 `concepts/world-2026-11-10/star-trail/`. 규칙 코드(`SevenSteps.Core`, `prototypes/seven-steps/src/core.js`)는 바꾸지 않는다.
+이야기 반영(같은 날 배분): 피날레 결과 행성별 문구 = gameplay-ui, 엔딩 4줄 화면 = scene-flow, 챕터 카드 intro = level-design, 문자열 키 확인 = architect (`design/story/seven-planets-story.md` 4장).
 
 ## 시안 항목 → 담당
 | 시안 항목 | 데이터 출처 (이미 있음) | 담당 |
