@@ -743,6 +743,85 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 
 ---
 
+## 14. UI 레이아웃 규칙 (2026-11-10, 사용자 지시 `production/ui-layout-fix.md`)
+
+모든 화면(Title, 언어 선택, StageSelect 지도·목록, Loading, 챕터 진입 카드, HUD, Result, Settings, Credits)에 적용한다. 검증기 `UiLayoutCheck`(씬 플로우, `SceneFlowValidator`)가 이 절을 그대로 검사하고, `scene-validate`와 빌드 전 검사에서 위반이 하나라도 있으면 **오류**다. 수치는 모두 **기준 해상도 1280×720의 캔버스 단위**(`CanvasScaler` ScaleWithScreenSize, `referenceResolution` 1280×720, `matchWidthOrHeight` 0.5 — 지금 모든 캔버스가 이 값이고 바꾸지 않는다). 1920×1080에서는 같은 배치가 1.5배로 그려진다.
+
+### 14.1 용어
+- **글자 사각형**: `Text`가 실제로 그리는 글자의 범위. `RectTransform` 전체가 아니라 `preferredWidth`·`preferredHeight`(그 `Text`의 글꼴·크기·줄간격·줄바꿈 설정으로 계산)를 정렬(`alignment`) 기준으로 `rect` 안에 놓은 사각형. 회전·스케일은 월드 모서리(`GetWorldCorners`)로 반영한다.
+- **판(plate)**: 글자 뒤에 깔린 `Image`. 그리기 순서가 글자보다 앞(같은 캔버스에서 앞선 형제나 조상)이고, 글자 사각형을 사방 8단위 이상 여유를 두고 감싼다(14.4).
+- **장식**: 판이 아닌 보이는 `Graphic`(`Image`·`RawImage`, 북두칠성 연결선, 테두리, 아이콘, 구분선). 3D 장면(보드·선돌·하늘·행성)은 장식이 아니라 **배경**이다.
+- **보이는**: `activeInHierarchy`, `enabled`, 색 알파 × 조상 `CanvasGroup.alpha` > 0.01, 마스크 안.
+
+### 14.2 글자 크기
+| 종류 | 최소 | 대상 |
+|---|---|---|
+| 본문 | **22** | 버튼 글자, 힌트·이야기·설명, 행성·스테이지 이름, 별 조건, 결과 문구, 설정 항목 |
+| 보조 | **18** | 별 개수, 진행 숫자 옆 단위, 조작 안내, 크레딧 본문, 상태 라벨("사용 중"·"남음") — `UiLayout.secondary`로 표시한 것만 |
+| 제목 | 본문 이상 | 화면 제목, 챕터 행성 이름(카드), 스테이지 제목 |
+
+- 실제 크기 = `fontSize` × 그 언어·역할의 `LanguageFonts.titleScale/bodyScale`(13.4, 0이면 1). 숫자 역할은 × 1. `resizeTextForBestFit`이면 `resizeTextMinSize`로 판정한다.
+- 18 미만은 어디에도 없다(허용 목록으로도 안 됨). 보드 위 3D 라벨(TextMesh 등 월드 공간)은 이 절 밖이다.
+
+### 14.3 대비
+- 글자 색과 바로 뒤 판 색의 WCAG 대비가 **4.5:1 이상**(크기 무관, 큰 글자 예외 없음). 판이 불투명하지 않으면(알파 < 1) 판 색을 **검정과 흰색 위에 각각 합성한 두 값 중 낮은 쪽**으로 계산한다. 글자 알파도 같은 방식으로 판 위에 합성해 계산한다. `Outline`·`Shadow` 효과는 계산에 넣지 않는다.
+- 판이 없는 글자는 대비를 계산할 수 없으므로 14.4 위반이다.
+- 선·아이콘 같은 장식은 뒤 배경(판이나 화면 배경색)과 **3:1 이상**, 선 굵기 **2 이상**(1920×1080에서 3px).
+
+### 14.4 판 (텍스트 뒤 배경)
+- 3D 장면 위에 보이는 모든 글자는 판 위에 있다. 판의 알파는 **0.75 이상**. 글자를 감싸는 화면 전체 배경 `Image`(Title·Loading처럼 불투명 배경)도 판으로 친다.
+- **안쪽 여백(padding) 8**: 판의 안쪽 영역이 글자 사각형을 사방 8 이상 여유를 두고 감싼다. 판이 9-slice(`Image.type == Sliced`)면 안쪽 영역은 스프라이트 `border`(× `pixelsPerUnitMultiplier` 반영 크기)를 뺀 가운데 칸이다 — 테두리·이중선 장식은 border 안에 있어야 하고, border가 0인 테두리 스프라이트는 판으로 쓸 수 없다(늘어난 장식선이 글자를 지나는 지금 문제의 원인).
+- 한 판에 여러 글자(이름·번호·별 개수 = 한 카드)가 있어도 된다. 카드끼리는 겹치지 않는다(14.5).
+
+### 14.5 겹침
+- 보이는 글자 사각형끼리 겹치지 않는다(같은 판 안에서도).
+- 장식(선·테두리·아이콘)은 글자 사각형 + 여백 4를 지나지 않는다. 북두칠성 선은 노드 상자 가장자리에서 끊는다. 회전한 선은 회전 사각형으로 판정한다.
+- 판·카드·버튼끼리 겹치지 않는다(자기 조상·자손은 제외).
+- 글자는 자기 부모 `RectTransform` 밖으로 넘치지도, 잘리지도 않는다: `horizontalOverflow`/`verticalOverflow`가 Wrap/Truncate이면 `preferredWidth/Height` ≤ `rect`, Overflow면 글자 사각형이 부모 `rect` 안. 줄 수는 13.4대로 제목·행성 이름 2줄까지.
+
+### 14.6 안전 영역과 보드 영역
+- **안전 영역**: 캔버스 가장자리에서 24 안쪽. 모든 글자·버튼은 안전 영역 안.
+- **보드 영역**: 보드 칸과 액터의 월드 경계(`BoardGrid` 셀 전체, 높이 포함)를 Game 카메라로 화면에 투영한 사각형 + 여백 8. 카메라는 실제 게임과 같은 맞춤(`IStageEnvironment.Fit`·카메라 맞춤) 뒤의 값.
+- HUD의 글자·판·버튼은 보드 영역과 겹치지 않는다. 3D 장식(빙산·선돌·기둥)은 보드 영역 밖에 있어도 되지만, HUD 글자 뒤로 지나가면 그 글자는 판 위에 있어야 한다(14.4가 잡는다).
+- 검사 범위: 가장 큰 보드(가로·세로 칸 수 최대 스테이지 각각)와 23번처럼 힌트가 가장 긴 스테이지.
+
+### 14.7 모달
+- Result, Settings, 언어 선택, 챕터 진입 카드, Credits, 확인 창은 모달이다. 모달이 뜨면 **화면 전체를 덮는 막(`Image`, 캔버스 전체로 늘림, 알파 0.6 이상, `raycastTarget` 켬)**이 모달 아래·다른 UI 위에 그려진다(정렬 순서가 더 높은 캔버스나 마지막 형제). 막 아래 UI는 입력을 받지 않는다.
+- 아래 UI가 모달 패널 가장자리에 잘려 보이면 안 된다: 막 알파 0.6 이상이면 아래 UI는 겹침 검사에서 빠지고, 그보다 옅게 하려면 아래 HUD를 숨긴다(`CanvasGroup.alpha = 0`).
+- 모달 패널도 14.2~14.6을 그대로 따른다.
+
+### 14.8 허용 목록 (`UiLayout` 컴포넌트)
+검사를 일부러 비켜야 하는 요소는 그 GameObject에 컴포넌트를 붙인다. 이름·경로 문자열 목록은 쓰지 않는다(코드로 만든 UI는 이름이 자주 바뀐다).
+```csharp
+namespace SevenSteps.Game.UI {
+    [Flags] public enum UiLayoutRule { None = 0, Overlap = 1, Decoration = 2, Overflow = 4, Plate = 8, Contrast = 16, Board = 32 }
+    [DisallowMultipleComponent]
+    public sealed class UiLayout : MonoBehaviour {
+        public bool secondary;          // 14.2 보조 글자(최소 18)
+        public UiLayoutRule exempt;     // 이 요소에만 빼는 규칙. 자손에 퍼지지 않는다
+        public string reason = "";      // exempt != None이면 필수(비면 검사 오류)
+    }
+}
+```
+- 코드로 만드는 UI는 `Ui.Label` 등 생성 도우미에서 붙인다(`Ui.Secondary(text)`, `Ui.Exempt(go, rule, reason)` 같은 짧은 도우미 권장).
+- 최소 크기 18 미만과 모달 막(14.7)은 뺄 수 없다.
+- `UiLayoutCheck`는 끝에 허용 개수를 화면별로 출력한다(`exempt 3: StageSelect/Map/BigDipper Decoration "..."`). 허용을 늘리는 커밋은 아키텍트 리뷰에서 이유를 본다.
+
+### 14.9 검사 방법 (`UiLayoutCheck`, 씬 플로우 구현)
+- 화면: 위 목록 전부, **ko·en 각각**, 해상도 1280×720·1920×1080(16:9, WebGL 템플릿이 16:9 비율 유지로 맞추므로 이 둘이면 된다). Windows 빌드용 1280×800(16:10)은 **경고**만.
+- 문자열: 각 키에 그 언어의 실제 문구, 레벨·챕터 텍스트는 언어별 **가장 긴 값**(이름·힌트·이야기·행성 이름·소개), 숫자는 가장 긴 값(`150/150`, `50`, `7/7`).
+- 화면을 Play 없이 Edit Mode에서 만들 수 있어야 한다(빌더나 뷰의 `Build`를 `Localizer`·데이터로 호출 → `Canvas.ForceUpdateCanvases`·`LayoutRebuilder.ForceRebuildLayoutImmediate`). 지금 Play에서만 만들어지는 뷰는 이 경로를 추가한다(각 화면 소유자).
+- 위반 출력은 `화면/언어/해상도: 규칙 — 요소 경로 (수치)` 한 줄씩. 하나라도 있으면 실패.
+
+### 14.10 화면별 수치 (ui-layout-fix 반영)
+- Loading: 북두칠성 진행 표시 너비 = 화면 너비 40~50%, 진행 숫자 본문 이상.
+- StageSelect 지도: 행성 하나 = 이름·번호·별 개수 한 카드(판), 전체 별 수는 하단 정보 띠(판). 배경 보드·선돌은 노드 뒤에서 어둡게(판 규칙으로 해결되지 않는 대비 문제는 화면 소유자 판단).
+- Result: 14.7 막, 별 조건 문구 본문 크기.
+- HUD: 상태 라벨은 아이콘 옆(같은 카드), 조작 안내는 보조 18 이상 + 판, 버튼 줄과 8 이상 띄움.
+- 전후 캡처: 각 작업 공간 `reports/ui-layout/<화면>-<ko|en>-<1280|webgl>-<before|after>.png`(커밋하지 않음).
+
+---
+
 ## 변경 기록
 
 | 날짜 | 누가 | 내용 |
@@ -792,3 +871,4 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 | 2026-11-10 | 씬 플로우·아키텍트 | 11.1 `AppFlow.CanGo`에 (Title, Game) 추가(feat/scene-flow 19554a3, 검토 승인). 타이틀 시작·이어하기가 조용히 막히던 버그 수정. 뒤로 표 변경 없음 |
 | 2026-11-10 | 씬 플로우·아키텍트 | 11.2 `EntryTracker.TakeVia`: 알린 via가 첫 진입보다 앞섬(지도·목록·타이틀 시작 = select, 이어하기 = 첫 진입이면 boot), `TitleFlowController(…, EntryTracker)` 생성자 인자 추가(feat/scene-flow c474b03 검토 승인, telemetry.md v1 via 정의 e953eb0). 텔레메트리 골든은 트레이스 `via`로 첫 `level_start` |
 | 2026-11-10 | 씬 플로우·아키텍트 | 11장 `LaunchOptions.TitleCheck`(`-titlecheck begin, continue, map`, 개발·스모크용, feat/scene-flow 78e81ee 검토 승인), `GameFlowController.LastVia`, `unity.sh smoke` 타이틀 단계 |
+| 2026-11-10 | 아키텍트 | 14장 UI 레이아웃 규칙(사용자 지시 production/ui-layout-fix.md): 기준 1280x720 캔버스 단위, 본문 22·보조 18(`UiLayout.secondary`), 대비 4.5:1(장식 3:1, 선 2 이상), 3D 위 글자는 판(알파 0.75 이상, 안쪽 여백 8, 9-slice는 border 안쪽), 장식선은 글자 사각형을 지나지 않음, 글자·판 겹침과 넘침 금지, 안전 영역 24와 보드 영역 분리, 모달 막(알파 0.6 이상), 허용 목록은 `UiLayout` 컴포넌트(exempt 규칙 + reason 필수). 검증기 `UiLayoutCheck`(씬 플로우) ko·en, 1280x720·1920x1080 오류, 1280x800 경고. 영향: 씬 플로우(검증기, `UiLayout` 타입 추가, 소유 화면), 게임플레이/UI(HUD·결과·버튼 스킨, Edit Mode에서 만들 수 있게) |
