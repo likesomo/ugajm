@@ -55,10 +55,17 @@ function textOf(def, lang) {
 
 // ---------- state key, replay (docs/qa-attempts.md 6, 7) ----------
 
-export const finalKey = (s) => `${s.start}|${s.pos}|${s.used}|${s.bodies}|${s.statues}|${s.bridges}|${s.broken}|${s.status}|${s.flipped ? 1 : 0}`;
-export const keyHash = (k) => createHash('sha256').update(k, 'utf8').digest('hex').slice(0, 16);
+// Same text as C# Rules.Key: keyOf fields with the status as its enum number (Play 0, Choose 1, Win 2, Lose 3).
+const STATUS_NO = { play: 0, choose: 1, win: 2, lose: 3 };
+export const stateKey = (s) => `${s.start}|${s.pos}|${s.used}|${s.bodies}|${s.statues}|${s.bridges}|${s.broken}|${STATUS_NO[s.status]}|${s.flipped ? 1 : 0}`;
+// FNV-1a 32 over the UTF-8 bytes, 8 lowercase hex digits (C# QaReplay.StateHash).
+export function keyHash(k) {
+  let h = 0x811c9dc5;
+  for (const b of Buffer.from(k, 'utf8')) { h ^= b; h = Math.imul(h, 0x01000193) >>> 0; }
+  return h.toString(16).padStart(8, '0');
+}
 const TOKEN_CMD = { U: { type: 'move', dir: 'up' }, D: { type: 'move', dir: 'down' }, L: { type: 'move', dir: 'left' }, R: { type: 'move', dir: 'right' },
-  K: { type: 'keep' }, X: { type: 'switch' }, Z: { type: 'undo' } };
+  K: { type: 'keep' }, X: { type: 'switch' }, Z: { type: 'undo' }, '!': { type: 'restart' } };
 const LOSS = ['fall', 'bridge', 'seal', 'vanish', 'stone'];
 
 /// Runs tokens from newState(level). Returns { state, lastEvents, error } (error = index and token without effect).
@@ -69,7 +76,8 @@ export function runTokens(level, inputs) {
     const c = inputs[i];
     if (c === 'H') continue;
     const cmd = TOKEN_CMD[c];
-    if (!cmd) return { state: s, lastEvents, error: `token ${i} "${c}" is not U D L R K X Z H` };
+    if (!cmd) return { state: s, lastEvents, error: `token ${i} "${c}" is not U D L R K X Z H !` };
+    if (c === '!' && !s.prev) return { state: s, lastEvents, error: `token ${i} "!" on a fresh state (such a restart is not counted and never recorded)` };
     const r = dispatch(s, cmd);
     if (r.state === s) return { state: s, lastEvents, error: `token ${i} "${c}" had no effect` };
     s = r.state; lastEvents = r.events;
@@ -100,9 +108,11 @@ export function replayLine(line) {
     if ((line.outcome === 'fell' || line.outcome === 'out_of_bodies') && lossOf(r.lastEvents) !== line.failReason)
       problems.push(`failReason ${line.failReason}, replay ${lossOf(r.lastEvents)}`);
   }
-  const k = finalKey(s);
-  if (k !== line.finalKey) problems.push(`finalKey ${line.finalKey}, replay ${k}`);
-  if (keyHash(line.finalKey) !== line.finalHash) problems.push('finalHash does not match finalKey');
+  const k = stateKey(s);
+  if (k !== line.stateKey) problems.push(`stateKey ${line.stateKey}, replay ${k}`);
+  if (keyHash(k) !== line.stateHash) problems.push(`stateHash ${line.stateHash}, replay ${keyHash(k)}`);
+  for (const [f, ch] of [['levelUndos', 'Z'], ['levelHints', 'H'], ['levelRestarts', '!']])
+    if (count(line.inputs, ch) !== line[f]) problems.push(`${f} ${line[f]}, replay ${count(line.inputs, ch)}`);
   if (bodiesUsedOf(s) !== line.bodiesUsed) problems.push(`bodiesUsed ${line.bodiesUsed}, replay ${bodiesUsedOf(s)}`);
   const own = line.inputs.slice(line.from);
   for (const [f, chars] of [['steps', 'UDLR'], ['keeps', 'K'], ['switches', 'X'], ['undos', 'Z'], ['hints', 'H']])
@@ -156,7 +166,7 @@ function closeAttempt(ss, outcome, s, lastEvents) {
     stars: outcome === 'clear'
       ? stars({ bodiesUsed: bodiesUsedOf(s), minBodies: st.minBodies, hints: ss.levelHints, undos: ss.levelUndos, restarts: ss.levelRestarts })
       : null,
-    finalKey: finalKey(s), finalHash: keyHash(finalKey(s)), startT: ss.attemptT, t: new Date().toISOString(),
+    stateKey: stateKey(s), stateHash: keyHash(stateKey(s)), startT: ss.attemptT, t: new Date().toISOString(),
   };
   mkdirSync(qaDir(), { recursive: true });
   appendFileSync(attemptsPath(), JSON.stringify(line) + '\n');
@@ -302,16 +312,16 @@ export function run(argv) {
     }
     case 'restart': {
       let msg = '';
-      if (s0.prev) ss.levelRestarts++;
-      if (ss.inputs.length > ss.from) { const line = closeAttempt(ss, 'restart', s0, []); msg = `시도 ${line.attempt} 기록: restart\n`; }
-      ss.inputs = ''; ss.from = 0; ss.attemptT = new Date().toISOString();
+      if (playedSince(ss)) { const line = closeAttempt(ss, 'restart', s0, []); msg = `시도 ${line.attempt} 기록: restart\n`; }
+      // The game counts a restart only when something was done (AttemptCounts); only a counted restart is a token.
+      if (s0.prev) { ss.inputs += '!'; ss.levelRestarts++; }
+      ss.attemptT = new Date().toISOString();
       saveSession(ss);
       return msg + '재시작\n\n' + printView(view(ss, newState(lv)));
     }
     case 'giveup': {
-      // No new input since the last line: a stop marker with empty inputs (from the fresh start), not a try of its own.
-      if (ss.inputs.length === ss.from) { ss.inputs = ''; ss.from = 0; }
-      const line = closeAttempt(ss, 'gave_up', ss.inputs ? s0 : newState(lv), []);
+      // Nothing played since the last line: the line is only a stop marker (steps+keeps+switches+undos+hints = 0).
+      const line = closeAttempt(ss, 'gave_up', s0, []);
       ss.active = false; ss.ended = 'gave_up';
       saveSession(ss);
       return `시도 ${line.attempt} 기록: gave_up. 스테이지 ${ss.level}을 끝냈다. 다음은 start --level N`;
@@ -320,6 +330,9 @@ export function run(argv) {
       fail(`unknown command "${cmd}" (start show move keep switch undo restart hint giveup status verify)`);
   }
 }
+
+// Something other than restarts was entered since the last line.
+const playedSince = (ss) => ss.inputs.slice(ss.from).replace(/!/g, '') !== '';
 
 function applyTokens(ss, s0, tokens) {
   let s = s0;

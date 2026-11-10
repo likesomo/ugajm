@@ -13,6 +13,7 @@
 #   scene-validate (batch) check build list = AppScenes, scene roots and their references (errors -> exit 1)
 #   build-win    (batch) Windows build -> Builds/Windows/Seven Steps.exe
 #   build-webgl  (batch) WebGL build -> Builds/WebGL/
+#   qa-replay    (batch) replay reports/qa/attempts.jsonl in C# (BuildTools.QaReplay, docs/qa-attempts.md) -> reports/qa/unity-replay.json
 #   play         run the Windows build
 #   smoke        run the Windows build on 7 replays, save screenshots + logs to reports/smoke/
 #   smoke-webgl  open Builds/WebGL in the Orca browser on 3 replays (+ ?smoke=board, + a ?smoke=empty control), fail if the board is missing
@@ -137,6 +138,7 @@ case "$cmd" in
     echo "[unity.sh] test OK" ;;
   build-win)   batch build-win BuildTools.BuildWindows ;;
   build-webgl) batch build-webgl BuildTools.BuildWebGL ;;
+  qa-replay)   batch qa-replay BuildTools.QaReplay ;;   # replays reports/qa/attempts.jsonl in C# (docs/qa-attempts.md 7) -> reports/qa/unity-replay.json
   play)        "$REPO/Builds/Windows/Seven Steps.exe" & ;;
   smoke)
     # Runs the Windows build on a few replays, saves screenshots + logs to reports/smoke/, fails on exceptions.

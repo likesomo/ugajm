@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { run, replayLine, stage, finalKey, keyHash, QaError } from './qa-play.mjs';
+import { run, replayLine, stage, stateKey, keyHash, QaError } from './qa-play.mjs';
 import { newState, step, choose, actions, minBodies, keyOf, DIRS } from '../../prototypes/seven-steps/src/core.js';
 import { LEVELS } from '../../prototypes/seven-steps/src/levels.js';
 
@@ -23,6 +23,7 @@ const play = (word) => {
     else run([{ K: 'keep', X: 'switch', Z: 'undo', H: 'hint' }[c], ...T]);
   }
 };
+const count = (str) => [...str].filter((c) => 'UDLR'.includes(c)).length;
 const errors = (argv, re) => assert.throws(() => run(argv), (e) => e instanceof QaError && re.test(e.message));
 
 // BFS from the start for a command list that ends in a lose whose last command does (or does not) contain a fall.
@@ -85,9 +86,11 @@ test('undo gives 2 stars, a hint 1 star, a counted restart 2 stars', () => {
   run(['restart', ...T]); // fresh: not counted, no line
   assert.equal(lines().length, 2);
   play(path[0]); run(['restart', ...T]);
-  assert.equal(last().outcome, 'restart'); assert.equal(last().levelRestarts, 1); assert.equal(last().attempt, 3);
+  // The restart line ends before the restart; the counted restart is the '!' that starts the next attempt.
+  assert.equal(last().outcome, 'restart'); assert.equal(last().inputs, path[0]); assert.equal(last().levelRestarts, 0); assert.equal(last().attempt, 3);
   play(path);
   assert.equal(last().outcome, 'clear'); assert.equal(last().stars, 2); assert.equal(last().levelRestarts, 1); assert.equal(last().attempt, 4);
+  assert.equal(last().inputs, path[0] + '!' + path); assert.equal(last().from, 1); assert.equal(last().steps, count(path));
   for (const l of lines()) assert.deepEqual(replayLine(l), []);
 });
 
@@ -110,8 +113,10 @@ test('fell and out_of_bodies end an attempt; undo continues the run with from > 
   const n = lines().length;
   run(['giveup', ...T]);
   assert.equal(lines().length, n + 1);
-  assert.equal(last().inputs, ''); assert.equal(last().from, 0); assert.equal(last().levelRestarts, 1);
-  assert.equal(last().finalKey, finalKey(newState(stage(1).level)));
+  const m = last(); // a stop marker: nothing but the restart since the loss line
+  assert.equal(m.inputs, word(oobPath) + '!'); assert.equal(m.levelRestarts, 1);
+  assert.equal(m.steps + m.keeps + m.switches + m.undos + m.hints, 0);
+  assert.equal(m.stateKey, stateKey(newState(stage(1).level)));
   for (const l of lines()) assert.deepEqual(replayLine(l), []);
 });
 
@@ -127,7 +132,9 @@ test('no solution leaks: show --json and every output carry no solver or expecte
 test('replayLine catches tampering; finalHash is the key hash; CLI exits 2 on errors', () => {
   run(['start', ...T, '--level', '1']); play(word(minBodies(stage(1).level).path));
   const l = last();
-  assert.equal(l.finalHash, keyHash(l.finalKey));
+  assert.equal(l.stateHash, keyHash(l.stateKey)); assert.match(l.stateHash, /^[0-9a-f]{8}$/);
+  assert.equal(keyHash('a'), 'e40c292c'); // FNV-1a 32 reference value
+  assert.match(l.stateKey, /|2|0$/); // status as the C# enum number (Win = 2)
   assert.match(replayLine({ ...l, stars: 2 }).join(), /stars/);
   assert.match(replayLine({ ...l, inputs: l.inputs + 'R' }).join(), /no effect/);
   assert.match(replayLine({ ...l, outcome: 'restart' }).join(), /status win/);
