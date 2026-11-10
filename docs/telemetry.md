@@ -152,7 +152,7 @@ DB_PATH=server/data/playtest-$(date +%F).sqlite node server/src/index.mjs
 
 **방화벽** (같은 와이파이 기기를 받을 때만): 서버를 처음 켤 때 Windows가 "Node.js 액세스 허용"을 물으면 **허용**. 현장 와이파이는 보통 "공용 네트워크"로 잡히므로(`Get-NetConnectionProfile`의 `NetworkCategory`) 그 종류에 체크한다. 창을 놓쳤거나 휴대폰에서 안 열리면 관리자 PowerShell에서 `New-NetFirewallRule -DisplayName "Seven Steps 8787" -Direction Inbound -Protocol TCP -LocalPort 8787 -Action Allow`, 끝나면 `Remove-NetFirewallRule -DisplayName "Seven Steps 8787"`. 공유기 밖(인터넷)으로는 열리지 않는다. 손님용 와이파이는 기기끼리 막혀 있을 수 있다(그때는 진행자 PC로만).
 
-**3. 시작 전 확인** (2분): `curl http://localhost:8787/healthz` → `{"ok":true}`. 휴대폰을 쓰면 휴대폰에서 LAN 주소로 한 번 열어 본다. 테스터 주소로 1스테이지를 깨고 5~10초 뒤 대시보드 "새로고침" → 빌드 목록에 새 빌드(`0.1.0+<커밋>`)와 `unity-webgl`이 보이면 된다. 확인 기록은 "기간" 필터로 빼거나, 서버를 끄고 그날 DB 파일을 지운 뒤 다시 켠다.
+**3. 시작 전 확인** (2분): `curl http://localhost:8787/healthz` → `{"ok":true}`. 같은 와이파이 기기를 쓰면 **현장에서 실제 휴대폰 1대로** 서버가 출력한 LAN 주소(`http://<IP>:8787/webgl/`)를 열어 1스테이지를 깨고 대시보드 클라이언트·빌드 목록에 그 기록이 들어왔는지 본다(안 열리면 방화벽, 열리는데 기록이 없으면 서버가 ca6d7db 이후 버전인지 확인). 진행자 PC에서도 테스터 주소로 1스테이지를 깨고 5~10초 뒤 대시보드 "새로고침" → 빌드 목록에 새 빌드(`0.1.0+<커밋>`)와 `unity-webgl`이 보이면 된다. 확인 기록은 "기간" 필터로 빼거나, 서버를 끄고 그날 DB 파일을 지운 뒤 다시 켠다.
 
 **4. 대시보드에서 보는 것** (자동 갱신 없음, "새로고침")
 - 필터: 클라이언트, 빌드, 언어(`ko`/`en`, `lang`), 기간, 챕터(행성 7개)

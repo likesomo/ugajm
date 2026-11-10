@@ -25,6 +25,23 @@ test('intake: stores valid events, ignores duplicates, reports bad ones', async 
   assert.equal(JSON.parse(row.data).dir, 'right');
 });
 
+test('intake same-origin through a tunnel: X-Forwarded-Host counts only with trustProxy', async () => {
+  const tunnel = { 'Content-Type': 'text/plain', Origin: 'https://x.trycloudflare.com', 'X-Forwarded-Proto': 'https', 'X-Forwarded-Host': 'x.trycloudflare.com' };
+  const body = (sessionId) => envelope([events[0]], { sessionId });
+  const proxied = await startServer({ trustProxy: true });
+  const direct = await startServer();
+  try {
+    const ok = await post(proxied.url, body('44444444-4444-4444-8444-444444444444'), tunnel);
+    assert.equal(ok.status, 200, 'trustProxy: the forwarded host is this server, so the tunnel origin is same-origin');
+    assert.equal(ok.headers.get('access-control-allow-origin'), 'https://x.trycloudflare.com');
+    // Without trustProxy anyone could send X-Forwarded-Host to pass as same-origin: it is ignored.
+    assert.equal((await post(direct.url, body('55555555-5555-4555-8555-555555555555'), tunnel)).status, 403);
+  } finally {
+    await proxied.close();
+    await direct.close();
+  }
+});
+
 test('intake: text/plain (sendBeacon), CORS allow list, errors', async () => {
   const sid = '33333333-3333-4333-8333-333333333333';
   let res = await post(srv.url, envelope([events[0]], { sessionId: sid }), { 'Content-Type': 'text/plain', Origin: 'https://someone.itch.io' });
