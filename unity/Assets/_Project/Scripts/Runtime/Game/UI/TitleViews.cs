@@ -33,15 +33,15 @@ namespace SevenSteps.Game.UI
             panel = Ui.Rect("Title", root).Stretch().gameObject;
             var t = panel.transform;
             Ui.Wash(t, 0.12f);
-            var menu = Ui.Panel(t, "Menu").rectTransform.TopLeft(32, 36, 450, 648);
+            var menu = Ui.Panel(t, "Menu").rectTransform.TopLeft(32, 30, 450, 664); // texts 8 inside the panel border (32)
             name = Ui.Label(menu, "", 66, Ui.Gold, TextAnchor.MiddleLeft, "Name");
-            name.rectTransform.TopLeft(30, 27, 390, 105);
+            name.rectTransform.TopLeft(42, 33, 380, 105);
             tagline = Ui.Label(menu, "", 25, Ui.Ink, TextAnchor.MiddleLeft, "Tagline");
-            tagline.rectTransform.TopLeft(32, 138, 390, 46);
+            tagline.rectTransform.TopLeft(42, 144, 380, 46);
             Button Menu(int row, Action click, out Text label, string id)
             {
                 var b = Ui.MenuButton(menu, 25, click, out label, id);
-                ((RectTransform)b.transform).TopLeft(38, 198 + row * 76, 370, 72); // 72: the label + 8 inside the button border (14.4)
+                ((RectTransform)b.transform).TopLeft(40, 204 + row * 76, 370, 72); // 72: the label + 8 inside the button border (14.4)
                 return b;
             }
             beginButton = Menu(0, () => BeginRequested?.Invoke(), out begin, "Begin");
@@ -52,7 +52,7 @@ namespace SevenSteps.Game.UI
             begin.color = Ui.Gold;
             var lang = Ui.MakeButton(menu, "", 22, () => LanguageRequested?.Invoke(), out language, "Language");
             ((Image)lang.targetGraphic).color = new Color(0, 0, 0, 0);
-            ((RectTransform)lang.transform).TopLeft(40, 584, 370, 36);
+            ((RectTransform)lang.transform).TopLeft(40, 590, 370, 36);
             language.color = Ui.Dim;
             var ver = Ui.Secondary(Ui.Label(t, Application.version, 18, Ui.Dim, TextAnchor.LowerRight, "Version")); // 14.2 secondary, inside the 24 safe margin
             ver.rectTransform.Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-28, 26), new Vector2(300, 24));
@@ -329,9 +329,9 @@ namespace SevenSteps.Game.UI
             blocker.raycastTarget = true;
             var frame = Ui.Panel(panel.transform, "Frame").rectTransform.TopLeft(140, 60, 1000, 600);
             title = Ui.Label(frame, "", 52, Ui.Gold, TextAnchor.MiddleCenter, "Planet");
-            title.rectTransform.TopLeft(40, 28, 920, 72);
+            title.rectTransform.TopLeft(40, 36, 920, 72);
             tagline = Ui.Label(frame, "", 24, Ui.Dim, TextAnchor.MiddleCenter, "Tagline");
-            tagline.rectTransform.TopLeft(40, 100, 920, 40);
+            tagline.rectTransform.TopLeft(40, 108, 920, 40);
             tagline.horizontalOverflow = HorizontalWrapMode.Wrap;
             grid = Ui.Rect("Grid", frame).TopLeft(40, 156, 920, 340);
             var g = grid.gameObject.AddComponent<GridLayoutGroup>();
@@ -361,7 +361,7 @@ namespace SevenSteps.Game.UI
                 }
             }
             var backButton = Ui.MenuButton(frame, 25, () => CloseRequested?.Invoke(), out back, "Back");
-            ((RectTransform)backButton.transform).TopLeft(385, 510, 230, 72);
+            ((RectTransform)backButton.transform).TopLeft(385, 504, 230, 72);
             panel.SetActive(false);
         }
 

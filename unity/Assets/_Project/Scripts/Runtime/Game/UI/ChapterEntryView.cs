@@ -49,7 +49,7 @@ namespace SevenSteps.Game.UI
             head = Ui.Label(root, "", 48, Ui.Ink, TextAnchor.MiddleLeft, "Head");
             head.rectTransform.TopLeft(40, 30, 1070, 72);
             // Plates behind the planet name and the story line: they sit over the board picture (14.4).
-            Plate(root, "PlanetPlate").TopLeft(200, 196, 880, 118);
+            Ui.Plate(root, "PlanetPlate").rectTransform.TopLeft(200, 196, 880, 118);
             planet = Ui.Label(root, "", 64, Ui.Gold, TextAnchor.MiddleCenter, "Planet");
             planet.rectTransform.TopLeft(216, 205, 848, 100);
             chips = new Image[MaxPlanets];
@@ -65,14 +65,11 @@ namespace SevenSteps.Game.UI
                 chipNames[i].horizontalOverflow = HorizontalWrapMode.Wrap;
                 chipNames[i].lineSpacing = 0.9f;
             }
-            Plate(root, "IntroPlate").TopLeft(120, 532, 1040, 112);
+            Ui.Plate(root, "IntroPlate").rectTransform.TopLeft(120, 532, 1040, 112);
             intro = Ui.Label(root, "", 28, Ui.Ink, TextAnchor.MiddleCenter, "Intro");
             intro.rectTransform.TopLeft(140, 542, 1000, 92);
             intro.horizontalOverflow = HorizontalWrapMode.Wrap;
         }
-
-        static RectTransform Plate(Transform root, string name) =>
-            Ui.MakeImage(root, new Color(Ui.PanelBg.r, Ui.PanelBg.g, Ui.PanelBg.b, 0.85f), null, name).rectTransform;
 
         public void Bind(ChapterCardModel model)
         {

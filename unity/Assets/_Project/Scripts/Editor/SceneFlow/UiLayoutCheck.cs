@@ -41,11 +41,6 @@ namespace SevenSteps.EditorTools
         public const float PlateAlpha = 0.75f, ScrimAlpha = 0.6f, TextContrast = 4.5f, LineContrast = 3f, LineMin = 2;
         /// HUD / Result findings: warnings first (shared with gameplay-ui), errors once both are fixed (lead).
         public static bool HudResultAreErrors = false;
-        /// RH_UI_Atlas 9-slice borders (button 20, panel 32) are wider than their decoration (<= 10 px); art is asked for 12
-        /// (lead, 2026-11-10). Until the new sprites land, plates are measured with the border capped at this value; set
-        /// SpriteBordersPending = false when they do (the check must then pass with the real borders).
-        public static bool SpriteBordersPending = true;
-        public const float RequestedBorder = 12;
         /// Glyph quads carry the font's side bearing (hand fonts: up to ~2 units past the pen position).
         const float GlyphSlack = 2f;
 
@@ -121,10 +116,11 @@ namespace SevenSteps.EditorTools
                         foreach (var f in found) issues.Add($"{level} UiLayout {label}: {f}");
                     }
                 }
+            foreach (var tex in decoded.Values) if (tex != null) Object.DestroyImmediate(tex);
+            decoded.Clear(); // S3: the PNG copies are big, do not keep them between runs
             foreach (var kv in exemptions)
                 issues.Add($"NOTE UiLayout exempt {kv.Value.Count}: {kv.Key}: {string.Join("; ", kv.Value.Distinct())}");
             issues.Add($"NOTE UiLayout: {screensBuilt} screen builds checked; board area (14.6) not checked yet");
-            if (SpriteBordersPending) issues.Add($"NOTE UiLayout: sprite borders measured as at most {RequestedBorder} (art request pending, SpriteBordersPending)");
         }
 
         // ---------------------------------------------------------------- screens
@@ -342,7 +338,7 @@ namespace SevenSteps.EditorTools
             foreach (var t in texts)
             {
                 // 14.6 safe area
-                if (!t.I.Is(UiLayoutRule.Overflow) && !Contains(Inset(canvasBox, Safe), t.Glyphs))
+                if (!t.I.Is(UiLayoutRule.Safe) && !Contains(Inset(canvasBox, Safe), t.Glyphs))
                     found.Add($"safe area: {t.I.Path} \"{Short(t.T.text)}\" glyphs {Fmt(t.Glyphs)} outside the 24 margin");
                 // 14.4 / 14.5 plates and decorations
                 var g4 = Grow(t.Glyphs, TextMargin);
@@ -400,7 +396,7 @@ namespace SevenSteps.EditorTools
                 var it = live.FirstOrDefault(i => i.G == s.targetGraphic);
                 if (it == null || IsFull(it, canvasBox)) continue; // a full-screen click catcher (chapter card: click to close)
                 if (!boxes.Contains(it)) boxes.Add(it);
-                if (!it.Is(UiLayoutRule.Overflow) && !Contains(Grow(Inset(canvasBox, Safe), 0.5f), it.Box))
+                if (!it.Is(UiLayoutRule.Safe) && !Contains(Grow(Inset(canvasBox, Safe), 0.5f), it.Box))
                     found.Add($"safe area: button {it.Path} {Fmt(it.Box)} outside the 24 margin");
             }
             for (int a = 0; a < boxes.Count; a++)
@@ -442,6 +438,7 @@ namespace SevenSteps.EditorTools
                     var corners = new Vector3[4];
                     g.rectTransform.GetWorldCorners(corners);
                     var poly = corners.Select(p => ToCanvas(root, p, units)).ToArray();
+                    if (Masked(g, Bounds(poly), root, units)) continue;
                     list.Add(new Item
                     {
                         G = g, Order = list.Count, Poly = poly, Box = Bounds(poly), Alpha = alpha,
@@ -450,6 +447,19 @@ namespace SevenSteps.EditorTools
                 }
             }
             return list;
+        }
+
+        /// 14.1 "inside the mask": out of sight behind an ancestor RectMask2D / Mask (scroll lists).
+        static bool Masked(Graphic g, Rect box, RectTransform root, Vector2 units)
+        {
+            for (var p = g.transform.parent; p != null; p = p.parent)
+            {
+                bool masks = (p.TryGetComponent<RectMask2D>(out var m2) && m2.enabled) || (p.TryGetComponent<Mask>(out var m) && m.enabled);
+                if (!masks) continue;
+                var clip = Bounds(Corners((RectTransform)p, root, units));
+                if (Area(Intersect(clip, box)) <= 0) return true;
+            }
+            return false;
         }
 
         static float GroupAlpha(Transform t)
@@ -546,9 +556,10 @@ namespace SevenSteps.EditorTools
             var box = img.Box;
             if (img.G is Image im && im.sprite != null && (im.type == Image.Type.Sliced || im.type == Image.Type.Tiled) && im.hasBorder)
             {
-                float ppu = im.pixelsPerUnit; // sprite ppu / canvas reference ppu x pixelsPerUnitMultiplier
-                var border = SpriteBordersPending ? Vector4.Min(im.sprite.border, Vector4.one * RequestedBorder) : im.sprite.border;
-                var b = border / Mathf.Max(ppu, 0.0001f);
+                // Image.pixelsPerUnit = sprite ppu / canvas reference ppu; the sliced border is drawn at that x pixelsPerUnitMultiplier
+                // (Image.multipliedPixelsPerUnit, internal), e.g. FitButtonSkin's 2.5.
+                float ppu = im.pixelsPerUnit * im.pixelsPerUnitMultiplier;
+                var b = im.sprite.border / Mathf.Max(ppu, 0.0001f);
                 var s = img.G.transform.lossyScale;
                 return Rect.MinMaxRect(box.xMin + b.x * s.x, box.yMin + b.w * s.y, box.xMax - b.z * s.x, box.yMax - b.y * s.y);
             }
