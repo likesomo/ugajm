@@ -79,6 +79,8 @@ namespace SevenSteps.Game.UI
         {
             var b = MakeButton(parent, "", fontSize, onClick, out text, name);
             Skin(b);
+            // The hand fonts draw low in their line box (descenders): 2 up centers the glyphs inside the frame (14.4 padding).
+            text.rectTransform.anchoredPosition += new Vector2(0, 2);
             return b;
         }
 

@@ -48,28 +48,31 @@ namespace SevenSteps.Game.UI
             wash.gameObject.AddComponent<Button>().onClick.AddListener(() => CloseRequested?.Invoke());
             head = Ui.Label(root, "", 48, Ui.Ink, TextAnchor.MiddleLeft, "Head");
             head.rectTransform.TopLeft(40, 30, 1070, 72);
+            // Plates behind the planet name and the story line: they sit over the board picture (14.4).
+            Plate(root, "PlanetPlate").TopLeft(200, 196, 880, 118);
             planet = Ui.Label(root, "", 64, Ui.Gold, TextAnchor.MiddleCenter, "Planet");
-            planet.rectTransform.TopLeft(80, 205, 1120, 100);
+            planet.rectTransform.TopLeft(216, 205, 848, 100);
             chips = new Image[MaxPlanets];
             chipNames = new Text[MaxPlanets];
             for (int i = 0; i < MaxPlanets; i++)
             {
                 chips[i] = Ui.Card(root, "Planet " + (i + 1));
-                chipNames[i] = Ui.Label(chips[i].transform, "", 21, Ui.Ink, TextAnchor.MiddleCenter, "Name");
+                chipNames[i] = Ui.Label(chips[i].transform, "", 22, Ui.Ink, TextAnchor.MiddleCenter, "Name");
                 chipNames[i].rectTransform.Stretch();
-                // between the card sprite's two rules; long names (en) shrink to one line instead of crossing them
-                chipNames[i].rectTransform.offsetMin = new Vector2(7, 22);
-                chipNames[i].rectTransform.offsetMax = new Vector2(-7, -22);
+                // inside the card border (12) + 8; long names take two lines (14.2: never under 22)
+                chipNames[i].rectTransform.offsetMin = new Vector2(20, 20);
+                chipNames[i].rectTransform.offsetMax = new Vector2(-20, -20);
                 chipNames[i].horizontalOverflow = HorizontalWrapMode.Wrap;
-                chipNames[i].verticalOverflow = VerticalWrapMode.Truncate;
-                chipNames[i].resizeTextForBestFit = true;
-                chipNames[i].resizeTextMinSize = 14;
-                chipNames[i].resizeTextMaxSize = 21;
+                chipNames[i].lineSpacing = 0.9f;
             }
+            Plate(root, "IntroPlate").TopLeft(120, 532, 1040, 112);
             intro = Ui.Label(root, "", 28, Ui.Ink, TextAnchor.MiddleCenter, "Intro");
-            intro.rectTransform.TopLeft(150, 543, 980, 90);
+            intro.rectTransform.TopLeft(140, 542, 1000, 92);
             intro.horizontalOverflow = HorizontalWrapMode.Wrap;
         }
+
+        static RectTransform Plate(Transform root, string name) =>
+            Ui.MakeImage(root, new Color(Ui.PanelBg.r, Ui.PanelBg.g, Ui.PanelBg.b, 0.85f), null, name).rectTransform;
 
         public void Bind(ChapterCardModel model)
         {
@@ -83,8 +86,8 @@ namespace SevenSteps.Game.UI
             intro.text = model.Intro;
             intro.font = Ui.Theme.FontFor(lang, FontRole.Body);
             int n = model.Planets.Count;
-            float step = n > 0 ? Mathf.Min(174f, 1220f / n) : 0;
-            float width = Mathf.Min(145f, step - 12);
+            float step = n > 0 ? Mathf.Min(176f, 1232f / n) : 0;
+            float width = Mathf.Min(164f, step - 12);
             float x0 = (1280 - (n - 1) * step - width) / 2;
             var body = Ui.Theme.FontFor(lang, FontRole.Body);
             for (int i = 0; i < MaxPlanets; i++)
@@ -92,7 +95,7 @@ namespace SevenSteps.Game.UI
                 bool used = i < n;
                 chips[i].gameObject.SetActive(used);
                 if (!used) continue;
-                chips[i].rectTransform.TopLeft(x0 + i * step, 397, width, 85);
+                chips[i].rectTransform.TopLeft(x0 + i * step, 372, width, 112);
                 bool current = i == model.Number - 1;
                 chips[i].color = Ui.Theme.card != null ? (current ? Ui.Gold : Color.white) : (current ? Ui.Gold : Ui.ButtonBg);
                 chipNames[i].text = model.Planets[i];

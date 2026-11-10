@@ -48,13 +48,13 @@ namespace SevenSteps.Game.UI
                 var lang = Languages.All[i];
                 buttons[i] = Ui.MenuButton(frame, 25, () => LanguagePicked?.Invoke(lang), out names[i], "Lang " + Languages.Code(lang));
                 float x = Languages.All.Length == 2 ? 45 + i * 302 : 45 + i * (580f / Languages.All.Length);
-                ((RectTransform)buttons[i].transform).TopLeft(x, 134, 270, 55);
+                ((RectTransform)buttons[i].transform).TopLeft(x, 126, 270, 72);
             }
             note = Ui.Label(frame, "", 27, Ui.Ink, TextAnchor.MiddleCenter, "Note");
             note.rectTransform.TopLeft(48, 227, 568, 70);
             note.horizontalOverflow = HorizontalWrapMode.Wrap;
             continueButton = Ui.MenuButton(s, 25, () => ContinueRequested?.Invoke(), out cont, "Continue");
-            ((RectTransform)continueButton.transform).TopLeft(482, 585, 316, 55);
+            ((RectTransform)continueButton.transform).TopLeft(482, 578, 316, 72);
             cont.color = Ui.Gold;
             panel.SetActive(false);
         }

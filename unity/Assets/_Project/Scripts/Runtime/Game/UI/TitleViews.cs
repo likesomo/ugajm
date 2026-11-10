@@ -33,7 +33,7 @@ namespace SevenSteps.Game.UI
             panel = Ui.Rect("Title", root).Stretch().gameObject;
             var t = panel.transform;
             Ui.Wash(t, 0.12f);
-            var menu = Ui.Panel(t, "Menu").rectTransform.TopLeft(32, 40, 450, 624);
+            var menu = Ui.Panel(t, "Menu").rectTransform.TopLeft(32, 36, 450, 648);
             name = Ui.Label(menu, "", 66, Ui.Gold, TextAnchor.MiddleLeft, "Name");
             name.rectTransform.TopLeft(30, 27, 390, 105);
             tagline = Ui.Label(menu, "", 25, Ui.Ink, TextAnchor.MiddleLeft, "Tagline");
@@ -41,7 +41,7 @@ namespace SevenSteps.Game.UI
             Button Menu(int row, Action click, out Text label, string id)
             {
                 var b = Ui.MenuButton(menu, 25, click, out label, id);
-                ((RectTransform)b.transform).TopLeft(38, 217 + row * 70, 370, 55);
+                ((RectTransform)b.transform).TopLeft(38, 198 + row * 76, 370, 72); // 72: the label + 8 inside the button border (14.4)
                 return b;
             }
             beginButton = Menu(0, () => BeginRequested?.Invoke(), out begin, "Begin");
@@ -52,10 +52,10 @@ namespace SevenSteps.Game.UI
             begin.color = Ui.Gold;
             var lang = Ui.MakeButton(menu, "", 22, () => LanguageRequested?.Invoke(), out language, "Language");
             ((Image)lang.targetGraphic).color = new Color(0, 0, 0, 0);
-            ((RectTransform)lang.transform).TopLeft(40, 572, 370, 34);
+            ((RectTransform)lang.transform).TopLeft(40, 584, 370, 36);
             language.color = Ui.Dim;
-            var ver = Ui.Label(t, Application.version, 14, Ui.Dim, TextAnchor.LowerRight, "Version");
-            ver.rectTransform.Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-16, 12), new Vector2(300, 20));
+            var ver = Ui.Secondary(Ui.Label(t, Application.version, 18, Ui.Dim, TextAnchor.LowerRight, "Version")); // 14.2 secondary, inside the 24 safe margin
+            ver.rectTransform.Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-28, 26), new Vector2(300, 24));
             panel.SetActive(false);
         }
 
@@ -141,7 +141,8 @@ namespace SevenSteps.Game.UI
     /// </summary>
     public sealed class PlanetMapView
     {
-        const float MapX = 60, MapY = 190, MapW = 1140, MapH = 650;
+        // Card centers: Dipper x .10..0.98 -> 130..1150, y .12..0.40 -> 315..540 (docs/architecture.md 14.10: one card per planet).
+        const float MapX = 14, MapY = 218, MapW = 1159, MapH = 805, CardW = 180, CardH = 124, BandY = 606;
 
         readonly GameObject panel;
         readonly IReadOnlyList<PlanetEntry> planets;
@@ -164,7 +165,7 @@ namespace SevenSteps.Game.UI
             if (planets.Count == 0) throw new ArgumentException("no planets", nameof(planets));
             panel = Ui.Rect("PlanetSelect", root).Stretch().gameObject;
             var s = panel.transform;
-            Ui.Wash(s, 0.97f);
+            Ui.Wash(s, 0.985f); // the board and menhirs stay far behind the cards
             head = Ui.Label(s, "", 48, Ui.Ink, TextAnchor.MiddleLeft, "Head");
             head.rectTransform.TopLeft(40, 30, 1070, 72);
             detail = Ui.Label(s, "", 24, Ui.Dim, TextAnchor.MiddleLeft, "Detail");
@@ -172,9 +173,17 @@ namespace SevenSteps.Game.UI
 
             var pos = new Vector2[planets.Count];
             for (int i = 0; i < pos.Length; i++) pos[i] = Position(i, pos.Length);
+            // Dipper lines from card edge to card edge (never under a card's text).
             if (planets.Count <= 7)
                 foreach (var (a, b) in UiTheme.DipperEdges)
-                    if (a < pos.Length && b < pos.Length) Ui.Line(s, pos[a], pos[b], Ui.Dim, "Edge");
+                    if (a < pos.Length && b < pos.Length)
+                    {
+                        var d = pos[b] - pos[a];
+                        float cut = Mathf.Min(d.x != 0 ? CardW / 2 / Mathf.Abs(d.x) : float.MaxValue, d.y != 0 ? CardH / 2 / Mathf.Abs(d.y) : float.MaxValue) + 6f / d.magnitude;
+                        if (cut >= 0.5f) continue; // cards side by side: no room for a line
+                        var line = Ui.Line(s, pos[a] + d * cut, pos[b] - d * cut, Ui.Dim, "Edge");
+                        line.rectTransform.sizeDelta = new Vector2(line.rectTransform.sizeDelta.x, 3);
+                    }
 
             cards = new Button[planets.Count];
             names = new Text[planets.Count];
@@ -183,32 +192,39 @@ namespace SevenSteps.Game.UI
             {
                 int idx = i;
                 var p = pos[i];
+                // One card per planet: number, name (up to 2 lines), star count.
                 var card = Ui.Card(s, "Planet " + (i + 1));
-                card.rectTransform.TopLeft(p.x - 65, p.y - 24, 130, 48);
+                card.rectTransform.TopLeft(p.x - CardW / 2, p.y - CardH / 2, CardW, CardH);
                 card.raycastTarget = true;
                 cards[i] = card.gameObject.AddComponent<Button>();
                 var colors = cards[i].colors;
                 colors.highlightedColor = colors.selectedColor = Ui.Gold;
                 cards[i].colors = colors;
                 cards[i].onClick.AddListener(() => PlanetClicked?.Invoke(idx));
-                var num = Ui.Label(card.transform, (i + 1).ToString(), 25, Ui.Gold, TextAnchor.MiddleCenter, "Number");
-                num.rectTransform.Stretch();
-                names[i] = Ui.Label(s, "", 23, Ui.Ink, TextAnchor.UpperCenter, "Name " + (i + 1));
-                names[i].rectTransform.TopLeft(p.x - 95, p.y + 30, 190, 60);
+                var c = card.transform;
+                var num = Ui.Label(c, (i + 1).ToString(), 28, Ui.Gold, TextAnchor.UpperLeft, "Number");
+                num.rectTransform.TopLeft(22, 21, 24, 34);
+                names[i] = Ui.Label(c, "", 22, Ui.Ink, TextAnchor.UpperLeft, "Name");
+                names[i].rectTransform.TopLeft(48, 22, 112, 52);
                 names[i].horizontalOverflow = HorizontalWrapMode.Wrap;
-                var star = Ui.Star(s, true, "Star " + (i + 1));
-                star.rectTransform.TopLeft(p.x - 48, p.y + 92, 22, 22);
-                totals[i] = Ui.Label(s, "", 22, Ui.Gold, TextAnchor.MiddleLeft, "Stars " + (i + 1));
-                totals[i].rectTransform.TopLeft(p.x - 20, p.y + 88, 100, 30);
+                names[i].lineSpacing = 0.9f;
+                var star = Ui.Star(c, true, "Star");
+                star.rectTransform.TopLeft(22, 84, 22, 22);
+                totals[i] = Ui.Secondary(Ui.Label(c, "", 20, Ui.Gold, TextAnchor.MiddleLeft, "Stars"));
+                totals[i].rectTransform.TopLeft(50, 80, 110, 30);
             }
 
-            totalLabel = Ui.Label(s, "", 30, Ui.Gold, TextAnchor.MiddleLeft, "TotalLabel");
-            totalLabel.rectTransform.TopLeft(440, 572, 400, 40);
-            totalValue = Ui.Label(s, "", 27, Ui.Gold, TextAnchor.MiddleLeft, "TotalValue");
-            var backButton = Ui.MenuButton(s, 25, () => BackRequested?.Invoke(), out back, "Back");
-            ((RectTransform)backButton.transform).TopLeft(40, 624, 230, 55);
-            note = Ui.Label(s, "", 24, Ui.Ink, TextAnchor.MiddleLeft, "Note");
-            note.rectTransform.TopLeft(310, 634, 900, 35);
+            // Bottom band: back, all stars, note on one plate.
+            var band = Ui.MakeImage(s, new Color(Ui.PanelBg.r, Ui.PanelBg.g, Ui.PanelBg.b, 0.92f), null, "Band");
+            band.rectTransform.TopLeft(0, BandY, 1280, 720 - BandY);
+            var bt = band.transform; // children of the band: one plate, positions from the band top
+            totalLabel = Ui.Label(bt, "", 28, Ui.Gold, TextAnchor.MiddleLeft, "TotalLabel");
+            totalLabel.rectTransform.TopLeft(300, 24, 300, 40);
+            totalValue = Ui.Label(bt, "", 28, Ui.Gold, TextAnchor.MiddleLeft, "TotalValue");
+            var backButton = Ui.MenuButton(bt, 25, () => BackRequested?.Invoke(), out back, "Back");
+            ((RectTransform)backButton.transform).TopLeft(40, 14, 230, 72);
+            note = Ui.Label(bt, "", 22, Ui.Ink, TextAnchor.MiddleRight, "Note");
+            note.rectTransform.TopLeft(640, 26, 600, 36);
             panel.SetActive(false);
         }
 
@@ -220,8 +236,8 @@ namespace SevenSteps.Game.UI
                 var d = Ui.Theme.Dipper[i];
                 return new Vector2(MapX + d.x * MapW, MapY + d.y * MapH);
             }
-            float step = (MapW - 130) / (count - 1);
-            return new Vector2(MapX + 65 + i * step, 320);
+            float step = (1280 - 80 - CardW) / (count - 1);
+            return new Vector2(40 + CardW / 2 + i * step, 400);
         }
 
         public void Apply(Localizer localizer)
@@ -239,12 +255,12 @@ namespace SevenSteps.Game.UI
                 names[i].text = planets[i].Name(loc);
                 names[i].font = body;
                 totals[i].font = number;
-                cards[i].GetComponentInChildren<Text>().font = number;
+                cards[i].transform.Find("Number").GetComponent<Text>().font = number;
             }
             totalValue.font = number;
             // The value follows the label's measured width + 12 px (art: HandwrittenUiPreview).
             totalLabel.rectTransform.sizeDelta = new Vector2(totalLabel.preferredWidth + 2, 40);
-            totalValue.rectTransform.TopLeft(440 + totalLabel.preferredWidth + 12, 572, 200, 40);
+            totalValue.rectTransform.TopLeft(300 + totalLabel.preferredWidth + 12, 24, 200, 40);
             if (shown != null && panel.activeSelf) Show(shown, -1);
         }
 
@@ -319,8 +335,8 @@ namespace SevenSteps.Game.UI
             tagline.horizontalOverflow = HorizontalWrapMode.Wrap;
             grid = Ui.Rect("Grid", frame).TopLeft(40, 156, 920, 340);
             var g = grid.gameObject.AddComponent<GridLayoutGroup>();
-            g.cellSize = new Vector2(214, 108); // the card sprite's two rules sit ~22 px inside: text and stars go between them
-            g.spacing = new Vector2(16, 10);
+            g.cellSize = new Vector2(214, 112); // the card sprite's two rules sit ~22 px inside: text and stars go between them
+            g.spacing = new Vector2(16, 8);
             g.childAlignment = TextAnchor.UpperCenter;
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             g.constraintCount = Columns;
@@ -335,17 +351,17 @@ namespace SevenSteps.Game.UI
                 cards[k].colors = colors;
                 cards[k].onClick.AddListener(() => StageClicked?.Invoke(cardStage[slot]));
                 labels[k] = Ui.Label(card.transform, "", 22, Ui.Ink, TextAnchor.UpperLeft, "Label");
-                labels[k].rectTransform.TopLeft(16, 26, 120, 30);
+                labels[k].rectTransform.TopLeft(24, 28, 112, 30);
                 numbers[k] = Ui.Label(card.transform, "", 28, Ui.Gold, TextAnchor.UpperRight, "Number");
-                numbers[k].rectTransform.TopLeft(120, 23, 80, 36);
+                numbers[k].rectTransform.TopLeft(104, 25, 84, 36);
                 for (int st = 0; st < ProgressData.MaxStars; st++)
                 {
                     stars[k, st] = Ui.Star(card.transform, false, "Star " + (st + 1));
-                    stars[k, st].rectTransform.TopLeft(16 + st * 32, 58, 24, 24);
+                    stars[k, st].rectTransform.TopLeft(22 + st * 32, 66, 24, 24);
                 }
             }
             var backButton = Ui.MenuButton(frame, 25, () => CloseRequested?.Invoke(), out back, "Back");
-            ((RectTransform)backButton.transform).TopLeft(385, 516, 230, 55);
+            ((RectTransform)backButton.transform).TopLeft(385, 510, 230, 72);
             panel.SetActive(false);
         }
 
