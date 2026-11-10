@@ -76,7 +76,7 @@ namespace SevenSteps.Game
         // Shader globals animated by the view (15.1): newest-cell pulse, seventh awaken, Restart fade, finale.
         float newestStart = -1f, awakenStart = -1f, fadeStart = -1f, finale;
         StarTrail pendingRefill; // Restart: the old map fades out first, then this is written
-        int currentBody, phase;
+        int currentBody, phase, used;
         bool lastStepPulse; // one step left: ring star 7 pulses (and _StarTrailPulse.z)
 
         /// Interim quad renderer on. Turn off when the art tile shader draws _StarTrailMap, or the trail is drawn twice
@@ -140,7 +140,7 @@ namespace SevenSteps.Game
 
         void SetParams(float fade) => Shader.SetGlobalVector(StarTrailMap.ParamsId, new Vector4(map.W, map.H, 1f, Mathf.Clamp01(fade)));
 
-        void SetState() => Shader.SetGlobalVector(StarTrailMap.StateId, StarTrailMap.StateVector(currentBody, phase, finale));
+        void SetState() => Shader.SetGlobalVector(StarTrailMap.StateId, StarTrailMap.StateVector(currentBody, phase, finale, used));
 
         void Upload(StarTrail trail, bool newest)
         {
@@ -172,6 +172,7 @@ namespace SevenSteps.Game
 
             currentBody = Mathf.Clamp(BodyIndex.Current(s), 0, StarTrailMap.MaxBodies - 1);
             phase = (int)s.Status;
+            used = s.Used;
             lastStepPulse = trail.Ring && trail.Used == Rules.Steps - 1;
             finale = 0f;
             SetState();
