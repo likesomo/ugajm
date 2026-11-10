@@ -51,6 +51,10 @@ namespace SevenSteps.Contracts
         [Tooltip("Optional label font size as a fraction of projected cell width; 0 keeps the view's existing default.")]
         public float labelScale;
 
+        /// labelScale range (docs/architecture.md 7.2): 0 = view default, otherwise a fraction of the projected cell side.
+        public const float LabelScaleMin = 0.2f, LabelScaleMax = 0.8f;
+        public static bool IsValidLabelScale(float s) => s == 0f || (s >= LabelScaleMin && s <= LabelScaleMax);
+
         public bool HasPrefab => prefab != null;
         public Vector3 Scale => scale == Vector3.zero ? Vector3.one : scale;
 
