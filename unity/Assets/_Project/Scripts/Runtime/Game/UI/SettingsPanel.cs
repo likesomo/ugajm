@@ -105,7 +105,12 @@ namespace SevenSteps.Game.UI
                 ((RectTransform)c.transform).TopLeft(x, y, w, h);
             }
             void Size(Text t, int size) { if (t != null) t.fontSize = size; }
-            void ButtonText(Button b, int size) { if (b != null) foreach (var t in b.GetComponentsInChildren<Text>(true)) { t.resizeTextForBestFit = false; t.fontSize = size; t.rectTransform.anchoredPosition += new Vector2(0, 2); } } // hand fonts draw low
+            void ButtonText(Button b, int size)
+            {
+                if (b == null) return;
+                Ui.FitButtonSkin(b); // frame border 8 + label padding 8 (gameplay-ui, 14.4)
+                foreach (var t in b.GetComponentsInChildren<Text>(true)) { t.resizeTextForBestFit = false; t.fontSize = size; }
+            }
             Put(titleText, 44, 30, 592, 60); Size(titleText, 40); titleText.alignment = TextAnchor.MiddleCenter;
             float y = 104;
             foreach (var (label, down, value, up) in new[] { (masterLabel, masterDown, masterText, masterUp), (sfxLabel, sfxDown, sfxText, sfxUp) })
