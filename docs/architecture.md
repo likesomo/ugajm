@@ -842,6 +842,7 @@ namespace SevenSteps.Game.UI {
 | `_StarTrailWorldToCell` | float4x4 | 월드 위치 → (cx, cy). 칸 (x, y) 중심이 정수 (x, y)이고 cy는 맵 아래로 커진다(levels.json 행). `StarTrailMap.WorldToCell(BoardGrid)` |
 | `_StarTrailParams` | float4 | (W, H, 켜짐 0/1, 페이드 0..1). 설정 안 된 전역은 0이라, 뷰가 없으면(타이틀, 아트 리뷰 씬) 셰이더가 아무것도 그리지 않는다 |
 | `_StarTrailPulse` | float4 | (최신 칸 맥동 0..1, 일곱째 각성 0..1, 0, 0). 뷰가 프레임마다 애니메이션 |
+| `_StarTrailState` | float4 | (현재 형제 0..2, 단계 0 진행 / 1 선택 / 2 승리 / 3 패배, 피날레 0..1, 0), 15.5 |
 | `_StarTrailColors` | float4[3] | 형제 0·1·2의 linear 색. HUD 형제 색과 같은 출처(gameplay-ui) |
 
 ### 15.2 텍스처 배치 (칸마다 텍셀 2개, 행 y = 맵 행 y)
@@ -852,7 +853,7 @@ namespace SevenSteps.Game.UI {
 - **층 1** `(2x+1, y)`
   - R·G·B = 형제 0·1·2의 경로 변. 비트 0은 x+1, 비트 1은 x−1, 비트 2는 y+1(맵 아래), 비트 3은 y−1 쪽 변이다.
   - 연속한 두 발자국 사이의 경로는 양 끝 칸의 마주 보는 변을 켜고, 사이 칸(얼음 미끄러짐)은 양쪽 변을 다 켠다(`AddPath`).
-  - 나머지 비트와 A는 0(예약).
+  - 나머지 비트는 0(예약). A는 형제가 끝난 방식이다(15.5).
 - 셰이더 읽기(아트):
   - 표본 위치는 `cell = floor(c + 0.5)`, `local = c − cell`(−0.5..0.5, x 오른쪽, y 맵 아래), `uv = ((2·cell.x + 층 + 0.5) / (2W), (cell.y + 0.5) / H)`이다.
   - 표본은 `SAMPLE_TEXTURE2D_LOD(..., point clamp, 0)`으로 읽는다.
@@ -879,6 +880,31 @@ namespace SevenSteps.Game.UI {
 - 머티리얼 수치(밝기, 별 크기)는 머티리얼 프로퍼티(아트)에 둔다. 형제 색은 15.1 전역에서 읽는다(HUD와 한 출처).
 - `TileVisual`/`TileSet` 확장이 필요하면 0/null이면 기존 동작인 선택 필드로 더하고 `tileset-validate` 검사를 붙인다(7.2 `labelScale`와 같은 방식).
 - 확인: `scene-validate`(보드 대비·UiLayoutCheck 보드 영역), 표준 Chrome 1/29/50에서 60 FPS, 드로우 수 그대로.
+
+### 15.5 상태 머신과 행성별 값 (`StarTrailPreset`, 2026-11-10 리드 추가 지시, gameplay-ui와 합의)
+- **상태 판정**은 View 쪽 순수 C# `StarTrail.Of(State)`(gameplay-ui)에서 한다.
+  - 입력은 `Trail`과 `Prev` 사슬이다.
+  - 끝난 형제는 끝난 방식으로 나눈다: 낙하, 다리, 봉인, 사라짐, 선돌(KEEP), SWITCH, 승리.
+  - 한 이동 안에서 끝난 형제의 마지막 칸은 Present의 `StepResult` 캐시에서 얻고, 캐시가 없으면 15.3의 네 방향 재실행으로 얻는다.
+  - 규칙 코드는 그대로다.
+- **셰이더에 넘기는 것**:
+  - 층 1 A에 끝난 방식 비트를 둔다: 0 SWITCH 바통 이음매(새 출발점), 1 다리·봉인(`State.Bridges`, 가라앉은 별), 2 낙하(구멍), 3 사라짐(출발점에서 일곱째). 비트의 주인은 그 칸에 7번째(또는 마지막) 걸음이 있는 형제다.
+  - 전역 `_StarTrailState`는 (현재 형제 0..2, 단계 0 진행 / 1 선택 / 2 승리 / 3 패배 = Core `Status` 순서, 피날레 0..1, 0)이다.
+  - 셰이더는 현재 형제보다 앞선 형제를 "굳은 별자리"(실선, 선돌 별)로, 현재 형제를 "진행 중"(걸음마다 커지는 점)으로 그린다. 승리 단계에서는 피날레 값에 따라 세 색 별자리를 함께 밝힌다.
+  - Undo·Restart는 15.3대로 다시 채우고 페이드한다.
+- **행성별 값**은 `Contracts.StarTrailPreset`(ScriptableObject)에 둔다.
+  - `ChapterPreset.starTrail`이 이것을 참조한다(조명·하늘과 같은 방식). 비어 있으면 `StarTrailPreset.Default`(필드 기본값 = 시안 메모 초기값)를 쓴다.
+  - 아트가 `Art/<Set>/StarTrail_<id>.asset` 7개를 채운다.
+  - 셰이더 값은 `StarTrailPreset.SetGlobals(preset)`이 챕터가 바뀔 때 전역 네 개로 넘긴다.
+    - `_StarTrailStyleA` = (점 크기 최소, 최대, 불투명도 최소, 최대)
+    - `_StarTrailStyleB` = (발광, 각성 발광, 선 굵기, 선 불투명도)
+    - `_StarTrailStyleC` = (선돌 별 크기, 이음매 굵기, 가라앉음, 음각 깊이)
+    - `_StarTrailTint` = (석질 색조 linear rgb, 섞는 양)
+  - View만 쓰는 값: 시간(각성 0.18, Undo 0.12, 실패 0.20, Restart 0.25, 피날레 1.2초), 불꽃 입자 수(0..12, 공유 풀), 모양 마스크 번호(0..3).
+  - 형제 색은 프리셋에 두지 않는다(HUD와 한 출처, 15.1).
+- **검사**: `tileset-validate`가 `ChapterPreset.starTrail`이 있으면 `StarTrailPreset.Validate()` 범위를 오류로 검사한다. 비어 있으면 검사하지 않는다(기본값).
+  - 범위: 크기 0.01~0.2이고 최소 ≤ 최대, 불투명도 0~1, 발광 0~1.5이고 각성 ≥ 기본, 섞는 양 ≤ 0.5, 시간 0~2초(피날레 0~5), 입자 0~12, 마스크 0~3.
+- **임시 렌더**: 셰이더 마스크(아트)가 오기 전, gameplay-ui의 결합 quad 메시 1개(+1 드로우, 코드 생성 아틀라스)는 개발용으로 허용한다. 최종은 15.2 전역 텍스처(추가 드로우 0)다. 아트 v2 시안에서 배치(비트)를 바꿔야 하면 아키텍트가 15.2와 `StarTrailMap`을 함께 고친다.
 
 ## 변경 기록
 
@@ -939,3 +965,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-10 | 게임플레이/UI·씬 플로우·아키텍트 | 14.9 HUD·결과 위반도 오류(`UiLayoutCheck.HudResultAreErrors = true`, HUD/결과 0건 달성, feat/view d170385 검토 승인). 이제 14장 위반은 모든 화면에서 빌드를 막는다 |
 | 2026-11-10 | 씬 플로우·아키텍트 | Game: `AttemptCounts.After(SessionUpdate)`(6.5 Undo·Restart 세기, `BoardController`와 QA 리플레이가 공유), `Game.Flow.QaReplay`(attempts.jsonl 교차 검사, 재시작 글자·해시는 docs/qa-attempts.md 확정 전 임시). feat/scene-flow 332498f 검토 승인 |
 | 2026-11-10 | 아키텍트 | 15장 별 흔적 셰이더 입력: 전역 `_StarTrailMap`((2W)×H RGBA32, 층 0 걸음·선돌·최신, 층 1 경로 변)·`_StarTrailWorldToCell`·`_StarTrailParams`·`_StarTrailPulse`·`_StarTrailColors`, Contracts `StarTrailMap`(배치·쓰기 도우미·`WorldToCell`). 추가 드로우 0, State에서 매번 다시 채움 |
+| 2026-11-10 | 아키텍트·게임플레이/UI | 15.5 별 흔적 상태 머신(층 1 A 끝난 방식 비트, 전역 `_StarTrailState`)과 행성별 값 `StarTrailPreset`(Contracts SO, `ChapterPreset.starTrail`, 비면 Default, `SetGlobals` → `_StarTrailStyleA/B/C`·`_StarTrailTint`, `tileset-validate` 범위 검사) |

@@ -24,6 +24,8 @@ namespace SevenSteps.Contracts
         [Header("Look")]
         public LightingPreset lighting;
         public SkyPreset sky;
+        [Tooltip("Star trail look of this planet (docs 15.5). Empty = StarTrailPreset.Default.")]
+        public StarTrailPreset starTrail;
 
         /// The material to use instead of <paramref name="m"/> in this chapter (itself when not overridden).
         public Material Override(Material m)

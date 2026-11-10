@@ -14,7 +14,9 @@ namespace SevenSteps.Contracts
     ///   Bit 7: that body's KEEP statue stands here. A: bit 0 = newest step cell (the pulse), other bits 0.
     /// - Layer 1: R, G, B = body 0, 1, 2 path edges: bit 0 toward x+1, bit 1 toward x-1, bit 2 toward y+1 (down the map),
     ///   bit 3 toward y-1. A path between two footprints marks both cells' facing edges, and every cell between them with
-    ///   both edges (an ice slide). Other bits 0. A: 0.
+    ///   both edges (an ice slide). Other bits 0. A: how a brother ended on this cell (15.5): bit 0 SWITCH baton seam (the
+    ///   new start), bit 1 bridge (a pit or crack the brother sealed, State.Bridges: the sunken star), bit 2 fell (the pit),
+    ///   bit 3 vanished (a seventh step on the start). Whose: the brother with step 7 (or the last step) on the cell.
     /// </summary>
     public sealed class StarTrailMap
     {
@@ -26,6 +28,8 @@ namespace SevenSteps.Contracts
         public const string ParamsName = "_StarTrailParams";
         /// float4 (newest-cell pulse 0..1, seventh-step awaken 0..1, 0, 0), animated by the view.
         public const string PulseName = "_StarTrailPulse";
+        /// float4 (current body 0..2, phase 0 play / 1 choose / 2 win / 3 lose, finale 0..1, 0): the trail state machine.
+        public const string StateName = "_StarTrailState";
         /// float4[3] linear colours of body 0, 1, 2 (the HUD brother colours).
         public const string ColorsName = "_StarTrailColors";
 
@@ -34,10 +38,12 @@ namespace SevenSteps.Contracts
         public static readonly int ParamsId = Shader.PropertyToID(ParamsName);
         public static readonly int PulseId = Shader.PropertyToID(PulseName);
         public static readonly int ColorsId = Shader.PropertyToID(ColorsName);
+        public static readonly int StateId = Shader.PropertyToID(StateName);
 
         public const int MaxBodies = 3, Steps = 7;
         public const byte StatueBit = 1 << 7, NewestBit = 1;
         public const byte EdgeRight = 1, EdgeLeft = 2, EdgeDown = 4, EdgeUp = 8;
+        public const byte EndSwitch = 1, EndBridge = 2, EndFell = 4, EndVanish = 8;
 
         public readonly int W, H;
         /// RGBA32 pixel data, row-major from row 0, 4 bytes per texel: what Texture2D.SetPixelData takes.
@@ -80,6 +86,12 @@ namespace SevenSteps.Contracts
         }
 
         public void SetNewest(int cell) => Bytes[Index(cell, 0, 3)] |= NewestBit;
+
+        /// How a brother ended on <paramref name="cell"/>: <see cref="EndSwitch"/>, <see cref="EndBridge"/>, <see cref="EndFell"/>, <see cref="EndVanish"/>.
+        public void SetEnd(int cell, byte end) => Bytes[Index(cell, 1, 3)] |= end;
+
+        /// Value for <see cref="StateName"/>. Phase: 0 play, 1 choose, 2 win, 3 lose (Core Status order).
+        public static Vector4 StateVector(int currentBody, int phase, float finale) => new Vector4(currentBody, phase, Mathf.Clamp01(finale), 0f);
 
         /// The path of body <paramref name="body"/> from one footprint to the next (same row or column).
         public void AddPath(int body, int fromCell, int toCell)

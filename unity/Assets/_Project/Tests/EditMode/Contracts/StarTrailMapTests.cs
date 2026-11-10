@@ -66,5 +66,33 @@ namespace SevenSteps.Tests
             Assert.AreEqual(0.5f, corner.x, 1e-4f, "half a cell right");
             Assert.AreEqual(0.5f, corner.y, 1e-4f, "half a cell down the map; height ignored");
         }
+        [Test]
+        public void EndFlagsAndStateGoToLayerOneAlpha()
+        {
+            var m = new StarTrailMap(3, 3);
+            m.SetEnd(4, StarTrailMap.EndSwitch);
+            m.SetEnd(4, StarTrailMap.EndBridge);
+            Assert.AreEqual(StarTrailMap.EndSwitch | StarTrailMap.EndBridge, m.Bytes[m.Index(4, 1, 3)]);
+            Assert.AreEqual(0, m.Bytes[m.Index(4, 0, 3)], "layer 0 alpha untouched");
+            Assert.AreEqual(new Vector4(2, (int)SevenSteps.Core.Status.Win, 1, 0), StarTrailMap.StateVector(2, (int)SevenSteps.Core.Status.Win, 3f));
+        }
+
+        [Test]
+        public void PresetDefaultsAreValidAndRangesCaught()
+        {
+            Assert.IsEmpty(StarTrailPreset.Default.Validate(), "built-in values pass");
+            var p = ScriptableObject.CreateInstance<StarTrailPreset>();
+            try
+            {
+                Assert.IsEmpty(p.Validate());
+                p.dotSizeMax = 0.02f; // below dotSizeMin
+                p.awakenEmission = 0.5f; // below emission
+                p.particleCount = 40;
+                p.stoneTint = new Color(1, 0, 0, 0.9f);
+                var problems = p.Validate();
+                Assert.AreEqual(4, problems.Count, string.Join("; ", problems));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(p); }
+        }
     }
 }
