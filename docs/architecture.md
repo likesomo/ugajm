@@ -787,6 +787,7 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 - HUD의 글자·판·버튼은 보드 영역과 겹치지 않는다. 3D 장식(빙산·선돌·기둥)은 보드 영역 밖에 있어도 되지만, HUD 글자 뒤로 지나가면 그 글자는 판 위에 있어야 한다(14.4가 잡는다).
 - 검사 범위: 가장 큰 보드(가로·세로 칸 수 최대 스테이지 각각)와 23번처럼 힌트가 가장 긴 스테이지.
 - 구현(feat/view f525128): HUD가 비워 두는 칸은 `HudView.BoardFrame`(1280×720 기준 316,222 648×398), `BoardView.FitCamera`가 보드를 그 안에 맞춘다. `UiLayoutCheck`는 이 상수를 믿지 말고 **실제 HUD 사각형과 보드 투영**을 비교한다(상수가 HUD 배치와 어긋나면 잡히도록).
+- 구현(feat/scene-flow 17cbddf): 카메라 맞춤은 `BoardView.Fit(cam, grid, rig)`(Game, public static, 게임플레이/UI 소유) 하나를 게임(`FitCamera`)과 `UiLayoutCheck`가 같이 쓴다. 시그니처를 바꿀 때는 씬 플로우와 같이 바꾼다. 배우 높이 `BoardView.ActorHeight`(1.2칸).
 
 ### 14.7 모달
 - Result, Settings, 언어 선택, 챕터 진입 카드, Credits, 확인 창은 모달이다. 모달이 뜨면 **화면 전체를 덮는 막(`Image`, 캔버스 전체로 늘림, 알파 0.6 이상, `raycastTarget` 켬)**이 모달 아래·다른 UI 위에 그려진다(정렬 순서가 더 높은 캔버스나 마지막 형제). 막 아래 UI는 입력을 받지 않는다.
@@ -881,3 +882,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-10 | 아키텍트 | 14.8 `UiLayoutRule.Safe = 64` 추가(안전 영역 면제, 지금은 `Overflow`가 대신하던 것), 규칙과 플래그 1:1. 영향: 씬 플로우(`UiLayout.cs` 한 줄, `UiLayoutCheck` 안전 영역 검사가 `Safe`를 봄). feat/scene-flow b4ed8b6 검토 승인 |
 | 2026-11-10 | 아키텍트 | 11장 `LaunchOptions.SaveKey`(`-savekey`, `?savekey=`), 11.3 `SuffixedStore`(키 + `#접미사`)·`SaveStores.For(LaunchOptions)`·`SaveStores.IsValidSuffix` (Contracts, 리드 제안 채택). 영향: 씬 플로우(`Bootstrap` `new PlayerPrefsStore()` → `SaveStores.For(launch)`), 게임플레이/UI(`TelemetryRunner.CreateTelemetry` 같은 교체), 코어(`unity.sh smoke`가 `-savekey <작업 공간>`) |
 | 2026-11-10 | 아키텍트 | 11장 SaveKey 연결: `Bootstrap`(SaveSystem)·`TelemetryRunner.CreateTelemetry`(큐)가 `SaveStores.For(launch)` (리드 지시로 아키텍트가 소유자 대신 두 줄 수정, 리드가 씬 플로우·게임플레이/UI에 알림). `unity.sh smoke -savekey`는 코어 |
+| 2026-11-10 | 씬 플로우·아키텍트 | 14.6 보드 영역 검사 구현: `BoardView.Fit` public static(게임과 검사기가 같은 맞춤 식), `BoardView.ActorHeight`, `UiLayoutRule.Board` 면제. feat/scene-flow 17cbddf 검토 승인(B1: Choose 상태·긴 메시지 HUD 변형 추가 요청) |
