@@ -27,15 +27,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 1
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   floorAlt:
@@ -44,15 +44,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 1
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   wall:
@@ -61,15 +61,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   pit:
@@ -78,15 +78,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   ice:
@@ -95,15 +95,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   cracked:
@@ -112,15 +112,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   bridge:
@@ -129,15 +129,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   exit:
@@ -146,15 +146,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0.12, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   gate:
@@ -163,16 +163,16 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: Model/SS_Tile_NumberDoor__GatePanel
-    materialTarget: Model/SS_Tile_NumberDoor__GatePanel
+    activeChild:
+    inactiveChild: GatePanel
+    materialTarget: GatePanel
     activeMaterial: {fileID: 2100000, guid: 7364774f548195d46a39143edd077350, type: 2}
     inactiveMaterial: {fileID: 2100000, guid: c38ccdba49b258446a7b458cfb37786b, type: 2}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
-    labelOffset: {x: 0, y: 0.66, z: 0}
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
+    labelOffset: {x: 0, y: 0.31, z: -0.15}
     activeLabelOffset: {x: 0, y: 0.1, z: 0}
   plates:
   - prefab: {fileID: 4632874159605898388, guid: e0da7049a075ab54199f562baf8501c0, type: 3}
@@ -180,15 +180,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0.1, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   - prefab: {fileID: 4632874159605898388, guid: e0da7049a075ab54199f562baf8501c0, type: 3}
@@ -196,15 +196,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0.1, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   - prefab: {fileID: 4632874159605898388, guid: e0da7049a075ab54199f562baf8501c0, type: 3}
@@ -212,15 +212,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0.1, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   doors:
@@ -229,48 +229,48 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: Model/SS_Tile_NumberDoor__GatePanel
-    materialTarget: Model/SS_Tile_NumberDoor__GatePanel
+    activeChild:
+    inactiveChild: GatePanel
+    materialTarget: GatePanel
     activeMaterial: {fileID: 2100000, guid: 7364774f548195d46a39143edd077350, type: 2}
     inactiveMaterial: {fileID: 2100000, guid: c38ccdba49b258446a7b458cfb37786b, type: 2}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
-    labelOffset: {x: 0, y: 0.66, z: 0}
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
+    labelOffset: {x: 0, y: 0.31, z: -0.15}
     activeLabelOffset: {x: 0, y: 0.1, z: 0}
   - prefab: {fileID: 3758314307773898452, guid: 44820b367ddf2fd499319c9fff6dc15c, type: 3}
     offset: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: Model/SS_Tile_NumberDoor__GatePanel
-    materialTarget: Model/SS_Tile_NumberDoor__GatePanel
+    activeChild:
+    inactiveChild: GatePanel
+    materialTarget: GatePanel
     activeMaterial: {fileID: 2100000, guid: 7364774f548195d46a39143edd077350, type: 2}
     inactiveMaterial: {fileID: 2100000, guid: c38ccdba49b258446a7b458cfb37786b, type: 2}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
-    labelOffset: {x: 0, y: 0.66, z: 0}
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
+    labelOffset: {x: 0, y: 0.31, z: -0.15}
     activeLabelOffset: {x: 0, y: 0.1, z: 0}
   - prefab: {fileID: 3758314307773898452, guid: 44820b367ddf2fd499319c9fff6dc15c, type: 3}
     offset: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: Model/SS_Tile_NumberDoor__GatePanel
-    materialTarget: Model/SS_Tile_NumberDoor__GatePanel
+    activeChild:
+    inactiveChild: GatePanel
+    materialTarget: GatePanel
     activeMaterial: {fileID: 2100000, guid: 7364774f548195d46a39143edd077350, type: 2}
     inactiveMaterial: {fileID: 2100000, guid: c38ccdba49b258446a7b458cfb37786b, type: 2}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
-    labelOffset: {x: 0, y: 0.66, z: 0}
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
+    labelOffset: {x: 0, y: 0.31, z: -0.15}
     activeLabelOffset: {x: 0, y: 0.1, z: 0}
   countDoor:
     prefab: {fileID: 2190066906777382831, guid: daaf362564a157e419dfa2785c295118, type: 3}
@@ -278,16 +278,16 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: Model/SS_Tile_CountDoor__GatePanel
-    materialTarget: Model/SS_Tile_CountDoor__GatePanel
+    activeChild:
+    inactiveChild: GatePanel
+    materialTarget: GatePanel
     activeMaterial: {fileID: 2100000, guid: 7364774f548195d46a39143edd077350, type: 2}
     inactiveMaterial: {fileID: 2100000, guid: c38ccdba49b258446a7b458cfb37786b, type: 2}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
-    labelOffset: {x: 0, y: 0.66, z: 0}
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
+    labelOffset: {x: 0, y: 0.31, z: -0.15}
     activeLabelOffset: {x: 0, y: 0.1, z: 0}
   lever:
     prefab: {fileID: 4898971436050853154, guid: 321530670955d7c42bea7f61e2785621, type: 3}
@@ -297,13 +297,13 @@ MonoBehaviour:
     randomYaw90: 0
     activeChild: PulledHandle
     inactiveChild: RaisedHandle
-    materialTarget: 
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0.15, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   flipWalls:
@@ -312,15 +312,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   - prefab: {fileID: 3138634961435411407, guid: 00e5881e1449f2a478281646ccff550c, type: 3}
@@ -328,32 +328,32 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   mud:
-    prefab: {fileID: 0}
+    prefab: {fileID: 1082224659519973441, guid: 2aeeec7d49c71e9428fe2b9ca1a8cae2, type: 3}
     offset: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0}
-    scale: {x: 0, y: 0, z: 0}
+    scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   player:
@@ -362,15 +362,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 1.04, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   statue:
@@ -379,15 +379,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   startMarker:
@@ -396,15 +396,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   oldStartMarker:
@@ -413,15 +413,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   footprint:
@@ -430,15 +430,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0.035, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   luckyRing:
@@ -447,15 +447,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   playerBodies:
@@ -464,15 +464,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 1.04, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   - prefab: {fileID: 4785607976043798300, guid: cc24480b19c697749b73f5d48da2499b, type: 3}
@@ -480,15 +480,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 1.04, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   - prefab: {fileID: 6758376875444796199, guid: 0d2b6d6f7bc6a514ebf5cbe0de340ba4, type: 3}
@@ -496,15 +496,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 1.04, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   statueBodies:
@@ -513,15 +513,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   - prefab: {fileID: 1447245662685483513, guid: e31e5d2a20f82124f91cfbefb1bb045f, type: 3}
@@ -529,15 +529,15 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   - prefab: {fileID: 1447245662685483513, guid: e31e5d2a20f82124f91cfbefb1bb045f, type: 3}
@@ -545,18 +545,19 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
     randomYaw90: 0
-    activeChild: 
-    inactiveChild: 
-    materialTarget: 
+    activeChild:
+    inactiveChild:
+    materialTarget:
     activeMaterial: {fileID: 0}
     inactiveMaterial: {fileID: 0}
-    appearTrigger: 
-    vanishTrigger: 
-    activateTrigger: 
-    deactivateTrigger: 
+    appearTrigger:
+    vanishTrigger:
+    activateTrigger:
+    deactivateTrigger:
     labelOffset: {x: 0, y: 0, z: 0}
     activeLabelOffset: {x: 0, y: 0, z: 0}
   bodyColors:
   - {r: 0.3372549, g: 0.54901963, b: 0.53333336, a: 1}
   - {r: 0.7254902, g: 0.6039216, b: 0.34117648, a: 1}
   - {r: 0.7254902, g: 0.42352942, b: 0.34901962, a: 1}
+  keepLook: 0

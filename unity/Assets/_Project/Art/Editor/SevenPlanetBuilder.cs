@@ -73,7 +73,10 @@ namespace SevenSteps.Art
                 EditorUtility.SetDirty(material);AssetDatabase.SaveAssetIfDirty(material);
                 Debug.Log("[Weather] "+id+" hasProperty="+material.HasProperty("_EnvironmentDetail")+" detail="+material.GetFloat("_EnvironmentDetail")+" map="+material.GetTexture("_WeatherMap"));
             }
-            AssetDatabase.SaveAssets();Debug.Log("[SevenPlanets] Seven chapter/summit/sky/lighting presets created; IDs match chapters.json");
+            AssetDatabase.SaveAssets();
+            // Once the Blender kit exists, rebuilding the seven presets must retain R2 A.
+            if(AssetDatabase.LoadAssetAtPath<BoardShapeAKit>(Art+"/BoardShapeA_Kit.asset"))BoardShapeABuilder.Apply();
+            Debug.Log("[SevenPlanets] Seven chapter/summit/sky/lighting presets created; IDs match chapters.json");
         }
         [Serializable] sealed class Catalog { public Entry[] chapters; }
         [Serializable] sealed class Entry { public string id;public string artPreset; }

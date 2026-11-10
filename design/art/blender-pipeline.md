@@ -1,5 +1,7 @@
 # Seven Steps — Blender 제작·Unity 전달 규격
 
+> 2026-11-10 R2 A: 직사각 화강암 연석과 약3m 쐐기형 지각은 [BoardShapeA 전달 기록](board-shape-a-delivery-2026-11-10.md)이 현행이다. `blender/build_board_shape_a.py`를 Blender MCP로 실행해 실제 normal/AO를 베이크하고, 새 공유 BoardShapeA FBX/PNG는 Assets 밖 원본과 분리한다. 기존 GUID와 기본 게임 카메라는 유지한다.
+
 ## 현행 확정 — A안 색 구분과 정상부 접지 (2026-11-09)
 
 A/B/C 머플러·밑단 색 #568C88/#B99A57/#B96C59 확정. 아래 과거 ‘구분 미정/Identical’ 문구는 탐색 기록이다. 동일 외형 B안 FBX와 .meta는 `Source/Blender/Archive/Triplet-B-option-2026-11-09/`로 이동하고 생성 대상에서 제외했다. A/B/C·중성Menhir·색 흔적 Menhir_A/B/C의7 FBX만 이 빌더가 출력한다(각160tris/0.88m/같은 몸 메시).
