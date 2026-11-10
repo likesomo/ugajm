@@ -1,4 +1,4 @@
-﻿# 최소 HUD v2 — 실제 Unity 판 A안 기준
+# 최소 HUD v2 — 실제 Unity 판 A안 기준
 
 2026-11-10 요청, 11일 갱신. 보드를 화면의 주인공으로 둔다. v1의 GPT 석판과 캐릭터를 실제 Unity 판 A안 석재·문양 띠·지각 단면·7행성 하늘·원경 행성·얼굴 없는 세쌍둥이 모델로 교체했다. Monument Valley는 정보량과 점진 공개 원칙만 참고하며 색·건축·조형·레이아웃·아이콘을 가져오지 않는다.
 
@@ -121,3 +121,20 @@ UiTheme는 FontRole·ink/panel/gold/stone·별·Dipper·얇은 프레임을 공�
 HTML 검사는 moss/frost/carved×KO/EN×9=54화면에서 안전 여백24px, 실제 보드 투영과 HUD 비겹침, 텍스트 넘침과 상호작용을 확인한다. production UiLayoutCheck가 HTML을 검사할 수는 없으므로 **docs/architecture.md 14.6의 같은 기하 규칙을 별도 검사**한 결과다. production 전체 검사 통과나 1920×1080 런타임 적용을 주장하지 않는다. 정식 적용 때 최대 보드·23번 긴 문구·KO/EN·1920×1080을 다시 검사한다.
 
 사용자 확인: 720p에서 별 일곱 개를 셀 수 있는지, 일곱 재질에서 빈 별/찬 별이 구분되는지, 두 고스트로 KEEP/SWITCH의 다음 출발점을 이해하는지, 작은 선택이 형제에 충분히 가까운지. 범용 앵커 회피·게임 설정/힌트 저장·실제 세션 연결은 후속 구현이다. 본 작업은 실제 아트 위 UI 목업이며 production Unity UI 코드는 변경하지 않았다.
+
+## UI v3 — 실제 GameSession 선택 프로토타입 (2026-11-11)
+
+사용자의 “KEEP/SWITCH를 더 명확하게 안내하고 실제 Unity에서 확인” 요청을 반영했다. v2의 작은 K/X 아이콘을 다음 형제 머플러색 테두리의 두 갈래 카드로 바꾸고, 선돌/매듭 그림·한국어/영어 이름·큰 키 배지·결과 한 줄을 함께 보여 준다. 선택 중에는 보드를 살짝 어둡게 하고 형제 주변 링과 “걷기 잠김” 안내를 표시한다. 보드 전체 투영 영역의 좌우 여백을 비교해 패널을 놓고 형제 높이에 맞춰 제한한다. 처음 설명 상자도 보드 바깥 여백에 둔다.
+
+호버/키보드 포커스는 한 선택지만 미리 보여 준다. KEEP는 현재 칸의 반투명 선돌과 출발점의 다음 형제, 둘 사이 점선이다. SWITCH는 현재 칸의 다음 형제와 바통 매듭이다. 첫 세 번 확정 전에는 양쪽 결과 설명이 보이고 그 뒤에는 포커스한 카드만 설명한다. 세션 메모리 기준이며 프로필 영속 저장은 정식 HUD 이식 때 처리한다.
+
+별 흔적 v2의 형제색 별빛 점·직각 빛줄기·굳은 별자리·선돌 별·매듭·일곱째 각성을 실제 저장된 BoardShapeA/ChapterPreset 보드 위에 리뷰 전용 Unity Graphic으로 구현했다. 화면 위 합성이 아니라 Unity가 보드 RenderTexture와 투영된 리뷰 도형을 함께 렌더한다. production StarTrail 셰이더 구현과는 별개다. 발치 일곱 별은 기본 16px로 키웠고 형제색 바깥별/빈 중심을 사용한다. 6걸음의 마지막 별은 17~23px로 맥동한다. 일곱 실제 행성 재질 위 720p 캡처를 남긴다.
+
+`Art/Test/UiV3/ChoiceReview.unity`는 독립 `SevenSteps.Art.Review` 어셈블리의 참고 프로토타입이다. `ReviewChoiceController`, `ChoicePanelView`, `GhostPreviewView`, `StarTrailReviewView`, `FootStarsView`가 실제 `GameSession(IBoardPresenter)`에 연결된다. 프로젝트 설정에 맞는 Unity Input System과 UI 입력 모듈을 쓴다. K/X·마우스·터치 버튼·Tab/Enter·Z가 같은 명령 경로를 사용하며 확정 연출은 0.38초 이내다. 선택 여부는 세션 이벤트의 Status.Choose만 읽고 구멍/출구 판정을 중복 구현하지 않는다. 정식 씬/HUD/규칙은 수정하지 않는다.
+
+산출물: [v3 README 및 확인 표](../../concepts/ui/minimal-2026-11-10/v3/README.md), [선택 상태 시트](../../concepts/ui/minimal-2026-11-10/v3/choice-state-sheet.png), [전후 비교](../../concepts/ui/minimal-2026-11-10/v3/before-after.png), [일곱 행성 발치 별](../../concepts/ui/minimal-2026-11-10/v3/seven-planet-foot-stars.png). KO/EN×moss/frost/carved 원본 PNG, 미리보기 결과 JSON, 입력/Undo/특수 칸 단언, CompileCheck·GlyphCheck·EditMode 전체·WebGL 로그를 함께 둔다. 실제 레벨 4에 `DURRRRR`를 보내 선택을 열고 양쪽 분기를 확인한 뒤 `DURRRRRKDDRRRRR`로 결과까지 진행한다.
+
+배치 비겹침 검사는 UiLayoutCheck 14.6과 같은 보드 제외 기하 규칙을 적용한 것이다. 리뷰 Canvas 전체가 production UiLayoutCheck 등록 화면을 통과했다는 의미는 아니다. 정식 HUD 이식과 전체 해상도/프로필/접근성 검증은 gameplay-ui 담당이다.
+
+최종 리뷰 검증: 상태/입력/미리보기/글리프 단언 216개 PASS, CompileCheck PASS, 전체 EditMode 801/801 PASS(실패·건너뜀 0). 원본 Unity 상태 캡처 70개와 상태 시트·비교 4개를 저장했다. 터치 포커스 때 클릭 타깃을 보존하며, 6걸음의 맥동 중 터치로 일곱째에 도달하는 경로도 검증했다. 물리 모바일 기기 입력 검사는 후속 범위다.
+WebGL 최종 리뷰 씬 빌드도 Succeeded, 오류 0, 19,281,698 bytes로 완료했다(`Builds/UiV3WebGL`, v3/webgl-summary.json). 빌드가 자동으로 다시 저장한 URP/ProjectSettings 변경은 되돌렸으며 정식 설정 변경은 포함하지 않았다.

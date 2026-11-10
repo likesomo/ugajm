@@ -1,0 +1,448 @@
+VBCSCompilerPreWarmer: watching VBCSCompiler (PID 16484)
+VBCSCompilerPreWarmer: pre-warm launched (dotnet PID 28728)
+VBCSCompiler prewarm took 15.18 ms
+[Licensing::Module] Trying to connect to existing licensing client channel...
+Built from '6000.6/respin/6000.6.8f1-b6138bef9630' branch; Version is '6000.6.8f1 (237b6593792b) revision 2325349'; Using compiler version '194234433'; Build Type 'Release'
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-soso1" at "2026-11-10T18:15:39.4018903Z"
+OS: 'Windows 11  (10.0.26300) Core' Language: 'ko' Physical Memory: 65462 MB
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+System  architecture: x64
+Process architecture: x64
+Date: 2026-11-10T18:15:39Z
+[Licensing::Client] Code 10 while verifying Licensing Client signature (process Id: 31284, path: "C:/Program Files/WindowsApps/UnityTechnologies.UnityHub_3.22.6.65535_x64__2vrhnee42bhxm/app/UnityLicensingClient_V1/Unity.Licensing.Client.exe")
+[Licensing::Module] LicensingClient has failed validation; ignoring
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.18.3+d7ffd15
+  Session Id:              4c452272b4914edc8ac57213c7cf96aa
+  Correlation Id:          cdda2e8f11e71ce3cbae0400de699bf0
+  External correlation Id: 403753982401384991
+  Machine Id:              vUo0WJ+pL3Zjp/K+K7vCp0/53Co=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-soso1" (connect: 0.00s, validation: 0.00s, handshake: 0.03s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-soso1-notifications" at "2026-11-10T18:15:39.4344465Z"
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: 14569036913820-UnityPersXXXX
+  Product: Unity Personal
+  Type: Assigned
+  Expiration: Unlimited
+[Licensing::Client] Successfully updated license, isAsync: True, time: 0.00
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] Licensing Background thread has ended after 0.04s
+
+COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\6000.6.8f1\Editor\Unity.exe
+-batchmode
+-projectPath
+C:\Users\soso1\orca\workspaces\ugajm\art/unity
+-executeMethod
+SevenSteps.Art.UiV3Batch.Run
+-logFile
+C:\Users\soso1\orca\workspaces\ugajm\art/concepts/ui/minimal-2026-11-10/v3/capture.log
+Successfully changed project path to: C:\Users\soso1\orca\workspaces\ugajm\art/unity
+C:/Users/soso1/orca/workspaces/ugajm/art/unity
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+    "memorysetup-temp-allocator-size-gfx=262144"
+    "memorysetup-remapper-allocator-initial-capacity=32768"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-main-allocator-mimalloc-enabled=1"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+Logging is directed to a specific file, skipping project log.
+Player connection [22788]  Target information:
+
+Player connection [22788]  * "[IP] 192.168.219.135 [Port] 55504 [Flags] 2 [Guid] 2156577581 [EditorId] 2156577581 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-4D6SFLN) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor"
+
+Player connection [22788] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [22788] Host joined alternative multi-casting on [225.0.0.222:34997]...
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+[Package Manager] Connected to IPC stream "Upm-34672" after 0.2 seconds.
+[Licensing::Client] Successfully resolved entitlement details
+Library Redirect Path: Library/
+Launching Unity Data Store - C:/Program Files/Unity/Hub/Editor/6000.6.8f1/Editor/Data/Tools/Unity.DataStore.exe
+Unity Data Store artifact dir = Library/DataStore, working dir = C:/Users/soso1/orca/workspaces/ugajm/art/unityUnity Data Store running and initialised
+Refreshing native plugins compatible for Editor in 3.53 ms, found 0 plugins.
+[Physics::Module] Selected backend (deferred post-plugins).
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+Initialize engine version: 6000.6.8f1 (237b6593792b)
+[EntityIdStore] init: VM path (explicit commit), pageSize=4096, blockCount=262144, entitiesPerBlock=1024, blocksPerSlotPage=0, slots reserved=4294967296 bytes
+[Subsystems] Discovering subsystems at path C:/Program Files/Unity/Hub/Editor/6000.6.8f1/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path C:/Users/soso1/orca/workspaces/ugajm/art/unity/Assets
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+d3d12: failed to query info queue interface (0x80004002).
+Direct3D:
+    Version:         Direct3D 12 [level 12.2]
+    Renderer:        NVIDIA GeForce RTX 3060 (ID=0x2504)
+    Vendor:          NVIDIA
+    VRAM:            12115 MB
+    App VRAM Budget: 11347 MB
+    Driver:          32.0.16.1088
+Initialize mono
+Mono path[0] = 'C:/Program Files/Unity/Hub/Editor/6000.6.8f1/Editor/Data/Managed'
+Mono path[1] = 'C:/Program Files/Unity/Hub/Editor/6000.6.8f1/Editor/Data/BCLExtensions/runtime/netstandard2.1'
+Mono path[2] = 'C:/Program Files/Unity/Hub/Editor/6000.6.8f1/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
+Mono config path = 'C:/Program Files/Unity/Hub/Editor/6000.6.8f1/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56672
+CodeReloadManager initialized
+ImportWorker Server TCP listen port: 0
+AcceleratorClientConnectionCallback - disconnected - :0
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.6.8f1/Editor/Data/PlaybackEngines/WebGLSupport/UnityEditor.WebGL.Extensions.dll
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.6.8f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
+Registered in 0.002904 seconds.
+Native extension for WindowsStandalone target not found
+Native extension for WebGL target not found
+Package Manager log level set to [2]
+ScheduleIndexationOnStartup MainProcess:False IndexOnStartup:False
+Scripting: successfully reloaded assembly
+- Finished resetting the current domain, in  0.651 seconds
+Domain Reload Profiling: 1201ms
+	BeginReloadAssembly (136ms)
+		CreateAndSetChildDomain (4ms)
+	RebuildCommonClasses (5ms)
+	RebuildNativeTypeToScriptingClass (16ms)
+	initialDomainReloadingComplete (72ms)
+	LoadAllAssembliesAndSetupDomain (319ms)
+		LoadAssemblies (128ms)
+		TypeCache.Refresh (209ms)
+			TypeCache.ScanAssembly (195ms)
+		AnalyzeDomain (1ms)
+	FinalizeReload (652ms)
+		SetupLoadedEditorAssemblies (0ms)
+			InitializePlatformSupportModulesInManaged (36ms)
+			BeforeProcessingInitializeOnLoad (99ms)
+			ProcessInitializeOnLoadAttributes (131ms)
+			ProcessInitializeOnLoadMethodAttributes (174ms)
+[Licensing::Client] Successfully resolved entitlement details
+Application.AssetDatabase Initial Refresh Start
+[Package Manager] Restoring resolved packages state from cache
+[Licensing::Client] Successfully resolved entitlement details
+[Package Manager] Registered 56 packages:
+  Packages from [https://packages.unity.com]:
+    com.unity.collab-proxy@2.13.6 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.collab-proxy@4628d2ba6ea4)
+    com.unity.ide.rider@3.1.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.ide.rider@570989d4a882)
+    com.unity.ide.visualstudio@2.0.28 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.ide.visualstudio@b5edea5f33f4)
+    com.unity.inputsystem@1.20.1 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.inputsystem@2436e68c60c4)
+    com.unity.searcher@4.9.5 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.searcher@a463122f2c00)
+    com.unity.profiling.core@1.0.3 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.profiling.core@8a49f7027d06)
+    com.unity.nuget.mono-cecil@1.11.6 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.nuget.mono-cecil@ecb9724e46ff)
+  Built-in packages:
+    com.unity.render-pipelines.universal@17.6.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.render-pipelines.universal@66a8e36658da)
+    com.unity.test-framework@1.8.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.test-framework@ee3fe9477490)
+    com.unity.ugui@2.6.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.ugui@fd16ebf174c6)
+    com.unity.modules.accessibility@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.accessibility)
+    com.unity.modules.adaptiveperformance@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.adaptiveperformance)
+    com.unity.modules.ai@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.ai)
+    com.unity.modules.androidjni@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.androidjni)
+    com.unity.modules.animation@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.animation)
+    com.unity.modules.assetbundle@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.assetbundle)
+    com.unity.modules.audio@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.audio)
+    com.unity.modules.cloth@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.cloth)
+    com.unity.modules.director@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.director)
+    com.unity.modules.imageconversion@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.imageconversion)
+    com.unity.modules.imgui@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.imgui)
+    com.unity.modules.jsonserialize@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.jsonserialize)
+    com.unity.modules.particlesystem@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.particlesystem)
+    com.unity.modules.physics@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.physics)
+    com.unity.modules.physics2d@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.physics2d)
+    com.unity.modules.physicscore2d@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.physicscore2d)
+    com.unity.modules.screencapture@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.screencapture)
+    com.unity.modules.terrain@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.terrain)
+    com.unity.modules.terrainphysics@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.terrainphysics)
+    com.unity.modules.tetgen@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.tetgen)
+    com.unity.modules.tilemap@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.tilemap)
+    com.unity.modules.timelinefoundation@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.timelinefoundation)
+    com.unity.modules.ui@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.ui)
+    com.unity.modules.uielements@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.uielements)
+    com.unity.modules.umbra@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.umbra)
+    com.unity.modules.unityanalytics@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.unityanalytics)
+    com.unity.modules.unitywebrequest@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.unitywebrequest)
+    com.unity.modules.unitywebrequestassetbundle@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.unitywebrequestassetbundle)
+    com.unity.modules.unitywebrequestaudio@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.unitywebrequestaudio)
+    com.unity.modules.unitywebrequesttexture@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.unitywebrequesttexture)
+    com.unity.modules.unitywebrequestwww@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.unitywebrequestwww)
+    com.unity.modules.vectorgraphics@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.vectorgraphics)
+    com.unity.modules.vehicles@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.vehicles)
+    com.unity.modules.video@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.video)
+    com.unity.modules.wind@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.wind)
+    com.unity.modules.xr@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.xr)
+    com.unity.modules.subsystems@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.subsystems)
+    com.unity.modules.hierarchycore@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.modules.hierarchycore)
+    com.unity.ext.nunit@2.1.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.ext.nunit@0198eae3b53e)
+    com.unity.render-pipelines.core@17.6.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.render-pipelines.core@74b1c5924895)
+    com.unity.shadergraph@17.6.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.shadergraph@807b608040c3)
+    com.unity.render-pipelines.universal-config@17.6.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.render-pipelines.universal-config@561422b74439)
+    com.unity.graph-authoring@1.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.graph-authoring@cfd2588851ee)
+    com.unity.burst@2.0.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.burst@626e66ab421b)
+    com.unity.collections@6.6.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.collections@4920e8897b5a)
+    com.unity.test-framework.performance@6.6.0 (location: C:\Users\soso1\orca\workspaces\ugajm\art\unity\Library\PackageCache\com.unity.test-framework.performance@e8b39e3ef3d9)
+[Subsystems] No new subsystems found in resolved package list.
+[Package Manager] Done registering packages in 0.02 seconds
+Assets/Shared is a symbolic link. Using symlinks in Unity projects may cause your project to become corrupted if you create multiple references to the same asset, use recursive symlinks or use symlinks to share assets between projects used with different versions of Unity. Make sure you know what you are doing.
+Disabling directory monitoring for current editor session. Found symlinks in project which cannot be used with directory monitoring. Directory monitoring settings can be changed in preferences.
+AcceleratorClientConnectionCallback - disconnected - :0
+[ScriptCompilation] Requested script compilation because: AssetDatabase observed changes in script compilation related files
+Starting: C:\Program Files\Unity\Hub\Editor\6000.6.8f1\Editor\Data\Tools\BuildPipeline\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/2000b0aE.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssemblies
+WorkingDir: C:/Users/soso1/orca/workspaces/ugajm/art/unity
+DisplayProgressbar: Compiling Scripts
+ExitCode: 0 Duration: 1s386ms
+[419/856    0s] WriteResponseFile Library/Bee/artifacts/rsp/4747638433968585886.rsp
+[664/856    0s] ILPP-Configuration Library/ilpp-configuration.nevergeneratedoutput
+[848/856    0s] Csc Library/Bee/artifacts/2000b0aE.dag/SevenSteps.Art.Review.dll (+2 others)
+Assets\_Project\Art\Test\UiV3\ReviewChoiceController.cs(36,18): warning CS0618: 'Object.FindFirstObjectByType<T>()' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+
+Assets\_Project\Art\Test\UiV3\ReviewChoiceController.cs(15,93): warning UAC1001: Field 'surface' type 'SevenSteps.Art.Review.BoardSurfaceReviewView' is skipped by serialization (missing the [Serializable] attribute). Refer to the Serialization rules analyzer reference. (https://docs.unity3d.com/6000.6/Documentation/Manual/script-serialization-analyzer.html#uac1001)
+
+Assets\_Project\Art\Test\UiV3\ReviewChoiceController.cs(15,121): warning UAC1001: Field 'Session' type 'SevenSteps.Contracts.GameSession' is skipped by serialization (missing the [Serializable] attribute). Refer to the Serialization rules analyzer reference. (https://docs.unity3d.com/6000.6/Documentation/Manual/script-serialization-analyzer.html#uac1001)
+
+Assets\_Project\Art\Test\UiV3\ReviewChoiceController.cs(15,317): warning UAC1001: Field 'panel' type 'SevenSteps.Art.Review.ChoicePanelView' is skipped by serialization (missing the [Serializable] attribute). Refer to the Serialization rules analyzer reference. (https://docs.unity3d.com/6000.6/Documentation/Manual/script-serialization-analyzer.html#uac1001)
+
+Assets\_Project\Art\Test\UiV3\ReviewChoiceController.cs(15,348): warning UAC1001: Field 'ghosts' type 'SevenSteps.Art.Review.GhostPreviewView' is skipped by serialization (missing the [Serializable] attribute). Refer to the Serialization rules analyzer reference. (https://docs.unity3d.com/6000.6/Documentation/Manual/script-serialization-analyzer.html#uac1001)
+
+Assets\_Project\Art\Test\UiV3\ReviewChoiceController.cs(15,383): warning UAC1001: Field 'trail' type 'SevenSteps.Art.Review.StarTrailReviewView' is skipped by serialization (missing the [Serializable] attribute). Refer to the Serialization rules analyzer reference. (https://docs.unity3d.com/6000.6/Documentation/Manual/script-serialization-analyzer.html#uac1001)
+
+Assets\_Project\Art\Test\UiV3\ReviewChoiceController.cs(15,411): warning UAC1001: Field 'feet' type 'SevenSteps.Art.Review.FootStarsView' is skipped by serialization (missing the [Serializable] attribute). Refer to the Serialization rules analyzer reference. (https://docs.unity3d.com/6000.6/Documentation/Manual/script-serialization-analyzer.html#uac1001)
+[849/856    0s] ILPostProcess Library/Bee/artifacts/2000b0aE.dag/post-processed/SevenSteps.Art.Review.dll (+pdb)
+Processing assembly Library/Bee/artifacts/2000b0aE.dag/SevenSteps.Art.Review.dll, with 124 defines and 302 references
+
+processors: Unity.Jobs.CodeGen.JobsILPostProcessor, zzzUnity.Burst.CodeGen.BurstILPostProcessor
+
+1 processor(s) skipped this assembly
+
+running Unity.Jobs.CodeGen.JobsILPostProcessor
+[850/856    0s] CopyFiles Library/ScriptAssemblies/SevenSteps.Art.Review.pdb
+[851/856    0s] CopyFiles Library/ScriptAssemblies/SevenSteps.Art.Review.dll
+[852/856    0s] Csc Library/Bee/artifacts/2000b0aE.dag/SevenSteps.Art.Editor.dll (+2 others)
+Assets\_Project\Art\Editor\UiV3Batch.cs(141,74): warning CS0618: 'FindObjectsSortMode' is obsolete: 'FindObjectsSortMode has been deprecated. Use the FindObjectsByType overloads that do not take a FindObjectsSortMode parameter.'
+
+Assets\_Project\Art\Editor\UiV3Batch.cs(141,37): warning CS0618: 'Object.FindObjectsByType<T>(FindObjectsSortMode)' is obsolete: 'FindObjectsByType with FindObjectsSortMode parameter has been deprecated. Use FindObjectsByType<T>() or FindObjectsByType<T>(FindObjectsInactive) instead. InstanceID will be replaced in the future with EntityId and previous sort order cannot be maintained.'
+
+Assets\_Project\Art\Editor\RuinsHengeBuilder.cs(183,28): warning CS0618: 'Object.FindFirstObjectByType<T>()' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+
+Assets\_Project\Art\Editor\RuinsHengeBuilder.cs(188,21): warning CS0618: 'Object.FindFirstObjectByType<T>()' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+
+Assets\_Project\Art\Editor\RuinsHengeBuilder.cs(189,78): warning CS0618: 'FindObjectsSortMode' is obsolete: 'FindObjectsSortMode has been deprecated. Use the FindObjectsByType overloads that do not take a FindObjectsSortMode parameter.'
+
+Assets\_Project\Art\Editor\RuinsHengeBuilder.cs(189,34): warning CS0618: 'Object.FindObjectsByType<T>(FindObjectsSortMode)' is obsolete: 'FindObjectsByType with FindObjectsSortMode parameter has been deprecated. Use FindObjectsByType<T>() or FindObjectsByType<T>(FindObjectsInactive) instead. InstanceID will be replaced in the future with EntityId and previous sort order cannot be maintained.'
+[853/856    0s] ILPostProcess Library/Bee/artifacts/2000b0aE.dag/post-processed/SevenSteps.Art.Editor.dll (+pdb)
+Processing assembly Library/Bee/artifacts/2000b0aE.dag/SevenSteps.Art.Editor.dll, with 122 defines and 321 references
+
+processors: Unity.Jobs.CodeGen.JobsILPostProcessor, zzzUnity.Burst.CodeGen.BurstILPostProcessor
+
+1 processor(s) skipped this assembly
+
+running Unity.Jobs.CodeGen.JobsILPostProcessor
+[854/856    0s] CopyFiles Library/ScriptAssemblies/SevenSteps.Art.Editor.pdb
+[855/856    0s] CopyFiles Library/ScriptAssemblies/SevenSteps.Art.Editor.dll
+*** Tundra build success (1.36 seconds), 10 items updated, 856 evaluated
+Assets\_Project\Art\Test\UiV3\ReviewChoiceController.cs(36,18): warning CS0618: 'Object.FindFirstObjectByType<T>()' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+Assets\_Project\Art\Test\UiV3\ReviewChoiceController.cs(15,93): warning UAC1001: Field 'surface' type 'SevenSteps.Art.Review.BoardSurfaceReviewView' is skipped by serialization (missing the [Serializable] attribute). Refer to the Serialization rules analyzer reference. (https://docs.unity3d.com/6000.6/Documentation/Manual/script-serialization-analyzer.html#uac1001)
+Assets\_Project\Art\Test\UiV3\ReviewChoiceController.cs(15,121): warning UAC1001: Field 'Session' type 'SevenSteps.Contracts.GameSession' is skipped by serialization (missing the [Serializable] attribute). Refer to the Serialization rules analyzer reference. (https://docs.unity3d.com/6000.6/Documentation/Manual/script-serialization-analyzer.html#uac1001)
+Assets\_Project\Art\Test\UiV3\ReviewChoiceController.cs(15,317): warning UAC1001: Field 'panel' type 'SevenSteps.Art.Review.ChoicePanelView' is skipped by serialization (missing the [Serializable] attribute). Refer to the Serialization rules analyzer reference. (https://docs.unity3d.com/6000.6/Documentation/Manual/script-serialization-analyzer.html#uac1001)
+Assets\_Project\Art\Test\UiV3\ReviewChoiceController.cs(15,348): warning UAC1001: Field 'ghosts' type 'SevenSteps.Art.Review.GhostPreviewView' is skipped by serialization (missing the [Serializable] attribute). Refer to the Serialization rules analyzer reference. (https://docs.unity3d.com/6000.6/Documentation/Manual/script-serialization-analyzer.html#uac1001)
+Assets\_Project\Art\Test\UiV3\ReviewChoiceController.cs(15,383): warning UAC1001: Field 'trail' type 'SevenSteps.Art.Review.StarTrailReviewView' is skipped by serialization (missing the [Serializable] attribute). Refer to the Serialization rules analyzer reference. (https://docs.unity3d.com/6000.6/Documentation/Manual/script-serialization-analyzer.html#uac1001)
+Assets\_Project\Art\Test\UiV3\ReviewChoiceController.cs(15,411): warning UAC1001: Field 'feet' type 'SevenSteps.Art.Review.FootStarsView' is skipped by serialization (missing the [Serializable] attribute). Refer to the Serialization rules analyzer reference. (https://docs.unity3d.com/6000.6/Documentation/Manual/script-serialization-analyzer.html#uac1001)
+Assets\_Project\Art\Editor\UiV3Batch.cs(141,74): warning CS0618: 'FindObjectsSortMode' is obsolete: 'FindObjectsSortMode has been deprecated. Use the FindObjectsByType overloads that do not take a FindObjectsSortMode parameter.'
+Assets\_Project\Art\Editor\UiV3Batch.cs(141,37): warning CS0618: 'Object.FindObjectsByType<T>(FindObjectsSortMode)' is obsolete: 'FindObjectsByType with FindObjectsSortMode parameter has been deprecated. Use FindObjectsByType<T>() or FindObjectsByType<T>(FindObjectsInactive) instead. InstanceID will be replaced in the future with EntityId and previous sort order cannot be maintained.'
+Assets\_Project\Art\Editor\RuinsHengeBuilder.cs(183,28): warning CS0618: 'Object.FindFirstObjectByType<T>()' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+Assets\_Project\Art\Editor\RuinsHengeBuilder.cs(188,21): warning CS0618: 'Object.FindFirstObjectByType<T>()' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+Assets\_Project\Art\Editor\RuinsHengeBuilder.cs(189,78): warning CS0618: 'FindObjectsSortMode' is obsolete: 'FindObjectsSortMode has been deprecated. Use the FindObjectsByType overloads that do not take a FindObjectsSortMode parameter.'
+Assets\_Project\Art\Editor\RuinsHengeBuilder.cs(189,34): warning CS0618: 'Object.FindObjectsByType<T>(FindObjectsSortMode)' is obsolete: 'FindObjectsByType with FindObjectsSortMode parameter has been deprecated. Use FindObjectsByType<T>() or FindObjectsByType<T>(FindObjectsInactive) instead. InstanceID will be replaced in the future with EntityId and previous sort order cannot be maintained.'
+AssetDatabase: script compilation time: 2.097602s
+Total cache size 266863089
+Total cache size after purge 266863089, took 00:00:00.3248755
+Begin MonoManager ReloadAssembly
+'Packages/com.unity.render-pipelines.core/Editor/Deprecated.cs' contains partial class of Unity.Object, exactly 1 of the partial classes needs to be in a file with the same filename. This is to know the one that can be referenced from ie. GameObjects
+'Packages/com.unity.render-pipelines.core/Editor/Deprecated.cs' contains partial class of Unity.Object, exactly 1 of the partial classes needs to be in a file with the same filename. This is to know the one that can be referenced from ie. GameObjects
+Refreshing native plugins compatible for Editor in 2.01 ms, found 3 plugins.
+Native extension for WindowsStandalone target not found
+Native extension for WebGL target not found
+ScheduleIndexationOnStartup MainProcess:True IndexOnStartup:True
+Scripting: successfully reloaded assembly
+- Finished resetting the current domain, in  0.863 seconds
+Domain Reload Profiling: 1801ms
+	BeginReloadAssembly (254ms)
+		DisableScriptedObjects (27ms)
+		CreateAndSetChildDomain (41ms)
+	RebuildCommonClasses (10ms)
+	RebuildNativeTypeToScriptingClass (16ms)
+	initialDomainReloadingComplete (62ms)
+	LoadAllAssembliesAndSetupDomain (596ms)
+		LoadAssemblies (344ms)
+		TypeCache.Refresh (139ms)
+			TypeCache.ScanAssembly (129ms)
+		AnalyzeDomain (64ms)
+			BuildScriptInfoCaches (58ms)
+			ResolveRequiredComponents (4ms)
+	FinalizeReload (864ms)
+		SetupLoadedEditorAssemblies (0ms)
+			InitializePlatformSupportModulesInManaged (11ms)
+			BeforeProcessingInitializeOnLoad (106ms)
+			ProcessInitializeOnLoadAttributes (255ms)
+			ProcessInitializeOnLoadMethodAttributes (50ms)
+			AfterProcessingInitializeOnLoad (10ms)
+		AwakeInstancesAfterBackupRestoration (25ms)
+Starting new worker id: 0 with log in C:/Users/soso1/orca/workspaces/ugajm/art/unity/Logs/AssetImportWorkerHW0.log
+Refreshing native plugins compatible for Editor in 2.76 ms, found 3 plugins.
+
+Asset Pipeline Refresh (id=0da223ba0fc13624bad4aa1f9d348cce): Total: 4.686 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
+	(Values over 0.05ms)
+	Summary:
+		Imports: total=0 (actual=0, local cache=0, cache server=0)
+		Asset DB Process Time: managed=0 ms, native=1317 ms
+		Asset DB Callback time: managed=170 ms, native=31 ms
+		Scripting: domain reloads=1, domain reload time=1005 ms, compile time=2100 ms, other=61 ms
+		Project Asset Count: scripts=1145, non-scripts=2369
+		Asset File Changes: new=0, changed=3, moved=0, deleted=0
+		Scan Filter Count: 0
+	InvokePackagesCallback: 22.918ms
+	ApplyChangesToAssetFolders: 0.651ms
+	Scan: 129.488ms
+	Collect global state as custom dependencies: 21.728ms
+	OnSourceAssetsModified: 1.465ms
+	CategorizeScriptCompilationAssets: 25.080ms
+	ProcessAssetsWithTransientArtifactChanges: 56.779ms
+	CategorizeAssets: 44.260ms
+	CompileScripts: 2099.868ms
+	ImportOutOfDateAssets: 885.266ms (871.819ms without children)
+		UnloadImportedAssets: 2.013ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 0.608ms
+		ImportSchedulerStart: 10.783ms
+	PostProcessAllAssets: 172.154ms
+		VCAutoAddAssetPostprocess 1.145ms
+		XRBuildSystem.XRAssetImported 0.858ms
+		PostProcessCallbackCreateDeferredMaterials 0.076ms
+		MonoPostProcessAllAssets: 169.351ms
+			AssetPostprocessor.OnPostprocessAllAssets 97.421ms
+			UniversalRenderPipelineGlobalSettingsPostprocessor.OnPostprocessAllAssets 19.301ms
+			StyleCatalogPostProcessor.OnPostprocessAllAssets 14.633ms
+			BuilderAssetPostprocessor.OnPostprocessAllAssets 5.624ms
+			SyncVS.PostprocessSyncProject 4.598ms
+			AssetChangedListener.OnPostprocessAllAssets 1.845ms
+			WindowAssetPostprocessingWatcher.OnPostprocessAllAssets 1.719ms
+			SpeedTree9Postprocessor.OnPostprocessAllAssets 1.632ms
+			ShaderGraphAssetPostProcessor.OnPostprocessAllAssets 1.610ms
+			RetainedModeAssetPostprocessor.OnPostprocessAllAssets 1.307ms
+			RenderPipelineGlobalSettingsPostprocessor.OnPostprocessAllAssets 0.983ms
+			EditModeScopePostprocessor.OnPostprocessAllAssets 0.862ms
+			MaterialPostprocessor.OnPostprocessAllAssets 0.661ms
+			ShaderReflectionAssetPostProcessor.OnPostprocessAllAssets 0.505ms
+			InputActionAssetPostprocessor.OnPostprocessAllAssets 0.462ms
+			ArtifactBrowserPostProcessor.OnPostprocessAllAssets 0.455ms
+			UVCSAssetPostprocessor.OnPostprocessAllAssets 0.426ms
+			TextAssetPostProcessor.OnPostprocessAllAssets 0.326ms
+			PostProcessor.OnPostprocessAllAssets 0.322ms
+			ReferencedClipsPostProcessor.OnPostprocessAllAssets 0.320ms
+			AssetEvents.OnPostprocessAllAssets 0.318ms
+			AudioMixerPostprocessor.OnPostprocessAllAssets 0.298ms
+			InputActionJsonNameModifierAssetProcessor.OnPostprocessAllAssets 0.268ms
+			TMPro_TexturePostProcessor.OnPostprocessAllAssets 0.254ms
+			TerrainToolbarOverlayPostProcessor.OnPostprocessAllAssets 0.192ms
+			ScenarioDriftAssetsTracker.OnPostprocessAllAssets 0.170ms
+			AssetDatabaseCallbacks.OnPostprocessAllAssets 0.162ms
+			ConfigAssetsTracker.OnPostprocessAllAssets 0.154ms
+			ProjectSettingsPostprocessor.OnPostprocessAllAssets 0.149ms
+			SpeedTreePostProcessor.OnPostprocessAllAssets 0.139ms
+			ThemePostprocessor.OnPostprocessAllAssets 0.131ms
+			AssetReloadNotifier.OnPostprocessAllAssets 0.105ms
+			AudioContainerPostProcessor.OnPostprocessAllAssets 0.080ms
+	PostAssetChangesProfiler: 7.989ms
+	UnloadStreamsBegin: 1.166ms
+	PersistCurrentRevisions: 0.090ms
+	GenerateScriptTypeHashes: 2.019ms
+	GenerateScriptTypeSerializationHashes: 3.560ms
+	Untracked: 1192.781ms
+
+Application.AssetDatabase Initial Refresh End
+Launched and connected shader compiler UnityShaderCompiler.exe after 0.01 seconds
+Scanning for USB devices : 12.077ms
+Initializing Unity extensions:
+[MODES] ModeService[none].Initialize
+[MODES] ModeService[none].LoadModes
+[MODES] Loading mode Default (0) for mode-current-id-Seven Steps
+Unloading 69 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 4823 unused Assets / (11.3 MB). Loaded Objects now: 5778.
+Memory consumption went from 372.8 MB to 361.5 MB.
+Total: 9.519100 ms (FindLiveObjects: 0.425600 ms CreateObjectMapping: 0.136400 ms MarkObjects: 5.865300 ms  DeleteObjects: 2.944100 ms)
+
+Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 0 unused Assets / (0 B). Loaded Objects now: 5780.
+Memory consumption went from 359.2 MB to 359.2 MB.
+Total: 6.331300 ms (FindLiveObjects: 0.264500 ms CreateObjectMapping: 0.078500 ms MarkObjects: 5.827200 ms  DeleteObjects: 0.006300 ms)
+
+Importing 'GUID: d9fe0ae8ce9322c4485186d8fee29beb - Path: Assets/_Project/Art/Test/UiV3/ChoiceReview.unity' with importer (DefaultImporter)
+Imported 'GUID: d9fe0ae8ce9322c4485186d8fee29beb' -> (Import Result ID: '8e2a1f8d2331f0af81adc5828a3cb1d8') in 0.005 seconds [static dependencies only]. Details - ImportResultOutputID=c39becda3643aeb24f98384a88564bee DependenciesID=c429c2220531b7fce58ae923b56e20aa StaticDependenciesID=dfb22dcb705a1ca4f4e6013a0398cc35
+Asset Pipeline Refresh (id=fcc354cc48d3a5d468c7af67414e7abb): Total: 0.066 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Worker ready: AssetImportWorkerHW0 0
+UI_V3_CAPTURE_PASS 216
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+SevenSteps.Art.UiV3Batch:Run () (at Assets/_Project/Art/Editor/UiV3Batch.cs:209)
+
+(Filename: Assets/_Project/Art/Editor/UiV3Batch.cs Line: 209)
+
+MonoPathRemapper: Attempts to remap: 14025; Successful remaps: 2
+Serialized file version minimum: 22, current 23
+Importing 'GUID: 00000000000000009000000000000000 - Path: ProjectSettings/QualitySettings.asset' with importer (LibraryAssetImporter)
+Imported 'GUID: 00000000000000009000000000000000' -> (Import Result ID: '4c4863529adc9ac14970731e8a5da60e') in 0.036 seconds [static dependencies only]. Details - ImportResultOutputID=2a108b3da874f726c62fbe5f12be4a8a DependenciesID=e27b047e3559935d81d11e8d5dd7411e StaticDependenciesID=a4661aca7a2be7b6d5e28438e344ffeb
+Refreshing native plugins compatible for Editor in 2.03 ms, found 3 plugins.
+Asset Pipeline Refresh (id=01df91f3d6529c24c80813539b066229): Total: 0.124 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+[Physics::Module] Cleanup current backend.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input Polling Thread exited.
+Input System module state changed to: Shutdown.
+[Licensing::IpcConnector] LicenseClient-soso1-notifications channel disconnected successfully.
+[Licensing::IpcConnector] LicenseClient-soso1 channel disconnected successfully.
+Lingering sessions upon destruction of worker manager
+Unity Data Store service was successfully shut down
+UDS shutting down local client system
+AcceleratorClientConnectionCallback - disconnected - :0
+Cleanup mono
+CodeReloadManager destroyed
+VBCSCompilerPreWarmer: requested VBCSCompiler shutdown
+Checking for leaked weakptr:
+  Found no leaked weakptrs.
+[Package Manager] Server process was shutdown
+##utp:{"type":"MemoryLeaks","version":2,"phase":"Immediate","time":1794334561783,"processId":34672,"allocatedMemory":16040259,"memoryLabels":[{"Default":208310},{"Permanent":15516},{"NewDelete":74407},{"Thread":4205680},{"Manager":819229},{"VertexData":3264},{"Geometry":824},{"Texture":24},{"Shader":849203},{"Material":132},{"GfxDevice":58624},{"Animation":952},{"Audio":1272},{"FreeType":8},{"FontEngine":736},{"Physics":1970},{"Physics2D":16},{"Serialization":42518},{"Input":42840},{"JobScheduler":256},{"TextLib":336},{"Mono":48},{"MonoCode":64},{"ScriptingNativeRuntime":1271576},{"BaseObject":48848},{"Resource":1444},{"Renderer":2504},{"Transform":4781},{"File":13323},{"WebCam":616},{"Culling":32},{"Terrain":11442},{"Wind":24},{"STL":40},{"String":459780},{"StaticString":3808},{"Utility":2674262},{"Curl":2559},{"PoolAlloc":2312},{"AI":80},{"TypeTree":17269},{"ScriptManager":12656},{"CodeReload":448},{"RuntimeInitializeOnLoadManager":64},{"Sprites":102},{"SpriteAtlas":120},{"GI":7816},{"Director":8296},{"CloudService":7296},{"WebRequest":14631},{"VR":49650},{"SceneManager":608},{"Video":64},{"LazyScriptCache":32},{"NativeArray":144},{"Camera":729},{"Secure":2377},{"SerializationCache":9256},{"APIUpdating":10320},{"Subsystems":336},{"VirtualTexturing":57888},{"StaticSafetyDebugInfo":278528},{"Analytics":768},{"Hierarchy":1188},{"UIElements":40},{"CoreStats":14456},{"Identifiers":7152},{"EntityIdStore":33088},{"Gui":128},{"EditorUtility":117271},{"VersionControl":8},{"Undo":931},{"AssetDatabase":4493159},{"AssetImporter":40},{"EditorGi":328},{"UnityConnect":40441},{"Upm":1912},{"UpmDiagnostics":8},{"AssetCompliance":96},{"DrivenProperties":72},{"LocalIPC":260},{"ProfilerEditor":9746},{"CoreBusinessMetrics":3600},{"Windowing":456},{"Licensing":12757},{"AssetReference":32},{"IPCStream":32}]}

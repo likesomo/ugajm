@@ -1,0 +1,216 @@
+level4 choice event komoss: PASS
+UiLayoutCheck board-panel komoss: PASS
+KEEP ghost = result position: PASS
+SWITCH ghost = result position: PASS
+KEEP ghost stone = result statue: PASS
+presentation input lock: PASS
+other input suppressed during presentation: PASS
+SWITCH input and state: PASS
+Undo restores choice: PASS
+keyboard focus changes preview: PASS
+touch target survives focus redraw: PASS
+touch pointer SWITCH: PASS
+mouse hover changes preview: PASS
+mouse pointer KEEP: PASS
+K keyboard KEEP: PASS
+Undo returns before seventh step: PASS
+touch seventh move from pulsing sixth: PASS
+actual session result: PASS
+level4 choice event kofrost: PASS
+UiLayoutCheck board-panel kofrost: PASS
+KEEP ghost = result position: PASS
+SWITCH ghost = result position: PASS
+KEEP ghost stone = result statue: PASS
+presentation input lock: PASS
+other input suppressed during presentation: PASS
+SWITCH input and state: PASS
+Undo restores choice: PASS
+keyboard focus changes preview: PASS
+touch target survives focus redraw: PASS
+touch pointer SWITCH: PASS
+mouse hover changes preview: PASS
+mouse pointer KEEP: PASS
+K keyboard KEEP: PASS
+Undo returns before seventh step: PASS
+touch seventh move from pulsing sixth: PASS
+actual session result: PASS
+level4 choice event kocarved: PASS
+UiLayoutCheck board-panel kocarved: PASS
+KEEP ghost = result position: PASS
+SWITCH ghost = result position: PASS
+KEEP ghost stone = result statue: PASS
+presentation input lock: PASS
+other input suppressed during presentation: PASS
+SWITCH input and state: PASS
+Undo restores choice: PASS
+keyboard focus changes preview: PASS
+touch target survives focus redraw: PASS
+touch pointer SWITCH: PASS
+mouse hover changes preview: PASS
+mouse pointer KEEP: PASS
+K keyboard KEEP: PASS
+Undo returns before seventh step: PASS
+touch seventh move from pulsing sixth: PASS
+actual session result: PASS
+level4 choice event enmoss: PASS
+UiLayoutCheck board-panel enmoss: PASS
+KEEP ghost = result position: PASS
+SWITCH ghost = result position: PASS
+KEEP ghost stone = result statue: PASS
+presentation input lock: PASS
+other input suppressed during presentation: PASS
+SWITCH input and state: PASS
+Undo restores choice: PASS
+keyboard focus changes preview: PASS
+touch target survives focus redraw: PASS
+touch pointer SWITCH: PASS
+mouse hover changes preview: PASS
+mouse pointer KEEP: PASS
+K keyboard KEEP: PASS
+Undo returns before seventh step: PASS
+touch seventh move from pulsing sixth: PASS
+actual session result: PASS
+level4 choice event enfrost: PASS
+UiLayoutCheck board-panel enfrost: PASS
+KEEP ghost = result position: PASS
+SWITCH ghost = result position: PASS
+KEEP ghost stone = result statue: PASS
+presentation input lock: PASS
+other input suppressed during presentation: PASS
+SWITCH input and state: PASS
+Undo restores choice: PASS
+keyboard focus changes preview: PASS
+touch target survives focus redraw: PASS
+touch pointer SWITCH: PASS
+mouse hover changes preview: PASS
+mouse pointer KEEP: PASS
+K keyboard KEEP: PASS
+Undo returns before seventh step: PASS
+touch seventh move from pulsing sixth: PASS
+actual session result: PASS
+level4 choice event encarved: PASS
+UiLayoutCheck board-panel encarved: PASS
+KEEP ghost = result position: PASS
+SWITCH ghost = result position: PASS
+KEEP ghost stone = result statue: PASS
+presentation input lock: PASS
+other input suppressed during presentation: PASS
+SWITCH input and state: PASS
+Undo restores choice: PASS
+keyboard focus changes preview: PASS
+touch target survives focus redraw: PASS
+touch pointer SWITCH: PASS
+mouse hover changes preview: PASS
+mouse pointer KEEP: PASS
+K keyboard KEEP: PASS
+Undo returns before seventh step: PASS
+touch seventh move from pulsing sixth: PASS
+actual session result: PASS
+Art GlyphCheck 다: PASS
+Art GlyphCheck 음: PASS
+Art GlyphCheck 형: PASS
+Art GlyphCheck 제: PASS
+Art GlyphCheck 에: PASS
+Art GlyphCheck 게: PASS
+Art GlyphCheck 어: PASS
+Art GlyphCheck 떻: PASS
+Art GlyphCheck 게: PASS
+Art GlyphCheck 이: PASS
+Art GlyphCheck 을: PASS
+Art GlyphCheck 까: PASS
+Art GlyphCheck 요: PASS
+Art GlyphCheck 남: PASS
+Art GlyphCheck 기: PASS
+Art GlyphCheck 기: PASS
+Art GlyphCheck 넘: PASS
+Art GlyphCheck 기: PASS
+Art GlyphCheck 기: PASS
+Art GlyphCheck 선: PASS
+Art GlyphCheck 돌: PASS
+Art GlyphCheck 을: PASS
+Art GlyphCheck 남: PASS
+Art GlyphCheck 기: PASS
+Art GlyphCheck 고: PASS
+Art GlyphCheck 출: PASS
+Art GlyphCheck 발: PASS
+Art GlyphCheck 점: PASS
+Art GlyphCheck 에: PASS
+Art GlyphCheck 서: PASS
+Art GlyphCheck 깨: PASS
+Art GlyphCheck 어: PASS
+Art GlyphCheck 나: PASS
+Art GlyphCheck 요: PASS
+Art GlyphCheck 이: PASS
+Art GlyphCheck 칸: PASS
+Art GlyphCheck 에: PASS
+Art GlyphCheck 서: PASS
+Art GlyphCheck 다: PASS
+Art GlyphCheck 음: PASS
+Art GlyphCheck 형: PASS
+Art GlyphCheck 제: PASS
+Art GlyphCheck 가: PASS
+Art GlyphCheck 깨: PASS
+Art GlyphCheck 어: PASS
+Art GlyphCheck 나: PASS
+Art GlyphCheck 요: PASS
+Art GlyphCheck 일: PASS
+Art GlyphCheck 곱: PASS
+Art GlyphCheck 걸: PASS
+Art GlyphCheck 음: PASS
+Art GlyphCheck 다: PASS
+Art GlyphCheck 음: PASS
+Art GlyphCheck 형: PASS
+Art GlyphCheck 제: PASS
+Art GlyphCheck 에: PASS
+Art GlyphCheck 게: PASS
+Art GlyphCheck 선: PASS
+Art GlyphCheck 택: PASS
+Art GlyphCheck 중: PASS
+Art GlyphCheck 걷: PASS
+Art GlyphCheck 기: PASS
+Art GlyphCheck 잠: PASS
+Art GlyphCheck 김: PASS
+Art GlyphCheck 별: PASS
+Art GlyphCheck 자: PASS
+Art GlyphCheck 리: PASS
+Art GlyphCheck 가: PASS
+Art GlyphCheck 이: PASS
+Art GlyphCheck 어: PASS
+Art GlyphCheck 졌: PASS
+Art GlyphCheck 어: PASS
+Art GlyphCheck 요: PASS
+Art GlyphCheck 방: PASS
+Art GlyphCheck 향: PASS
+Art GlyphCheck 키: PASS
+Art GlyphCheck 터: PASS
+Art GlyphCheck 치: PASS
+Art GlyphCheck 로: PASS
+Art GlyphCheck 걷: PASS
+Art GlyphCheck 기: PASS
+Art GlyphCheck 일: PASS
+Art GlyphCheck 곱: PASS
+Art GlyphCheck 번: PASS
+Art GlyphCheck 째: PASS
+Art GlyphCheck 걸: PASS
+Art GlyphCheck 음: PASS
+Art GlyphCheck 에: PASS
+Art GlyphCheck 서: PASS
+Art GlyphCheck 바: PASS
+Art GlyphCheck 통: PASS
+Art GlyphCheck 을: PASS
+Art GlyphCheck 골: PASS
+Art GlyphCheck 라: PASS
+Art GlyphCheck 요: PASS
+Art GlyphCheck 되: PASS
+Art GlyphCheck 돌: PASS
+Art GlyphCheck 리: PASS
+Art GlyphCheck 기: PASS
+Art GlyphCheck 남: PASS
+Art GlyphCheck 기: PASS
+Art GlyphCheck 기: PASS
+Art GlyphCheck 넘: PASS
+Art GlyphCheck 기: PASS
+Art GlyphCheck 기: PASS
+production GlyphCheck: PASS
+exit does not show choice: PASS
+pit does not show choice: PASS

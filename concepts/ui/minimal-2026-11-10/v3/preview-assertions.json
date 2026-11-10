@@ -1,0 +1,81 @@
+{
+    "level": 4,
+    "width": 1280,
+    "height": 720,
+    "footStarMinPixels": 16,
+    "presentationSeconds": 0.3799999952316284,
+    "cases": [
+        {
+            "language": "ko",
+            "planet": "moss",
+            "current": 15,
+            "start": 10,
+            "keepGhost": 10,
+            "keepActual": 10,
+            "keepStone": 15,
+            "switchGhost": 15,
+            "switchActual": 15,
+            "matches": true
+        },
+        {
+            "language": "ko",
+            "planet": "frost",
+            "current": 15,
+            "start": 10,
+            "keepGhost": 10,
+            "keepActual": 10,
+            "keepStone": 15,
+            "switchGhost": 15,
+            "switchActual": 15,
+            "matches": true
+        },
+        {
+            "language": "ko",
+            "planet": "carved",
+            "current": 15,
+            "start": 10,
+            "keepGhost": 10,
+            "keepActual": 10,
+            "keepStone": 15,
+            "switchGhost": 15,
+            "switchActual": 15,
+            "matches": true
+        },
+        {
+            "language": "en",
+            "planet": "moss",
+            "current": 15,
+            "start": 10,
+            "keepGhost": 10,
+            "keepActual": 10,
+            "keepStone": 15,
+            "switchGhost": 15,
+            "switchActual": 15,
+            "matches": true
+        },
+        {
+            "language": "en",
+            "planet": "frost",
+            "current": 15,
+            "start": 10,
+            "keepGhost": 10,
+            "keepActual": 10,
+            "keepStone": 15,
+            "switchGhost": 15,
+            "switchActual": 15,
+            "matches": true
+        },
+        {
+            "language": "en",
+            "planet": "carved",
+            "current": 15,
+            "start": 10,
+            "keepGhost": 10,
+            "keepActual": 10,
+            "keepStone": 15,
+            "switchGhost": 15,
+            "switchActual": 15,
+            "matches": true
+        }
+    ]
+}

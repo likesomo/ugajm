@@ -1,0 +1,27 @@
+{
+    "date":  "2026-11-11",
+    "unity":  "6000.6.8f1",
+    "scene":  "Assets/_Project/Art/Test/UiV3/ChoiceReview.unity",
+    "assembly":  "SevenSteps.Art.Review",
+    "level":  4,
+    "commandSequence":  "DURRRRRKDDRRRRR",
+    "captureAssertions":  216,
+    "compile":  "Passed",
+    "glyph":  "Passed",
+    "editMode":  {
+                     "failed":  0,
+                     "skipped":  0,
+                     "total":  801,
+                     "passed":  801
+                 },
+    "webgl":  {
+                  "path":  "Builds/UiV3WebGL",
+                  "result":  "Succeeded",
+                  "errors":  0,
+                  "bytes":  19281698
+              },
+    "rawUnityStateCaptures":  70,
+    "comparisonAndSheets":  4,
+    "hardwareTouchTested":  false,
+    "productionScenesModified":  false
+}
