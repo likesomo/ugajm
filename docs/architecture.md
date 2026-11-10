@@ -1,4 +1,5 @@
 | 2026-11-10 | 게임플레이/UI·아키텍트 | 14.6 `BoardView.Fit` 맞춤 식: 대칭 반폭 대신 투영 min/max 상자, 중심 +0.3 들어올림 제거(시그니처 그대로). feat/view 1f689b0 검토 승인 |
+| 2026-11-10 | 아트·아키텍트 | 7.2 `TileVisual.labelScale`(선택, 0 = 기존 기본 글자 크기, 양수 = 셀 한 변 px × 값), `BoardView.SetCellLabel` 1줄. feat/art 4760464 검토 승인 |
 # 일곱 걸음 Unity 아키텍처
 
 담당: 아키텍트 (`feat/architecture`). 기준 코드: v0 (`7lucky` 0568bfb).
