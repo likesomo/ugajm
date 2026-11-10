@@ -29,3 +29,8 @@ MonoBehaviour:
   rubble: {fileID: 1182497776389938457, guid: 64867a9ca51288d4e85a8cd30ddc88b0, type: 3}
   fragment: {fileID: -80577718331875683, guid: 950e18729e83b684da1264189adc76a0, type: 3}
   grass: {fileID: -8808126164064023102, guid: 6ed28444f804f204e8eb1de987d56e0c, type: 3}
+  hollowArch: {fileID: 449165768373052684, guid: b9077a83b820c7a4d876319b3df580ba, type: 3}
+  terrace: {fileID: -454346185614569159, guid: 754e15ab0abb36943b853397d58155f4, type: 3}
+  frostSpire: {fileID: 5498393017138259647, guid: 793899c993da42b4d8ccb54dba82eb00, type: 3}
+  timberFrame: {fileID: -2505178694896368991, guid: b70df6fa7aa2e3d4b8ada08aef945e8f, type: 3}
+  mossPatch: {fileID: -8993601259506670756, guid: 9c1766da68d1c7e489fddab29658be4b, type: 3}

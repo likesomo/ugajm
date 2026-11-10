@@ -434,6 +434,7 @@ namespace SevenSteps.Game
                 return;
             }
             float size = id.Kind switch { TileKind.Gate => 0.5f, TileKind.Exit => 0.26f, _ => 0.4f };
+            if(v.labelScale>0)size=v.labelScale;
             if (c.Label == null) c.Label = AddLabel(text, Vector3.zero, size, Ui.Ink);
             c.Label.Text.text = text;
             c.Label.Size = size;

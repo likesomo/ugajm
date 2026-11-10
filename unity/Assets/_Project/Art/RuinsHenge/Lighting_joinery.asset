@@ -16,7 +16,7 @@ MonoBehaviour:
     enabled: 1
     color: {r: 1, g: 0.9137255, b: 0.827451, a: 1}
     intensity: 1.35
-    euler: {x: 40, y: 35, z: 0}
+    euler: {x: 40, y: 125, z: 0}
     shadows: 0
   fill:
     enabled: 1
@@ -30,4 +30,4 @@ MonoBehaviour:
     intensity: 0.35
     euler: {x: 20, y: 175, z: 0}
     shadows: 0
-  ambient: {r: 0.32156864, g: 0.38039216, b: 0.46666667, a: 1}
+  ambient: {r: 0.20784314, g: 0.26666668, b: 0.35686275, a: 1}

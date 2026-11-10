@@ -336,6 +336,7 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 | `materialTarget`, `activeMaterial`, `inactiveMaterial` | 상태별 머티리얼 교체 | 게이트 `"Arch"` 금색/기본 |
 | `appearTrigger`, `vanishTrigger`, `activateTrigger`, `deactivateTrigger` | Animator 트리거 이름. 비우면 보드의 코드 트윈 | 3D 모델 애니메이션 |
 | `labelOffset`, `activeLabelOffset` | 숫자/글자 라벨 위치(셀 단위) | 쿼터뷰에서 기둥 높이가 다를 때 |
+| `labelScale` | 선택적 글자 크기 = 투영된 셀 폭 × 값, 0이면 기존 기본값 | 큰 숫자 문의 판독성 조정; 게임 규칙에는 영향 없음 |
 
 **활성(active)의 뜻**: 문·석상 수 문 = 열림(`Rules.DoorOpen`), 레버 = 당겨짐(`State.Flipped`), (뒤집힘 벽은 활성 대신 variant가 현재 모양), 게이트 = 다음 걸음에 통과 가능, 발판 = 눌림, 출구 = 다음 걸음이 7번째. 이 값은 보드가 `Rules.DoorOpen`, `state.Used`, `state.Statues`에서 읽는다.
 
