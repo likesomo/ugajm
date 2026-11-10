@@ -125,10 +125,15 @@ case "$cmd" in
   smoke)
     # Runs the Windows build on a few replays, saves screenshots + logs to reports/smoke/, fails on exceptions.
     out="$REPO/reports/smoke"; mkdir -p "$out"; fail=0
+    # Windows PlayerPrefs are one registry key per product, shared by every workspace on this PC: concurrent smoke runs
+    # overwrote each other's progress (title continue/map). -savekey suffixes every save key (LaunchOptions.SaveKey):
+    # the workspace folder name, other characters -> _, a leading - -> _ (it would read as a flag), at most 32 chars.
+    SAVEKEY="$(basename "$REPO" | sed 's/[^A-Za-z0-9_-]/_/g; s/^-/_/' | cut -c1-32)"; SAVEKEY="${SAVEKEY:-smoke}"
+    echo "[unity.sh] smoke save key: $SAVEKEY"
     for spec in "1:R" "4:DURRRRRK" "8:RRRRRRDX" "10:RLRLRRR" "22:RDDLLLL" "29:DURRRRRKDDR" "43:RRRRRR"; do
       lv="${spec%%:*}"; rp="${spec#*:}"
       winout="$(cygpath -w "$out")"
-      "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 \
+      "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -savekey "$SAVEKEY" \
         -level "$lv" -replay "$rp" -screenshot "$winout\\level$lv.png" -logFile "$winout\\level$lv.log" > /dev/null || true
       grep -h "\[SevenSteps\] Screenshot" "$out/level$lv.log" || { echo "[unity.sh] smoke level $lv: no screenshot"; fail=1; }
       if grep -qE "^[A-Za-z.]*Exception" "$out/level$lv.log"; then grep -E "^[A-Za-z.]*Exception" "$out/level$lv.log"; fail=1; fi
@@ -139,7 +144,7 @@ case "$cmd" in
     for spec in $(node "$HERE/flow-stages.mjs" "$(cygpath -w "$REPO/unity/Assets/_Project/Data/levels.json")"); do
       lv="${spec%%:*}"; rp="${spec#*:}"
       winout="$(cygpath -w "$out")"
-      "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -lang ko \
+      "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -savekey "$SAVEKEY" -lang ko \
         -level "$lv" -replay "$rp" -flowcheck -screenshot "$winout\\flow$lv.png" -logFile "$winout\\flow$lv.log" > /dev/null || true
       grep -h "\[SevenSteps\] Flow check" "$out/flow$lv.log" || { echo "[unity.sh] smoke flow $lv: no result line"; fail=1; }
       grep -q "\[SevenSteps\] Flow check stage $lv: OK" "$out/flow$lv.log" || fail=1
@@ -152,7 +157,7 @@ case "$cmd" in
     for spec in "begin:1:select:-newplayer" "map:$p2:select:" "continue:$p2:boot:"; do
       IFS=: read -r path lv via extra <<< "$spec"
       winout="$(cygpath -w "$out")"
-      "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -lang ko $extra \
+      "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -savekey "$SAVEKEY" -lang ko $extra \
         -titlecheck "$path" -logFile "$winout\\title-$path.log" > /dev/null || true
       want="[SevenSteps] Title check $path: arrived stage $lv via $via"
       grep -h "\[SevenSteps\] Title check" "$out/title-$path.log" || echo "[unity.sh] smoke title $path: no result line"
