@@ -785,6 +785,7 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 - **보드 영역**: 보드 칸과 액터의 월드 경계(`BoardGrid` 셀 전체, 높이 포함)를 Game 카메라로 화면에 투영한 사각형 + 여백 8. 카메라는 실제 게임과 같은 맞춤(`IStageEnvironment.Fit`·카메라 맞춤) 뒤의 값.
 - HUD의 글자·판·버튼은 보드 영역과 겹치지 않는다. 3D 장식(빙산·선돌·기둥)은 보드 영역 밖에 있어도 되지만, HUD 글자 뒤로 지나가면 그 글자는 판 위에 있어야 한다(14.4가 잡는다).
 - 검사 범위: 가장 큰 보드(가로·세로 칸 수 최대 스테이지 각각)와 23번처럼 힌트가 가장 긴 스테이지.
+- 구현(feat/view f525128): HUD가 비워 두는 칸은 `HudView.BoardFrame`(1280×720 기준 316,222 648×398), `BoardView.FitCamera`가 보드를 그 안에 맞춘다. `UiLayoutCheck`는 이 상수를 믿지 말고 **실제 HUD 사각형과 보드 투영**을 비교한다(상수가 HUD 배치와 어긋나면 잡히도록).
 
 ### 14.7 모달
 - Result, Settings, 언어 선택, 챕터 진입 카드, Credits, 확인 창은 모달이다. 모달이 뜨면 **화면 전체를 덮는 막(`Image`, 캔버스 전체로 늘림, 알파 0.6 이상, `raycastTarget` 켬)**이 모달 아래·다른 UI 위에 그려진다(정렬 순서가 더 높은 캔버스나 마지막 형제). 막 아래 UI는 입력을 받지 않는다.
@@ -874,3 +875,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-10 | 씬 플로우·아키텍트 | 11장 `LaunchOptions.TitleCheck`(`-titlecheck begin, continue, map`, 개발·스모크용, feat/scene-flow 78e81ee 검토 승인), `GameFlowController.LastVia`, `unity.sh smoke` 타이틀 단계 |
 | 2026-11-10 | 아키텍트 | 14장 UI 레이아웃 규칙(사용자 지시 production/ui-layout-fix.md): 기준 1280x720 캔버스 단위, 본문 22·보조 18(`UiLayout.secondary`), 대비 4.5:1(장식 3:1, 선 2 이상), 3D 위 글자는 판(알파 0.75 이상, 안쪽 여백 8, 9-slice는 border 안쪽), 장식선은 글자 사각형을 지나지 않음, 글자·판 겹침과 넘침 금지, 안전 영역 24와 보드 영역 분리, 모달 막(알파 0.6 이상), 허용 목록은 `UiLayout` 컴포넌트(exempt 규칙 + reason 필수). 검증기 `UiLayoutCheck`(씬 플로우) ko·en, 1280x720·1920x1080 오류, 1280x800 경고. 영향: 씬 플로우(검증기, `UiLayout` 타입 추가, 소유 화면), 게임플레이/UI(HUD·결과·버튼 스킨, Edit Mode에서 만들 수 있게) |
 | 2026-11-10 | 아키텍트 | 11장 `LaunchOptions.ArtPerf`(`-artperf`, `?artperf=1`, 아트 측정용, 리드 승인). 영향: 아트(`RuinsHengePlanet.Awake`의 URL 직접 검사를 `Services.TryGet<LaunchOptions>`의 `ArtPerf`로 한 줄 교체, Codex 다음 커밋) |
+| 2026-11-10 | 게임플레이/UI·아키텍트 | 14.6 `HudView.BoardFrame`·`BoardViewport`(보드가 들어갈 HUD 빈 칸, 공개 상수), `BoardView.FitCamera`가 그 틀에 맞춤. `Ui.FitButtonSkin`·`FrameBorder`·`Plate`·`PlateAlpha`(14.4), `UiLayout`(14.8, scene-flow 37a146b) — feat/view f525128·3216c4d 검토 승인 |
