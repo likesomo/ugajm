@@ -9,7 +9,7 @@
       "id": "moss",
       "planet": "이끼의 궤도",
       "concept": "고향. 잘린 석주와 이끼 덮인 작은 관측 유적",
-      "intro": "하늘 지도의 맨 끝에 원형 제단이 그려져 있었다. 셋은 고향 행성을 떠난다.",
+      "intro": "지도 끝에 선돌의 원이 있다. 셋은 고향을 떠난다.",
       "tagline": "세쌍둥이의 고향. 일곱 걸음을 배운다",
       "artPreset": "moss",
       "text": [
@@ -17,7 +17,7 @@
           "lang": "en",
           "planet": "Mossy Orbit",
           "concept": "Home: broken pillars and a small moss-covered observatory ruin",
-          "intro": "At the very edge of the sky map, someone drew a ring of stones. The three leave home.",
+          "intro": "The map ends in a ring of stones. The three leave home.",
           "tagline": "Home. Learn to count to seven"
         }
       ]
@@ -26,7 +26,7 @@
       "id": "hollow",
       "planet": "별구멍 달",
       "concept": "표면 곳곳이 뚫려 아래로 별이 보이는 달",
-      "intro": "발밑으로 별이 보이는 달. 길이 끊긴 곳에서는 형제가 길이 된다.",
+      "intro": "발밑으로 별이 흐른다. 끊긴 곳에선 형제가 길이 된다.",
       "tagline": "구멍 아래로 별이 보이는 달",
       "artPreset": "hollow",
       "text": [
@@ -34,7 +34,7 @@
           "lang": "en",
           "planet": "Starhole Moon",
           "concept": "A moon full of holes with stars showing through",
-          "intro": "Stars show through the ground here. Where the path breaks, a brother becomes the path.",
+          "intro": "Stars flow underfoot. Where the path breaks, a brother becomes it.",
           "tagline": "A moon of holes and stars below"
         }
       ]
@@ -43,7 +43,7 @@
       "id": "carved",
       "planet": "새김돌 행성",
       "concept": "기둥마다 숫자가 새겨진 계산의 행성",
-      "intro": "옛 관측자들은 돌에 숫자를 새겼다. 몇 번째 걸음에 지나가야 하는지.",
+      "intro": "옛 관측자들은 돌에 걸음을 새겼다. 몇 번째 걸음에 지나가야 하는지.",
       "tagline": "돌마다 걸음 수가 새겨진 행성",
       "artPreset": "carved",
       "text": [
@@ -51,7 +51,7 @@
           "lang": "en",
           "planet": "Carved Stone World",
           "concept": "A planet of counting, numbers carved into every pillar",
-          "intro": "The old watchers carved numbers into the stones: which step lets you through.",
+          "intro": "The old watchers carved their steps into stone: which step lets you through.",
           "tagline": "Every stone carved with a step"
         }
       ]
@@ -111,7 +111,7 @@
       "id": "altar",
       "planet": "원형 제단",
       "concept": "선돌 원형 제단과 이끼 늪이 있는 마지막 행성",
-      "intro": "지도의 끝. 늪 너머에 선돌들이 원을 그리고 서 있다.",
+      "intro": "늪 너머 선돌의 원. 빈자리가 둘 있다.",
       "tagline": "여정의 끝, 선돌의 원",
       "artPreset": "altar",
       "text": [
@@ -119,7 +119,7 @@
           "lang": "en",
           "planet": "The Stone Circle",
           "concept": "The last planet: a ring of standing stones beyond a mossy bog",
-          "intro": "The end of the map. Beyond the bog, standing stones form a circle.",
+          "intro": "A ring of stones past the bog. Two places are empty.",
           "tagline": "Journey's end: the stone circle"
         }
       ]
