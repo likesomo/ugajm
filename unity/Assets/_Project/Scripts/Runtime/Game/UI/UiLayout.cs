@@ -5,7 +5,7 @@ namespace SevenSteps.Game.UI
 {
     /// <summary>Rules of docs/architecture.md 14 that one element may skip (<see cref="UiLayout.exempt"/>).</summary>
     [Flags]
-    public enum UiLayoutRule { None = 0, Overlap = 1, Decoration = 2, Overflow = 4, Plate = 8, Contrast = 16, Board = 32 }
+    public enum UiLayoutRule { None = 0, Overlap = 1, Decoration = 2, Overflow = 4, Plate = 8, Contrast = 16, Board = 32, Safe = 64 }
 
     /// <summary>
     /// Layout marks read by UiLayoutCheck (docs/architecture.md 14.8): <see cref="secondary"/> text (minimum size 18

@@ -64,7 +64,7 @@ namespace SevenSteps.Game.Telemetry
 #endif
                 Build = build.Length > 40 ? build.Substring(0, 40) : build,
             };
-            var t = new HttpTelemetry(ctx, new PlayerPrefsStore(), level => save.Progress.CountStart(LevelCatalog.At(level - 1)), LevelsJsonMinBodies);
+            var t = new HttpTelemetry(ctx, SaveStores.For(launch), level => save.Progress.CountStart(LevelCatalog.At(level - 1)), LevelsJsonMinBodies);
             var go = new GameObject(ObjectName);
             DontDestroyOnLoad(go);
             go.AddComponent<TelemetryRunner>().telemetry = t;
