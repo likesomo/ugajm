@@ -197,8 +197,8 @@ namespace SevenSteps.Game
 
         /// Fills <paramref name="map"/> (docs/architecture.md 15.2) from scratch: step bits where a step landed (the cells
         /// an ice slide glides over carry only path edges, like the stars), both bits on a mud cell, path edges, statues,
-        /// how each finished brother ended (on his last cell), and with <paramref name="newest"/> the current body's last
-        /// step cell. Brothers past <see cref="StarTrailMap.MaxBodies"/> are left out.
+        /// how each finished brother ended (on his last cell), the walking body's cell (the ring), and with
+        /// <paramref name="newest"/> the current body's last step cell. Brothers past <see cref="StarTrailMap.MaxBodies"/> are left out.
         public void Write(StarTrailMap map, bool newest)
         {
             if (map == null) throw new ArgumentNullException(nameof(map));
@@ -212,7 +212,6 @@ namespace SevenSteps.Game
                     case TrailMarkKind.Star:
                     case TrailMarkKind.Seventh: map.AddStep(m.Body, m.Cell, m.Step); break;
                     case TrailMarkKind.StoneStar: map.AddStatue(m.Body, m.Cell); break;
-                    // Ring: the view draws it (feet follow the player); the shader gets steps used through the state global.
                 }
             }
             foreach (var b in Bodies)
@@ -232,6 +231,8 @@ namespace SevenSteps.Game
             }
             var cur = Current;
             if (newest && cur != null && cur.Steps.Length > 1) map.SetNewest(cur.Steps[cur.Steps.Length - 1].Cell);
+            // The ring of seven stars stands where the walking body is (15.6); its lit stars come from _StarTrailState.w.
+            if (Ring && cur != null) map.SetPlayer(Pos);
         }
     }
 }
