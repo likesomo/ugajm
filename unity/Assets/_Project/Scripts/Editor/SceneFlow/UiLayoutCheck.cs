@@ -156,7 +156,10 @@ namespace SevenSteps.EditorTools
                 {
                     var story = StoryOf(c);
                     if (story == null) throw new Skipped("story.json does not load (SceneFlowValidator reports it)");
-                    BuildTitle(c, root, LongestLine(story, c.Lang, e => e.on == "title" && e.after == a));
+                    var v = BuildTitle(c, root, LongestLine(story, c.Lang, e => e.on == "title" && e.after == a));
+                    // The title sky (0.5 #4): every other chapter's star lit, so both looks are drawn.
+                    v.ShowSky(story.ChapterIds.Select((id, i) => i % 2 == 0).ToArray());
+                    if (v.SkyLit < 0) throw new InvalidOperationException("title sky not shown");
                     return null;
                 } }, a == "" ? "story" : "story after ending");
             }
@@ -207,6 +210,19 @@ namespace SevenSteps.EditorTools
                 return Find(root, "GameMenu");
             } }, "");
             yield return (new Screen { Name = "StageSelect", Build = (c, root) => { BuildMap(c, root, planets); return null; } }, "map");
+            // Story on the map (0.5 #3, #7): a carving tapped, its truth in the detail row (the longest finale line); the
+            // polaris mark on the last stage's planet shows in both map screens (full progress, final truth not seen).
+            yield return (new Screen { Name = "StageSelect", Build = (c, root) =>
+            {
+                var map = BuildMap(c, root, planets);
+                var story = StoryOf(c);
+                if (story == null) throw new Skipped("story.json does not load (SceneFlowValidator reports it)");
+                int longest = Enumerable.Range(0, planets.Count).OrderByDescending(i => story.Line(story.Find(StoryRules.Finale(planets[i].Key)), 0, c.Lang).Length).First();
+                map.ShowTruth(longest);
+                if (map.TruthShown != longest) throw new InvalidOperationException("the carving tap did not show the truth");
+                if (!map.PolarisShown) throw new InvalidOperationException("no polaris mark with every truth found");
+                return null;
+            } }, "map truth");
             for (int p = 0; p < planets.Count; p++)
             {
                 int planet = p;
@@ -214,7 +230,10 @@ namespace SevenSteps.EditorTools
                 {
                     BuildMap(c, root, planets);
                     var list = new PlanetStagesPanel(root);
-                    list.Bind(planets[planet], FullProgress(c.Levels), c.Levels, c.Loc);
+                    // Full progress: every finale cleared, so the tagline row holds the planet's truth (review cd38eb8 N2).
+                    var story = StoryOf(c);
+                    string truth = story != null ? story.Line(story.Find(StoryRules.Finale(planets[planet].Key)), 0, c.Lang) : null;
+                    list.Bind(planets[planet], FullProgress(c.Levels), c.Levels, c.Loc, truth);
                     list.Show();
                     return Find(root, "PlanetStages");
                 } }, "list " + planets[p].Key);
@@ -382,15 +401,16 @@ namespace SevenSteps.EditorTools
                 found.Add("result clear: no star criteria tip is showing after a tap (14.7)");
         }
 
-        static void BuildTitle(Ctx c, RectTransform root, string storyLine = null)
+        static TitleView BuildTitle(Ctx c, RectTransform root, string storyLine = null)
         {
             Ui.MenuBackground(root);
             var v = new TitleView(root);
             v.Apply(c.Loc, storyLine);
             v.Show(true);
+            return v;
         }
 
-        static void BuildMap(Ctx c, RectTransform root, List<PlanetEntry> planets)
+        static PlanetMapView BuildMap(Ctx c, RectTransform root, List<PlanetEntry> planets)
         {
             Ui.MenuBackground(root);
             var map = new PlanetMapView(root, planets, c.Levels);
@@ -399,6 +419,7 @@ namespace SevenSteps.EditorTools
             if (story != null) map.Story = new StoryBook(story, new StoryProgress(), null, _ => true);
             map.Apply(c.Loc);
             map.Show(FullProgress(c.Levels), -1);
+            return map;
         }
 
         /// story.json as the player loads it, or null when it does not load (SceneFlowValidator.ValidateStory reports that).
