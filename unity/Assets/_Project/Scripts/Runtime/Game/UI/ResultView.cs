@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using SevenSteps.Contracts;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
@@ -69,7 +70,15 @@ namespace SevenSteps.Game.UI
     /// <summary>
     /// Clear / loss panel (view only, docs/scene-flow.md 4.7, S6). Prefab UI/Prefabs/ResultPanel.prefab (its own canvas,
     /// sorting 5, above the HUD), referenced by UiTheme.resultPanel. Shows a <see cref="ResultModel"/> and raises button
-    /// events; the flow controller decides what they do. Layout lives in the prefab (first built by UiBuilder).
+    /// events; the flow controller decides what they do. Layout lives in the prefab (ResultLayoutBuilder).
+    ///
+    /// Minimal result (production/ui-minimal-plan.md: stars, constellation, next only; design/art/ui-minimal.md): a clear
+    /// is shown over the board, so the finale constellation stays in view: a light scrim (input still blocked), the HUD
+    /// hidden (<see cref="HudHidden"/>), the three stars on a small plate in the band above the board, one Next button
+    /// bottom right (the last stage: [끝까지 보기] -> GameFlowController.EndingRequested), and the planet / journey line on a
+    /// plate at the bottom centre when this clear ends one. What a star asks shows on hover or a tap of that star, on a
+    /// plate beside the stars (clear of the board). No again / stage select buttons: R and Esc do that (docs 14.7,
+    /// 9eda0b0). A loss keeps the modal panel (title, line, undo / restart / stage select).
     /// </summary>
     public sealed class ResultView : MonoBehaviour, Flow.IResultPanel
     {
@@ -80,12 +89,28 @@ namespace SevenSteps.Game.UI
         [Tooltip("3 stars of this clear (docs/architecture.md 6.5), revealed one by one; the row hides for a loss or unknown stars")]
         public Image[] stars = new Image[Core.Stars.Max];
         public Sprite starEmpty, starFilled;
-        [Tooltip("What each star asks (result.star1..3, under the stars); earned ones in ink, the rest dimmed. Hidden with the stars.")]
+        [Tooltip("What each star asks (result.star1..3), each on a tip plate under its star shown on hover / tap; earned in ink, the rest dimmed.")]
         public Text[] starLabels = new Text[Core.Stars.Max];
+        [Tooltip("Full-screen scrim (the Overlay image): light for a clear over the board, modal for a loss.")]
+        public Image scrim;
+        [Tooltip("The loss modal panel (title, body, buttons).")]
+        public RectTransform panel;
+        [Tooltip("Clear over the board: stars plate, next slot, finale plate.")]
+        public RectTransform clearGroup;
+        [Tooltip("Bottom right: Next (on the last stage: on to the ending, result.ending).")]
+        public RectTransform nextSlot;
+        [Tooltip("Bottom centre: the planet / journey line (story FinaleLine later); body sits here for a clear.")]
+        public RectTransform finalePlate;
+
+        /// Scrim alphas: a clear over the board (the constellation shows through), a loss (docs 14.7 modal).
+        public const float ClearScrimAlpha = 0.25f, LossScrimAlpha = 0.72f;
 
         public event Action NextRequested, RetryRequested, StageSelectRequested;
         /// Loss only: the board actions stay available on the panel (Z / R also work, the loss is not an overlay).
         public event Action UndoRequested, RestartRequested;
+        /// true: a clear is shown over the board, hide the HUD (docs 14.7: a scrim under 0.6 needs the UI under it hidden);
+        /// false: show it again (Hide, or a loss with the modal scrim).
+        public event Action<bool> HudHidden;
 
         public bool IsShown => overlay.activeSelf;
 
@@ -101,6 +126,8 @@ namespace SevenSteps.Game.UI
             Need(starEmpty, nameof(starEmpty)); Need(starFilled, nameof(starFilled));
             if (starLabels == null || starLabels.Length != Core.Stars.Max) issues.Add($"ResultView {name}: starLabels needs {Core.Stars.Max} entries");
             else for (int k = 0; k < starLabels.Length; k++) Need(starLabels[k], $"starLabels[{k}]");
+            Need(scrim, nameof(scrim)); Need(panel, nameof(panel)); Need(clearGroup, nameof(clearGroup));
+            Need(nextSlot, nameof(nextSlot)); Need(finalePlate, nameof(finalePlate));
         }
 
         void OnValidate()
@@ -126,7 +153,63 @@ namespace SevenSteps.Game.UI
             select.onClick.AddListener(() => StageSelectRequested?.Invoke());
             undo.onClick.AddListener(() => UndoRequested?.Invoke());
             restart.onClick.AddListener(() => RestartRequested?.Invoke());
+            bodyHome = Home.Of(body.rectTransform);
+            for (int k = 0; k < stars.Length; k++)
+            {
+                int star = k;
+                if (!stars[k].TryGetComponent<EventTrigger>(out var trigger)) trigger = stars[k].gameObject.AddComponent<EventTrigger>();
+                void On(EventTriggerType type, Action act)
+                {
+                    var e = new EventTrigger.Entry { eventID = type };
+                    e.callback.AddListener(_ => act());
+                    trigger.triggers.Add(e);
+                }
+                On(EventTriggerType.PointerEnter, () => ShowTip(star));
+                On(EventTriggerType.PointerExit, () => { if (tip == star && !tipPinned) ShowTip(-1); });
+                On(EventTriggerType.PointerClick, () => { bool same = tip == star && tipPinned; ShowTip(same ? -1 : star); tipPinned = !same; });
+                stars[k].raycastTarget = true;
+            }
+            ShowTip(-1);
             wired = true;
+        }
+
+        /// Where an element sits in the loss panel, to put it back after a clear borrowed it.
+        readonly struct Home
+        {
+            readonly Transform parent;
+            readonly int sibling;
+            readonly Vector2 min, max, pivot, pos, size;
+            Home(RectTransform r)
+            {
+                parent = r.parent; sibling = r.GetSiblingIndex();
+                min = r.anchorMin; max = r.anchorMax; pivot = r.pivot; pos = r.anchoredPosition; size = r.sizeDelta;
+            }
+            public static Home Of(RectTransform r) => new Home(r);
+            public void Restore(RectTransform r)
+            {
+                if (r.parent != parent) { r.SetParent(parent, false); r.SetSiblingIndex(sibling); }
+                r.anchorMin = min; r.anchorMax = max; r.pivot = pivot; r.anchoredPosition = pos; r.sizeDelta = size;
+            }
+        }
+
+        Home bodyHome;
+        int tip = -1;
+        bool tipPinned;
+
+        /// Shows what star <paramref name="k"/> asks on its tip plate (-1: none).
+        void ShowTip(int k)
+        {
+            tip = k;
+            if (k < 0) tipPinned = false;
+            for (int i = 0; i < starLabels.Length; i++) starLabels[i].transform.parent.gameObject.SetActive(i == k);
+        }
+
+        /// Puts <paramref name="r"/> inside <paramref name="slot"/>, filling it (inset by <paramref name="pad"/>).
+        static void Dock(RectTransform r, RectTransform slot, float pad)
+        {
+            if (r.parent != slot) r.SetParent(slot, false);
+            r.anchorMin = Vector2.zero; r.anchorMax = Vector2.one; r.pivot = new Vector2(.5f, .5f);
+            r.offsetMin = new Vector2(pad, pad / 2); r.offsetMax = new Vector2(-pad, -pad / 2);
         }
 
         Localizer loc;
@@ -166,15 +249,10 @@ namespace SevenSteps.Game.UI
             shown = m;
             if (m.Cleared)
             {
-                // "Bodies 2 (fewest 1, your best 2)". Minimum = JS solver's expected.minBodies.
-                string detail = m.MinBodies > 0 && m.BestBodies > 0 ? loc.Format("result.detail_both", m.MinBodies, m.BestBodies)
-                    : m.MinBodies > 0 ? loc.Format("result.detail_min", m.MinBodies)
-                    : m.BestBodies > 0 ? loc.Format("result.detail_best", m.BestBodies)
-                    : "";
+                // Minimal: no title or counts (the stars say it); only the planet / journey line, when this clear ends one.
                 title.text = loc.Get("result.clear");
-                body.text = loc.Format("result.bodies", m.BodiesUsed) + detail + (m.IsLast ? "\n" + loc.Get("result.journey_done")
-                    : m.FinishedChapter != null ? "\n" + loc.Format("result.chapter_done", m.FinishedChapter.Planet(loc.Current)) : "");
-                if (m.BestStars > m.Stars) body.text += "\n" + loc.Format("result.best_stars", m.BestStars);
+                body.text = m.IsLast ? loc.Get("result.journey_done")
+                    : m.FinishedChapter != null ? loc.Format("result.chapter_done", m.FinishedChapter.Planet(loc.Current)) : "";
             }
             else
             {
@@ -183,21 +261,44 @@ namespace SevenSteps.Game.UI
             }
             ShowStarLabels(m);
             Set(Label(next), m.IsLast ? "result.ending" : "result.next"); // last stage: [끝까지 보기] -> the ending (16.8)
+            Arrange(m);
             if (redraw) return;
-            next.gameObject.SetActive(m.Cleared);
-            again.gameObject.SetActive(m.Cleared);
-            select.gameObject.SetActive(true);
-            undo.gameObject.SetActive(!m.Cleared);
-            restart.gameObject.SetActive(!m.Cleared);
+            ShowTip(-1);
             overlay.SetActive(true);
+            HudHidden?.Invoke(m.Cleared);
             ShowStars(m.Cleared ? m.Stars : 0);
+        }
+
+        /// A clear over the board or the loss modal: scrim, which group shows, where body and stage select sit.
+        void Arrange(ResultModel m)
+        {
+            bool clear = m.Cleared;
+            var c = scrim.color;
+            scrim.color = new Color(c.r, c.g, c.b, clear ? ClearScrimAlpha : LossScrimAlpha);
+            scrim.raycastTarget = true;
+            panel.gameObject.SetActive(!clear);
+            clearGroup.gameObject.SetActive(clear);
+            if (clear)
+            {
+                Dock(body.rectTransform, finalePlate, 16);
+                body.alignment = TextAnchor.MiddleCenter;
+                finalePlate.gameObject.SetActive(body.text.Length > 0);
+            }
+            else bodyHome.Restore(body.rectTransform);
+            next.gameObject.SetActive(clear); // the last stage: [끝까지 보기] (GameFlowController.EndingRequested)
+            again.gameObject.SetActive(false); // R in Result (GameController / flow), not a button on the minimal result
+            select.gameObject.SetActive(!clear); // Esc in Result: the menu, then stage select
+            undo.gameObject.SetActive(!clear);
+            restart.gameObject.SetActive(!clear);
         }
 
         public void Hide()
         {
             Wire();
             if (reveal != null) { StopCoroutine(reveal); reveal = null; }
+            bool was = overlay.activeSelf;
             overlay.SetActive(false);
+            if (was) HudHidden?.Invoke(false);
         }
 
         Coroutine reveal;
@@ -208,19 +309,20 @@ namespace SevenSteps.Game.UI
         /// brothers / no undo or restart. Words only; whether a star was earned comes from the model.
         void ShowStarLabels(ResultModel m)
         {
-            bool on = m.Cleared && m.Stars > 0;
-            starLabels[0].transform.parent.gameObject.SetActive(on);
-            if (!on) return;
+            if (!(m.Cleared && m.Stars > 0)) { ShowTip(-1); return; }
             var font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
-            starLabels[0].text = loc.Get("result.star1");
-            starLabels[1].text = loc.Format(m.MinBodies == 1 ? "result.star2_one" : "result.star2_many", m.MinBodies);
-            starLabels[2].text = loc.Get("result.star3");
+            // One line each on the tip plate beside the stars (the table strings break for the old two-line columns).
+            starLabels[0].text = OneLine(loc.Get("result.star1"));
+            starLabels[1].text = OneLine(loc.Format(m.MinBodies == 1 ? "result.star2_one" : "result.star2_many", m.MinBodies));
+            starLabels[2].text = OneLine(loc.Get("result.star3"));
             for (int k = 0; k < starLabels.Length; k++)
             {
                 starLabels[k].font = font;
                 starLabels[k].color = k < m.Stars ? Ui.Ink : Ui.Dim;
             }
         }
+
+        static string OneLine(string s) => s.Replace(",\n", ", ").Replace("\n", " ");
 
         void ShowStars(int earned)
         {

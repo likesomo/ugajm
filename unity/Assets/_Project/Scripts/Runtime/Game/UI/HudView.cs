@@ -238,6 +238,18 @@ namespace SevenSteps.Game.UI
         /// because the HUD toggles its pieces while playing; smoke runs only.
         public void HideForSmoke() => smokeHidden = true;
 
+        /// Clear result over the board (docs 14.7): the whole HUD invisible and out of raycasts (CanvasGroup), the board's
+        /// world labels too; false brings it back as it was.
+        public void Conceal(bool hidden)
+        {
+            if (!TryGetComponent<CanvasGroup>(out var group)) group = gameObject.AddComponent<CanvasGroup>();
+            group.alpha = hidden ? 0f : 1f;
+            group.blocksRaycasts = !hidden;
+            group.interactable = !hidden;
+        }
+
+        public bool Concealed => TryGetComponent<CanvasGroup>(out var g) && g.alpha == 0f;
+
         bool smokeHidden;
 
         void LateUpdate()

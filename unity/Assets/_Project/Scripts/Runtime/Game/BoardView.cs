@@ -542,6 +542,7 @@ namespace SevenSteps.Game
             DrawChoice();
 
             // Star trail (design/art/star-trail.md): rebuilt from s, lights up new marks only after Present.
+            trail.ReduceMotion = ReduceMotion;
             trail.Show(s, pop);
         }
 

@@ -300,12 +300,17 @@ namespace SevenSteps.EditorTools
             } }, $"stage {widest + 1} step numbers");
             yield return (new Screen { Name = "Result", GameplayUi = true, Build = (c, root) =>
             {
-                BuildHud(c, longestHint);
+                // Clear over the board (docs 14.7, 9eda0b0): the HUD hides, the result keeps clear of the board area.
+                // Interim glue by gameplay-ui so the new ResultView builds; scene-flow finishes the 'Result clear' checks
+                // (scrim raycast, HUD hidden, the star tip shown).
+                var hud = BuildHud(c, longestHint);
                 var r = ResultView.Create();
+                r.HudHidden += hud.Conceal;
                 r.Apply(c.Loc);
                 bool last = c.Levels.Length > 0;
+                c.Board = BoardArea(c, c.Levels.Length - 1);
                 r.Show(ResultModel.Clear(c.Levels.Length - 1, 3, 3, 1, 1, last, 3, 3));
-                return r.gameObject;
+                return null; // not a modal: the scrim is 0.25 (14.7)
             } }, "clear");
         }
 
