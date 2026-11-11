@@ -5,7 +5,8 @@
 // Proposals (experimental rules / another stage order), paths relative to the repo root:
 //   --core <rules.js> --levels <module exporting LEVELS> --html <out.html> --json <out.json>
 //   --title <text> --compare <earlier level-metrics.json>   (draws that run's D/I faintly, matched by stage name)
-//   --qa <reports/qa/qa-report.json>   (tools/qa-report.mjs: measured mean tries per stage on a right-hand axis, matched by stage name)
+//   --qa <reports/qa/qa-report.json>   (tools/qa-report.mjs: measured mean tries per stage on a right-hand axis, matched by stage name;
+//                                       a stage renamed since the QA build matches by number)
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -298,7 +299,10 @@ function renderHtml(rows) {
     if (!QA) return '';
     let d = '', pen = 'M', marks = '';
     rows.forEach((r, i) => {
-      const q = qaByName.get(r.name);
+      // A stage renamed after the QA build (23 and 37 after QA 1) falls back to the same stage number,
+      // but only when that QA stage's name is not used by any current stage (so a reorder never matches the wrong map).
+      const byNum = QA.levels.find((l) => l.level === r.idx);
+      const q = qaByName.get(r.name) ?? (byNum && !rows.some((o) => o.name === byNum.name) ? byNum : undefined);
       if (!q || q.meanTries === null) { pen = 'M'; return; }
       d += `${pen}${x(i).toFixed(1)},${qaY(q.meanTries).toFixed(1)} `; pen = 'L';
       const warn = QA.warnings.filter((w) => w.level === q.level);

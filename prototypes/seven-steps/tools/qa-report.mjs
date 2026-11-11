@@ -26,7 +26,7 @@ const MD = argv.includes('--no-md') ? null : fromRoot(arg('md', 'design/levels/q
 
 // ---- Assumptions (written into the report; tune after the first run) ----
 const Q = {
-  maxAttempts: 15,            // qa-play-plan 2: over 15 tries → gave_up
+  maxAttempts: Number(arg('max-attempts', 15)), // tester try cap (qa-play-plan 2: 15; QA 1 ran with 10). gave_up also comes from a tester giving up early
   predicted: (D) => 1 + 5 * D, // expected tries per tester from model D (0..1 → 1..6). No data behind it yet: first QA run calibrates it
   tooHardRatio: 2,            // warning when mean tries ≥ 2 × predicted
   outcomes: ['clear', 'restart', 'fell', 'out_of_bodies', 'gave_up'],
@@ -134,7 +134,7 @@ const levels = stageRows.map((st, k) => {
 const warnings = [];
 const played = levels.filter((l) => l.testers > 0);
 for (const l of played) {
-  if (l.gaveUp) warnings.push({ level: l.level, kind: 'gave_up', text: `${l.gaveUp}/${l.testers}명 포기 (상한 ${Q.maxAttempts}회)` });
+  if (l.gaveUp) warnings.push({ level: l.level, kind: 'gave_up', text: `${l.gaveUp}/${l.testers}명 포기 줄 있음 (상한 ${Q.maxAttempts}회 도달 또는 스스로 포기)` });
   if (l.ratioToPredicted !== null && l.ratioToPredicted >= Q.tooHardRatio)
     warnings.push({ level: l.level, kind: 'too_hard', text: `평균 ${l.meanTries}회, 예측 ${l.predictedTries}회의 ${l.ratioToPredicted}배` });
   if (l.testers === testers.length && l.maxTries === 1 && l.clearRate === 1)

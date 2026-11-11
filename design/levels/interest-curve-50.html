@@ -2,333 +2,435 @@
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Seven Steps Interest Curve</title>
 <style>
-:root{--bg:#fbfaf7;--fg:#22211f;--muted:#6b6862;--grid:#e3e0d9;--d:#c2571a;--i:#2b6cb0;--base:#8a8580;--drop:rgba(214,69,65,.12);--intro:#3f8f5a;--insert:#d64541;--card:#fff;--line:#e8e5de}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1a1917;--fg:#ece9e3;--muted:#a19d96;--grid:#34322e;--d:#f08a4b;--i:#6aa9ee;--base:#8f8a83;--drop:rgba(240,100,95,.16);--intro:#6cc28a;--insert:#f06c66;--card:#22211e;--line:#33312d}}
-:root[data-theme="dark"]{--bg:#1a1917;--fg:#ece9e3;--muted:#a19d96;--grid:#34322e;--d:#f08a4b;--i:#6aa9ee;--base:#8f8a83;--drop:rgba(240,100,95,.16);--intro:#6cc28a;--insert:#f06c66;--card:#22211e;--line:#33312d}
+:root{--bg:#fbfaf7;--fg:#22211f;--muted:#6b6862;--grid:#e3e0d9;--d:#c2571a;--i:#2b6cb0;--base:#8a8580;--drop:rgba(214,69,65,.12);--intro:#3f8f5a;--insert:#d64541;--card:#fff;--line:#e8e5de;--q:#6b4fa0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1a1917;--fg:#ece9e3;--muted:#a19d96;--grid:#34322e;--d:#f08a4b;--i:#6aa9ee;--base:#8f8a83;--drop:rgba(240,100,95,.16);--intro:#6cc28a;--insert:#f06c66;--card:#22211e;--line:#33312d;--q:#b59be6}}
+:root[data-theme="dark"]{--bg:#1a1917;--fg:#ece9e3;--muted:#a19d96;--grid:#34322e;--d:#f08a4b;--i:#6aa9ee;--base:#8f8a83;--drop:rgba(240,100,95,.16);--intro:#6cc28a;--insert:#f06c66;--card:#22211e;--line:#33312d;--q:#b59be6}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI","Malgun Gothic",sans-serif}
 main{max-width:1040px;margin:0 auto;padding:24px 16px 48px}h1{font-size:22px;margin:0 0 4px}p.sub{color:var(--muted);margin:0 0 16px}
 .legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted);margin:0 0 8px}.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px}
 svg{width:100%;height:auto;display:block}.grid{stroke:var(--grid)}.grid.zero{stroke:var(--muted);stroke-dasharray:2 3}.tick{fill:var(--muted);font-size:12px}
 .baseline{stroke:var(--base);stroke-width:1.5;stroke-dasharray:6 4}.baselabel{fill:var(--base);font-size:12px}
-.lineD{fill:none;stroke:var(--d);stroke-width:2.5}.lineI{fill:none;stroke:var(--i);stroke-width:3}.dotD{fill:var(--d)}.ghostD,.ghostI{fill:none;stroke-width:2;stroke-dasharray:5 4;opacity:.45}.ghostD{stroke:var(--d)}.ghostI{stroke:var(--i)}.dotI{fill:var(--i)}
+.lineD{fill:none;stroke:var(--d);stroke-width:2.5}.lineI{fill:none;stroke:var(--i);stroke-width:3}.dotD{fill:var(--d)}.ghostD,.ghostI{fill:none;stroke-width:2;stroke-dasharray:5 4;opacity:.45}.ghostD{stroke:var(--d)}.ghostI{stroke:var(--i)}.dotI{fill:var(--i)}.lineQ{fill:none;stroke:var(--q);stroke-width:2.5;stroke-dasharray:1 0}.dotQ{fill:var(--q)}.warnQ{stroke:var(--insert);stroke-width:2.5}.qtick{fill:var(--q)}
 .drop{fill:var(--drop)}.intro{stroke:var(--intro);stroke-dasharray:3 3}.introlabel{fill:var(--intro);font-size:11px}.insert path{fill:var(--insert)}
 .tablewrap{overflow-x:auto;margin-top:20px}table{border-collapse:collapse;font-size:13px;min-width:900px;width:100%}
 th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--muted);font-weight:600}
 td:nth-child(2){white-space:nowrap}td.num{text-align:right;font-variant-numeric:tabular-nums}td.strong{font-weight:700}tr.is-drop td{background:var(--drop)}.new{color:var(--intro)}.reason{color:var(--muted);max-width:280px}
 </style></head><body><main>
 <h1>일곱 걸음 — 난이도·흥미도 곡선</h1>
-<p class="sub">50스테이지 후보 전체 (묶음 1-5) · 50개 스테이지. 모델: design/levels/interest-model.md · 생성: tools/level-metrics.mjs</p>
+<p class="sub">50스테이지 + QA 1차 실측 · 50개 스테이지. 모델: design/levels/interest-model.md · 생성: tools/level-metrics.mjs</p>
 <div class="legend"><span><i style="background:var(--d)"></i>난이도 D</span><span><i style="background:var(--i)"></i>흥미도 I</span>
-<span><i style="background:var(--base)"></i>기준선</span><span><i style="background:var(--drop);height:10px"></i>흥미도 하락 구간</span>
+<span><i style="background:var(--base)"></i>기준선</span><span><i style="background:var(--q)"></i>QA 실측 평균 시도(오른쪽 눈금, 테스터 3명 AI, 빨간 테두리 = 경고)</span><span><i style="background:var(--drop);height:10px"></i>흥미도 하락 구간</span>
 <span><i style="background:var(--intro)"></i>새 요소 등장</span><span><i style="background:var(--insert);height:8px;width:8px"></i>새 기믹 투입 지점</span></div>
 <div class="card"><svg viewBox="0 0 960 440" role="img" aria-label="스테이지별 난이도와 흥미도 곡선">
-  <line x1="56" x2="936" y1="376" y2="376" class="grid"/><text x="48" y="380" class="tick" text-anchor="end">-0.2</text><line x1="56" x2="936" y1="324" y2="324" class="grid zero"/><text x="48" y="328" class="tick" text-anchor="end">0.0</text><line x1="56" x2="936" y1="272" y2="272" class="grid"/><text x="48" y="276" class="tick" text-anchor="end">0.2</text><line x1="56" x2="936" y1="220" y2="220" class="grid"/><text x="48" y="224" class="tick" text-anchor="end">0.4</text><line x1="56" x2="936" y1="168" y2="168" class="grid"/><text x="48" y="172" class="tick" text-anchor="end">0.6</text><line x1="56" x2="936" y1="115.99999999999999" y2="115.99999999999999" class="grid"/><text x="48" y="119.99999999999999" class="tick" text-anchor="end">0.8</text><line x1="56" x2="936" y1="64" y2="64" class="grid"/><text x="48" y="68" class="tick" text-anchor="end">1.0</text><rect x="154.77551020408163" y="64" width="17.959183673469386" height="312" class="drop"><title>7. 두 개의 문: 흥미도 하락 (I=0.4)</title></rect><rect x="190.6938775510204" y="64" width="17.959183673469386" height="312" class="drop"><title>9. 바통 넘기기: 흥미도 하락 (I=0.47)</title></rect><rect x="226.6122448979592" y="64" width="17.959183673469386" height="312" class="drop"><title>11. 다리냐 선돌이냐: 흥미도 하락 (I=0.52)</title></rect><rect x="244.57142857142856" y="64" width="17.959183673469386" height="312" class="drop"><title>12. 건너편에서 깨어나기: 흥미도 하락 (I=0.38)</title></rect><rect x="298.44897959183675" y="64" width="17.959183673469386" height="312" class="drop"><title>15. 숫자 문: 흥미도 하락 (I=0.34)</title></rect><rect x="370.2857142857143" y="64" width="17.959183673469386" height="312" class="drop"><title>19. 숫자와 구멍: 흥미도 하락 (I=0.39)</title></rect><rect x="460.0816326530612" y="64" width="17.959183673469386" height="312" class="drop"><title>24. 얼음 위의 숫자: 흥미도 하락 (I=0.43)</title></rect><rect x="567.8367346938776" y="64" width="17.959183673469386" height="312" class="drop"><title>30. 열면 닫힌다: 흥미도 하락 (I=0.5)</title></rect><rect x="603.7551020408163" y="64" width="17.959183673469386" height="312" class="drop"><title>32. 레버와 발판: 흥미도 하락 (I=0.4)</title></rect><rect x="621.7142857142857" y="64" width="17.959183673469386" height="312" class="drop"><title>33. 레버와 숫자: 흥미도 하락 (I=0.38)</title></rect><rect x="657.6326530612245" y="64" width="17.959183673469386" height="312" class="drop"><title>35. 결구의 장치: 흥미도 하락 (I=0.39)</title></rect><rect x="693.5510204081633" y="64" width="17.959183673469386" height="312" class="drop"><title>37. 무너진 길 위의 구멍: 흥미도 하락 (I=0.44)</title></rect><line x1="56" x2="56" y1="58" y2="376" class="intro"/><text x="56" y="52" class="introlabel" text-anchor="start">7걸음</text><line x1="73.95918367346938" x2="73.95918367346938" y1="42" y2="376" class="intro"/><text x="73.95918367346938" y="36" class="introlabel" text-anchor="middle">돌아가기</text><line x1="91.91836734693877" x2="91.91836734693877" y1="58" y2="376" class="intro"/><text x="91.91836734693877" y="52" class="introlabel" text-anchor="middle">route</text><line x1="109.87755102040816" x2="109.87755102040816" y1="42" y2="376" class="intro"/><text x="109.87755102040816" y="36" class="introlabel" text-anchor="middle">KEEP 석상·발판·문</text><line x1="127.83673469387755" x2="127.83673469387755" y1="58" y2="376" class="intro"/><text x="127.83673469387755" y="52" class="introlabel" text-anchor="middle">plateChoice</text><line x1="145.79591836734693" x2="145.79591836734693" y1="42" y2="376" class="intro"/><text x="145.79591836734693" y="36" class="introlabel" text-anchor="middle">statueBlock</text><line x1="163.75510204081633" x2="163.75510204081633" y1="58" y2="376" class="intro"/><text x="163.75510204081633" y="52" class="introlabel" text-anchor="middle">석상 여러 개</text><line x1="181.71428571428572" x2="181.71428571428572" y1="42" y2="376" class="intro"/><text x="181.71428571428572" y="36" class="introlabel" text-anchor="middle">SWITCH</text><line x1="199.6734693877551" x2="199.6734693877551" y1="58" y2="376" class="intro"/><text x="199.6734693877551" y="52" class="introlabel" text-anchor="middle">relay</text><line x1="217.6326530612245" x2="217.6326530612245" y1="42" y2="376" class="intro"/><text x="217.6326530612245" y="36" class="introlabel" text-anchor="middle">몸 다리·구덩이</text><line x1="271.51020408163265" x2="271.51020408163265" y1="58" y2="376" class="intro"/><text x="271.51020408163265" y="52" class="introlabel" text-anchor="middle">multiBridge</text><line x1="289.46938775510205" x2="289.46938775510205" y1="42" y2="376" class="intro"/><text x="289.46938775510205" y="36" class="introlabel" text-anchor="middle">출발점 되돌리기</text><line x1="307.42857142857144" x2="307.42857142857144" y1="58" y2="376" class="intro"/><text x="307.42857142857144" y="52" class="introlabel" text-anchor="middle">숫자 문</text><line x1="361.3061224489796" x2="361.3061224489796" y1="42" y2="376" class="intro"/><text x="361.3061224489796" y="36" class="introlabel" text-anchor="middle">recount</text><line x1="433.14285714285717" x2="433.14285714285717" y1="42" y2="376" class="intro"/><text x="433.14285714285717" y="36" class="introlabel" text-anchor="middle">얼음</text><line x1="451.1020408163265" x2="451.1020408163265" y1="58" y2="376" class="intro"/><text x="451.1020408163265" y="52" class="introlabel" text-anchor="middle">홀짝</text><line x1="487.0204081632653" x2="487.0204081632653" y1="58" y2="376" class="intro"/><text x="487.0204081632653" y="52" class="introlabel" text-anchor="middle">석상 멈춤벽</text><line x1="558.8571428571429" x2="558.8571428571429" y1="58" y2="376" class="intro"/><text x="558.8571428571429" y="52" class="introlabel" text-anchor="middle">레버</text><line x1="594.7755102040817" x2="594.7755102040817" y1="58" y2="376" class="intro"/><text x="594.7755102040817" y="52" class="introlabel" text-anchor="middle">raiseStopper</text><line x1="684.5714285714286" x2="684.5714285714286" y1="42" y2="376" class="intro"/><text x="684.5714285714286" y="36" class="introlabel" text-anchor="middle">금 간 바닥·봉인 다리</text><line x1="720.4897959183673" x2="720.4897959183673" y1="42" y2="376" class="intro"/><text x="720.4897959183673" y="36" class="introlabel" text-anchor="middle">석상 수 문</text><line x1="738.4489795918367" x2="738.4489795918367" y1="58" y2="376" class="intro"/><text x="738.4489795918367" y="52" class="introlabel" text-anchor="middle">열쇠 석상</text><line x1="756.4081632653061" x2="756.4081632653061" y1="42" y2="376" class="intro"/><text x="756.4081632653061" y="36" class="introlabel" text-anchor="middle">0개 문</text><line x1="810.2857142857143" x2="810.2857142857143" y1="58" y2="376" class="intro"/><text x="810.2857142857143" y="52" class="introlabel" text-anchor="middle">진흙</text>
-  <line x1="56" x2="936" y1="233.00000000000003" y2="233.00000000000003" class="baseline"/>
-  <text x="936" y="227.00000000000003" class="baselabel" text-anchor="end">기준선 0.35</text>
-  <path d="M56.0,279.8 L74.0,282.4 L91.9,272.0 L109.9,222.6 L127.8,238.2 L145.8,230.4 L163.8,207.0 L181.7,227.8 L199.7,191.4 L217.6,248.6 L235.6,212.2 L253.6,222.6 L271.5,222.6 L289.5,186.2 L307.4,292.8 L325.4,246.0 L343.3,243.4 L361.3,243.4 L379.3,248.6 L397.2,225.2 L415.2,207.0 L433.1,279.8 L451.1,292.8 L469.1,227.8 L487.0,217.4 L505.0,220.0 L522.9,212.2 L540.9,209.6 L558.9,227.8 L576.8,194.0 L594.8,225.2 L612.7,220.0 L630.7,168.0 L648.7,178.4 L666.6,178.4 L684.6,207.0 L702.5,191.4 L720.5,230.4 L738.4,199.2 L756.4,204.4 L774.4,175.8 L792.3,175.8 L810.3,285.0 L828.2,188.8 L846.2,217.4 L864.2,196.6 L882.1,220.0 L900.1,183.6 L918.0,173.2 L936.0,170.6" class="lineD"/><path d="M56.0,214.8 L74.0,160.2 L91.9,175.8 L109.9,188.8 L127.8,168.0 L145.8,165.4 L163.8,220.0 L181.7,121.2 L199.7,201.8 L217.6,134.2 L235.6,188.8 L253.6,225.2 L271.5,165.4 L289.5,188.8 L307.4,235.6 L325.4,214.8 L343.3,207.0 L361.3,139.4 L379.3,222.6 L397.2,217.4 L415.2,201.8 L433.1,188.8 L451.1,144.6 L469.1,212.2 L487.0,178.4 L505.0,212.2 L522.9,186.2 L540.9,212.2 L558.9,139.4 L576.8,194.0 L594.8,134.2 L612.7,220.0 L630.7,225.2 L648.7,199.2 L666.6,222.6 L684.6,118.6 L702.5,209.6 L720.5,160.2 L738.4,155.0 L756.4,136.8 L774.4,162.8 L792.3,191.4 L810.3,217.4 L828.2,217.4 L846.2,209.6 L864.2,173.2 L882.1,204.4 L900.1,165.4 L918.0,186.2 L936.0,152.4" class="lineI"/>
+  <line x1="56" x2="916" y1="376" y2="376" class="grid"/><text x="48" y="380" class="tick" text-anchor="end">-0.2</text><line x1="56" x2="916" y1="324" y2="324" class="grid zero"/><text x="48" y="328" class="tick" text-anchor="end">0.0</text><line x1="56" x2="916" y1="272" y2="272" class="grid"/><text x="48" y="276" class="tick" text-anchor="end">0.2</text><line x1="56" x2="916" y1="220" y2="220" class="grid"/><text x="48" y="224" class="tick" text-anchor="end">0.4</text><line x1="56" x2="916" y1="168" y2="168" class="grid"/><text x="48" y="172" class="tick" text-anchor="end">0.6</text><line x1="56" x2="916" y1="115.99999999999999" y2="115.99999999999999" class="grid"/><text x="48" y="119.99999999999999" class="tick" text-anchor="end">0.8</text><line x1="56" x2="916" y1="64" y2="64" class="grid"/><text x="48" y="68" class="tick" text-anchor="end">1.0</text><rect x="152.53061224489795" y="64" width="17.551020408163264" height="312" class="drop"><title>7. 두 개의 문: 흥미도 하락 (I=0.4)</title></rect><rect x="187.6326530612245" y="64" width="17.551020408163264" height="312" class="drop"><title>9. 바통 넘기기: 흥미도 하락 (I=0.47)</title></rect><rect x="222.73469387755102" y="64" width="17.551020408163264" height="312" class="drop"><title>11. 다리냐 선돌이냐: 흥미도 하락 (I=0.52)</title></rect><rect x="240.28571428571428" y="64" width="17.551020408163264" height="312" class="drop"><title>12. 건너편에서 깨어나기: 흥미도 하락 (I=0.38)</title></rect><rect x="292.9387755102041" y="64" width="17.551020408163264" height="312" class="drop"><title>15. 숫자 문: 흥미도 하락 (I=0.34)</title></rect><rect x="363.14285714285717" y="64" width="17.551020408163264" height="312" class="drop"><title>19. 숫자와 구멍: 흥미도 하락 (I=0.39)</title></rect><rect x="450.8979591836735" y="64" width="17.551020408163264" height="312" class="drop"><title>24. 얼음 위의 숫자: 흥미도 하락 (I=0.43)</title></rect><rect x="556.204081632653" y="64" width="17.551020408163264" height="312" class="drop"><title>30. 열면 닫힌다: 흥미도 하락 (I=0.5)</title></rect><rect x="591.3061224489795" y="64" width="17.551020408163264" height="312" class="drop"><title>32. 레버와 발판: 흥미도 하락 (I=0.4)</title></rect><rect x="608.8571428571428" y="64" width="17.551020408163264" height="312" class="drop"><title>33. 레버와 숫자: 흥미도 하락 (I=0.38)</title></rect><rect x="643.9591836734693" y="64" width="17.551020408163264" height="312" class="drop"><title>35. 결구의 장치: 흥미도 하락 (I=0.39)</title></rect><rect x="679.0612244897959" y="64" width="17.551020408163264" height="312" class="drop"><title>37. 무너질 길: 흥미도 하락 (I=0.44)</title></rect><line x1="56" x2="56" y1="58" y2="376" class="intro"/><text x="56" y="52" class="introlabel" text-anchor="start">7걸음</text><line x1="73.55102040816327" x2="73.55102040816327" y1="42" y2="376" class="intro"/><text x="73.55102040816327" y="36" class="introlabel" text-anchor="middle">돌아가기</text><line x1="91.10204081632654" x2="91.10204081632654" y1="58" y2="376" class="intro"/><text x="91.10204081632654" y="52" class="introlabel" text-anchor="middle">route</text><line x1="108.65306122448979" x2="108.65306122448979" y1="42" y2="376" class="intro"/><text x="108.65306122448979" y="36" class="introlabel" text-anchor="middle">KEEP 석상·발판·문</text><line x1="126.20408163265306" x2="126.20408163265306" y1="58" y2="376" class="intro"/><text x="126.20408163265306" y="52" class="introlabel" text-anchor="middle">plateChoice</text><line x1="143.75510204081633" x2="143.75510204081633" y1="42" y2="376" class="intro"/><text x="143.75510204081633" y="36" class="introlabel" text-anchor="middle">statueBlock</text><line x1="161.30612244897958" x2="161.30612244897958" y1="58" y2="376" class="intro"/><text x="161.30612244897958" y="52" class="introlabel" text-anchor="middle">석상 여러 개</text><line x1="178.85714285714286" x2="178.85714285714286" y1="42" y2="376" class="intro"/><text x="178.85714285714286" y="36" class="introlabel" text-anchor="middle">SWITCH</text><line x1="196.40816326530611" x2="196.40816326530611" y1="58" y2="376" class="intro"/><text x="196.40816326530611" y="52" class="introlabel" text-anchor="middle">relay</text><line x1="213.9591836734694" x2="213.9591836734694" y1="42" y2="376" class="intro"/><text x="213.9591836734694" y="36" class="introlabel" text-anchor="middle">몸 다리·구덩이</text><line x1="266.61224489795916" x2="266.61224489795916" y1="58" y2="376" class="intro"/><text x="266.61224489795916" y="52" class="introlabel" text-anchor="middle">multiBridge</text><line x1="284.1632653061224" x2="284.1632653061224" y1="42" y2="376" class="intro"/><text x="284.1632653061224" y="36" class="introlabel" text-anchor="middle">출발점 되돌리기</text><line x1="301.7142857142857" x2="301.7142857142857" y1="58" y2="376" class="intro"/><text x="301.7142857142857" y="52" class="introlabel" text-anchor="middle">숫자 문</text><line x1="354.3673469387755" x2="354.3673469387755" y1="42" y2="376" class="intro"/><text x="354.3673469387755" y="36" class="introlabel" text-anchor="middle">recount</text><line x1="424.57142857142856" x2="424.57142857142856" y1="42" y2="376" class="intro"/><text x="424.57142857142856" y="36" class="introlabel" text-anchor="middle">얼음</text><line x1="442.1224489795918" x2="442.1224489795918" y1="58" y2="376" class="intro"/><text x="442.1224489795918" y="52" class="introlabel" text-anchor="middle">홀짝</text><line x1="477.2244897959184" x2="477.2244897959184" y1="58" y2="376" class="intro"/><text x="477.2244897959184" y="52" class="introlabel" text-anchor="middle">석상 멈춤벽</text><line x1="547.4285714285714" x2="547.4285714285714" y1="58" y2="376" class="intro"/><text x="547.4285714285714" y="52" class="introlabel" text-anchor="middle">레버</text><line x1="582.530612244898" x2="582.530612244898" y1="58" y2="376" class="intro"/><text x="582.530612244898" y="52" class="introlabel" text-anchor="middle">raiseStopper</text><line x1="670.2857142857143" x2="670.2857142857143" y1="42" y2="376" class="intro"/><text x="670.2857142857143" y="36" class="introlabel" text-anchor="middle">금 간 바닥·봉인 다리</text><line x1="705.3877551020408" x2="705.3877551020408" y1="42" y2="376" class="intro"/><text x="705.3877551020408" y="36" class="introlabel" text-anchor="middle">석상 수 문</text><line x1="722.9387755102041" x2="722.9387755102041" y1="58" y2="376" class="intro"/><text x="722.9387755102041" y="52" class="introlabel" text-anchor="middle">열쇠 석상</text><line x1="740.4897959183673" x2="740.4897959183673" y1="42" y2="376" class="intro"/><text x="740.4897959183673" y="36" class="introlabel" text-anchor="middle">0개 문</text><line x1="793.1428571428571" x2="793.1428571428571" y1="58" y2="376" class="intro"/><text x="793.1428571428571" y="52" class="introlabel" text-anchor="middle">진흙</text>
+  <line x1="56" x2="916" y1="233.00000000000003" y2="233.00000000000003" class="baseline"/>
+  <text x="916" y="227.00000000000003" class="baselabel" text-anchor="end">기준선 0.35</text>
+  <path d="M56.0,279.8 L73.6,282.4 L91.1,272.0 L108.7,222.6 L126.2,238.2 L143.8,230.4 L161.3,207.0 L178.9,227.8 L196.4,191.4 L214.0,248.6 L231.5,212.2 L249.1,222.6 L266.6,222.6 L284.2,186.2 L301.7,292.8 L319.3,246.0 L336.8,243.4 L354.4,243.4 L371.9,248.6 L389.5,225.2 L407.0,207.0 L424.6,279.8 L442.1,292.8 L459.7,227.8 L477.2,217.4 L494.8,220.0 L512.3,212.2 L529.9,209.6 L547.4,227.8 L565.0,194.0 L582.5,225.2 L600.1,220.0 L617.6,168.0 L635.2,178.4 L652.7,178.4 L670.3,207.0 L687.8,191.4 L705.4,230.4 L722.9,199.2 L740.5,204.4 L758.0,175.8 L775.6,175.8 L793.1,285.0 L810.7,188.8 L828.2,217.4 L845.8,196.6 L863.3,220.0 L880.9,183.6 L898.4,173.2 L916.0,170.6" class="lineD"/><path d="M56.0,214.8 L73.6,160.2 L91.1,175.8 L108.7,188.8 L126.2,168.0 L143.8,165.4 L161.3,220.0 L178.9,121.2 L196.4,201.8 L214.0,134.2 L231.5,188.8 L249.1,225.2 L266.6,165.4 L284.2,188.8 L301.7,235.6 L319.3,214.8 L336.8,207.0 L354.4,139.4 L371.9,222.6 L389.5,217.4 L407.0,201.8 L424.6,188.8 L442.1,144.6 L459.7,212.2 L477.2,178.4 L494.8,212.2 L512.3,186.2 L529.9,212.2 L547.4,139.4 L565.0,194.0 L582.5,134.2 L600.1,220.0 L617.6,225.2 L635.2,199.2 L652.7,222.6 L670.3,118.6 L687.8,209.6 L705.4,160.2 L722.9,155.0 L740.5,136.8 L758.0,162.8 L775.6,191.4 L793.1,217.4 L810.7,217.4 L828.2,209.6 L845.8,173.2 L863.3,204.4 L880.9,165.4 L898.4,186.2 L916.0,152.4" class="lineI"/>
   <circle cx="56" cy="279.79999999999995" r="5" class="dotD"><title>1. 일곱 걸음
 D 0.17  I 0.42
 N 0.7  A 0.3  C 0.3  F 0
-7걸음</title></circle><circle cx="73.95918367346938" cy="282.4" r="5" class="dotD"><title>2. 늦게 도착하기
+7걸음</title></circle><circle cx="73.55102040816327" cy="282.4" r="5" class="dotD"><title>2. 늦게 도착하기
 D 0.16  I 0.63
 N 0.7  A 0.5  C 0.68  F 0
-돌아가기, 7걸음</title></circle><circle cx="91.91836734693877" cy="272" r="5" class="dotD"><title>3. 딱 맞는 길
+돌아가기, 7걸음</title></circle><circle cx="91.10204081632654" cy="272" r="5" class="dotD"><title>3. 딱 맞는 길
 D 0.2  I 0.57
 N 0.7  A 0.3  C 0.67  F 0
-route, 7걸음</title></circle><circle cx="109.87755102040816" cy="222.6" r="5" class="dotD"><title>4. 돌이 된 몸
+route, 7걸음</title></circle><circle cx="108.65306122448979" cy="222.6" r="5" class="dotD"><title>4. 돌이 된 몸
 D 0.39  I 0.52
 N 1  A 0.6  C 0.14  F 0.04
-돌아가기, KEEP 석상, 발판·문, 7걸음</title></circle><circle cx="127.83673469387755" cy="238.2" r="5" class="dotD"><title>5. 가까운 발판
+돌아가기, KEEP 석상, 발판·문, 7걸음</title></circle><circle cx="126.20408163265306" cy="238.2" r="5" class="dotD"><title>5. 가까운 발판
 D 0.33  I 0.6
 N 0.7  A 0.5  C 0.76  F 0.17
-돌아가기, KEEP 석상, 발판·문, plateChoice, 7걸음</title></circle><circle cx="145.79591836734693" cy="230.4" r="5" class="dotD"><title>6. 길을 막는 선돌
+돌아가기, KEEP 석상, 발판·문, plateChoice, 7걸음</title></circle><circle cx="143.75510204081633" cy="230.4" r="5" class="dotD"><title>6. 길을 막는 선돌
 D 0.36  I 0.61
 N 0.7  A 0.6  C 0.75  F 0.21
-돌아가기, KEEP 석상, 발판·문, statueBlock, 7걸음</title></circle><circle cx="163.75510204081633" cy="207.00000000000003" r="5" class="dotD"><title>7. 두 개의 문
+돌아가기, KEEP 석상, 발판·문, statueBlock, 7걸음</title></circle><circle cx="161.30612244897958" cy="207.00000000000003" r="5" class="dotD"><title>7. 두 개의 문
 D 0.45  I 0.4
 N 0.7  A 0.3  C 0.49  F 0.25
-돌아가기, KEEP 석상, 석상 여러 개, 발판·문, 7걸음</title></circle><circle cx="181.71428571428572" cy="227.8" r="5" class="dotD"><title>8. 새 출발점
+돌아가기, KEEP 석상, 석상 여러 개, 발판·문, 7걸음</title></circle><circle cx="178.85714285714286" cy="227.8" r="5" class="dotD"><title>8. 새 출발점
 D 0.37  I 0.78
 N 0.7  A 0.6  C 0.98  F 0
-SWITCH, 7걸음</title></circle><circle cx="199.6734693877551" cy="191.4" r="5" class="dotD"><title>9. 바통 넘기기
+SWITCH, 7걸음</title></circle><circle cx="196.40816326530611" cy="191.4" r="5" class="dotD"><title>9. 바통 넘기기
 D 0.51  I 0.47
 N 0.7  A 0.4  C 0.45  F 0.1
-돌아가기, relay, SWITCH, 7걸음</title></circle><circle cx="217.6326530612245" cy="248.6" r="5" class="dotD"><title>10. 몸으로 놓는 다리
+돌아가기, relay, SWITCH, 7걸음</title></circle><circle cx="213.9591836734694" cy="248.6" r="5" class="dotD"><title>10. 몸으로 놓는 다리
 D 0.29  I 0.73
 N 1  A 0.5  C 0.76  F 0.05
-몸 다리, 돌아가기, 구덩이, 7걸음</title></circle><circle cx="235.59183673469389" cy="212.20000000000005" r="5" class="dotD"><title>11. 다리냐 선돌이냐
+몸 다리, 돌아가기, 구덩이, 7걸음</title></circle><circle cx="231.51020408163265" cy="212.20000000000005" r="5" class="dotD"><title>11. 다리냐 선돌이냐
 D 0.43  I 0.52
 N 0.4  A 0.5  C 0.97  F 0.34
-몸 다리, 돌아가기, KEEP 석상, 구덩이, 발판·문, 7걸음</title></circle><circle cx="253.55102040816325" cy="222.6" r="5" class="dotD"><title>12. 건너편에서 깨어나기
+몸 다리, 돌아가기, KEEP 석상, 구덩이, 발판·문, 7걸음</title></circle><circle cx="249.0612244897959" cy="222.6" r="5" class="dotD"><title>12. 건너편에서 깨어나기
 D 0.39  I 0.38
 N 0.4  A 0.6  C 0.74  F 0.55
-몸 다리, 돌아가기, 구덩이, SWITCH, 7걸음</title></circle><circle cx="271.51020408163265" cy="222.6" r="5" class="dotD"><title>13. 구멍 둘, 형제 셋
+몸 다리, 돌아가기, 구덩이, SWITCH, 7걸음</title></circle><circle cx="266.61224489795916" cy="222.6" r="5" class="dotD"><title>13. 구멍 둘, 형제 셋
 D 0.39  I 0.61
 N 0.7  A 0.4  C 0.95  F 0.24
-몸 다리, 돌아가기, multiBridge, 구덩이, 7걸음</title></circle><circle cx="289.46938775510205" cy="186.2" r="5" class="dotD"><title>14. 떠나온 자리
+몸 다리, 돌아가기, multiBridge, 구덩이, 7걸음</title></circle><circle cx="284.1632653061224" cy="186.2" r="5" class="dotD"><title>14. 떠나온 자리
 D 0.53  I 0.52
 N 0.7  A 0.6  C 0.41  F 0.09
-돌아가기, KEEP 석상, 발판·문, SWITCH, 출발점 되돌리기, 7걸음</title></circle><circle cx="307.42857142857144" cy="292.8" r="5" class="dotD"><title>15. 숫자 문
+돌아가기, KEEP 석상, 발판·문, SWITCH, 출발점 되돌리기, 7걸음</title></circle><circle cx="301.7142857142857" cy="292.8" r="5" class="dotD"><title>15. 숫자 문
 D 0.12  I 0.34
 N 0.7  A 0.35  C 0.12  F 0.07
-돌아가기, 숫자 문, 7걸음</title></circle><circle cx="325.38775510204084" cy="246" r="5" class="dotD"><title>16. 문 너머의 발판
+돌아가기, 숫자 문, 7걸음</title></circle><circle cx="319.265306122449" cy="246" r="5" class="dotD"><title>16. 문 너머의 발판
 D 0.3  I 0.42
 N 0.4  A 0.5  C 0.81  F 0.43
-돌아가기, 숫자 문, KEEP 석상, 발판·문, 7걸음</title></circle><circle cx="343.3469387755102" cy="243.39999999999998" r="5" class="dotD"><title>17. 갈림길의 숫자
+돌아가기, 숫자 문, KEEP 석상, 발판·문, 7걸음</title></circle><circle cx="336.81632653061223" cy="243.39999999999998" r="5" class="dotD"><title>17. 갈림길의 숫자
 D 0.31  I 0.45
 N 0.4  A 0.5  C 0.83  F 0.37
-돌아가기, 숫자 문, route, SWITCH, 7걸음</title></circle><circle cx="361.3061224489796" cy="243.39999999999998" r="5" class="dotD"><title>18. 처음부터 다시 세기
+돌아가기, 숫자 문, route, SWITCH, 7걸음</title></circle><circle cx="354.3673469387755" cy="243.39999999999998" r="5" class="dotD"><title>18. 처음부터 다시 세기
 D 0.31  I 0.71
 N 0.7  A 0.7  C 0.92  F 0.2
-돌아가기, 숫자 문, recount, SWITCH, 7걸음</title></circle><circle cx="379.265306122449" cy="248.6" r="5" class="dotD"><title>19. 숫자와 구멍
+돌아가기, 숫자 문, recount, SWITCH, 7걸음</title></circle><circle cx="371.9183673469388" cy="248.6" r="5" class="dotD"><title>19. 숫자와 구멍
 D 0.29  I 0.39
 N 0.4  A 0.4  C 0.71  F 0.33
-몸 다리, 돌아가기, 숫자 문, 구덩이, 7걸음</title></circle><circle cx="397.2244897959184" cy="225.20000000000002" r="5" class="dotD"><title>20. 두 숫자
+몸 다리, 돌아가기, 숫자 문, 구덩이, 7걸음</title></circle><circle cx="389.46938775510205" cy="225.20000000000002" r="5" class="dotD"><title>20. 두 숫자
 D 0.38  I 0.41
 N 0.4  A 0.4  C 0.99  F 0.57
-돌아가기, 숫자 문, SWITCH, 7걸음</title></circle><circle cx="415.18367346938777" cy="207.00000000000003" r="5" class="dotD"><title>21. 새김돌의 계산
+돌아가기, 숫자 문, SWITCH, 7걸음</title></circle><circle cx="407.0204081632653" cy="207.00000000000003" r="5" class="dotD"><title>21. 새김돌의 계산
 D 0.45  I 0.47
 N 0.4  A 0.5  C 1  F 0.49
-돌아가기, 숫자 문, KEEP 석상, 발판·문, SWITCH, 7걸음</title></circle><circle cx="433.14285714285717" cy="279.79999999999995" r="5" class="dotD"><title>22. 미끄러운 첫걸음
+돌아가기, 숫자 문, KEEP 석상, 발판·문, SWITCH, 7걸음</title></circle><circle cx="424.57142857142856" cy="279.79999999999995" r="5" class="dotD"><title>22. 미끄러운 첫걸음
 D 0.17  I 0.52
 N 0.7  A 0.4  C 0.47  F 0
-얼음, 7걸음</title></circle><circle cx="451.1020408163265" cy="292.8" r="5" class="dotD"><title>23. 홀수의 저주
+얼음, 7걸음</title></circle><circle cx="442.1224489795918" cy="292.8" r="5" class="dotD"><title>23. 홀수의 셈
 D 0.12  I 0.69
 N 0.7  A 0.75  C 0.73  F 0.1
-돌아가기, 얼음, 홀짝, 7걸음</title></circle><circle cx="469.0612244897959" cy="227.8" r="5" class="dotD"><title>24. 얼음 위의 숫자
+돌아가기, 얼음, 홀짝, 7걸음</title></circle><circle cx="459.6734693877551" cy="227.8" r="5" class="dotD"><title>24. 얼음 위의 숫자
 D 0.37  I 0.43
 N 0.4  A 0.5  C 0.89  F 0.48
-돌아가기, 숫자 문, 얼음, SWITCH, 7걸음</title></circle><circle cx="487.0204081632653" cy="217.4" r="5" class="dotD"><title>25. 멈춰 세우는 석상
+돌아가기, 숫자 문, 얼음, SWITCH, 7걸음</title></circle><circle cx="477.2244897959184" cy="217.4" r="5" class="dotD"><title>25. 멈춰 세우는 선돌
 D 0.41  I 0.56
 N 0.7  A 0.7  C 0.47  F 0.13
-돌아가기, 얼음, KEEP 석상, 석상 멈춤벽, 7걸음</title></circle><circle cx="504.9795918367347" cy="220" r="5" class="dotD"><title>26. 미끄럼을 막는 형제
+돌아가기, 얼음, KEEP 석상, 석상 멈춤벽, 7걸음</title></circle><circle cx="494.7755102040816" cy="220" r="5" class="dotD"><title>26. 미끄럼을 막는 형제
 D 0.4  I 0.43
 N 0.4  A 0.5  C 0.94  F 0.55
-돌아가기, 얼음, KEEP 석상, statueBlock, 석상 멈춤벽, 7걸음</title></circle><circle cx="522.9387755102041" cy="212.20000000000005" r="5" class="dotD"><title>27. 얼음 끝의 구멍
+돌아가기, 얼음, KEEP 석상, statueBlock, 석상 멈춤벽, 7걸음</title></circle><circle cx="512.3265306122448" cy="212.20000000000005" r="5" class="dotD"><title>27. 얼음 끝의 구멍
 D 0.43  I 0.53
 N 0.4  A 0.5  C 0.95  F 0.31
-몸 다리, 돌아가기, 얼음, 구덩이, 7걸음</title></circle><circle cx="540.8979591836735" cy="209.60000000000002" r="5" class="dotD"><title>28. 서리의 길목
+몸 다리, 돌아가기, 얼음, 구덩이, 7걸음</title></circle><circle cx="529.8775510204082" cy="209.60000000000002" r="5" class="dotD"><title>28. 서리의 길목
 D 0.44  I 0.43
 N 0.4  A 0.4  C 0.91  F 0.44
-돌아가기, 얼음, KEEP 석상, 발판·문, 7걸음</title></circle><circle cx="558.8571428571429" cy="227.8" r="5" class="dotD"><title>29. 내리는 벽
+돌아가기, 얼음, KEEP 석상, 발판·문, 7걸음</title></circle><circle cx="547.4285714285714" cy="227.8" r="5" class="dotD"><title>29. 내리는 벽
 D 0.37  I 0.71
 N 0.7  A 0.5  C 1  F 0.13
-돌아가기, KEEP 석상, 레버, 7걸음</title></circle><circle cx="576.8163265306123" cy="194" r="5" class="dotD"><title>30. 열면 닫힌다
+돌아가기, KEEP 석상, 레버, 7걸음</title></circle><circle cx="564.9795918367347" cy="194" r="5" class="dotD"><title>30. 열면 닫힌다
 D 0.5  I 0.5
 N 0.4  A 0.6  C 1  F 0.5
-돌아가기, KEEP 석상, 레버, SWITCH, 7걸음</title></circle><circle cx="594.7755102040817" cy="225.20000000000002" r="5" class="dotD"><title>31. 올려서 멈추기
+돌아가기, KEEP 석상, 레버, SWITCH, 7걸음</title></circle><circle cx="582.530612244898" cy="225.20000000000002" r="5" class="dotD"><title>31. 올려서 멈추기
 D 0.38  I 0.73
 N 0.7  A 0.7  C 0.99  F 0.21
-돌아가기, 얼음, KEEP 석상, 레버, raiseStopper, 7걸음</title></circle><circle cx="612.734693877551" cy="220" r="5" class="dotD"><title>32. 레버와 발판
+돌아가기, 얼음, KEEP 석상, 레버, raiseStopper, 7걸음</title></circle><circle cx="600.0816326530612" cy="220" r="5" class="dotD"><title>32. 레버와 발판
 D 0.4  I 0.4
 N 0.4  A 0.5  C 0.72  F 0.39
-KEEP 석상, 레버, 발판·문, 7걸음</title></circle><circle cx="630.6938775510204" cy="168" r="5" class="dotD"><title>33. 레버와 숫자
+KEEP 석상, 레버, 발판·문, 7걸음</title></circle><circle cx="617.6326530612245" cy="168" r="5" class="dotD"><title>33. 레버와 숫자
 D 0.6  I 0.38
 N 0.4  A 0.4  C 0.81  F 0.46
-돌아가기, 숫자 문, KEEP 석상, 레버, SWITCH, 7걸음</title></circle><circle cx="648.6530612244898" cy="178.39999999999998" r="5" class="dotD"><title>34. 레버와 바통
+돌아가기, 숫자 문, KEEP 석상, 레버, SWITCH, 7걸음</title></circle><circle cx="635.1836734693877" cy="178.39999999999998" r="5" class="dotD"><title>34. 레버와 바통
 D 0.56  I 0.48
 N 0.4  A 0.5  C 0.95  F 0.43
-돌아가기, 레버, SWITCH, 7걸음</title></circle><circle cx="666.6122448979592" cy="178.39999999999998" r="5" class="dotD"><title>35. 결구의 장치
+돌아가기, 레버, SWITCH, 7걸음</title></circle><circle cx="652.734693877551" cy="178.39999999999998" r="5" class="dotD"><title>35. 결구의 장치
 D 0.56  I 0.39
 N 0.4  A 0.5  C 0.88  F 0.57
-돌아가기, 얼음, KEEP 석상, 레버, SWITCH, 7걸음</title></circle><circle cx="684.5714285714286" cy="207.00000000000003" r="5" class="dotD"><title>36. 한 번만 버티는 바닥
+돌아가기, 얼음, KEEP 석상, 레버, SWITCH, 7걸음</title></circle><circle cx="670.2857142857143" cy="207.00000000000003" r="5" class="dotD"><title>36. 한 번만 버티는 바닥
 D 0.45  I 0.79
 N 1  A 0.5  C 0.95  F 0.09
-금 간 바닥, 돌아가기, KEEP 석상, 발판·문, 봉인 다리, 7걸음</title></circle><circle cx="702.530612244898" cy="191.4" r="5" class="dotD"><title>37. 무너진 길 위의 구멍
+금 간 바닥, 돌아가기, KEEP 석상, 발판·문, 봉인 다리, 7걸음</title></circle><circle cx="687.8367346938776" cy="191.4" r="5" class="dotD"><title>37. 무너질 길
 D 0.51  I 0.44
 N 0.4  A 0.4  C 0.82  F 0.31
-금 간 바닥, 돌아가기, 구덩이, SWITCH, 7걸음</title></circle><circle cx="720.4897959183673" cy="230.4" r="5" class="dotD"><title>38. 하나만 남겨라
+금 간 바닥, 돌아가기, 구덩이, SWITCH, 7걸음</title></circle><circle cx="705.3877551020408" cy="230.4" r="5" class="dotD"><title>38. 하나만 남겨라
 D 0.36  I 0.63
 N 0.7  A 0.45  C 0.8  F 0.1
-돌아가기, KEEP 석상, 석상 수 문, 7걸음</title></circle><circle cx="738.4489795918367" cy="199.20000000000002" r="5" class="dotD"><title>39. 열쇠가 되는 형제
+돌아가기, KEEP 석상, 석상 수 문, 7걸음</title></circle><circle cx="722.9387755102041" cy="199.20000000000002" r="5" class="dotD"><title>39. 열쇠가 되는 형제
 D 0.48  I 0.65
 N 0.7  A 0.6  C 0.79  F 0.14
-돌아가기, KEEP 석상, 석상 여러 개, 발판·문, 석상 수 문, 열쇠 석상, 7걸음</title></circle><circle cx="756.4081632653061" cy="204.40000000000003" r="5" class="dotD"><title>40. 남기기 전에 지나가라
+돌아가기, KEEP 석상, 석상 여러 개, 발판·문, 석상 수 문, 열쇠 석상, 7걸음</title></circle><circle cx="740.4897959183673" cy="204.40000000000003" r="5" class="dotD"><title>40. 남기기 전에 지나가라
 D 0.46  I 0.72
 N 0.7  A 0.7  C 0.93  F 0.18
-돌아가기, 0개 문, KEEP 석상, 발판·문, 석상 수 문, SWITCH, 7걸음</title></circle><circle cx="774.3673469387755" cy="175.8" r="5" class="dotD"><title>41. 선돌 아닌 흔적
+돌아가기, 0개 문, KEEP 석상, 발판·문, 석상 수 문, SWITCH, 7걸음</title></circle><circle cx="758.0408163265306" cy="175.8" r="5" class="dotD"><title>41. 선돌 아닌 흔적
 D 0.57  I 0.62
 N 0.4  A 0.6  C 1  F 0.19
-금 간 바닥, 봉인 다리, 석상 수 문, SWITCH, 7걸음</title></circle><circle cx="792.3265306122449" cy="175.8" r="5" class="dotD"><title>42. 무너지는 계산
+금 간 바닥, 봉인 다리, 석상 수 문, SWITCH, 7걸음</title></circle><circle cx="775.5918367346939" cy="175.8" r="5" class="dotD"><title>42. 무너지는 계산
 D 0.57  I 0.51
 N 0.4  A 0.5  C 0.95  F 0.34
-몸 다리, 금 간 바닥, 구덩이, 석상 수 문, SWITCH, 7걸음</title></circle><circle cx="810.2857142857143" cy="285" r="5" class="dotD"><title>43. 한 칸에 두 걸음
+몸 다리, 금 간 바닥, 구덩이, 석상 수 문, SWITCH, 7걸음</title></circle><circle cx="793.1428571428571" cy="285" r="5" class="dotD"><title>43. 한 칸에 두 걸음
 D 0.15  I 0.41
 N 0.7  A 0.6  C 0.05  F 0
-진흙, 7걸음</title></circle><circle cx="828.2448979591836" cy="188.8" r="5" class="dotD"><title>44. 진흙과 숫자
+진흙, 7걸음</title></circle><circle cx="810.6938775510204" cy="188.8" r="5" class="dotD"><title>44. 진흙과 숫자
 D 0.52  I 0.41
 N 0.4  A 0.5  C 0.87  F 0.53
-돌아가기, 숫자 문, 진흙, SWITCH, 7걸음</title></circle><circle cx="846.204081632653" cy="217.4" r="5" class="dotD"><title>45. 얼음과 진흙
+돌아가기, 숫자 문, 진흙, SWITCH, 7걸음</title></circle><circle cx="828.2448979591836" cy="217.4" r="5" class="dotD"><title>45. 얼음과 진흙
 D 0.41  I 0.44
 N 0.4  A 0.6  C 0.69  F 0.33
-돌아가기, 얼음, 진흙, 홀짝, SWITCH, 7걸음</title></circle><circle cx="864.1632653061224" cy="196.60000000000002" r="5" class="dotD"><title>46. 칠칠의 방
+돌아가기, 얼음, 진흙, 홀짝, SWITCH, 7걸음</title></circle><circle cx="845.795918367347" cy="196.60000000000002" r="5" class="dotD"><title>46. 칠칠의 방
 D 0.49  I 0.58
 N 0.4  A 0.5  C 0.98  F 0.21
-몸 다리, 돌아가기, 숫자 문, 레버, 구덩이, 발판·문, SWITCH, 7걸음</title></circle><circle cx="882.1224489795918" cy="220" r="5" class="dotD"><title>47. 레버와 선돌의 수
+몸 다리, 돌아가기, 숫자 문, 레버, 구덩이, 발판·문, SWITCH, 7걸음</title></circle><circle cx="863.3469387755102" cy="220" r="5" class="dotD"><title>47. 레버와 선돌의 수
 D 0.4  I 0.46
 N 0.4  A 0.6  C 0.55  F 0.16
-돌아가기, 0개 문, KEEP 석상, 레버, 석상 수 문, 7걸음</title></circle><circle cx="900.0816326530612" cy="183.6" r="5" class="dotD"><title>48. 길이 된 형제들
+돌아가기, 0개 문, KEEP 석상, 레버, 석상 수 문, 7걸음</title></circle><circle cx="880.8979591836735" cy="183.6" r="5" class="dotD"><title>48. 길이 된 형제들
 D 0.54  I 0.61
 N 0.4  A 0.5  C 1  F 0.16
-몸 다리, 금 간 바닥, 돌아가기, multiBridge, 구덩이, 봉인 다리, 7걸음</title></circle><circle cx="918.0408163265306" cy="173.20000000000002" r="5" class="dotD"><title>49. 일곱의 일곱
+몸 다리, 금 간 바닥, 돌아가기, multiBridge, 구덩이, 봉인 다리, 7걸음</title></circle><circle cx="898.4489795918367" cy="173.20000000000002" r="5" class="dotD"><title>49. 일곱의 일곱
 D 0.58  I 0.53
 N 0.16  A 0.5  C 1  F 0.17
-돌아가기, 숫자 문, 진흙, SWITCH, 7걸음</title></circle><circle cx="936" cy="170.60000000000002" r="5" class="dotD"><title>50. 원형 제단
+돌아가기, 숫자 문, 진흙, SWITCH, 7걸음</title></circle><circle cx="916" cy="170.60000000000002" r="5" class="dotD"><title>50. 원형 제단
 D 0.59  I 0.66
 N 0.4  A 0.8  C 0.96  F 0.2
 돌아가기, 얼음, KEEP 석상, 진흙, 석상 여러 개, 발판·문, 석상 수 문, 7걸음</title></circle><circle cx="56" cy="214.80000000000004" r="5" class="dotI"><title>1. 일곱 걸음
 D 0.17  I 0.42
 N 0.7  A 0.3  C 0.3  F 0
-7걸음</title></circle><circle cx="73.95918367346938" cy="160.2" r="5" class="dotI"><title>2. 늦게 도착하기
+7걸음</title></circle><circle cx="73.55102040816327" cy="160.2" r="5" class="dotI"><title>2. 늦게 도착하기
 D 0.16  I 0.63
 N 0.7  A 0.5  C 0.68  F 0
-돌아가기, 7걸음</title></circle><circle cx="91.91836734693877" cy="175.8" r="5" class="dotI"><title>3. 딱 맞는 길
+돌아가기, 7걸음</title></circle><circle cx="91.10204081632654" cy="175.8" r="5" class="dotI"><title>3. 딱 맞는 길
 D 0.2  I 0.57
 N 0.7  A 0.3  C 0.67  F 0
-route, 7걸음</title></circle><circle cx="109.87755102040816" cy="188.8" r="5" class="dotI"><title>4. 돌이 된 몸
+route, 7걸음</title></circle><circle cx="108.65306122448979" cy="188.8" r="5" class="dotI"><title>4. 돌이 된 몸
 D 0.39  I 0.52
 N 1  A 0.6  C 0.14  F 0.04
-돌아가기, KEEP 석상, 발판·문, 7걸음</title></circle><circle cx="127.83673469387755" cy="168" r="5" class="dotI"><title>5. 가까운 발판
+돌아가기, KEEP 석상, 발판·문, 7걸음</title></circle><circle cx="126.20408163265306" cy="168" r="5" class="dotI"><title>5. 가까운 발판
 D 0.33  I 0.6
 N 0.7  A 0.5  C 0.76  F 0.17
-돌아가기, KEEP 석상, 발판·문, plateChoice, 7걸음</title></circle><circle cx="145.79591836734693" cy="165.4" r="5" class="dotI"><title>6. 길을 막는 선돌
+돌아가기, KEEP 석상, 발판·문, plateChoice, 7걸음</title></circle><circle cx="143.75510204081633" cy="165.4" r="5" class="dotI"><title>6. 길을 막는 선돌
 D 0.36  I 0.61
 N 0.7  A 0.6  C 0.75  F 0.21
-돌아가기, KEEP 석상, 발판·문, statueBlock, 7걸음</title></circle><circle cx="163.75510204081633" cy="220" r="5" class="dotI"><title>7. 두 개의 문
+돌아가기, KEEP 석상, 발판·문, statueBlock, 7걸음</title></circle><circle cx="161.30612244897958" cy="220" r="5" class="dotI"><title>7. 두 개의 문
 D 0.45  I 0.4
 N 0.7  A 0.3  C 0.49  F 0.25
-돌아가기, KEEP 석상, 석상 여러 개, 발판·문, 7걸음</title></circle><circle cx="181.71428571428572" cy="121.19999999999999" r="5" class="dotI"><title>8. 새 출발점
+돌아가기, KEEP 석상, 석상 여러 개, 발판·문, 7걸음</title></circle><circle cx="178.85714285714286" cy="121.19999999999999" r="5" class="dotI"><title>8. 새 출발점
 D 0.37  I 0.78
 N 0.7  A 0.6  C 0.98  F 0
-SWITCH, 7걸음</title></circle><circle cx="199.6734693877551" cy="201.8" r="5" class="dotI"><title>9. 바통 넘기기
+SWITCH, 7걸음</title></circle><circle cx="196.40816326530611" cy="201.8" r="5" class="dotI"><title>9. 바통 넘기기
 D 0.51  I 0.47
 N 0.7  A 0.4  C 0.45  F 0.1
-돌아가기, relay, SWITCH, 7걸음</title></circle><circle cx="217.6326530612245" cy="134.20000000000002" r="5" class="dotI"><title>10. 몸으로 놓는 다리
+돌아가기, relay, SWITCH, 7걸음</title></circle><circle cx="213.9591836734694" cy="134.20000000000002" r="5" class="dotI"><title>10. 몸으로 놓는 다리
 D 0.29  I 0.73
 N 1  A 0.5  C 0.76  F 0.05
-몸 다리, 돌아가기, 구덩이, 7걸음</title></circle><circle cx="235.59183673469389" cy="188.8" r="5" class="dotI"><title>11. 다리냐 선돌이냐
+몸 다리, 돌아가기, 구덩이, 7걸음</title></circle><circle cx="231.51020408163265" cy="188.8" r="5" class="dotI"><title>11. 다리냐 선돌이냐
 D 0.43  I 0.52
 N 0.4  A 0.5  C 0.97  F 0.34
-몸 다리, 돌아가기, KEEP 석상, 구덩이, 발판·문, 7걸음</title></circle><circle cx="253.55102040816325" cy="225.20000000000002" r="5" class="dotI"><title>12. 건너편에서 깨어나기
+몸 다리, 돌아가기, KEEP 석상, 구덩이, 발판·문, 7걸음</title></circle><circle cx="249.0612244897959" cy="225.20000000000002" r="5" class="dotI"><title>12. 건너편에서 깨어나기
 D 0.39  I 0.38
 N 0.4  A 0.6  C 0.74  F 0.55
-몸 다리, 돌아가기, 구덩이, SWITCH, 7걸음</title></circle><circle cx="271.51020408163265" cy="165.4" r="5" class="dotI"><title>13. 구멍 둘, 형제 셋
+몸 다리, 돌아가기, 구덩이, SWITCH, 7걸음</title></circle><circle cx="266.61224489795916" cy="165.4" r="5" class="dotI"><title>13. 구멍 둘, 형제 셋
 D 0.39  I 0.61
 N 0.7  A 0.4  C 0.95  F 0.24
-몸 다리, 돌아가기, multiBridge, 구덩이, 7걸음</title></circle><circle cx="289.46938775510205" cy="188.8" r="5" class="dotI"><title>14. 떠나온 자리
+몸 다리, 돌아가기, multiBridge, 구덩이, 7걸음</title></circle><circle cx="284.1632653061224" cy="188.8" r="5" class="dotI"><title>14. 떠나온 자리
 D 0.53  I 0.52
 N 0.7  A 0.6  C 0.41  F 0.09
-돌아가기, KEEP 석상, 발판·문, SWITCH, 출발점 되돌리기, 7걸음</title></circle><circle cx="307.42857142857144" cy="235.6" r="5" class="dotI"><title>15. 숫자 문
+돌아가기, KEEP 석상, 발판·문, SWITCH, 출발점 되돌리기, 7걸음</title></circle><circle cx="301.7142857142857" cy="235.6" r="5" class="dotI"><title>15. 숫자 문
 D 0.12  I 0.34
 N 0.7  A 0.35  C 0.12  F 0.07
-돌아가기, 숫자 문, 7걸음</title></circle><circle cx="325.38775510204084" cy="214.80000000000004" r="5" class="dotI"><title>16. 문 너머의 발판
+돌아가기, 숫자 문, 7걸음</title></circle><circle cx="319.265306122449" cy="214.80000000000004" r="5" class="dotI"><title>16. 문 너머의 발판
 D 0.3  I 0.42
 N 0.4  A 0.5  C 0.81  F 0.43
-돌아가기, 숫자 문, KEEP 석상, 발판·문, 7걸음</title></circle><circle cx="343.3469387755102" cy="207.00000000000003" r="5" class="dotI"><title>17. 갈림길의 숫자
+돌아가기, 숫자 문, KEEP 석상, 발판·문, 7걸음</title></circle><circle cx="336.81632653061223" cy="207.00000000000003" r="5" class="dotI"><title>17. 갈림길의 숫자
 D 0.31  I 0.45
 N 0.4  A 0.5  C 0.83  F 0.37
-돌아가기, 숫자 문, route, SWITCH, 7걸음</title></circle><circle cx="361.3061224489796" cy="139.40000000000003" r="5" class="dotI"><title>18. 처음부터 다시 세기
+돌아가기, 숫자 문, route, SWITCH, 7걸음</title></circle><circle cx="354.3673469387755" cy="139.40000000000003" r="5" class="dotI"><title>18. 처음부터 다시 세기
 D 0.31  I 0.71
 N 0.7  A 0.7  C 0.92  F 0.2
-돌아가기, 숫자 문, recount, SWITCH, 7걸음</title></circle><circle cx="379.265306122449" cy="222.6" r="5" class="dotI"><title>19. 숫자와 구멍
+돌아가기, 숫자 문, recount, SWITCH, 7걸음</title></circle><circle cx="371.9183673469388" cy="222.6" r="5" class="dotI"><title>19. 숫자와 구멍
 D 0.29  I 0.39
 N 0.4  A 0.4  C 0.71  F 0.33
-몸 다리, 돌아가기, 숫자 문, 구덩이, 7걸음</title></circle><circle cx="397.2244897959184" cy="217.4" r="5" class="dotI"><title>20. 두 숫자
+몸 다리, 돌아가기, 숫자 문, 구덩이, 7걸음</title></circle><circle cx="389.46938775510205" cy="217.4" r="5" class="dotI"><title>20. 두 숫자
 D 0.38  I 0.41
 N 0.4  A 0.4  C 0.99  F 0.57
-돌아가기, 숫자 문, SWITCH, 7걸음</title></circle><circle cx="415.18367346938777" cy="201.8" r="5" class="dotI"><title>21. 새김돌의 계산
+돌아가기, 숫자 문, SWITCH, 7걸음</title></circle><circle cx="407.0204081632653" cy="201.8" r="5" class="dotI"><title>21. 새김돌의 계산
 D 0.45  I 0.47
 N 0.4  A 0.5  C 1  F 0.49
-돌아가기, 숫자 문, KEEP 석상, 발판·문, SWITCH, 7걸음</title></circle><circle cx="433.14285714285717" cy="188.8" r="5" class="dotI"><title>22. 미끄러운 첫걸음
+돌아가기, 숫자 문, KEEP 석상, 발판·문, SWITCH, 7걸음</title></circle><circle cx="424.57142857142856" cy="188.8" r="5" class="dotI"><title>22. 미끄러운 첫걸음
 D 0.17  I 0.52
 N 0.7  A 0.4  C 0.47  F 0
-얼음, 7걸음</title></circle><circle cx="451.1020408163265" cy="144.60000000000002" r="5" class="dotI"><title>23. 홀수의 저주
+얼음, 7걸음</title></circle><circle cx="442.1224489795918" cy="144.60000000000002" r="5" class="dotI"><title>23. 홀수의 셈
 D 0.12  I 0.69
 N 0.7  A 0.75  C 0.73  F 0.1
-돌아가기, 얼음, 홀짝, 7걸음</title></circle><circle cx="469.0612244897959" cy="212.20000000000005" r="5" class="dotI"><title>24. 얼음 위의 숫자
+돌아가기, 얼음, 홀짝, 7걸음</title></circle><circle cx="459.6734693877551" cy="212.20000000000005" r="5" class="dotI"><title>24. 얼음 위의 숫자
 D 0.37  I 0.43
 N 0.4  A 0.5  C 0.89  F 0.48
-돌아가기, 숫자 문, 얼음, SWITCH, 7걸음</title></circle><circle cx="487.0204081632653" cy="178.39999999999998" r="5" class="dotI"><title>25. 멈춰 세우는 석상
+돌아가기, 숫자 문, 얼음, SWITCH, 7걸음</title></circle><circle cx="477.2244897959184" cy="178.39999999999998" r="5" class="dotI"><title>25. 멈춰 세우는 선돌
 D 0.41  I 0.56
 N 0.7  A 0.7  C 0.47  F 0.13
-돌아가기, 얼음, KEEP 석상, 석상 멈춤벽, 7걸음</title></circle><circle cx="504.9795918367347" cy="212.20000000000005" r="5" class="dotI"><title>26. 미끄럼을 막는 형제
+돌아가기, 얼음, KEEP 석상, 석상 멈춤벽, 7걸음</title></circle><circle cx="494.7755102040816" cy="212.20000000000005" r="5" class="dotI"><title>26. 미끄럼을 막는 형제
 D 0.4  I 0.43
 N 0.4  A 0.5  C 0.94  F 0.55
-돌아가기, 얼음, KEEP 석상, statueBlock, 석상 멈춤벽, 7걸음</title></circle><circle cx="522.9387755102041" cy="186.2" r="5" class="dotI"><title>27. 얼음 끝의 구멍
+돌아가기, 얼음, KEEP 석상, statueBlock, 석상 멈춤벽, 7걸음</title></circle><circle cx="512.3265306122448" cy="186.2" r="5" class="dotI"><title>27. 얼음 끝의 구멍
 D 0.43  I 0.53
 N 0.4  A 0.5  C 0.95  F 0.31
-몸 다리, 돌아가기, 얼음, 구덩이, 7걸음</title></circle><circle cx="540.8979591836735" cy="212.20000000000005" r="5" class="dotI"><title>28. 서리의 길목
+몸 다리, 돌아가기, 얼음, 구덩이, 7걸음</title></circle><circle cx="529.8775510204082" cy="212.20000000000005" r="5" class="dotI"><title>28. 서리의 길목
 D 0.44  I 0.43
 N 0.4  A 0.4  C 0.91  F 0.44
-돌아가기, 얼음, KEEP 석상, 발판·문, 7걸음</title></circle><circle cx="558.8571428571429" cy="139.40000000000003" r="5" class="dotI"><title>29. 내리는 벽
+돌아가기, 얼음, KEEP 석상, 발판·문, 7걸음</title></circle><circle cx="547.4285714285714" cy="139.40000000000003" r="5" class="dotI"><title>29. 내리는 벽
 D 0.37  I 0.71
 N 0.7  A 0.5  C 1  F 0.13
-돌아가기, KEEP 석상, 레버, 7걸음</title></circle><circle cx="576.8163265306123" cy="194" r="5" class="dotI"><title>30. 열면 닫힌다
+돌아가기, KEEP 석상, 레버, 7걸음</title></circle><circle cx="564.9795918367347" cy="194" r="5" class="dotI"><title>30. 열면 닫힌다
 D 0.5  I 0.5
 N 0.4  A 0.6  C 1  F 0.5
-돌아가기, KEEP 석상, 레버, SWITCH, 7걸음</title></circle><circle cx="594.7755102040817" cy="134.20000000000002" r="5" class="dotI"><title>31. 올려서 멈추기
+돌아가기, KEEP 석상, 레버, SWITCH, 7걸음</title></circle><circle cx="582.530612244898" cy="134.20000000000002" r="5" class="dotI"><title>31. 올려서 멈추기
 D 0.38  I 0.73
 N 0.7  A 0.7  C 0.99  F 0.21
-돌아가기, 얼음, KEEP 석상, 레버, raiseStopper, 7걸음</title></circle><circle cx="612.734693877551" cy="220" r="5" class="dotI"><title>32. 레버와 발판
+돌아가기, 얼음, KEEP 석상, 레버, raiseStopper, 7걸음</title></circle><circle cx="600.0816326530612" cy="220" r="5" class="dotI"><title>32. 레버와 발판
 D 0.4  I 0.4
 N 0.4  A 0.5  C 0.72  F 0.39
-KEEP 석상, 레버, 발판·문, 7걸음</title></circle><circle cx="630.6938775510204" cy="225.20000000000002" r="5" class="dotI"><title>33. 레버와 숫자
+KEEP 석상, 레버, 발판·문, 7걸음</title></circle><circle cx="617.6326530612245" cy="225.20000000000002" r="5" class="dotI"><title>33. 레버와 숫자
 D 0.6  I 0.38
 N 0.4  A 0.4  C 0.81  F 0.46
-돌아가기, 숫자 문, KEEP 석상, 레버, SWITCH, 7걸음</title></circle><circle cx="648.6530612244898" cy="199.20000000000002" r="5" class="dotI"><title>34. 레버와 바통
+돌아가기, 숫자 문, KEEP 석상, 레버, SWITCH, 7걸음</title></circle><circle cx="635.1836734693877" cy="199.20000000000002" r="5" class="dotI"><title>34. 레버와 바통
 D 0.56  I 0.48
 N 0.4  A 0.5  C 0.95  F 0.43
-돌아가기, 레버, SWITCH, 7걸음</title></circle><circle cx="666.6122448979592" cy="222.6" r="5" class="dotI"><title>35. 결구의 장치
+돌아가기, 레버, SWITCH, 7걸음</title></circle><circle cx="652.734693877551" cy="222.6" r="5" class="dotI"><title>35. 결구의 장치
 D 0.56  I 0.39
 N 0.4  A 0.5  C 0.88  F 0.57
-돌아가기, 얼음, KEEP 석상, 레버, SWITCH, 7걸음</title></circle><circle cx="684.5714285714286" cy="118.6" r="5" class="dotI"><title>36. 한 번만 버티는 바닥
+돌아가기, 얼음, KEEP 석상, 레버, SWITCH, 7걸음</title></circle><circle cx="670.2857142857143" cy="118.6" r="5" class="dotI"><title>36. 한 번만 버티는 바닥
 D 0.45  I 0.79
 N 1  A 0.5  C 0.95  F 0.09
-금 간 바닥, 돌아가기, KEEP 석상, 발판·문, 봉인 다리, 7걸음</title></circle><circle cx="702.530612244898" cy="209.60000000000002" r="5" class="dotI"><title>37. 무너진 길 위의 구멍
+금 간 바닥, 돌아가기, KEEP 석상, 발판·문, 봉인 다리, 7걸음</title></circle><circle cx="687.8367346938776" cy="209.60000000000002" r="5" class="dotI"><title>37. 무너질 길
 D 0.51  I 0.44
 N 0.4  A 0.4  C 0.82  F 0.31
-금 간 바닥, 돌아가기, 구덩이, SWITCH, 7걸음</title></circle><circle cx="720.4897959183673" cy="160.2" r="5" class="dotI"><title>38. 하나만 남겨라
+금 간 바닥, 돌아가기, 구덩이, SWITCH, 7걸음</title></circle><circle cx="705.3877551020408" cy="160.2" r="5" class="dotI"><title>38. 하나만 남겨라
 D 0.36  I 0.63
 N 0.7  A 0.45  C 0.8  F 0.1
-돌아가기, KEEP 석상, 석상 수 문, 7걸음</title></circle><circle cx="738.4489795918367" cy="155" r="5" class="dotI"><title>39. 열쇠가 되는 형제
+돌아가기, KEEP 석상, 석상 수 문, 7걸음</title></circle><circle cx="722.9387755102041" cy="155" r="5" class="dotI"><title>39. 열쇠가 되는 형제
 D 0.48  I 0.65
 N 0.7  A 0.6  C 0.79  F 0.14
-돌아가기, KEEP 석상, 석상 여러 개, 발판·문, 석상 수 문, 열쇠 석상, 7걸음</title></circle><circle cx="756.4081632653061" cy="136.8" r="5" class="dotI"><title>40. 남기기 전에 지나가라
+돌아가기, KEEP 석상, 석상 여러 개, 발판·문, 석상 수 문, 열쇠 석상, 7걸음</title></circle><circle cx="740.4897959183673" cy="136.8" r="5" class="dotI"><title>40. 남기기 전에 지나가라
 D 0.46  I 0.72
 N 0.7  A 0.7  C 0.93  F 0.18
-돌아가기, 0개 문, KEEP 석상, 발판·문, 석상 수 문, SWITCH, 7걸음</title></circle><circle cx="774.3673469387755" cy="162.8" r="5" class="dotI"><title>41. 선돌 아닌 흔적
+돌아가기, 0개 문, KEEP 석상, 발판·문, 석상 수 문, SWITCH, 7걸음</title></circle><circle cx="758.0408163265306" cy="162.8" r="5" class="dotI"><title>41. 선돌 아닌 흔적
 D 0.57  I 0.62
 N 0.4  A 0.6  C 1  F 0.19
-금 간 바닥, 봉인 다리, 석상 수 문, SWITCH, 7걸음</title></circle><circle cx="792.3265306122449" cy="191.4" r="5" class="dotI"><title>42. 무너지는 계산
+금 간 바닥, 봉인 다리, 석상 수 문, SWITCH, 7걸음</title></circle><circle cx="775.5918367346939" cy="191.4" r="5" class="dotI"><title>42. 무너지는 계산
 D 0.57  I 0.51
 N 0.4  A 0.5  C 0.95  F 0.34
-몸 다리, 금 간 바닥, 구덩이, 석상 수 문, SWITCH, 7걸음</title></circle><circle cx="810.2857142857143" cy="217.4" r="5" class="dotI"><title>43. 한 칸에 두 걸음
+몸 다리, 금 간 바닥, 구덩이, 석상 수 문, SWITCH, 7걸음</title></circle><circle cx="793.1428571428571" cy="217.4" r="5" class="dotI"><title>43. 한 칸에 두 걸음
 D 0.15  I 0.41
 N 0.7  A 0.6  C 0.05  F 0
-진흙, 7걸음</title></circle><circle cx="828.2448979591836" cy="217.4" r="5" class="dotI"><title>44. 진흙과 숫자
+진흙, 7걸음</title></circle><circle cx="810.6938775510204" cy="217.4" r="5" class="dotI"><title>44. 진흙과 숫자
 D 0.52  I 0.41
 N 0.4  A 0.5  C 0.87  F 0.53
-돌아가기, 숫자 문, 진흙, SWITCH, 7걸음</title></circle><circle cx="846.204081632653" cy="209.60000000000002" r="5" class="dotI"><title>45. 얼음과 진흙
+돌아가기, 숫자 문, 진흙, SWITCH, 7걸음</title></circle><circle cx="828.2448979591836" cy="209.60000000000002" r="5" class="dotI"><title>45. 얼음과 진흙
 D 0.41  I 0.44
 N 0.4  A 0.6  C 0.69  F 0.33
-돌아가기, 얼음, 진흙, 홀짝, SWITCH, 7걸음</title></circle><circle cx="864.1632653061224" cy="173.20000000000002" r="5" class="dotI"><title>46. 칠칠의 방
+돌아가기, 얼음, 진흙, 홀짝, SWITCH, 7걸음</title></circle><circle cx="845.795918367347" cy="173.20000000000002" r="5" class="dotI"><title>46. 칠칠의 방
 D 0.49  I 0.58
 N 0.4  A 0.5  C 0.98  F 0.21
-몸 다리, 돌아가기, 숫자 문, 레버, 구덩이, 발판·문, SWITCH, 7걸음</title></circle><circle cx="882.1224489795918" cy="204.40000000000003" r="5" class="dotI"><title>47. 레버와 선돌의 수
+몸 다리, 돌아가기, 숫자 문, 레버, 구덩이, 발판·문, SWITCH, 7걸음</title></circle><circle cx="863.3469387755102" cy="204.40000000000003" r="5" class="dotI"><title>47. 레버와 선돌의 수
 D 0.4  I 0.46
 N 0.4  A 0.6  C 0.55  F 0.16
-돌아가기, 0개 문, KEEP 석상, 레버, 석상 수 문, 7걸음</title></circle><circle cx="900.0816326530612" cy="165.4" r="5" class="dotI"><title>48. 길이 된 형제들
+돌아가기, 0개 문, KEEP 석상, 레버, 석상 수 문, 7걸음</title></circle><circle cx="880.8979591836735" cy="165.4" r="5" class="dotI"><title>48. 길이 된 형제들
 D 0.54  I 0.61
 N 0.4  A 0.5  C 1  F 0.16
-몸 다리, 금 간 바닥, 돌아가기, multiBridge, 구덩이, 봉인 다리, 7걸음</title></circle><circle cx="918.0408163265306" cy="186.2" r="5" class="dotI"><title>49. 일곱의 일곱
+몸 다리, 금 간 바닥, 돌아가기, multiBridge, 구덩이, 봉인 다리, 7걸음</title></circle><circle cx="898.4489795918367" cy="186.2" r="5" class="dotI"><title>49. 일곱의 일곱
 D 0.58  I 0.53
 N 0.16  A 0.5  C 1  F 0.17
-돌아가기, 숫자 문, 진흙, SWITCH, 7걸음</title></circle><circle cx="936" cy="152.39999999999998" r="5" class="dotI"><title>50. 원형 제단
+돌아가기, 숫자 문, 진흙, SWITCH, 7걸음</title></circle><circle cx="916" cy="152.39999999999998" r="5" class="dotI"><title>50. 원형 제단
 D 0.59  I 0.66
 N 0.4  A 0.8  C 0.96  F 0.2
-돌아가기, 얼음, KEEP 석상, 진흙, 석상 여러 개, 발판·문, 석상 수 문, 7걸음</title></circle><text x="56" y="394" class="tick" text-anchor="middle">1</text><text x="73.95918367346938" y="394" class="tick" text-anchor="middle">2</text><text x="91.91836734693877" y="394" class="tick" text-anchor="middle">3</text><text x="109.87755102040816" y="394" class="tick" text-anchor="middle">4</text><text x="127.83673469387755" y="394" class="tick" text-anchor="middle">5</text><text x="145.79591836734693" y="394" class="tick" text-anchor="middle">6</text><text x="163.75510204081633" y="394" class="tick" text-anchor="middle">7</text><text x="181.71428571428572" y="394" class="tick" text-anchor="middle">8</text><text x="199.6734693877551" y="394" class="tick" text-anchor="middle">9</text><text x="217.6326530612245" y="394" class="tick" text-anchor="middle">10</text><text x="235.59183673469389" y="394" class="tick" text-anchor="middle">11</text><text x="253.55102040816325" y="394" class="tick" text-anchor="middle">12</text><text x="271.51020408163265" y="394" class="tick" text-anchor="middle">13</text><text x="289.46938775510205" y="394" class="tick" text-anchor="middle">14</text><text x="307.42857142857144" y="394" class="tick" text-anchor="middle">15</text><text x="325.38775510204084" y="394" class="tick" text-anchor="middle">16</text><text x="343.3469387755102" y="394" class="tick" text-anchor="middle">17</text><text x="361.3061224489796" y="394" class="tick" text-anchor="middle">18</text><text x="379.265306122449" y="394" class="tick" text-anchor="middle">19</text><text x="397.2244897959184" y="394" class="tick" text-anchor="middle">20</text><text x="415.18367346938777" y="394" class="tick" text-anchor="middle">21</text><text x="433.14285714285717" y="394" class="tick" text-anchor="middle">22</text><text x="451.1020408163265" y="394" class="tick" text-anchor="middle">23</text><text x="469.0612244897959" y="394" class="tick" text-anchor="middle">24</text><text x="487.0204081632653" y="394" class="tick" text-anchor="middle">25</text><text x="504.9795918367347" y="394" class="tick" text-anchor="middle">26</text><text x="522.9387755102041" y="394" class="tick" text-anchor="middle">27</text><text x="540.8979591836735" y="394" class="tick" text-anchor="middle">28</text><text x="558.8571428571429" y="394" class="tick" text-anchor="middle">29</text><text x="576.8163265306123" y="394" class="tick" text-anchor="middle">30</text><text x="594.7755102040817" y="394" class="tick" text-anchor="middle">31</text><text x="612.734693877551" y="394" class="tick" text-anchor="middle">32</text><text x="630.6938775510204" y="394" class="tick" text-anchor="middle">33</text><text x="648.6530612244898" y="394" class="tick" text-anchor="middle">34</text><text x="666.6122448979592" y="394" class="tick" text-anchor="middle">35</text><text x="684.5714285714286" y="394" class="tick" text-anchor="middle">36</text><text x="702.530612244898" y="394" class="tick" text-anchor="middle">37</text><text x="720.4897959183673" y="394" class="tick" text-anchor="middle">38</text><text x="738.4489795918367" y="394" class="tick" text-anchor="middle">39</text><text x="756.4081632653061" y="394" class="tick" text-anchor="middle">40</text><text x="774.3673469387755" y="394" class="tick" text-anchor="middle">41</text><text x="792.3265306122449" y="394" class="tick" text-anchor="middle">42</text><text x="810.2857142857143" y="394" class="tick" text-anchor="middle">43</text><text x="828.2448979591836" y="394" class="tick" text-anchor="middle">44</text><text x="846.204081632653" y="394" class="tick" text-anchor="middle">45</text><text x="864.1632653061224" y="394" class="tick" text-anchor="middle">46</text><text x="882.1224489795918" y="394" class="tick" text-anchor="middle">47</text><text x="900.0816326530612" y="394" class="tick" text-anchor="middle">48</text><text x="918.0408163265306" y="394" class="tick" text-anchor="middle">49</text><text x="936" y="394" class="tick" text-anchor="middle">50</text><g class="insert"><path d="M307.42857142857144,406 l-7,10 h14 z"/><title>15. 새 기믹 투입 지점</title></g>
-  <text x="496" y="434" class="tick" text-anchor="middle">스테이지</text>
+돌아가기, 얼음, KEEP 석상, 진흙, 석상 여러 개, 발판·문, 석상 수 문, 7걸음</title></circle><path d="M56.0,324.0 L73.6,324.0 L91.1,324.0 L108.7,324.0 L126.2,324.0 L143.8,324.0 L161.3,324.0 L178.9,324.0 L196.4,324.0 L214.0,324.0 L231.5,324.0 L249.1,324.0 L266.6,324.0 L284.2,324.0 L301.7,324.0 L319.3,324.0 L336.8,324.0 L354.4,324.0 L371.9,286.9 L389.5,324.0 L407.0,324.0 L424.6,324.0 L442.1,324.0 L459.7,324.0 L477.2,324.0 L494.8,314.7 L512.3,324.0 L529.9,324.0 L547.4,324.0 L565.0,324.0 L582.5,324.0 L600.1,324.0 L617.6,324.0 L635.2,324.0 L652.7,305.4 L670.3,286.9 L687.8,324.0 L705.4,324.0 L722.9,324.0 L740.5,324.0 L758.0,314.7 L775.6,314.7 L793.1,324.0 L810.7,324.0 L828.2,324.0 L845.8,324.0 L863.3,324.0 L880.9,324.0 L898.4,324.0 L916.0,324.0 " class="lineQ"/><rect x="52" y="320" width="8" height="8" class="dotQ"><title>1. 일곱 걸음
+QA 평균 1회 (최대 1, 예측 1.85)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="69.55102040816327" y="320" width="8" height="8" class="dotQ"><title>2. 늦게 도착하기
+QA 평균 1회 (최대 1, 예측 1.8)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="87.10204081632654" y="320" width="8" height="8" class="dotQ"><title>3. 딱 맞는 길
+QA 평균 1회 (최대 1, 예측 2)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="104.65306122448979" y="320" width="8" height="8" class="dotQ"><title>4. 돌이 된 몸
+QA 평균 1회 (최대 1, 예측 2.95)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="122.20408163265306" y="320" width="8" height="8" class="dotQ"><title>5. 가까운 발판
+QA 평균 1회 (최대 1, 예측 2.65)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="139.75510204081633" y="320" width="8" height="8" class="dotQ"><title>6. 길을 막는 선돌
+QA 평균 1회 (최대 1, 예측 2.8)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="157.30612244897958" y="320" width="8" height="8" class="dotQ"><title>7. 두 개의 문
+QA 평균 1회 (최대 1, 예측 3.25)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="174.85714285714286" y="320" width="8" height="8" class="dotQ"><title>8. 새 출발점
+QA 평균 1회 (최대 1, 예측 2.85)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="192.40816326530611" y="320" width="8" height="8" class="dotQ"><title>9. 바통 넘기기
+QA 평균 1회 (최대 1, 예측 3.55)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="209.9591836734694" y="320" width="8" height="8" class="dotQ"><title>10. 몸으로 놓는 다리
+QA 평균 1회 (최대 1, 예측 2.45)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="227.51020408163265" y="320" width="8" height="8" class="dotQ"><title>11. 다리냐 선돌이냐
+QA 평균 1회 (최대 1, 예측 3.15)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="245.0612244897959" y="320" width="8" height="8" class="dotQ"><title>12. 건너편에서 깨어나기
+QA 평균 1회 (최대 1, 예측 2.95)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="262.61224489795916" y="320" width="8" height="8" class="dotQ"><title>13. 구멍 둘, 형제 셋
+QA 평균 1회 (최대 1, 예측 2.95)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="280.1632653061224" y="320" width="8" height="8" class="dotQ"><title>14. 떠나온 자리
+QA 평균 1회 (최대 1, 예측 3.65)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="297.7142857142857" y="320" width="8" height="8" class="dotQ"><title>15. 숫자 문
+QA 평균 1회 (최대 1, 예측 1.6)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="315.265306122449" y="320" width="8" height="8" class="dotQ"><title>16. 문 너머의 발판
+QA 평균 1회 (최대 1, 예측 2.5)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="332.81632653061223" y="320" width="8" height="8" class="dotQ"><title>17. 갈림길의 숫자
+QA 평균 1회 (최대 1, 예측 2.55)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="350.3673469387755" y="320" width="8" height="8" class="dotQ"><title>18. 처음부터 다시 세기
+QA 평균 1회 (최대 1, 예측 2.55)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="367.9183673469388" y="282.8571428571429" width="8" height="8" class="dotQ warnQ"><title>19. 숫자와 구멍
+QA 평균 3회 (최대 5, 예측 2.45)
+첫 시도 클리어 50%  포기 1
+! 1/2명 포기 줄 있음 (상한 10회 도달 또는 스스로 포기)</title></rect><rect x="385.46938775510205" y="320" width="8" height="8" class="dotQ"><title>20. 두 숫자
+QA 평균 1회 (최대 1, 예측 2.9)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="403.0204081632653" y="320" width="8" height="8" class="dotQ"><title>21. 새김돌의 계산
+QA 평균 1회 (최대 1, 예측 3.25)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="420.57142857142856" y="320" width="8" height="8" class="dotQ"><title>22. 미끄러운 첫걸음
+QA 평균 1회 (최대 1, 예측 1.85)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="438.1224489795918" y="320" width="8" height="8" class="dotQ"><title>23. 홀수의 셈
+QA 평균 1회 (최대 1, 예측 1.6)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="455.6734693877551" y="320" width="8" height="8" class="dotQ"><title>24. 얼음 위의 숫자
+QA 평균 1회 (최대 1, 예측 2.85)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="473.2244897959184" y="320" width="8" height="8" class="dotQ"><title>25. 멈춰 세우는 선돌
+QA 평균 1회 (최대 1, 예측 3.05)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="490.7755102040816" y="310.7142857142858" width="8" height="8" class="dotQ"><title>26. 미끄럼을 막는 형제
+QA 평균 1.5회 (최대 2, 예측 3)
+첫 시도 클리어 50%  포기 0</title></rect><rect x="508.3265306122448" y="320" width="8" height="8" class="dotQ"><title>27. 얼음 끝의 구멍
+QA 평균 1회 (최대 1, 예측 3.15)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="525.8775510204082" y="320" width="8" height="8" class="dotQ"><title>28. 서리의 길목
+QA 평균 1회 (최대 1, 예측 3.2)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="543.4285714285714" y="320" width="8" height="8" class="dotQ"><title>29. 내리는 벽
+QA 평균 1회 (최대 1, 예측 2.85)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="560.9795918367347" y="320" width="8" height="8" class="dotQ"><title>30. 열면 닫힌다
+QA 평균 1회 (최대 1, 예측 3.5)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="578.530612244898" y="320" width="8" height="8" class="dotQ"><title>31. 올려서 멈추기
+QA 평균 1회 (최대 1, 예측 2.9)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="596.0816326530612" y="320" width="8" height="8" class="dotQ"><title>32. 레버와 발판
+QA 평균 1회 (최대 1, 예측 3)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="613.6326530612245" y="320" width="8" height="8" class="dotQ"><title>33. 레버와 숫자
+QA 평균 1회 (최대 1, 예측 4)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="631.1836734693877" y="320" width="8" height="8" class="dotQ"><title>34. 레버와 바통
+QA 평균 1회 (최대 1, 예측 3.8)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="648.734693877551" y="301.42857142857144" width="8" height="8" class="dotQ"><title>35. 결구의 장치
+QA 평균 2회 (최대 3, 예측 3.8)
+첫 시도 클리어 50%  포기 0</title></rect><rect x="666.2857142857143" y="282.8571428571429" width="8" height="8" class="dotQ warnQ"><title>36. 한 번만 버티는 바닥
+QA 평균 3회 (최대 3, 예측 3.25)
+첫 시도 클리어 0%  포기 0
+! 행성 첫 스테이지 평균 3회 &gt; 직전 피날레 35의 2회 (톱니 곡선 어긋남)</title></rect><rect x="683.8367346938776" y="320" width="8" height="8" class="dotQ"><title>37. 무너질 길
+QA 평균 1회 (최대 1, 예측 3.55)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="701.3877551020408" y="320" width="8" height="8" class="dotQ"><title>38. 하나만 남겨라
+QA 평균 1회 (최대 1, 예측 2.8)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="718.9387755102041" y="320" width="8" height="8" class="dotQ"><title>39. 열쇠가 되는 형제
+QA 평균 1회 (최대 1, 예측 3.4)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="736.4897959183673" y="320" width="8" height="8" class="dotQ"><title>40. 남기기 전에 지나가라
+QA 평균 1회 (최대 1, 예측 3.3)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="754.0408163265306" y="310.7142857142858" width="8" height="8" class="dotQ"><title>41. 선돌 아닌 흔적
+QA 평균 1.5회 (최대 2, 예측 3.85)
+첫 시도 클리어 50%  포기 0</title></rect><rect x="771.5918367346939" y="310.7142857142858" width="8" height="8" class="dotQ"><title>42. 무너지는 계산
+QA 평균 1.5회 (최대 2, 예측 3.85)
+첫 시도 클리어 50%  포기 0</title></rect><rect x="789.1428571428571" y="320" width="8" height="8" class="dotQ"><title>43. 한 칸에 두 걸음
+QA 평균 1회 (최대 1, 예측 1.75)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="806.6938775510204" y="320" width="8" height="8" class="dotQ"><title>44. 진흙과 숫자
+QA 평균 1회 (최대 1, 예측 3.6)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="824.2448979591836" y="320" width="8" height="8" class="dotQ"><title>45. 얼음과 진흙
+QA 평균 1회 (최대 1, 예측 3.05)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="841.795918367347" y="320" width="8" height="8" class="dotQ"><title>46. 칠칠의 방
+QA 평균 1회 (최대 1, 예측 3.45)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="859.3469387755102" y="320" width="8" height="8" class="dotQ"><title>47. 레버와 선돌의 수
+QA 평균 1회 (최대 1, 예측 3)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="876.8979591836735" y="320" width="8" height="8" class="dotQ"><title>48. 길이 된 형제들
+QA 평균 1회 (최대 1, 예측 3.7)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="894.4489795918367" y="320" width="8" height="8" class="dotQ"><title>49. 일곱의 일곱
+QA 평균 1회 (최대 1, 예측 3.9)
+첫 시도 클리어 100%  포기 0</title></rect><rect x="912" y="320" width="8" height="8" class="dotQ"><title>50. 원형 제단
+QA 평균 1회 (최대 1, 예측 3.95)
+첫 시도 클리어 100%  포기 0</title></rect><text x="920" y="328" class="tick qtick">1</text><text x="920" y="272.2857142857143" class="tick qtick">4</text><text x="920" y="198" class="tick qtick">8</text><text x="920" y="123.71428571428572" class="tick qtick">12</text><text x="920" y="68" class="tick qtick">15</text><text x="920" y="54" class="tick qtick">시도</text><text x="56" y="394" class="tick" text-anchor="middle">1</text><text x="73.55102040816327" y="394" class="tick" text-anchor="middle">2</text><text x="91.10204081632654" y="394" class="tick" text-anchor="middle">3</text><text x="108.65306122448979" y="394" class="tick" text-anchor="middle">4</text><text x="126.20408163265306" y="394" class="tick" text-anchor="middle">5</text><text x="143.75510204081633" y="394" class="tick" text-anchor="middle">6</text><text x="161.30612244897958" y="394" class="tick" text-anchor="middle">7</text><text x="178.85714285714286" y="394" class="tick" text-anchor="middle">8</text><text x="196.40816326530611" y="394" class="tick" text-anchor="middle">9</text><text x="213.9591836734694" y="394" class="tick" text-anchor="middle">10</text><text x="231.51020408163265" y="394" class="tick" text-anchor="middle">11</text><text x="249.0612244897959" y="394" class="tick" text-anchor="middle">12</text><text x="266.61224489795916" y="394" class="tick" text-anchor="middle">13</text><text x="284.1632653061224" y="394" class="tick" text-anchor="middle">14</text><text x="301.7142857142857" y="394" class="tick" text-anchor="middle">15</text><text x="319.265306122449" y="394" class="tick" text-anchor="middle">16</text><text x="336.81632653061223" y="394" class="tick" text-anchor="middle">17</text><text x="354.3673469387755" y="394" class="tick" text-anchor="middle">18</text><text x="371.9183673469388" y="394" class="tick" text-anchor="middle">19</text><text x="389.46938775510205" y="394" class="tick" text-anchor="middle">20</text><text x="407.0204081632653" y="394" class="tick" text-anchor="middle">21</text><text x="424.57142857142856" y="394" class="tick" text-anchor="middle">22</text><text x="442.1224489795918" y="394" class="tick" text-anchor="middle">23</text><text x="459.6734693877551" y="394" class="tick" text-anchor="middle">24</text><text x="477.2244897959184" y="394" class="tick" text-anchor="middle">25</text><text x="494.7755102040816" y="394" class="tick" text-anchor="middle">26</text><text x="512.3265306122448" y="394" class="tick" text-anchor="middle">27</text><text x="529.8775510204082" y="394" class="tick" text-anchor="middle">28</text><text x="547.4285714285714" y="394" class="tick" text-anchor="middle">29</text><text x="564.9795918367347" y="394" class="tick" text-anchor="middle">30</text><text x="582.530612244898" y="394" class="tick" text-anchor="middle">31</text><text x="600.0816326530612" y="394" class="tick" text-anchor="middle">32</text><text x="617.6326530612245" y="394" class="tick" text-anchor="middle">33</text><text x="635.1836734693877" y="394" class="tick" text-anchor="middle">34</text><text x="652.734693877551" y="394" class="tick" text-anchor="middle">35</text><text x="670.2857142857143" y="394" class="tick" text-anchor="middle">36</text><text x="687.8367346938776" y="394" class="tick" text-anchor="middle">37</text><text x="705.3877551020408" y="394" class="tick" text-anchor="middle">38</text><text x="722.9387755102041" y="394" class="tick" text-anchor="middle">39</text><text x="740.4897959183673" y="394" class="tick" text-anchor="middle">40</text><text x="758.0408163265306" y="394" class="tick" text-anchor="middle">41</text><text x="775.5918367346939" y="394" class="tick" text-anchor="middle">42</text><text x="793.1428571428571" y="394" class="tick" text-anchor="middle">43</text><text x="810.6938775510204" y="394" class="tick" text-anchor="middle">44</text><text x="828.2448979591836" y="394" class="tick" text-anchor="middle">45</text><text x="845.795918367347" y="394" class="tick" text-anchor="middle">46</text><text x="863.3469387755102" y="394" class="tick" text-anchor="middle">47</text><text x="880.8979591836735" y="394" class="tick" text-anchor="middle">48</text><text x="898.4489795918367" y="394" class="tick" text-anchor="middle">49</text><text x="916" y="394" class="tick" text-anchor="middle">50</text><g class="insert"><path d="M301.7142857142857,406 l-7,10 h14 z"/><title>15. 새 기믹 투입 지점</title></g>
+  <text x="486" y="434" class="tick" text-anchor="middle">스테이지</text>
 </svg></div>
 <div class="tablewrap"><table><thead><tr><th>#</th><th>이름</th><th>몸(최소/제한)</th><th>걸음</th><th>탐색 상태</th><th>희소도</th><th>함정 비율</th>
 <th>D</th><th>N</th><th>A</th><th>C</th><th>F</th><th>I</th><th>기믹 조합</th><th>깨달음 근거</th></tr></thead><tbody><tr class="">
@@ -351,7 +453,7 @@ N 0.4  A 0.8  C 0.96  F 0.2
     <td class="num">5</td><td>가까운 발판</td><td class="num">2/3</td><td class="num">15</td><td class="num">118</td><td class="num">1.82</td><td class="num">0.87</td>
     <td class="num">0.33</td><td class="num">0.7</td><td class="num">0.5</td><td class="num">0.76</td><td class="num">0.17</td><td class="num strong">0.6</td>
     <td>돌아가기, KEEP 석상, 발판·문, plateChoice <span class="new">새: plateChoice</span></td>
-    <td class="reason">가까운 발판은 짝수 걸음 거리라 7번째에 설 수 없다. 먼 발판을 고르는 작은 홀짝 발견(23 홀수의 저주의 예고)</td></tr><tr class="">
+    <td class="reason">가까운 발판은 짝수 걸음 거리라 7번째에 설 수 없다. 먼 발판을 고르는 작은 홀짝 발견(23 홀수의 셈의 예고)</td></tr><tr class="">
     <td class="num">6</td><td>길을 막는 선돌</td><td class="num">2/3</td><td class="num">15</td><td class="num">147</td><td class="num">2.64</td><td class="num">0.97</td>
     <td class="num">0.36</td><td class="num">0.7</td><td class="num">0.6</td><td class="num">0.75</td><td class="num">0.21</td><td class="num strong">0.61</td>
     <td>돌아가기, KEEP 석상, 발판·문, statueBlock <span class="new">새: statueBlock</span></td>
@@ -420,7 +522,7 @@ N 0.4  A 0.8  C 0.96  F 0.2
     <td class="num">0.17</td><td class="num">0.7</td><td class="num">0.4</td><td class="num">0.47</td><td class="num">0</td><td class="num strong">0.52</td>
     <td>얼음 <span class="new">새: 얼음</span></td>
     <td class="reason">얼음은 여러 칸에 한 걸음. 바닥으로는 12걸음인 출구가 7걸음이 된다</td></tr><tr class="">
-    <td class="num">23</td><td>홀수의 저주</td><td class="num">1/3</td><td class="num">7</td><td class="num">63</td><td class="num">1.04</td><td class="num">0.09</td>
+    <td class="num">23</td><td>홀수의 셈</td><td class="num">1/3</td><td class="num">7</td><td class="num">63</td><td class="num">1.04</td><td class="num">0.09</td>
     <td class="num">0.12</td><td class="num">0.7</td><td class="num">0.75</td><td class="num">0.73</td><td class="num">0.1</td><td class="num strong">0.69</td>
     <td>돌아가기, 얼음, 홀짝 <span class="new">새: 홀짝</span></td>
     <td class="reason">바닥만으로는 홀짝이 안 맞아 닿을 수 없다. 얼음 미끄럼(여러 칸=1걸음)으로 홀짝을 바꾼다</td></tr><tr class="is-drop">
@@ -428,7 +530,7 @@ N 0.4  A 0.8  C 0.96  F 0.2
     <td class="num">0.37</td><td class="num">0.4</td><td class="num">0.5</td><td class="num">0.89</td><td class="num">0.48</td><td class="num strong">0.43</td>
     <td>돌아가기, 숫자 문, 얼음, SWITCH</td>
     <td class="reason">미끄럼 한 번이 숫자 하나. 둘째 형제의 걸음 번호를 미끄럼으로 맞춘다</td></tr><tr class="">
-    <td class="num">25</td><td>멈춰 세우는 석상</td><td class="num">2/3</td><td class="num">15</td><td class="num">474</td><td class="num">3.73</td><td class="num">0.95</td>
+    <td class="num">25</td><td>멈춰 세우는 선돌</td><td class="num">2/3</td><td class="num">15</td><td class="num">474</td><td class="num">3.73</td><td class="num">0.95</td>
     <td class="num">0.41</td><td class="num">0.7</td><td class="num">0.7</td><td class="num">0.47</td><td class="num">0.13</td><td class="num strong">0.56</td>
     <td>돌아가기, 얼음, KEEP 석상, 석상 멈춤벽 <span class="new">새: 석상 멈춤벽</span></td>
     <td class="reason">석상을 발판이 아니라 얼음을 멈추는 벽으로 쓴다. 석상의 새 용도</td></tr><tr class="">
@@ -476,7 +578,7 @@ N 0.4  A 0.8  C 0.96  F 0.2
     <td class="num">0.45</td><td class="num">1</td><td class="num">0.5</td><td class="num">0.95</td><td class="num">0.09</td><td class="num strong">0.79</td>
     <td>금 간 바닥, 돌아가기, KEEP 석상, 발판·문, 봉인 다리 <span class="new">새: 금 간 바닥, 봉인 다리</span></td>
     <td class="reason">금 간 바닥 위에 7번째로 서서 영구 다리로 만든다. 다리 개념의 변형이라 중간</td></tr><tr class="is-drop">
-    <td class="num">37</td><td>무너진 길 위의 구멍</td><td class="num">3/3 X</td><td class="num">23</td><td class="num">4685</td><td class="num">2.93</td><td class="num">0.9</td>
+    <td class="num">37</td><td>무너질 길</td><td class="num">3/3 X</td><td class="num">23</td><td class="num">4685</td><td class="num">2.93</td><td class="num">0.9</td>
     <td class="num">0.51</td><td class="num">0.4</td><td class="num">0.4</td><td class="num">0.82</td><td class="num">0.31</td><td class="num strong">0.44</td>
     <td>금 간 바닥, 돌아가기, 구덩이, SWITCH</td>
     <td class="reason">금 간 바닥과 구멍이 지름길을 막는다. 무너뜨릴 길과 남길 길을 고른다</td></tr><tr class="">
