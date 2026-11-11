@@ -115,5 +115,17 @@ namespace SevenSteps.Tests
             Assert.IsTrue(book.FinaleCleared(cat.ChapterIds[0]));
             Assert.IsFalse(book.FinaleCleared(cat.ChapterIds[1]));
         }
+
+        [Test]
+        public void FinaleLineIsTheChaptersTruthAndIsNotCounted()
+        {
+            var cat = Catalog();
+            var book = new StoryBook(cat, new StoryProgress(), null, _ => true);
+            string id = cat.ChapterIds[0];
+            var entry = cat.Find(StoryRules.Finale(id));
+            Assert.AreEqual(cat.Line(entry, 0, Language.En), book.FinaleLine(id, Language.En));
+            Assert.AreEqual(0, book.Progress.Count(entry.id), "a replay on the star map is not a new showing");
+            Assert.IsNull(StoryBook.Off().FinaleLine(id, Language.Ko));
+        }
     }
 }

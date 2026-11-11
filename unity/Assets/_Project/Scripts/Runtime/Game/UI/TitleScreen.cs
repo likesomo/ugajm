@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using SevenSteps.Contracts;
 using SevenSteps.Core;
 using SevenSteps.Game.Flow;
@@ -70,6 +71,8 @@ namespace SevenSteps.Game.UI
             planets = PlanetEntry.FromCatalog(levels.Length);
             planetMap = new PlanetMapView(root, planets, levels);
             planetMap.Story = Services.TryGet<StoryBook>(out var story) ? story : null; // carvings, lit dipper lines (story 0.5)
+            planetMap.ReduceMotion = save.Settings.reduceMotion;
+            if (story != null && story.On) titleView.ShowSky(story.Catalog.ChapterIds.Select(story.FinaleCleared).ToArray());
             planetStages = new PlanetStagesPanel(root);
             languagePanel = new LanguagePanel(root);
             bool telemetryDefault = Services.Get<AppConfig>().telemetryOnByDefault;
@@ -151,7 +154,7 @@ namespace SevenSteps.Game.UI
         void OpenPlanet(int planet)
         {
             if (overlays.Count > 0) return;
-            planetStages.Bind(planets[planet], save.Progress, levels, localizer);
+            planetStages.Bind(planets[planet], save.Progress, levels, localizer, TruthOf(planet));
             openPlanet = planet;
             Open(planetStages);
         }
@@ -185,10 +188,14 @@ namespace SevenSteps.Game.UI
             languagePanel.Apply(localizer);
             creditsPanel.Apply(localizer);
             if (overlays.Contains(planetStages) && openPlanet >= 0)
-                planetStages.Bind(planets[openPlanet], save.Progress, levels, localizer);
+                planetStages.Bind(planets[openPlanet], save.Progress, levels, localizer, TruthOf(openPlanet));
         }
 
         void OnLanguageChanged(Language lang) => ApplyText();
+
+        /// A planet's truth for its stage list once its finale is cleared (story 0.5 #3), else null (the tagline).
+        string TruthOf(int planet) =>
+            Services.TryGet<StoryBook>(out var story) && story.FinaleCleared(planets[planet].Key) ? story.FinaleLine(planets[planet].Key, localizer.Current) : null;
 
         void OnDestroy()
         {

@@ -829,7 +829,7 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 - **클리어 결과는 "보드 위 결과"다**(2026-11-11, 최소 UI "결과 화면은 별, 별자리, 다음 버튼만", gameplay-ui 제안 채택). 위 둘째 항목(옅은 막 + HUD 숨김)을 쓴다.
   - **막**: 화면 전체를 덮고 `raycastTarget`을 켠다. 알파는 0.25이고, 피날레 별자리(보드)가 보이게 한다.
   - **HUD**: `CanvasGroup.alpha = 0`, `blocksRaycasts = false`로 숨긴다.
-  - **배치**: 결과 요소는 보드 영역(14.11 투영 + 8)과 겹치지 않는다.
+  - **배치**: 결과 요소는 보드 영역(14.11 투영 + 8, 타일 영역 기준)과 겹치지 않는다. 행성 환경(뒷담·뒤 문·크러스트·선돌)은 대상이 아니다. 장식이고 출구는 타일이다(48ff6b4 검토).
     - 별 3개는 `BoardFrame` 위 띠(y < 80)에 판(14.4)과 함께 둔다.
     - [다음]은 우하단, 안전 영역 24 안에 둔다.
   - **별 조건 문구**: 별에 hover·focus·tap할 때만 보조 글자 판으로 보인다. 그 판도 보드 영역과 다른 결과 요소를 피한다.
@@ -1139,3 +1139,10 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | 16장 이야기 계약 S2(A1~A13): `Contracts/Story/` `StoryCatalog`(로드 단정, 구체성 Find, 모호함·필수 갈래 검사), `StoryCue`/`StoryOn`, `StoryRules`(TryMoment·TrySeventh·Ending·Finale), `StoryProgress` + `SaveSystem.Story`/`SaveStory`/키 `seven-steps.story`(-newplayer가 지움), `StoryTruths`(ChapterKeyOf 경계 피날레·Truths), `StoryImageSet`(required 기본 false), `GameAssets.storyJson`/`storyImages`, `LevelDto.startLine`(기본 story). 테스트 `StoryContractTests` 12개 |
 | 2026-11-11 | 아키텍트 | 14.7 클리어 결과 = 보드 위 결과(막 0.25 + raycast, HUD CanvasGroup 0, 별 3은 BoardFrame 위 띠, 다음은 우하단, 별 조건은 hover/focus/tap, 다시 하기·스테이지 선택 버튼 빼고 R·Esc 동작). 패배는 0.6 모달. UiLayoutCheck Result clear는 막 raycast·HUD 숨김·보드 비겹침 검사 |
 | 2026-11-11 | 아키텍트 | feat/levels-2 dc6cea2(S3) 승인: b03ce11 위 병합 EditMode 852/852(실제 Data/story.json StoryCatalog 로드 통과), startLine hint 4·8, 피날레 스테이지 7·14·…·49 데이터 경계와 일치. QA 끝까지 qa 워크트리 고정에 동의. `docs/reviews/2026-11-11-levels-2-dc6cea2.md` |
+| 2026-11-11 | 아키텍트 | feat/art bcb2126 승인: R2 altar 앞 그루터기 그림자 제외(9×9 47→44, 한도 48), S1 hollow 트라이플래너 펼친 좌표 미분으로 SAMPLE_TEXTURE2D_GRAD. 메모 G1 미분이 정점 데이터 분기 안(경계 줄이 남으면 분기 밖으로). `docs/reviews/2026-11-11-feat-art-bcb2126.md` |
+| 2026-11-11 | 아키텍트 | feat/scene-flow 6e8f3cd(이야기 S4 흐름) 승인: StoryLoad A8 끔, 개발 실행 메모리 진행, 저장 시점 결과·엔딩 끝, 엔딩 StoryRules.Ending 갈래·FinalTruthSeen, 50 끝까지 보기, 타이틀·별지도 새김·dipper, ValidateStory 이미지 경고. 메모 M1 ResultView 병합 순서, M2 dipper↔테마 선, M3 앱 종료 저장. `docs/reviews/2026-11-11-scene-flow-6e8f3cd.md` |
+| 2026-11-11 | 아키텍트 | feat/view 48ff6b4 승인(별 흔적 v2 임시 메시 1 draw, TrailMark.End 값 비교·Knot, 움직임 줄이기, linear 꼭짓점 색 / 결과 14.7 클리어 막 0.25+HUD Conceal·패배 0.72 모달·50 result.ending 유지·R Again). 메모 M1 키보드 focus로 별 조건, M2 Result clear·lose 검사 등록(scene-flow), M4 Chrome FPS에 긴 판. `docs/reviews/2026-11-11-feat-view-48ff6b4.md` |
+| 2026-11-11 | 아키텍트 | feat/view c58dfa4 승인(48ff6b4 M1 결과 별 키보드 초점 Tab·←→ 순환, M5 주석). R1 다음 커밋: 키 입력을 ResultView.Update에서 GameController로 옮김(메뉴 덮개 위에서 별 초점이 같이 움직임). `docs/reviews/2026-11-11-feat-view-c58dfa4.md` |
+| 2026-11-11 | 아키텍트 | feat/scene-flow cd38eb8 조건부 승인(새김 첫 등장·CarvingSeen 저장, 진실 다시 보기 세지 않음, 북극성, 타이틀 하늘, 앱 종료 저장). R1 병합 전 CarvingTap navigation None(별지도 방향키가 숨은 버튼에 멈춤), R2 진실 다시 보기 48px·키보드 경로. 4d41d15(14.7 Result clear·lose 검사)·01f4cc6(dipper 경고) 승인. `docs/reviews/2026-11-11-scene-flow-cd38eb8.md` |
+| 2026-11-11 | 아키텍트 | feat/scene-flow 6958352 승인(cd38eb8 R1·R2를 (a)로: 새김 탭 버튼 제거, 행성 카드 초점·hover로 진실 표시). 메모 N1 언어 변경 뒤 detailDefault 갱신. `docs/reviews/2026-11-11-scene-flow-cd38eb8.md` |
+| 2026-11-11 | 아키텍트 | feat/scene-flow 2fe7f4d 승인(N2 단계 패널 tagline 줄에 진실 금색, N1 언어 변경 뒤 detailDefault). `docs/reviews/2026-11-11-scene-flow-cd38eb8.md` |
