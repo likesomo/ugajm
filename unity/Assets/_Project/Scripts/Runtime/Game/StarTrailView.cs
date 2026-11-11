@@ -37,6 +37,16 @@ namespace SevenSteps.Game
         const float LineScale = 2.2f;              // interim line width per preset lineWidth
         const float ShadowScale = 1.7f;            // shadow quad per mark quad (lines: width)
         const float SeventhSize = 0.5f, KnotSize = 0.34f, KnotOffset = 0.1f;
+        // Minimal look (user playtest 2026-11-11, board-readability.png: "very messy"): one line weight, one mark per
+        // state, no shadows / cores / rims / crystals; older brothers' trails fainter so the walking one reads first.
+        /// Line width (cells), the same for every brother and state.
+        const float LineWidth = 0.065f;
+        /// Past-step dot (cells): one per brother per cell whatever the step number; brothers sharing a cell side by side.
+        const float DotSize = 0.26f, DotSpread = 0.2f;
+        /// SWITCH knot ring and KEEP statue star (cells).
+        const float KnotRing = 0.36f, StoneStarSize = 0.3f;
+        /// Alpha by age: the walking brother, the one before, older ones.
+        const float AgeNow = 1f, AgePrev = 0.7f, AgeOld = 0.5f;
         const float AppearSeconds = 0.18f, FellDim = 0.35f;
         /// v2 Active breathing: 0.8 Hz, ±8 %.
         const float BreathHz = 0.8f, BreathAmount = 0.08f;
@@ -75,6 +85,8 @@ namespace SevenSteps.Game
         readonly Dictionary<TrailMark, Item> byMark = new Dictionary<TrailMark, Item>();
         readonly List<(Item It, Part Part)> quads = new List<(Item, Part)>();
         readonly HashSet<int> sharedCells = new HashSet<int>();
+        /// Dots drawn: (slot on the cell, brothers on the cell). A Star / Seventh mark not in here is not drawn.
+        readonly Dictionary<TrailMark, (int Slot, int Count)> dotSlot = new Dictionary<TrailMark, (int, int)>();
         readonly List<Vector3> verts = new List<Vector3>();
         readonly List<Vector2> uvs = new List<Vector2>();
         readonly List<Color> colors = new List<Color>();
@@ -87,6 +99,7 @@ namespace SevenSteps.Game
         float newestStart = -1f, awakenStart = -1f, fadeStart = -1f, finale;
         StarTrail pendingRefill; // Restart: the old map fades out first, then this is written
         int currentBody, phase, used;
+        int startCell = -1; // the walking brother's start: its start marker already rings it, so no knot ring on top
         bool lastStepPulse; // one step left: _StarTrailPulse.z
 
         /// Interim quad renderer on. Turn off when the art tile shader draws _StarTrailMap, or the trail is drawn twice
@@ -258,6 +271,25 @@ namespace SevenSteps.Game
             sharedCells.Clear();
             var rimSeen = new HashSet<int>();
             foreach (var m in marks) if (m.Kind == TrailMarkKind.Rim && !rimSeen.Add(m.Cell)) sharedCells.Add(m.Cell);
+
+            // One dot per brother per cell (mud and revisits do not stack), brothers on one cell side by side; the 7th
+            // step's star on a cell that now holds a statue is the statue star's job.
+            startCell = s.Start;
+            dotSlot.Clear();
+            var bodiesAt = new Dictionary<int, List<int>>();
+            var statueCells = new HashSet<int>();
+            foreach (var m in marks) if (m.Kind == TrailMarkKind.StoneStar) statueCells.Add(m.Cell);
+            var dots = new List<TrailMark>();
+            foreach (var m in marks)
+            {
+                if (m.Kind != TrailMarkKind.Star && m.Kind != TrailMarkKind.Seventh) continue;
+                if (m.Kind == TrailMarkKind.Seventh && statueCells.Contains(m.Cell)) continue;
+                if (!bodiesAt.TryGetValue(m.Cell, out var list)) bodiesAt[m.Cell] = list = new List<int>();
+                if (list.Contains(m.Body)) continue;
+                list.Add(m.Body);
+                dots.Add(m);
+            }
+            foreach (var m in dots) dotSlot[m] = (bodiesAt[m.Cell].IndexOf(m.Body), bodiesAt[m.Cell].Count);
 
             breathing = !ReduceMotion && marks.Exists(m => m.End == TrailEnd.Walking && (m.Kind == TrailMarkKind.Line || m.Kind == TrailMarkKind.Star));
             if (newestStart >= 0 || awakenStart >= 0 || lastStepPulse || breathing) animating = true;
@@ -437,13 +469,15 @@ namespace SevenSteps.Game
         bool Has(Item it, Part part)
         {
             var m = it.Mark;
+            if (part != Part.Main) return false; // minimal look: no shadows, cores or second rings
             switch (m.Kind)
             {
-                case TrailMarkKind.Rim: return part == Part.Main && sharedCells.Contains(m.Cell);
-                case TrailMarkKind.Line: return (part == Part.Shadow || part == Part.Main) && m.Cell != m.Aux;
-                case TrailMarkKind.Knot: return part != Part.Core;
-                case TrailMarkKind.Star: return part != Part.Second && !(part == Part.Core && Crystal(m.End));
-                default: return part != Part.Second; // Seventh, StoneStar
+                case TrailMarkKind.Rim: return false; // a shared cell: the dots sit side by side instead
+                case TrailMarkKind.Line: return m.Cell != m.Aux;
+                case TrailMarkKind.Star:
+                case TrailMarkKind.Seventh: return dotSlot.ContainsKey(m) || it.Leaving; // one dot per brother per cell
+                case TrailMarkKind.Knot: return m.Cell != startCell || it.Leaving; // one ring per cell
+                default: return true; // StoneStar
             }
         }
 
@@ -479,8 +513,33 @@ namespace SevenSteps.Game
             return new Color(Mathf.Lerp(c.r, t.r, t.a), Mathf.Lerp(c.g, t.g, t.a), Mathf.Lerp(c.b, t.b, t.a), 1f);
         }
 
+        /// Older brothers' trails fade so the walking brother's reads first.
+        float Age(TrailMark m)
+        {
+            int age = currentBody - m.Body;
+            return age <= 0 ? AgeNow : age == 1 ? AgePrev : AgeOld;
+        }
+
         Color ColorOf(TrailMark m, Part part)
         {
+            if (part == Part.Main) // the minimal look (the only part drawn now)
+            {
+                Color b = Body(m.Body);
+                float age = Age(m);
+                switch (m.Kind)
+                {
+                    case TrailMarkKind.Line: b.a = 0.95f * age; return b;
+                    case TrailMarkKind.Star:
+                    case TrailMarkKind.Seventh:
+                    {
+                        var c = Color.Lerp(b, Color.white, 0.12f);
+                        c.a = (m.Dim ? 0.45f : 0.95f) * age;
+                        return c;
+                    }
+                    case TrailMarkKind.Knot: b.a = 0.95f * age; return b;
+                    case TrailMarkKind.StoneStar: { var c = Color.Lerp(b, Color.white, 0.35f); c.a = 0.95f; return c; }
+                }
+            }
             float k = EndStrength(m.End);
             if (part == Part.Shadow) { var s = ShadowColor; s.a *= Mathf.Lerp(0.6f, 1f, k); return s; }
             if (part == Part.Core) { var w = CoreColor; w.a = 0.9f * k; return w; }
@@ -526,36 +585,28 @@ namespace SevenSteps.Game
                     right = d.normalized;
                     fwd = Vector3.Cross(right, Vector3.up);
                     center = (a + b) * 0.5f + Vector3.up * (Lift * 1.5f * cs);
-                    float lw = preset.lineWidth * LineScale;
-                    w = len + (shadow ? lw * ShadowScale : lw);
-                    h = shadow ? lw * ShadowScale * 1.6f : lw;
+                    w = len; // centre to centre: the dots cover the joints
+                    h = LineWidth; // one weight for every brother and state
                     uv = Region(2, 0);
                     break;
                 }
-                case TrailMarkKind.Seventh:
-                    center += Vector3.up * (Lift * 2f * cs);
-                    w = h = SeventhSize * (shadow ? 1.25f : core ? CoreShare : 1f);
-                    uv = shadow ? Region(3, 0) : Region(0, 0);
-                    break;
                 case TrailMarkKind.Star:
+                case TrailMarkKind.Seventh:
                 {
-                    var slot = Slots[m.Aux % Slots.Length] * StarSlot;
-                    center += new Vector3(slot.x, Lift * 2f, slot.y) * cs;
-                    float size = BeadSize(m.Step) * (Crystal(m.End) ? 1.15f : 1f);
-                    w = h = size * (shadow ? ShadowScale : core ? CoreShare : 1f);
-                    uv = shadow || core ? Region(3, 0) : Crystal(m.End) ? Region(Mathf.Clamp(preset.shapeMask, 0, 3), 2) : Region(3, 0);
+                    // One round dot per brother per cell; brothers sharing the cell side by side across it.
+                    var (slot, count) = dotSlot.TryGetValue(m, out var sc) ? sc : (0, 1);
+                    float x = count <= 1 ? 0f : (slot - (count - 1) / 2f) * DotSpread;
+                    center += new Vector3(x, Lift * 2f, 0f) * cs;
+                    w = h = DotSize;
+                    uv = Region(3, 0);
                     break;
                 }
                 case TrailMarkKind.Knot:
-                {
-                    // Two interlocked rings across the cell (the baton seam), this brother's on the left.
+                    // SWITCH: one thin ring round the hand-off cell in the brother's colour.
                     center += Vector3.up * (Lift * 2.5f * cs);
-                    if (part != Part.Shadow) center += Vector3.right * ((part == Part.Second ? KnotOffset : -KnotOffset) * cs);
-                    w = h = shadow ? KnotSize * 1.9f : KnotSize;
-                    uv = shadow ? Region(3, 0) : Region(3, 1);
-                    if (shadow) w *= 1.2f;
+                    w = h = KnotRing;
+                    uv = Region(3, 1);
                     break;
-                }
                 default: // StoneStar: faces the camera on top of the statue
                 {
                     var v = set != null ? set.StatueFor(m.Body) : default;
@@ -563,9 +614,8 @@ namespace SevenSteps.Game
                     center = grid.CellToWorld(m.Cell) + v.offset * cs + Vector3.up * ((top + 0.08f) * cs);
                     if (cam != null) { right = cam.transform.right; fwd = cam.transform.up; }
                     else fwd = Vector3.up;
-                    float size = Mathf.Max(preset.statueStarSize * 3f, 0.3f);
-                    w = h = size * (shadow ? 1.2f : core ? CoreShare : 1f);
-                    uv = shadow || core ? Region(3, 0) : Region(0, 0);
+                    w = h = StoneStarSize;
+                    uv = Region(0, 0);
                     if (cam != null && !shadow) center -= cam.transform.forward * (0.01f * cs * (core ? 2 : 1)); // in front of its shadow
                     break;
                 }

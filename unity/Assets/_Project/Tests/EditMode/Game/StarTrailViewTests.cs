@@ -27,7 +27,7 @@ namespace SevenSteps.Tests
                 var mesh = go.GetComponent<MeshFilter>().sharedMesh;
                 Assert.AreEqual(view.QuadCount * 4, mesh.vertexCount);
                 // v2: a shadow under every line and bead, a white core in each walking bead; no rims (no shared cell).
-                Assert.AreEqual(6 * 2 + 6 * 3, view.QuadCount, "6 lines (shadow, line) + 6 beads (shadow, bead, core)");
+                Assert.AreEqual(6 + 6, view.QuadCount, "6 lines + 6 dots (minimal look: no shadows, cores or rims)");
                 Assert.IsTrue(go.GetComponent<MeshRenderer>().enabled);
                 Assert.AreEqual(1 << 5, view.Map.Bytes[view.Map.Index(6, 0, 0)], "step 6 on cell 6");
                 Assert.AreSame(StarTrailPreset.Default, view.Preset);

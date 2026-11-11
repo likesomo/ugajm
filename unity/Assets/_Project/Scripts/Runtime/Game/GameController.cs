@@ -75,6 +75,8 @@ namespace SevenSteps.Game
         /// One-time guides of the minimal UI (move guide, KEEP / SWITCH guide, choice result lines). The HUD and the choice
         /// cards read it and redraw on Changed (gameplay-ui).
         public TutorialTracker Tutorial => tutorial;
+        /// Stage select v4 journey transitions (docs/stage-select-transitions.md); null when JourneyToggle is off. PlayMode tests read it.
+        public GameJourney Journey => journey;
         /// The in-game menu (settings, stages, solution, controls). The HUD menu button calls Menu.Toggle.
         public MenuController Menu => menu;
 
@@ -155,7 +157,7 @@ namespace SevenSteps.Game
                 foreach (var c in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
                     if (c.isRootCanvas && c.gameObject != hud.gameObject) c.enabled = false;
             }
-            flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, result, LevelCatalog.MinBodies, LevelCatalog.ChapterKeyOf, LevelCatalog.ChapterOf);
+            flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, result, LevelCatalog.ChapterKeyOf, LevelCatalog.ChapterOf);
             back = new BackNavigator(overlays, flowController.Back);
             chapterIntro = new ChapterIntroController(flowController, overlays, chapterCard, key => LevelCatalog.ChapterCard(key, localizer.Current));
             this.result = result;

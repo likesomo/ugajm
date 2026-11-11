@@ -8,7 +8,8 @@ namespace SevenSteps.Game
 {
     /// <summary>
     /// Registers the app services (docs/architecture.md 11.2). Called by the Boot scene, or by GameController/TitleScreen when
-    /// their scene is played directly in the editor. The only DontDestroyOnLoad object it makes is the telemetry runner.
+    /// their scene is played directly in the editor. The only DontDestroyOnLoad root it makes is the telemetry runner,
+    /// and only when telemetry is on (the other DDOL root, SceneFader, comes with the first scene load; docs/scene-flow.md 2).
     /// </summary>
     public static class Bootstrap
     {
@@ -18,11 +19,46 @@ namespace SevenSteps.Game
 
         static Action quitSave;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        internal static void ResetForPlay() => HasRunThisPlay = false;
+        /// Launch options for the next Bootstrap.Run, set by PlayMode tests and the Play Mode capture (docs/scene-flow.md 9.1):
+        /// a -runTests run cannot pass -level / -telemetry off / -savekey per test. Taken once by ReadLaunchOptions.
+        static LaunchOptions nextRun;
 
-        public static LaunchOptions ReadLaunchOptions() =>
-            LaunchOptions.Parse(Environment.GetCommandLineArgs(), Application.absoluteURL);
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        internal static void ResetForPlay()
+        {
+            HasRunThisPlay = false;
+            nextRun = null;
+        }
+
+        /// Tests and the Play Mode capture: the next ReadLaunchOptions (Boot scene, or a scene played directly) returns
+        /// <paramref name="launch"/> instead of the command line and page URL. Set it inside Play Mode, after entering it
+        /// (entering clears it). Throws when one is already waiting.
+        public static void UseLaunchOptionsForNextRun(LaunchOptions launch)
+        {
+            if (launch == null) throw new ArgumentNullException(nameof(launch));
+            if (nextRun != null) throw new InvalidOperationException("[SevenSteps] launch options for the next run are already set");
+            nextRun = launch;
+        }
+
+        /// PlayMode tests between runs in one Play session: forget this Play's bootstrap and services, as entering Play Mode
+        /// does (SubsystemRegistration). The caller destroys the DontDestroyOnLoad roots (TelemetryRunner, SceneFader).
+        public static void ResetForTest()
+        {
+            ResetForPlay();
+            Services.ResetForPlay();
+        }
+
+        /// The command line and page URL, or the options a test set (<see cref="UseLaunchOptionsForNextRun"/>), once.
+        public static LaunchOptions ReadLaunchOptions()
+        {
+            if (nextRun != null)
+            {
+                var o = nextRun;
+                nextRun = null;
+                return o;
+            }
+            return LaunchOptions.Parse(Environment.GetCommandLineArgs(), Application.absoluteURL);
+        }
 
         /// <param name="assets">Stage list (levels.json): AppFlow needs the stage count.</param>
         /// <param name="enterFirstScreen">Boot scene: go to Game (?level=) or Title now. Direct scene play: false, the scene enters itself.</param>

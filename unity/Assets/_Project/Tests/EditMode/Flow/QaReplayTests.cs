@@ -11,7 +11,7 @@ namespace SevenSteps.Tests
     /// QA cross-check replay (production/qa-play-plan.md 3, docs/qa-attempts.md v1): C# Core + GameSession against the JS harness.
     public sealed class QaReplayTests
     {
-        // Stage 1 of levels.json: 7 steps right to the exit, minBodies 1.
+        // Stage 1 of levels.json: 7 steps right to the exit (1 of its 3 brothers: 2 stars at most, stars.md 0).
         static Level Corridor() => Level.Parse("일곱 걸음", "", 3, new[] { "##########", "#S......E#", "##########" });
 
         /// Lines written by core's harness (unity/Tools/qa-play.mjs, feat/core ca616f5) on stages 1, 2, 10 and 29:
@@ -27,7 +27,7 @@ namespace SevenSteps.Tests
         static QaReplayReport CheckAgainstLevelsJson(System.Collections.Generic.List<QaAttemptRecord> records)
         {
             var dto = Stages();
-            return QaReplay.Check(dto.Select(d => d.ToLevel()).ToArray(), i => dto[i].expected.minBodies, records, i => dto[i].map);
+            return QaReplay.Check(dto.Select(d => d.ToLevel()).ToArray(), records, i => dto[i].map);
         }
 
         [Test]
@@ -46,7 +46,7 @@ namespace SevenSteps.Tests
         public void Stage29KeyGolden()
         {
             var dto = Stages()[28];
-            var r = QaReplay.Run(dto.ToLevel(), dto.expected.minBodies, "R!HDURRRRRKZKDDR");
+            var r = QaReplay.Run(dto.ToLevel(), "R!HDURRRRRKZKDDR");
             Assert.AreEqual("", r.error);
             Assert.AreEqual("10|29|3|2|15|||0|1", r.stateKey);
             Assert.AreEqual("e57f027f", r.stateHash);
@@ -58,7 +58,7 @@ namespace SevenSteps.Tests
         public void SeveralStatuesKeyGolden()
         {
             var dto = Stages()[1];
-            var r = QaReplay.Run(dto.ToLevel(), dto.expected.minBodies, "UDUDUDUKDUDUDUDKRLRLRLR");
+            var r = QaReplay.Run(dto.ToLevel(), "UDUDUDUKDUDUDUDKRLRLRLR");
             Assert.AreEqual(("15|16|7|0|8,16,22|||3|0", "1d479b67", "out_of_bodies", "stone"), (r.stateKey, r.stateHash, r.outcome, r.failReason));
         }
 
@@ -71,30 +71,30 @@ namespace SevenSteps.Tests
         [Test]
         public void StarsCountTheWholeStageSession()
         {
-            var clean = QaReplay.Run(Corridor(), 1, "RRRRRRR");
-            Assert.AreEqual(("clear", 7, 1, 3), (clean.outcome, clean.steps, clean.bodiesUsed, clean.stars));
+            var clean = QaReplay.Run(Corridor(), "RRRRRRR");
+            Assert.AreEqual(("clear", 7, 1, 2), (clean.outcome, clean.steps, clean.bodiesUsed, clean.stars));
 
-            var undo = QaReplay.Run(Corridor(), 1, "RRRZRRRRR");
+            var undo = QaReplay.Run(Corridor(), "RRRZRRRRR");
             Assert.AreEqual((8, 1, 2), (undo.steps, undo.undos, undo.stars));
 
-            var hint = QaReplay.Run(Corridor(), 1, "HRRRRRRR");
+            var hint = QaReplay.Run(Corridor(), "HRRRRRRR");
             Assert.AreEqual((1, 1), (hint.levelHints, hint.stars));
 
-            // The earlier attempt's restart and hint still cost stars; steps / hints count only from `from`.
-            var later = QaReplay.Run(Corridor(), 1, "RHR!RRRRRRR", 3);
+            // The earlier attempt's hint still costs stars (a restart does not); steps / hints count only from `from`.
+            var later = QaReplay.Run(Corridor(), "RHR!RRRRRRR", 3);
             Assert.AreEqual((1, 1, 7, 0, 1), (later.levelRestarts, later.levelHints, later.steps, later.hints, later.stars));
         }
 
         [Test]
         public void TokensWithoutEffectAreErrors()
         {
-            StringAssert.Contains("token 0 \"L\" had no effect", QaReplay.Run(Corridor(), 1, "L").error);   // bump
-            StringAssert.Contains("token 1 \"K\" had no effect", QaReplay.Run(Corridor(), 1, "RK").error);  // not choosing
-            StringAssert.Contains("token 0 \"Z\" had no effect", QaReplay.Run(Corridor(), 1, "Z").error);   // nothing to undo
-            StringAssert.Contains("token 0 \"!\" on a fresh state", QaReplay.Run(Corridor(), 1, "!").error);
-            StringAssert.Contains("token 2 \"!\" on a fresh state", QaReplay.Run(Corridor(), 1, "R!!").error);
-            StringAssert.Contains("token 1 \"q\" is not", QaReplay.Run(Corridor(), 1, "Rq").error);
-            Assert.AreEqual("", QaReplay.Run(Corridor(), 1, "RZ").error);
+            StringAssert.Contains("token 0 \"L\" had no effect", QaReplay.Run(Corridor(), "L").error);   // bump
+            StringAssert.Contains("token 1 \"K\" had no effect", QaReplay.Run(Corridor(), "RK").error);  // not choosing
+            StringAssert.Contains("token 0 \"Z\" had no effect", QaReplay.Run(Corridor(), "Z").error);   // nothing to undo
+            StringAssert.Contains("token 0 \"!\" on a fresh state", QaReplay.Run(Corridor(), "!").error);
+            StringAssert.Contains("token 2 \"!\" on a fresh state", QaReplay.Run(Corridor(), "R!!").error);
+            StringAssert.Contains("token 1 \"q\" is not", QaReplay.Run(Corridor(), "Rq").error);
+            Assert.AreEqual("", QaReplay.Run(Corridor(), "RZ").error);
         }
 
         [Test]

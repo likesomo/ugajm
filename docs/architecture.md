@@ -235,7 +235,7 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
   2. 텍스트라 git diff와 리뷰가 쉽고, `expected`(JS 솔버 답)를 함께 실어 `LevelVerifier`가 C#과 JS를 비교할 수 있다.
   3. `Core`가 엔진을 모르므로 SO를 읽을 수 없다. JSON은 Core 테스트에서 그대로 쓸 수 있다.
   4. WebGL에서 TextAsset은 빌드에 포함되므로 파일 IO가 필요 없다.
-- `expected`의 런타임 사용: 클리어 화면이 `expected.minBodies`를 `LevelCatalog.MinBodies(stage)`로 읽어 "최소 N개"로 보여 준다(feat/view 5a2180a). 0(없음)이면 표시하지 않는다. 그래서 스테이지를 바꾸면 반드시 `unity.sh levels`로 다시 내보낸다(손으로 고친 `levels.json`은 최소 수가 틀릴 수 있다). `expected.path`는 런타임에서 쓰지 않는다(H 풀이는 C# `Solver`가 계산).
+- `expected`의 런타임 사용: `expected.minBodies`는 런타임에서 쓰지 않는다(2026-11-11 별 규칙 변경으로 클리어 화면·별 판정에서 뺌, 검사 도구 `LevelVerifier`·`stage-report`만 씀). 그래도 스테이지를 바꾸면 반드시 `unity.sh levels`로 다시 내보낸다(손으로 고친 `levels.json`은 최소 수가 틀릴 수 있다). `expected.path`는 런타임에서 쓰지 않는다(H 풀이는 C# `Solver`가 계산).
 - 레벨에 기믹 글자를 추가하면: 코어가 `Level.Parse` 범례와 규칙을 고치고, 아키텍트가 `TileKind`/`TileId.FromChar`/`TileSet`에 항목을 추가한다 (enum 끝에 추가).
 
 ### 6.1 석상 수 문 (`Q`, 2026-11-07 승인)
@@ -290,22 +290,22 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
 - Unity 검사(켜짐, 2026-11-09): `TileSetValidator`가 `GameAssets.chaptersJson`의 `artPreset`이 모두 `AppConfig.chapters`에 있는지 본다(없으면 오류). `AppConfig.chapters`가 비어 있으면 경고만(모든 스테이지가 `AppConfig.tileSet`/`GameAssets.tileSet`).
 - 담당: 레벨 디자인(`chapters.json`, `chapter`/`story` 채우기, export 검증), 코어(`LevelDto` 필드), 아키텍트(`ChapterInfo`, 이 절, 검사기), 게임플레이/UI(`LevelCatalog`·진입 문구 표시), 씬 플로우(챕터가 바뀔 때의 흐름·`ResultModel.nextChapterChanges`), 백엔드/분석(이벤트에 챕터 id를 실을지).
 
-### 6.5 3별 (2026-11-09 사용자 결정 B안, 50스테이지 반영 다음 순서)
+### 6.5 3별 (2026-11-11 "형제 모두" 규칙, 가정·사용자 확인 필요, design/levels/stars.md 0. B안 대체)
 
-- 규칙: ★1 = 클리어. ★2 = ★1 + 이번 시도에서 풀이 보기(H)를 쓰지 않음 + 쓴 몸 수 ≤ 최소 몸 수(`levels.json` `expected.minBodies`, JS 솔버). ★3 = ★2 + 이번 시도에서 되돌리기·재시작 없음(한 번에). 잠금 없음(별은 진행을 막지 않는다).
-- **시도(attempt)** = 스테이지에 들어온 때(`LoadStage`: 선택·다음·다시 하기·`[` `]`)부터 클리어까지. 결과 화면의 "다시 하기"는 새 시도다. 시도 안의 재시작(R)은 시도를 끝내지 않는다(★3만 잃음).
+- 규칙: ★1 = 클리어. ★2 = ★1 + 이번 시도에서 풀이 보기(H)를 쓰지 않음. ★3 = ★2 + 형제를 모두 씀(`bodiesUsed == Level.Bodies`). 최소 몸 수·되돌리기·재시작은 별과 상관없다. 잠금 없음(별은 진행을 막지 않는다).
+- **시도(attempt)** = 스테이지에 들어온 때(`LoadStage`: 선택·다음·다시 하기·`[` `]`)부터 클리어까지. 결과 화면의 "다시 하기"는 새 시도다. 시도 안의 재시작(R)은 시도를 끝내지 않는다(별과 상관없음).
 - 셈: `undos` = 실제로 상태를 되돌린 Undo(`Undo` 이벤트가 난 것). `restarts` = 시작 상태가 아닐 때의 Restart(움직인 뒤 처음부터). `hintUsed` = 이번 시도에서 H를 한 번이라도. 실패(`Lose`) 뒤의 Undo도 센다.
 - **판정 함수(코어 구현 feat/core b41948d, Core 어셈블리, 엔진 없음, `core.js` `stars()` 이식)**: `SevenSteps.Core.Stars`
   ```csharp
   public static class Stars {
       public const int Max = 3;
-      public static int Of(int bodiesUsed, int minBodies, int hints, int undos, int restarts); // 0 = 판정 불가, 1..3
+      public static int Of(int bodiesUsed, int bodies, int hints); // 1..3, bodies < 1 · bodiesUsed 1..bodies 밖 · hints < 0 은 예외
       public static int BodiesUsed(State s);   // Level.Bodies - Bodies + 1 (클리어 상태면 쓴 몸 수)
   }
   ```
-  ★1 클리어, ★2 = `hints == 0 && bodiesUsed <= minBodies`, ★3 = ★2 `&& undos == 0 && restarts == 0`. `minBodies <= 0`(데이터에 최소 몸 수가 없음)이면 **0 = 판정 불가**(core.js는 null): 이때는 별 없이 `MarkCleared(level, bodies)`. levels.json export가 모든 스테이지에 `minBodies`를 채우므로 정상 빌드에서는 나오지 않는다. 클리어 안 한 시도에는 부르지 않는다. `GameFlowController.BodiesUsed`·`TelemetryTracker`의 같은 식은 `Stars.BodiesUsed`로 바꿀 수 있다.
+  ★1 클리어, ★2 = `hints == 0`, ★3 = ★2 `&& bodiesUsed == bodies`. core.js `stars({ bodiesUsed, bodies, hints })`는 `bodies`가 없으면 null(서버의 `level_start.bodies` 없는 옛 줄). 클리어 안 한 시도에는 부르지 않는다. ★3이 불가능한 스테이지 목록: `design/levels/all-brothers-check.json`. `GameFlowController.BodiesUsed`·`TelemetryTracker`의 같은 식은 `Stars.BodiesUsed`로 바꿀 수 있다.
 - **셈(게임플레이/UI)**: `BoardController`가 시도마다 센다(`LoadStage`에서 0으로, `ShowHint`·`Undo`/`Restart` 결과에서 증가). `IStageBoard`에 시도 셈(`Hints`, `Undos`, `Restarts`)을 내는 읽기 전용 속성을 추가(씬 플로우 인터페이스, 씬 플로우가 모양 결정).
-- **저장(씬 플로우)**: `GameFlowController.OnWon`에서 `stars = Stars.Of(...)`, 0이 아니면 → `save.Progress.MarkCleared(level, bodiesUsed, stars)`(Contracts, 구현됨: 최소 몸·최다 별 유지, 맵이 바뀌면 별도 0부터). 표시용 `save.Progress.BestStars(level)`(0 = 없음). `ProgressData.MaxStars == Stars.Max`(= 3).
+- **저장(씬 플로우)**: `GameFlowController.OnWon`에서 `stars = Stars.Of(bodiesUsed, level.Bodies, attempt.Hints)` → `save.Progress.MarkCleared(level, bodiesUsed, stars)`(Contracts, 구현됨: 최소 몸·최다 별 유지, 맵이 바뀌면 별도 0부터). 표시용 `save.Progress.BestStars(level)`(0 = 없음). `ProgressData.MaxStars == Stars.Max`(= 3).
 - **표시(게임플레이/UI·아트)**: 결과 화면 이번 별 + 최고 별, 스테이지 선택의 별. 행성(챕터)마다 7스테이지 = 북두칠성 7별, 별 수 = 밝기, 50번(원형 제단) = 북극성. 아트 `RuinsHengeUiResources.starEmpty/starFilled`.
 - 텔레메트리 `level_clear`에 `stars`를 실을지는 백엔드/분석이 `docs/telemetry.md`에 정한다(규칙 변경이 아니라 필드 추가).
 
@@ -397,7 +397,7 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 - **매 프레임 할당 금지**: `Update`/`LateUpdate`에서 LINQ, `params` 배열, 문자열 결합, 람다 캡처, `GetComponent*` 금지. 문자열은 상태가 바뀔 때만 만든다. (v0 `GameController.Pressed(params ...)`+`Any`는 2단계에서 고칠 것)
 - **입력**: Input System만 쓴다(`Keyboard.current` 또는 `InputSystem_Actions`). 레거시 `Input` 클래스 금지.
 - **에디터 코드**는 `Scripts/Editor`의 `SevenSteps.Editor` 어셈블리에만. 런타임 코드에서 `#if UNITY_EDITOR`는 최소화.
-- **구조 원칙 (사용자 지시 2026-11-08)**: 객체지향, MVC, 단정적 프로그래밍. 근거·사례는 `docs/scene-flow.md` 1장. 새 코드와 이번에 손대는 코드에 적용하고, 기존 코드는 `scene-flow.md` 5장 단계 계획대로 옮긴다(한꺼번에 고치지 않는다).
+- **구조 원칙 (사용자 지시 2026-11-08)**: 객체지향, MVC, 단정적 프로그래밍. 근거·사례는 `docs/scene-flow.md` 11장(코드 규칙). 새 코드와 이번에 손대는 코드에 적용하고, 기존 코드는 `docs/scene-flow-2026-11-08.md` 5장 단계 계획대로 옮긴다(한꺼번에 고치지 않는다).
 - **MVC**:
   - Model: Core, `GameSession`, `AppFlow`, `SaveSystem`. 순수 C#, 변경은 C# 이벤트로 알린다. View 구체 타입을 모른다. 예외 하나: `GameSession`은 Contracts의 `IBoardPresenter` 인터페이스로 연출을 순서대로 부른다(4장, 입력 락·시퀀싱 계약).
   - View: 표시 전용 MonoBehaviour·프리팹. 사용자 조작은 `event Action...`으로 낸다. Model을 바꾸지 않고 `Services`를 읽지 않는다. Model 데이터(`State`, `ProgressData` 등)는 읽기 전용으로 받아 그린다.
@@ -1161,3 +1161,6 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | feat/view b6ad087 승인(c5a3657 N1: 힌트 줄이 HintSteps를 잡아 둠). `docs/reviews/2026-11-11-feat-view-4024c25.md` |
 | 2026-11-11 | 아키텍트 | feat/scene-flow 7452b11+426ce76 승인(메뉴 시작 줄 다시 보기: MenuController canReplayLine/replayLine, MenuPanel 보이는 행만 배치·높이 가운데, 결과 위에서는 행 없음). 메모 M1 ReplayStartLine 문서 주석 자리. `docs/reviews/2026-11-11-scene-flow-7452b11.md` |
 | 2026-11-11 | 아키텍트 | feat/scene-flow 93b5e04 승인(7452b11 M1: ReplayStartLine 문서 주석 자리, 순서만). `docs/reviews/2026-11-11-scene-flow-7452b11.md` |
+| 2026-11-11 | 아키텍트 | feat/scene-flow 21ea3d8 조건부 승인(scene-flow.md를 Unity 씬 구조로 다시 씀: Boot 0·Title 1·Game 2, Single + DDOL 유지, `Loading`은 보류 자리만, 에디터 Play Mode 확인 P1~P4). 고칠 것 M1 DDOL 수 0~2, M2 도메인 리로드 Unity 6 링크, M3 Play Mode 캡처 방식·빈 화면 대조. 9장 구조 원칙 참조를 scene-flow.md 11장·scene-flow-2026-11-08.md 5장으로 수정. `docs/reviews/2026-11-11-scene-flow-unity-structure.md` |
+| 2026-11-11 | 아키텍트 | feat/scene-flow 4515ccf+a67fac6 승인(21ea3d8 M1~M3·N1/N3/N4/N5 문서 반영, P1: `SevenSteps.Tests.PlayMode` asmdef 소유자 검토 승인(UNITY_INCLUDE_TESTS, 플레이어 빌드 제외), `Bootstrap.UseLaunchOptionsForNextRun`/`ResetForTest` 런타임 경로 불변, 저장 키 `#playtest` 분리, SceneFlowTests 6개, `unity.sh playtest` 직접 실행 6/6). 메모 P1-N1 ResetForTest 범위, P1-N2 테스트 진입점 공개. `docs/reviews/2026-11-11-scene-flow-unity-structure.md` |
+| 2026-11-11 | 아키텍트 | feat/scene-flow f40d292+975d2ce+ac632a9 승인(P2 PlayCapture 에디터 전용·1280×720·Board/Empty 대조, P3 Contracts `AppScenes.BuildOrder` 추가(빌드 목록 순서의 한 곳, 검증기 `ValidateBuildOrder`)·Boot 배경 카메라(씬 오브젝트, DDOL 아님, cullingMask 0)·주석, P4 JourneyFlowTests·PlayEnv, playtest 직접 실행 8/8). 메모 P2-N1~N3, P3-N1. `docs/reviews/2026-11-11-scene-flow-unity-structure.md` |

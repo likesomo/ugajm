@@ -1,0 +1,1 @@
+{"name":"SevenSteps.StepStars.Review","references":["SevenSteps.Art","SevenSteps.Core","SevenSteps.Contracts","SevenSteps.Game","UnityEngine.UI"],"includePlatforms":[],"defineConstraints":["UNITY_EDITOR"],"autoReferenced":false}

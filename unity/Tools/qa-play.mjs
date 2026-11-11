@@ -118,7 +118,7 @@ export function replayLine(line) {
   for (const [f, chars] of [['steps', 'UDLR'], ['keeps', 'K'], ['switches', 'X'], ['undos', 'Z'], ['hints', 'H']])
     if (count(own, chars) !== line[f]) problems.push(`${f} ${line[f]}, replay ${count(own, chars)}`);
   const wantStars = s.status === 'win'
-    ? stars({ bodiesUsed: bodiesUsedOf(s), minBodies: st.minBodies, hints: line.levelHints, undos: line.levelUndos, restarts: line.levelRestarts })
+    ? stars({ bodiesUsed: bodiesUsedOf(s), bodies: st.level.bodies, hints: line.levelHints })
     : null;
   if (wantStars !== line.stars) problems.push(`stars ${line.stars}, replay ${wantStars}`);
   return problems;
@@ -164,7 +164,7 @@ function closeAttempt(ss, outcome, s, lastEvents) {
     steps: count(own, 'UDLR'), keeps: count(own, 'K'), switches: count(own, 'X'), undos: count(own, 'Z'), hints: count(own, 'H'),
     bodiesUsed: bodiesUsedOf(s), levelUndos: ss.levelUndos, levelHints: ss.levelHints, levelRestarts: ss.levelRestarts,
     stars: outcome === 'clear'
-      ? stars({ bodiesUsed: bodiesUsedOf(s), minBodies: st.minBodies, hints: ss.levelHints, undos: ss.levelUndos, restarts: ss.levelRestarts })
+      ? stars({ bodiesUsed: bodiesUsedOf(s), bodies: st.level.bodies, hints: ss.levelHints })
       : null,
     stateKey: stateKey(s), stateHash: keyHash(stateKey(s)), startT: ss.attemptT, t: new Date().toISOString(),
   };

@@ -122,7 +122,7 @@ namespace SevenSteps.Tests
             string[] keys = { "ruins", "ruins", "moss" };
             var flow = new AppFlow(new Scenes(), 3);
             var game = new GameFlowController(flow, EntryTracker.ForLaunch(false), new SaveSystem(new MemoryStore()), new Board(), new Panel(),
-                _ => 0, stage => keys[stage]);
+                stage => keys[stage]);
             var overlays = new OverlayStack();
             var card = new Card();
             using var intro = new ChapterIntroController(game, overlays, card,
@@ -146,7 +146,7 @@ namespace SevenSteps.Tests
             string[] keys = { "ruins", "ruins", "moss" };
             var flow = new AppFlow(new Scenes(), 3);
             var game = new GameFlowController(flow, EntryTracker.ForLaunch(false), new SaveSystem(new MemoryStore()), new Board(), new Panel(),
-                _ => 0, stage => keys[stage]);
+                stage => keys[stage]);
             var overlays = new OverlayStack();
             var card = new Card();
             var dive = new JourneyDive();
@@ -167,7 +167,7 @@ namespace SevenSteps.Tests
         public void NoCardOrNoDataMeansNothing()
         {
             var flow = new AppFlow(new Scenes(), 3);
-            var game = new GameFlowController(flow, EntryTracker.ForLaunch(false), new SaveSystem(new MemoryStore()), new Board(), new Panel(), _ => 0, _ => "");
+            var game = new GameFlowController(flow, EntryTracker.ForLaunch(false), new SaveSystem(new MemoryStore()), new Board(), new Panel(), _ => "");
             var overlays = new OverlayStack();
             using (new ChapterIntroController(game, overlays, null, id => new ChapterCardModel("x", 1, "p", "")))
                 game.Start(0);
