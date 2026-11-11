@@ -199,6 +199,21 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
 
 - `Present`가 끝난 그림과 `Snap(result.State)`의 그림은 같아야 한다. 연출 중 만든 임시 오브젝트(링, 파편)는 `Snap`이 모두 정리한다.
 
+### 4.4 KEEP/SWITCH 선택 화면 (최소 UI v3, 2026-11-11 사용자 승인, `Contracts/ChoicePreview.cs`)
+기준: `production/ui-minimal-plan.md` "승인된 결정", feat/art `design/art/ui-minimal.md` UI v3, 참고 구현 feat/art 2cd08fb `Art/Test/UiV3`(리뷰 전용, 복사하지 않음). 규칙 코드는 바꾸지 않는다.
+- **판단**: 선택 UI는 화면의 State가 `Status.Choose`일 때만 보인다. 다른 것(구덩이·출구·출발점·금 간 바닥·마지막 형제의 자동 선돌)은 Status가 Choose가 아니므로 표시가 없다. 판정을 따로 만들지 않는다.
+  - 보이는 시점: Present로 Choose가 되었으면 `Presented(state)`(일곱째 걸음 연출 끝) 뒤. Snap(Undo로 돌아옴)·Rebuild면 그 `Updated`에서 바로.
+  - 숨는 시점: Status가 Choose가 아닌 `Updated`를 받으면 즉시(확정 명령의 Present `Updated`는 보드 연출 시작 전에 온다).
+- **미리보기(고스트·카드 문구)**: `ChoicePreview.TryOf(state, out p)`. `Rules.Dispatch(choose, Keep/Switch)` 순수 호출 두 번이고 세션에 보내지 않는다. 그래서 세션 State·Undo 사슬·텔레메트리·리플레이가 그대로다. 테스트 `MinimalUiContractTests`가 "미리보기 = 세션이 실제 적용한 결과"(`Rules.Key` 비교)를 고정한다.
+  - KEEP 고스트: `p.Cell`의 선돌 + `p.KeepStart`의 다음 형제 + 둘 사이 점선. SWITCH 고스트: `p.SwitchStart`(= `p.Cell`)의 다음 형제 + 매듭.
+  - KEEP으로 문이 바뀌면 `p.Keep.Events`·`p.Keep.State`로 보여 줄 수 있다(선택).
+  - 카드 테두리 = 형제 색[`p.NextBody`](`BodyIndex`, 15.1과 같은 출처).
+  - `Updated`마다 다시 만든다(Undo·언어 변경). 미리보기 State를 `StarTrailMap`·텔레메트리·저장에 쓰지 않는다.
+- **입력**: 카드 클릭·탭·Enter는 `session.Send(Command.Keep / Command.Switch)`이고 K/X와 같은 경로다. 카드는 `IsLocked`를 보지 않는다(4.1). 호버·포커스는 표시만 바꾸고 명령이 아니다. 선택 중 이동은 규칙이 `Feedback`으로 거부한다. 방향 버튼을 끄는 것은 표시일 뿐이다.
+- **확정 연출**: 그 Keep/Switch 명령의 `IBoardPresenter.Present` 안에서 재생한다. 경로·이벤트·새 형제 등장까지 **`ChoicePreview.ConfirmSecondsMax` 0.5초 이하**이고, 움직임 줄이기(11.3.2)면 0초(바로 `done`)다. 잠금은 4.1 그대로다: 그 사이 입력은 큐(최대 2), Undo·Restart는 연출을 끊고 `Snap`. `done`은 정확히 한 번. 카드가 사라지는 UI 애니메이션은 잠금과 무관하고 상태 반영을 늦추지 않는다.
+- **Z**: 선택 중 Z = 일곱째 걸음 전(6걸음 진행). 확정 뒤 Z = 선택 화면(`p.Keep.State.Prev`가 Choose 상태)이고 카드가 Snap으로 다시 뜬다. 기존 Undo 그대로이며 새 코드가 없다.
+- **확정 횟수**: `Updated`가 Present이고 `Command.Type`이 Keep/Switch일 때 세션 구독 컨트롤러(Game, 한 곳)가 `save.CountChoiceConfirm()`을 부른다. Feedback·Snap·Rebuild·Replay는 세지 않고 Undo로 줄지 않는다. 설명 밀도는 `save.ExplainChoice`(처음 3회: 두 결과 설명, 이후: 포커스한 쪽만), 11.3.2.
+
 ---
 
 ## 5. Undo: 상태 스냅샷 재그리기 (필수)
@@ -532,6 +547,18 @@ else flow.Go(AppState.Title);
 
 **구현 담당 제안**: 아키텍트가 Contracts(`ProgressData` v2, `StageRecord`, `ProgressMigration`, EditMode 테스트: v0·v1 이전, `levelKey` 불일치, 미래 버전)와 **호출부 기계적 수정을 한 커밋에** 넣는다(공용 API가 바뀌어 나눠 넣으면 7lucky 컴파일이 깨짐). 호출부: `GameFlowController`·`TitleFlowController`(씬 플로우), `TitleViews`·`HudView`·`TelemetryRunner`(게임플레이/UI), `LevelCatalog` 이름 중복 검사(씬 플로우). 각 소유자가 자기 파일을 검토한다. **R1(첫 50스테이지 묶음) 합류 전에** 들어가야 한다.
 
+#### 11.3.2 1회 안내와 접근성 설정 (최소 UI v3, 2026-11-11, scene-flow 제안 채택, `Contracts/Save/Tutorial.cs`)
+- **키 `seven-steps.tutorial`** → `TutorialData { version 1, seen: ["move@1", ...], choiceConfirms 0..3 }`. 설정 키에 두지 않는 이유: `StartNewPlayer`(`-newplayer`)가 진행 기록과 함께 지워야 다음 테스터가 안내를 다시 본다. 설정은 남는 값이다.
+- **안내 ID** = `이름@버전`(이름 a-z 0-9 -, 버전 1~99, `TutorialIds.IsValid`). 안내 내용을 바꾸면 버전을 올린다. 그러면 새 ID라 한 번 더 보인다. 정해진 것: `TutorialIds.Move = "move@1"`(첫 이동), `TutorialIds.Choose = "choose@1"`(첫 선택 화면의 "걷기 잠김, 하나를 고른다"). 새 ID는 씬 플로우가 `TutorialIds`에 상수로 더한다(아키텍트 리뷰).
+- **명령**(모두 바로 저장): `TutorialSeen(id)`, `MarkTutorialSeen(id)`(잘못된 ID는 `ArgumentException`), `ChoiceConfirms`, `ExplainChoice`(= 확정 3회 미만), `CountChoiceConfirm()`(3에서 멈춤).
+- **seen 시점**: 안내가 가리킨 조작이 처음 **적용된** 때(`Updated` Present). 막힌 입력(Feedback)은 소비하지 않는다. Undo·Restart·언어 변경은 seen을 바꾸지 않는다. 메뉴의 조작법 다시 보기도 seen을 바꾸지 않는다.
+- **리플레이·검사 실행**: `LaunchOptions.Replay`가 있거나 `SmokeView`가 켜진 실행은 안내를 띄우지 않고 세지도 않는다(스크린샷·보드 픽셀 측정 보호). Replay는 Snap이라 확정 횟수에도 저절로 안 들어간다. `Rules.Key`·QA 시도 줄·텔레메트리에는 들어가지 않는다.
+- **이전·손상**: 값이 없거나 깨졌으면 기본값이다. `version`이 1보다 크면(새 빌드의 저장) 읽지 않고 덮어쓰지 않는다(progress와 같다). `choiceConfirms`는 0~3으로 자른다.
+- **접근성**: `SettingsData.showStepNumbers`·`reduceMotion`(기본 false, 필드 추가만이라 `version` 1 그대로, 옛 저장은 false로 읽힘). 명령 `SetShowStepNumbers(on)`·`SetReduceMotion(on)`은 저장하고 `SettingsChanged`를 낸다. 뷰는 그 이벤트로 다시 그린다.
+  - 설정이라 `StartNewPlayer`가 남긴다(음량·언어와 같음). 플레이테스트 진행자는 테스터를 바꿀 때 둘 다 꺼져 있는지 본다(playtest-guide에 한 줄).
+  - 걸음 숫자 표시: 발치 별 옆 한 곳에 걸은 수/7, 숫자 발자국(gameplay-ui). `StarTrailMap` 데이터는 그대로다.
+  - 움직임 줄이기: 맥동 대신 이중 테두리(`_StarTrailPulse` x·z는 0으로 고정, 뷰가 표시를 바꿈), 각성·피날레 광선은 끝 그림으로 바로, 확정 연출 0초(4.4). 규칙·입력 타이밍은 바뀌지 않는다.
+
 ### 11.4 텔레메트리 (`ITelemetry`, 스키마 v1)
 
 스키마·전송 사양의 기준은 **`docs/telemetry.md` v1**(백엔드/분석)이고, 이벤트 생성 기준 구현은 `prototypes/seven-steps/src/telemetry.js`의 `Tracker`다. Unity는 같은 입력에 같은 이벤트를 낸다. 공용 타입(`Contracts/Telemetry/`):
@@ -829,6 +856,34 @@ namespace SevenSteps.Game.UI {
 - HUD: 상태 라벨은 아이콘 옆(같은 카드), 조작 안내는 보조 18 이상 + 판, 버튼 줄과 8 이상 띄움.
 - 전후 캡처: 각 작업 공간 `reports/ui-layout/<화면>-<ko|en>-<1280|webgl>-<before|after>.png`(커밋하지 않음).
 
+### 14.11 최소 UI v3 등록 (2026-11-11 사용자 승인, `production/ui-minimal-plan.md`)
+14.1~14.9 규칙은 그대로다. 바뀌는 것은 HUD 배치와 `UiLayoutCheck`에 등록할 화면이다.
+- **보드 틀** `HudView.BoardFrame` 제안은 **(276, 80, 728, 496)**이다(1280×720, 왼쪽 위 원점).
+  - 위 HUD 띠(메뉴·제목·형제 점, y 24~72) + 8부터, 아래 Undo·Reset(y 644~) 위까지이다. 양옆 252씩은 선택 카드와 1회 안내 자리다.
+  - 8×6(pitch 50)에서 `BoardView.Fit`이 padding 0.7이면 셀 약 77px, 0.5이면 약 81px를 준다.
+  - Codex 값 ortho 4.65·중심 (0,−0.75,0)은 8×6의 목표치다. 카메라를 그 값으로 고정하지 않고, Fit이 틀에서 판마다 계산한다(가장 넓은 판 17×3도 같은 틀).
+  - gameplay-ui가 수치를 바꿔도 된다. `UiLayoutCheck`는 상수가 아니라 실제 HUD 사각형과 보드 투영을 비교한다(14.6).
+- **상시 HUD**는 메뉴·제목·Undo·Reset·형제 점 3이다.
+  - 버튼은 48×48 이상(터치)이다.
+  - 제목은 본문 22 이상이다. **시안의 20px는 14.2 위반**이라 22로 올린다.
+  - 형제 점은 장식이다(14.3 대비 3:1, 색 말고 모양으로도 구분).
+  - 상시 조작키 줄과 방향 버튼은 1회 안내 화면에만 있다.
+- **선택 화면**(4.4)
+  - 카드(판·이름·그림·K/X 배지·결과 한 줄)와 설명 판은 보드 영역(14.6) 밖에 두고, 서로 겹치지 않는다. 배지 글자는 보조 18 이상, 나머지는 본문 22 이상이다. 다음 형제 색 테두리는 장식이다(3:1, 굵기 2).
+  - 배치: 보드 영역의 좌·우·위·아래 후보 중 형제 투영점에 가장 가까운, 겹치지 않는 후보를 쓴다. 후보가 없으면 칸 위에 얹지 않는다. 등록 화면에서 오류로 나오므로 틀을 고친다.
+  - **보드 30% 암부**: 3D 쪽(셰이더가 `_StarTrailState.y == 1` 선택 단계를 읽음, 또는 카메라 앞 quad)을 권한다.
+    - UI `Image`로 한다면 HUD 맨 뒤 형제이고 `raycastTarget` 끔이다.
+    - 그리고 `UiLayout.exempt = Decoration | Board`, reason "choose dim 30% (ui-minimal v3)"을 단다. 막 알파 0.6 미만이라 모달이 아니다.
+    - 형제 링·연결선·고스트는 3D 표시다(UI로 그리면 장식 규칙을 따른다).
+- **등록 화면**: 씬 플로우가 `UiLayoutCheck`에 등록하고, gameplay-ui는 각 뷰의 Edit Mode `Build` 경로(14.9)를 준다. 모두 ko·en, 1280×720(1920×1080은 같은 캔버스 단위), 1280×800은 경고다.
+  1. HUD 평소: 기존 넷(가장 긴 힌트·이름, 가장 넓은·높은 판)을 새 HUD로 본다.
+  2. HUD + 걸음 숫자 표시 켬: 가장 넓은 판.
+  3. 1회 이동 안내(`TutorialIds.Move`): 첫 스테이지.
+  4. 선택 화면: 기존 chooser 스테이지와, 7수 안에 Choose에 닿는 가장 넓은 판(있으면). 각각 `ExplainChoice` 참(두 설명 + `TutorialIds.Choose` 안내)과 거짓(포커스 하나)이다.
+  5. 메뉴(씬 플로우, 설정·스테이지·풀이 보기): 14.7 모달.
+  6. Result(최소: 별·별자리·다음): 기존 등록을 새 배치로 본다.
+- HUD·Result·선택 화면 위반은 지금처럼 오류다(`HudResultAreErrors`). 새 `exempt`는 아키텍트 리뷰에서 이유를 본다(14.8).
+
 ---
 
 ## 15. 별 흔적 셰이더 입력 (2026-11-10, 사용자 승인 `production/star-trail-plan.md`)
@@ -907,7 +962,7 @@ namespace SevenSteps.Game.UI {
 - **임시 렌더**: 셰이더 마스크(아트)가 오기 전, gameplay-ui의 결합 quad 메시 1개(+1 드로우, 코드 생성 아틀라스)는 개발용으로 허용한다. 최종은 15.2 전역 텍스처(추가 드로우 0)다. 아트 v2 시안에서 배치(비트)를 바꿔야 하면 아키텍트가 15.2와 `StarTrailMap`을 함께 고친다.
 
 ### 15.6 형제 발치의 별 일곱 고리 (2026-11-10, 리드 지시 ui-minimal 예고, feat/view 535e775)
-- 걷는 중(`Status.Play`)인 형제 발치에 별 일곱 개가 고리로 놓인다. k걸음을 쓰면 k번째 별이 꺼진다. 그래서 켜진 별이 남은 걸음이고, 6걸음 뒤에는 7번째 별이 맥동한다.
+- 걷는 중(`Status.Play`)인 형제 발치에 별 일곱 개가 고리로 놓인다. k걸음을 쓰면 k번째 별이 채워진다(2026-11-11 승인 시안: 채운 별 = 걸은 수, 빈 별 = 남은 수, 숫자 없음). 6걸음 뒤에는 마지막 빈 별이 맥동한다(움직임 줄이기면 이중 테두리, 11.3.2).
 - **데이터**: 위치는 층 0 A 비트 1(`StarTrailMap.SetPlayer(State.Pos)`), 쓴 걸음은 `_StarTrailState.w`(`StateVector(..., used)`), 맥동은 `_StarTrailPulse.z`다. 선택·승리·패배 단계에서는 비트를 쓰지 않는다(고리 없음).
 - 같은 State에서 다시 계산하므로 Undo·Restart가 저절로 맞는다. 이동 중에는 고리가 도착 칸에 있다(Present 뒤 갱신).
 - 임시 quad가 그리는 동안(`StarTrailView.UseQuad`)은 뷰가 같은 값으로 그린다. 셰이더가 그리게 되면 셰이더가 이 세 값만 읽는다.
@@ -973,3 +1028,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-10 | 아키텍트 | 15장 별 흔적 셰이더 입력: 전역 `_StarTrailMap`((2W)×H RGBA32, 층 0 걸음·선돌·최신, 층 1 경로 변)·`_StarTrailWorldToCell`·`_StarTrailParams`·`_StarTrailPulse`·`_StarTrailColors`, Contracts `StarTrailMap`(배치·쓰기 도우미·`WorldToCell`). 추가 드로우 0, State에서 매번 다시 채움 |
 | 2026-11-10 | 아키텍트·게임플레이/UI | 15.5 별 흔적 상태 머신(층 1 A 끝난 방식 비트, 전역 `_StarTrailState`)과 행성별 값 `StarTrailPreset`(Contracts SO, `ChapterPreset.starTrail`, 비면 Default, `SetGlobals` → `_StarTrailStyleA/B/C`·`_StarTrailTint`, `tileset-validate` 범위 검사) |
 | 2026-11-10 | 아키텍트·게임플레이/UI | 15.6 별 일곱 고리: 층 0 A 비트 1(`SetPlayer`), `_StarTrailState.w` = 쓴 걸음, `_StarTrailPulse.z` = 마지막 걸음 고리 맥동. feat/view 535e775 검토 |
+| 2026-11-11 | 아키텍트·씬 플로우 | 최소 UI v3 계약: 4.4 선택 화면(`ChoicePreview.TryOf` = `Rules.Dispatch` 순수 호출 미리보기, 확정 연출 0.5초 이하는 기존 Present 잠금, Z는 선택 전, 확정 횟수는 Present Keep/Switch만). 11.3.2 키 `seven-steps.tutorial`(`TutorialData` seen `이름@버전`·choiceConfirms 상한 3, `StartNewPlayer`가 지움, 리플레이·smoke 실행 제외), 접근성 `SettingsData.showStepNumbers`·`reduceMotion`(기본 끔). 14.11 BoardFrame 제안 (276,80,728,496)·상시 HUD·선택 화면 배치·등록 화면 6종. 15.6 채운 별 = 걸은 수로 문구 정정. 테스트 `MinimalUiContractTests` 7개 |
