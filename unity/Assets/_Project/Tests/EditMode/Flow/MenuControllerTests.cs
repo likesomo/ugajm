@@ -8,10 +8,13 @@ namespace SevenSteps.Tests
     /// The minimal HUD's one menu (production/ui-minimal-plan.md): settings, stages, solution, controls.
     public sealed class MenuControllerTests
     {
+        bool hasLine;
         sealed class FakeMenu : IMenuPanel
         {
-            public bool Shown;
-            public event Action SettingsRequested, StagesRequested, SolutionRequested, ControlsRequested, CloseRequested;
+            public bool Shown, ReplayShown = true;
+            public event Action SettingsRequested, StagesRequested, SolutionRequested, ControlsRequested, ReplayLineRequested, CloseRequested;
+            public void ShowReplayLine(bool shown) => ReplayShown = shown;
+            public void ReplayLine() => ReplayLineRequested?.Invoke();
             public void Show() => Shown = true;
             public void Hide() => Shown = false;
             public void Settings() => SettingsRequested?.Invoke();
@@ -44,7 +47,9 @@ namespace SevenSteps.Tests
             calls = new List<string>();
             menu = new MenuController(overlays, panel,
                 () => { calls.Add("settings"); overlays.Push(settings); },
-                () => calls.Add("stages"), () => calls.Add("solution"), () => calls.Add("controls"));
+                () => calls.Add("stages"), () => calls.Add("solution"), () => calls.Add("controls"),
+                () => hasLine, () => { calls.Add("line open " + menu.IsOpen); return hasLine; });
+            hasLine = true;
         }
 
         [TearDown]
@@ -107,6 +112,30 @@ namespace SevenSteps.Tests
             settings.Close();
             panel.Solution(); // menu closed: ignored
             CollectionAssert.IsEmpty(calls);
+        }
+
+        [Test]
+        public void StartLineRowOnlyWhenTheStageHasOneAndItClosesTheMenuFirst()
+        {
+            hasLine = false; // no start line, or a result is up (review ebdb653 N1)
+            menu.Open();
+            Assert.IsFalse(panel.ReplayShown);
+            menu.Toggle();
+            hasLine = true;
+            menu.Open();
+            Assert.IsTrue(panel.ReplayShown);
+            panel.ReplayLine();
+            Assert.IsFalse(menu.IsOpen);
+            CollectionAssert.AreEqual(new[] { "line open False" }, calls);
+        }
+
+        [Test]
+        public void StartLineIsOptional()
+        {
+            var bare = new MenuController(overlays, new FakeMenu(), () => { }, () => { }, () => { }, () => { });
+            bare.Open();
+            Assert.Throws<ArgumentException>(() => new MenuController(overlays, new FakeMenu(), () => { }, () => { }, () => { }, () => { }, () => true));
+            bare.Dispose();
         }
     }
 }

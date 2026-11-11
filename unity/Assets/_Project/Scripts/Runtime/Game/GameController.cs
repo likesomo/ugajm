@@ -177,7 +177,11 @@ namespace SevenSteps.Game
                 openSettings: () => { if (!overlays.Contains(settings)) overlays.Push(settings); },
                 openStages: flowController.OpenStageSelect,
                 showSolution: board.ShowHint,
-                playControls: tutorial.PlayControls);
+                playControls: tutorial.PlayControls,
+                // "시작 줄 다시 보기" (story-integration.md 0.2): the row only when the stage has a start line and no result is up
+                // (review ebdb653 N1). storyLines is made later in Awake: lambdas.
+                canReplayLine: () => storyLines != null && flow.State != AppState.Result && StartLineHere().Length > 0,
+                replayLine: () => ReplayStartLine());
             hud.MenuRequested += menu.Toggle; // the HUD menu button (settings, stages, solution, controls)
             // Move guide (first play, or Menu > controls) in the HUD's left margin; the KEEP / SWITCH guide goes with the choice cards.
             hud.Guide = tutorial.ShowMoveGuide;
@@ -203,7 +207,7 @@ namespace SevenSteps.Game
             for (int i = 0; i < chapterKeys.Length; i++) chapterKeys[i] = LevelCatalog.ChapterKeyOf(i);
             bool FinaleHere() => story.On && StoryTruths.IsFinaleStage(chapterKeys, board.LevelIndex);
             storyLines = new Story.StoryDirector(board.Session, hud, devRun || launch.ArtPerf,
-                startLine: () => Story.StoryDirector.StartText(LevelCatalog.TextOf(board.LevelIndex, localizer.Current), LevelCatalog.StartLineOf(board.LevelIndex)),
+                startLine: StartLineHere,
                 finaleLine: () => FinaleHere() ? story.FinaleLine(chapterKeys[board.LevelIndex], localizer.Current) : null,
                 finaleShown: () => story.Progress.MarkShown(story.Catalog.Find(StoryRules.Finale(chapterKeys[board.LevelIndex])).id),
                 covered: () => overlays.Count > 0);
@@ -242,6 +246,9 @@ namespace SevenSteps.Game
                     return $"level {flow.Stage + 1}, status {s.Status}, used {s.Used}, bodies {s.Bodies}";
                 }));
         }
+
+        /// The current stage's start line in the current language ("" = none).
+        string StartLineHere() => Story.StoryDirector.StartText(LevelCatalog.TextOf(board.LevelIndex, localizer.Current), LevelCatalog.StartLineOf(board.LevelIndex));
 
         /// Menu "다시 보기" (story-integration.md 0.2): the stage's start line again once the menu closes. False when the
         /// stage has none (the menu item can say so or stay quiet), and over a result (its HUD is hidden, review N1 on
