@@ -109,7 +109,7 @@
       "n": 13,
       "ko": "구멍 둘, 형제 셋",
       "name": "Two Holes, Three Brothers",
-      "hint": "Two holes. Two bridges.",
+      "hint": "A brother who becomes a bridge walks no more. There are three.",
       "story": "The stars below grow deeper."
     },
     {
@@ -354,7 +354,7 @@
       "n": 48,
       "ko": "길이 된 형제들",
       "name": "Brothers Become the Road",
-      "hint": "Both brothers become the road.",
+      "hint": "Cracked floor falls once crossed, and holds if your seventh step ends on it.",
       "story": "Over the traces, the last steps pass."
     },
     {
@@ -368,7 +368,7 @@
       "n": 50,
       "ko": "원형 제단",
       "name": "The Stone Circle",
-      "hint": "When two brothers stand as stones, the altar opens.",
+      "hint": "The altar gate counts the standing stones.",
       "story": "One night this turn. Into the circle."
     }
   ],
