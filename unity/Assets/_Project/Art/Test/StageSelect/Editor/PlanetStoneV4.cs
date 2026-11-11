@@ -5,6 +5,7 @@ namespace SevenSteps.Art.StageSelectReview
     public sealed partial class PlanetBodyStudy
     {
         public static bool UseV4;
+        public static bool PolishV4b;
         static float Noise(Vector3 n,float scale)=>Mathf.PerlinNoise(n.x*scale+n.z*scale*.37f+19,n.y*scale+n.z*scale*.71f+31);
         static Vector3 Pore(int i,int count)
         {float y=1-2*(i+.5f)/count;float a=i*2.39996323f;return new Vector3(Mathf.Sqrt(1-y*y)*Mathf.Cos(a),y,Mathf.Sqrt(1-y*y)*Mathf.Sin(a));}
@@ -15,9 +16,11 @@ namespace SevenSteps.Art.StageSelectReview
             float grain=(Noise(n,17)-.5f)*.055f+(Noise(n,5)-.5f)*.09f;float radius=3.65f+grain;
             if(p==1){radius-=Pit(n,100,out var rim)*.34f;radius+=rim*.035f;float d=Vector3.Distance(n,new Vector3(0,.64f,-.77f).normalized);if(d<.48f)radius-=.85f*Mathf.Pow(1-d/.48f,1.2f);}
             if(p==2)radius+=Mathf.Sin(n.y*47+n.z*1.8f)*.045f+Mathf.Sin(n.y*21)*.045f;
+            if(PolishV4b&&p==2){float ledge=Mathf.Repeat(n.y*6,1);radius=3.65f+(Noise(n,6)-.5f)*.025f+.18f*(1-Mathf.SmoothStep(.05f,.38f,ledge))-.02f;}
             if(p==3)radius+=Mathf.Sin(n.x*29+n.z*17)*.015f;
             if(p==4)radius-=Mathf.Pow(1-Mathf.Abs(Mathf.Sin(n.x*16+n.z*7)),14)*.035f;
             if(p==5){radius-=Pit(n,85,out var rim)*.14f;radius+=Mathf.Sin(n.y*33+Mathf.Sin(Mathf.Atan2(n.z,n.x)*13)*.6f)*.10f;radius-=Mathf.Pow(Mathf.Max(0,Mathf.Sin(Mathf.Atan2(n.z,n.x)*19+n.y*3)),10)*.11f;}
+            if(PolishV4b&&p==5){float phase=Mathf.Repeat(n.y*5.5f+.045f*Mathf.Sin(Mathf.Atan2(n.z,n.x)*13),1);radius=3.65f+.15f*(1-Mathf.SmoothStep(.10f,.42f,phase))-Pit(n,65,out var lip)*.20f;radius-=Mathf.Pow(Mathf.Max(0,Mathf.Sin(Mathf.Atan2(n.z,n.x)*17+n.y*1.8f)),10)*.14f;}
             var q=Vector3.Scale(n*radius,new Vector3(1,.88f,1));
             if(seat&&p==0&&Mathf.Abs(q.x)<2.72f&&Mathf.Abs(q.z)<1.12f&&q.y>2.25f)q.y=2.25f;
             return q;
@@ -35,6 +38,9 @@ namespace SevenSteps.Art.StageSelectReview
                 case 5:float pore=Pit(n,85,out var lip);float terrace=Mathf.Sin(n.y*33+Mathf.Sin(Mathf.Atan2(n.z,n.x)*13)*.6f);color=Color.Lerp(Hex("B39B72"),Hex("E0CC9E"),grain);color*=1-pore*.38f;if(terrace<-.62f)color*=.72f;else if(terrace>.70f)color=Color.Lerp(color,Hex("EAD8AE"),.65f);break;
                 default:color=Color.Lerp(Hex("999178"),Hex("C2AE74"),grain);if(broad>.51f)color=Color.Lerp(Hex("9B9444"),Hex("B9AE64"),mid);break;
             }
+            if(PolishV4b&&p==2){float phase=Mathf.Repeat(n.y*6,1);color=Color.Lerp(Hex("9A4E35"),Hex("CB8056"),.40f+grain*.15f);if(phase<.13f)color*=.58f;else if(phase<.33f)color=Hex("DD996A");}
+            if(PolishV4b&&p==5){float phase=Mathf.Repeat(n.y*5.5f+.045f*Mathf.Sin(Mathf.Atan2(n.z,n.x)*13),1);color=Color.Lerp(Hex("B49A73"),Hex("E7D2AB"),grain);if(phase<.16f)color*=.64f;else if(phase<.36f)color=Hex("EAD9B5");color*=1-Pit(n,65,out var lip)*.36f;}
+            if(PolishV4b&&p==6){color=Color.Lerp(Hex("88887C"),Hex("BDB29A"),grain);if(broad>.61f)color=Color.Lerp(Hex("9C914A"),Hex("B0A35A"),mid);}
             return color;
         }
         void StoneTri(int p,Vector3 a,Vector3 b,Vector3 d,bool seat)
@@ -59,7 +65,7 @@ namespace SevenSteps.Art.StageSelectReview
                 Band(center-.045f,center+.045f,Hex("9C7648")*(.94f+.06f*Mathf.Sin(segment*4)));
                 Band(center-.054f,center-.045f,Hex("C5A05A"));Band(center+.045f,center+.054f,Hex("C5A05A"));
             }
-            if(p==6)for(int k=0;k<7;k++){float a=k*Mathf.PI*2/7;m.Box(new Vector3(Mathf.Cos(a)*1.22f,3.20f,Mathf.Sin(a)*1.22f),new Vector3(.24f,.42f,.27f),Hex("BFB28B"),Quaternion.Euler(0,k*51,0));}
+            if(p==6)for(int k=0;k<7;k++){float a=k*Mathf.PI*2/7;float r=PolishV4b?1.50f:1.22f;m.Box(new Vector3(Mathf.Cos(a)*r,PolishV4b?3.15f:3.20f,Mathf.Sin(a)*r),PolishV4b?new Vector3(.46f,.72f,.40f):new Vector3(.24f,.42f,.27f),PolishV4b?Hex("CAC0A5"):Hex("BFB28B"),Quaternion.Euler(0,k*51,0));}
             if(p==3)for(int k=0;k<6;k++){float a=k*Mathf.PI/3;var pos=new Vector3(Mathf.Cos(a)*1.5f,2.80f,Mathf.Sin(a)*1.5f);m.Crystal(pos,.40f,Hex("D1EBEA"));}
             if(p==3)for(int line=0;line<5;line++)for(int k=0;k<24;k++)
             {
@@ -67,7 +73,18 @@ namespace SevenSteps.Art.StageSelectReview
                 var n=Crack(k/24f);var n2=Crack((k+1)/24f);var a=StonePoint(p,n)+n*.028f;var b=StonePoint(p,n2)+n2*.028f;var side=Vector3.Cross(n,b-a).normalized*.025f;
                 m.Tri(a-side,b-side,b+side,Hex("5F91A9"));m.Tri(a-side,b+side,a+side,Hex("5F91A9"));
             }
-            if(p==2)for(int k=0;k<8;k++){var n=new Vector3(-.6f+k*.17f,.20f,-1).normalized;var n2=(n+new Vector3(.03f,.065f,0)).normalized;var pos=StonePoint(p,n)+n*.024f;var end=StonePoint(p,n2)+n2*.024f;var delta=end-pos;m.Box((pos+end)*.5f,new Vector3(.018f,.018f,delta.magnitude),Hex("E1A16A"),Quaternion.LookRotation(delta));}
+            if(p==2&&!PolishV4b)for(int k=0;k<8;k++){var n=new Vector3(-.6f+k*.17f,.20f,-1).normalized;var n2=(n+new Vector3(.03f,.065f,0)).normalized;var pos=StonePoint(p,n)+n*.024f;var end=StonePoint(p,n2)+n2*.024f;var delta=end-pos;m.Box((pos+end)*.5f,new Vector3(.018f,.018f,delta.magnitude),Hex("E1A16A"),Quaternion.LookRotation(delta));}
+            if(p==2&&PolishV4b)for(int glyph=0;glyph<3;glyph++)
+            {
+                Vector3 Mark(float x,float y){var n=new Vector3(x,y,-1).normalized;return StonePoint(p,n)+n*.07f;}
+                void Stroke(Vector3 a,Vector3 b){var side=Vector3.Cross((a+b).normalized,b-a).normalized*.035f;m.Tri(a-side,b+side,b-side,Hex("542F29"));m.Tri(a-side,a+side,b+side,Hex("542F29"));}
+                float x=-.45f+glyph*.43f;Stroke(Mark(x,.20f),Mark(x,.48f));Stroke(Mark(x-.10f,.42f),Mark(x+.10f,.32f));Stroke(Mark(x-.10f,.28f),Mark(x+.10f,.38f));
+            }
+            if(p==5&&PolishV4b)for(int row=0;row<3;row++)for(int k=0;k<10;k++)
+            {
+                float a=k*Mathf.PI/5+.17f*row;float y=.45f-row*.36f;var n=new Vector3(Mathf.Cos(a)*Mathf.Sqrt(1-y*y),y,Mathf.Sin(a)*Mathf.Sqrt(1-y*y));var center=StonePoint(p,n)+n*.09f;var side=Vector3.Cross(Vector3.up,n).normalized*.07f;var tip=center+Vector3.down*(.30f+(k%3)*.08f)+n*.045f;
+                m.Tri(center-side,tip,center+n*.09f,Hex("E9D5AF"));m.Tri(center+n*.09f,tip,center+side,Hex("C8AF87"));
+            }
             var go=m.Draw("Procedural stone planet / "+p,material,parent);go.transform.localRotation=Quaternion.Euler(0,yaw,0);int tris=go.GetComponent<MeshFilter>().sharedMesh.triangles.Length/3;if(tris<4000||tris>6000)throw new Exception("V4 body outside 4-6k triangle budget: "+tris);return go;
         }
     }
