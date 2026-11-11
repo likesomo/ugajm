@@ -151,13 +151,17 @@ namespace SevenSteps.Game.Flow
             return cleared[planet][slot] ? PlaceState.Cleared : PlaceState.Untouched;
         }
 
-        /// A trail is lit when the planet it leaves is complete ("a completed world's outgoing trail lights toward the next
-        /// world even when that destination is unfinished", v3). <paramref name="held"/>: a planet whose new trail waits
-        /// for the journey return pullback (JourneyReturn.Pending), -1 = none.
+        /// A planet is completed for the star trails when its last stage (the chapter finale) is cleared: the same moment
+        /// as the story's finale and scene-flow's journey return (JourneyReturn.Begin), whatever else is left to replay.
+        public bool FinaleCleared(int planet) => cleared[Check(planet)][cleared[planet].Length - 1];
+
+        /// A trail is lit when the planet it leaves is completed (<see cref="FinaleCleared"/>; "a completed world's outgoing
+        /// trail lights toward the next world even when that destination is unfinished", v3). <paramref name="held"/>: a
+        /// planet whose new trail waits for the journey return pullback (JourneyReturn.Pending), -1 = none.
         public bool TrailLit(int edge, int held = -1)
         {
             var (a, _) = trails[edge];
-            return a != held && Complete(a);
+            return a != held && FinaleCleared(a);
         }
 
         /// What a map click / Enter on a planet does: play its first unfinished stage (the dive), or, on a complete

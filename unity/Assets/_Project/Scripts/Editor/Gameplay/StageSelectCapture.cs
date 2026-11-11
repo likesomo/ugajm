@@ -139,6 +139,9 @@ namespace SevenSteps.EditorTools
                 Shot("map-focused", (m, s) => { m.Show(fresh, 0, -1); m.Preview(0); }, "fresh save, moss focused");
                 var mid = Fixture(3, 2, 3, 2);
                 Shot("map-mid-game", (m, s) => { m.Show(mid, 3, -1); m.Preview(3); }, "moss/hollow/carved complete, frost 2 cleared, brothers on frost, frost focused");
+                // The journey-complete-end case (scene-flow smoke): moss stages 1 and 7 cleared, its finale lights the trail.
+                var finale = StageSelectModel.From(keys, stages, st => st == stages[0][0] || st == stages[0][stages[0].Count - 1], stages[0][stages[0].Count - 1], trails);
+                Shot("map-moss-finale", (m, s) => { m.Show(finale, 1, -1); m.Preview(1); }, "moss stages 1 and 7 cleared (finale), brothers on moss, hollow focused");
                 var all = Fixture(planets.Count, 0, planets.Count - 1, stages[planets.Count - 1].Count - 1);
                 Shot("map-all-complete", (m, s) => m.Show(all, planets.Count - 1, -1), "every stage cleared");
                 Shot("surface-moss-default", (m, s) => { m.Show(fresh, 0, -1); s.Bind(fresh, 0); s.Show(); s.Preview(-1); }, "fresh save");

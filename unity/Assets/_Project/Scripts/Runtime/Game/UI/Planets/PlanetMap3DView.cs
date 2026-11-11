@@ -26,6 +26,8 @@ namespace SevenSteps.Game.UI.Planets
     /// </summary>
     public sealed class PlanetMap3DView
     {
+        /// Unlit trails are thin and faint, lit ones twice as wide and gold, so a newly lit trail stands out (lead, journey-complete-end).
+        const float DimWidth = 2f, LitWidth = 4f;
         const float MinTarget = 96f, StarSize = 14f, StarGap = 18f, HoldPreview = 0.5f, LightSeconds = 0.8f;
         static readonly Vector2 LabelSize = new Vector2(360, 64);
         static readonly Color DimTint = new Color(0.7f, 0.72f, 0.78f, 1f); // "slightly dimmed" (research point 2)
@@ -326,7 +328,7 @@ namespace SevenSteps.Game.UI.Planets
         {
             while (lines.Count < model.Trails.Count)
             {
-                var dim = Ui.MakeImage(trailLayer, new Color(Ui.Dim.r, Ui.Dim.g, Ui.Dim.b, 0.55f), null, "Trail");
+                var dim = Ui.MakeImage(trailLayer, new Color(Ui.Dim.r, Ui.Dim.g, Ui.Dim.b, 0.4f), null, "Trail");
                 var lit = Ui.MakeImage(dim.transform, Ui.Gold, null, "Lit");
                 dim.raycastTarget = lit.raycastTarget = false;
                 foreach (var r in new[] { dim.rectTransform, lit.rectTransform })
@@ -372,9 +374,9 @@ namespace SevenSteps.Game.UI.Planets
                 r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
                 r.anchoredPosition = from;
                 float len = Vector2.Distance(from, to);
-                r.sizeDelta = new Vector2(len, 3);
+                r.sizeDelta = new Vector2(len, DimWidth);
                 r.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(to.y - from.y, to.x - from.x) * Mathf.Rad2Deg);
-                lit.rectTransform.sizeDelta = new Vector2(LitLength(k, len), 3);
+                lit.rectTransform.sizeDelta = new Vector2(LitLength(k, len), LitWidth);
             }
             // Arrows: left / right = story order, up / down = nearest that way on screen (y down for Neighbor).
             var points = new Vector2[centers.Length];
@@ -439,7 +441,7 @@ namespace SevenSteps.Game.UI.Planets
             {
                 for (int k = 0; k < model.Trails.Count; k++)
                     if (model.Trails[k].from == lighting && lines[k].dim.gameObject.activeSelf)
-                        lines[k].lit.rectTransform.sizeDelta = new Vector2(LitLength(k, lines[k].dim.rectTransform.sizeDelta.x), 3);
+                        lines[k].lit.rectTransform.sizeDelta = new Vector2(LitLength(k, lines[k].dim.rectTransform.sizeDelta.x), LitWidth);
                 if (Time.unscaledTime - lightStart >= LightSeconds)
                 {
                     lighting = -1;
