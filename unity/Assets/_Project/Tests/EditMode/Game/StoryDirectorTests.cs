@@ -176,6 +176,34 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void ReplayShowsTheStartLineAgainAfterTheMenuCloses()
+        {
+            var r = new Rig();
+            Assert.IsFalse(r.Director.ReplayStartLine(), "no stage yet");
+            r.Session.Load(Short());
+            r.Move(Dir.Right);
+            Assert.IsFalse(r.Line.LineShown);
+            r.Covered = true; // asked from the menu
+            Assert.IsTrue(r.Director.ReplayStartLine());
+            Assert.IsFalse(r.Line.LineShown, "waits under the menu");
+            r.Covered = false;
+            r.Director.CoverChanged();
+            Assert.IsTrue(r.Line.LineShown);
+            Assert.AreEqual("첫째가 먼저 간다", r.Line.Text);
+            r.Move(Dir.Right);
+            Assert.IsFalse(r.Line.LineShown, "gone at the next move");
+
+            r.Start = "";
+            Assert.IsFalse(r.Director.ReplayStartLine(), "a stage without a start line");
+            Assert.IsFalse(r.Line.LineShown);
+
+            var quiet = new Rig(quiet: true);
+            quiet.Session.Load(Short());
+            Assert.IsTrue(quiet.Director.ReplayStartLine(), "the player asked, also in a quiet run");
+            Assert.IsTrue(quiet.Line.LineShown);
+        }
+
+        [Test]
         public void DisposeStopsListening()
         {
             var r = new Rig();

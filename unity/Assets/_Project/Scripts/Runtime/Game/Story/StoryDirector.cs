@@ -92,6 +92,20 @@ namespace SevenSteps.Game.Story
         /// The start line waits for the board to be uncovered.
         public bool StartWaiting => waitingStart != null;
 
+        /// Menu "다시 보기" (story-integration.md 0.2): the stage's start line again, with its full time; it waits while the
+        /// menu still covers the board and goes at the next move like the first time. False when the stage has none
+        /// (startLine "" or an empty text) or no stage is loaded; then nothing changes. Also in quiet runs: the player asked.
+        public bool ReplayStartLine()
+        {
+            if (session.State == null) return false;
+            string start = startLine() ?? "";
+            if (start.Length == 0) return false;
+            StartGone();
+            waitingStart = start;
+            CoverChanged();
+            return true;
+        }
+
         /// Overlays opened or closed: a start line on screen goes back to waiting under a cover, a waiting one shows when uncovered.
         public void CoverChanged()
         {
