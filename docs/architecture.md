@@ -397,7 +397,7 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 - **매 프레임 할당 금지**: `Update`/`LateUpdate`에서 LINQ, `params` 배열, 문자열 결합, 람다 캡처, `GetComponent*` 금지. 문자열은 상태가 바뀔 때만 만든다. (v0 `GameController.Pressed(params ...)`+`Any`는 2단계에서 고칠 것)
 - **입력**: Input System만 쓴다(`Keyboard.current` 또는 `InputSystem_Actions`). 레거시 `Input` 클래스 금지.
 - **에디터 코드**는 `Scripts/Editor`의 `SevenSteps.Editor` 어셈블리에만. 런타임 코드에서 `#if UNITY_EDITOR`는 최소화.
-- **구조 원칙 (사용자 지시 2026-11-08)**: 객체지향, MVC, 단정적 프로그래밍. 근거·사례는 `docs/scene-flow.md` 1장. 새 코드와 이번에 손대는 코드에 적용하고, 기존 코드는 `scene-flow.md` 5장 단계 계획대로 옮긴다(한꺼번에 고치지 않는다).
+- **구조 원칙 (사용자 지시 2026-11-08)**: 객체지향, MVC, 단정적 프로그래밍. 근거·사례는 `docs/scene-flow.md` 11장(코드 규칙). 새 코드와 이번에 손대는 코드에 적용하고, 기존 코드는 `docs/scene-flow-2026-11-08.md` 5장 단계 계획대로 옮긴다(한꺼번에 고치지 않는다).
 - **MVC**:
   - Model: Core, `GameSession`, `AppFlow`, `SaveSystem`. 순수 C#, 변경은 C# 이벤트로 알린다. View 구체 타입을 모른다. 예외 하나: `GameSession`은 Contracts의 `IBoardPresenter` 인터페이스로 연출을 순서대로 부른다(4장, 입력 락·시퀀싱 계약).
   - View: 표시 전용 MonoBehaviour·프리팹. 사용자 조작은 `event Action...`으로 낸다. Model을 바꾸지 않고 `Services`를 읽지 않는다. Model 데이터(`State`, `ProgressData` 등)는 읽기 전용으로 받아 그린다.
@@ -1161,3 +1161,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | feat/view b6ad087 승인(c5a3657 N1: 힌트 줄이 HintSteps를 잡아 둠). `docs/reviews/2026-11-11-feat-view-4024c25.md` |
 | 2026-11-11 | 아키텍트 | feat/scene-flow 7452b11+426ce76 승인(메뉴 시작 줄 다시 보기: MenuController canReplayLine/replayLine, MenuPanel 보이는 행만 배치·높이 가운데, 결과 위에서는 행 없음). 메모 M1 ReplayStartLine 문서 주석 자리. `docs/reviews/2026-11-11-scene-flow-7452b11.md` |
 | 2026-11-11 | 아키텍트 | feat/scene-flow 93b5e04 승인(7452b11 M1: ReplayStartLine 문서 주석 자리, 순서만). `docs/reviews/2026-11-11-scene-flow-7452b11.md` |
+| 2026-11-11 | 아키텍트 | feat/scene-flow 21ea3d8 조건부 승인(scene-flow.md를 Unity 씬 구조로 다시 씀: Boot 0·Title 1·Game 2, Single + DDOL 유지, `Loading`은 보류 자리만, 에디터 Play Mode 확인 P1~P4). 고칠 것 M1 DDOL 수 0~2, M2 도메인 리로드 Unity 6 링크, M3 Play Mode 캡처 방식·빈 화면 대조. 9장 구조 원칙 참조를 scene-flow.md 11장·scene-flow-2026-11-08.md 5장으로 수정. `docs/reviews/2026-11-11-scene-flow-unity-structure.md` |
