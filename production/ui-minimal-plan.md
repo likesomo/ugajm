@@ -1,7 +1,15 @@
 # UI 단순화 배분 준비 — 2026-11-10
 
 작성: 리드. 사용자 지시(코디네이터 전달): Monument Valley 수준의 최소 UI. 기법만 참고하고 모방하지 않는다.
-상태: **준비만.** Codex 목업과 `design/art/ui-minimal.md`(요소 유지·이동·삭제 표, 등장 조건, 구현 메모)가 사용자 승인된 뒤 시작한다. 규칙 코드는 바꾸지 않는다.
+상태: **진행 중 (2026-11-11 사용자 승인).** 최소 UI + 별 흔적 v2 + KEEP/SWITCH 선택 UI v3를 정식 구현한다. 기준: origin/feat/art `design/art/ui-minimal.md`, `concepts/ui/minimal-2026-11-10/v3/README.md`, 참고 구현 feat/art 2cd08fb `unity/Assets/_Project/Art/Test/UiV3/`(리뷰 전용, 복사하지 말고 MVC로 다시 짠다). 규칙 코드는 바꾸지 않고, 판단은 `GameSession.Updated(SessionUpdate)`/`Presented`의 State로만 한다.
+
+## 승인된 결정 (2026-11-11)
+- **상시 HUD**: 메뉴·작은 제목·되돌리기·재시작·형제 점 3개만. 방향 버튼·조작키 줄·안내문은 첫 회 튜토리얼에만(scene-flow 저장).
+- **보드**: 화면 중앙·크게. 프레이밍 ortho 4.65, 중심 (0,-0.75,0) 제안 반영(8×6 셀 약 77px). `HudView.BoardFrame`을 줄어든 HUD에 맞춰 키운다.
+- **선택 UI v3**: Choose일 때만 — 보드 30% 암부 + 형제 선택 링 + 보드 밖 여백의 두 카드(그림·이름 남기기 KEEP/넘기기 SWITCH·K/X 배지·결과 한 줄, 다음 형제 머플러색 테두리, 첫 3회 확정까지 두 설명 항상 표시) + 호버/포커스한 쪽만 보드 고스트(KEEP: 선돌+출발점 형제+점선, SWITCH: 형제+매듭) + 0.5초 이하 확정 연출. Z는 선택 전으로.
+- **발치 별 7개**: 숫자 없음, 1280×720 실제 보드에서 판독 확인. 6걸음 뒤 마지막 빈 별 맥동. "걸음 숫자 표시" 설정(기본 꺼짐).
+- **별 흔적 v2**: 단일 형제 점·직각선, KEEP 굳은 별자리+선돌 별, SWITCH 매듭, 7번째 각성, Undo 시 소멸, 행성별 변주(`StarTrailPreset`). 형제는 실제 후드 모델.
+- **검증**: UiLayoutCheck, GlyphCheck, EditMode 전체, WebGL 빌드 + smoke-webgl, 실제 플레이 캡처 5종(평소/6걸음/선택/KEEP 후/SWITCH 후)을 7lucky 통합 후 보고.
 
 ## 지시 요약
 1. 평소 HUD: 메뉴 1개(설정·스테이지·풀이 보기는 메뉴 안), 되돌리기, 재시작, 작은 제목.
@@ -19,7 +27,7 @@
 | 결과 화면 최소화(별, 별자리, 다음) | gameplay-ui | 이야기 `FinaleLine`(story-integration S4)과 같은 자리 |
 | 메뉴(설정·스테이지·풀이 보기), 튜토리얼 1회 상태 저장, 조작 안내 1회 | scene-flow | 저장 키는 architect 확인. 기존 `SettingsPanel`과 연결 |
 | 접근성 "걸음 숫자 표시"(기본 꺼짐) 설정 항목 | scene-flow(설정) + gameplay-ui(표시) | 켜면 지금의 숫자 발자국·남은 걸음 |
-| UiLayoutCheck 규칙 갱신(새 HUD 프레임, 보드 영역, 1회 안내·두 갈래 선택 화면) | architect | `docs/architecture.md` 14장, 리뷰 |
+| 계약(선택 카드·고스트·튜토리얼 seen·접근성 설정 키), UiLayoutCheck 등록(새 HUD 프레임, 보드 영역, 1회 안내·선택 화면) | architect | `docs/architecture.md` 14장, 리뷰 |
 | 아이콘(선돌, 바통·매듭, 메뉴), 고리 별, 맥동 | 아트(Codex) | 코디네이터 경유 |
 
 ## 이미 있는 것과의 관계
