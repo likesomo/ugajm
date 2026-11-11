@@ -68,6 +68,7 @@ namespace SevenSteps.EditorTools
             var keys = planets.Select(p => p.Key).ToList();
             var story = JsonUtility.FromJson<StoryFileDto>(assets.storyJson.text);
             var trails = StageSelectModel.TrailsByKey(keys, story.dipper.Select(d => (d.from, d.to)));
+            var nodeTrails = StageSelectModel.NodeTrailsByKey(keys, story.dipper.Select(d => (d.from, d.to)));
             var stages = planets.Select(p => p.Stages).ToList();
 
             StageSelectModel Fixture(int completePlanets, int extraOnNext, int markerPlanet, int markerSlot)
@@ -77,7 +78,7 @@ namespace SevenSteps.EditorTools
                     for (int s = 0; s < stages[p].Count; s++)
                         if (p < completePlanets || (p == completePlanets && s < extraOnNext)) cleared.Add(stages[p][s]);
                 int last = markerPlanet >= 0 ? stages[markerPlanet][markerSlot] : -1;
-                return StageSelectModel.From(keys, stages, cleared.Contains, last, trails);
+                return StageSelectModel.From(keys, stages, cleared.Contains, last, trails, nodeTrails);
             }
 
             var log = new List<string> { $"Unity {Application.unityVersion}; {W}x{H}; production PlanetMap3DView / PlanetSurfaceView; fixtures below" };
@@ -140,7 +141,7 @@ namespace SevenSteps.EditorTools
                 var mid = Fixture(3, 2, 3, 2);
                 Shot("map-mid-game", (m, s) => { m.Show(mid, 3, -1); m.Preview(3); }, "moss/hollow/carved complete, frost 2 cleared, brothers on frost, frost focused");
                 // The journey-complete-end case (scene-flow smoke): moss stages 1 and 7 cleared, its finale lights the trail.
-                var finale = StageSelectModel.From(keys, stages, st => st == stages[0][0] || st == stages[0][stages[0].Count - 1], stages[0][stages[0].Count - 1], trails);
+                var finale = StageSelectModel.From(keys, stages, st => st == stages[0][0] || st == stages[0][stages[0].Count - 1], stages[0][stages[0].Count - 1], trails, nodeTrails);
                 Shot("map-moss-finale", (m, s) => { m.Show(finale, 1, -1); m.Preview(1); }, "moss stages 1 and 7 cleared (finale), brothers on moss, hollow focused");
                 var all = Fixture(planets.Count, 0, planets.Count - 1, stages[planets.Count - 1].Count - 1);
                 Shot("map-all-complete", (m, s) => m.Show(all, planets.Count - 1, -1), "every stage cleared");

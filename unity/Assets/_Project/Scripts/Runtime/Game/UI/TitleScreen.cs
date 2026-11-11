@@ -295,17 +295,23 @@ namespace SevenSteps.Game.UI
         }
 
         /// The v4 stage select model for the save now: cleared stages, the last played one, and the star-trail edges
-        /// (story.json "dipper" when the story is on, else the Dipper lines).
+        /// (story.json "dipper" when the story is on, else the Dipper lines), and the story's edges to non-planet nodes
+        /// (dipper altar -> "circle", drawn once lit).
         StageSelectModel BuildStageSelectModel()
         {
             var keys = planets.Select(p => p.Key).ToList();
             List<(int from, int to)> trails;
+            List<(int from, string node)> nodeTrails = null;
             if (Services.TryGet<StoryBook>(out var story) && story.On)
-                trails = StageSelectModel.TrailsByKey(keys, story.Catalog.Dipper.Select(d => (d.from, d.to)));
+            {
+                var pairs = story.Catalog.Dipper.Select(d => (d.from, d.to)).ToList();
+                trails = StageSelectModel.TrailsByKey(keys, pairs);
+                nodeTrails = StageSelectModel.NodeTrailsByKey(keys, pairs);
+            }
             else
                 trails = UiTheme.DipperEdges.Where(e => e.a < keys.Count && e.b < keys.Count).Select(e => (e.a, e.b)).ToList();
             int last = string.IsNullOrEmpty(save.Progress.lastStage) ? -1 : save.Progress.LastStageIndex(levels);
-            return StageSelectModel.From(keys, planets.Select(p => p.Stages).ToList(), s => save.Progress.IsCleared(levels[s]), last, trails);
+            return StageSelectModel.From(keys, planets.Select(p => p.Stages).ToList(), s => save.Progress.IsCleared(levels[s]), last, trails, nodeTrails);
         }
 
         static Transform BuildCanvas()
