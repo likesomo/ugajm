@@ -267,12 +267,12 @@ PlayMode 테스트 항목:
 ### 9.2 Play Mode 캡처 (P2, 아키텍트 M3)
 
 - **방법**: `-batchmode` 없이 에디터를 연다. `-batchmode`에는 Game 뷰 창이 없고, `-nographics`면 아무것도 그려지지 않는다. 카메라 → `RenderTexture` → `ReadPixels`는 Screen Space - Overlay uGUI(HUD·타이틀·결과)를 찍지 못하므로 쓰지 않는다.
-  - `unity.sh playcapture <이름>`이 `Unity.exe -projectPath unity -executeMethod SevenSteps.EditorTools.PlayCapture.Run -playcapture <이름>`을 실행한다(에디터 창이 잠깐 뜬다).
+  - `unity.sh playcapture`가 `Unity.exe -projectPath unity -executeMethod SevenSteps.EditorTools.PlayCapture.Run -playcaptureOut <폴더>`를 실행한다(에디터 창이 잠깐 뜬다). 찍는 화면 목록은 `PlayCapture.Shots`에 있다: `title`, `game`(1번 스테이지), `game-board`, `game-empty`. 메뉴 **Seven Steps > Scene Flow > Play Mode Capture**로도 돌린다.
   - 에디터 스크립트 `PlayCapture`는 다음 순서로 동작한다:
     1. Game 뷰 해상도를 고정한다.
     2. 캡처 이름에 맞는 `LaunchOptions`를 9.1의 진입점으로 넣는다.
-    3. 시작 씬(Boot)을 열고 `EditorApplication.EnterPlaymode()`.
-    4. 정해진 시점(예: Title 활성 + 1초)에 `WaitForEndOfFrame` 뒤 `ScreenCapture.CaptureScreenshotAsTexture()`로 찍어 PNG로 저장한다.
+    3. 빈 씬에서 `EditorApplication.EnterPlaymode()`, Play Mode에 들어가면 `SceneManager.LoadScene(Boot)`(PlayMode 테스트와 같은 길).
+    4. 흐름이 목표 상태가 되고 1.5초 뒤 `ScreenCapture.CaptureScreenshot(path)`로 찍는다. 이 호출은 렌더된 프레임 끝에 Game 뷰를 파일로 쓴다(오버레이 UI 포함).
     5. `EditorApplication.ExitPlaymode()`, `EditorApplication.Exit(0)`.
 - **해상도**: 1280×720 고정. `PlayModeWindow.SetCustomRenderingResolution(1280, 720, "playcapture")`로 Game 뷰 크기를 정하고, 찍은 텍스처 크기가 1280×720이 아니면 실패로 본다.
 - **빈 화면 대조**(smoke-webgl의 `?smoke=empty`와 같은 뜻): 캡처마다 두 장을 찍는다.
