@@ -160,17 +160,21 @@ case "$cmd" in
     if [ "$code" -ne 0 ]; then echo "[unity.sh] playtest FAILED (exit $code)"; exit "$code"; fi
     echo "[unity.sh] playtest OK" ;;
   playcapture)
-    # Play Mode capture (docs/scene-flow.md 9.2): opens the Editor WITHOUT -batchmode (batchmode has no Game view), enters
-    # Play Mode per shot at 1280x720 and captures the Game view -> reports/playcapture/. An Editor window shows briefly.
+    # Headless Play Mode capture (docs/scene-flow.md 9.2; user rule 2026-11-11: batch mode only, no Editor GUI): the
+    # [Explicit] PlayMode test class PlayCaptureTests renders the cameras + UI into 1280x720 PNGs -> reports/playcapture/.
+    # -batchmode without -nographics: cameras need a graphics device.
     out="$REPO/reports/playcapture"; mkdir -p "$out" "$PROJ/Logs"
-    echo "[unity.sh] playcapture -> reports/playcapture (log: unity/Logs/playcapture.log)"
+    echo "[unity.sh] playcapture -> reports/playcapture (log: unity/Logs/batch-playcapture.log)"
+    rm -f "$REPO/reports/playcapture-results.xml"
     code=0
-    (cd "$REPO" && "$U" -projectPath unity -executeMethod SevenSteps.EditorTools.PlayCapture.Run \
-      -playcaptureOut "$(cygpath -w "$out")" -logFile unity/Logs/playcapture.log) || code=$?
+    (cd "$REPO" && "$U" -batchmode -projectPath unity -runTests -testPlatform PlayMode       -testFilter "SevenSteps.Tests.PlayMode.PlayCaptureTests"       -testResults "$(cygpath -w "$REPO/reports/playcapture-results.xml")" -logFile unity/Logs/batch-playcapture.log) || code=$?
     restore_urp_settings || true
     restore_whitespace_only
-    grep -h "\[SevenSteps\] Play capture" "$PROJ/Logs/playcapture.log" || echo "[unity.sh] playcapture: no result line"
-    grep -q "\[SevenSteps\] Play capture: OK" "$PROJ/Logs/playcapture.log" || code=1
+    grep -h "[SevenSteps] Play capture" "$PROJ/Logs/batch-playcapture.log" | sed 's/^.*[SevenSteps]/[SevenSteps]/'
+    summary="$(grep -o '<test-run [^>]*' "$REPO/reports/playcapture-results.xml" 2>/dev/null | grep -o '(total|passed|failed)="[0-9]*"' | tr '
+' ' ')"
+    echo "[unity.sh] playcapture: ${summary:-no results}"
+    grep -o '<test-case [^>]*result="Failed"[^>]*' "$REPO/reports/playcapture-results.xml" 2>/dev/null | grep -o 'fullname="[^"]*"' || true
     if [ "$code" -ne 0 ]; then echo "[unity.sh] playcapture FAILED (exit $code)"; exit "$code"; fi
     echo "[unity.sh] playcapture OK" ;;
   build-win)   batch build-win BuildTools.BuildWindows ;;
