@@ -16,30 +16,32 @@ namespace SevenSteps.Art.StageSelectReview
     {
         static Material bodyMaterial,lightMaterial;
         static readonly List<string> bodyStats=new List<string>{"planet,tris,materials"};
+        public static void RunV4b(){PlanetBodyStudy.PolishV4b=true;RunV4();}
         public static void RunV4(){PlanetBodyStudy.UseV4=true;RunV3();}
         static bool V4=>PlanetBodyStudy.UseV4;
         static float Seat=>V4?2.30f:3.35f;
         [MenuItem("Seven Steps/Art/Stage Select/Capture journey v3")]
         public static void RunV3()
         {
-            Output="C:/unityjam/shared-assets/seven-steps/concepts/ui/stage-select-2026-11-11/"+(V4?"v4":"v3");Directory.CreateDirectory(Output);
+            Output="C:/unityjam/shared-assets/seven-steps/concepts/ui/stage-select-2026-11-11/"+(PlanetBodyStudy.PolishV4b?"v4b":V4?"v4":"v3");Directory.CreateDirectory(Output);
             try
             {
                 assets=AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset");Ui.Theme=assets.uiTheme;levels=LevelCatalog.Load(assets);planets=PlanetEntry.FromCatalog(levels.Length);
                 chapters=Ids.Select(id=>AssetDatabase.LoadAssetAtPath<ChapterPreset>("Assets/_Project/Art/RuinsHenge/Chapter_"+id+".asset")).ToArray();font=AssetDatabase.LoadAssetAtPath<Font>("Assets/Shared/Fonts/Jua-Regular.ttf");
                 copy=JsonUtility.FromJson<Copy>(File.ReadAllText("../design/story/copy-levels.json"));story=JsonUtility.FromJson<Story>(File.ReadAllText("../design/story/story.json"));
-                bodyMaterial=new Material(Shader.Find("SevenSteps/RuinsSurface")){name="Shared vertex-colour planet stone",hideFlags=HideFlags.HideAndDontSave};
+                bodyMaterial=new Material(Shader.Find(PlanetBodyStudy.PolishV4b?"SevenSteps/Review/PlanetDepthV4b":"SevenSteps/RuinsSurface")){name="Shared vertex-colour planet stone",hideFlags=HideFlags.HideAndDontSave};
                 bodyMaterial.SetColor("_BaseColor",Color.white);bodyMaterial.SetFloat("_UseMoss",0);bodyMaterial.SetFloat("_SurfaceAlpha",1);bodyMaterial.SetFloat("_UseAtlas",0);bodyMaterial.SetFloat("_UseVertexColor",1);bodyMaterial.SetFloat("_EnvironmentDetail",.12f);bodyMaterial.SetFloat("_AmbientFloor",.42f);
                 lightMaterial=new Material(bodyMaterial){name="Shared ground starlight",hideFlags=HideFlags.HideAndDontSave};lightMaterial.SetFloat("_Unlit",1);
                 worlds=BakeBodiesV3();language="ko";
-                if(V4){MapV3("default",-1,0);MapV3("focused",0,0);MapV3("mid-game",3,3);SurfaceV3(0,"default",-1,0);for(int i=0;i<7;i++){DiveV3(i);AdvanceV3(i);}}
+                if(PlanetBodyStudy.PolishV4b){MapV3("default",-1,0);MapV3("focused",0,0);}
+                else if(V4){MapV3("default",-1,0);MapV3("focused",0,0);MapV3("mid-game",3,3);SurfaceV3(0,"default",-1,0);for(int i=0;i<7;i++){DiveV3(i);AdvanceV3(i);}}
                 else {                MapV3("default",-1,0);MapV3("focused",0,0);MapV3("mid-game",3,3);MapV3("all-complete",-1,7);
                 foreach(int p in new[]{0,6}){SurfaceV3(p,"default",-1,0);SurfaceV3(p,"focused",3,0);SurfaceV3(p,"cleared-mix",3,3);}
                 language="en";MapV3("focused",0,0);language="ko";
                 for(int i=0;i<7;i++){DiveV3(i);AdvanceV3(i);CompleteV3(i);}
                 }
                 File.WriteAllLines(Path.Combine(Output,"performance.csv"),perf);File.WriteAllLines(Path.Combine(Output,"planet-bodies.csv"),bodyStats);
-                File.WriteAllText(Path.Combine(Output,"capture-source.txt"),"Unity "+Application.unityVersion+"; editor-only "+(V4?"v4":"v3")+"; all captures 1280x720; orthographic pitch 50 yaw 0; actual chapter skies, lighting, board tiles, gate and three player prefabs; newly authored faceted planet meshes, no map grid.\n");
+                File.WriteAllText(Path.Combine(Output,"capture-source.txt"),"Unity "+Application.unityVersion+"; editor-only "+(PlanetBodyStudy.PolishV4b?"v4b":V4?"v4":"v3")+"; all captures 1280x720; orthographic pitch 50 yaw 0; actual chapter skies, lighting, board tiles, gate and three player prefabs; newly authored faceted planet meshes, no map grid.\n");
                 Debug.Log(V4?"STAGE_SELECT_V4_PASS":"STAGE_SELECT_V3_PASS");EditorApplication.Exit(0);
             }catch(Exception e){Debug.LogException(e);File.WriteAllText(Path.Combine(Output,"failure.txt"),e.ToString());EditorApplication.Exit(1);}
         }
