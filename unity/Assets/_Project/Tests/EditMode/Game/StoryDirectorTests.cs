@@ -157,11 +157,26 @@ namespace SevenSteps.Tests
             r.Board.Finish();
             Assert.IsFalse(r.Director.FinaleHeld, "Presented without the finale taking it: dropped");
             Assert.AreEqual(0, r.FinaleShown);
+            Assert.AreEqual(0f, r.Director.FinaleStarting(), "not picked up again after the result");
 
             r.Session.Load(Short());
             r.ToTheWin();
             r.Session.Send(Command.Undo); // takes the win back mid-presentation (Snap)
             Assert.IsFalse(r.Director.FinaleHeld, "Undo drops it");
+        }
+
+        [Test]
+        public void FinaleLineFoundAtTheFinaleEvenIfNotHeldYet()
+        {
+            var r = new Rig();
+            r.Session.Load(Short());
+            r.ToTheWin(); // Updated ran with no finale line yet (as if the director heard it late)
+            Assert.IsFalse(r.Director.FinaleHeld);
+            r.Finale = "진실";
+            Assert.AreEqual(StoryDirector.Seconds("진실"), r.Director.FinaleStarting(), 1e-4f);
+            Assert.AreEqual("진실", r.Line.Text);
+            Assert.AreEqual(1, r.FinaleShown);
+            Assert.AreEqual(0f, r.Director.FinaleStarting(), "once per win");
         }
 
         [Test]
