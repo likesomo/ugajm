@@ -14,7 +14,8 @@ namespace SevenSteps.Game
     /// The replay's moves but the last are snapped, the last is played (so the win is presented like a player's), then:
     /// the Result shows; its text names the planet when this was the planet's last stage (result.chapter_done) or ends
     /// the journey on the last stage (result.journey_done), and neither otherwise; Next enters the next stage; at a
-    /// planet boundary the chapter entry card shows the new planet and the chapter look switches to its preset.
+    /// planet boundary the chapter entry card shows the new planet and the chapter look switches to its preset. On the last
+    /// stage, [끝까지 보기] opens the story ending: four cards with lines (story.json "ending"), then the star map (16.8).
     /// Logs "[SevenSteps] Flow check stage N: OK" or "... FAIL: reasons", saves screenshots, and quits.
     /// </summary>
     public sealed class FlowCheck
@@ -32,12 +33,17 @@ namespace SevenSteps.Game
         readonly ChapterStage chapterStage;
         readonly Localizer loc;
         readonly Func<int, ChapterPreset> presetFor;
+        readonly EndingController ending;
+        readonly EndingView endingView;
         ChapterCardModel cardShown;
         int stars = -1;
 
         public FlowCheck(AppFlow flow, BoardController board, GameFlowController flowController, OverlayStack overlays, ResultView result,
-            ChapterStage chapterStage, ChapterIntroController chapterIntro, Localizer loc, Func<int, ChapterPreset> presetFor)
+            ChapterStage chapterStage, ChapterIntroController chapterIntro, Localizer loc, Func<int, ChapterPreset> presetFor,
+            EndingController ending, EndingView endingView)
         {
+            this.ending = ending ?? throw new ArgumentNullException(nameof(ending));
+            this.endingView = endingView ?? throw new ArgumentNullException(nameof(endingView));
             this.flow = flow ?? throw new ArgumentNullException(nameof(flow));
             this.board = board ?? throw new ArgumentNullException(nameof(board));
             this.flowController = flowController ?? throw new ArgumentNullException(nameof(flowController));
@@ -84,6 +90,31 @@ namespace SevenSteps.Game
                     CheckChapterEntry(stage + 1, boundary, fails);
                     if (shotBase != null) { ScreenCapture.CaptureScreenshot(shotBase + "-next.png"); yield return new WaitForSeconds(0.5f); }
                 }
+                else
+                {
+                    // 50 -> ending -> StageSelect (story S4): [끝까지 보기], four cards, the last one goes to the map.
+                    flowController.Next();
+                    yield return new WaitForSeconds(0.5f);
+                    var story = Services.TryGet<StoryBook>(out var b) ? b : null;
+                    if (story == null || !story.On) fails.Add("story is off: no ending");
+                    else if (!ending.IsOpen) fails.Add($"[see it through] did not open the ending (state {flow.State})");
+                    else
+                    {
+                        int cards = ending.Model.Pages.Count;
+                        for (int i = 0; i < cards; i++)
+                        {
+                            if (ending.Page != i) { fails.Add($"ending shows card {ending.Page + 1}, expected {i + 1}"); break; }
+                            if (string.IsNullOrEmpty(endingView.Text)) fails.Add($"ending card {i + 1} has no line");
+                            if (shotBase != null) { ScreenCapture.CaptureScreenshot($"{shotBase}-ending{i + 1}.png"); yield return new WaitForSeconds(0.5f); }
+                            ending.Next();
+                            yield return null;
+                        }
+                        float te = Time.unscaledTime;
+                        while (flow.State != AppState.StageSelect && Time.unscaledTime - te < Timeout) yield return null;
+                        if (ending.IsOpen) fails.Add("ending still open after its last card");
+                        if (flow.State != AppState.StageSelect) fails.Add($"ending did not go to the star map (state {flow.State})");
+                    }
+                }
             }
 
             Debug.Log(fails.Count == 0 ? $"[SevenSteps] Flow check stage {stage + 1}: OK (stars {stars})"
@@ -103,7 +134,7 @@ namespace SevenSteps.Game
             if (last && !body.Contains(journey)) fails.Add($"last stage: result has no journey_done ({Flat(body)})");
             if (!last && boundary && planetDone != null && !body.Contains(planetDone)) fails.Add($"planet end: result has no chapter_done for {planet.Planet(loc.Current)} ({Flat(body)})");
             if (!boundary && (body.Contains(journey) || (planetDone != null && body.Contains(planetDone)))) fails.Add($"mid-planet stage: result says the planet or journey ended ({Flat(body)})");
-            if (result.next != null && result.next.gameObject.activeSelf == last) fails.Add(last ? "last stage shows Next" : "Next button hidden");
+            if (result.next != null && !result.next.gameObject.activeSelf) fails.Add(last ? "last stage has no [see it through]" : "Next button hidden");
         }
 
         void CheckChapterEntry(int stage, bool boundary, List<string> fails)

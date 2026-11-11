@@ -169,16 +169,24 @@ namespace SevenSteps.Tests
         }
 
         [Test]
-        public void NoNextAfterTheLastStage()
+        public void NextAfterTheLastStageAsksForTheEnding()
         {
             Make(2, false);
+            int endings = 0, clears = 0;
+            ctl.EndingRequested += () => endings++;
+            ctl.ClearShown += () => clears++;
             ctl.Start(1);
             board.Win();
             Assert.IsTrue(panel.Shown.IsLast);
+            Assert.AreEqual(1, clears, "story save point when the clear result opens (16.5)");
             int loads = board.Loads.Count;
-            ctl.Next();
+            ctl.Next();                // [끝까지 보기] (16.8): no stage load, the ending
             Assert.AreEqual(loads, board.Loads.Count);
             Assert.AreEqual(AppState.Result, flow.State);
+            Assert.AreEqual(1, endings);
+            ctl.Again();
+            ctl.Next();                // not in Result: nothing
+            Assert.AreEqual(1, endings);
         }
 
         [Test]

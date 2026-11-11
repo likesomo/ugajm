@@ -95,6 +95,10 @@
     { "key": "result.star3", "text": "In one go, no undo" },
     { "key": "result.chapter_done", "text": "Leaving {0}" },
     { "key": "result.journey_done", "text": "The three brothers reached the stone circle" },
+    { "key": "result.ending", "text": "See it through" },
+    { "key": "ending.next", "text": "Next (Enter)" },
+    { "key": "ending.skip", "text": "Skip (Esc)" },
+    { "key": "ending.to_map", "text": "To the map (Enter)" },
 
     { "key": "board.exit", "text": "EXIT" },
 

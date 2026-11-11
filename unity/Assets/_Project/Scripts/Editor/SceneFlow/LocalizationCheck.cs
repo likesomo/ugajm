@@ -114,7 +114,26 @@ namespace SevenSteps.EditorTools
                     texts.Add((c.Tagline(lang), $"chapters.json {c.id} tagline ({code})"));
                 }
             }
+            // story.json (docs/architecture.md 16, story-integration.md 3.2): every line and brother name, in both role fonts.
+            // A story.json that fails its load check is reported by SceneFlowValidator.ValidateStory.
+            var story = StoryCatalogOf(assets);
+            if (story != null)
+            {
+                for (int n = 1; n <= 3; n++) texts.Add((story.BrotherName(n, lang), $"story.json brother {n} ({code})"));
+                foreach (var e in story.Entries)
+                    for (int i = 0; i < e.lines.Length; i++)
+                        texts.Add((story.Line(e, i, lang).Replace(StoryCatalog.BrotherToken, ""), $"story.json {e.id}/{e.lines[i].id} ({code})"));
+            }
             return texts;
+        }
+
+        /// story.json loaded against chapters.json, or null when there is none or it does not load.
+        internal static StoryCatalog StoryCatalogOf(GameAssets assets)
+        {
+            if (assets.storyJson == null || assets.chaptersJson == null) return null;
+            var chapters = JsonUtility.FromJson<ChapterFileDto>(assets.chaptersJson.text);
+            try { return StoryCatalog.FromJson(assets.storyJson.text, (chapters.chapters ?? new ChapterInfo[0]).Select(c => c.id).ToArray()); }
+            catch (Exception) { return null; }
         }
 
         static void CheckGlyphs(GameAssets assets, Dictionary<Language, StringTable> tables, List<string> issues)
