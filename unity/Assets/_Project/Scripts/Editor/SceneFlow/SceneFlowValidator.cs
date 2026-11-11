@@ -215,6 +215,16 @@ namespace SevenSteps.EditorTools
             StoryCatalog story;
             try { story = StoryCatalog.FromJson(gameAssets.storyJson.text, (chapters.chapters ?? new ChapterInfo[0]).Select(c => c.id).ToArray()); }
             catch (Exception e) { issues.Add($"ERROR {AssetDatabase.GetAssetPath(gameAssets.storyJson)}: {e.Message}"); return; }
+            // The star map draws only UiTheme.DipperEdges between planet cards (PlanetMapView): a story "dipper" line with
+            // no such edge never lights (review 6e8f3cd M2). "circle" is the last stage, not a planet card: no edge by design.
+            var ids = story.ChapterIds.ToList();
+            foreach (var d in story.Dipper)
+            {
+                if (d.to == StoryOns.Circle) continue;
+                int a = ids.IndexOf(d.from), b = ids.IndexOf(d.to);
+                if (!UiTheme.DipperEdges.Any(e => (e.a == a && e.b == b) || (e.a == b && e.b == a)))
+                    issues.Add($"WARN {AssetDatabase.GetAssetPath(gameAssets.storyJson)}: dipper line {d.from} -> {d.to} is not a star map edge (UiTheme.DipperEdges): it never shows");
+            }
             var images = gameAssets.storyImages;
             if (images == null) { issues.Add("WARN GameAssets.storyImages is not set: story cards show text only"); return; }
             var missing = story.ImageKeys.Where(k => images.Get(k) == null).ToArray();
