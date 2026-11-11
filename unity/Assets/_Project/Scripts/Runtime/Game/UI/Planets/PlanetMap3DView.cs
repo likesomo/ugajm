@@ -20,7 +20,7 @@ namespace SevenSteps.Game.UI.Planets
     /// Big Dipper, star-trail lines between them lit as planets are completed, a row of small stars under each body (one
     /// per stage, lit = cleared; no numbers), the brothers' marker (three scarf-colour dots) on the last-played planet,
     /// unvisited planets dimmed, and the name + one-line tagline only for the hovered / focused planet, placed clear of the
-    /// trail lines. The planet is the button (invisible target at least 96 units, the body's size). Back is the ‹ only.
+    /// trail lines. The planet is the button (invisible target at least 96 units, the body's size). Back is a drawn chevron only (‹ shape; the fonts have no U+2039).
     /// Input: mouse hover / click, arrows (left / right = story order, up / down = nearest that way; explicit uGUI
     /// navigation), Enter, touch tap; a held press (0.5 s) previews the name without entering. Esc is the root's.
     /// </summary>
@@ -42,7 +42,7 @@ namespace SevenSteps.Game.UI.Planets
         readonly RectTransform[] starRows;
         readonly List<Image>[] stars;
         readonly RectTransform marker, label, trailLayer;
-        readonly Text nameText, taglineText, backText;
+        readonly Text nameText, taglineText;
         readonly List<(Image dim, Image lit)> lines = new List<(Image, Image)>();
         readonly Vector2[] centers;
         readonly float[] radii;
@@ -140,14 +140,36 @@ namespace SevenSteps.Game.UI.Planets
             taglineText.raycastTarget = false;
             label.gameObject.SetActive(false);
 
-            var back = Ui.MakeButton(rect, "‹", 44, () => { if (!pending && held < 0) BackRequested?.Invoke(); }, out backText, "Back");
-            ((Image)back.targetGraphic).color = new Color(0, 0, 0, 0);
-            ((RectTransform)back.transform).TopLeft(20, 16, 80, 80); // 80 units: IMPLEMENT.md minimum target
-            backText.color = Ui.Gold;
+            BackChevron(rect, Ui.Gold, () => { if (!pending && held < 0) BackRequested?.Invoke(); }); // 80 units: IMPLEMENT.md minimum target
 
             panel.AddComponent<ResizeHook>().Resized = () => { if (Visible) Layout(); };
             panel.AddComponent<ViewTicker>().Tick = Tick;
             panel.SetActive(false);
+        }
+
+        /// The top-left back control: an 80-unit transparent button with a ‹ drawn as two bars (no font glyph: GlyphCheck).
+        public static Button BackChevron(RectTransform parent, Color color, Action onClick)
+        {
+            var hit = Ui.MakeImage(parent, new Color(0, 0, 0, 0), null, "Back");
+            hit.raycastTarget = true;
+            hit.rectTransform.TopLeft(20, 16, 80, 80);
+            var b = hit.gameObject.AddComponent<Button>();
+            var colors = b.colors;
+            colors.highlightedColor = colors.selectedColor = new Color(1.3f, 1.3f, 1.3f, 1);
+            b.colors = colors;
+            b.onClick.AddListener(() => onClick());
+            for (int k = 0; k < 2; k++)
+            {
+                var bar = Ui.MakeImage(hit.rectTransform, color, null, k == 0 ? "Upper" : "Lower");
+                bar.raycastTarget = false;
+                var r = bar.rectTransform;
+                r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
+                r.pivot = new Vector2(0, 0.5f);
+                r.anchoredPosition = new Vector2(-6, 0);
+                r.sizeDelta = new Vector2(16, 3.5f);
+                r.localRotation = Quaternion.Euler(0, 0, k == 0 ? 45 : -45);
+            }
+            return b;
         }
 
         static void On(EventTrigger trigger, EventTriggerType type, Action act)
@@ -162,7 +184,6 @@ namespace SevenSteps.Game.UI.Planets
             loc = localizer ?? throw new ArgumentNullException(nameof(localizer));
             nameText.font = Ui.Theme.FontFor(loc.Current, FontRole.Title);
             taglineText.font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
-            backText.font = Ui.Theme.FontFor(Language.Ko, FontRole.Body); // the ‹ glyph: the Korean body font has it in every language
             if (Visible) Refresh();
         }
 

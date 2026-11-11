@@ -14,7 +14,7 @@ namespace SevenSteps.Game.UI.Planets
     /// in the ground, current = three scarf-colour dots, untouched = a dark ground mark. Invisible targets of at least 80
     /// units follow the projected places (hidden when a place turns away). The body turns slowly while idle (about 6°/s,
     /// swinging so the path stays in front) and pauses while a place is focused or touched; dragging turns it.
-    /// Input: hover / click, left / right along the path, up / down nearest place, Enter plays, touch tap; Esc and ‹ close
+    /// Input: hover / click, left / right along the path, up / down nearest place, Enter plays, touch tap; Esc and the back chevron close
     /// (the root's OverlayStack).
     /// </summary>
     public sealed class PlanetSurfaceView : IOverlay
@@ -29,7 +29,7 @@ namespace SevenSteps.Game.UI.Planets
         readonly GameObject panel;
         readonly RectTransform rect;
         readonly CanvasGroup group;
-        readonly Text title, step, backText;
+        readonly Text title, step;
         readonly Image ring;
         readonly List<Button> targets = new List<Button>();
         readonly Transform root;
@@ -92,10 +92,7 @@ namespace SevenSteps.Game.UI.Planets
             step = Ui.Label(rect, "", 23, Gold, TextAnchor.MiddleCenter, "Step");
             step.rectTransform.Place(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 40), new Vector2(400, 40));
             step.raycastTarget = false;
-            var back = Ui.MakeButton(rect, "‹", 44, () => { if (!pending) CloseRequested?.Invoke(); }, out backText, "Back");
-            ((Image)back.targetGraphic).color = new Color(0, 0, 0, 0);
-            ((RectTransform)back.transform).TopLeft(20, 16, 80, 80);
-            backText.color = Gold;
+            PlanetMap3DView.BackChevron(rect, Gold, () => { if (!pending) CloseRequested?.Invoke(); });
 
             panel.AddComponent<ViewTicker>().Tick = Tick;
             panel.SetActive(false);
@@ -113,7 +110,6 @@ namespace SevenSteps.Game.UI.Planets
             loc = localizer ?? throw new ArgumentNullException(nameof(localizer));
             title.font = Ui.Theme.FontFor(loc.Current, FontRole.Title);
             step.font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
-            backText.font = Ui.Theme.FontFor(Language.Ko, FontRole.Body); // the ‹ glyph
             if (model != null && planet >= 0) { title.text = planets[planet].Name(loc); Refresh(); }
         }
 
