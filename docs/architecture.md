@@ -692,6 +692,8 @@ else flow.Go(AppState.Title);
 **검사**: `TileSetValidator`가 `ChapterPreset`도 본다: id 비었거나 중복이면 오류, `tileSet` 없으면 오류, 빈 머티리얼 교체 오류, `lighting`·`sky` 없음 경고, `planetPrefab` 루트에 `IStageEnvironment` 없으면 경고. `levels.json` `chapter` id가 `AppConfig.chapters`에 다 있는지는 필드가 생기면 추가.
 
 **WebGL 예산**: 챕터 에셋은 `AppConfig.chapters` 참조로 모두 빌드에 들어간다(Addressables 안 씀). 행성을 늘리면 빌드 크기를 잰다. 1280×720 draw call 400 안팎(유적 레벨 8: 403). 바닥·벽은 SRP Batcher, 하늘·장식은 결합 메시. 후처리는 Bloom·톤매핑까지(Mobile 렌더러).
+- 행성 환경 결합 메시(`BoardShapeAAssembly`)의 삼각형 상한은 런타임 가드다. 50k로 두고, 환경 드로우 1개를 유지한다(2026-11-11 e05c3c1, 실제 최대는 joinery 12×5 31,830). 예산 판단은 표준 Chrome 60 FPS이고, 가장 큰 판(14 hollow 17×3, 31 joinery 10×7, 49 altar 9×9)을 측정에 포함한다. 정적 그림자 한도는 48이다(`BoardShapeAShadowField`).
+- 리뷰·프리뷰 코드 asmdef는 `defineConstraints: UNITY_EDITOR || SEVENSTEPS_ART_PREVIEW`로 게임 빌드에서 뺀다. 리뷰용 데이터는 `Resources`에 두지 않는다.
 
 ### 12.9 smoke-webgl 판정 (팔레트 무관, 리드가 구현)
 
@@ -1036,3 +1038,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | feat/view cce7783·740a516·fdd9651(최소 HUD, 선택 UI v3, 발치 별) 조건부 승인: 계약 4.4·14.11 대조 맞음(BoardFrame 8×6 ortho 4.67 셀 77px). R1 카드 Button 선택이 남아 Enter가 Submit과 `choice.Confirm` 두 경로로 갈 수 있음, R2 확정 Present 문 여러 개면 0.5초 초과·움직임 줄이기에서도 문 대기. `docs/reviews/2026-11-11-feat-view-fdd9651.md` |
 | 2026-11-11 | 아키텍트 | scene-flow b619811(14.11 등록 4종, C2) 승인, 병합은 gameplay-ui `LayoutChoice` 수정 뒤. 14.11 보강: 카드 비겹침 대상에 보이는 HUD 판·버튼 포함, 피할 후보가 없으면 카드가 보이는 동안 메시지 줄을 숨김, 상시 버튼 자리는 후보에서 뺌. `docs/reviews/2026-11-11-scene-flow-b619811.md` |
 | 2026-11-11 | 아키텍트 | feat/view 71a8f9c 승인(R1 Enter 한 경로, R2 확정 Present 최대 0.42초·움직임 줄이기 0, M2 고스트 Behaviour 끔, 14.11 보이는 HUD 판 회피·메시지 숨김). b619811과 함께 병합 가능 |
+| 2026-11-11 | 아키텍트 | feat/art e05c3c1(행성 2~7 모델링)+2cd08fb 조건부 승인. 12.8에 환경 삼각형 런타임 가드 50k(예산은 Chrome 60 FPS, 큰 판 14·31·49 측정)와 리뷰 asmdef 빌드 제외 규칙 추가. 병합 전 B1 concepts PNG 75개·실행 로그 제외, R1 `SevenSteps.Art.Review` defineConstraints와 ReviewLevels.json Resources 밖으로. R2 altar 9×9 정적 그림자 47/48. `docs/reviews/2026-11-11-feat-art-e05c3c1.md` |
