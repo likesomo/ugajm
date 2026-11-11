@@ -18,7 +18,7 @@ namespace SevenSteps.Game.UI.Planets
     /// <summary>
     /// Stage select v4 star map (view only; IMPLEMENT.md "Planet map", approved v4 images): seven round planet bodies on the
     /// Big Dipper, star-trail lines between them lit as planets are completed, a row of small stars under each body (one
-    /// per stage, lit = cleared; no numbers), the brothers' marker (three scarf-colour dots) on the last-played planet,
+    /// per cleared stage, as the approved v4 map: nothing under an unplayed planet; no numbers), the brothers' marker (three scarf-colour dots) on the last-played planet,
     /// unvisited planets dimmed, and the name + one-line tagline only for the hovered / focused planet, placed clear of the
     /// trail lines. The planet is the button (invisible target at least 96 units, the body's size). Back is a drawn chevron only (‹ shape; the fonts have no U+2039).
     /// Input: mouse hover / click, arrows (left / right = story order, up / down = nearest that way; explicit uGUI
@@ -28,7 +28,7 @@ namespace SevenSteps.Game.UI.Planets
     {
         const float MinTarget = 96f, StarSize = 14f, StarGap = 18f, HoldPreview = 0.5f, LightSeconds = 0.8f;
         static readonly Vector2 LabelSize = new Vector2(360, 64);
-        static readonly Color DimTint = new Color(0.52f, 0.54f, 0.6f, 1f);
+        static readonly Color DimTint = new Color(0.7f, 0.72f, 0.78f, 1f); // "slightly dimmed" (research point 2)
         /// Scarf colours of the three brothers (v3 current-place dots).
         public static readonly Color[] Scarves = { new Color(0.95f, 0.76f, 0.31f), new Color(0.6f, 0.82f, 0.85f), new Color(0.85f, 0.59f, 0.46f) };
 
@@ -47,6 +47,7 @@ namespace SevenSteps.Game.UI.Planets
         readonly Vector2[] centers;
         readonly float[] radii;
         readonly List<(Vector2 a, Vector2 b)> segments = new List<(Vector2, Vector2)>();
+        readonly List<Rect> avoid = new List<Rect>();
 
         Localizer loc;
         StageSelectModel model;
@@ -199,7 +200,7 @@ namespace SevenSteps.Game.UI.Planets
             hovered = -1;
             labelArmed = false;
             space.Enter();
-            SetBodiesVisible(true);
+            foreach (var b in bodies) b.gameObject.SetActive(true); // the overlay is built below
             if (held < 0) Frame();
             panel.SetActive(true);
             BuildStars();
@@ -230,10 +231,14 @@ namespace SevenSteps.Game.UI.Planets
             ApplyOverlay();
         }
 
-        /// The surface path is open over the map: the map bodies hide (the surface body takes the space).
+        /// The surface path is open over the map: the map bodies and overlay hide (the surface takes the space); back on
+        /// when it closes (the root reframes the camera, then the overlay is placed again).
         public void SetBodiesVisible(bool on)
         {
             foreach (var b in bodies) b.gameObject.SetActive(on);
+            if (model == null) return;
+            panel.SetActive(on);
+            if (on) Layout();
         }
 
         /// Frames the camera on the map (not while scene-flow drives it).
@@ -253,6 +258,14 @@ namespace SevenSteps.Game.UI.Planets
         }
 
         public void Focus(int planet) => Select(planet);
+
+        /// Shows a planet's label as if hovered (-1 = none) and places the overlay again (editor captures, tests).
+        public void Preview(int planet)
+        {
+            Layout();
+            hovered = planet;
+            Refresh();
+        }
 
         public void Hide()
         {
@@ -296,15 +309,14 @@ namespace SevenSteps.Game.UI.Planets
                     s.rectTransform.sizeDelta = new Vector2(StarSize, StarSize);
                     stars[i].Add(s);
                 }
+                int lit = model.ClearedCount(i);
                 for (int k = 0; k < stars[i].Count; k++)
                 {
-                    bool used = k < count;
+                    bool used = k < lit;
                     stars[i][k].gameObject.SetActive(used);
                     if (!used) continue;
-                    stars[i][k].rectTransform.anchoredPosition = new Vector2((k - (count - 1) / 2f) * StarGap, 0);
-                    bool lit = model.IsCleared(i, k);
-                    Ui.SetStar(stars[i][k], lit);
-                    if (!lit) stars[i][k].color = new Color(stars[i][k].color.r, stars[i][k].color.g, stars[i][k].color.b, 0.45f);
+                    stars[i][k].rectTransform.anchoredPosition = new Vector2((k - (lit - 1) / 2f) * StarGap, 0);
+                    Ui.SetStar(stars[i][k], true);
                 }
             }
             marker.gameObject.SetActive(model.MarkerPlanet >= 0);
@@ -349,7 +361,10 @@ namespace SevenSteps.Game.UI.Planets
             {
                 var (a, b) = model.Trails[k];
                 var (dim, lit) = lines[k];
-                bool room = PlanetMapLayout.TrailSegment(centers[a], radii[a], centers[b], radii[b], 8, out var from, out var to);
+                // A line leaving a body downward also clears its star row (14 + the star size under the rim).
+                var dir = (centers[b] - centers[a]).normalized;
+                float gapA = 8 + (dir.y < -0.5f ? 16 : 0), gapB = 8 + (dir.y > 0.5f ? 16 : 0);
+                bool room = PlanetMapLayout.TrailSegment(centers[a], radii[a] + gapA - 8, centers[b], radii[b] + gapB - 8, 8, out var from, out var to);
                 dim.gameObject.SetActive(room);
                 if (!room) continue;
                 segments.Add((from, to));
@@ -403,7 +418,17 @@ namespace SevenSteps.Game.UI.Planets
             taglineText.text = tag;
             taglineText.gameObject.SetActive(!string.IsNullOrEmpty(tag));
             var bounds = new Rect(rect.rect.xMin + 24, rect.rect.yMin + 24, rect.rect.width - 48, rect.rect.height - 48);
-            label.anchoredPosition = PlanetMapLayout.LabelSpot(centers[p], radii[p], LabelSize, 26, segments, bounds);
+            avoid.Clear();
+            for (int i = 0; i < centers.Length; i++)
+            {
+                if (i != p) avoid.Add(new Rect(centers[i] - Vector2.one * radii[i], Vector2.one * 2 * radii[i])); // other bodies
+                float w = model.ClearedCount(i) * StarGap;
+                avoid.Add(new Rect(centers[i] + new Vector2(-w / 2, -(radii[i] + 14 + StarSize / 2)), new Vector2(w, StarSize))); // star rows
+            }
+            if (model.MarkerPlanet >= 0) avoid.Add(new Rect(marker.anchoredPosition - marker.sizeDelta / 2, marker.sizeDelta));
+            // The box is the text's measured width (a 360-unit box rarely fits between lines), the full height.
+            float textW = Mathf.Min(LabelSize.x, Mathf.Max(nameText.preferredWidth, taglineText.gameObject.activeSelf ? taglineText.preferredWidth : 0) + 16);
+            label.anchoredPosition = PlanetMapLayout.LabelSpot(centers[p], radii[p], new Vector2(textW, LabelSize.y), 26, segments, bounds, avoid);
         }
 
         void Tick()

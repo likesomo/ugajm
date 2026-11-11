@@ -7,8 +7,9 @@ namespace SevenSteps.Game.UI.Planets
     /// <summary>
     /// The v4 stone planet bodies (concepts/ui/stage-select-2026-11-11/v4, user approved 2026-11-11) built at run time: a
     /// four-times subdivided icosahedron (5,120 crust triangles) displaced and vertex-coloured per world, plus each world's
-    /// small details in the same mesh. Ported from the editor-only review (feat/art-stages 8c6e9b3, PlanetStoneV4.cs); the
-    /// shapes and colours are the same numbers. Used when a <see cref="PlanetBodySet"/> entry has no authored mesh, so an art
+    /// small details in the same mesh. Ported from the editor-only review (feat/art-stages 8c6e9b3, PlanetStoneV4.cs) with the
+    /// v4b polish as the default (dd6592c PolishV4b: carved ledges + three glyphs, crumble terraces + eaves, altar stones
+    /// and sarsen colour); the shapes and colours are the same numbers. Used when a <see cref="PlanetBodySet"/> entry has no authored mesh, so an art
     /// mesh (v4b) replaces it by setting the asset only.
     /// Local space: centre at the origin, radius <see cref="Radius"/> (y squashed by <see cref="Squash"/>). A seated body
     /// has its summit cut flat at <see cref="SeatCut"/> inside |x| &lt; 2.72, |z| &lt; 1.12 so a board sits within it.
@@ -144,14 +145,18 @@ namespace SevenSteps.Game.UI.Planets
                 float d = Vector3.Distance(n, new Vector3(0, .64f, -.77f).normalized);
                 if (d < .48f) radius -= .85f * Mathf.Pow(1 - d / .48f, 1.2f);
             }
-            if (p == 2) radius += Mathf.Sin(n.y * 47 + n.z * 1.8f) * .045f + Mathf.Sin(n.y * 21) * .045f;
+            if (p == 2) // v4b: stepped sandstone ledges
+            {
+                float ledge = Mathf.Repeat(n.y * 6, 1);
+                radius = Radius + (Noise(n, 6) - .5f) * .025f + .18f * (1 - Mathf.SmoothStep(.05f, .38f, ledge)) - .02f;
+            }
             if (p == 3) radius += Mathf.Sin(n.x * 29 + n.z * 17) * .015f;
             if (p == 4) radius -= Mathf.Pow(1 - Mathf.Abs(Mathf.Sin(n.x * 16 + n.z * 7)), 14) * .035f;
-            if (p == 5)
+            if (p == 5) // v4b: terraces with eaves, pores, erosion channels
             {
-                radius -= Pit(n, 85, out _) * .14f;
-                radius += Mathf.Sin(n.y * 33 + Mathf.Sin(Mathf.Atan2(n.z, n.x) * 13) * .6f) * .10f;
-                radius -= Mathf.Pow(Mathf.Max(0, Mathf.Sin(Mathf.Atan2(n.z, n.x) * 19 + n.y * 3)), 10) * .11f;
+                float phase = Mathf.Repeat(n.y * 5.5f + .045f * Mathf.Sin(Mathf.Atan2(n.z, n.x) * 13), 1);
+                radius = Radius + .15f * (1 - Mathf.SmoothStep(.10f, .42f, phase)) - Pit(n, 65, out _) * .20f;
+                radius -= Mathf.Pow(Mathf.Max(0, Mathf.Sin(Mathf.Atan2(n.z, n.x) * 17 + n.y * 1.8f)), 10) * .14f;
             }
             var q = Vector3.Scale(n * radius, new Vector3(1, Squash, 1));
             // The review seated only moss (the one dived into); production seats every world the same way.
@@ -176,10 +181,11 @@ namespace SevenSteps.Game.UI.Planets
                     color = Color.Lerp(color, Hex("95816A"), rim * .3f);
                     if (Vector3.Distance(n, new Vector3(0, .64f, -.77f).normalized) < .29f) color = Hex("22262A");
                     break;
-                case 2:
-                    float band = Mathf.Sin(n.y * 47 + n.z * 1.8f);
-                    color = Color.Lerp(Hex("8E452F"), Hex("CA8159"), .5f + band * .32f + grain * .18f);
-                    if (Mathf.Abs(Mathf.Sin(n.y * 23 + n.x)) < .08f) color *= .74f;
+                case 2: // v4b ledges: shadowed riser, lit tread
+                    float ledgePhase = Mathf.Repeat(n.y * 6, 1);
+                    color = Color.Lerp(Hex("9A4E35"), Hex("CB8056"), .40f + grain * .15f);
+                    if (ledgePhase < .13f) color *= .58f;
+                    else if (ledgePhase < .33f) color = Hex("DD996A");
                     break;
                 case 3:
                     float stream = Mathf.Abs(n.z + .32f * Mathf.Sin(n.x * 4));
@@ -195,17 +201,16 @@ namespace SevenSteps.Game.UI.Planets
                     if (strap < .07f || diagonal < .07f) color = Hex("99703E");
                     if ((strap > .048f && strap < .073f) || (diagonal > .048f && diagonal < .078f)) color = Hex("C4A05B");
                     break;
-                case 5:
-                    float pore = Pit(n, 85, out _);
-                    float terrace = Mathf.Sin(n.y * 33 + Mathf.Sin(Mathf.Atan2(n.z, n.x) * 13) * .6f);
-                    color = Color.Lerp(Hex("B39B72"), Hex("E0CC9E"), grain);
-                    color *= 1 - pore * .38f;
-                    if (terrace < -.62f) color *= .72f;
-                    else if (terrace > .70f) color = Color.Lerp(color, Hex("EAD8AE"), .65f);
+                case 5: // v4b terraces
+                    float phase = Mathf.Repeat(n.y * 5.5f + .045f * Mathf.Sin(Mathf.Atan2(n.z, n.x) * 13), 1);
+                    color = Color.Lerp(Hex("B49A73"), Hex("E7D2AB"), grain);
+                    if (phase < .16f) color *= .64f;
+                    else if (phase < .36f) color = Hex("EAD9B5");
+                    color *= 1 - Pit(n, 65, out _) * .36f;
                     break;
-                default:
-                    color = Color.Lerp(Hex("999178"), Hex("C2AE74"), grain);
-                    if (broad > .51f) color = Color.Lerp(Hex("9B9444"), Hex("B9AE64"), mid);
+                default: // v4b sarsen
+                    color = Color.Lerp(Hex("88887C"), Hex("BDB29A"), grain);
+                    if (broad > .61f) color = Color.Lerp(Hex("9C914A"), Hex("B0A35A"), mid);
                     break;
             }
             color.a = 1;
@@ -290,7 +295,7 @@ namespace SevenSteps.Game.UI.Planets
                 for (int k = 0; k < 7; k++)
                 {
                     float a = k * Mathf.PI * 2 / 7;
-                    m.Box(new Vector3(Mathf.Cos(a) * 1.22f, 3.20f, Mathf.Sin(a) * 1.22f), new Vector3(.24f, .42f, .27f), Hex("BFB28B"), Quaternion.Euler(0, k * 51, 0));
+                    m.Box(new Vector3(Mathf.Cos(a) * 1.50f, 3.15f, Mathf.Sin(a) * 1.50f), new Vector3(.46f, .72f, .40f), Hex("CAC0A5"), Quaternion.Euler(0, k * 51, 0)); // v4b
                 }
             if (p == 3)
             {
@@ -315,15 +320,33 @@ namespace SevenSteps.Game.UI.Planets
                         m.Tri(a0 - side, b0 + side, a0 + side, Hex("5F91A9"));
                     }
             }
-            if (p == 2) // fine incised rune strokes
-                for (int k = 0; k < 8; k++)
+            if (p == 2) // v4b: three carved glyphs on the front
+                for (int glyph = 0; glyph < 3; glyph++)
                 {
-                    var n = new Vector3(-.6f + k * .17f, .20f, -1).normalized;
-                    var n2 = (n + new Vector3(.03f, .065f, 0)).normalized;
-                    var pos = StonePoint(p, n, seat) + n * .024f; var end = StonePoint(p, n2, seat) + n2 * .024f;
-                    var delta = end - pos;
-                    m.Box((pos + end) * .5f, new Vector3(.018f, .018f, delta.magnitude), Hex("E1A16A"), Quaternion.LookRotation(delta));
+                    Vector3 Mark(float gx, float gy) { var n = new Vector3(gx, gy, -1).normalized; return StonePoint(p, n, seat) + n * .07f; }
+                    void Stroke(Vector3 a, Vector3 b)
+                    {
+                        var side = Vector3.Cross((a + b).normalized, b - a).normalized * .035f;
+                        m.Tri(a - side, b + side, b - side, Hex("542F29"));
+                        m.Tri(a - side, a + side, b + side, Hex("542F29"));
+                    }
+                    float x = -.45f + glyph * .43f;
+                    Stroke(Mark(x, .20f), Mark(x, .48f));
+                    Stroke(Mark(x - .10f, .42f), Mark(x + .10f, .32f));
+                    Stroke(Mark(x - .10f, .28f), Mark(x + .10f, .38f));
                 }
+            if (p == 5) // v4b: hanging eaves under three terrace rows
+                for (int row = 0; row < 3; row++)
+                    for (int k = 0; k < 10; k++)
+                    {
+                        float a = k * Mathf.PI / 5 + .17f * row, y = .45f - row * .36f;
+                        var n = new Vector3(Mathf.Cos(a) * Mathf.Sqrt(1 - y * y), y, Mathf.Sin(a) * Mathf.Sqrt(1 - y * y));
+                        var center = StonePoint(p, n, seat) + n * .09f;
+                        var side = Vector3.Cross(Vector3.up, n).normalized * .07f;
+                        var tip = center + Vector3.down * (.30f + (k % 3) * .08f) + n * .045f;
+                        m.Tri(center - side, tip, center + n * .09f, Hex("E9D5AF"));
+                        m.Tri(center + n * .09f, tip, center + side, Hex("C8AF87"));
+                    }
             var mesh = m.ToMesh($"Planet stone {Looks[p]}{(seat ? " seated" : "")}");
             int tris = m.t.Count / 3;
             if (tris < MinTriangles || tris > MaxTriangles)

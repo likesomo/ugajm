@@ -103,7 +103,9 @@ namespace SevenSteps.Game.UI.Planets
         public Vector2 ToCanvas(RectTransform rect, Vector3 world)
         {
             Vector2 screen = Camera.WorldToScreenPoint(world);
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, screen, null, out var local);
+            var canvas = rect.GetComponentInParent<Canvas>();
+            var uiCamera = canvas != null && canvas.rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.rootCanvas.worldCamera : null;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, screen, uiCamera, out var local);
             return local;
         }
 
