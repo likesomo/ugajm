@@ -131,6 +131,24 @@ namespace SevenSteps.EditorTools
             }
             foreach (var p in enabled.Where(p => !names.Any(n => PathFor(n) == p)))
                 issues.Add($"ERROR build list: {p} is not an AppScenes name; add it to AppScenes or remove it from the build");
+            ValidateBuildOrder(enabled, names, AppScenes.BuildOrder, issues);
+        }
+
+        /// Build index order = AppScenes.BuildOrder (architect review N3 on the scene structure doc): one source for the order,
+        /// holding every AppScenes name once. The enabled list must follow it exactly.
+        public static void ValidateBuildOrder(IReadOnlyList<string> enabledPaths, IReadOnlyList<string> names, IReadOnlyList<string> order, List<string> issues)
+        {
+            if (enabledPaths == null) throw new ArgumentNullException(nameof(enabledPaths));
+            if (names == null) throw new ArgumentNullException(nameof(names));
+            if (order == null) throw new ArgumentNullException(nameof(order));
+            if (order.Count != names.Count || names.Any(n => order.Count(o => o == n) != 1))
+            {
+                issues.Add($"ERROR AppScenes.BuildOrder ({string.Join(", ", order)}) must hold every AppScenes name ({string.Join(", ", names)}) exactly once");
+                return;
+            }
+            var want = order.Select(PathFor).ToList();
+            if (!enabledPaths.SequenceEqual(want))
+                issues.Add($"ERROR build list order: {string.Join(", ", enabledPaths.Select(System.IO.Path.GetFileNameWithoutExtension))}; AppScenes.BuildOrder is {string.Join(", ", order)}");
         }
 
         /// One root of the scene's type and none of the others; its references set. Returns the root's AppConfig (or null).

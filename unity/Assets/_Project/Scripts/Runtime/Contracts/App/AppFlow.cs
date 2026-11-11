@@ -12,6 +12,10 @@ namespace SevenSteps.Contracts
         public const string Title = "Title";
         public const string Game = "Game";
 
+        /// The Build Profiles scene list in build index order (docs/scene-flow.md 2). Code loads scenes by name and never by
+        /// index; SceneFlowValidator checks the list against this order. The deferred Loading scene goes in at index 1 here.
+        public static readonly System.Collections.Generic.IReadOnlyList<string> BuildOrder = new[] { Boot, Title, Game };
+
         public static string For(AppState s) => s switch
         {
             AppState.Boot => Boot,
@@ -34,7 +38,8 @@ namespace SevenSteps.Contracts
 
     /// <summary>
     /// App-level state machine: Boot → Title → StageSelect → Game ⇄ Result. Pure C#.
-    /// Changing state loads the hosting scene only if it differs from the current one;
+    /// Changing state loads the hosting scene (ISceneLoader: LoadSceneAsync, LoadSceneMode.Single, docs/scene-flow.md 6) only if
+    /// it differs from the active scene; states sharing a scene are in-scene transitions (docs/scene-flow.md 7);
     /// screens inside a scene listen to <see cref="Changed"/> and show/hide their panels.
     /// Assertive (docs/architecture.md 9, docs/scene-flow.md S2): a transition outside <see cref="CanGo"/>, a stage out of
     /// range, or any transition while a scene is loading throws. Input handlers ask first (<see cref="IsLoading"/>,

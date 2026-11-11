@@ -8,7 +8,8 @@ namespace SevenSteps.Game
 {
     /// <summary>
     /// Registers the app services (docs/architecture.md 11.2). Called by the Boot scene, or by GameController/TitleScreen when
-    /// their scene is played directly in the editor. The only DontDestroyOnLoad object it makes is the telemetry runner.
+    /// their scene is played directly in the editor. The only DontDestroyOnLoad root it makes is the telemetry runner,
+    /// and only when telemetry is on (the other DDOL root, SceneFader, comes with the first scene load; docs/scene-flow.md 2).
     /// </summary>
     public static class Bootstrap
     {
