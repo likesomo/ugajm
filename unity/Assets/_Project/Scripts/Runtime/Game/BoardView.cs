@@ -71,6 +71,9 @@ namespace SevenSteps.Game
 
         /// True while the session has queued input: animations play faster (docs/architecture.md 4.1).
         public Func<bool> Hurry;
+        /// Set by the board controller: the win finale starts; returns seconds to keep it up at least (the story's finale
+        /// line, StoryDirector.FinaleStarting; 0 = none). Enter / click skips that hold with the finale.
+        public Func<float> FinaleStarting = () => 0f;
 
         public BoardGrid Grid => grid;
         /// The TileSet given to Init (the HUD reads body colors from it, docs 12.6).
@@ -414,7 +417,18 @@ namespace SevenSteps.Game
             trail.Remember(r);
             Draw(r.State, true, prev);
             if (r.Has(GameEventType.Respawn)) Tween(player.transform, PlayerScale);
-            if (r.State.Status == Status.Win) yield return trail.Finale(Speed); // the paths join up before the result
+            if (r.State.Status == Status.Win)
+            {
+                float t0 = Time.time, hold = FinaleStarting();
+                yield return trail.Finale(Speed); // the paths join up before the result
+                // The finale line reads before the result covers it (story-integration.md 4.3); Enter / click goes on.
+                bool skipped = StarTrailView.SkipPressed();
+                while (!skipped && Time.time - t0 < hold)
+                {
+                    yield return null;
+                    skipped = StarTrailView.SkipPressed();
+                }
+            }
             anim = null;
             done?.Invoke();
         }

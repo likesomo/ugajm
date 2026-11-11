@@ -13,14 +13,14 @@ namespace SevenSteps.Game.UI
     /// Game HUD, minimal (production/ui-minimal-plan.md "승인된 결정" 2026-11-11, design/art/ui-minimal.md): always on are
     /// only the menu button, a small stage title, undo, restart and the three brothers as muffler-colour dots. Everything
     /// else appears only while it has something to say: the message line, the statue count on statue-door stages, the
-    /// guide (controls, shown by the flow on a first play) and the stage story (on entering a stage, until the first move
-    /// or 3 s). Steps are read from the star trail and the stars at the brother's feet, not from numbers; the old numeric
+    /// guide (controls, shown by the flow on a first play) and the passing story line (<see cref="ShowLine"/>: the stage's
+    /// start line or a planet's finale line, Story.StoryDirector decides when). Steps are read from the star trail and the stars at the brother's feet, not from numbers; the old numeric
     /// footprints come back with <see cref="StepNumbers"/> (accessibility, off by default).
     /// Prefab UI/Prefabs/Hud.prefab (its own canvas), referenced by UiTheme.hud, built by Seven Steps > Gameplay > Build HUD
     /// (HudBuilder). Reads State only and raises button events; controllers decide. Every word comes from the string table
     /// (hud.*, docs/architecture.md 13.2) in the role fonts of the current language; <see cref="Apply"/> redraws on a switch.
     /// </summary>
-    public sealed class HudView : MonoBehaviour
+    public sealed class HudView : MonoBehaviour, Story.ITransientLine
     {
         [Header("Board labels (step numbers, gate digits) are placed here by BoardView")]
         public RectTransform labelLayer;
@@ -80,9 +80,6 @@ namespace SevenSteps.Game.UI
         /// A choice card got the pointer or the selection: true = KEEP. Choice controller (ghost of that choice only).
         public event Action<bool> ChoiceFocused;
 
-        /// Seconds the stage story stays after entering a stage when no move is made (design/art/ui-minimal.md).
-        public const float StorySeconds = 3f;
-
         Localizer loc;
         State shownState;
         int shownStage = -1;
@@ -90,7 +87,6 @@ namespace SevenSteps.Game.UI
         string shownMessage = "";
         bool guideOn, storyOn, stepNumbers;
         float storyUntil;
-        int storyStage = -1;
 
         TileSet bodyLook;
         readonly List<BodyDot> dots = new List<BodyDot>();
@@ -280,15 +276,6 @@ namespace SevenSteps.Game.UI
             title.text = text.name ?? "";
             title.transform.parent.gameObject.SetActive(title.text.Length > 0);
 
-            // The story: once per stage entry (not again on restart), until the first move or StorySeconds.
-            story.text = text.story ?? "";
-            if (levelIdx != storyStage)
-            {
-                storyStage = levelIdx;
-                storyOn = story.text.Length > 0;
-                storyUntil = Time.unscaledTime + StorySeconds;
-            }
-            if (s.Prev != null) storyOn = false;
             RefreshGuide();
 
             RefreshBodies(s);
@@ -296,6 +283,28 @@ namespace SevenSteps.Game.UI
             RefreshMessage();
             RefreshStatues(s);
         }
+
+        /// The passing line (story-integration.md 0.2, the story plate in the left margin): the stage's start line or a
+        /// planet's finale line for <paramref name="seconds"/> (unscaled), replacing one already up.
+        public void ShowLine(string text, float seconds)
+        {
+            if (string.IsNullOrEmpty(text)) throw new ArgumentException("empty line", nameof(text));
+            if (!(seconds > 0)) throw new ArgumentOutOfRangeException(nameof(seconds), seconds, "> 0");
+            story.text = text;
+            storyOn = true;
+            storyUntil = Time.unscaledTime + seconds;
+            RefreshGuide();
+        }
+
+        public void HideLine()
+        {
+            if (!storyOn) return;
+            storyOn = false;
+            RefreshGuide();
+        }
+
+        /// The passing line is up.
+        public bool LineShown => storyOn;
 
         // ---------- KEEP / SWITCH cards (docs 4.4, 14.11) ----------
 
