@@ -141,6 +141,29 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void DiveArrivalShowsNoCardOtherEntriesDo()
+        {
+            string[] keys = { "ruins", "ruins", "moss" };
+            var flow = new AppFlow(new Scenes(), 3);
+            var game = new GameFlowController(flow, EntryTracker.ForLaunch(false), new SaveSystem(new MemoryStore()), new Board(), new Panel(),
+                _ => 0, stage => keys[stage]);
+            var overlays = new OverlayStack();
+            var card = new Card();
+            var dive = new JourneyDive();
+            using var intro = new ChapterIntroController(game, overlays, card,
+                id => new ChapterCardModel(id, id == "ruins" ? 1 : 2, id + " planet", ""));
+            intro.Skips = stage => dive.Pending && dive.Stage == stage; // as GameController wires it with the journey on
+
+            dive.Begin(0);
+            game.Start(0);                 // the dive's arrival: the dive is the planet entry (lead 2026-11-11)
+            Assert.IsTrue(dive.Arrive(0));
+            Assert.AreEqual(0, overlays.Count);
+            game.SelectStage(2);           // [ ] into another chapter, no dive: the card as before
+            CollectionAssert.AreEqual(new[] { "moss" }, card.Bound);
+            game.Dispose();
+        }
+
+        [Test]
         public void NoCardOrNoDataMeansNothing()
         {
             var flow = new AppFlow(new Scenes(), 3);

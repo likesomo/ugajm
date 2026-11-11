@@ -61,12 +61,16 @@ namespace SevenSteps.Game.Flow
 
         public void Dispose() => flow.ChapterEntering -= OnChapterEntering;
 
+        /// Stage entries (0-based stage) that show no card: the map → board dive is itself the planet entry (lead 2026-11-11).
+        /// Set by the scene root when the journey is on; default none.
+        public Func<int, bool> Skips { get; set; } = _ => false;
+
         /// Raised after the card was pushed (tests, analytics hooks later).
         public event Action<ChapterCardModel> Shown;
 
         void OnChapterEntering(string fromChapter, string toChapter, int stage)
         {
-            if (card == null || overlays.Contains(card)) return;
+            if (card == null || overlays.Contains(card) || Skips(stage)) return;
             var model = modelFor(toChapter);
             if (model == null) return;
             card.Bind(model);

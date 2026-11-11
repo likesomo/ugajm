@@ -169,6 +169,12 @@ namespace SevenSteps.Game
                 journey = new GameJourney(flowController, board, cam, runner, Services.Get<JourneyReturn>(), Services.Get<JourneyDive>(),
                     stage => JourneyRoute.PlanetIndex(ChaptersWithStages(), LevelCatalog.ChapterKeyOf(stage)), LevelCatalog.ChapterKeyOf);
             }
+            if (journey != null)
+            {
+                // No chapter card on the dive's arrival: the dive is the planet entry (lead 2026-11-11). Continue, [ ] and ?level= keep it.
+                var dive = Services.Get<JourneyDive>();
+                chapterIntro.Skips = stage => dive.Pending && dive.Stage == stage;
+            }
             board.InputBlocked = () => flow.IsLoading || (journey != null && journey.Blocks) || (overlays.Count > 0 && !OnlyChapterCard());
             board.FlowTakes = flowController.TakesCommand;
 
