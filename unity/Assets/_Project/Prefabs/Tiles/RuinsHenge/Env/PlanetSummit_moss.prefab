@@ -47,6 +47,7 @@ MonoBehaviour:
   surface: {fileID: 2100000, guid: 9e59cf32aef50ad4c97c35ea132e735c, type: 2}
   chapterId: moss
   boardShape: {fileID: 11400000, guid: 0094accda97e29e47a800eaddc096043, type: 2}
+  dressing: {fileID: 11400000, guid: a5d4a8d3dba1f954a9b80f0032f373fe, type: 2}
   craterCrust: {fileID: -672807524522685444, guid: bf86b877c3ef4ba4ea9672918d442b61, type: 3}
   craterCrustScale: {x: 100, y: 99.999985, z: 99.999985}
   craterCrustEuler: {x: 270.01978, y: 0, z: 0}

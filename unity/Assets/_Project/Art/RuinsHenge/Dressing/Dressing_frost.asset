@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bddbdd7b197081429d4248a051e9a7a, type: 3}
+  m_Name: Dressing_frost
+  m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.PlanetDressingSet
+  planetId: frost
+  modules:
+  - {fileID: 6186484341744984321, guid: 1fcc9ecd8f6075446993ff73b78c51d3, type: 3}
+  - {fileID: 8751813886685525927, guid: 87e2c1cf6807f29409a05ff853b16d3f, type: 3}
+  - {fileID: 5427763451629997907, guid: a014365c1d53dbe49a6678a081094678, type: 3}
+  - {fileID: 4350378976696747814, guid: 2bcd882cdfc49084db631e3d70ab2df8, type: 3}
+  - {fileID: 2584552635491432373, guid: 1804d379151b1984a95e4c7c2694bedf, type: 3}
+  material: {fileID: 2100000, guid: 8990ab390a3b2f44bb545dc3e2da31b6, type: 2}

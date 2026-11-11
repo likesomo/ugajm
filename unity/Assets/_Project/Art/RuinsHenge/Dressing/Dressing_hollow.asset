@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bddbdd7b197081429d4248a051e9a7a, type: 3}
+  m_Name: Dressing_hollow
+  m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.PlanetDressingSet
+  planetId: hollow
+  modules:
+  - {fileID: 9171690210634875821, guid: 5c7d1ffdb424e784db35837ababc1c30, type: 3}
+  - {fileID: 1769398103080692126, guid: 45f7f2a5d4d502544b0ddf4e7da2c9ae, type: 3}
+  - {fileID: 3134163092135322225, guid: f92b2b96e6e60004f94dfa25ece05c6b, type: 3}
+  - {fileID: 4584122405569736560, guid: 29153a9e499754d4d961ccc2a74dfad1, type: 3}
+  - {fileID: 7625164838238829694, guid: 1112de3b1fadfa34ea2d05657214b72f, type: 3}
+  material: {fileID: 2100000, guid: e68d98b73a4c1754fa19cb37bc8e7d0f, type: 2}

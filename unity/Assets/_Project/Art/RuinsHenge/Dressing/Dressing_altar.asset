@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bddbdd7b197081429d4248a051e9a7a, type: 3}
+  m_Name: Dressing_altar
+  m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.PlanetDressingSet
+  planetId: altar
+  modules:
+  - {fileID: 6932989975412844805, guid: ec1a5ac4edf8bc6488ee02c305ac6b6d, type: 3}
+  - {fileID: 8499293644245424595, guid: e7f23f7edbb038848875b558193ba895, type: 3}
+  - {fileID: 8197861315807947679, guid: e0f667dc74c92b5468221abc1b4dd4ca, type: 3}
+  - {fileID: 2523501515675563311, guid: 19a10ea2e8ef6bb42b85340b85abbad2, type: 3}
+  - {fileID: 5459232415367630444, guid: b2c44aacd57040545bb248a95894fabf, type: 3}
+  material: {fileID: 2100000, guid: df9ffb1a77172904393efba61f862de0, type: 2}

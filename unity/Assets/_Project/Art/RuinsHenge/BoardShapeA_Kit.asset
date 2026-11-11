@@ -44,3 +44,4 @@ MonoBehaviour:
   altarMenhir: {fileID: 7990961134020157916, guid: 9a9f35c6196d394438e20fc26d8654cb, type: 3}
   joineryKerb: {fileID: -369742588959352630, guid: 1e27312459217d14f998ecb5eb3ce226, type: 3}
   joineryCrust: {fileID: 7652732416409778683, guid: b72888c0ebb042348be75a4f3110a8b5, type: 3}
+  dressingJoineryKerb: {fileID: 2699515418000663820, guid: f0f8cb9a7f203be42abbe17d5396fcd0, type: 3}
