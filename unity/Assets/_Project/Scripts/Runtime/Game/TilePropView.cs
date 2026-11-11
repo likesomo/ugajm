@@ -44,6 +44,7 @@ namespace SevenSteps.Game
         public void SetData(int variant, int required, int statues)
         {
             Init();
+            LayoutCounters(lamps,variant);LayoutCounters(sockets,required);
             if(lastVariant!=variant)
             {
                 lastVariant=variant;
@@ -55,16 +56,32 @@ namespace SevenSteps.Game
             for(int i=0;i<sockets.Length;i++)if(sockets[i]!=null)sockets[i].gameObject.SetActive(i<required);
             for(int i=0;i<tokens.Length;i++)if(tokens[i]!=null)tokens[i].gameObject.SetActive(i<Mathf.Min(required,statues));
         }
+        void LayoutCounters(Transform[] counters,int count)
+        {
+            int columns=count<=4?Mathf.Max(1,count):3;
+            float pitch=columns==4?.22f:.28f;
+            for(int i=0;i<Mathf.Min(count,counters.Length);i++)
+            {
+                int row=i/columns, rowCount=Mathf.Min(columns,count-row*columns);
+                var local=new Vector3((i%columns-(rowCount-1)*.5f)*pitch,.90f,-.28f+row*.28f);
+                counters[i].position=transform.TransformPoint(local);
+            }
+        }
+        static void Paint(Renderer r,Color color)
+        {
+            var b=new MaterialPropertyBlock();b.SetColor("_BaseColor",color);b.SetFloat("_UseVertexColor",0);b.SetFloat("_UseAtlas",0);b.SetFloat("_Unlit",1);r.SetPropertyBlock(b);
+        }
         void Tint(Color color)
         {
             var block=new MaterialPropertyBlock();
-            block.SetColor("_BaseColor",color);block.SetFloat("_UseVertexColor",0);block.SetFloat("_UseAtlas",0);block.SetFloat("_Unlit",.8f);
-            foreach(var r in accents)if(r!=null)r.SetPropertyBlock(block);
+            block.SetColor("_BaseColor",color*1.6f);block.SetFloat("_UseVertexColor",0);block.SetFloat("_UseAtlas",0);block.SetFloat("_Unlit",1);
+            foreach(var r in accents)if(r!=null){r.SetPropertyBlock(block);if(r.name.StartsWith("inlay_socket_dim"))Paint(r,new Color(.55f,.25f,.06f));}
         }
         public void SetActiveVisual(bool active,bool animate)
         {
             Init();
             if(motion!=null){StopCoroutine(motion);motion=null;}
+            foreach(var lamp in lamps)foreach(var r in lamp.GetComponentsInChildren<Renderer>(true))if(r.name.StartsWith("inlay_"))Paint(r,active?new Color(2.8f,1.7f,.4f):new Color(.9f,.5f,.12f));
             if(handle!=null)handle.localRotation=handleRest*Quaternion.Euler(active?42:0,0,0);
             if(slab==null)return;
             // FBX roots may retain a coordinate-system rotation; motion follows the board root, not FBX local Y.

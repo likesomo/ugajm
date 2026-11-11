@@ -17,7 +17,8 @@ namespace SevenSteps.Art
  {
   const string Key="PropsReviewActive";
   const string Out="C:/unityjam/shared-assets/seven-steps/concepts/ui/props-2026-11-12";
-  static readonly int[] Stages=Arg("-props-all","false")=="true"?Enumerable.Range(1,50).ToArray():new[]{4,5,15,24,29,36,38,41,50};
+  static readonly int[] Stages=Arg("-props-stages","")!=""?Arg("-props-stages","").Split(',').Select(int.Parse).ToArray():Arg("-props-counter-proof","false")=="true"?Enumerable.Range(1,28).ToArray():Arg("-props-all","false")=="true"?Enumerable.Range(1,50).ToArray():Arg("-props-review","false")=="true"?new[]{15,24,38}:new[]{4,5,15,24,29,36,38,41,50};
+  static int W=>Arg("-props-game-resolution","false")=="true"?1280:1600; static int H=>Arg("-props-game-resolution","false")=="true"?720:1000;
   static int index; static double since; static GameObject root; static Camera cam; static RenderTexture rt;
   static PropsReviewCapture(){if(SessionState.GetBool(Key,false))EditorApplication.update+=Tick;}
   public static void Run(){SessionState.SetBool(Key,true);SessionState.SetString("PropsReviewPhase",Arg("-props-phase","before"));EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);EditorApplication.update-=Tick;EditorApplication.update+=Tick;EditorApplication.EnterPlaymode();}
@@ -36,10 +37,34 @@ namespace SevenSteps.Art
   static void Audit(int stage)
   {
    long Tris(GameObject go) => go.GetComponentsInChildren<MeshFilter>().Where(f=>f.sharedMesh!=null&&f.GetComponent<Renderer>()!=null&&f.GetComponent<Renderer>().enabled).Sum(f=>Enumerable.Range(0,f.sharedMesh.subMeshCount).Sum(i=>(long)f.sharedMesh.GetIndexCount(i)/3));
-   var board=root.GetComponentInChildren<BoardView>();var mats=root.GetComponentsInChildren<Renderer>().Where(r=>r.enabled).SelectMany(r=>r.sharedMaterials).Where(m=>m!=null).Distinct().Count();
+   var board=root.GetComponentInChildren<BoardView>();
+   if(SessionState.GetString("PropsReviewPhase","")=="readability-after")
+   {
+    string pixels=Path.Combine(Out,"stage-count-readability-pixels.csv");if(index==0)File.WriteAllText(pixels,"stage,prop,count,minimum_center_spacing_px,pip_diameter_px\n");
+    foreach(var prop in board.GetComponentsInChildren<TilePropView>())
+    {
+     var counters=(prop.lamps.Length>0?prop.lamps:prop.sockets).Where(t=>t.gameObject.activeSelf).ToArray();if(counters.Length==0)continue;
+     float minimum=float.MaxValue;var points=counters.Select(t=>cam.WorldToScreenPoint(t.position)).ToArray();for(int i=0;i<points.Length;i++)for(int j=0;j<i;j++)minimum=Mathf.Min(minimum,Vector2.Distance(points[i],points[j]));
+     var pip=counters[0].GetComponentsInChildren<Renderer>().First(r=>r.name.StartsWith("inlay_lamp")||r.name.StartsWith("inlay_socket_dim"));var b=pip.bounds;float diameter=Mathf.Abs(cam.WorldToScreenPoint(b.center+Vector3.right*b.extents.x).x-cam.WorldToScreenPoint(b.center-Vector3.right*b.extents.x).x);
+     File.AppendAllText(pixels,$"{stage},{prop.name},{counters.Length},{(counters.Length==1?0:minimum):F2},{diameter:F2}\n");
+    }
+   }
+   var mats=root.GetComponentsInChildren<Renderer>().Where(r=>r.enabled).SelectMany(r=>r.sharedMaterials).Where(m=>m!=null).Distinct().Count();
    string path=Path.Combine(Out,"unity-stage-audit-"+SessionState.GetString("PropsReviewPhase","before")+".csv");if(index==0)File.WriteAllText(path,"stage,board_triangles,scene_triangles,scene_materials\n");File.AppendAllText(path,$"{stage},{Tris(board.gameObject)},{Tris(root)},{mats}\n");
   }
-  static void FixLabels() { var view=root.GetComponentInChildren<BoardView>();var labels=(System.Collections.IEnumerable)typeof(BoardView).GetField("labels",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(view); var canvas=root.GetComponentInChildren<Canvas>();canvas.renderMode=RenderMode.WorldSpace;var rect=canvas.GetComponent<RectTransform>();rect.sizeDelta=new Vector2(1600,1000);rect.SetPositionAndRotation(cam.transform.position+cam.transform.forward*.8f,cam.transform.rotation);rect.localScale=Vector3.one*(2*cam.orthographicSize/1000);foreach(var label in labels){var type=label.GetType();var text=(Text)type.GetField("Text").GetValue(label);if(text==null||!text.enabled)continue;var world=(Vector3)type.GetField("World").GetValue(label);var follow=(Transform)type.GetField("Follow").GetValue(label);if(follow!=null)world+=follow.position;var vp=cam.WorldToViewportPoint(world);text.fontSize=Mathf.Max(10,Mathf.RoundToInt(1000/(2*cam.orthographicSize)*(float)type.GetField("Size").GetValue(label)));text.rectTransform.anchoredPosition=new Vector2((vp.x-.5f)*rect.rect.width,(vp.y-.5f)*rect.rect.height);}}
+  static void FixLabels() { var view=root.GetComponentInChildren<BoardView>();var labels=(System.Collections.IEnumerable)typeof(BoardView).GetField("labels",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(view); var canvas=root.GetComponentInChildren<Canvas>();canvas.renderMode=RenderMode.WorldSpace;var rect=canvas.GetComponent<RectTransform>();rect.sizeDelta=new Vector2(W,H);rect.SetPositionAndRotation(cam.transform.position+cam.transform.forward*.8f,cam.transform.rotation);rect.localScale=Vector3.one*(2*cam.orthographicSize/H);foreach(var label in labels){var type=label.GetType();var text=(Text)type.GetField("Text").GetValue(label);if(text==null||!text.enabled)continue;var world=(Vector3)type.GetField("World").GetValue(label);var follow=(Transform)type.GetField("Follow").GetValue(label);if(follow!=null)world+=follow.position;var vp=cam.WorldToViewportPoint(world);text.fontSize=Mathf.Max(10,Mathf.RoundToInt(H/(2*cam.orthographicSize)*(float)type.GetField("Size").GetValue(label)));text.rectTransform.anchoredPosition=new Vector2((vp.x-.5f)*rect.rect.width,(vp.y-.5f)*rect.rect.height);}}
+  static void CounterFixture(int shot,BoardView board,TileSet set)
+  {
+   int group=(shot-1)/7,count=(shot-1)%7+1;
+   var old=board.GetComponentsInChildren<TilePropView>().First(p=>p.name.StartsWith("Gate3 "));
+   var visual=group<2?set.gate:set.countDoor;
+   var go=UnityEngine.Object.Instantiate(visual.prefab,root.transform);go.transform.position=old.transform.position;go.transform.rotation=old.transform.rotation;old.gameObject.SetActive(false);
+   var prop=go.GetComponent<TilePropView>();prop.SetData(group<2?count:0,count,group==3?count:0);prop.SetActiveVisual(group==1||group==3,false);
+   var points=(group<2?prop.lamps:prop.sockets).Take(count).Select(t=>cam.WorldToScreenPoint(t.position+Vector3.up*.04f)).ToArray();float minimum=float.MaxValue;
+   for(int i=0;i<points.Length;i++)for(int j=0;j<i;j++)minimum=Mathf.Min(minimum,Vector2.Distance(points[i],points[j]));
+   if(count>1&&minimum<6)throw new Exception("Counter spacing below 6 pixels: "+minimum);
+   string path=Path.Combine(Out,"counter-proof-pixels.csv");if(shot==1)File.WriteAllText(path,"shot,state,count,min_center_spacing_px,screen_x,screen_y\n");File.AppendAllText(path,$"{shot},{group},{count},{(count==1?0:minimum):F2},{points[0].x:F2},{points[0].y:F2}\n");
+  }
   static ChapterPreset Baseline(ChapterPreset chapter)
   {
    const string p="Assets/_Project/Art/Test/PropsBaseline/";
@@ -49,14 +74,15 @@ namespace SevenSteps.Art
   }
   static void Build(int stage)
   {
-   var file=JsonUtility.FromJson<LevelFileDto>(File.ReadAllText("Assets/_Project/Data/levels.json"));var dto=file.levels[stage-1];var level=dto.ToLevel();var chapter=AssetDatabase.LoadAssetAtPath<ChapterPreset>("Assets/_Project/Art/RuinsHenge/Chapter_"+dto.chapter+".asset");
+   var file=JsonUtility.FromJson<LevelFileDto>(File.ReadAllText("Assets/_Project/Data/levels.json"));var dto=file.levels[Arg("-props-counter-proof","false")=="true"?14:stage-1];var level=dto.ToLevel();var chapter=AssetDatabase.LoadAssetAtPath<ChapterPreset>("Assets/_Project/Art/RuinsHenge/Chapter_"+dto.chapter+".asset");
    if(Arg("-props-baseline","false")=="true")chapter=Baseline(chapter);
-   root=new GameObject("PropsReviewStage"+stage);cam=new GameObject("Camera",typeof(Camera)).GetComponent<Camera>();cam.transform.SetParent(root.transform);cam.tag="MainCamera";cam.backgroundColor=chapter.sky.background;cam.clearFlags=CameraClearFlags.SolidColor;cam.allowHDR=false;rt=new RenderTexture(1600,1000,24){antiAliasing=4};cam.targetTexture=rt;cam.aspect=1.6f;
+   root=new GameObject("PropsReviewStage"+stage);cam=new GameObject("Camera",typeof(Camera)).GetComponent<Camera>();cam.transform.SetParent(root.transform);cam.tag="MainCamera";cam.backgroundColor=chapter.sky.background;cam.clearFlags=CameraClearFlags.SolidColor;cam.allowHDR=false;rt=new RenderTexture(W,H,24){antiAliasing=4};cam.targetTexture=rt;cam.aspect=(float)W/H;
    Ui.Theme=AssetDatabase.LoadAssetAtPath<UiTheme>("Assets/_Project/Art/UI/RuinsHengeTheme.asset");
    var canvas=new GameObject("Labels",typeof(RectTransform),typeof(Canvas)).GetComponent<Canvas>();canvas.transform.SetParent(root.transform);canvas.renderMode=RenderMode.ScreenSpaceCamera;canvas.worldCamera=cam;canvas.planeDistance=2;var rect=canvas.GetComponent<RectTransform>();
    var view=new GameObject("BoardView").AddComponent<BoardView>();view.transform.SetParent(root.transform);view.Init(chapter.tileSet,rect,cam);view.UseChapter(chapter.tileSet,chapter);view.ReduceMotion=true;var state=Rules.NewState(level);
    if(Arg("-props-progress","false")=="true")foreach(char action in dto.expected.path){var a=action switch {'U'=>Act.Up,'D'=>Act.Down,'L'=>Act.Left,'R'=>Act.Right,'K'=>Act.Keep,'X'=>Act.Switch,_=>throw new Exception("Unknown path action")};state=Rules.Dispatch(state,Command.FromAct(a)).State;if(state.Statues.Length>=Mathf.Max(1,level.StatueCount)&&state.Status==Status.Play)break;}
    view.Rebuild(state);
+   if(Arg("-props-counter-proof","false")=="true")CounterFixture(stage,view,chapter.tileSet);
    var planet=UnityEngine.Object.Instantiate(chapter.sky.planetPrefab,root.transform).GetComponent<RuinsHengePlanet>();planet.Fit(chapter.tileSet.GridFor(level));
    foreach(var rig in new[]{chapter.lighting.key,chapter.lighting.fill,chapter.lighting.rim}){var l=new GameObject("Light",typeof(Light)).GetComponent<Light>();l.transform.SetParent(root.transform);l.type=LightType.Directional;l.enabled=rig.enabled;l.color=rig.color;l.intensity=rig.intensity;l.transform.rotation=Quaternion.Euler(rig.euler);l.shadows=LightShadows.None;}
    RenderSettings.ambientMode=UnityEngine.Rendering.AmbientMode.Flat;RenderSettings.ambientLight=chapter.lighting.ambient;

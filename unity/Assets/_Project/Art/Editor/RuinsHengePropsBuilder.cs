@@ -17,10 +17,11 @@ namespace SevenSteps.Art
   static readonly Dictionary<string,GameObject> Built=new Dictionary<string,GameObject>();
   public static void Build()
   {
+   bool readabilityOnly=Environment.GetCommandLineArgs().Contains("-props-readability-only");
    AssetDatabase.Refresh();
    var stone=AssetDatabase.LoadAssetAtPath<Material>(Art+"/Materials/BaseAtlas.mat");
    var accent=AssetDatabase.LoadAssetAtPath<Material>(Art+"/Materials/MarkUnlit.mat");
-   foreach(var kind in new[]{"Exit","Plate","Door","Gate","CountDoor","Bridge","Cracked","FlipUp","FlipDown","Ice","Lever","Footprint","Mud","Start","OldStart"})
+   foreach(var kind in (readabilityOnly?new[]{"Exit","Gate","CountDoor"}:new[]{"Exit","Plate","Door","Gate","CountDoor","Bridge","Cracked","FlipUp","FlipDown","Ice","Lever","Footprint","Mud","Start","OldStart"}))
    {
     string path=Shared+"/RH_Prop_"+(kind=="OldStart"?"Start":kind)+".fbx";
     var importer=(ModelImporter)AssetImporter.GetAtPath(path);
@@ -57,6 +58,7 @@ namespace SevenSteps.Art
     root.AddComponent<BoardShapeAContact>().radius=new Vector2(.42f,.32f);
     Built[kind]=PrefabUtility.SaveAsPrefabAsset(root,Prefabs+"/"+kind+".prefab");UnityEngine.Object.DestroyImmediate(root);
    }
+   if(readabilityOnly){AssetDatabase.SaveAssets();Debug.Log("[StageProps] Readability props rebuilt without touching TileSets, dressing or unrelated prefabs");EditorApplication.Exit(0);return;}
    TileVisual V(string name,bool hide=false)=>new TileVisual{prefab=Built[name],scale=Vector3.one,hideLabel=hide};
    foreach(var guid in AssetDatabase.FindAssets("t:TileSet",new[]{Art}))
    {

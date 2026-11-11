@@ -62,7 +62,9 @@ models={}
 for kind in ['Exit','Plate','Door','Gate','CountDoor','Bridge','Cracked','FlipUp','FlipDown','Ice','Lever','Footprint','Mud','Start']:
  objects=[];root=empty(kind);floor(root) if kind not in ['Footprint','Start'] else None
  if kind=='Exit':
-  frame(root,.68);glyph(2,root,(0,-.065,.79),True,.70)
+  frame(root,.88);glyph(2,root,(0,-.10,1.12),True,1.45)
+  pts=[(math.sin(i*math.pi/5)*(.29 if i%2==0 else .12),-.105,1.12+math.cos(i*math.pi/5)*(.29 if i%2==0 else .12)) for i in range(10)]
+  me=bpy.data.meshes.new('StarBeacon');me.from_pydata([(0,-.105,1.12)]+pts,[],[(0,(i+1)%10+1,i+1) for i in range(10)]);o=bpy.data.objects.new('inlay_beacon',me);bpy.context.collection.objects.link(o);finish(o,'inlay_beacon',accent,root)
   for i in range(3):box('inlay_way_out',(0,-.34+i*.14,.025),(.18+i*.07,.055,.018),root,accent,.009)
   box('stone_threshold',(0,.12,.025),(.53,.31,.06),root)
  elif kind=='Plate':
@@ -72,17 +74,18 @@ for kind in ['Exit','Plate','Door','Gate','CountDoor','Bridge','Cracked','FlipUp
   for x,y in [(-.37,-.37),(.37,-.37),(-.37,.37),(.37,.37)]:cyl('stone_pin',(x,y,.015),.045,.04,root,n=8)
  elif kind in ['Door','Gate','CountDoor']:
   frame(root);s=slab(root)
+  if kind in ['Gate','CountDoor']:box('stone_counter_shelf',(0,0,.84),(.90,.76,.08),root,bevel=.025)
   if kind=='Door':
    for k in range(4):g=empty('Glyph_'+str(k),s);glyph(k,g,(0,.011,.34),True,.9);g.hide_render=k!=0
    for x in [-.35,.35]:box('inlay_pair_band',(x,-.024,.58),(.18,.02,.06),root,accent,.008)
   if kind=='Gate':
    for k in range(7):
-    g=empty('Lamp_'+str(k),root);x=(k-3)*.112;cyl('stone_lamp_cup',(x,-.07,.79),.047,.04,g,n=8);cyl('inlay_lamp',(x,-.07,.82),.029,.028,g,accent,n=8)
+    g=empty('Lamp_'+str(k),root);g.location=((k%3-1)*.28 if k<6 else 0,-.28+(k//3)*.28,.90);cyl('stone_lamp_cup',(0,0,0),.085,.04,g,n=8);cyl('inlay_lamp',(0,0,.035),.065,.04,g,accent,n=8)
    # Side-carved rung marks make the counted shape survive the overhead camera.
   if kind=='CountDoor':
    for k in range(7):
-    g=empty('Socket_'+str(k),root);x=(k-3)*.11;cyl('stone_socket_rim',(x,-.12,.83),.05,.045,g,n=10);cyl('carving_socket_hollow',(x,-.12,.856),.036,.006,g,dark,n=10)
-    t=empty('Token_'+str(k),g);box('inlay_token_body',(x,-.12,.89),(.045,.04,.065),t,accent,.01);cyl('inlay_token_head',(x,-.12,.938),.027,.028,t,accent,n=8)
+    g=empty('Socket_'+str(k),root);g.location=((k%3-1)*.28 if k<6 else 0,-.28+(k//3)*.28,.90);cyl('stone_socket_rim',(0,0,0),.085,.045,g,n=10);cyl('carving_socket_hollow',(0,0,.026),.067,.006,g,dark,n=10);cyl('inlay_socket_dim',(0,0,.032),.06,.009,g,accent,n=10)
+    t=empty('Token_'+str(k),g);box('inlay_token_body',(0,0,.075),(.09,.075,.08),t,accent,.01);cyl('inlay_token_head',(0,0,.14),.055,.035,t,accent,n=8)
  elif kind=='Bridge':
   # Raised dry-laid causeway, distinct from a smooth floor, with actual gaps and pins.
   for i in range(5):box('stone_bridge_plank',(0,(i-2)*.177,.02),(.86,.153,.12),root,bevel=.022)

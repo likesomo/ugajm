@@ -28,6 +28,25 @@ namespace SevenSteps.Tests
    Assert.That(set.gate.prefab.GetComponent<TilePropView>().lamps.Length,Is.EqualTo(7));
    var count=set.countDoor.prefab.GetComponent<TilePropView>();Assert.That(count.sockets.Length,Is.EqualTo(7));Assert.That(count.tokens.Length,Is.EqualTo(7));Assert.That(count.slab,Is.Not.Null);
   }
+  [Test]
+  public void CounterMeshesAreCountableIn1280x720Stage15Camera()
+  {
+   var set=AssetDatabase.LoadAssetAtPath<TileSet>(SetPath);
+   var root=new GameObject("Counter pixel projection");var rt=new RenderTexture(1280,720,24);
+   try{
+    var cam=root.AddComponent<Camera>();cam.targetTexture=rt;cam.aspect=1280f/720;
+    var level=JsonUtility.FromJson<LevelFileDto>(System.IO.File.ReadAllText("Assets/_Project/Data/levels.json")).levels[14].ToLevel();BoardView.Fit(cam,new BoardGrid(level),set.cameraRig);
+    var go=Object.Instantiate(set.gate.prefab);go.transform.SetParent(root.transform,true);go.transform.position=new BoardGrid(level).CellToWorld(2,2);var prop=go.GetComponent<TilePropView>();
+    for(int count=1;count<=7;count++){
+     prop.SetData(count,0,0);prop.SetActiveVisual(false,false);
+     Assert.That(prop.lamps.Count(t=>t.gameObject.activeSelf),Is.EqualTo(count));
+     var points=prop.lamps.Take(count).Select(t=>cam.WorldToScreenPoint(t.position)).ToArray();
+     for(int i=0;i<count;i++)for(int j=0;j<i;j++)Assert.That(Vector2.Distance(points[i],points[j]),Is.GreaterThanOrEqualTo(6),"Physical lamp spacing in the game camera");
+     var pip=prop.lamps[0].GetComponentsInChildren<Renderer>().Single(r=>r.name.StartsWith("inlay_lamp"));var b=pip.bounds;
+     Assert.That(Mathf.Abs(cam.WorldToScreenPoint(b.center+Vector3.right*b.extents.x).x-cam.WorldToScreenPoint(b.center-Vector3.right*b.extents.x).x),Is.GreaterThanOrEqualTo(6),"Lamp diameter at native game resolution");
+    }
+   }finally{Object.DestroyImmediate(root);Object.DestroyImmediate(rt);}
+  }
   [UnityTest]
   public IEnumerator RealStageStateOpensPairedDoorAndSnapSettlesItsSlabWithoutLabels()
   {
