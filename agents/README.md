@@ -29,7 +29,7 @@ v0(2026-11-07)에서 시작해 2.5·4단계까지 끝났고, 3단계(플레이�
 - **아트**: RuinsHenge 타일 세트와 행성 7개 `ChapterPreset`(`AppConfig.chapters`), 세쌍둥이 A/B/C 색과 중성 KEEP 선돌, 메뉴 배경 `MenhirJoineryBackground`(선돌+곧은 결구 들보). 붉은 문(도리이 닮은 것)은 폐기
 - **흐름**: Boot → Title(타이틀·행성 지도·스테이지 목록·설정·언어) → Game(챕터 진입·로딩·HUD·결과) (`docs/scene-flow.md`)
 - **검증**: `unity/Tools/unity.sh` test · verify(50/50) · scene-validate · tileset-validate · smoke(리플레이·행성 경계 흐름·타이틀 경로) · smoke-webgl(보드 픽셀, empty 대조)
-- **검증 규칙 (사용자 지시 2026-11-11, 토큰 비용으로 갱신)**: 헤드리스 배치 모드만 — `-batchmode -nographics` + `-executeMethod`(Play Mode 진입·카메라 PNG 렌더), 흐름은 `-runTests -testPlatform PlayMode`(`unity.sh playtest`), CompileCheck·EditMode. Unity 에디터 GUI를 열거나 computer-use로 창을 조작해 확인하지 않는다(`unity.sh playcapture`도 창을 띄우므로 쓰지 않음). 확인용 플레이어 빌드 금지 — WebGL 빌드는 리드가 플레이테스트·출시 빌드 때만. 도구 출력은 짧게. 자세히는 `CLAUDE.md` "검증 규칙"
+- **검증 규칙 (사용자 지시 2026-11-11, 토큰 비용으로 갱신)**: 헤드리스 배치 모드만 — `-batchmode -nographics` + `-executeMethod`(Play Mode 진입·카메라 PNG 렌더), 흐름은 `-runTests -testPlatform PlayMode`(`unity.sh playtest`), CompileCheck·EditMode. Unity 에디터 GUI를 열거나 computer-use로 창을 조작해 확인하지 않는다(화면은 배치 모드 `unity.sh playcapture`). 확인용 플레이어 빌드 금지 — WebGL 빌드는 리드가 플레이테스트·출시 빌드 때만. 도구 출력은 짧게. 자세히는 `CLAUDE.md` "검증 규칙"
 - **텔레메트리**: `server/`(수집·대시보드·내보내기), WebGL은 `/webgl/`로 제공 (`docs/telemetry.md`)
 
 **v0가 `7lucky`에 커밋·푸시된 뒤에** 다른 에이전트의 작업 공간을 만든다. 그래야 모두 같은 코드에서 시작한다.

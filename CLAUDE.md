@@ -32,7 +32,7 @@
 
 ## 검증 규칙 (사용자 지시 2026-11-11, 토큰 비용으로 갱신)
 - **헤드리스 배치 모드만 쓴다**: `Unity -batchmode -nographics` + `-executeMethod`(Play Mode 진입·카메라를 PNG로 렌더하는 스크립트), 흐름은 `-runTests -testPlatform PlayMode` (`unity.sh playtest`), 그리고 CompileCheck·EditMode. 카메라 렌더에 GPU가 꼭 필요할 때만 `-nographics`를 빼되 여전히 `-batchmode`
-- **Unity 에디터 GUI를 열지 않는다. computer-use·get-app-state로 창을 조작해 확인하지 않는다** (GUI Play Mode 작업 약 670만 토큰·컨텍스트 2회 소진, 플레이어 빌드 한 바퀴 약 980만, 헤드리스 배치 캡처 약 390만으로 측정됨). 에디터 창을 띄우는 `unity.sh playcapture`도 쓰지 않는다(배치 방식으로 바꿀 때까지)
+- **Unity 에디터 GUI를 열지 않는다. computer-use·get-app-state로 창을 조작해 확인하지 않는다** (GUI Play Mode 작업 약 670만 토큰·컨텍스트 2회 소진, 플레이어 빌드 한 바퀴 약 980만, 헤드리스 배치 캡처 약 390만으로 측정됨). 화면 확인은 `unity.sh playcapture`(배치 모드 PlayMode 캡처, GPU 렌더라 `-nographics` 없음, → reports/playcapture/)
 - 플레이어 빌드(`build-win`·`smoke`·`build-webgl`·`smoke-webgl`)는 **리드가 플레이테스트·출시 빌드를 만들 때만**
 - 도구 출력은 짧게 (로그는 tail·grep)
 - 씬 플로우는 Unity 씬 구조(Build Profiles 씬 목록, `LoadSceneAsync`, Single/Additive)를 뜻한다. 행성 다이브·전진 같은 카메라 이동은 씬 안 전환(`docs/stage-select-transitions.md`). 브리프 `C:/unityjam/shared-assets/seven-steps/briefs/scene-flow-unity-2026-11-11.md`
