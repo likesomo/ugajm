@@ -9,7 +9,7 @@ namespace SevenSteps.Game.UI
     public static partial class Ui
     {
 
-        static Sprite circle;
+        static Sprite circle, starShape, ringShape;
 
         /// Domain reload is disabled in the editor: drop the previous Play's theme and generated sprite.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -17,6 +17,8 @@ namespace SevenSteps.Game.UI
         {
             theme = null;
             circle = null;
+            starShape = null;
+            ringShape = null;
         }
 
         /// A soft-edged white circle, generated once (no texture asset needed).
@@ -40,6 +42,39 @@ namespace SevenSteps.Game.UI
                 circle = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), 100);
                 return circle;
             }
+        }
+
+        /// A white five-point star (anti-aliased), generated once: the stars at the brother's feet and the choice card marks.
+        public static Sprite StarShape => starShape != null ? starShape : starShape = Shape(64, (x, y) =>
+        {
+            // Distance-like coverage from a polar star outline: radius between inner .42 and outer 1 by angle.
+            float a = Mathf.Atan2(x, y), r = Mathf.Sqrt(x * x + y * y);
+            float k = Mathf.Abs(Mathf.Repeat(a / (2 * Mathf.PI) * 5f, 1f) - 0.5f) * 2f; // 1 at a point, 0 between points
+            float edge = Mathf.Lerp(0.5f, 0.98f, k * k);
+            return (edge - r) * 32f;
+        });
+
+        /// A white ring (outer radius 1, width 0.14), generated once: the choice ring around the brother.
+        public static Sprite RingShape => ringShape != null ? ringShape : ringShape = Shape(128, (x, y) =>
+        {
+            float r = Mathf.Sqrt(x * x + y * y);
+            return (0.07f - Mathf.Abs(r - 0.92f)) * 64f;
+        });
+
+        /// A sprite of n x n texels from a coverage function over -1..1 (clamped to 0..1).
+        static Sprite Shape(int n, Func<float, float, float> coverage)
+        {
+            var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+            var px = new Color32[n * n];
+            for (int y = 0; y < n; y++)
+            for (int x = 0; x < n; x++)
+            {
+                float u = (x + 0.5f) / n * 2f - 1f, v = (y + 0.5f) / n * 2f - 1f;
+                px[y * n + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(coverage(u, v)) * 255));
+            }
+            tex.SetPixels32(px);
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), 100);
         }
 
         public static RectTransform Rect(string name, Transform parent)

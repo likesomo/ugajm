@@ -99,8 +99,10 @@ namespace SevenSteps.Game
             session.Updated += OnSessionUpdated;
             session.Presented += OnPresented;
             if (telemetry is HttpTelemetry http) recorder = new TelemetryRecorder(this, session, http);
-            // Accessibility (docs 11.3.2): step numbers follow the setting, also when it changes while playing.
+            choice = new ChoiceController(session, hud, board, Send);
+            // Accessibility (docs 11.3.2): step numbers and reduce motion follow the settings, also when changed while playing.
             board.StepNumbers = hud.StepNumbers = save.Settings.showStepNumbers;
+            board.ReduceMotion = save.Settings.reduceMotion;
             save.SettingsChanged += OnSettingsChanged;
         }
 
@@ -117,6 +119,7 @@ namespace SevenSteps.Game
         {
             if (loc != null) loc.Changed -= OnLanguageChanged;
             if (save != null) save.SettingsChanged -= OnSettingsChanged;
+            choice?.Dispose();
             recorder?.Dispose();
             audio?.Dispose();
             chapters?.Dispose();
@@ -124,8 +127,13 @@ namespace SevenSteps.Game
 
         void OnSettingsChanged(SettingsData settings)
         {
+            board.ReduceMotion = settings.reduceMotion;
             if (settings.showStepNumbers != StepNumbers) StepNumbers = settings.showStepNumbers;
         }
+
+        ChoiceController choice;
+        /// The KEEP / SWITCH cards, ghosts and focus (docs 4.4). The scene root sets its tutorial funcs.
+        public ChoiceController Choice => choice;
 
         /// Accessibility "show step numbers" (SettingsData.showStepNumbers, off by default; the toggle is scene-flow's):
         /// numeric footprints and the steps-left number on the board. Redraws at once.
@@ -238,6 +246,8 @@ namespace SevenSteps.Game
                 else if (kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame) Send(Command.Move(Dir.Down));
                 else if (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame) Send(Command.Move(Dir.Left));
                 else if (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame) Send(Command.Move(Dir.Right));
+                else if (kb.tabKey.wasPressedThisFrame && choice.Shown) choice.ToggleFocus();
+                else if ((kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) && choice.Shown) choice.Confirm();
                 else if (kb.kKey.wasPressedThisFrame) Send(Command.Keep);
                 else if (kb.xKey.wasPressedThisFrame) Send(Command.Switch);
                 else if (kb.zKey.wasPressedThisFrame || kb.backspaceKey.wasPressedThisFrame) Send(Command.Undo);

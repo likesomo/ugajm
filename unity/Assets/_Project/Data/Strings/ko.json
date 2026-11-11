@@ -42,6 +42,7 @@
     { "key": "hud.statues_open", "text": "선돌 {0} / {1}  문 열림" },
     { "key": "hud.keep_desc", "text": "선돌을 남기고 출발점에서 깨어나요" },
     { "key": "hud.switch_desc", "text": "이 칸에서 다음 형제가 깨어나요" },
+    { "key": "hud.choose_guide", "text": "다음 형제에게 어떻게 이을까요?" },
     { "key": "hud.keep", "text": "남기기" },
     { "key": "hud.switch", "text": "넘기기" },
     { "key": "hud.keys", "text": "방향키 / WASD / 옆 칸 클릭으로 걸어요. 일곱 걸음 뒤 K 남기기, X 넘기기" },

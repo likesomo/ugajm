@@ -222,8 +222,11 @@ namespace SevenSteps.EditorTools
                 int st = chooser.Value;
                 string hint = new HintProvider(c.Levels, c.Loc).For(longestRoute);
                 string msg = LongestMessage(c.Loc);
-                BuildHud(c, st, ChooseState(c.Levels[st]), hint.Length > msg.Length ? hint : msg);
+                var choose = ChooseState(c.Levels[st]);
+                var hud = BuildHud(c, st, choose, hint.Length > msg.Length ? hint : msg);
                 c.Board = BoardArea(c, st);
+                // The choice cards (docs 4.4, 14.11) as the game shows them, with the most text: both result lines and the guide.
+                ShowChoice(c, st, hud, choose, explain: true, guide: true);
                 return null;
             } }, chooser != null ? $"stage {chooser + 1} choose" : "choose");
             yield return (new Screen { Name = "Result", GameplayUi = true, Build = (c, root) =>
@@ -293,6 +296,27 @@ namespace SevenSteps.EditorTools
         }
 
         /// The first KEEP / SWITCH choice (Status.Choose) reachable by moves, depth first; null when none within 7 moves.
+        /// gameplay-ui's Edit Mode path for the choice screen (14.11): the cards of <paramref name="s"/> (Status.Choose) placed
+        /// beside the board area near the brother, exactly as ChoiceController does at runtime.
+        static void ShowChoice(Ctx c, int stage, HudView hud, State s, bool explain, bool guide)
+        {
+            if (!ChoicePreview.TryOf(s, out var p)) throw new InvalidOperationException($"stage {stage + 1}: not a Choose state");
+            hud.ShowChoice(new HudView.ChoiceCards { On = true, NextBody = p.NextBody, Explain = explain, Guide = guide, FocusKeep = true });
+            var info = LevelCatalog.ChapterOf(stage);
+            var preset = info != null && c.Config != null ? c.Config.Chapter(info.ArtPreset) : null;
+            var set = BoardController.TileSetFor(c.Config != null ? c.Config.tileSet : null, preset, c.Assets.tileSet);
+            var grid = set.GridFor(c.Levels[stage]);
+            var go = new GameObject("UiLayoutCheck Choice Camera");
+            try
+            {
+                var cam = go.AddComponent<Camera>();
+                cam.aspect = c.Units.x / c.Units.y;
+                BoardView.Fit(cam, grid, c.RigOverride ?? set.cameraRig);
+                hud.PlaceChoice(BoardArea(c, stage), BoardView.BrotherPoint(cam, grid, s.Pos, c.Units), c.Units);
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
+
         static State ChooseState(Level level)
         {
             State Walk(State s, int depth)

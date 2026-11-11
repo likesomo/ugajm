@@ -42,11 +42,23 @@ namespace SevenSteps.Game.UI
         public GameObject guidePanel;
         public Text story, guide;
 
-        [Header("KEEP / SWITCH (Status.Choose only)")]
+        [Header("KEEP / SWITCH (docs 4.4, 14.11): shown by the choice controller after the 7th step's Present")]
+        [Tooltip("Top-left anchored group placed beside the projected board, near the brother")]
         public RectTransform choice;
         public Button keep, switchBody;
         [Tooltip("One-line result under each choice's name")]
         public Text keepDesc, switchDesc;
+        [Tooltip("Card pictures: statue (KEEP), the next brother (SWITCH)")]
+        public Image keepPicture, switchPicture;
+        [Tooltip("Thin border lines of each card, in the next brother's muffler colour")]
+        public Image[] keepEdges = new Image[4], switchEdges = new Image[4];
+        [Tooltip("\"How will you pass it on?\" on its plate (the plate is the text's parent): the first choice only")]
+        public Text choiceGuide;
+        [Tooltip("Full-screen 30% dim behind the HUD while choosing (exempt Decoration | Board, docs 14.11)")]
+        public Image chooseDim;
+        [Tooltip("Body A, B, C portraits (cycled), and the statue")]
+        public Sprite[] bodySprites = new Sprite[3];
+        public Sprite stoneSprite;
 
         [Serializable]
         public sealed class BodyDot
@@ -63,6 +75,8 @@ namespace SevenSteps.Game.UI
         public event Action MenuRequested;
         /// Board actions. Board controller.
         public event Action UndoRequested, RestartRequested, KeepRequested, SwitchRequested;
+        /// A choice card got the pointer or the selection: true = KEEP. Choice controller (ghost of that choice only).
+        public event Action<bool> ChoiceFocused;
 
         /// Seconds the stage story stays after entering a stage when no move is made (design/art/ui-minimal.md).
         public const float StorySeconds = 3f;
@@ -135,6 +149,14 @@ namespace SevenSteps.Game.UI
             Need(guidePanel, nameof(guidePanel)); Need(story, nameof(story)); Need(guide, nameof(guide));
             Need(choice, nameof(choice)); Need(keep, nameof(keep)); Need(switchBody, nameof(switchBody));
             Need(keepDesc, nameof(keepDesc)); Need(switchDesc, nameof(switchDesc));
+            Need(keepPicture, nameof(keepPicture)); Need(switchPicture, nameof(switchPicture));
+            foreach (var (edges, field) in new[] { (keepEdges, nameof(keepEdges)), (switchEdges, nameof(switchEdges)) })
+                if (edges == null || edges.Length != 4) issues.Add($"HudView {name}: {field} needs 4 lines");
+                else for (int k = 0; k < 4; k++) Need(edges[k], $"{field}[{k}]");
+            Need(choiceGuide, nameof(choiceGuide)); Need(chooseDim, nameof(chooseDim)); Need(stoneSprite, nameof(stoneSprite));
+            if (bodySprites == null || bodySprites.Length == 0) issues.Add($"HudView {name}: bodySprites needs at least one sprite");
+            else for (int k = 0; k < bodySprites.Length; k++) Need(bodySprites[k], $"bodySprites[{k}]");
+            if (choiceGuide != null && choiceGuide.transform.parent == transform) issues.Add($"HudView {name}: choiceGuide needs its plate as parent");
             if (message != null && message.transform.parent == transform) issues.Add($"HudView {name}: message needs its plate as parent");
             if (statues != null && statues.transform.parent == transform) issues.Add($"HudView {name}: statues needs its plate as parent");
         }
@@ -160,6 +182,8 @@ namespace SevenSteps.Game.UI
             restart.onClick.AddListener(() => RestartRequested?.Invoke());
             keep.onClick.AddListener(() => KeepRequested?.Invoke());
             switchBody.onClick.AddListener(() => SwitchRequested?.Invoke());
+            Focusable(keep, true);
+            Focusable(switchBody, false);
             dots.AddRange(bodyDots);
             wired = true;
         }
@@ -173,6 +197,7 @@ namespace SevenSteps.Game.UI
             Set(guide, "hud.keys", FontRole.Body);
             Set(Label(keep), "hud.keep", FontRole.Title);
             Set(Label(switchBody), "hud.switch", FontRole.Title);
+            Set(choiceGuide, "hud.choose_guide", FontRole.Body);
             title.font = Ui.Theme.FontFor(loc.Current, FontRole.Title);
             Font body = Ui.Theme.FontFor(loc.Current, FontRole.Body);
             foreach (var t in new[] { story, message, statues }) t.font = body;
@@ -251,8 +276,147 @@ namespace SevenSteps.Game.UI
             RefreshBodies(s);
             message.text = msg;
             message.transform.parent.gameObject.SetActive(msg.Length > 0);
-            choice.gameObject.SetActive(s.Status == Status.Choose);
             RefreshStatues(s);
+        }
+
+        // ---------- KEEP / SWITCH cards (docs 4.4, 14.11) ----------
+
+        /// What the choice cards show. Built by the choice controller from ChoicePreview and the tutorial state.
+        public struct ChoiceCards
+        {
+            public bool On;
+            /// The next brother (ChoicePreview.NextBody): border colour and the SWITCH picture.
+            public int NextBody;
+            /// Both result lines (the first 3 confirmed choices, SaveSystem.ExplainChoice); else only the focused card's.
+            public bool Explain;
+            /// The KEEP / SWITCH guide line above the cards (the first time a choice is asked).
+            public bool Guide;
+            public bool FocusKeep;
+        }
+
+        ChoiceCards shownCards;
+        public ChoiceCards ShownCards => shownCards;
+
+        public void ShowChoice(ChoiceCards c)
+        {
+            shownCards = c;
+            choice.gameObject.SetActive(c.On);
+            chooseDim.gameObject.SetActive(c.On);
+            if (!c.On) return;
+            var color = bodyLook.BodyColor(c.NextBody);
+            foreach (var e in keepEdges) e.color = color;
+            foreach (var e in switchEdges) e.color = color;
+            Thick(keepEdges, c.FocusKeep ? 4f : 2f);
+            Thick(switchEdges, c.FocusKeep ? 2f : 4f);
+            keepPicture.sprite = stoneSprite;
+            switchPicture.sprite = bodySprites[c.NextBody % bodySprites.Length];
+            keepDesc.gameObject.SetActive(c.Explain || c.FocusKeep);
+            switchDesc.gameObject.SetActive(c.Explain || !c.FocusKeep);
+            choiceGuide.transform.parent.gameObject.SetActive(c.Guide);
+            ArrangeChoice(vertical);
+        }
+
+        /// Puts the cards beside the board: <paramref name="board"/> = the projected board area (14.6) and
+        /// <paramref name="brother"/> = the brother's head, both on this canvas with a top-left origin. Returns false when no
+        /// candidate fits (then the cards sit in the right margin; UiLayoutCheck reports the overlap).
+        public bool PlaceChoice(Rect board, Vector2 brother) => PlaceChoice(board, brother, ((RectTransform)transform).rect.size);
+
+        /// <see cref="PlaceChoice(Rect, Vector2)"/> on a canvas of <paramref name="canvas"/> units (Edit Mode checks).
+        public bool PlaceChoice(Rect board, Vector2 brother, Vector2 canvas)
+        {
+
+            var r = LayoutChoice(board, brother, canvas, shownCards.Guide, out vertical, out bool fits);
+            choice.anchorMin = choice.anchorMax = choice.pivot = new Vector2(0, 1);
+            choice.anchoredPosition = new Vector2(r.x, -r.y);
+            choice.sizeDelta = r.size;
+            ArrangeChoice(vertical);
+            return fits;
+        }
+
+        bool vertical = true;
+        public const float CardW = 216, CardH = 170, CardGap = 12, GuideH = 84;
+        /// Clear of the top band (menu, title: to 76), the statue plate on the right (to 132), the undo / restart buttons
+        /// (bottom left, from 648) and the message plate (bottom centre, x 280..1000).
+        const float TopLimit = 84, RightTopLimit = 140, Safe = 24, ButtonsTop = 636, ButtonsRight = 148;
+
+        /// Choice group placement (docs 14.11): of the four sides of the board area, the candidate nearest to the brother that
+        /// stays inside the safe area and clear of the HUD; left / right stack the cards, top / bottom put them side by side.
+        public static Rect LayoutChoice(Rect board, Vector2 brother, Vector2 canvas, bool guide, out bool vertical, out bool fits)
+        {
+            float g = guide ? GuideH + CardGap : 0;
+            var v = new Vector2(CardW, 2 * CardH + CardGap + g);
+            var h = new Vector2(2 * CardW + CardGap, CardH + g);
+            var candidates = new List<(Rect r, bool vert)>();
+            {
+                float x = board.xMin - CardGap - v.x, y = Mathf.Clamp(brother.y - v.y * 0.5f, TopLimit, ButtonsTop - v.y);
+                if (x >= Safe && TopLimit <= ButtonsTop - v.y) candidates.Add((new Rect(x, y, v.x, v.y), true));
+            }
+            {
+                float x = board.xMax + CardGap, y = Mathf.Clamp(brother.y - v.y * 0.5f, RightTopLimit, canvas.y - Safe - v.y);
+                if (x + v.x <= canvas.x - Safe && RightTopLimit <= canvas.y - Safe - v.y) candidates.Add((new Rect(x, y, v.x, v.y), true));
+            }
+            {
+                float y = board.yMin - CardGap - h.y, x = Mathf.Clamp(brother.x - h.x * 0.5f, Safe, canvas.x - Safe - h.x);
+                if (y >= TopLimit) candidates.Add((new Rect(x, y, h.x, h.y), false));
+            }
+            {
+                float y = board.yMax + CardGap, x = Mathf.Clamp(brother.x - h.x * 0.5f, ButtonsRight, canvas.x - Safe - h.x);
+                if (y + h.y <= canvas.y - Safe) candidates.Add((new Rect(x, y, h.x, h.y), false));
+            }
+            fits = candidates.Count > 0;
+            if (!fits)
+            {
+                vertical = true;
+                return new Rect(canvas.x - Safe - v.x, Mathf.Max(RightTopLimit, canvas.y * 0.5f - v.y * 0.5f), v.x, v.y);
+            }
+            var best = candidates[0];
+            float bestD = float.MaxValue;
+            foreach (var c in candidates)
+            {
+                var near = new Vector2(Mathf.Clamp(brother.x, c.r.xMin, c.r.xMax), Mathf.Clamp(brother.y, c.r.yMin, c.r.yMax));
+                float d = Vector2.Distance(near, brother);
+                if (d < bestD) { bestD = d; best = c; }
+            }
+            vertical = best.vert;
+            return best.r;
+        }
+
+        /// Children of the choice group: the guide plate on top, then the cards stacked (vertical) or side by side.
+        void ArrangeChoice(bool vert)
+        {
+            float g = shownCards.Guide ? GuideH + CardGap : 0;
+            var guidePlate = (RectTransform)choiceGuide.transform.parent;
+            TopLeft(guidePlate, 0, 0, vert ? CardW : 2 * CardW + CardGap, GuideH);
+            TopLeft((RectTransform)keep.transform, 0, g, CardW, CardH);
+            TopLeft((RectTransform)switchBody.transform, vert ? 0 : CardW + CardGap, vert ? g + CardH + CardGap : g, CardW, CardH);
+        }
+
+        static void TopLeft(RectTransform r, float x, float y, float w, float h)
+        {
+            r.anchorMin = r.anchorMax = r.pivot = new Vector2(0, 1);
+            r.anchoredPosition = new Vector2(x, -y);
+            r.sizeDelta = new Vector2(w, h);
+        }
+
+        static void Thick(Image[] edges, float t)
+        {
+            // top, bottom, left, right
+            edges[0].rectTransform.sizeDelta = new Vector2(edges[0].rectTransform.sizeDelta.x, t);
+            edges[1].rectTransform.sizeDelta = new Vector2(edges[1].rectTransform.sizeDelta.x, t);
+            edges[2].rectTransform.sizeDelta = new Vector2(t, edges[2].rectTransform.sizeDelta.y);
+            edges[3].rectTransform.sizeDelta = new Vector2(t, edges[3].rectTransform.sizeDelta.y);
+        }
+
+        /// Pointer enter / select on a card focuses that choice (keyboard Tab and Enter go through the controller).
+        void Focusable(Button b, bool isKeep)
+        {
+            var trigger = b.gameObject.GetComponent<UnityEngine.EventSystems.EventTrigger>() ?? b.gameObject.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+            foreach (var type in new[] { UnityEngine.EventSystems.EventTriggerType.PointerEnter, UnityEngine.EventSystems.EventTriggerType.Select })
+            {
+                var entry = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = type };
+                entry.callback.AddListener(_ => ChoiceFocused?.Invoke(isKeep));
+                trigger.triggers.Add(entry);
+            }
         }
 
         void RefreshGuide()

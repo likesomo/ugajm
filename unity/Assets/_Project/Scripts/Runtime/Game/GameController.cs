@@ -170,7 +170,10 @@ namespace SevenSteps.Game
             hud.MenuRequested += menu.Toggle; // the HUD menu button (settings, stages, solution, controls)
             // Move guide (first play, or Menu > controls) in the HUD's left margin; the KEEP / SWITCH guide goes with the choice cards.
             hud.Guide = tutorial.ShowMoveGuide;
-            tutorial.Changed += () => hud.Guide = tutorial.ShowMoveGuide;
+            // Choice cards: both result lines for the first confirms, the guide line the first time (shown after Presented, 4.4).
+            board.Choice.ExplainChoices = () => tutorial.ExplainChoices;
+            board.Choice.ShowGuide = () => tutorial.ShowChoiceGuide;
+            tutorial.Changed += () => { hud.Guide = tutorial.ShowMoveGuide; board.Choice.Refresh(); };
             result.NextRequested += flowController.Next;
             result.RetryRequested += flowController.Again;
             result.StageSelectRequested += flowController.OpenStageSelect;

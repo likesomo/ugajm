@@ -28,7 +28,7 @@ namespace SevenSteps.EditorTools
         const string FontPath = "Assets/Shared/Fonts/Jua-Regular.ttf";
         static readonly string[] ThemePaths = { "Assets/_Project/Data/UiTheme_Default.asset", "Assets/_Project/Art/UI/RuinsHengeTheme.asset" };
 
-        const float Safe = 24, Pad = 12, Icon = 48, Margin = 192, CardH = 148;
+        const float Safe = 24, Pad = 12, Icon = 48, Margin = 192;
         /// Title plate: 22 px hand-font glyphs (about 29 tall) + 8 above and below with room for their offset; centred on the menu button.
         const float TitleH = 56;
 
@@ -93,7 +93,13 @@ namespace SevenSteps.EditorTools
             var hud = go.AddComponent<HudView>();
             var root = go.transform;
 
-            // World-anchored labels (gate digits, step numbers when switched on) live behind the HUD.
+            // While choosing: the board dimmed 30% (behind everything, docs 14.11 UI variant with its exemption).
+            hud.chooseDim = Image("ChooseDim", root, null, new Color(0, 0, 0, 0.3f), new Vector2(.5f, .5f), Vector2.zero, Vector2.zero);
+            hud.chooseDim.rectTransform.Stretch();
+            Ui.Exempt(hud.chooseDim.gameObject, UiLayoutRule.Decoration | UiLayoutRule.Board, "choose dim 30% (ui-minimal v3)");
+            hud.chooseDim.gameObject.SetActive(false);
+
+            // World-anchored labels (gate digits, step numbers when switched on, the stars at the feet) live behind the HUD.
             hud.labelLayer = Rect("WorldLabels", root).Stretch();
 
             // Top left: menu (three bars) and the stage title on a plate that fits the name.
@@ -150,12 +156,19 @@ namespace SevenSteps.EditorTools
             foreach (var t in new[] { hud.story, hud.guide }) { t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Overflow; }
             guide.gameObject.SetActive(false);
 
-            // Right margin: KEEP / SWITCH cards (name + key badge, one-line result), only while choosing.
+            // KEEP / SWITCH: guide plate + two cards (picture, name, key badge, result line, border in the next brother's
+            // colour), placed beside the board near the brother at runtime (HudView.PlaceChoice), only while choosing.
             var choice = Rect("Choice", root);
-            choice.Place(new Vector2(1, .5f), new Vector2(1, .5f), new Vector2(-Safe, 20), new Vector2(Margin, 2 * CardH + 12));
+            choice.Place(new Vector2(0, 1), new Vector2(0, 1), new Vector2(Safe, -100), new Vector2(HudView.CardW, 2 * HudView.CardH + HudView.CardGap));
             hud.choice = choice;
-            (hud.keep, hud.keepDesc) = Card(choice, "Keep", "K", 0);
-            (hud.switchBody, hud.switchDesc) = Card(choice, "Switch", "X", 1);
+            var guidePlate = Plate("GuidePlate", choice, new Vector2(0, 1), Vector2.zero, new Vector2(HudView.CardW, HudView.GuideH));
+            hud.choiceGuide = Text(guidePlate, "Guide", "", 22, Ui.Ink, TextAnchor.MiddleLeft);
+            Inside(hud.choiceGuide.rectTransform, Pad);
+            hud.choiceGuide.horizontalOverflow = HorizontalWrapMode.Wrap;
+            (hud.keep, hud.keepDesc, hud.keepPicture, hud.keepEdges) = Card(choice, "Keep", "K", 0);
+            (hud.switchBody, hud.switchDesc, hud.switchPicture, hud.switchEdges) = Card(choice, "Switch", "X", 1);
+            hud.bodySprites = new[] { Sprite("body_a"), Sprite("body_b"), Sprite("body_c") };
+            hud.stoneSprite = Sprite("body_stone");
             choice.gameObject.SetActive(false);
 
             // Bottom left: undo, restart (icons, 48 touch targets).
@@ -163,7 +176,7 @@ namespace SevenSteps.EditorTools
             hud.restart = IconButton(root, "Restart", "restart", new Vector2(0, 0), new Vector2(Safe + Icon + 14, Safe));
 
             // Bottom centre: the message line (bumps, the H solution), as tall as its lines.
-            var msgPlate = Plate("MessagePlate", root, new Vector2(.5f, 0), new Vector2(0, Safe), new Vector2(760, 48));
+            var msgPlate = Plate("MessagePlate", root, new Vector2(.5f, 0), new Vector2(0, Safe), new Vector2(720, 48));
             msgPlate.pivot = new Vector2(.5f, 0);
             var msgCol = msgPlate.gameObject.AddComponent<VerticalLayoutGroup>();
             msgCol.padding = new RectOffset((int)Pad, (int)Pad, (int)Pad, (int)Pad);
@@ -177,31 +190,53 @@ namespace SevenSteps.EditorTools
             return go;
         }
 
-        /// A KEEP / SWITCH card: the button (art frame), its name top left, the key badge top right, the result below.
-        static (Button, Text) Card(RectTransform parent, string name, string key, int index)
+        /// A KEEP / SWITCH card: the button (art frame), picture and name top left, the key badge top right, the result
+        /// line below (22, up to 3 lines), and four border lines (coloured at runtime).
+        static (Button, Text, Image, Image[]) Card(RectTransform parent, string name, string key, int index)
         {
-            var b = Button(parent, name, new Vector2(Margin, CardH));
-            ((RectTransform)b.transform).Place(new Vector2(.5f, 1), new Vector2(.5f, 1), new Vector2(0, -index * (CardH + 12)), new Vector2(Margin, CardH));
+            var size = new Vector2(HudView.CardW, HudView.CardH);
+            var b = Button(parent, name, size);
+            ((RectTransform)b.transform).Place(new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, -index * (size.y + HudView.CardGap)), size);
+            var edges = new Image[4];
+            for (int k = 0; k < 4; k++)
+            {
+                var e = Image(new[] { "Edge Top", "Edge Bottom", "Edge Left", "Edge Right" }[k], b.transform, null, Color.white, Vector2.zero, Vector2.zero, Vector2.zero);
+                var r = e.rectTransform;
+                const float In = 3, T = 2;
+                switch (k)
+                {
+                    case 0: r.anchorMin = new Vector2(0, 1); r.anchorMax = new Vector2(1, 1); r.pivot = new Vector2(.5f, 1); r.sizeDelta = new Vector2(-2 * In, T); r.anchoredPosition = new Vector2(0, -In); break;
+                    case 1: r.anchorMin = new Vector2(0, 0); r.anchorMax = new Vector2(1, 0); r.pivot = new Vector2(.5f, 0); r.sizeDelta = new Vector2(-2 * In, T); r.anchoredPosition = new Vector2(0, In); break;
+                    case 2: r.anchorMin = new Vector2(0, 0); r.anchorMax = new Vector2(0, 1); r.pivot = new Vector2(0, .5f); r.sizeDelta = new Vector2(T, -2 * In); r.anchoredPosition = new Vector2(In, 0); break;
+                    default: r.anchorMin = new Vector2(1, 0); r.anchorMax = new Vector2(1, 1); r.pivot = new Vector2(1, .5f); r.sizeDelta = new Vector2(T, -2 * In); r.anchoredPosition = new Vector2(-In, 0); break;
+                }
+                edges[k] = e;
+            }
             // + 2: hand-font glyphs reach a little past the pen position (UiLayoutCheck glyph boxes need the full 8 inside).
             var inset = Ui.FrameBorder((Image)b.targetGraphic) + Vector4.one * (Ui.LabelPadding + 2);
+            const float Row = 36;
+            var picture = Image("Picture", b.transform, null, Color.white, new Vector2(0, 1), new Vector2(inset.x, -inset.w), new Vector2(Row, Row));
+            picture.preserveAspect = true;
             var label = b.GetComponentInChildren<Text>();
-            label.alignment = TextAnchor.UpperLeft;
+            label.transform.SetAsLastSibling();
+            label.alignment = TextAnchor.MiddleLeft;
             label.fontSize = 22;
             var lr = label.rectTransform;
             lr.anchorMin = new Vector2(0, 1); lr.anchorMax = new Vector2(1, 1); lr.pivot = new Vector2(.5f, 1);
-            lr.offsetMin = new Vector2(inset.x, -(inset.w + 4 + 30));
-            lr.offsetMax = new Vector2(-(inset.z + 36), -(inset.w + 4));
+            lr.offsetMin = new Vector2(inset.x + Row + 8, -(inset.w + Row));
+            lr.offsetMax = new Vector2(-(inset.z + 34), -inset.w);
             var badge = Text(b.transform, "Key", key, 22, Ui.Gold, TextAnchor.MiddleCenter);
-            badge.rectTransform.Place(new Vector2(1, 1), new Vector2(1, 1), new Vector2(-inset.z, -(inset.w + 2)), new Vector2(30, 32));
-            var desc = Text(b.transform, "Desc", "", 18, Ui.Ink, TextAnchor.UpperLeft);
-            Ui.Secondary(desc);
+            Ui.Secondary(badge);
+            badge.rectTransform.Place(new Vector2(1, 1), new Vector2(1, 1), new Vector2(-inset.z, -inset.w), new Vector2(30, Row));
+            var desc = Text(b.transform, "Desc", "", 22, Ui.Ink, TextAnchor.UpperLeft);
             desc.horizontalOverflow = HorizontalWrapMode.Wrap;
             desc.verticalOverflow = VerticalWrapMode.Truncate;
+            desc.lineSpacing = 0.95f;
             var d = desc.rectTransform;
             d.anchorMin = Vector2.zero; d.anchorMax = Vector2.one;
             d.offsetMin = new Vector2(inset.x, inset.y);
-            d.offsetMax = new Vector2(-inset.z, -(inset.w + 4 + 30 + 6));
-            return (b, desc);
+            d.offsetMax = new Vector2(-inset.z, -(inset.w + Row + 6));
+            return (b, desc, picture, edges);
         }
 
         static Button IconButton(Transform parent, string name, string icon, Vector2 corner, Vector2 pos)

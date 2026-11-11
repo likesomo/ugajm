@@ -42,6 +42,7 @@
     { "key": "hud.statues_open", "text": "Stones {0} / {1}  gate open" },
     { "key": "hud.keep_desc", "text": "Leave a stone; the next wakes at the start" },
     { "key": "hud.switch_desc", "text": "The next wakes on this tile" },
+    { "key": "hud.choose_guide", "text": "How will you pass it on?" },
     { "key": "hud.keep", "text": "Keep" },
     { "key": "hud.switch", "text": "Switch" },
     { "key": "hud.keys", "text": "Walk with the arrows / WASD / a click on a next tile. After seven steps: K keep, X switch" },
