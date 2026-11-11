@@ -1062,7 +1062,7 @@ namespace SevenSteps.Game.UI {
 ### 16.7 `LevelDto.startLine` (최소 UI 시작 한 줄)
 - `"story"`, `"hint"`, `""`(없음) 중 하나다. 필드가 없거나 null이면 `"story"`로 읽는다(`LevelDto.StartLine`). 그 밖의 값은 `ArgumentException`이다.
 - 채우기는 레벨 디자인(`levels.js`, `export-levels.mjs` 검사)이다. 코어 파일의 필드 한 줄은 아키텍트가 리드 지시로 넣었다.
-- 시작 한 줄은 `Game/Story/StoryDirector`가 정하고 HUD 잠깐 줄(`ITransientLine`)에 보인다(gameplay-ui). 메뉴 다시 보기의 진입점은 `StoryDirector.ReplayStartLine()`(bool: 줄이나 스테이지가 없으면 false, 메뉴가 덮는 동안 기다림)이고, 메뉴 항목과 연결은 scene-flow 몫이다(`MenuController`에 람다로 넘김).
+- 시작 한 줄은 `Game/Story/StoryDirector`가 정하고 HUD 잠깐 줄(`ITransientLine`)에 보인다(gameplay-ui). 메뉴 다시 보기의 진입점은 `GameController.ReplayStartLine()`(bool: 결과 화면이거나 줄·스테이지가 없으면 false, 메뉴가 덮는 동안 기다림. 안에서 `StoryDirector.ReplayStartLine()`을 부름, 54fab4a)이고, 메뉴 항목과 연결은 scene-flow 몫이다(`MenuController`에 람다로 넘김).
 
 ### 16.8 흐름 쪽 약속 (씬 플로우·게임플레이/UI, 계약 아님)
 - 50 결과의 [다음]은 [끝까지 보기]가 되고, 엔딩 4장으로 이어진다(9장 질문 1). 엔딩 카드 이미지는 `entry.image`에서 온다.
@@ -1152,3 +1152,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | feat/view 4ea1ec0 승인(이야기 S4 보드 쪽: StoryDirector, 시작 줄 startLine, 피날레 줄 보류·표시, HUD 잠깐 줄 하나). 메뉴 다시 보기 나눔: gameplay-ui StoryDirector.ReplayStartLine, scene-flow 메뉴 항목. `docs/reviews/2026-11-11-feat-view-4ea1ec0.md` |
 | 2026-11-11 | 아키텍트 | feat/view ebdb653 승인(StoryDirector.ReplayStartLine, 메뉴 다시 보기 진입점. 메뉴 항목 연결은 scene-flow). `docs/reviews/2026-11-11-feat-view-4ea1ec0.md` |
 | 2026-11-11 | 아키텍트 | 16.7 시작 한 줄 담당 갱신: StoryDirector + ITransientLine(gameplay-ui), 메뉴 다시 보기 진입점 이름 StoryDirector.ReplayStartLine()(bool, ebdb653), 메뉴 항목·연결은 scene-flow |
+| 2026-11-11 | 아키텍트 | feat/view 54fab4a 승인(M2 FinaleStarting 순서 무관, N1 메뉴 진입점 GameController.ReplayStartLine 결과에선 false, 16.7 이름 갱신). feat/scene-flow 3a7804e 승인(QA 1 UiLayoutCheck 경고 정리, 1024x768 경고, 별지도 CardCenters). `docs/reviews/2026-11-11-feat-view-4ea1ec0.md`, `docs/reviews/2026-11-11-scene-flow-3a7804e.md` |

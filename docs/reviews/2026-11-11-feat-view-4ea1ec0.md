@@ -36,3 +36,9 @@
 - 조용한 실행에서도 보이는 것은 맞다. 플레이어가 누른 것이다.
 - **메모 N1**: 클리어 결과 위에서 Esc 메뉴를 열고 누르면 줄이 숨겨진 HUD(14.7 `Conceal`)에 걸려 보이지 않는다. 다음 스테이지의 Rebuild에서 지워지니 해는 없다. 결과 상태에서는 항목을 숨기거나, `ReplayStartLine`이 Result에서 false를 돌려주는 쪽이 깔끔하다(scene-flow가 연결할 때 정한다).
 - 연결(scene-flow): `MenuController`에 `() => storyLines.ReplayStartLine()`를 넘긴다. `storyLines`가 `menu`보다 뒤에 만들어지므로 람다로 늦게 읽는다.
+
+## 메모 반영 확인: feat/view 54fab4a (2026-11-11) — **승인**
+코드만 읽었다. EditMode 875/875는 gameplay-ui 보고 수치다.
+- **M2 해결**: `FinaleStarting`은 보류가 없어도, 판이 Win이고 그 스테이지에 피날레 줄이 있으면 그 자리에서 `finaleLine()`을 구한다. `finaleUsed`가 이긴 판마다 한 번만 쓰게 막는다. 핸들러 순서가 거꾸로면 뒤늦은 `Updated`가 다시 보류를 채우지만, 곧 오는 `Presented(Win)`이 지우므로 두 번 보이지 않는다.
+- **N1 해결**: 메뉴 진입점은 `GameController.ReplayStartLine()`(public)이다. 결과 상태(`AppState.Result`)에서는 false를 돌려준다. scene-flow는 `StoryDirector`가 아니라 이 메서드에 연결한다. 16.7을 이 이름으로 고쳤다.
+- M4(결과에서 R 뒤 시작 줄 다시 나옴)는 리허설 판단, M5(언어 변경)는 남긴다.
