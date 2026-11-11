@@ -1062,7 +1062,7 @@ namespace SevenSteps.Game.UI {
 ### 16.7 `LevelDto.startLine` (최소 UI 시작 한 줄)
 - `"story"`, `"hint"`, `""`(없음) 중 하나다. 필드가 없거나 null이면 `"story"`로 읽는다(`LevelDto.StartLine`). 그 밖의 값은 `ArgumentException`이다.
 - 채우기는 레벨 디자인(`levels.js`, `export-levels.mjs` 검사)이다. 코어 파일의 필드 한 줄은 아키텍트가 리드 지시로 넣었다.
-- 시작 한 줄 View(`TransientLineView`)와 다시 보기는 gameplay-ui 몫이다.
+- 시작 한 줄은 `Game/Story/StoryDirector`가 정하고 HUD 잠깐 줄(`ITransientLine`)에 보인다(gameplay-ui). 메뉴 다시 보기의 진입점은 `StoryDirector.ReplayStartLine()`(bool: 줄이나 스테이지가 없으면 false, 메뉴가 덮는 동안 기다림)이고, 메뉴 항목과 연결은 scene-flow 몫이다(`MenuController`에 람다로 넘김).
 
 ### 16.8 흐름 쪽 약속 (씬 플로우·게임플레이/UI, 계약 아님)
 - 50 결과의 [다음]은 [끝까지 보기]가 되고, 엔딩 4장으로 이어진다(9장 질문 1). 엔딩 카드 이미지는 `entry.image`에서 온다.
@@ -1149,5 +1149,6 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | feat/view bdaa019 반려(c58dfa4 R1: 키를 GameController로 옮겼지만 ResultView.Update가 남아 키당 FocusStar 두 번, 메뉴 위에서도 초점 이동). ResultView.Update 삭제 후 병합. `docs/reviews/2026-11-11-feat-view-c58dfa4.md` |
 | 2026-11-11 | 아키텍트 | feat/view 378bf38 승인(ResultView.Update 삭제로 c58dfa4 R1 종료: 별 초점 키는 GameController Result 분기 한 곳). `docs/reviews/2026-11-11-feat-view-c58dfa4.md` |
 | 2026-11-11 | 아키텍트 | 14장 UiLayoutCheck 해상도에 1024x768(4:3) 경고 추가 승인(scene-flow 제안, QA 1차 1280x800 경고 정리와 4:3 창 대비, 목표 경고 0, 세로 화면은 범위 밖). 영향: 씬 플로우(Resolutions 한 줄), gameplay-ui(Result 1024x768 경고 20건) |
-| 2026-11-11 | 아키텍트 | feat/view 4ea1ec0 승인(이야기 S4 보드 쪽: StoryDirector, 시작 줄 startLine, 피날레 줄 보류·표시, HUD 잠깐 줄 하나). 메뉴 다시 보기 나눔: gameplay-ui StoryDirector.ShowStartAgain, scene-flow 메뉴 항목. `docs/reviews/2026-11-11-feat-view-4ea1ec0.md` |
+| 2026-11-11 | 아키텍트 | feat/view 4ea1ec0 승인(이야기 S4 보드 쪽: StoryDirector, 시작 줄 startLine, 피날레 줄 보류·표시, HUD 잠깐 줄 하나). 메뉴 다시 보기 나눔: gameplay-ui StoryDirector.ReplayStartLine, scene-flow 메뉴 항목. `docs/reviews/2026-11-11-feat-view-4ea1ec0.md` |
 | 2026-11-11 | 아키텍트 | feat/view ebdb653 승인(StoryDirector.ReplayStartLine, 메뉴 다시 보기 진입점. 메뉴 항목 연결은 scene-flow). `docs/reviews/2026-11-11-feat-view-4ea1ec0.md` |
+| 2026-11-11 | 아키텍트 | 16.7 시작 한 줄 담당 갱신: StoryDirector + ITransientLine(gameplay-ui), 메뉴 다시 보기 진입점 이름 StoryDirector.ReplayStartLine()(bool, ebdb653), 메뉴 항목·연결은 scene-flow |
