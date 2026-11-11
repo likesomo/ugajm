@@ -203,14 +203,18 @@ namespace SevenSteps.EditorTools
                 s.Show();
                 return s.gameObject;
             } }, "");
-            yield return (new Screen { Name = "Menu", Build = (c, root) =>
-            {
-                BuildTitle(c, root);
-                var m = new MenuPanel(root);
-                m.Apply(c.Loc);
-                m.Show();
-                return Find(root, "GameMenu");
-            } }, "");
+            // Six rows with "시작 줄 다시 보기" (a stage with a start line), five without it (none, or over a result: review ebdb653 N1).
+            foreach (bool line in new[] { true, false })
+                yield return (new Screen { Name = "Menu", Build = (c, root) =>
+                {
+                    BuildTitle(c, root);
+                    var m = new MenuPanel(root);
+                    m.Apply(c.Loc);
+                    m.ShowReplayLine(line);
+                    m.Show();
+                    if (m.ReplayLineShown != line) throw new InvalidOperationException("MenuPanel.ShowReplayLine did not apply");
+                    return Find(root, "GameMenu");
+                } }, line ? "" : "no start line");
             yield return (new Screen { Name = "StageSelect", Build = (c, root) => { BuildMap(c, root, planets); return null; } }, "map");
             // Story on the map (0.5 #3, #7): a carving tapped, its truth in the detail row (the longest finale line); the
             // polaris mark on the last stage's planet shows in both map screens (full progress, final truth not seen).
