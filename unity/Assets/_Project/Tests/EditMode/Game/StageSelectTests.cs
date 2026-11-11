@@ -227,10 +227,12 @@ namespace SevenSteps.Tests
             c.StageChosen += ch => got = ch;
             c.Show();
             view.Choose(0);
-            got.Cancel();
+            var first = got;
+            first.Cancel();
             Assert.AreEqual("pending False", view.calls[view.calls.Count - 1]);
             view.Choose(2);
-            Assert.AreNotSame(got, c.Pending);
+            Assert.AreNotSame(first, c.Pending, "a new choice after the cancel");
+            Assert.AreSame(got, c.Pending);
             Assert.AreEqual(6, c.Pending.Stage);
         }
 
