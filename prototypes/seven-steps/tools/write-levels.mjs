@@ -29,6 +29,8 @@ CANDIDATES.slice(0, count).forEach((d, i) => {
   out += `    chapter: ${q(s.chapter)},\n`;
   out += `    story: ${q(s.story)},\n`;
   out += `    hint: ${q(s.hint ?? d.hint ?? '')},\n`;
+  // startLine (design/story/story-integration.md 0.3): which line the HUD shows at stage start. Omitted = "story".
+  if (s.startLine !== undefined) out += `    startLine: ${q(s.startLine)},\n`;
   out += `    bodies: ${d.bodies ?? 3},\n`;
   out += `    text: [{ lang: 'en', name: ${q(e.name)}, hint: ${q(e.hint)}, story: ${q(e.story)} }],
 `;

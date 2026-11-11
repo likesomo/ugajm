@@ -4,8 +4,13 @@
 // Before writing anything it asserts the stage set (6.4); on any failure it prints every problem and exits 1
 // without touching either file. Missing or empty translations for a language in chapters.json "languages" fail too (13.6),
 // and so does a chapter without a tagline once any chapter has one (6.4).
+// Then, if design/story/story.json exists, runs the story check (design/story/tools/check-story.mjs --strict-levels, story-integration.md 3.1;
+// level data copy issues are errors since the stage-4 copy merge)
+// and copies story.json to Data/story.json only when the check passes. A failed or missing check leaves Data/story.json
+// as it was and exits 1, but levels.json and chapters.json are already written (S0 review B2: stage work is not tied to the story text).
 // Usage (repo root): node unity/Tools/export-levels.mjs
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, copyFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STEPS, parseLevel, minBodies, solve } from '../../prototypes/seven-steps/src/core.js';
@@ -19,6 +24,10 @@ const data = join(here, '..', 'Assets', '_Project', 'Data');
 const out = join(data, 'levels.json');
 const chaptersSrc = join(root, 'design', 'levels', 'chapters.json');
 const chaptersOut = join(data, 'chapters.json');
+const storySrc = join(root, 'design', 'story', 'story.json');
+const storyCheck = join(root, 'design', 'story', 'tools', 'check-story.mjs');
+const storyOut = join(data, 'story.json');
+const START_LINES = ['story', 'hint', ''];
 
 const problems = [];
 const fail = (msg) => problems.push(msg);
@@ -84,6 +93,7 @@ const levels = LEVELS.map((def, i) => {
     else if (k > lastChapter + 1) fail(`${tag}: chapter "${def.chapter}" skips chapter "${chapters[lastChapter + 1].id}"`);
     lastChapter = Math.max(lastChapter, k);
   }
+  if (def.startLine !== undefined && !START_LINES.includes(def.startLine)) fail(`${tag}: startLine "${def.startLine}" is not one of story, hint, ""`);
   const level = parseLevel(def);
   if (level.bodies > BODY_CAP) fail(`${tag}: bodies ${level.bodies} > ${BODY_CAP}`);
   const best = minBodies(level);
@@ -97,6 +107,8 @@ const levels = LEVELS.map((def, i) => {
     // docs/architecture.md 6.4: chapter id and one-line story.
     ...(def.chapter ? { chapter: def.chapter } : {}),
     ...(def.story ? { story: def.story } : {}),
+    // story-integration.md 0.3: omitted = "story" (LevelDto default).
+    ...(def.startLine !== undefined ? { startLine: def.startLine } : {}),
     // docs/architecture.md 13.5: translations; name stays the ko save/telemetry key.
     text: checkText(def.text, ['name', 'hint', 'story'], tag),
     map: def.map,
@@ -119,3 +131,19 @@ writeFileSync(out, JSON.stringify({ steps: STEPS, levels }, null, 2) + '\n');
 writeFileSync(chaptersOut, JSON.stringify({ chapters }, null, 2) + '\n');
 console.log(`[export-levels] ${levels.length} stages -> ${out}`);
 console.log(`[export-levels] ${chapters.length} chapters -> ${chaptersOut}`);
+
+// ---- story.json (story-integration.md 2.1, 3.4) ----
+if (!existsSync(storySrc)) {
+  console.warn('[export-levels] WARN design/story/story.json not found; Data/story.json not written');
+} else if (!existsSync(storyCheck)) {
+  console.error('[export-levels] FAIL design/story/tools/check-story.mjs not found; story.json was not copied (it must pass the check first)');
+  process.exit(1);
+} else {
+  const r = spawnSync(process.execPath, [storyCheck, '--strict-levels'], { cwd: root, stdio: 'inherit' });
+  if (r.status !== 0) {
+    console.error(`[export-levels] FAIL story-check exit ${r.status ?? r.error}; Data/story.json was not written (levels.json and chapters.json were)`);
+    process.exit(1);
+  }
+  copyFileSync(storySrc, storyOut);
+  console.log(`[export-levels] story.json -> ${storyOut}`);
+}

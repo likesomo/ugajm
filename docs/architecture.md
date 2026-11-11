@@ -826,6 +826,24 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 - Result, Settings, 언어 선택, 챕터 진입 카드, Credits, 확인 창은 모달이다. 모달이 뜨면 **화면 전체를 덮는 막(`Image`, 캔버스 전체로 늘림, 알파 0.6 이상, `raycastTarget` 켬)**이 모달 아래·다른 UI 위에 그려진다(정렬 순서가 더 높은 캔버스나 마지막 형제). 막 아래 UI는 입력을 받지 않는다.
 - 아래 UI가 모달 패널 가장자리에 잘려 보이면 안 된다: 막 알파 0.6 이상이면 아래 UI는 겹침 검사에서 빠지고, 그보다 옅게 하려면 아래 HUD를 숨긴다(`CanvasGroup.alpha = 0`).
 - 모달 패널도 14.2~14.6을 그대로 따른다.
+- **클리어 결과는 "보드 위 결과"다**(2026-11-11, 최소 UI "결과 화면은 별, 별자리, 다음 버튼만", gameplay-ui 제안 채택). 위 둘째 항목(옅은 막 + HUD 숨김)을 쓴다.
+  - **막**: 화면 전체를 덮고 `raycastTarget`을 켠다. 알파는 0.25이고, 피날레 별자리(보드)가 보이게 한다.
+  - **HUD**: `CanvasGroup.alpha = 0`, `blocksRaycasts = false`로 숨긴다.
+  - **배치**: 결과 요소는 보드 영역(14.11 투영 + 8)과 겹치지 않는다.
+    - 별 3개는 `BoardFrame` 위 띠(y < 80)에 판(14.4)과 함께 둔다.
+    - [다음]은 우하단, 안전 영역 24 안에 둔다.
+  - **별 조건 문구**: 별에 hover·focus·tap할 때만 보조 글자 판으로 보인다. 그 판도 보드 영역과 다른 결과 요소를 피한다.
+  - **이야기 피날레 줄**: 결과가 열리면 사라지므로(16.8) 결과에 자리를 비워 두지 않는다.
+  - **버튼**: 다시 하기와 스테이지 선택 버튼은 결과에서 뺀다(사용자 승인 범위). 대신 클리어 결과가 떠 있는 동안 두 키가 동작해야 한다.
+    - **R**: 그 스테이지를 다시 한다. ★ 다시 도전 경로다.
+    - **Esc**: 메뉴(14.11 5번)가 결과 위에 열리고, 스테이지 선택으로 갈 수 있다.
+    - 포인터만 쓰는 플레이어는 [다음] 뒤 HUD 메뉴로 간다. 플레이테스트 관찰 항목이다.
+  - **패배 결과**는 지금처럼 알파 0.6 이상 막의 모달이다. 50 결과의 [다음]은 [끝까지 보기]다(16.8).
+  - **UiLayoutCheck(scene-flow)**: 'Result clear' 화면은 막 알파 검사 대신 셋을 확인한다.
+    - 막이 화면 전체이고 `raycastTarget`이 켜져 있다.
+    - HUD의 `CanvasGroup` 알파가 0이다.
+    - 결과 요소가 보드 영역과 겹치지 않는다.
+  - 별 조건 판이 보이는 상태(가장 긴 문구, ko·en)도 등록한다. 'Result lose'는 기존 막 검사를 그대로 한다.
 
 ### 14.8 허용 목록 (`UiLayout` 컴포넌트)
 검사를 일부러 비켜야 하는 요소는 그 GameObject에 컴포넌트를 붙인다. 이름·경로 문자열 목록은 쓰지 않는다(코드로 만든 UI는 이름이 자주 바뀐다).
@@ -854,7 +872,7 @@ namespace SevenSteps.Game.UI {
 ### 14.10 화면별 수치 (ui-layout-fix 반영)
 - Loading: 북두칠성 진행 표시 너비 = 화면 너비 40~50%, 진행 숫자 본문 이상.
 - StageSelect 지도: 행성 하나 = 이름·번호·별 개수 한 카드(판), 전체 별 수는 하단 정보 띠(판). 배경 보드·선돌은 노드 뒤에서 어둡게(판 규칙으로 해결되지 않는 대비 문제는 화면 소유자 판단).
-- Result: 14.7 막, 별 조건 문구 본문 크기.
+- Result: 클리어는 14.7 "보드 위 결과"(막 0.25 + HUD 숨김)이고, 패배는 14.7 막이다. 별 조건 문구는 본문 크기다(hover·focus·tap 때만 보인다).
 - HUD: 상태 라벨은 아이콘 옆(같은 카드), 조작 안내는 보조 18 이상 + 판, 버튼 줄과 8 이상 띄움.
 - 전후 캡처: 각 작업 공간 `reports/ui-layout/<화면>-<ko|en>-<1280|webgl>-<before|after>.png`(커밋하지 않음).
 
@@ -972,6 +990,85 @@ namespace SevenSteps.Game.UI {
 - 같은 State에서 다시 계산하므로 Undo·Restart가 저절로 맞는다. 이동 중에는 고리가 도착 칸에 있다(Present 뒤 갱신).
 - 임시 quad가 그리는 동안(`StarTrailView.UseQuad`)은 뷰가 같은 값으로 그린다. 셰이더가 그리게 되면 셰이더가 이 세 값만 읽는다.
 
+## 16. 이야기 계약 (2026-11-11 S2, 사용자 승인 구조 `design/story/story-integration.md`, 사전 검토 A1~A13)
+
+이야기는 규칙 코드를 바꾸지 않는다. 판정 입력은 `SessionUpdate`·`State`와 흐름 쪽 사실(클리어 기록, 챕터 경계)뿐이다. 모든 타입은 `Contracts/Story/`에 있고 네임스페이스는 평평한 `SevenSteps.Contracts`다(A1).
+
+### 16.1 파일과 소유
+| 무엇 | 위치 | 소유 |
+|---|---|---|
+| 원고 | `design/story/story.json` | 스토리 디렉터(S1, `check-story.mjs`가 1차 검사) |
+| 런타임 입력 | `Data/story.json` | 생성물(`unity.sh levels`가 검사 통과 뒤 복사, S3) |
+| `GameAssets.storyJson`(TextAsset), `GameAssets.storyImages`(`StoryImageSet`) | `Game/GameAssets.cs` | 아키텍트(필드), 게임플레이/UI(연결), 아트(이미지 값) |
+| `StoryFileDto`·`StoryEntryDto`·`StoryLineDto`·`StoryBrotherDto`·`StoryDipperDto`·`StoryBeatDto` | `StoryFile.cs` | 아키텍트. 모양은 story-integration 2.2 |
+
+### 16.2 이미지 (`StoryImageSet`, A7)
+- ScriptableObject `entries: {key, Sprite}[]`, `Get(key)`(없으면 null → 글만 보인다), `required`(기본 false).
+- `scene-validate`(scene-flow)가 `story.json` `images`의 키마다 Sprite가 있는지 본다. `required`가 거짓이면 경고, 참이면 오류다. 엔딩 이미지는 11/14 뒤에 오므로 그때까지 거짓이다. 아트가 다 채우고 켠다.
+
+### 16.3 `StoryCatalog` (로드 검사 = 단정, A8)
+- `FromJson(json, chapterIds)` — `chapterIds`는 `LevelCatalog.Chapters`의 id 순서다. 실패하면 `InvalidDataException`이고, 메시지에 entry id(줄이면 `id/lineId`)와 이유가 있다.
+  - 검사 항목:
+    - `version == 1`이고, `languages`는 `ko`로 시작하며 이 빌드의 모든 언어(`Languages.All`)를 포함한다.
+    - 형제 1·2·3이 한 번씩 있고, 이름과 번역이 있다.
+    - entry id는 `[a-z0-9.]+`이고 서로 다르다. line id는 entry 안에서 다르다. ko와 모든 번역이 비어 있지 않다.
+    - `on`은 `StoryOns` 코드다. 한정자 범위는 chapter = chapters id, brother 0~3, stones −1~2, card 0~4(ending만), after는 `""`/`ending`/`allStars`/`allTruths`다.
+    - `image`는 `images`에 있는 키다.
+    - 치환은 `{brother}`만 쓴다. `{brother}`는 형제를 아는 지점(순간 문구, `seventhFirst`, 엔딩 카드 1)에서만 쓴다.
+    - **모호함**: 같은 `on`에서 같은 구체성의 두 entry가 함께 맞는 cue가 있고, 그 cue를 더 구체적인 entry가 덮지 않으면 오류다.
+    - **필수 갈래**(최소 UI, story-integration 0.3·0.5): `title`(`after ""`, `"ending"`), `lose`, 챕터마다 `finale`, `ending` 카드 1 형제 1~3 · 카드 2 선돌 0~2 · 카드 3 `""`와 `allTruths` · 카드 4. 갈래는 **써 있어야** 한다(아무거나 entry가 대신하면 오류).
+    - `dipper`: from은 챕터 id, to는 챕터 id 또는 `circle`이다. 중복이 없고, 모든 챕터가 from에 한 번 이상 나온다(A13).
+  - 글자 수, KS X 1001, 기호, 금지어, 받침 검사는 `check-story.mjs`와 GlyphCheck가 한다.
+  - Boot에서 실패하면 오류 로그를 남기고 이야기만 끈다. 게임은 계속된다(호출하는 쪽 일).
+- `Find(cue)`는 한정자가 모두 맞는 entry 가운데 가장 구체적인 것을 고르고, 없으면 `KeyNotFoundException`이다. `TryFind`는 선택 지점용이다.
+- `Pick(entry, shownCount)` = `shownCount % lines.Length`(난수 없음), `Line(entry, i, lang)`, `BrotherName(n, lang)`.
+- `Text(cue, progress, lang, out entry)`는 Find, Pick, `{brother}` 치환을 한 번에 한다. **세지 않는다.** 실제로 보였을 때 호출하는 쪽이 `progress.MarkShown(entry.id)`를 부른다.
+- `ImageKeys`, `Dipper`, `Entries`, `ChapterIds`(읽기 전용).
+
+### 16.4 `StoryCue`·`StoryRules` (순수, 상태 없음, A2·A3·A11)
+- `StoryOn`(끝에만 추가)과 `StoryOns.Code/TryParse`가 있다. `StoryCue(on, chapter, brother, stones, card, after)`의 빈 값은 `""`/0/−1/0/`""`이고, 생성자가 범위를 검사한다.
+- `TryMoment(SessionUpdate u, out cue)`:
+  - Present만 본다. 결과가 Win·Lose면 내지 않는다(결과·실패 패널이 말한다).
+  - Keep → `keep`, Switch → `switch`, Move면 Fall > Vanish > Bridge > Seal 순으로 고른다.
+  - 형제는 `BodyIndex.Current(u.Prev) % 3 + 1`이다. 변환은 `StoryRules.Brother` 한 곳에서만 한다.
+- `TrySeventh(u, out cue)`: 일곱째 걸음이 된 이동이면 늘 낸다. "처음 한 번" 거르기, 시도당 1회, `QueuedCount > 0` 건너뛰기는 `StoryDirector`(S4)가 한다.
+- `Ending(State win, int card, int truths, int chapterCount)`:
+  - 카드 1: 형제 = 출구에 닿은 몸
+  - 카드 2: 선돌 = `min(2, Statues.Length)`
+  - 카드 3: `truths == chapterCount`이면 `after = allTruths`
+  - 카드 4: 고정
+  - 이긴 State가 아니거나 범위를 벗어나면 예외다.
+- `Finale(chapterId)`.
+- 최소 UI에서는 순간 문구와 `seventhFirst`를 잼에서 뺐다(story-integration 0.1). 함수는 남겨 두고 데이터 entry는 선택이다.
+
+### 16.5 저장: `SaveSystem.Story` (A5·A12)
+- 키 `seven-steps.story`, 타입 `StoryProgress { version 1, counts[{id,n}], endingSeen, carvingSeen[](챕터 id), finalTruthSeen }`.
+- `Count`·`MarkShown`·`EndingSeen`·`MarkEndingSeen`·`CarvingSeen(id)`·`MarkCarvingSeen(id)`·`FinalTruthSeen`·`MarkFinalTruthSeen`은 **메모리만** 바꾼다.
+- `SaveSystem.SaveStory()`를 부르는 때: 결과 패널이 열린 뒤, 엔딩 끝, 별지도 새김 연출 끝, 앱 종료.
+- 손상되면 기본값으로 읽고 경고한다. 새 버전이면 읽지도 덮어쓰지도 않는다. 중복·음수 count와 중복 id는 읽을 때 정리한다.
+- `StartNewPlayer`(`-newplayer`)가 지운다. 리플레이 해시·QA 줄·텔레메트리에는 섞지 않는다.
+
+### 16.6 `StoryTruths` (A4·A9·A10, 저장 없음)
+- 입력은 `levels`, 스테이지마다 챕터 키(`LevelCatalog.ChapterKeyOf`), `ProgressData`다.
+- `FinaleStage(keys, id)`:
+  - 챕터의 마지막 스테이지다.
+  - 게임의 마지막 스테이지를 가진 챕터는 그 바로 앞 스테이지다.
+  - 지금 데이터로는 7·14·21·28·35·42·49다(0부터 세면 6…48).
+- `IsFinaleStage`, `IsEndingStage`(마지막 스테이지 = 엔딩).
+- `FinaleCleared(…, id)`는 스테이지 **이름**으로 클리어를 본다.
+- `Truths(…, chapterIds)`. 다 모았는지는 `Truths == chapterIds.Count`로 본다.
+- `ChapterComplete`는 별자리(`constellation`)용이다.
+
+### 16.7 `LevelDto.startLine` (최소 UI 시작 한 줄)
+- `"story"`, `"hint"`, `""`(없음) 중 하나다. 필드가 없거나 null이면 `"story"`로 읽는다(`LevelDto.StartLine`). 그 밖의 값은 `ArgumentException`이다.
+- 채우기는 레벨 디자인(`levels.js`, `export-levels.mjs` 검사)이다. 코어 파일의 필드 한 줄은 아키텍트가 리드 지시로 넣었다.
+- 시작 한 줄 View(`TransientLineView`)와 다시 보기는 gameplay-ui 몫이다.
+
+### 16.8 흐름 쪽 약속 (씬 플로우·게임플레이/UI, 계약 아님)
+- 50 결과의 [다음]은 [끝까지 보기]가 되고, 엔딩 4장으로 이어진다(9장 질문 1). 엔딩 카드 이미지는 `entry.image`에서 온다.
+- `EndingModel.Truths`는 scene-flow가 `StoryTruths.Truths`로 센다. 텔레메트리 `ending_view.truths`는 백엔드가 스키마와 골든을 같이 바꾼다.
+- 피날레 한 줄은 `Updated(Present, Win)`에서 피날레 스테이지인지 판정해 보류한다. 별자리 피날레 동안 잠깐 줄 자리에 보이고, 결과가 열리면 사라진다(story-integration 0.1).
+
 ## 변경 기록
 
 | 날짜 | 누가 | 내용 |
@@ -1039,3 +1136,6 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | scene-flow b619811(14.11 등록 4종, C2) 승인, 병합은 gameplay-ui `LayoutChoice` 수정 뒤. 14.11 보강: 카드 비겹침 대상에 보이는 HUD 판·버튼 포함, 피할 후보가 없으면 카드가 보이는 동안 메시지 줄을 숨김, 상시 버튼 자리는 후보에서 뺌. `docs/reviews/2026-11-11-scene-flow-b619811.md` |
 | 2026-11-11 | 아키텍트 | feat/view 71a8f9c 승인(R1 Enter 한 경로, R2 확정 Present 최대 0.42초·움직임 줄이기 0, M2 고스트 Behaviour 끔, 14.11 보이는 HUD 판 회피·메시지 숨김). b619811과 함께 병합 가능 |
 | 2026-11-11 | 아키텍트 | feat/art e05c3c1(행성 2~7 모델링)+2cd08fb 조건부 승인. 12.8에 환경 삼각형 런타임 가드 50k(예산은 Chrome 60 FPS, 큰 판 14·31·49 측정)와 리뷰 asmdef 빌드 제외 규칙 추가. 병합 전 B1 concepts PNG 75개·실행 로그 제외, R1 `SevenSteps.Art.Review` defineConstraints와 ReviewLevels.json Resources 밖으로. R2 altar 9×9 정적 그림자 47/48. `docs/reviews/2026-11-11-feat-art-e05c3c1.md` |
+| 2026-11-11 | 아키텍트 | 16장 이야기 계약 S2(A1~A13): `Contracts/Story/` `StoryCatalog`(로드 단정, 구체성 Find, 모호함·필수 갈래 검사), `StoryCue`/`StoryOn`, `StoryRules`(TryMoment·TrySeventh·Ending·Finale), `StoryProgress` + `SaveSystem.Story`/`SaveStory`/키 `seven-steps.story`(-newplayer가 지움), `StoryTruths`(ChapterKeyOf 경계 피날레·Truths), `StoryImageSet`(required 기본 false), `GameAssets.storyJson`/`storyImages`, `LevelDto.startLine`(기본 story). 테스트 `StoryContractTests` 12개 |
+| 2026-11-11 | 아키텍트 | 14.7 클리어 결과 = 보드 위 결과(막 0.25 + raycast, HUD CanvasGroup 0, 별 3은 BoardFrame 위 띠, 다음은 우하단, 별 조건은 hover/focus/tap, 다시 하기·스테이지 선택 버튼 빼고 R·Esc 동작). 패배는 0.6 모달. UiLayoutCheck Result clear는 막 raycast·HUD 숨김·보드 비겹침 검사 |
+| 2026-11-11 | 아키텍트 | feat/levels-2 dc6cea2(S3) 승인: b03ce11 위 병합 EditMode 852/852(실제 Data/story.json StoryCatalog 로드 통과), startLine hint 4·8, 피날레 스테이지 7·14·…·49 데이터 경계와 일치. QA 끝까지 qa 워크트리 고정에 동의. `docs/reviews/2026-11-11-levels-2-dc6cea2.md` |

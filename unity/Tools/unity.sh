@@ -2,6 +2,8 @@
 # Seven Steps Unity runner (Git Bash). Run from anywhere:  unity/Tools/unity.sh <command>
 #
 #   levels       export prototypes/seven-steps levels + JS solver answers -> Assets/_Project/Data/levels.json
+#   story-check  check design/story/story.json (+ copy-levels.json) with design/story/tools/check-story.mjs (node, no Unity);
+#                levels also runs it and copies story.json -> Assets/_Project/Data/story.json only when it passes
 #   sfx          synthesize placeholder sound effects -> Assets/Shared/Audio/*.wav (git 밖)
 #   golden       regenerate rule golden data (core.js -> Tests/Golden) and telemetry golden (server/fixtures)
 #   setup        (batch) generate materials/prefabs/GameAssets, Game scene if missing, build/player settings
@@ -109,6 +111,7 @@ batch() {
 cmd="${1:-help}"
 case "$cmd" in
   levels)      node "$HERE/export-levels.mjs" ;;
+  story-check) node "$REPO/design/story/tools/check-story.mjs" "${@:2}" ;;
   sfx)         node "$HERE/gen-sfx.mjs" ;;
   golden)
     # Rule golden first: the telemetry golden reads Tests/Golden/traces.golden.json as input.

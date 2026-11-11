@@ -92,6 +92,9 @@ namespace SevenSteps.Core
         public string chapter;
         /// One-line story (the triplets' view), separate from the hint. Optional; empty or null = none.
         public string story;
+        /// Which line the stage start shows once (minimal UI, docs/architecture.md 16.7): "story", "hint" or "" (none).
+        /// A missing field keeps the default "story"; null also reads as "story" (<see cref="StartLine"/>). Level design fills it; not a rule.
+        public string startLine = "story";
         /// Translations (docs/architecture.md 13): one entry per language other than ko. ko lives in name/hint/story,
         /// and name stays the save key (11.3.1) whatever the language. Empty when the stage has no translations.
         public LevelTextDto[] text = new LevelTextDto[0];
@@ -99,6 +102,18 @@ namespace SevenSteps.Core
         public ExpectedDto expected;
 
         public Level ToLevel() => Level.Parse(name, hint, bodies, map, statueCount);
+
+        /// startLine as "story", "hint" or "": null or a missing field = "story". Any other value is a data error
+        /// (export-levels.mjs rejects it first): ArgumentException.
+        public string StartLine
+        {
+            get
+            {
+                if (startLine == null) return "story";
+                if (startLine == "story" || startLine == "hint" || startLine == "") return startLine;
+                throw new ArgumentException($"stage \"{name}\": startLine \"{startLine}\" is not story, hint or empty");
+            }
+        }
 
         /// Name, hint and story in a language code ("ko", "en"). ko reads the base fields. Another language without an
         /// entry throws KeyNotFoundException (the export check catches it before a build), like ChapterInfo.
