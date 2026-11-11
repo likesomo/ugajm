@@ -83,7 +83,10 @@ namespace SevenSteps.Game.Flow
             if (!journeyReturn.Pending) return;
             var cam = select.MapCamera != null ? select.MapCamera : throw new InvalidOperationException("TitleJourney: no map camera for the return");
             var body = select.Body(journeyReturn.Planet);
-            var map = CameraPose.Capture(cam);
+            // The settled map pose for this aspect: while a return is pending the map leaves the camera to us (gameplay-ui).
+            select.MapPose(out var position, out var rotation, out float size);
+            var map = new CameraPose(position, rotation, size);
+            if (!cam.orthographic) throw new InvalidOperationException($"TitleJourney: map camera {cam.name} is not orthographic");
             var start = Summit(body, map);
             start.Apply(cam);
             runner.Play(ReturnSeconds, t => CameraPose.Lerp(start, map, t).Apply(cam), journeyReturn.Settle);

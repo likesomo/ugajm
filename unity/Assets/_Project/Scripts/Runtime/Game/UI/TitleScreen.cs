@@ -56,6 +56,8 @@ namespace SevenSteps.Game.UI
 
         /// The v4 stage select controller (scene-flow's TitleJourney subscribes StageChosen); null when the new map is off.
         public StageSelectController StageSelect { get; private set; }
+        // Journey transitions (scene-flow, docs/stage-select-transitions.md): null unless JourneyToggle is on and the new map is up.
+        TitleJourney journey;
 
         void Awake()
         {
@@ -122,6 +124,12 @@ namespace SevenSteps.Game.UI
                     Services.TryGet<JourneyReturn>(out var journey) ? journey : null);
                 stageViews.Map.BackRequested += flowController.Back;
             }
+            if (StageSelect != null && JourneyToggle.On(Services.Get<LaunchOptions>()))
+            {
+                var runner = JourneyRunner.Create(transform);
+                runner.ReduceMotion = save.Settings.reduceMotion;
+                journey = new TitleJourney(StageSelect, runner, Services.Get<JourneyDive>(), Services.Get<JourneyReturn>(), flow.CanGoToGame);
+            }
             language = new LanguageController(languagePanel, overlays, localizer, save, Services.Get<LaunchOptions>().Language);
             settingsController.OpenLanguage = OpenLanguage; // the settings language button opens the picker
             overlays.Changed += OnOverlaysChanged;
@@ -135,6 +143,7 @@ namespace SevenSteps.Game.UI
         void Start()
         {
             flowController.Start();
+            journey?.ReturnIfPending(); // planet complete: pull back from the planet to the map, then the trail lights
             var launch = Services.Get<LaunchOptions>();
             if (!save.LanguageChosen && launch.Language == null && flow.State == AppState.Title) OpenLanguage();
             if (launch.OpenSettings) Open(settings); // -settings / ?settings=1 (development, screenshots)
@@ -247,6 +256,7 @@ namespace SevenSteps.Game.UI
         {
             flowController?.Dispose();
             StageSelect?.Dispose();
+            journey?.Dispose();
             settingsController?.Dispose();
             language?.Dispose();
             if (localizer != null) localizer.Changed -= OnLanguageChanged;
@@ -274,6 +284,7 @@ namespace SevenSteps.Game.UI
         {
             var kb = Keyboard.current;
             if (kb == null || flow.IsLoading) return;
+            if (journey != null && journey.Blocks) return; // a transition plays, or this press skipped / cancelled one
             if (kb.escapeKey.wasPressedThisFrame) back.Back();
         }
 
