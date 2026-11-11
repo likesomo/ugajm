@@ -43,11 +43,21 @@ namespace SevenSteps.Tests
                 Assert.Throws<InvalidOperationException>(() => view.Show(ResultModel.Loss(0, 3, false)), "words before Show");
                 view.Apply(loc);
                 Assert.IsFalse(view.IsShown);
+                var hudHidden = new System.Collections.Generic.List<bool>();
+                view.HudHidden += hudHidden.Add;
                 view.Show(ResultModel.Clear(0, 3, 2, 1, 2, isLast: false));
                 Assert.IsTrue(view.IsShown);
+                // Minimal clear over the board (docs 14.7): light scrim that still takes the clicks, HUD hidden, only Next.
+                Assert.AreEqual(ResultView.ClearScrimAlpha, view.scrim.color.a, 1e-4f);
+                Assert.IsTrue(view.scrim.raycastTarget);
+                CollectionAssert.AreEqual(new[] { true }, hudHidden);
+                Assert.IsFalse(view.panel.gameObject.activeSelf, "no modal panel for a clear");
                 Assert.IsTrue(Button(canvas, "다음 스테이지 (Enter)").activeSelf);
-                Assert.IsFalse(Button(canvas, "한 걸음 되돌리기 (Z)").activeSelf);
-                StringAssert.Contains("형제 2명 (최소 1명, 최고 기록 2명)", Text(canvas, "Body"));
+                Assert.IsTrue(Button(canvas, "다음 스테이지 (Enter)").transform.IsChildOf(view.nextSlot));
+                foreach (var b in new[] { view.again, view.select, view.undo, view.restart })
+                    Assert.IsFalse(b.gameObject.activeInHierarchy, b.name + ": R / Esc instead (14.7)");
+                Assert.AreEqual("", Text(canvas, "Body"), "mid-planet: no line");
+                Assert.IsFalse(view.finalePlate.gameObject.activeSelf);
 
                 int next = 0;
                 view.NextRequested += () => next++;
@@ -57,20 +67,39 @@ namespace SevenSteps.Tests
                 view.Show(ResultModel.Clear(16, 3, 3, 0, 0, isLast: true));
                 Assert.IsTrue(Button(canvas, "다음 스테이지 (Enter)").activeSelf, "the last stage: [끝까지 보기] -> the ending (16.8)");
                 Assert.AreEqual("끝까지 보기", view.next.GetComponentInChildren<UnityEngine.UI.Text>().text);
+                Assert.IsTrue(view.body.transform.IsChildOf(view.finalePlate) && view.finalePlate.gameObject.activeSelf, "the journey line, bottom centre");
 
                 view.Show(ResultModel.Loss(4, 3, isLast: false));
+                Assert.AreEqual(ResultView.LossScrimAlpha, view.scrim.color.a, 1e-4f);
+                Assert.IsTrue(view.panel.gameObject.activeSelf && !view.clearGroup.gameObject.activeSelf);
+                Assert.IsTrue(view.body.transform.IsChildOf(view.panel), "the body back in the loss panel");
+                Assert.IsFalse(hudHidden[hudHidden.Count - 1], "a loss is a modal over the HUD");
                 Assert.IsFalse(Button(canvas, "다음 스테이지 (Enter)").activeSelf, "a loss never offers next");
                 Assert.IsFalse(Button(canvas, "다시 하기 (R)").activeSelf);
                 Assert.IsTrue(Button(canvas, "한 걸음 되돌리기 (Z)").activeSelf);
                 Assert.IsTrue(Button(canvas, "다시 시작 (R)").activeSelf);
                 Assert.AreEqual("형제를 모두 잃었다", Text(canvas, "Title"));
 
-                // Star criteria under the stars: shown with the stars, the minimum in ★2, hidden for a loss.
+                // Star criteria: one line each, on tip plates that show only on hover / tap (hidden at first and for a loss).
                 view.Show(ResultModel.Clear(0, 3, 1, 1, 0, isLast: false, stars: 2, bestStars: 2));
-                Assert.AreEqual("풀이를 보지 않고\n형제 1명으로", Text(canvas, "Label 2"));
-                Assert.IsTrue(view.starLabels[0].transform.parent.gameObject.activeSelf);
-                view.Show(ResultModel.Loss(4, 3, isLast: false));
+                Assert.AreEqual("풀이를 보지 않고 형제 1명으로", view.starLabels[1].text);
+                Assert.IsTrue(System.Linq.Enumerable.All(view.starLabels, l => !l.transform.parent.gameObject.activeSelf));
+                UnityEngine.EventSystems.ExecuteEvents.Execute(view.stars[1].gameObject,
+                    new UnityEngine.EventSystems.PointerEventData(null), UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
+                Assert.IsTrue(view.starLabels[1].transform.parent.gameObject.activeSelf, "a tap shows what the star asks");
                 Assert.IsFalse(view.starLabels[0].transform.parent.gameObject.activeSelf);
+                // Keyboard focus (M1 on 48ff6b4): Tab / Right to the next star, Shift+Tab / Left back, wrapping.
+                Assert.IsTrue(view.StarRowShown);
+                view.FocusStar(1);
+                Assert.IsTrue(view.starLabels[2].transform.parent.gameObject.activeSelf, "from star 2 to star 3");
+                view.FocusStar(1);
+                Assert.IsTrue(view.starLabels[0].transform.parent.gameObject.activeSelf, "wraps to star 1");
+                view.FocusStar(-1);
+                Assert.IsTrue(view.starLabels[2].transform.parent.gameObject.activeSelf, "back to star 3");
+                Assert.Greater(view.stars[2].rectTransform.localScale.x, 1f, "the focused star is larger");
+                view.Show(ResultModel.Loss(4, 3, isLast: false));
+                Assert.IsFalse(view.StarRowShown);
+                Assert.IsTrue(System.Linq.Enumerable.All(view.starLabels, l => !l.transform.parent.gameObject.activeSelf));
 
                 // Language switch while open: the panel rewords itself (docs/architecture.md 13.3).
                 loc.Set(SevenSteps.Contracts.Language.En);
@@ -80,6 +109,7 @@ namespace SevenSteps.Tests
 
                 view.Hide();
                 Assert.IsFalse(view.IsShown);
+                Assert.IsFalse(hudHidden[hudHidden.Count - 1], "Hide brings the HUD back");
             }
             finally { UnityEngine.Object.DestroyImmediate(canvas); }
         }

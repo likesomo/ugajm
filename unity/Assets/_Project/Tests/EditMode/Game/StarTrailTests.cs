@@ -64,6 +64,28 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void V2StatesKeepHardensSwitchKnots()
+        {
+            var level = Map(3, Field);
+            var choosing = Run(Rules.NewState(level), "RRRRRRR");
+            Assert.IsTrue(Marks(choosing).Where(m => m.Kind != TrailMarkKind.Ring).All(m => m.End == TrailEnd.Walking), "choosing: still the active look");
+            var kept = Marks(Run(choosing, "K"));
+            Assert.IsTrue(kept.Where(m => m.Body == 0 && m.Kind != TrailMarkKind.StoneStar).All(m => m.End == TrailEnd.Kept), "KEEP: body 0 hardens");
+            Assert.IsEmpty(Of(kept, TrailMarkKind.Knot));
+
+            var s = Run(Rules.NewState(level), "RRRRRRRK" + "DRRRRRRX" + "L");
+            var marks = Marks(s);
+            var knot = Of(marks, TrailMarkKind.Knot).Single();
+            Assert.AreEqual((1, 14, 2, TrailEnd.Switched), (knot.Body, knot.Cell, knot.Aux, knot.End), "SWITCH: the knot of body 1 and 2 on body 1's last cell");
+            Assert.IsTrue(Of(marks, TrailMarkKind.Star).Where(m => m.Body == 1).All(m => m.End == TrailEnd.Switched));
+            Assert.IsTrue(Of(marks, TrailMarkKind.Star).Where(m => m.Body == 2).All(m => m.End == TrailEnd.Walking));
+            // Undo past the SWITCH: the knot goes, body 1 is active (choosing) again.
+            var back = Marks(Run(s, "ZZ"));
+            Assert.IsEmpty(Of(back, TrailMarkKind.Knot));
+            Assert.IsTrue(Of(back, TrailMarkKind.Star).Where(m => m.Body == 1).All(m => m.End == TrailEnd.Walking));
+        }
+
+        [Test]
         public void UndoAndRestartRedrawFromTheState()
         {
             var level = Map(3, Field);
