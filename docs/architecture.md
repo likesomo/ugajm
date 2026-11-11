@@ -871,6 +871,9 @@ namespace SevenSteps.Game.UI {
 - **선택 화면**(4.4)
   - 카드(판·이름·그림·K/X 배지·결과 한 줄)와 설명 판은 보드 영역(14.6) 밖에 두고, 서로 겹치지 않는다. 배지 글자는 보조 18 이상, 나머지는 본문 22 이상이다. 다음 형제 색 테두리는 장식이다(3:1, 굵기 2).
   - 배치: 보드 영역의 좌·우·위·아래 후보 중 형제 투영점에 가장 가까운, 겹치지 않는 후보를 쓴다. 후보가 없으면 칸 위에 얹지 않는다. 등록 화면에서 오류로 나오므로 틀을 고친다.
+  - **겹치지 않음의 대상**(2026-11-11 추가, scene-flow b619811이 찾음): 보드 영역뿐 아니라 그 순간 보이는 다른 HUD 판·버튼(메시지 줄, 이야기·이동 안내, 상시 버튼)도 포함한다. 카드와 설명 판의 높이는 실제 크기다(ExplainChoice 참 + 안내가 가장 크다).
+    - 선택 중에는 카드가 우선이다. 어느 후보도 메시지 판을 피하지 못하면 메시지 줄은 카드가 보이는 동안 숨겼다가, 카드가 숨으면 다시 보인다(문구는 그대로).
+    - 상시 버튼·형제 점은 숨기지 않는다. 그래서 그 자리는 처음부터 후보에서 뺀다.
   - **보드 30% 암부**: 3D 쪽(셰이더가 `_StarTrailState.y == 1` 선택 단계를 읽음, 또는 카메라 앞 quad)을 권한다.
     - UI `Image`로 한다면 HUD 맨 뒤 형제이고 `raycastTarget` 끔이다.
     - 그리고 `UiLayout.exempt = Decoration | Board`, reason "choose dim 30% (ui-minimal v3)"을 단다. 막 알파 0.6 미만이라 모달이 아니다.
@@ -1031,3 +1034,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트·씬 플로우 | 최소 UI v3 계약: 4.4 선택 화면(`ChoicePreview.TryOf` = `Rules.Dispatch` 순수 호출 미리보기, 확정 연출 0.5초 이하는 기존 Present 잠금, Z는 선택 전, 확정 횟수는 Present Keep/Switch만). 11.3.2 키 `seven-steps.tutorial`(`TutorialData` seen `이름@버전`·choiceConfirms 상한 3, `StartNewPlayer`가 지움, 리플레이·smoke 실행 제외), 접근성 `SettingsData.showStepNumbers`·`reduceMotion`(기본 끔). 14.11 BoardFrame 제안 (276,80,728,496)·상시 HUD·선택 화면 배치·등록 화면 6종. 15.6 채운 별 = 걸은 수로 문구 정정. 테스트 `MinimalUiContractTests` 7개 |
 | 2026-11-11 | 아키텍트 | scene-flow c513108 검토 승인(메뉴 오버레이·`TutorialTracker`·접근성 설정 연결, 검사 실행은 모두 seen인 메모리 저장소). 메모 C1 선택 카드·안내는 `Presented` 뒤 표시(gameplay-ui), C2 메모리 저장소 상한, C3 임시 설정 버튼 연결 정리. `docs/reviews/2026-11-11-scene-flow-c513108.md` |
 | 2026-11-11 | 아키텍트 | feat/view cce7783·740a516·fdd9651(최소 HUD, 선택 UI v3, 발치 별) 조건부 승인: 계약 4.4·14.11 대조 맞음(BoardFrame 8×6 ortho 4.67 셀 77px). R1 카드 Button 선택이 남아 Enter가 Submit과 `choice.Confirm` 두 경로로 갈 수 있음, R2 확정 Present 문 여러 개면 0.5초 초과·움직임 줄이기에서도 문 대기. `docs/reviews/2026-11-11-feat-view-fdd9651.md` |
+| 2026-11-11 | 아키텍트 | scene-flow b619811(14.11 등록 4종, C2) 승인, 병합은 gameplay-ui `LayoutChoice` 수정 뒤. 14.11 보강: 카드 비겹침 대상에 보이는 HUD 판·버튼 포함, 피할 후보가 없으면 카드가 보이는 동안 메시지 줄을 숨김, 상시 버튼 자리는 후보에서 뺌. `docs/reviews/2026-11-11-scene-flow-b619811.md` |
