@@ -1158,3 +1158,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | feat/view ecf50a2 승인(4:3 결과 행성·여정 줄 판을 같은 여백으로 늘려 [다음]과 비겹침, UiLayout 경고 0) + 1458ea0 병합의 UiLayoutCheck 맞춤 확인. `docs/reviews/2026-11-11-feat-view-ecf50a2.md` |
 | 2026-11-11 | 아키텍트 | feat/view 4024c25 승인(단계형 힌트: HintPlan expected.path 재생, 몸의 끝 목표, Rules.Key 이어서 보기, HintRules 스위치 FirstTierFree·TelemetryTier 기본 꺼짐, Core·골든 불변). 메모 M1 HintPlan 예외 시 전체 경로로 물러서기. `docs/reviews/2026-11-11-feat-view-4024c25.md` |
 | 2026-11-11 | 아키텍트 | feat/view c5a3657 승인(4024c25 M1 HintPlan 예외 시 전체 경로, M2 화면 단계 번호는 열 수 있는 단계만). `docs/reviews/2026-11-11-feat-view-4024c25.md` |
+| 2026-11-11 | 아키텍트 | feat/view b6ad087 승인(c5a3657 N1: 힌트 줄이 HintSteps를 잡아 둠). `docs/reviews/2026-11-11-feat-view-4024c25.md` |
