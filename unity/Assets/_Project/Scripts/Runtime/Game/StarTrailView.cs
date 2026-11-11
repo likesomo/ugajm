@@ -266,17 +266,20 @@ namespace SevenSteps.Game
 
         /// Win finale (finaleSeconds): each body's path brightens in turn and _StarTrailState.z rises 0 -> 1, so the three
         /// colours join into one constellation before the result. Enter, Space, a click or a tap skips to the end (N1).
+        /// Enter, Space, a click or a tap this frame: skips the win finale (and the finale line's hold, BoardView).
+        public static bool SkipPressed()
+        {
+            var kb = Keyboard.current;
+            if (kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame)) return true;
+            var mouse = Mouse.current;
+            if (mouse != null && mouse.leftButton.wasPressedThisFrame) return true;
+            var touch = Touchscreen.current;
+            return touch != null && touch.primaryTouch.press.wasPressedThisFrame;
+        }
+
         public IEnumerator Finale(float speed)
         {
-            bool Skip()
-            {
-                var kb = Keyboard.current;
-                if (kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame)) return true;
-                var mouse = Mouse.current;
-                if (mouse != null && mouse.leftButton.wasPressedThisFrame) return true;
-                var touch = Touchscreen.current;
-                return touch != null && touch.primaryTouch.press.wasPressedThisFrame;
-            }
+            bool Skip() => SkipPressed();
             int bodies = 0;
             foreach (var it in items) bodies = Mathf.Max(bodies, it.Mark.Body + 1);
             float total = preset.finaleSeconds / Mathf.Max(speed * FinaleSpeed, 0.01f);

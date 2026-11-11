@@ -7,6 +7,7 @@ using SevenSteps.Core;
 using SevenSteps.Game;
 using SevenSteps.Game.Flow;
 using SevenSteps.Game.UI;
+using SevenSteps.Game.Story;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -262,14 +263,26 @@ namespace SevenSteps.EditorTools
             }
             int longestHint = Longest(levels.Length, i => LevelCatalog.TextOf(i, loc.Current).hint);
             int longestName = Longest(levels.Length, i => LevelCatalog.TextOf(i, loc.Current).name);
+            // The passing line (story-integration.md 0.2): the longest start line (story or hint, as each stage picks).
+            int longestStart = Longest(levels.Length, i => StoryDirector.StartText(LevelCatalog.TextOf(i, loc.Current), LevelCatalog.StartLineOf(i)));
             // 14.6 range: the widest and the tallest board, and the longest hint / name.
             int widest = Longest(levels.Length, i => new string('w', levels[i].W));
             int tallest = Longest(levels.Length, i => new string('h', levels[i].H));
-            foreach (int stage in new[] { longestHint, longestName, widest, tallest }.Distinct())
+            foreach (int stage in new[] { longestHint, longestName, longestStart, widest, tallest }.Distinct())
             {
                 int s = stage;
                 yield return (new Screen { Name = "HUD", GameplayUi = true, Build = (c, root) => { BuildHud(c, s); c.Board = BoardArea(c, s); return null; } }, $"stage {s + 1}");
             }
+            // The finale line on the same passing line, the longest planet truth over the widest board (16.8).
+            yield return (new Screen { Name = "HUD", GameplayUi = true, Build = (c, root) =>
+            {
+                var story = StoryOf(c);
+                if (story == null) throw new Skipped("story.json does not load (SceneFlowValidator reports it)");
+                var hud = BuildHud(c, widest, Walked(c.Levels[widest], 1), "");
+                hud.ShowLine(LongestLine(story, c.Lang, e => e.on == "finale"), 3f);
+                c.Board = BoardArea(c, widest);
+                return null;
+            } }, "finale line");
             // Side column (statues, message, KEEP / SWITCH; review B1): the first choice of a statue-door stage, longest message.
             // The longest message is the longest msg.* line or the H hint of the longest solution (review B3).
             int? chooser = Enumerable.Range(0, levels.Length).Where(i => levels[i].StatueCount > 0).Concat(Enumerable.Range(0, levels.Length))
@@ -472,6 +485,9 @@ namespace SevenSteps.EditorTools
         {
             var hud = HudView.Create(HudTileSet(c), c.Loc);
             hud.Refresh(state, stage, LevelCatalog.TextOf(stage, c.Lang), message);
+            // At the stage start the passing line shows the stage's start line (StoryDirector, story-integration.md 0.2).
+            string start = StoryDirector.StartText(LevelCatalog.TextOf(stage, c.Lang), LevelCatalog.StartLineOf(stage));
+            if (state.Prev == null && start.Length > 0) hud.ShowLine(start, 3f);
             return hud;
         }
 

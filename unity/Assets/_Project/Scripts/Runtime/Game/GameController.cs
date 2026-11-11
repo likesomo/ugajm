@@ -60,6 +60,7 @@ namespace SevenSteps.Game
         MenuController menu;
         TutorialTracker tutorial;
         StoryBook story;
+        Story.StoryDirector storyLines;
         EndingView endingView;
         EndingController ending;
 
@@ -195,6 +196,19 @@ namespace SevenSteps.Game
             result.RestartRequested += board.Restart;
             // Clear over the board (docs 14.7): the HUD hides while the result shows.
             result.HudHidden += hud.Conceal;
+
+            // Story on the board (docs 16.7 / 16.8, story-integration.md 0.2): the stage's start line and a planet's finale
+            // line on the HUD's passing line. Quiet in dev runs and art perf, like the guides.
+            var chapterKeys = new string[levels.Length];
+            for (int i = 0; i < chapterKeys.Length; i++) chapterKeys[i] = LevelCatalog.ChapterKeyOf(i);
+            bool FinaleHere() => story.On && StoryTruths.IsFinaleStage(chapterKeys, board.LevelIndex);
+            storyLines = new Story.StoryDirector(board.Session, hud, devRun || launch.ArtPerf,
+                startLine: () => Story.StoryDirector.StartText(LevelCatalog.TextOf(board.LevelIndex, localizer.Current), LevelCatalog.StartLineOf(board.LevelIndex)),
+                finaleLine: () => FinaleHere() ? story.FinaleLine(chapterKeys[board.LevelIndex], localizer.Current) : null,
+                finaleShown: () => story.Progress.MarkShown(story.Catalog.Find(StoryRules.Finale(chapterKeys[board.LevelIndex])).id),
+                covered: () => overlays.Count > 0);
+            board.FinaleStarting = storyLines.FinaleStarting;
+            overlays.Changed += storyLines.CoverChanged;
         }
 
         void Start()
@@ -231,6 +245,7 @@ namespace SevenSteps.Game
 
         void OnDestroy()
         {
+            storyLines?.Dispose();
             flowController?.Dispose();
             settingsController?.Dispose();
             languageController?.Dispose();
