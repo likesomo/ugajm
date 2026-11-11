@@ -53,7 +53,12 @@ namespace SevenSteps.Game.Telemetry
             Tracker.LevelStart(s, stage + 1, s.Level.Name, via, LevelCatalog.ChapterIdOf(stage));
         }
 
-        void OnHint() { if (session.State != null) Tracker.Hint(session.State); }
+        void OnHint()
+        {
+            if (session.State == null) return;
+            var t = game.LastHint; // null: a stage without a stored route (the whole route at once, costs)
+            Tracker.Hint(session.State, t?.Tier ?? 0, t?.Tiers ?? 0, t?.Costs ?? true);
+        }
 
         void OnUpdated(SessionUpdate u)
         {

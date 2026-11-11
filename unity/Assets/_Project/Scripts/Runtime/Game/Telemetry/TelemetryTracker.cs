@@ -216,12 +216,19 @@ namespace SevenSteps.Game.Telemetry
             }
         }
 
-        public void Hint(State state)
+        /// A hint tier opened (staged hint, contract review 2026-11-11 (2)). <paramref name="costs"/>: it counts for the
+        /// stars, and so for level_clear / level_leave hints. A free tier (HintRules.FirstTierFree) is sent only once the
+        /// backend has the tier fields (HintRules.TelemetryTier), so old-schema hints keep meaning "a hint that costs".
+        /// <paramref name="tier"/> / <paramref name="tiers"/>: absolute tier and the stage's tier count, 0 = unknown.
+        public void Hint(State state, int tier = 0, int tiers = 0, bool costs = true)
         {
             if (run == null) return;
+            if (!costs && !HintRules.TelemetryTier) return;
             Input(state);
-            run.Hints++;
-            Emit(Where(new TelemetryEvent(N.Types.Hint), state));
+            if (costs) run.Hints++;
+            var e = Where(new TelemetryEvent(N.Types.Hint), state);
+            if (HintRules.TelemetryTier && tier > 0) e = e.With("tier", tier).With("tiers", tiers);
+            Emit(e);
         }
 
         /// Leaving the current stage for another one (call before LevelStart of the new one).

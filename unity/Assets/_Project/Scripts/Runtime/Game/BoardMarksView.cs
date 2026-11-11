@@ -39,6 +39,9 @@ namespace SevenSteps.Game
         readonly Image[] shadow = new Image[Rules.Steps], outer = new Image[Rules.Steps], inner = new Image[Rules.Steps];
         Image calm; // reduce motion: the steady second outline round the last star
         Image ring;
+        Image goal, goalShadow; // the staged hint's goal square (gold ring, QA-1 (A))
+        bool goalOn;
+        Vector3 goalAt;
         Image knotA, knotB;
         readonly List<Image> dots = new List<Image>();
 
@@ -64,6 +67,7 @@ namespace SevenSteps.Game
         public bool StarFilled(int k) => inner[k].color == Ui.Ink;
         public bool FeetShown => outer[0].enabled;
         public bool RingShown => ring.enabled;
+        public bool GoalShown => goal.enabled;
         public bool KnotShown => knotA.enabled;
         public int DotsShown { get { int n = 0; foreach (var d in dots) if (d.enabled) n++; return n; } }
 
@@ -74,6 +78,8 @@ namespace SevenSteps.Game
             this.toCanvas = toCanvas ?? throw new ArgumentNullException(nameof(toCanvas));
             backing = Make("Foot Stars Backing", Ui.Circle);
             ring = Make("Choice Ring", Ui.RingShape);
+            goalShadow = Make("Hint Goal Shadow", Ui.RingShape);
+            goal = Make("Hint Goal", Ui.RingShape);
             dots.Capacity = 64;
             knotA = Make("Knot A", null);
             knotB = Make("Knot B", null);
@@ -123,6 +129,14 @@ namespace SevenSteps.Game
             Refresh();
         }
 
+        /// The staged hint's goal: a breathing gold ring on the square where a body's run should end, or none.
+        public void SetGoal(bool on, Vector3 world)
+        {
+            goalOn = on;
+            goalAt = world;
+            Refresh();
+        }
+
         public void Clear()
         {
             feetOn = ringOn = false;
@@ -163,6 +177,16 @@ namespace SevenSteps.Game
                     if (k == Rules.Steps - 1 && calm.enabled) Put(calm, p, size * 1.6f, new Color(body.r, body.g, body.b, 0.7f));
                 }
                 calm.transform.SetSiblingIndex(shadow[Rules.Steps - 1].transform.GetSiblingIndex());
+            }
+
+            // Hint goal: gold on a dark ring, readable on light and dark stone.
+            goal.enabled = goalShadow.enabled = goalOn;
+            if (goalOn)
+            {
+                float breathe = reduceMotion ? 1f : 1f + 0.08f * Mathf.Sin(Time.unscaledTime * 3f);
+                var at = toCanvas(goalAt);
+                Put(goalShadow, at, 0.98f * cellPx * breathe, ShadowColor);
+                Put(goal, at, 0.9f * cellPx * breathe, Ui.Gold);
             }
 
             // Choice

@@ -16,11 +16,24 @@ namespace SevenSteps.Game
         readonly Level[] levels;
         readonly Localizer loc;
         readonly Dictionary<int, List<Act>> cache = new Dictionary<int, List<Act>>(); // null value = no solution
+        readonly Func<int, string> stored;
 
-        public HintProvider(Level[] levels, Localizer loc)
+        /// <param name="stored">The stage's stored route (replay letters, LevelCatalog.PathOf; "" = none, solve it). Null =
+        /// always solve. The stored one is the route the staged hint's goals come from, so the last tier agrees with them.</param>
+        public HintProvider(Level[] levels, Localizer loc, Func<int, string> stored = null)
         {
             this.levels = levels ?? throw new ArgumentNullException(nameof(levels));
             this.loc = loc ?? throw new ArgumentNullException(nameof(loc));
+            this.stored = stored;
+        }
+
+        static List<Act> Parse(string letters)
+        {
+            var acts = new List<Act>(letters.Length);
+            foreach (char c in letters)
+                if (Rules.TryParseLetter(c, out var a)) acts.Add(a);
+                else throw new ArgumentException($"'{c}' in \"{letters}\" is not a command", nameof(letters));
+            return acts;
         }
 
         /// Solution text for 0-based <paramref name="stage"/> in the current language. The first call per stage runs the solver.
@@ -29,7 +42,8 @@ namespace SevenSteps.Game
             if (stage < 0 || stage >= levels.Length) throw new ArgumentOutOfRangeException(nameof(stage), stage, $"stage must be 0..{levels.Length - 1}");
             if (!cache.TryGetValue(stage, out var path))
             {
-                path = Solver.Solve(levels[stage])?.Path;
+                string letters = stored?.Invoke(stage);
+                path = !string.IsNullOrEmpty(letters) ? Parse(letters) : Solver.Solve(levels[stage])?.Path;
                 cache[stage] = path;
             }
             return path == null ? loc.Get("hint.not_found") : loc.Format("hint.route", Describe(path));

@@ -305,7 +305,10 @@ namespace SevenSteps.EditorTools
                     {
                         if (stage == null) throw new Skipped("no stage reaches a KEEP / SWITCH choice within 7 moves: the side column is not checked");
                         int st = stage.Value;
-                        string hint = new HintProvider(c.Levels, c.Loc).For(longestRoute);
+                        // The staged hint's last tier: the stored route with the tier head, worst case (two-digit tiers,
+                        // from the start).
+                        string hint = c.Loc.Format("hint.line", c.Loc.Format("hint.tier", 10, 10) + " " + c.Loc.Get("hint.from_start"),
+                            new HintProvider(c.Levels, c.Loc, LevelCatalog.PathOf).For(longestRoute));
                         string msg = LongestMessage(c.Loc);
                         var choose = ChooseState(c.Levels[st]);
                         var hud = BuildHud(c, st, choose, hint.Length > msg.Length ? hint : msg);
@@ -574,7 +577,9 @@ namespace SevenSteps.EditorTools
             int best = 0, len = -1;
             for (int i = 0; i < levels.Length; i++)
             {
-                int n = Solver.Solve(levels[i])?.Path.Count ?? 0;
+                // The stored route the H hint shows (LevelCatalog.PathOf), else the solver's.
+                string stored = LevelCatalog.PathOf(i);
+                int n = stored.Length > 0 ? stored.Length : Solver.Solve(levels[i])?.Path.Count ?? 0;
                 if (n > len) { len = n; best = i; }
             }
             longestRouteOf = levels;

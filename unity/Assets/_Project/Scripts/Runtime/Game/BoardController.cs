@@ -84,7 +84,7 @@ namespace SevenSteps.Game
 
             audio = new GameAudio(gameObject, assets, save);
             messages = new MessagePresenter(loc);
-            hints = new HintProvider(levels, loc);
+            hints = new HintProvider(levels, loc, LevelCatalog.PathOf); // the stored route: the staged hint's goals agree with it
 
             hud.UndoRequested += () => Send(Command.Undo);
             hud.RestartRequested += Restart;
@@ -198,6 +198,9 @@ namespace SevenSteps.Game
             loadedStage = stage;
             lost = false;
             attempt = default; // a new attempt: select, next, again, [ ]
+            hintSteps = null; // the staged hint starts again (contract review (3))
+            LastHint = null;
+            board.ShowHintGoal(-1);
             // One line per stage load for performance checks (WebGL console, player log): where a planet change spends time.
             var clock = System.Diagnostics.Stopwatch.StartNew();
             EnterChapter(stage);
@@ -287,15 +290,77 @@ namespace SevenSteps.Game
 
         public void Restart() => Send(Command.Restart);
 
-        /// H: the shortest route from the stage start (HintProvider), shown on the message line.
+        /// H (and the menu's solution item): the next tier of the staged hint (QA-1 (A), contract review
+        /// 2026-11-11-staged-hint-contract.md): the principle (the level's hint text, unless the stage started with it),
+        /// then each body's goal (a gold ring on the board, where and how its run ends), then the whole route. Opened
+        /// tiers stay through Undo; a new attempt (LoadStage) starts again. A tier that costs (HintRules.Costs) counts as a
+        /// hint for the stars (6.5). A stage without a stored route gets the route at once, as before.
         public void ShowHint()
         {
             if (session.Level == null) return;
-            attempt = attempt.WithHint();
             int stage = loadedStage;
-            messages.Show(() => hints.For(stage));
+            if (hintSteps == null || hintStage != stage)
+            {
+                hintStage = stage;
+                string path = LevelCatalog.PathOf(stage);
+                hintSteps = path.Length > 0
+                    ? new HintSteps(HintPlan.From(levels[stage], path), LevelCatalog.TextOf(stage, loc.Current).hint.Length > 0 && LevelCatalog.StartLineOf(stage) != "hint")
+                    : null;
+            }
+            if (hintSteps == null)
+            {
+                LastHint = null;
+                attempt = attempt.WithHint();
+                messages.Show(() => hints.For(stage));
+                board.ShowHintGoal(-1);
+            }
+            else
+            {
+                var t = hintSteps.Open(session.State);
+                LastHint = t;
+                if (t.Costs) attempt = attempt.WithHint();
+                bool warn = HintRules.FirstTierFree && !t.Costs && attempt.Hints == 0 && t.Tier < t.Tiers && hintSteps.NextCosts(session.State);
+                messages.Show(() => HintText(stage, t, warn));
+                board.ShowHintGoal(t.What == HintTier.Shows.Goal ? t.Goal.Cell : -1);
+            }
             HintShown?.Invoke();
             Refresh();
+        }
+
+        /// What the last H opened (telemetry tier fields), null for a stage without a stored route.
+        public HintTier? LastHint { get; private set; }
+
+        HintSteps hintSteps;
+        int hintStage = -1;
+
+        /// The tier's line on the message line, worded on each read (a language change rewords it).
+        string HintText(int stage, HintTier t, bool nextCosts)
+        {
+            string body = t.What switch
+            {
+                HintTier.Shows.Principle => LevelCatalog.TextOf(stage, loc.Current).hint,
+                HintTier.Shows.Goal => loc.Format("hint.goal", loc.Get($"hint.brother{t.Goal.Body % 3 + 1}"), GoalWords(t.Goal)),
+                _ => hints.For(stage),
+            };
+            string head = loc.Format("hint.tier", t.Tier, t.Tiers);
+            if (t.FromStart) head += " " + loc.Get("hint.from_start");
+            string line = loc.Format("hint.line", head, body);
+            return nextCosts ? line + " " + loc.Get("hint.next_costs") : line;
+        }
+
+        string GoalWords(HintGoal g)
+        {
+            string kind = loc.Get(g.Kind switch
+            {
+                HintGoalKind.Keep => "hint.kind_keep",
+                HintGoalKind.Switch => "hint.kind_switch",
+                HintGoalKind.Bridge => "hint.kind_bridge",
+                HintGoalKind.Seal => "hint.kind_seal",
+                HintGoalKind.Stone => "hint.kind_stone",
+                HintGoalKind.Vanish => "hint.kind_vanish",
+                _ => "hint.kind_fall",
+            });
+            return g.Lever ? loc.Format("hint.with_lever", kind) : kind;
         }
 
         // ---------- Session updates ----------
@@ -317,7 +382,10 @@ namespace SevenSteps.Game
 
             var s = u.State;
             if (s.Status == Status.Win && u.Kind == SessionUpdateKind.Present)
+            {
+                board.ShowHintGoal(-1); // the result goes over the board
                 Won?.Invoke(s); // the flow saves the clear before the HUD redraws; the result panel waits for OnPresented
+            }
             Refresh();
             if (s.Status == Status.Lose && !lost) { lost = true; Lost?.Invoke(s); }
             else if (s.Status != Status.Lose && lost) { lost = false; Recovered?.Invoke(); }

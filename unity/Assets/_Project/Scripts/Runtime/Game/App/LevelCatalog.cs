@@ -57,6 +57,15 @@ namespace SevenSteps.Game
             return minBodies != null && stage >= 0 && stage < minBodies.Length ? minBodies[stage] : 0;
         }
 
+        /// The stored solution of a stage (levels.json expected.path, the JS solver's fewest-bodies route checked by
+        /// verify), replay letters; "" when there is none. The staged hint follows it (HintPlan). Call after Load.
+        public static string PathOf(int stage)
+        {
+            if (dtos == null) throw new InvalidOperationException("LevelCatalog.PathOf before Load");
+            if (stage < 0 || stage >= dtos.Length) throw new ArgumentOutOfRangeException(nameof(stage), stage, $"stage must be 0..{dtos.Length - 1}");
+            return dtos[stage].expected?.path ?? "";
+        }
+
         /// Which line a stage starts with (levels.json startLine, docs/architecture.md 16.7): "story", "hint" or "". Call after Load.
         public static string StartLineOf(int stage)
         {
