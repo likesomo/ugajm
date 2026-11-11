@@ -193,6 +193,8 @@ namespace SevenSteps.Game
             result.StageSelectRequested += flowController.OpenStageSelect;
             result.UndoRequested += () => board.Send(SevenSteps.Core.Command.Undo);
             result.RestartRequested += board.Restart;
+            // Clear over the board (docs 14.7): the HUD hides while the result shows.
+            result.HudHidden += hud.Conceal;
         }
 
         void Start()

@@ -9,49 +9,57 @@ using UnityEngine.InputSystem;
 namespace SevenSteps.Game
 {
     /// <summary>
-    /// Star trail view (design/art/star-trail.md, docs/architecture.md 15). On every board draw it works the trail out from
-    /// the State (<see cref="StarTrail.Of"/>) and
+    /// Star trail view (design/art/star-trail.md "별 흔적 v2", docs/architecture.md 15). On every board draw it works the
+    /// trail out from the State (<see cref="StarTrail.Of"/>) and
     /// - fills the global board texture _StarTrailMap and its globals (15.1-15.3, 15.5) for the shared tile shader (art):
     ///   the final look, zero extra draws;
-    /// - draws the same marks with an interim combined quad mesh (one draw, 15.5 interim render): body-coloured rims and
-    ///   lines, small stars for steps 1-6 at the cell corners (the centre 40 % stays clear for numbers), the Big Dipper
-    ///   glyph on the 7th step's cell and a star on each statue. Texture made in code, built-in Sprites/Default shader,
-    ///   alpha blended so overlaps never add up past a mark's own brightness. Turned off once the art shader draws the map.
-    /// Sizes, opacities and seconds come from the chapter's <see cref="StarTrailPreset"/> (empty = Default).
+    /// - draws the same marks with an interim combined quad mesh (one draw, 15.5 interim render), v2 states per brother:
+    ///   Active (walking): brother-coloured beads on the cells walked, joined by straight lines centre to centre, breathing
+    ///   gently (0.8 Hz, ±8 %); Fixed (KEEP): the path hardens into crystal stars (the planet's <see cref="StarTrailPreset.shapeMask"/>),
+    ///   steady, and the statue carries a star; Passed (SWITCH): the same crystals fainter, and a two-colour knot where
+    ///   the next brother sets off; the 7th step awakens as a large star; a fall's last star dims; a bridge's 7th sinks.
+    ///   Every bead, line and star sits on a dark soft shadow so it reads on the near-white planets (frost, altar). A cell
+    ///   two brothers share gets their rims inside each other (colour is not the only cue). Undo fades out only what the
+    ///   state no longer has (undoSeconds); Restart fades all (restartSeconds). Texture made in code, built-in
+    ///   Sprites/Default shader, alpha blended. Turned off once the art shader draws the map (<see cref="UseQuad"/>).
+    /// Sizes, opacities, seconds, crystal shape and stone tint come from the chapter's <see cref="StarTrailPreset"/>.
     /// </summary>
     public sealed class StarTrailView : MonoBehaviour
     {
-        // Interim quad look; the preset gives the numbers it shares with the shader.
+        // Interim quad look (cells); the preset gives the numbers it shares with the shader.
         const float Lift = 0.012f;                 // above the tile top, in cells
-        const float StarSlot = 0.33f;              // corner slot distance from the centre, in cells
-        const float RimAlpha = 0.55f, GlyphAlpha = 0.8f, StoneAlpha = 0.8f;
-        const float LineTrim = 0.22f;              // lines stop outside the centre 40 % (numbers)
+        const float StarSlot = 0.3f;               // a second step on a cell (mud, a revisit) sits off centre
         const float RimInset = 0.07f;              // each further body's rim sits this much further in
-        const float GlyphSize = 0.6f;
-        // Ring of seven stars at the walking body's feet (steps left; star 7 pulses after the 6th step).
-        const float RingLift = 0.1f, RingRadius = 0.46f, RingSize = 0.2f, RingLastSize = 0.28f, RingSpentSize = 0.14f, RingAlpha = 0.85f, RingSpentAlpha = 0.6f;
+        const float RimAlpha = 0.6f;
+        /// Bead quad per preset dot size (the dot size is the shader's core; the bead texture fills ~3/4 of its quad).
+        const float BeadPerDot = 5.5f;
+        const float CoreShare = 0.42f;             // white core of a bead / star, of its quad
+        const float LineScale = 2.2f;              // interim line width per preset lineWidth
+        const float ShadowScale = 1.7f;            // shadow quad per mark quad (lines: width)
+        const float SeventhSize = 0.5f, KnotSize = 0.34f, KnotOffset = 0.1f;
         const float AppearSeconds = 0.18f, FellDim = 0.35f;
-        /// Quad size per core diameter: the star texture's core is about a sixth of the quad (the rest is rays and glow).
-        const float StarQuadPerCore = 6f;
+        /// v2 Active breathing: 0.8 Hz, ±8 %.
+        const float BreathHz = 0.8f, BreathAmount = 0.08f;
         static readonly Color StarColor = new Color(1f, 0.93f, 0.74f);
-        static readonly Color GlyphColor = new Color(1f, 0.86f, 0.55f);
+        static readonly Color CoreColor = new Color(1f, 0.98f, 0.9f);
+        static readonly Color ShadowColor = new Color(0.02f, 0.04f, 0.06f, 0.62f);
 
-        /// The star texture's core is this opaque; star alpha divides by it so the core reaches the preset opacity.
-        const float CoreOpacity = 0.6f;
-
-        /// Corner slots first (TL, TR, BR, BL as seen from the camera), then edge middles; more stars wrap around.
+        /// Further stars on one cell (mud, a revisit): the first is at the centre, then corners and edge middles.
         static readonly Vector2[] Slots =
         {
+            Vector2.zero,
             new Vector2(-1, 1), new Vector2(1, 1), new Vector2(1, -1), new Vector2(-1, -1),
             new Vector2(0, 1.1f), new Vector2(1.1f, 0), new Vector2(0, -1.1f), new Vector2(-1.1f, 0),
         };
 
+        /// Parts of one mark, drawn in this order over the whole mesh: every shadow first, then the marks, then the cores.
+        enum Part { Shadow, Main, Second, Core }
+
         sealed class Item
         {
             public TrailMark Mark;
-            public Color Color;          // rgb + full alpha
             public float From, To, Start, Duration; // alpha factor tween
-            public float Pulse;          // extra brightness for the 7th step's awakening / the finale, over Duration
+            public float Pulse;          // extra brightness for the 7th step's awakening / hardening / the finale, over Duration
             public bool Leaving;
         }
 
@@ -65,6 +73,8 @@ namespace SevenSteps.Game
         Texture2D mapTexture;
         readonly List<Item> items = new List<Item>();
         readonly Dictionary<TrailMark, Item> byMark = new Dictionary<TrailMark, Item>();
+        readonly List<(Item It, Part Part)> quads = new List<(Item, Part)>();
+        readonly HashSet<int> sharedCells = new HashSet<int>();
         readonly List<Vector3> verts = new List<Vector3>();
         readonly List<Vector2> uvs = new List<Vector2>();
         readonly List<Color> colors = new List<Color>();
@@ -72,23 +82,27 @@ namespace SevenSteps.Game
         // StepResults the session presented, so a body that ended inside a move keeps the cells it really took.
         readonly System.Runtime.CompilerServices.ConditionalWeakTable<State, StepResult> results =
             new System.Runtime.CompilerServices.ConditionalWeakTable<State, StepResult>();
-        bool animating;
+        bool animating, breathing;
         // Shader globals animated by the view (15.1): newest-cell pulse, seventh awaken, Restart fade, finale.
         float newestStart = -1f, awakenStart = -1f, fadeStart = -1f, finale;
         StarTrail pendingRefill; // Restart: the old map fades out first, then this is written
         int currentBody, phase, used;
-        bool lastStepPulse; // one step left: ring star 7 pulses (and _StarTrailPulse.z)
+        bool lastStepPulse; // one step left: _StarTrailPulse.z
 
         /// Interim quad renderer on. Turn off when the art tile shader draws _StarTrailMap, or the trail is drawn twice
         /// (architect N2 on 26f01e0); the map and globals are written either way.
         public static bool UseQuad = true;
         /// Finale speed-up for dev runs (replay, smoke, flow check), set by GameController; 1 in play.
         public static float FinaleSpeed = 1f;
+        /// Accessibility "reduce motion" (BoardView sets it before each Show): no breathing, no pulses; steady marks.
+        public bool ReduceMotion { get; set; }
 
         static Material material;
         static Texture2D atlas;
 
         public int MarkCount => items.Count;
+        /// Quads in the interim mesh (shadows, marks, cores; rims only on shared cells).
+        public int QuadCount => quads.Count;
         public StarTrailPreset Preset => preset;
         /// The board data the shader reads (15.2), as last written.
         public StarTrailMap Map => map;
@@ -159,9 +173,13 @@ namespace SevenSteps.Game
 
         StepResult Known(State s) => results.TryGetValue(s, out var r) ? r : null;
 
+        /// The mark without its body's end state: the same footprint before and after KEEP / SWITCH (and Undo).
+        static TrailMark Bare(TrailMark m) => new TrailMark(m.Kind, m.Body, m.Cell, m.Aux, m.Step, m.Dim);
+
         /// Draws the trail of s. animate (after Present): new marks light up, the 7th awakens, a fall's star dims, the
-        /// newest cell pulses. Otherwise (Rebuild, Snap: Undo, Restart, replay) the picture snaps to s and marks s no
-        /// longer has fade out (Undo: undoSeconds; Restart: restartSeconds, the shader map fades the same way first).
+        /// newest cell pulses, a KEEP / SWITCH restyles the brother's path at once (with a short glint). Otherwise (Rebuild,
+        /// Snap: Undo, Restart, replay) the picture snaps to s and marks s no longer has fade out (Undo: undoSeconds;
+        /// Restart: restartSeconds, the shader map fades the same way first).
         public void Show(State s, bool animate)
         {
             var trail = StarTrail.Of(s, Known);
@@ -192,9 +210,19 @@ namespace SevenSteps.Game
             }
             newestStart = animate ? now : -1f;
 
+            // Marks that only changed state (Walking -> Kept / Switched, or back on Undo): restyled in place.
+            var restyled = new HashSet<TrailMark>();
+            var bare = new Dictionary<TrailMark, TrailMark>();
+            foreach (var m in marks) if (!byMark.ContainsKey(m)) bare[Bare(m)] = m;
             foreach (var it in items)
             {
                 if (it.Leaving || keep.Contains(it.Mark)) continue;
+                if (bare.TryGetValue(Bare(it.Mark), out var now2) && !restart)
+                {
+                    restyled.Add(now2);
+                    it.Leaving = true; it.Duration = 0; // replaced at once by its restyled mark
+                    continue;
+                }
                 it.Leaving = true;
                 Tween(it, Alpha(it), 0f, now, animate ? AppearSeconds : restart ? preset.restartSeconds : preset.undoSeconds);
             }
@@ -203,14 +231,19 @@ namespace SevenSteps.Game
             foreach (var m in marks)
             {
                 if (byMark.TryGetValue(m, out var it) && !it.Leaving) { next.Add(it); continue; }
-                it = new Item { Mark = m, Color = ColorOf(m) };
+                it = new Item { Mark = m };
                 byMark[m] = it;
-                if (!animate) Tween(it, 1f, 1f, now, 0f);
+                if (restyled.Contains(m))
+                {
+                    Tween(it, 1f, 1f, now, 0f);
+                    if (animate && !ReduceMotion) { it.Pulse = 0.6f; it.Start = now; it.Duration = 2f * preset.awakenSeconds; animating = true; }
+                }
+                else if (!animate) Tween(it, 1f, 1f, now, 0f);
                 else if (m.Dim) Tween(it, 1f, 1f, now, m.Kind == TrailMarkKind.Seventh ? preset.awakenSeconds : preset.failSeconds); // lit, then lets go
                 else
                 {
                     Tween(it, 0f, 1f, now, m.Kind == TrailMarkKind.Seventh ? preset.awakenSeconds : AppearSeconds);
-                    if (m.Kind == TrailMarkKind.Seventh) { it.Pulse = 1f; awakenStart = now; }
+                    if (m.Kind == TrailMarkKind.Seventh && !ReduceMotion) { it.Pulse = 1f; awakenStart = now; }
                 }
                 next.Add(it);
             }
@@ -220,8 +253,15 @@ namespace SevenSteps.Game
             items.AddRange(next);
             byMark.Clear();
             foreach (var it in items) if (!it.Leaving) byMark[it.Mark] = it;
-            if (newestStart >= 0 || awakenStart >= 0 || lastStepPulse) animating = true;
-            Rebuild(now);
+
+            // Rims only where brothers share a cell: two or three rims inside each other.
+            sharedCells.Clear();
+            var rimSeen = new HashSet<int>();
+            foreach (var m in marks) if (m.Kind == TrailMarkKind.Rim && !rimSeen.Add(m.Cell)) sharedCells.Add(m.Cell);
+
+            breathing = !ReduceMotion && marks.Exists(m => m.End == TrailEnd.Walking && (m.Kind == TrailMarkKind.Line || m.Kind == TrailMarkKind.Star));
+            if (newestStart >= 0 || awakenStart >= 0 || lastStepPulse || breathing) animating = true;
+            Rebuild();
         }
 
         /// Win finale (finaleSeconds): each body's path brightens in turn and _StarTrailState.z rises 0 -> 1, so the three
@@ -245,12 +285,13 @@ namespace SevenSteps.Game
             for (int b = 0; b < bodies; b++)
             {
                 float now = Time.time;
-                foreach (var it in items)
-                    if (!it.Leaving && !it.Mark.Dim && it.Mark.Body == b && it.Mark.Kind != TrailMarkKind.Rim)
-                    {
-                        it.From = it.To; // keep its alpha, only pulse
-                        it.Pulse = 1f; it.Start = now; it.Duration = per * 2f;
-                    }
+                if (!ReduceMotion)
+                    foreach (var it in items)
+                        if (!it.Leaving && !it.Mark.Dim && it.Mark.Body == b && it.Mark.Kind != TrailMarkKind.Rim)
+                        {
+                            it.From = it.To; // keep its alpha, only pulse
+                            it.Pulse = 1f; it.Start = now; it.Duration = per * 2f;
+                        }
                 animating = true;
                 for (float t = 0; t < per; t += Time.deltaTime)
                 {
@@ -283,11 +324,11 @@ namespace SevenSteps.Game
             float k = it.Duration > 0 ? Mathf.Clamp01((Time.time - it.Start) / it.Duration) : 1f;
             float a = Mathf.Lerp(it.From, it.To, k);
             // A fall's star dims as it lets go; a bridge's 7th star sinks (bridgeSink).
-            if (it.Mark.Dim && it.Mark.Kind != TrailMarkKind.Ring) a *= Mathf.Lerp(1f, it.Mark.Kind == TrailMarkKind.Seventh ? 1f - 0.8f * preset.bridgeSink : FellDim, k);
+            if (it.Mark.Dim) a *= Mathf.Lerp(1f, it.Mark.Kind == TrailMarkKind.Seventh ? 1f - 0.8f * preset.bridgeSink : FellDim, k);
             return a;
         }
 
-        /// 0..1, about one beat a second: the last step's star breathing.
+        /// 0..1, about one beat a second: the last step's pulse (_StarTrailPulse.z).
         static float RingPulse(float now) => 0.5f + 0.5f * Mathf.Sin(now * 2f * Mathf.PI / RingBeat);
         const float RingBeat = 0.9f;
 
@@ -302,7 +343,7 @@ namespace SevenSteps.Game
         {
             if (!animating || mesh == null) return;
             float now = Time.time;
-            bool still = false, dropped = false;
+            bool still = breathing, dropped = false;
             for (int i = items.Count - 1; i >= 0; i--)
             {
                 var it = items[i];
@@ -324,7 +365,7 @@ namespace SevenSteps.Game
                 float k = (now - awakenStart) / Mathf.Max(preset.awakenSeconds, 0.001f);
                 if (k < 1) { awaken = Mathf.Sin(k * Mathf.PI); still = true; } else awakenStart = -1;
             }
-            float ring = lastStepPulse ? RingPulse(now) : 0f;
+            float ring = lastStepPulse && !ReduceMotion ? RingPulse(now) : 0f;
             if (lastStepPulse) still = true;
             Shader.SetGlobalVector(StarTrailMap.PulseId, new Vector4(newest, awaken, ring, 0));
             if (fadeStart >= 0)
@@ -340,53 +381,125 @@ namespace SevenSteps.Game
             }
 
             animating = still;
-            if (dropped) Rebuild(now);
+            if (dropped) Rebuild();
             else WriteColors();
         }
 
         static float StepT(int step) => (Mathf.Clamp(step, 1, 6) - 1) / 5f;
-        /// Star quad size (cells) for step 1..6: the core grows dotSizeMin -> dotSizeMax of the tile.
-        float StarSize(int step) => Mathf.Lerp(preset.dotSizeMin, preset.dotSizeMax, StepT(step)) * StarQuadPerCore;
-        /// Star alpha for step 1..6 so the core reaches opacityMin -> opacityMax.
-        float StarAlpha(int step) => Mathf.Lerp(preset.opacityMin, preset.opacityMax, StepT(step)) / CoreOpacity;
+        /// Bead quad size (cells) for step 1..6: grows with the preset dot size.
+        float BeadSize(int step) => Mathf.Lerp(preset.dotSizeMin, preset.dotSizeMax, StepT(step)) * BeadPerDot;
+        /// Bead alpha for step 1..6: the preset opacity, lifted so the interim beads read at 720p (lead feedback (d)).
+        float BeadAlpha(int step) => Mathf.Clamp01(0.5f + Mathf.Lerp(preset.opacityMin, preset.opacityMax, StepT(step)));
+        float LineAlpha => Mathf.Clamp01(0.45f + preset.lineOpacity);
+
+        /// v2 state strength: active and kept full, passed fainter, a fall / vanish faint.
+        static float EndStrength(TrailEnd e) => e switch
+        {
+            TrailEnd.Switched => 0.62f,
+            TrailEnd.Fell => 0.55f,
+            TrailEnd.Vanished => 0.55f,
+            TrailEnd.Bridged => 0.75f,
+            TrailEnd.Sealed => 0.75f,
+            TrailEnd.Kept => 0.92f,
+            _ => 1f,
+        };
+
+        /// Hardened (crystal) look: a finished path that stays on the board.
+        static bool Crystal(TrailEnd e) => e == TrailEnd.Kept || e == TrailEnd.Switched || e == TrailEnd.Bridged || e == TrailEnd.Sealed;
 
         // ---------- Mesh ----------
 
-        void Rebuild(float now)
+        void Rebuild()
         {
+            quads.Clear();
+            foreach (var it in items) if (Has(it, Part.Shadow)) quads.Add((it, Part.Shadow));
+            foreach (var it in items)
+            {
+                if (Has(it, Part.Main)) quads.Add((it, Part.Main));
+                if (Has(it, Part.Second)) quads.Add((it, Part.Second));
+            }
+            foreach (var it in items) if (Has(it, Part.Core)) quads.Add((it, Part.Core));
+
             verts.Clear(); uvs.Clear(); colors.Clear(); tris.Clear();
-            foreach (var it in items) AddQuad(it);
+            foreach (var (it, part) in quads) AddQuad(it, part);
             mesh.Clear();
             mesh.SetVertices(verts);
             mesh.SetUVs(0, uvs);
             mesh.SetColors(colors);
             mesh.SetTriangles(tris, 0);
             mesh.RecalculateBounds();
-            rend.enabled = UseQuad && items.Count > 0;
+            rend.enabled = UseQuad && quads.Count > 0;
+        }
+
+        bool Has(Item it, Part part)
+        {
+            var m = it.Mark;
+            switch (m.Kind)
+            {
+                case TrailMarkKind.Rim: return part == Part.Main && sharedCells.Contains(m.Cell);
+                case TrailMarkKind.Line: return (part == Part.Shadow || part == Part.Main) && m.Cell != m.Aux;
+                case TrailMarkKind.Knot: return part != Part.Core;
+                case TrailMarkKind.Star: return part != Part.Second && !(part == Part.Core && Crystal(m.End));
+                default: return part != Part.Second; // Seventh, StoneStar
+            }
         }
 
         void WriteColors()
         {
             colors.Clear();
-            foreach (var it in items)
+            foreach (var (it, part) in quads)
             {
-                var c = ColorNow(it);
+                var c = ColorNow(it, part);
                 colors.Add(c); colors.Add(c); colors.Add(c); colors.Add(c);
             }
             if (colors.Count == mesh.vertexCount) mesh.SetColors(colors);
         }
 
-        Color ColorNow(Item it)
+        Color ColorNow(Item it, Part part)
         {
-            var c = it.Color;
-            float gain = 1f + 0.25f * PulseNow(it);
-            // The last step's ring star breathes between 60 % and full.
-            if (lastStepPulse && it.Mark.Kind == TrailMarkKind.Ring && it.Mark.Aux == Rules.Steps && !it.Mark.Dim) gain = 0.6f + 0.4f * RingPulse(Time.time);
-            c.a = Mathf.Clamp01(c.a * Alpha(it) * gain);
+            var c = ColorOf(it.Mark, part);
+            float gain = 1f + 0.4f * PulseNow(it);
+            if (breathing && it.Mark.End == TrailEnd.Walking && part != Part.Shadow)
+                gain *= 1f + BreathAmount * Mathf.Sin(Time.time * 2f * Mathf.PI * BreathHz);
+            c.a = Mathf.Clamp01(c.a * Alpha(it) * (part == Part.Shadow ? 1f : gain));
+            // Vertex colours are not converted by Sprites/Default: in a linear project they must be given in linear, or the
+            // brother colours wash out to grey on the stone.
+            if (QualitySettings.activeColorSpace == ColorSpace.Linear) { float a = c.a; c = c.linear; c.a = a; }
             return c;
         }
 
-        void AddQuad(Item it)
+        /// The brother's colour, tinted toward the planet's stone (stoneTint, alpha = amount).
+        Color Body(int body)
+        {
+            Color c = set != null ? set.BodyColor(body) : Color.white;
+            var t = preset.stoneTint;
+            return new Color(Mathf.Lerp(c.r, t.r, t.a), Mathf.Lerp(c.g, t.g, t.a), Mathf.Lerp(c.b, t.b, t.a), 1f);
+        }
+
+        Color ColorOf(TrailMark m, Part part)
+        {
+            float k = EndStrength(m.End);
+            if (part == Part.Shadow) { var s = ShadowColor; s.a *= Mathf.Lerp(0.6f, 1f, k); return s; }
+            if (part == Part.Core) { var w = CoreColor; w.a = 0.9f * k; return w; }
+            Color body = Body(m.Body);
+            switch (m.Kind)
+            {
+                case TrailMarkKind.Rim: body.a = RimAlpha * k; return body;
+                case TrailMarkKind.Line: { var c = Color.Lerp(body, Color.white, 0.1f); c.a = LineAlpha * k; return c; }
+                case TrailMarkKind.Seventh: { var c = Color.Lerp(body, StarColor, 0.35f); c.a = 0.95f * k; return c; }
+                case TrailMarkKind.Star: { var c = Color.Lerp(body, Color.white, Crystal(m.End) ? 0.2f : 0.1f); c.a = BeadAlpha(m.Step) * k; return c; }
+                case TrailMarkKind.Knot:
+                {
+                    // Two rings: this brother's and the next one's colours.
+                    var c = Color.Lerp(Body(part == Part.Second ? m.Aux : m.Body), Color.white, 0.2f);
+                    c.a = 0.95f;
+                    return c;
+                }
+                default: { var c = StarColor; c.a = 0.95f; return c; } // StoneStar
+            }
+        }
+
+        void AddQuad(Item it, Part part)
         {
             var m = it.Mark;
             float cs = grid.CellSize;
@@ -394,6 +507,7 @@ namespace SevenSteps.Game
             Vector3 right = Vector3.right, fwd = Vector3.forward; // flat on the board
             float w, h;
             Rect uv;
+            bool shadow = part == Part.Shadow, core = part == Part.Core;
             switch (m.Kind)
             {
                 case TrailMarkKind.Rim:
@@ -402,38 +516,41 @@ namespace SevenSteps.Game
                     break;
                 case TrailMarkKind.Line:
                 {
+                    // Centre to centre along the move (v2: straight lines, turns at the centres).
                     Vector3 a = grid.CellToWorld(m.Cell), b = grid.CellToWorld(m.Aux);
                     Vector3 d = b - a;
                     float len = d.magnitude / cs;
-                    if (len < 0.001f) { w = h = 0; uv = Region(2, 0); break; }
                     right = d.normalized;
                     fwd = Vector3.Cross(right, Vector3.up);
                     center = (a + b) * 0.5f + Vector3.up * (Lift * 1.5f * cs);
-                    w = Mathf.Max(0, len - 2f * LineTrim);
-                    h = preset.lineWidth;
+                    float lw = preset.lineWidth * LineScale;
+                    w = len + (shadow ? lw * ShadowScale : lw);
+                    h = shadow ? lw * ShadowScale * 1.6f : lw;
                     uv = Region(2, 0);
                     break;
                 }
                 case TrailMarkKind.Seventh:
-                    center += Vector3.up * (Lift * cs);
-                    w = h = GlyphSize;
-                    uv = Region(1, 0);
+                    center += Vector3.up * (Lift * 2f * cs);
+                    w = h = SeventhSize * (shadow ? 1.25f : core ? CoreShare : 1f);
+                    uv = shadow ? Region(3, 0) : Region(0, 0);
                     break;
                 case TrailMarkKind.Star:
                 {
                     var slot = Slots[m.Aux % Slots.Length] * StarSlot;
                     center += new Vector3(slot.x, Lift * 2f, slot.y) * cs;
-                    w = h = StarSize(m.Step);
-                    uv = Region(0, 0);
+                    float size = BeadSize(m.Step) * (Crystal(m.End) ? 1.15f : 1f);
+                    w = h = size * (shadow ? ShadowScale : core ? CoreShare : 1f);
+                    uv = shadow || core ? Region(3, 0) : Crystal(m.End) ? Region(Mathf.Clamp(preset.shapeMask, 0, 3), 2) : Region(3, 0);
                     break;
                 }
-                case TrailMarkKind.Ring:
+                case TrailMarkKind.Knot:
                 {
-                    // Seven stars round the feet, star 1 at the top (away from the camera), clockwise.
-                    float a = Mathf.PI * 0.5f - (m.Aux - 1) * 2f * Mathf.PI / Rules.Steps;
-                    center += new Vector3(Mathf.Cos(a) * RingRadius, RingLift, Mathf.Sin(a) * RingRadius) * cs;
-                    w = h = m.Dim ? RingSpentSize : m.Aux == Rules.Steps ? RingLastSize : RingSize;
-                    uv = Region(0, 0);
+                    // Two interlocked rings across the cell (the baton seam), this brother's on the left.
+                    center += Vector3.up * (Lift * 2.5f * cs);
+                    if (part != Part.Shadow) center += Vector3.right * ((part == Part.Second ? KnotOffset : -KnotOffset) * cs);
+                    w = h = shadow ? KnotSize * 1.9f : KnotSize;
+                    uv = shadow ? Region(3, 0) : Region(3, 1);
+                    if (shadow) w *= 1.2f;
                     break;
                 }
                 default: // StoneStar: faces the camera on top of the statue
@@ -443,8 +560,10 @@ namespace SevenSteps.Game
                     center = grid.CellToWorld(m.Cell) + v.offset * cs + Vector3.up * ((top + 0.08f) * cs);
                     if (cam != null) { right = cam.transform.right; fwd = cam.transform.up; }
                     else fwd = Vector3.up;
-                    w = h = preset.statueStarSize * StarQuadPerCore * 0.5f;
-                    uv = Region(0, 0);
+                    float size = Mathf.Max(preset.statueStarSize * 3f, 0.3f);
+                    w = h = size * (shadow ? 1.2f : core ? CoreShare : 1f);
+                    uv = shadow || core ? Region(3, 0) : Region(0, 0);
+                    if (cam != null && !shadow) center -= cam.transform.forward * (0.01f * cs * (core ? 2 : 1)); // in front of its shadow
                     break;
                 }
             }
@@ -454,35 +573,15 @@ namespace SevenSteps.Game
             verts.Add(center - rx + fz); uvs.Add(new Vector2(uv.xMin, uv.yMax));
             verts.Add(center + rx + fz); uvs.Add(new Vector2(uv.xMax, uv.yMax));
             verts.Add(center + rx - fz); uvs.Add(new Vector2(uv.xMax, uv.yMin));
-            var c = ColorNow(it);
+            var c = ColorNow(it, part);
             colors.Add(c); colors.Add(c); colors.Add(c); colors.Add(c);
             tris.Add(i0); tris.Add(i0 + 1); tris.Add(i0 + 2);
             tris.Add(i0); tris.Add(i0 + 2); tris.Add(i0 + 3);
         }
 
-        Color ColorOf(TrailMark m)
-        {
-            Color body = set != null ? set.BodyColor(m.Body) : Color.white;
-            switch (m.Kind)
-            {
-                case TrailMarkKind.Rim: body.a = RimAlpha; return body;
-                case TrailMarkKind.Line: { var c = Color.Lerp(body, Color.white, 0.35f); c.a = preset.lineOpacity; return c; }
-                case TrailMarkKind.Seventh: { var c = GlyphColor; c.a = GlyphAlpha; return c; }
-                case TrailMarkKind.Star: { var c = StarColor; c.a = Mathf.Clamp01(StarAlpha(m.Step)); return c; }
-                case TrailMarkKind.Ring:
-                {
-                    // Lit = a step left, in the star colour; spent = the brother's colour, faint.
-                    var c = m.Dim ? body : StarColor;
-                    c.a = m.Dim ? RingSpentAlpha : RingAlpha;
-                    return c;
-                }
-                default: { var c = StarColor; c.a = StoneAlpha; return c; }
-            }
-        }
-
         // ---------- Shared material and atlas (made in code, no image asset) ----------
 
-        const int Cell = 128, Cols = 4, Rows = 2;
+        const int Cell = 128, Cols = 4, Rows = 3;
 
         /// Atlas cell (col, row) with a 4 px inset, so mipmaps do not bleed between cells.
         static Rect Region(int col, int row)
@@ -503,6 +602,8 @@ namespace SevenSteps.Game
             }
         }
 
+        /// Row 0: star, Big Dipper glyph (spare), line, bead (round). Row 1: rims with 1-3 breaks, knot ring. Row 2: the
+        /// four crystal shapes of a hardened path (StarTrailPreset.shapeMask 0 diamond, 1 four-point, 2 hexagon, 3 shard).
         public static Texture2D Atlas
         {
             get
@@ -516,11 +617,25 @@ namespace SevenSteps.Game
                 Paint(px, 0, 0, StarAt);
                 Paint(px, 1, 0, DipperAt);
                 Paint(px, 2, 0, (x, y) => Mathf.Exp(-y * y / (2f * 0.3f * 0.3f)));
+                Paint(px, 3, 0, (x, y) => Shape(Mathf.Sqrt(x * x + y * y)));
                 for (int k = 0; k < 3; k++) { int breaks = k + 1; Paint(px, k, 1, (x, y) => RimAt(x, y, breaks)); }
+                Paint(px, 3, 1, (x, y) => { float r = Mathf.Sqrt(x * x + y * y) - 0.68f; return Mathf.Exp(-r * r / (2f * 0.085f * 0.085f)); });
+                Paint(px, 0, 2, (x, y) => Shape(Mathf.Abs(x) + Mathf.Abs(y)));
+                Paint(px, 1, 2, (x, y) => { float d = Mathf.Sqrt(Mathf.Abs(x)) + Mathf.Sqrt(Mathf.Abs(y)); return Shape(d * d * 0.85f); });
+                Paint(px, 2, 2, (x, y) => Shape(Mathf.Max(Mathf.Abs(x) * 0.866f + Mathf.Abs(y) * 0.5f, Mathf.Abs(y))));
+                Paint(px, 3, 2, (x, y) => Shape(Mathf.Abs(x) / 0.62f + Mathf.Abs(y)));
                 atlas.SetPixels32(px);
                 atlas.Apply(true, true);
                 return atlas;
             }
+        }
+
+        /// A solid shape whose edge is at distance 0.72 (in its own metric), with a soft glow outside.
+        static float Shape(float d)
+        {
+            float t = Mathf.Clamp01((0.8f - d) / 0.12f);
+            float solid = t * t * (3f - 2f * t);
+            return Mathf.Max(solid, 0.35f * Mathf.Exp(-Mathf.Max(0, d - 0.7f) * Mathf.Max(0, d - 0.7f) / (2f * 0.12f * 0.12f)) * (d < 1f ? 1f : 0f));
         }
 
         /// Fills atlas cell (col, row) with white and alpha f(x, y), x and y in -1..1 across the cell's inner area.
@@ -537,14 +652,14 @@ namespace SevenSteps.Game
             }
         }
 
-        /// Four-point star: a soft core (about a quarter of the quad wide) and thin rays.
+        /// Four-point star: a solid core and thin rays.
         static float StarAt(float x, float y)
         {
             float r2 = x * x + y * y;
-            float core = CoreOpacity * Mathf.Exp(-r2 / (2f * 0.11f * 0.11f)) + 0.4f * Mathf.Exp(-r2 / (2f * 0.3f * 0.3f));
-            float rays = Mathf.Exp(-Mathf.Abs(x) / 0.025f) * Mathf.Exp(-Mathf.Abs(y) / 0.35f) + Mathf.Exp(-Mathf.Abs(y) / 0.025f) * Mathf.Exp(-Mathf.Abs(x) / 0.35f);
+            float core = Mathf.Exp(-r2 / (2f * 0.14f * 0.14f)) + 0.4f * Mathf.Exp(-r2 / (2f * 0.3f * 0.3f));
+            float rays = Mathf.Exp(-Mathf.Abs(x) / 0.04f) * Mathf.Exp(-Mathf.Abs(y) / 0.4f) + Mathf.Exp(-Mathf.Abs(y) / 0.04f) * Mathf.Exp(-Mathf.Abs(x) / 0.4f);
             float edge = Mathf.Clamp01((1f - Mathf.Sqrt(r2)) * 4f);
-            return Mathf.Min(1f, core + 0.5f * rays) * edge;
+            return Mathf.Min(1f, core + 0.8f * rays) * edge;
         }
 
         /// The Big Dipper as a shallow engraving: bowl 1-2-3-4-1, handle 4-5-6-7 (star-trail.md).
@@ -573,7 +688,7 @@ namespace SevenSteps.Game
         /// A rounded-square ring near the cell edge with 1, 2 or 3 breaks (colour is not the only cue for the body).
         static float RimAt(float x, float y, int breaks)
         {
-            const float half = 0.9f, radius = 0.18f, width = 0.03f;
+            const float half = 0.9f, radius = 0.18f, width = 0.035f;
             float qx = Mathf.Abs(x) - (half - radius), qy = Mathf.Abs(y) - (half - radius);
             float outside = new Vector2(Mathf.Max(qx, 0), Mathf.Max(qy, 0)).magnitude + Mathf.Min(Mathf.Max(qx, qy), 0) - radius;
             float ring = Mathf.Exp(-outside * outside / (2f * width * width));

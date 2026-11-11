@@ -16,7 +16,8 @@ namespace SevenSteps.Game
         public TrailEnd End;
     }
 
-    public enum TrailMarkKind { Rim, Line, Seventh, Star, StoneStar, Ring }
+    /// Knot (star trail v2): the SWITCH baton knot on the cell where a brother handed on (Body = him, Aux = the next one).
+    public enum TrailMarkKind { Rim, Line, Seventh, Star, StoneStar, Ring, Knot }
 
     /// One drawn piece of the star trail. Equal marks draw the same thing, so a view can diff two trails by value.
     public readonly struct TrailMark : IEquatable<TrailMark>
@@ -32,16 +33,21 @@ namespace SevenSteps.Game
         public readonly int Step;
         /// The star of a fall: dimmed (the step let go). A bridge's 7th: sunk. A ring star: spent.
         public readonly bool Dim;
+        /// How the body's walk ended (v2 path state: Walking = active, Kept = hardened constellation, Switched = passed on,
+        /// ...). Walking for the ring and stone stars. A body's marks change when it ends, so a view diffing by value
+        /// redraws them in the new state (and Undo back to the choice brings the active look back).
+        public readonly TrailEnd End;
 
-        public TrailMark(TrailMarkKind kind, int body, int cell, int aux, int step, bool dim = false)
+        public TrailMark(TrailMarkKind kind, int body, int cell, int aux, int step, bool dim = false, TrailEnd end = TrailEnd.Walking)
         {
-            Kind = kind; Body = body; Cell = cell; Aux = aux; Step = step; Dim = dim;
+            Kind = kind; Body = body; Cell = cell; Aux = aux; Step = step; Dim = dim; End = end;
         }
 
-        public bool Equals(TrailMark o) => Kind == o.Kind && Body == o.Body && Cell == o.Cell && Aux == o.Aux && Step == o.Step && Dim == o.Dim;
+        public bool Equals(TrailMark o) => Kind == o.Kind && Body == o.Body && Cell == o.Cell && Aux == o.Aux && Step == o.Step && Dim == o.Dim && End == o.End;
         public override bool Equals(object obj) => obj is TrailMark o && Equals(o);
-        public override int GetHashCode() => ((((int)Kind * 31 + Body) * 397 + Cell) * 397 + Aux) * 31 + Step * 2 + (Dim ? 1 : 0);
-        public override string ToString() => Kind == TrailMarkKind.Line ? $"Line b{Body} {Cell}->{Aux}" : $"{Kind} b{Body} @{Cell} s{Step} #{Aux}{(Dim ? " dim" : "")}";
+        public override int GetHashCode() => (((((int)Kind * 31 + Body) * 397 + Cell) * 397 + Aux) * 31 + Step * 2 + (Dim ? 1 : 0)) * 11 + (int)End;
+        public override string ToString() => (Kind == TrailMarkKind.Line ? $"Line b{Body} {Cell}->{Aux}" : $"{Kind} b{Body} @{Cell} s{Step} #{Aux}{(Dim ? " dim" : "")}")
+            + (End != TrailEnd.Walking ? $" {End}" : "");
     }
 
     /// <summary>
@@ -133,6 +139,8 @@ namespace SevenSteps.Game
         ///   with 2 steps) gets both numbers' stars; stars on one cell take the next free slot;
         /// - the Big Dipper glyph on the 7th step's cell; the star of a fall is dim;
         /// - a star on top of each statue;
+        /// - the SWITCH knot where a brother handed on (his last cell = the next brother's start);
+        /// Every body mark carries the body's <see cref="TrailEnd"/> (v2 states: active, hardened, passed, ...).
         /// - the ring of seven stars at the walking body's feet: star k is spent (Dim) once k steps are used, so the lit
         ///   stars are the steps left and star 7 is the last one (the view pulses it after the 6th step).
         public List<TrailMark> Marks()
@@ -152,11 +160,11 @@ namespace SevenSteps.Game
                 for (int k = 1; k < f.Length; k++)
                 {
                     int cell = f[k].Cell, step = f[k].Step;
-                    lines.Add(new TrailMark(TrailMarkKind.Line, body.Index, f[k - 1].Cell, cell, step));
+                    lines.Add(new TrailMark(TrailMarkKind.Line, body.Index, f[k - 1].Cell, cell, step, false, body.End));
                     if (ringed.Add(cell))
                     {
                         rimCount.TryGetValue(cell, out int inset);
-                        rims.Add(new TrailMark(TrailMarkKind.Rim, body.Index, cell, inset, 0));
+                        rims.Add(new TrailMark(TrailMarkKind.Rim, body.Index, cell, inset, 0, false, body.End));
                         rimCount[cell] = inset + 1;
                     }
                     if (k + 1 < f.Length && f[k + 1].Step == step) continue; // gliding over this ice cell
@@ -169,11 +177,11 @@ namespace SevenSteps.Game
                         {
                             // A brother who became a bridge (pit or crack sealed): the sunken star, drawn dim.
                             bool sunk = body.End == TrailEnd.Bridged || body.End == TrailEnd.Sealed;
-                            sevenths.Add(new TrailMark(TrailMarkKind.Seventh, body.Index, cell, 0, n, sunk));
+                            sevenths.Add(new TrailMark(TrailMarkKind.Seventh, body.Index, cell, 0, n, sunk, body.End));
                             continue;
                         }
                         slotCount.TryGetValue(cell, out int slot);
-                        stars.Add(new TrailMark(TrailMarkKind.Star, body.Index, cell, slot, n, dim && n == step));
+                        stars.Add(new TrailMark(TrailMarkKind.Star, body.Index, cell, slot, n, dim && n == step, body.End));
                         slotCount[cell] = slot + 1;
                     }
                 }
@@ -184,6 +192,9 @@ namespace SevenSteps.Game
             all.AddRange(lines);
             all.AddRange(sevenths);
             all.AddRange(stars);
+            foreach (var body in Bodies)
+                if (body.End == TrailEnd.Switched && body.Index + 1 < Bodies.Count && body.Steps.Length > 0)
+                    all.Add(new TrailMark(TrailMarkKind.Knot, body.Index, body.Steps[body.Steps.Length - 1].Cell, body.Index + 1, 0, false, TrailEnd.Switched));
             foreach (var (cell, body) in Stones) all.Add(new TrailMark(TrailMarkKind.StoneStar, body, cell, 0, 0));
             var cur = Current;
             if (Ring && cur != null)
