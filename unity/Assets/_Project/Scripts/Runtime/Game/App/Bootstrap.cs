@@ -16,6 +16,8 @@ namespace SevenSteps.Game
         /// Not Services.Has: with domain reload disabled that could see the previous Play's services (docs/scene-flow.md 3.1).
         public static bool HasRunThisPlay { get; private set; }
 
+        static Action quitSave;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         internal static void ResetForPlay() => HasRunThisPlay = false;
 
@@ -57,7 +59,12 @@ namespace SevenSteps.Game
             Services.Register(EntryTracker.ForLaunch(launch.DirectToGame && !levelFromEditor));
             // Story (docs/architecture.md 16): off when story.json is missing or broken (A8). Dev runs do not touch its save.
             bool devRun = launch.SmokeView != SmokeView.None || !string.IsNullOrEmpty(launch.Replay) || launch.FlowCheck || launch.TitleCheck != "";
-            Services.Register(StoryLoad.FromAssets(assets, save, devRun));
+            var story = StoryLoad.FromAssets(assets, save, devRun);
+            Services.Register(story);
+            // 16.5 "앱 종료": story memory marked since the last save point (review 6e8f3cd M3). One hook per Play (no domain reload).
+            if (quitSave != null) Application.quitting -= quitSave;
+            quitSave = story.Save;
+            Application.quitting += quitSave;
             HasRunThisPlay = true;
 
             if (!enterFirstScreen) return;

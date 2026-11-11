@@ -92,6 +92,15 @@ namespace SevenSteps.Game.Flow
             }
         }
 
+        /// A chapter's truth (story.json "finale", its first line; the star map's carving tap). Null when off. Not counted:
+        /// a replay of a line already shown.
+        public string FinaleLine(string chapterId, Language lang)
+        {
+            if (!On) return null;
+            var entry = Catalog.Find(StoryRules.Finale(chapterId));
+            return Catalog.Line(entry, 0, lang);
+        }
+
         /// The still-star line once every star is earned (story.json "stillStar" after "allStars"); null when off or none.
         public string StillStarLine(Language lang)
         {

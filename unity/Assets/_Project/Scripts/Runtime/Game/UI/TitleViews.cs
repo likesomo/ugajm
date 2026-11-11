@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using SevenSteps.Contracts;
 using SevenSteps.Core;
 using SevenSteps.Game.Flow;
@@ -81,6 +82,41 @@ namespace SevenSteps.Game.UI
         }
 
         /// Shows the menu; Continue is off without a last played stage. Focus: Continue when it can, else Begin (Enter plays it).
+        /// Title sky (story-integration.md 0.5 #4): one star per chapter in the Dipper at the top right, faint until that
+        /// chapter's finale is cleared, then bright. <paramref name="lit"/> null = no sky (story off or more than 7 chapters).
+        public void ShowSky(IReadOnlyList<bool> lit)
+        {
+            if (lit == null || lit.Count == 0 || lit.Count > 7) { if (sky != null) sky.SetActive(false); return; }
+            if (sky == null || skyStars.Length != lit.Count)
+            {
+                if (sky != null) UnityEngine.Object.DestroyImmediate(sky);
+                sky = Ui.Rect("Sky", panel.transform).Stretch().gameObject;
+                sky.transform.SetSiblingIndex(1); // over the wash, under the menu
+                skyStars = new Image[lit.Count];
+                for (int i = 0; i < lit.Count; i++)
+                {
+                    var d = Ui.Theme.Dipper[i]; // x .10..0.98, y .12..0.40 -> the free sky right of the menu, below the badge
+                    var p = new Vector2(700 + (d.x - 0.10f) / 0.88f * 460, 84 + (d.y - 0.12f) / 0.28f * 150);
+                    skyStars[i] = Ui.Star(sky.transform, true, "SkyStar " + (i + 1));
+                    skyStars[i].rectTransform.TopLeft(p.x - 14, p.y - 14, 28, 28);
+                    skyStars[i].raycastTarget = false;
+                }
+            }
+            sky.SetActive(true);
+            for (int i = 0; i < lit.Count; i++)
+            {
+                Ui.SetStar(skyStars[i], lit[i]);
+                var c = skyStars[i].color;
+                skyStars[i].color = new Color(c.r, c.g, c.b, lit[i] ? 1f : 0.35f); // faint, nearly out (the crisis)
+            }
+        }
+
+        /// The title sky's stars that are bright (tests, UiLayoutCheck); -1 when there is no sky.
+        public int SkyLit => sky == null || !sky.activeSelf ? -1 : skyStars.Count(s => s.color.a > 0.5f);
+
+        GameObject sky;
+        Image[] skyStars = new Image[0];
+
         public void Show(bool canContinue)
         {
             panel.SetActive(true);
@@ -144,7 +180,10 @@ namespace SevenSteps.Game.UI
     /// between planets (uGUI automatic navigation).
     /// Story (story-integration.md 0.5 #1, #2): with <see cref="Story"/> on, a planet whose finale is cleared shows its
     /// carving mark and lights the story.json "dipper" lines leaving it (the order of clears does not matter); with every
-    /// star earned, the detail line is the still-star line.
+    /// star earned, the detail line is the still-star line. A carving rises once the first time it is shown
+    /// (StoryProgress.CarvingSeen, saved), and a tap on it brings back that planet's truth (its finale line) in the detail
+    /// row (0.5 #3). With every truth found and the final truth not seen yet, a star marks the planet of the last stage:
+    /// play it again to see the ending's last truth (0.5 #7).
     /// </summary>
     public sealed class PlanetMapView
     {
@@ -159,10 +198,19 @@ namespace SevenSteps.Game.UI
         readonly Text head, detail, totalLabel, totalValue, back, note;
         readonly List<(int a, int b, Image line)> edges = new List<(int, int, Image)>();
         readonly Image[] carvings;
+        readonly Image polaris;
+        readonly int polarisPlanet;
         Localizer loc;
+        int truthShown = -1;
 
         /// The run's story (StoryBook): carvings, lit lines, still-star line. Null or off = the plain map.
         public StoryBook Story { get; set; }
+        /// SettingsData.reduceMotion: a new carving appears without rising.
+        public bool ReduceMotion { get; set; }
+        /// The polaris mark (every truth found, the final one not seen) is showing (UiLayoutCheck, tests).
+        public bool PolarisShown => polaris.gameObject.activeSelf;
+        /// The detail row shows this planet's truth (-1: none).
+        public int TruthShown => truthShown;
 
         /// A planet's carving mark is showing (UiLayoutCheck, tests).
         public bool CarvingShown(int planet) => carvings[planet].gameObject.activeSelf;
@@ -234,8 +282,21 @@ namespace SevenSteps.Game.UI
                 carvings[i].rectTransform.TopLeft(26, 62, 12, 12); // under the number: the name may take two lines, the star row is the total
                 carvings[i].rectTransform.localRotation = Quaternion.Euler(0, 0, 45);
                 carvings[i].raycastTarget = false;
+                // Its tap area (inside the card, clear of the number, name and total glyphs): the planet's truth again.
+                var hit = Ui.MakeImage(carvings[i].transform.parent, new Color(0, 0, 0, 0), null, "CarvingTap");
+                hit.rectTransform.TopLeft(18, 60, 26, 22);
+                hit.raycastTarget = true;
+                hit.gameObject.AddComponent<Button>().onClick.AddListener(() => ShowTruth(idx));
+                hit.transform.SetParent(carvings[i].transform, true); // shown and hidden with the carving
+                hit.rectTransform.localRotation = Quaternion.Euler(0, 0, -45);
                 carvings[i].gameObject.SetActive(false);
             }
+            // Polaris (story 0.5 #7): a star above the top right corner of the planet holding the last stage.
+            polarisPlanet = PlanetOf(levels.Count - 1);
+            polaris = Ui.Star(cards[polarisPlanet].transform, true, "Polaris");
+            polaris.rectTransform.TopLeft(CardW - 14, -12, 26, 26);
+            polaris.raycastTarget = false;
+            polaris.gameObject.SetActive(false);
 
             // Bottom band: back, all stars, note on one plate.
             var band = Ui.MakeImage(s, new Color(Ui.PanelBg.r, Ui.PanelBg.g, Ui.PanelBg.b, 0.92f), null, "Band");
@@ -287,6 +348,19 @@ namespace SevenSteps.Game.UI
             if (shown != null && panel.activeSelf) Show(shown, -1);
         }
 
+        /// The detail row says planet <paramref name="planet"/>'s truth (its finale line, story.json "finale"); a tap on
+        /// its carving. Back to the usual detail on the next Show. Nothing without a story or before its finale is cleared.
+        public void ShowTruth(int planet)
+        {
+            var story = Story != null && Story.On ? Story : null;
+            if (planet < 0 || planet >= planets.Count || story == null || !story.FinaleCleared(planets[planet].Key)) return;
+            string line = story.FinaleLine(planets[planet].Key, loc.Current);
+            if (string.IsNullOrEmpty(line)) return;
+            truthShown = planet;
+            detail.text = line;
+            detail.color = Ui.Gold;
+        }
+
         /// Shows the map with this progress (read only). <paramref name="focus"/>: planet to select, -1 = the last played one.
         public void Show(ProgressData progress, int focus)
         {
@@ -311,7 +385,20 @@ namespace SevenSteps.Game.UI
         void ShowStory(bool allStars)
         {
             var story = Story != null && Story.On ? Story : null;
-            for (int i = 0; i < planets.Count; i++) carvings[i].gameObject.SetActive(story != null && story.FinaleCleared(planets[i].Key));
+            bool newCarving = false;
+            for (int i = 0; i < planets.Count; i++)
+            {
+                bool on = story != null && story.FinaleCleared(planets[i].Key);
+                carvings[i].gameObject.SetActive(on);
+                if (!on || story.Progress.CarvingSeen(planets[i].Key)) continue;
+                UiPop.Play(carvings[i].rectTransform, ReduceMotion); // the first time: it rises once
+                story.Progress.MarkCarvingSeen(planets[i].Key);
+                newCarving = true;
+            }
+            if (newCarving) story.Save(); // 16.5: after a star-map carving appears
+            polaris.gameObject.SetActive(story != null && story.Truths == story.ChapterCount && !story.Progress.FinalTruthSeen);
+            truthShown = -1;
+            detail.color = Ui.Dim;
             foreach (var (a, b, line) in edges)
             {
                 bool lit = false;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using SevenSteps.Contracts;
 using SevenSteps.Core;
 using SevenSteps.Game.Flow;
@@ -70,6 +71,8 @@ namespace SevenSteps.Game.UI
             planets = PlanetEntry.FromCatalog(levels.Length);
             planetMap = new PlanetMapView(root, planets, levels);
             planetMap.Story = Services.TryGet<StoryBook>(out var story) ? story : null; // carvings, lit dipper lines (story 0.5)
+            planetMap.ReduceMotion = save.Settings.reduceMotion;
+            if (story != null && story.On) titleView.ShowSky(story.Catalog.ChapterIds.Select(story.FinaleCleared).ToArray());
             planetStages = new PlanetStagesPanel(root);
             languagePanel = new LanguagePanel(root);
             bool telemetryDefault = Services.Get<AppConfig>().telemetryOnByDefault;
