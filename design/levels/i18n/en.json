@@ -26,350 +26,350 @@
       "ko": "일곱 걸음",
       "name": "Seven Steps",
       "hint": "Exactly 7 steps at a time. The exit only opens on the 7th.",
-      "story": "Count from the first step. On the seventh, the sky lines up."
+      "story": "Count from one. The seventh step opens."
     },
     {
       "n": 2,
       "ko": "늦게 도착하기",
       "name": "Arrive Late",
       "hint": "The exit is close. Stepping on it early does nothing. Wander, and arrive on the 7th.",
-      "story": "The door is right there, but not all the stars are out yet."
+      "story": "The door is near. The stars aren't."
     },
     {
       "n": 3,
       "ko": "딱 맞는 길",
       "name": "Just the Right Path",
       "hint": "Only one path to the exit is exactly 7 steps long.",
-      "story": "Many forks, but only one path is seven steps long."
+      "story": "Many roads. Only one is seven steps."
     },
     {
       "n": 4,
       "ko": "돌이 된 몸",
       "name": "Turned to Stone",
       "hint": "After 7 steps, you choose. KEEP: leave a standing stone here. A stone keeps a plate pressed.",
-      "story": "The eldest stops. Right there he turns to stone and holds the door."
+      "story": "Stay on the seventh step, as stone."
     },
     {
       "n": 5,
       "ko": "가까운 발판",
       "name": "The Near Plate",
       "hint": "Two plates. Which one can you stand on with your 7th step?",
-      "story": "The near plate is an even count away. Seven never lands there."
+      "story": "The plate waits for someone to stand."
     },
     {
       "n": 6,
       "ko": "길을 막는 선돌",
       "name": "The Stone in the Way",
       "hint": "A stone opens the door, but it also blocks the spot it stands on.",
-      "story": "The brother who opened the door now stands in the shortcut."
+      "story": "The stone that holds also blocks."
     },
     {
       "n": 7,
       "ko": "두 개의 문",
       "name": "Two Doors",
       "hint": "You can leave as many stones as you like, while brothers last.",
-      "story": "Two hold the doors. The third opens the way. The sky brings them back together."
+      "story": "Past the last door, the road begins."
     },
     {
       "n": 8,
       "ko": "새 출발점",
       "name": "A New Start",
       "hint": "SWITCH: leave no stone. Instead, this spot becomes the next brother's start.",
-      "story": "Leave nothing behind. Hand your spot to your brother."
+      "story": "Or hand the map over, right there."
     },
     {
       "n": 9,
       "ko": "바통 넘기기",
       "name": "Pass It On",
       "hint": "No one gets there alone. Hand your 7th-step spot to the next brother.",
-      "story": "Too far for one. The three walk it together."
+      "story": "Too far for one. Not for three."
     },
     {
       "n": 10,
       "ko": "몸으로 놓는 다리",
       "name": "A Bridge of Brothers",
       "hint": "Step into a hole on your 7th step and the fallen brother becomes a bridge.",
-      "story": "Stars below the hole. Fall on the seventh step and you land as a bridge."
+      "story": "Only a seventh step bridges a hole."
     },
     {
       "n": 11,
       "ko": "다리냐 선돌이냐",
       "name": "Bridge or Stone",
       "hint": "One brother for the bridge, one for the plate. Who goes where?",
-      "story": "One becomes a bridge, one becomes a stone."
+      "story": "To be a bridge, or a stone?"
     },
     {
       "n": 12,
       "ko": "건너편에서 깨어나기",
       "name": "Waking on the Far Side",
       "hint": "The brother who crossed the bridge hands over from there.",
-      "story": "The second crosses the bridge and hands over on the far side."
+      "story": "Across the hole, the next one wakes."
     },
     {
       "n": 13,
       "ko": "구멍 둘, 형제 셋",
       "name": "Two Holes, Three Brothers",
       "hint": "Two holes. Two bridges.",
-      "story": "Two holes means two bridges."
+      "story": "The stars below grow deeper."
     },
     {
       "n": 14,
       "ko": "떠나온 자리",
       "name": "Where We Started",
       "hint": "Move the start far away, and the way back gets longer too.",
-      "story": "They passed the start far ahead. Now one has to come back."
+      "story": "Past the holes, the next star shines."
     },
     {
       "n": 15,
       "ko": "숫자 문",
       "name": "Numbered Gate",
       "hint": "A numbered gate lets you through only on that step.",
-      "story": "The carved number says which step may pass."
+      "story": "The carved number says which step passes."
     },
     {
       "n": 16,
       "ko": "문 너머의 발판",
       "name": "Plate Past the Gate",
       "hint": "Pass the numbered gate, then stand on the plate.",
-      "story": "Beyond the numbered gate lies a plate."
+      "story": "Beyond the carving, a place to hold."
     },
     {
       "n": 17,
       "ko": "갈림길의 숫자",
       "name": "Numbers at the Fork",
       "hint": "Numbered gates are not shortcuts. Count which step gets you there.",
-      "story": "The gates close the shortcuts. Count the long way round."
+      "story": "Even the short way is carved."
     },
     {
       "n": 18,
       "ko": "처음부터 다시 세기",
       "name": "Count Again from One",
       "hint": "From a new start, counting begins again at 1.",
-      "story": "Too far for the first brother. The second starts again from one."
+      "story": "A far door. Count again from one."
     },
     {
       "n": 19,
       "ko": "숫자와 구멍",
       "name": "Numbers and a Hole",
       "hint": "Steps across the bridge count too.",
-      "story": "Crossing the bridge counts as steps."
+      "story": "Steps over a bridge count too."
     },
     {
       "n": 20,
       "ko": "두 숫자",
       "name": "Two Numbers",
       "hint": "Two numbered gates. Which step of the second brother?",
-      "story": "Where you hand over decides the second brother's numbers."
+      "story": "Where it's handed sets the next count."
     },
     {
       "n": 21,
       "ko": "새김돌의 계산",
       "name": "The Carvers' Sum",
       "hint": "One stone, one handover, one gate. Count every brother's steps.",
-      "story": "The last sum of the carved world: every brother's steps add up."
+      "story": "The old stones are just their height."
     },
     {
       "n": 22,
       "ko": "미끄러운 첫걸음",
       "name": "A Slippery First Step",
       "hint": "However far you slide on ice, it is one step.",
-      "story": "On ice, any slide is just one step."
+      "story": "On ice, one slide is one step."
     },
     {
       "n": 23,
       "ko": "홀수의 저주",
       "name": "The Odd Curse",
       "hint": "7 is odd. Some squares can never be reached on foot alone. A slide on ice is 1 step, however far.",
-      "story": "On plain ground it never comes to seven. Seven is odd."
+      "story": "The floor alone won't make seven."
     },
     {
       "n": 24,
       "ko": "얼음 위의 숫자",
       "name": "Numbers on Ice",
       "hint": "One slide is one step. Which step for the gate?",
-      "story": "One slide, one number."
+      "story": "The carvings count slides too."
     },
     {
       "n": 25,
       "ko": "멈춰 세우는 선돌",
       "name": "The Stone That Stops",
       "hint": "Ice stops only at a wall. A stone is a wall.",
-      "story": "No wall? Then a brother becomes the wall."
+      "story": "No wall? A standing stone stops you."
     },
     {
       "n": 26,
       "ko": "미끄럼을 막는 형제",
       "name": "A Brother in the Slide",
       "hint": "A stone stops a slide, but it blocks the path too. Where should it stand?",
-      "story": "Stand as the stopper, but not in the next brother's way."
+      "story": "The stone that stops may also block."
     },
     {
       "n": 27,
       "ko": "얼음 끝의 구멍",
       "name": "Hole at the End of the Ice",
       "hint": "What if you slide into the hole on your 7th step?",
-      "story": "Sliding into the hole. If that is the seventh step..."
+      "story": "If the slide ends at a hole…"
     },
     {
       "n": 28,
       "ko": "서리의 길목",
       "name": "Frost Pass",
       "hint": "The plate and the door are both beyond the ice.",
-      "story": "The edge of the frost moon. Plate and door wait past the ice."
+      "story": "Past the ice, the home star shows."
     },
     {
       "n": 29,
       "ko": "내리는 벽",
       "name": "Lowering the Wall",
       "hint": "Step on the lever with your 7th step and the wall goes down. Unlike a plate, one pull is enough.",
-      "story": "Step on the lever with the seventh step and the wall sinks."
+      "story": "On the seventh, the handle flips walls."
     },
     {
       "n": 30,
       "ko": "열면 닫힌다",
       "name": "Open One, Close One",
       "hint": "The lever flips every wall. An open way can close.",
-      "story": "One way opens, another way shuts."
+      "story": "One opens, and another closes."
     },
     {
       "n": 31,
       "ko": "올려서 멈추기",
       "name": "Raise It to Stop",
       "hint": "The lever flips every wall. A lowered wall rises and stops the ice.",
-      "story": "Raise the sunken wall to stop the slide."
+      "story": "A risen wall can stop a slide."
     },
     {
       "n": 32,
       "ko": "레버와 발판",
       "name": "Lever and Plate",
       "hint": "A lever once, a plate always. You need both.",
-      "story": "A lever needs one pull. A plate needs someone standing."
+      "story": "A handle turns once. A plate holds."
     },
     {
       "n": 33,
       "ko": "레버와 숫자",
       "name": "Lever and Numbers",
       "hint": "Once the wall is down, count the new way to the gates.",
-      "story": "When the walls change, so does the count to the gate."
+      "story": "Move the walls, and the count shifts."
     },
     {
       "n": 34,
       "ko": "레버와 바통",
       "name": "Lever and Handover",
       "hint": "The brother who pulled the lever: where does the next one start?",
-      "story": "The one who pulled the lever hands over."
+      "story": "The brass handles sit at their height."
     },
     {
       "n": 35,
       "ko": "결구의 장치",
       "name": "The Joinery Machine",
       "hint": "Lever, ice, stone, handover. Get off the joinery world.",
-      "story": "The way off this world is a machine: lever, ice and brothers."
+      "story": "The last gear points at cracked ground."
     },
     {
       "n": 36,
       "ko": "한 번만 버티는 바닥",
       "name": "Floor That Holds Once",
       "hint": "Cracked floor breaks after you cross it. End your 7th step on it and it seals into a path.",
-      "story": "The floor behind you crumbles. Stop on it, and it sets."
+      "story": "Passed floors fall, but a stop holds."
     },
     {
       "n": 37,
       "ko": "무너진 길 위의 구멍",
       "name": "Holes in a Crumbling Road",
       "hint": "Floor you cross falls in. Leave yourself a way back.",
-      "story": "Choose which road to break and which to keep."
+      "story": "Choose which road falls and which stays."
     },
     {
       "n": 38,
       "ko": "하나만 남겨라",
       "name": "Leave Only One",
       "hint": "The number on the gate is the number of standing stones. It opens only at exactly that many.",
-      "story": "The gate counts the stones. Just one."
+      "story": "The gate counts the stones still standing."
     },
     {
       "n": 39,
       "ko": "열쇠가 되는 형제",
       "name": "The Brother Who Is the Key",
       "hint": "Where do you get a stone to open the gate?",
-      "story": "In a dead end nobody visits, a brother stands as the key."
+      "story": "Nowhere roads have their use too."
     },
     {
       "n": 40,
       "ko": "남기기 전에 지나가라",
       "name": "Pass Before You Stay",
       "hint": "A gate marked 0 closes as soon as any stone stands.",
-      "story": "A gate marked zero. Get through before anyone turns to stone."
+      "story": "This gate opens while no stone stands."
     },
     {
       "n": 41,
       "ko": "선돌 아닌 흔적",
       "name": "Not a Stone",
       "hint": "Sealed floor becomes a path, but it does not count as a stone.",
-      "story": "Sealed floor is a path, not a stone."
+      "story": "Sealed floor is road, not stone."
     },
     {
       "n": 42,
       "ko": "무너지는 계산",
       "name": "Crumbling Sums",
       "hint": "Neither bridges nor sealed floor are stones. How many is the gate waiting for?",
-      "story": "Bridges and sealed floor are not stones. The gate stays shut to the end."
+      "story": "No way back. Only counting forward."
     },
     {
       "n": 43,
       "ko": "한 칸에 두 걸음",
       "name": "Two Steps a Square",
       "hint": "Mud takes two steps per square.",
-      "story": "Bog mud: two steps for one square."
+      "story": "Bog mud takes two steps a square."
     },
     {
       "n": 44,
       "ko": "진흙과 숫자",
       "name": "Mud and Numbers",
       "hint": "Through the mud, you skip a number.",
-      "story": "Step in the mud and a number goes by."
+      "story": "Mud skips a number in the count."
     },
     {
       "n": 45,
       "ko": "얼음과 진흙",
       "name": "Ice and Mud",
       "hint": "Ice: many squares, one step. Mud: one square, two steps.",
-      "story": "Ice is quick. Mud is slow."
+      "story": "Ice runs fast. Mud weighs heavy."
     },
     {
       "n": 46,
       "ko": "칠칠의 방",
       "name": "Seven by Seven Room",
       "hint": "Bridge, plate, numbered gate, lever. Three brothers.",
-      "story": "Bridge, plate, number and lever, and only three brothers."
+      "story": "Every count they learned, in one room."
     },
     {
       "n": 47,
       "ko": "레버와 선돌의 수",
       "name": "Lever and the Count",
       "hint": "If the brother who pulled the lever stays as a stone, the 0 gate closes.",
-      "story": "The one who pulled the lever stays. The 0 gate shuts, but it is not the only way."
+      "story": "A shut gate isn't the only way."
     },
     {
       "n": 48,
       "ko": "길이 된 형제들",
       "name": "Brothers Become the Road",
       "hint": "Both brothers become the road.",
-      "story": "Two brothers become the road. The third walks it."
+      "story": "Over the traces, the last steps pass."
     },
     {
       "n": 49,
       "ko": "일곱의 일곱",
       "name": "Seven Sevens",
       "hint": "Seven squares by seven squares. Count them all.",
-      "story": "Seven rows of seven. The altar is near."
+      "story": "Seven by seven. The circle draws near."
     },
     {
       "n": 50,
       "ko": "원형 제단",
       "name": "The Stone Circle",
       "hint": "When two brothers stand as stones, the altar opens.",
-      "story": "Two brothers stand in the circle. The third's seventh step reaches the altar."
+      "story": "One night this turn. Into the circle."
     }
   ],
   "stars": {

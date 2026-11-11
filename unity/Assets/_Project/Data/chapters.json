@@ -4,16 +4,16 @@
       "id": "moss",
       "planet": "이끼의 궤도",
       "concept": "고향. 잘린 석주와 이끼 덮인 작은 관측 유적",
-      "intro": "하늘 지도의 맨 끝에 원형 제단이 그려져 있었다. 셋은 고향 행성을 떠난다.",
-      "tagline": "세쌍둥이의 고향. 일곱 걸음을 배운다",
+      "intro": "별이 꺼지면 땅은 걸음을 잊는다.",
+      "tagline": "이끼 덮인 고향 관측소",
       "artPreset": "moss",
       "text": [
         {
           "lang": "en",
           "planet": "Mossy Orbit",
           "concept": "Home: broken pillars and a small moss-covered observatory ruin",
-          "intro": "At the very edge of the sky map, someone drew a ring of stones. The three leave home.",
-          "tagline": "Home. Learn to count to seven"
+          "intro": "Without stars, no step will count.",
+          "tagline": "Home, a mossy observatory"
         }
       ]
     },
@@ -21,16 +21,16 @@
       "id": "hollow",
       "planet": "별구멍 달",
       "concept": "표면 곳곳이 뚫려 아래로 별이 보이는 달",
-      "intro": "발밑으로 별이 보이는 달. 길이 끊긴 곳에서는 형제가 길이 된다.",
-      "tagline": "구멍 아래로 별이 보이는 달",
+      "intro": "구멍 너머로 잇는 셈을 찾는다.",
+      "tagline": "별이 비치는 구멍의 달",
       "artPreset": "hollow",
       "text": [
         {
           "lang": "en",
           "planet": "Starhole Moon",
           "concept": "A moon full of holes with stars showing through",
-          "intro": "Stars show through the ground here. Where the path breaks, a brother becomes the path.",
-          "tagline": "A moon of holes and stars below"
+          "intro": "Find the count that crosses holes.",
+          "tagline": "A moon of holes and stars"
         }
       ]
     },
@@ -38,16 +38,16 @@
       "id": "carved",
       "planet": "새김돌 행성",
       "concept": "기둥마다 숫자가 새겨진 계산의 행성",
-      "intro": "옛 관측자들은 돌에 숫자를 새겼다. 몇 번째 걸음에 지나가야 하는지.",
-      "tagline": "돌마다 걸음 수가 새겨진 행성",
+      "intro": "원의 셈은 새김돌에 적혀 있다.",
+      "tagline": "셈이 새겨진 기둥 숲",
       "artPreset": "carved",
       "text": [
         {
           "lang": "en",
           "planet": "Carved Stone World",
           "concept": "A planet of counting, numbers carved into every pillar",
-          "intro": "The old watchers carved numbers into the stones: which step lets you through.",
-          "tagline": "Every stone carved with a step"
+          "intro": "The circle's count is carved here.",
+          "tagline": "A forest of carved pillars"
         }
       ]
     },
@@ -55,16 +55,16 @@
       "id": "frost",
       "planet": "서리 위성",
       "concept": "얼어붙은 위성, 목재 난간과 서리 낀 석재",
-      "intro": "얼어붙은 위성. 한 번 미끄러지면 벽에 닿을 때까지 멈추지 않는다.",
-      "tagline": "미끄러지면 멈추지 않는 얼음",
+      "intro": "국자를 닫아야 자루를 뻗는다.",
+      "tagline": "미끄러운 서리의 달",
       "artPreset": "frost",
       "text": [
         {
           "lang": "en",
           "planet": "Frost Moon",
           "concept": "A frozen moon, wooden rails and frosted stone",
-          "intro": "A frozen moon. Once you slide, you do not stop until something stops you.",
-          "tagline": "Ice that slides until it stops"
+          "intro": "Close the bowl before going onward.",
+          "tagline": "A slippery frost moon"
         }
       ]
     },
@@ -72,16 +72,16 @@
       "id": "joinery",
       "planet": "결구의 행성",
       "concept": "나무 결구와 놋쇠 레버로 움직이는 벽의 행성",
-      "intro": "나무와 놋쇠로 짜인 행성. 일곱 번째 걸음이 장치를 돌린다.",
-      "tagline": "레버 하나에 벽이 움직인다",
+      "intro": "남은 길은 옛 장치로만 열린다.",
+      "tagline": "나무와 놋쇠의 장치",
       "artPreset": "joinery",
       "text": [
         {
           "lang": "en",
           "planet": "Joinery World",
           "concept": "Walls that move on wooden joints and brass levers",
-          "intro": "A world of timber and brass. The seventh step turns the machinery.",
-          "tagline": "One lever moves every wall"
+          "intro": "Only the old gears open the rest.",
+          "tagline": "Gears of timber and brass"
         }
       ]
     },
@@ -89,16 +89,16 @@
       "id": "crumble",
       "planet": "무너지는 행성",
       "concept": "금 간 바닥과 선돌 수를 세는 문이 있는 부서지는 행성",
-      "intro": "발자국마다 바닥이 갈라진다. 문은 서 있는 선돌의 수를 센다.",
-      "tagline": "밟으면 갈라지고, 문은 선돌을 센다",
+      "intro": "원으로 가는 마지막 디딤이다.",
+      "tagline": "밟으면 갈라지는 땅",
       "artPreset": "crumble",
       "text": [
         {
           "lang": "en",
           "planet": "Crumbling World",
           "concept": "Cracked floors and gates that count the standing stones",
-          "intro": "The floor cracks under every footstep. The gates count the stones left standing.",
-          "tagline": "Floors crack. Gates count stones"
+          "intro": "The last foothold before the circle.",
+          "tagline": "A crumbling stone world"
         }
       ]
     },
@@ -106,16 +106,16 @@
       "id": "altar",
       "planet": "원형 제단",
       "concept": "선돌 원형 제단과 이끼 늪이 있는 마지막 행성",
-      "intro": "지도의 끝. 늪 너머에 선돌들이 원을 그리고 서 있다.",
-      "tagline": "여정의 끝, 선돌의 원",
+      "intro": "한 밤 안에 원을 맞춰야 한다.",
+      "tagline": "늪 너머 선돌의 원",
       "artPreset": "altar",
       "text": [
         {
           "lang": "en",
           "planet": "The Stone Circle",
           "concept": "The last planet: a ring of standing stones beyond a mossy bog",
-          "intro": "The end of the map. Beyond the bog, standing stones form a circle.",
-          "tagline": "Journey's end: the stone circle"
+          "intro": "The circle must align this one night.",
+          "tagline": "The circle past the bog"
         }
       ]
     }

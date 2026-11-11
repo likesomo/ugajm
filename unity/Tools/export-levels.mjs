@@ -4,7 +4,8 @@
 // Before writing anything it asserts the stage set (6.4); on any failure it prints every problem and exits 1
 // without touching either file. Missing or empty translations for a language in chapters.json "languages" fail too (13.6),
 // and so does a chapter without a tagline once any chapter has one (6.4).
-// Then, if design/story/story.json exists, runs the story check (design/story/tools/check-story.mjs, story-integration.md 3.1)
+// Then, if design/story/story.json exists, runs the story check (design/story/tools/check-story.mjs --strict-levels, story-integration.md 3.1;
+// level data copy issues are errors since the stage-4 copy merge)
 // and copies story.json to Data/story.json only when the check passes. A failed or missing check leaves Data/story.json
 // as it was and exits 1, but levels.json and chapters.json are already written (S0 review B2: stage work is not tied to the story text).
 // Usage (repo root): node unity/Tools/export-levels.mjs
@@ -138,7 +139,7 @@ if (!existsSync(storySrc)) {
   console.error('[export-levels] FAIL design/story/tools/check-story.mjs not found; story.json was not copied (it must pass the check first)');
   process.exit(1);
 } else {
-  const r = spawnSync(process.execPath, [storyCheck], { cwd: root, stdio: 'inherit' });
+  const r = spawnSync(process.execPath, [storyCheck, '--strict-levels'], { cwd: root, stdio: 'inherit' });
   if (r.status !== 0) {
     console.error(`[export-levels] FAIL story-check exit ${r.status ?? r.error}; Data/story.json was not written (levels.json and chapters.json were)`);
     process.exit(1);
