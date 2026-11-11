@@ -1,7 +1,7 @@
 # 일곱 걸음 씬 플로우 — Unity 씬 구조
 
 담당: 씬 플로우 엔지니어 (`feat/scene-flow`). 브리프: `agents/scene-flow.md`, `C:/unityjam/shared-assets/seven-steps/briefs/scene-flow-unity-2026-11-11.md`.
-상태: **리드 승인 (2026-11-11, 아키텍트 조건부 승인 `docs/reviews/2026-11-11-scene-flow-unity-structure.md`, M1~M3 반영). P1부터 구현 중.**
+상태: **리드 승인 (2026-11-11, 아키텍트 조건부 승인 `docs/reviews/2026-11-11-scene-flow-unity-structure.md`, M1~M3 반영). P1~P4 구현 완료(10장 끝).**
 
 이 문서는 **Unity 씬 구조**만 다룬다:
 - 어떤 씬이 빌드 목록 몇 번에 있는지
@@ -267,12 +267,12 @@ PlayMode 테스트 항목:
 ### 9.2 Play Mode 캡처 (P2, 아키텍트 M3)
 
 - **방법**: `-batchmode` 없이 에디터를 연다. `-batchmode`에는 Game 뷰 창이 없고, `-nographics`면 아무것도 그려지지 않는다. 카메라 → `RenderTexture` → `ReadPixels`는 Screen Space - Overlay uGUI(HUD·타이틀·결과)를 찍지 못하므로 쓰지 않는다.
-  - `unity.sh playcapture <이름>`이 `Unity.exe -projectPath unity -executeMethod SevenSteps.EditorTools.PlayCapture.Run -playcapture <이름>`을 실행한다(에디터 창이 잠깐 뜬다).
+  - `unity.sh playcapture`가 `Unity.exe -projectPath unity -executeMethod SevenSteps.EditorTools.PlayCapture.Run -playcaptureOut <폴더>`를 실행한다(에디터 창이 잠깐 뜬다). 찍는 화면 목록은 `PlayCapture.Shots`에 있다: `title`, `game`(1번 스테이지), `game-board`, `game-empty`. 메뉴 **Seven Steps > Scene Flow > Play Mode Capture**로도 돌린다.
   - 에디터 스크립트 `PlayCapture`는 다음 순서로 동작한다:
     1. Game 뷰 해상도를 고정한다.
     2. 캡처 이름에 맞는 `LaunchOptions`를 9.1의 진입점으로 넣는다.
-    3. 시작 씬(Boot)을 열고 `EditorApplication.EnterPlaymode()`.
-    4. 정해진 시점(예: Title 활성 + 1초)에 `WaitForEndOfFrame` 뒤 `ScreenCapture.CaptureScreenshotAsTexture()`로 찍어 PNG로 저장한다.
+    3. 빈 씬에서 `EditorApplication.EnterPlaymode()`, Play Mode에 들어가면 `SceneManager.LoadScene(Boot)`(PlayMode 테스트와 같은 길).
+    4. 흐름이 목표 상태가 되고 1.5초 뒤 `ScreenCapture.CaptureScreenshot(path)`로 찍는다. 이 호출은 렌더된 프레임 끝에 Game 뷰를 파일로 쓴다(오버레이 UI 포함).
     5. `EditorApplication.ExitPlaymode()`, `EditorApplication.Exit(0)`.
 - **해상도**: 1280×720 고정. `PlayModeWindow.SetCustomRenderingResolution(1280, 720, "playcapture")`로 Game 뷰 크기를 정하고, 찍은 텍스처 크기가 1280×720이 아니면 실패로 본다.
 - **빈 화면 대조**(smoke-webgl의 `?smoke=empty`와 같은 뜻): 캡처마다 두 장을 찍는다.
@@ -296,6 +296,12 @@ PlayMode 테스트 항목:
 | P3 | `SceneFlowValidator` 빌드 목록 순서 검사, `Boot` 배경 카메라, 코드 주석 용어 정리 | scene-validate, PlayMode, 캡처 |
 | P4 | journey 확인(`-journeycheck advance/complete`)을 PlayMode 테스트로 옮김 | PlayMode |
 | (보류) | `Loading` 씬(4장): 사용자가 다시 요청할 때 | — |
+
+진행 (2026-11-11, `feat/scene-flow`):
+- P1 완료 a67fac6: PlayMode 6/6 (아키텍트 승인, 7lucky 9858b43)
+- P2 완료 f40d292: `unity.sh playcapture` OK (title·game 보통 화면, game-board 73138, game-empty 대조 0)
+- P3 완료 975d2ce: 빌드 목록 순서 검사(`AppScenes.BuildOrder`), Boot 배경 카메라 `#101C32`, 주석 용어. scene-validate OK
+- P4 완료: `JourneyFlowTests`(이어 가기 1→2, 첫 행성 완료 → 지도·`JourneyReturn`·별 길 켜짐). PlayMode 8/8. 플레이어 빌드 smoke의 `-journeycheck`는 리드의 빌드 확인용으로 남긴다
 
 ---
 

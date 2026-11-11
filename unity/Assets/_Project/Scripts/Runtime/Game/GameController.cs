@@ -75,6 +75,8 @@ namespace SevenSteps.Game
         /// One-time guides of the minimal UI (move guide, KEEP / SWITCH guide, choice result lines). The HUD and the choice
         /// cards read it and redraw on Changed (gameplay-ui).
         public TutorialTracker Tutorial => tutorial;
+        /// Stage select v4 journey transitions (docs/stage-select-transitions.md); null when JourneyToggle is off. PlayMode tests read it.
+        public GameJourney Journey => journey;
         /// The in-game menu (settings, stages, solution, controls). The HUD menu button calls Menu.Toggle.
         public MenuController Menu => menu;
 

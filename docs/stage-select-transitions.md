@@ -43,7 +43,12 @@
 - Commit/Cancel은 한 번만(assert + 예외). 다이브 중 Esc는 Cancel(카메라가 지도 자세로 돌아가고 선택이 풀림). 다른 입력(두 번째 클릭 포함)은 건너뛰기: 도착 자세로 가서 Commit을 **한 번** 부른다. 두 번째 클릭이 또 Commit하는 일은 없다.
 - 병합 조건: 토글이 꺼진 상태에서 기존 smoke·smoke-webgl·flowcheck(타이틀 경로 3/3)가 그대로 통과.
 
-## 5. 확인 (smoke 여정 단계)
+## 5. 확인
+
+- **에디터 Play Mode (기본, 2026-11-11 검증 규칙)**: `unity.sh playtest`의 `JourneyFlowTests`. 이어 가기(스테이지 1 → 2, 결과 없음, 사본 보드 없음, 카메라·보드 루트 원위치)와 행성 완료(첫 행성 마지막 스테이지 → Title 지도, `JourneyReturn` 풀림, 카메라가 `MapPose`, 그 행성의 나가는 별 길 켜짐).
+- 아래 플레이어 빌드 smoke 단계는 리드의 빌드 확인용이다.
+
+### 5.1 플레이어 빌드 smoke 여정 단계 (리드 전용)
 
 - `unity.sh smoke` 마지막 단계: `-newmap -level N -replay <풀이> -journeycheck advance|complete` (`flow-stages.mjs --journey`).
   - advance(스테이지 1): 결과 패널 없이 2로 들어가고, 전환이 끝나면 사본 보드가 없어지고 보드 루트가 제자리, 카메라가 보드 것으로 돌아오고 형제가 보인다.
