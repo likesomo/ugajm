@@ -37,6 +37,12 @@ namespace SevenSteps.Game.UI
         public event Action<float> MasterVolumeStepped, SfxVolumeStepped;
         public event Action TelemetryToggled;
         public event Action LanguageToggled;
+        /// Accessibility rows (design/art/ui-minimal.md): "걸음 숫자 표시" and "움직임 줄이기", both off by default.
+        public event Action StepNumbersToggled, ReduceMotionToggled;
+
+        /// The accessibility rows, built in code as copies of the play-data row (no prefab change).
+        Text stepNumbersLabel, stepNumbersText, reduceMotionLabel, reduceMotionText;
+        Button stepNumbersToggle, reduceMotionToggle;
         public event Action CloseRequested;
 
         /// Required references missing in the prefab, one line each (OnValidate, Awake, SceneFlowValidator).
@@ -86,18 +92,32 @@ namespace SevenSteps.Game.UI
             var r = telemetryStatus.rectTransform;
             r.anchoredPosition -= new Vector2(0, telemetryNote.rectTransform.rect.height + 2);
             telemetryStatus.text = "";
+            (stepNumbersLabel, stepNumbersToggle, stepNumbersText) = CopyToggleRow("StepNumbers", () => StepNumbersToggled?.Invoke());
+            (reduceMotionLabel, reduceMotionToggle, reduceMotionText) = CopyToggleRow("ReduceMotion", () => ReduceMotionToggled?.Invoke());
             Layout();
             wired = true;
         }
 
-        /// Row layout in code over the prefab's rects (docs/architecture.md 14): 680x500 panel, 24-size rows, the consent
-        /// note and the status line as 18-size secondary text, everything 44 inside the panel edge.
+        /// A copy of the play-data row (label + on/off button) with its own click.
+        (Text label, Button toggle, Text value) CopyToggleRow(string name, Action click)
+        {
+            var label = Instantiate(telemetryLabel.gameObject, telemetryLabel.transform.parent, false).GetComponent<Text>();
+            label.name = name + "Label";
+            var toggle = Instantiate(telemetryToggle.gameObject, telemetryToggle.transform.parent, false).GetComponent<Button>();
+            toggle.name = name + "Toggle";
+            toggle.onClick = new Button.ButtonClickedEvent(); // the copy must not also toggle play data
+            toggle.onClick.AddListener(() => click());
+            return (label, toggle, toggle.GetComponentInChildren<Text>(true));
+        }
+
+        /// Row layout in code over the prefab's rects (docs/architecture.md 14): 680x672 panel, six 64-pitch rows with 24-size
+        /// text, the consent note and the status line as 18-size secondary text, everything 44 inside the panel edge.
         void Layout()
         {
             if (!(masterLabel.transform.parent is RectTransform panel)) return;
             panel.anchorMin = panel.anchorMax = panel.pivot = new Vector2(0.5f, 0.5f);
             panel.anchoredPosition = Vector2.zero;
-            panel.sizeDelta = new Vector2(680, 620);
+            panel.sizeDelta = new Vector2(680, 672);
             void Put(Component c, float x, float y, float w, float h)
             {
                 if (c == null) return;
@@ -111,31 +131,35 @@ namespace SevenSteps.Game.UI
                 Ui.FitButtonSkin(b); // frame border 8 + label padding 8 (gameplay-ui, 14.4)
                 foreach (var t in b.GetComponentsInChildren<Text>(true)) { t.resizeTextForBestFit = false; t.fontSize = size; }
             }
-            Put(titleText, 44, 30, 592, 60); Size(titleText, 40); titleText.alignment = TextAnchor.MiddleCenter;
-            float y = 104;
+            Put(titleText, 44, 36, 592, 56); Size(titleText, 40); titleText.alignment = TextAnchor.MiddleCenter;
+            const float Pitch = 64, Row = 62;
+            float y = 102;
             foreach (var (label, down, value, up) in new[] { (masterLabel, masterDown, masterText, masterUp), (sfxLabel, sfxDown, sfxText, sfxUp) })
             {
-                Put(label, 44, y + 11, 330, 48); Size(label, 24);
-                Put(down, 388, y + 3, 64, 64); ButtonText(down, 24);
-                Put(value, 456, y + 11, 116, 48); Size(value, 24); value.alignment = TextAnchor.MiddleCenter;
-                Put(up, 576, y + 3, 64, 64); ButtonText(up, 24);
-                y += 76;
+                Put(label, 44, y + 7, 330, 48); Size(label, 24);
+                Put(down, 388, y, 64, Row); ButtonText(down, 24);
+                Put(value, 456, y + 7, 116, 48); Size(value, 24); value.alignment = TextAnchor.MiddleCenter;
+                Put(up, 576, y, 64, Row); ButtonText(up, 24);
+                y += Pitch;
             }
-            Put(telemetryLabel, 44, y + 11, 330, 48); Size(telemetryLabel, 24);
-            Put(telemetryToggle, 388, y, 252, 72); ButtonText(telemetryToggle, 24);
-            y += 76;
-            Put(languageLabel, 44, y + 11, 200, 48); Size(languageLabel, 24);
-            Put(languageText, 240, y + 11, 140, 48); Size(languageText, 22);
+            foreach (var (label, toggle) in new[] { (telemetryLabel, telemetryToggle), (stepNumbersLabel, stepNumbersToggle), (reduceMotionLabel, reduceMotionToggle) })
+            {
+                Put(label, 44, y + 7, 330, 48); Size(label, 24);
+                Put(toggle, 388, y, 252, Row); ButtonText(toggle, 24);
+                y += Pitch;
+            }
+            Put(languageLabel, 44, y + 7, 200, 48); Size(languageLabel, 24);
+            Put(languageText, 240, y + 7, 140, 48); Size(languageText, 22);
             if (languageText != null) { languageText.alignment = TextAnchor.MiddleRight; languageText.color = Ui.Ink; } // Dim was 3.7:1
-            Put(languageToggle, 388, y, 252, 72); ButtonText(languageToggle, 22);
-            y += 80;
-            Put(telemetryNote, 44, y, 592, 50); Size(telemetryNote, 18);
+            Put(languageToggle, 388, y - 1, 252, Row + 2); ButtonText(languageToggle, 22); // 64: "Change language" needs 8 inside
+            y += Row + 6;
+            Put(telemetryNote, 44, y, 592, 48); Size(telemetryNote, 18);
             telemetryNote.horizontalOverflow = HorizontalWrapMode.Wrap;
             telemetryNote.alignment = TextAnchor.MiddleCenter;
             Ui.Secondary(telemetryNote);
-            Put(telemetryStatus, 44, y + 50, 592, 28); Size(telemetryStatus, 18);
+            Put(telemetryStatus, 44, y + 48, 592, 28); Size(telemetryStatus, 18);
             Ui.Secondary(telemetryStatus);
-            Put(close, 240, 532, 200, 72); ButtonText(close, 24);
+            Put(close, 240, 576, 200, 64); ButtonText(close, 24);
         }
 
         Text telemetryStatus;
@@ -191,6 +215,8 @@ namespace SevenSteps.Game.UI
             sfxText.text = $"{Mathf.RoundToInt(s.sfxVolume * 100)}%";
             bool on = save.TelemetryOn(telemetryOnByDefault);
             telemetryText.color = on ? Ui.Gold : Ui.Dim;
+            stepNumbersText.color = s.showStepNumbers ? Ui.Gold : Ui.Dim;
+            reduceMotionText.color = s.reduceMotion ? Ui.Gold : Ui.Dim;
             if (localizer == null) return; // tests without a language keep the prefab's words
             // Words and role fonts in the current language (settings.*, 13.2 / 13.4); Redraw runs on every switch.
             var body = Ui.Theme.FontFor(localizer.Current, FontRole.Body);
@@ -202,6 +228,10 @@ namespace SevenSteps.Game.UI
             Set(telemetryLabel, "settings.telemetry");
             Set(telemetryNote, "settings.telemetry_note");
             Set(telemetryText, on ? "settings.on" : "settings.off");
+            Set(stepNumbersLabel, "settings.step_numbers");
+            Set(reduceMotionLabel, "settings.reduce_motion");
+            Set(stepNumbersText, s.showStepNumbers ? "settings.on" : "settings.off");
+            Set(reduceMotionText, s.reduceMotion ? "settings.on" : "settings.off");
             Set(close.GetComponentInChildren<Text>(true), "settings.close");
             if (languageLabel != null) Set(languageLabel, "settings.language");
             // The button opens the language picker (scene-flow S7c): it says what it does, the current language sits beside it.
@@ -259,6 +289,8 @@ namespace SevenSteps.Game.UI
             view.SfxVolumeStepped += StepSfx;
             view.TelemetryToggled += ToggleTelemetry;
             view.LanguageToggled += OnLanguageButton;
+            view.StepNumbersToggled += ToggleStepNumbers;
+            view.ReduceMotionToggled += ToggleReduceMotion;
         }
 
         /// The settings language button opens the language picker (lead decision 2026-11-10) when the scene root sets this;
@@ -277,11 +309,16 @@ namespace SevenSteps.Game.UI
             view.SfxVolumeStepped -= StepSfx;
             view.TelemetryToggled -= ToggleTelemetry;
             view.LanguageToggled -= OnLanguageButton;
+            view.StepNumbersToggled -= ToggleStepNumbers;
+            view.ReduceMotionToggled -= ToggleReduceMotion;
         }
 
         void StepMaster(float delta) { save.SetMasterVolume(save.Settings.masterVolume + Step(delta)); Saved(); }
         void StepSfx(float delta) { save.SetSfxVolume(save.Settings.sfxVolume + Step(delta)); Saved(); }
         void ToggleTelemetry() { save.SetTelemetryChoice(!save.TelemetryOn(telemetryOnByDefault)); Saved(); }
+        /// Accessibility (ui-minimal): saved at once; SettingsChanged tells the HUD and the star trail (gameplay-ui).
+        void ToggleStepNumbers() { save.SetShowStepNumbers(!save.Settings.showStepNumbers); Saved(); }
+        void ToggleReduceMotion() { save.SetReduceMotion(!save.Settings.reduceMotion); Saved(); }
 
         /// Next language that has a table (Ko -> En -> Ko). Saved (SetLanguage) and applied now (Localizer.Changed redraws
         /// the views and updates telemetry lang); a -lang launch override is replaced by the player's choice.
