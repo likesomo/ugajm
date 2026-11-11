@@ -5,6 +5,7 @@ using System.Linq;
 using SevenSteps.Contracts;
 using SevenSteps.Core;
 using SevenSteps.Game;
+using SevenSteps.Game.Flow;
 using SevenSteps.Game.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -142,6 +143,42 @@ namespace SevenSteps.EditorTools
         {
             var planets = PlanetEntry.FromCatalog(levels.Length);
             yield return (new Screen { Name = "Title", Build = (c, root) => { BuildTitle(c, root); return null; } }, "");
+            // Story (story-integration.md 3.3, docs/architecture.md 16): the title sentence before and after the ending, the
+            // ending cards with their longest line of every branch, the loading carving. The map screen above shows every
+            // carving, every lit dipper line and the still-star line (full progress).
+            foreach (string after in new[] { "", StoryOns.AfterEnding })
+            {
+                string a = after;
+                yield return (new Screen { Name = "Title", Build = (c, root) =>
+                {
+                    var story = StoryOf(c);
+                    if (story == null) throw new Skipped("story.json does not load (SceneFlowValidator reports it)");
+                    BuildTitle(c, root, LongestLine(story, c.Lang, e => e.on == "title" && e.after == a));
+                    return null;
+                } }, a == "" ? "story" : "story after ending");
+            }
+            for (int card = 1; card <= StoryRules.EndingCards; card++)
+            {
+                int k = card;
+                yield return (new Screen { Name = "Ending", Build = (c, root) =>
+                {
+                    var story = StoryOf(c);
+                    if (story == null) throw new Skipped("story.json does not load (SceneFlowValidator reports it)");
+                    var v = new EndingView(root, null, c.Loc);
+                    v.ShowPage(k - 1, StoryRules.EndingCards, new EndingPage(LongestLine(story, c.Lang, e => e.on == "ending" && e.card == k), "", "check"));
+                    v.Show();
+                    return Find(root, "Ending");
+                } }, "card " + k);
+            }
+            var storyHere = StoryOfProject();
+            if (storyHere != null && storyHere.Entries.Any(e => e.on == "loading"))
+                yield return (new Screen { Name = "Loading", Build = (c, root) =>
+                {
+                    var v = new LoadingView(root);
+                    v.Begin(c.Loc, 1, LongestLine(StoryOf(c), c.Lang, e => e.on == "loading"));
+                    v.Progress(4f / 7f);
+                    return null;
+                } }, "carving");
             yield return (new Screen { Name = "Language", Build = (c, root) =>
             {
                 Ui.MenuBackground(root);
@@ -272,11 +309,11 @@ namespace SevenSteps.EditorTools
             } }, "clear");
         }
 
-        static void BuildTitle(Ctx c, RectTransform root)
+        static void BuildTitle(Ctx c, RectTransform root, string storyLine = null)
         {
             Ui.MenuBackground(root);
             var v = new TitleView(root);
-            v.Apply(c.Loc);
+            v.Apply(c.Loc, storyLine);
             v.Show(true);
         }
 
@@ -284,8 +321,34 @@ namespace SevenSteps.EditorTools
         {
             Ui.MenuBackground(root);
             var map = new PlanetMapView(root, planets, c.Levels);
+            // Full progress: every carving, every lit dipper line, and the still-star line in the detail row.
+            var story = StoryOf(c);
+            if (story != null) map.Story = new StoryBook(story, new StoryProgress(), null, _ => true);
             map.Apply(c.Loc);
             map.Show(FullProgress(c.Levels), -1);
+        }
+
+        /// story.json as the player loads it, or null when it does not load (SceneFlowValidator.ValidateStory reports that).
+        static StoryCatalog StoryOf(Ctx c) => LocalizationCheck.StoryCatalogOf(c.Assets);
+
+        static StoryCatalog StoryOfProject()
+        {
+            var assets = AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset");
+            return assets != null ? LocalizationCheck.StoryCatalogOf(assets) : null;
+        }
+
+        /// The longest line (in characters, {brother} as the longest brother name) of the matching entries in a language.
+        static string LongestLine(StoryCatalog story, Language lang, Func<StoryEntryDto, bool> which)
+        {
+            string brother = Enumerable.Range(1, 3).Select(n => story.BrotherName(n, lang)).OrderByDescending(s => s.Length).First();
+            string best = null;
+            foreach (var e in story.Entries.Where(which))
+                for (int i = 0; i < e.lines.Length; i++)
+                {
+                    string line = story.Line(e, i, lang).Replace(StoryCatalog.BrotherToken, brother);
+                    if (best == null || line.Length > best.Length) best = line;
+                }
+            return best ?? throw new Skipped("story.json has no matching entry");
         }
 
         static HudView BuildHud(Ctx c, int stage) => BuildHud(c, stage, Rules.NewState(c.Levels[stage]), "");

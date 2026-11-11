@@ -29,6 +29,13 @@ namespace SevenSteps.Game.Flow
         /// preset (UiTheme, lighting, sky, docs/architecture.md 12.8). Chapter ids are levels.json "chapter", "" = first chapter.
         public event Action<string, string, int> ChapterEntering;
 
+        /// [끝까지 보기] on the cleared last stage (docs/architecture.md 16.8): the story ending instead of another stage
+        /// (GameController: EndingController, or the star map when the story is off).
+        public event Action EndingRequested;
+
+        /// The clear result has opened (story save point, docs/architecture.md 16.5 "결과 패널이 열린 뒤").
+        public event Action ClearShown;
+
         /// <param name="minBodies">Solver's fewest bodies per stage, 0 = unknown (LevelCatalog.MinBodies).</param>
         /// <param name="chapterOf">Chapter key per stage (LevelCatalog.ChapterKeyOf).</param>
         /// <param name="chapterInfoOf">Optional: the chapters.json planet of a stage (LevelCatalog.ChapterOf), for the result
@@ -79,10 +86,12 @@ namespace SevenSteps.Game.Flow
             flow.GoToGame(stage);
         }
 
-        /// Result panel "다음 스테이지" / Enter in Result.
+        /// Result panel "다음 스테이지" / Enter in Result. On the last stage: [끝까지 보기], the ending (<see cref="EndingRequested"/>).
         public void Next()
         {
-            if (flow.State != AppState.Result || !flow.CanGoToGame(flow.Stage + 1)) return;
+            if (flow.State != AppState.Result || flow.IsLoading) return;
+            if (IsLast) { EndingRequested?.Invoke(); return; }
+            if (!flow.CanGoToGame(flow.Stage + 1)) return;
             entries.Announce(TelemetryNames.Via.Next);
             flow.GoToGame(flow.Stage + 1);
         }
@@ -186,6 +195,7 @@ namespace SevenSteps.Game.Flow
             int best = save.Progress.BestBodies(s.Level); // 0 = none, other map or out of range (11.3.1)
             result.Show(ResultModel.Clear(stage, bodies, BodiesUsed(s), MinBodies(s), best, IsLast,
                 clearStars, save.Progress.BestStars(s.Level), FinishedChapter(stage)));
+            ClearShown?.Invoke();
         }
 
         /// The planet a cleared stage finishes: the last stage of its chapter (the next stage is in another chapter) or the

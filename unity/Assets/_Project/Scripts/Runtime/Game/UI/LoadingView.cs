@@ -66,13 +66,15 @@ namespace SevenSteps.Game.UI
             tip.horizontalOverflow = HorizontalWrapMode.Wrap;
         }
 
-        /// Text in the current language and a tip (1..Tips); progress back to 0.
-        public void Begin(Localizer loc, int tipNumber)
+        /// Text in the current language and a tip (1..Tips), or the observer's carving instead (story.json "loading",
+        /// StoryBook.LoadingLine; null = the tip); progress back to 0.
+        public void Begin(Localizer loc, int tipNumber, string carving = null)
         {
             if (loc == null) throw new ArgumentNullException(nameof(loc));
             if (tipNumber < 1 || tipNumber > Tips) throw new ArgumentOutOfRangeException(nameof(tipNumber));
             UiText.Set(head, loc, "loading.title", FontRole.Title);
             UiText.Set(tip, loc, "loading.tip." + tipNumber, FontRole.Body);
+            if (!string.IsNullOrEmpty(carving)) tip.text = carving;
             lit = -1;
             Progress(0f);
         }

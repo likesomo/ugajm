@@ -36,8 +36,10 @@ namespace SevenSteps.Game.UI
             var menu = Ui.Panel(t, "Menu").rectTransform.TopLeft(32, 30, 450, 664); // texts 8 inside the panel border (32)
             name = Ui.Label(menu, "", 66, Ui.Gold, TextAnchor.MiddleLeft, "Name");
             name.rectTransform.TopLeft(42, 33, 380, 105);
-            tagline = Ui.Label(menu, "", 25, Ui.Ink, TextAnchor.MiddleLeft, "Tagline");
-            tagline.rectTransform.TopLeft(42, 144, 380, 46);
+            // The story's one sentence (story.json "title", ko 20 / en 44 characters): up to two lines.
+            tagline = Ui.Label(menu, "", 22, Ui.Ink, TextAnchor.MiddleLeft, "Tagline");
+            tagline.rectTransform.TopLeft(42, 138, 380, 60);
+            tagline.horizontalOverflow = HorizontalWrapMode.Wrap;
             Button Menu(int row, Action click, out Text label, string id)
             {
                 var b = Ui.MenuButton(menu, 25, click, out label, id);
@@ -59,12 +61,14 @@ namespace SevenSteps.Game.UI
             panel.SetActive(false);
         }
 
-        /// Text and fonts for the current language (call once, then on Localizer.Changed).
-        public void Apply(Localizer loc)
+        /// Text and fonts for the current language (call once, then on Localizer.Changed). <paramref name="storyLine"/>: the
+        /// story's title sentence in that language (StoryBook.TitleLine, after-ending branch included); null = title.tagline.
+        public void Apply(Localizer loc, string storyLine = null)
         {
             if (loc == null) throw new ArgumentNullException(nameof(loc));
             UiText.Set(name, loc, "title.name", FontRole.Title);
             UiText.Set(tagline, loc, "title.tagline", FontRole.Body);
+            if (!string.IsNullOrEmpty(storyLine)) tagline.text = storyLine;
             UiText.Set(begin, loc, "title.begin", FontRole.Body);
             UiText.Set(cont, loc, "title.continue", FontRole.Body);
             UiText.Set(stages, loc, "title.stages", FontRole.Body);
@@ -138,6 +142,9 @@ namespace SevenSteps.Game.UI
     /// Dipper (UiTheme.Dipper, edges 1-2-3-4-1 / 4-5-6-7), each with its name and star total, no locks. A click / Enter
     /// on a planet raises <see cref="PlanetClicked"/> (the root opens <see cref="PlanetStagesPanel"/>). Arrow keys move
     /// between planets (uGUI automatic navigation).
+    /// Story (story-integration.md 0.5 #1, #2): with <see cref="Story"/> on, a planet whose finale is cleared shows its
+    /// carving mark and lights the story.json "dipper" lines leaving it (the order of clears does not matter); with every
+    /// star earned, the detail line is the still-star line.
     /// </summary>
     public sealed class PlanetMapView
     {
@@ -150,7 +157,15 @@ namespace SevenSteps.Game.UI
         readonly Button[] cards;
         readonly Text[] names, totals;
         readonly Text head, detail, totalLabel, totalValue, back, note;
+        readonly List<(int a, int b, Image line)> edges = new List<(int, int, Image)>();
+        readonly Image[] carvings;
         Localizer loc;
+
+        /// The run's story (StoryBook): carvings, lit lines, still-star line. Null or off = the plain map.
+        public StoryBook Story { get; set; }
+
+        /// A planet's carving mark is showing (UiLayoutCheck, tests).
+        public bool CarvingShown(int planet) => carvings[planet].gameObject.activeSelf;
         ProgressData shown;
 
         /// Index into the planets list.
@@ -183,11 +198,13 @@ namespace SevenSteps.Game.UI
                         if (cut >= 0.5f) continue; // cards side by side: no room for a line
                         var line = Ui.Line(s, pos[a] + d * cut, pos[b] - d * cut, Ui.Dim, "Edge");
                         line.rectTransform.sizeDelta = new Vector2(line.rectTransform.sizeDelta.x, 3);
+                        edges.Add((a, b, line));
                     }
 
             cards = new Button[planets.Count];
             names = new Text[planets.Count];
             totals = new Text[planets.Count];
+            carvings = new Image[planets.Count];
             for (int i = 0; i < planets.Count; i++)
             {
                 int idx = i;
@@ -212,6 +229,12 @@ namespace SevenSteps.Game.UI
                 star.rectTransform.TopLeft(22, 84, 22, 22);
                 totals[i] = Ui.Secondary(Ui.Label(c, "", 20, Ui.Gold, TextAnchor.MiddleLeft, "Stars"));
                 totals[i].rectTransform.TopLeft(50, 80, 110, 30);
+                // The observer's carving (story 0.5 #1): a small gold diamond at the card's top right until art's picture lands.
+                carvings[i] = Ui.MakeImage(c, Ui.Gold, null, "Carving");
+                carvings[i].rectTransform.TopLeft(26, 62, 12, 12); // under the number: the name may take two lines, the star row is the total
+                carvings[i].rectTransform.localRotation = Quaternion.Euler(0, 0, 45);
+                carvings[i].raycastTarget = false;
+                carvings[i].gameObject.SetActive(false);
             }
 
             // Bottom band: back, all stars, note on one plate.
@@ -280,8 +303,27 @@ namespace SevenSteps.Game.UI
                 maxAll += max;
             }
             totalValue.text = $"{earnedAll} / {maxAll}";
+            ShowStory(earnedAll == maxAll && maxAll > 0);
             if (focus < 0) focus = PlanetOf(progress.LastStageIndex(levels));
             cards[Mathf.Clamp(focus, 0, cards.Length - 1)].Select();
+        }
+
+        void ShowStory(bool allStars)
+        {
+            var story = Story != null && Story.On ? Story : null;
+            for (int i = 0; i < planets.Count; i++) carvings[i].gameObject.SetActive(story != null && story.FinaleCleared(planets[i].Key));
+            foreach (var (a, b, line) in edges)
+            {
+                bool lit = false;
+                if (story != null)
+                    foreach (var d in story.Catalog.Dipper)
+                        if ((d.from == planets[a].Key && d.to == planets[b].Key) || (d.from == planets[b].Key && d.to == planets[a].Key))
+                            lit |= story.FinaleCleared(d.from);
+                line.color = lit ? Ui.Gold : Ui.Dim;
+            }
+            string still = story != null && allStars ? story.StillStarLine(loc.Current) : null;
+            if (!string.IsNullOrEmpty(still)) detail.text = still;
+            else UiText.Set(detail, loc, "planets.detail", FontRole.Body);
         }
 
         /// The planet holding a stage (0 when none does).

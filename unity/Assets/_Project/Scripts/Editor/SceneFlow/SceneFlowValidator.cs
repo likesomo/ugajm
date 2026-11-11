@@ -98,6 +98,7 @@ namespace SevenSteps.EditorTools
             else
             {
                 ValidateThemes(gameAssets, issues);
+                ValidateStory(gameAssets, issues); // 16.2 / 16.3: story.json load check, picture keys
                 LocalizationCheck.Check(gameAssets, issues); // 13.6: tables, keys in code, glyphs per language
                 UiLayoutCheck.Check(gameAssets, sharedConfig, issues); // 14: text size, plates, overlaps on screens built in Edit Mode
             }
@@ -203,6 +204,24 @@ namespace SevenSteps.EditorTools
         /// Every UiTheme under Assets/_Project, not only the one GameAssets uses: an art theme (Art/UI/RuinsHengeTheme)
         /// or a chapter's theme can be switched in later, so its prefabs and font must already be complete. Glyphs are
         /// checked once per distinct theme font.
+        /// story.json must pass StoryCatalog's load check (a failure would turn the story off in the player, A8), and every
+        /// "images" key needs a sprite in GameAssets.storyImages: a warning while StoryImageSet.required is false (ending
+        /// pictures land after 11/14), an error once art turns it on (16.2).
+        public static void ValidateStory(GameAssets gameAssets, List<string> issues)
+        {
+            if (gameAssets.storyJson == null) { issues.Add("ERROR GameAssets.storyJson is not set (Data/story.json, unity.sh levels then setup)"); return; }
+            if (gameAssets.chaptersJson == null) { issues.Add("ERROR GameAssets.chaptersJson is not set: story.json needs the chapter ids"); return; }
+            var chapters = JsonUtility.FromJson<ChapterFileDto>(gameAssets.chaptersJson.text);
+            StoryCatalog story;
+            try { story = StoryCatalog.FromJson(gameAssets.storyJson.text, (chapters.chapters ?? new ChapterInfo[0]).Select(c => c.id).ToArray()); }
+            catch (Exception e) { issues.Add($"ERROR {AssetDatabase.GetAssetPath(gameAssets.storyJson)}: {e.Message}"); return; }
+            var images = gameAssets.storyImages;
+            if (images == null) { issues.Add("WARN GameAssets.storyImages is not set: story cards show text only"); return; }
+            var missing = story.ImageKeys.Where(k => images.Get(k) == null).ToArray();
+            if (missing.Length > 0)
+                issues.Add($"{(images.required ? "ERROR" : "WARN")} {AssetDatabase.GetAssetPath(images)}: no sprite for {missing.Length} story image key(s): {string.Join(", ", missing)}");
+        }
+
         static void ValidateThemes(GameAssets gameAssets, List<string> issues)
         {
             var fontsChecked = new HashSet<Font>();
