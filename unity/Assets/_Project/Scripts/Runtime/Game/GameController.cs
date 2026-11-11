@@ -247,12 +247,12 @@ namespace SevenSteps.Game
                 }));
         }
 
-        /// Menu "다시 보기" (story-integration.md 0.2): the stage's start line again once the menu closes. False when the
-        /// stage has none (the menu item can say so or stay quiet), and over a result (its HUD is hidden, review N1 on
-        /// ebdb653). The menu item and its wiring are scene-flow's.
         /// The current stage's start line in the current language ("" = none).
         string StartLineHere() => Story.StoryDirector.StartText(LevelCatalog.TextOf(board.LevelIndex, localizer.Current), LevelCatalog.StartLineOf(board.LevelIndex));
 
+        /// Menu "다시 보기" (story-integration.md 0.2): the stage's start line again once the menu closes. False when the
+        /// stage has none (the menu item can say so or stay quiet), and over a result (its HUD is hidden, review N1 on
+        /// ebdb653). The menu item and its wiring are scene-flow's.
         public bool ReplayStartLine() => storyLines != null && flow.State != AppState.Result && storyLines.ReplayStartLine();
 
         void OnDestroy()
