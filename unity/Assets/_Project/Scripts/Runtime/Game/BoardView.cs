@@ -78,6 +78,9 @@ namespace SevenSteps.Game
         public bool IsAnimating => anim != null;
         /// Word on the exit tile in the UI language (board.exit), set by BoardController; the next draw uses it.
         public string ExitLabel { get; set; } = "EXIT";
+        /// Accessibility "show step numbers" (off by default, production/ui-minimal-plan.md): numeric footprints on the cells
+        /// walked and the steps-left number over the player. Off, steps are read from the star trail and the stars at the feet.
+        public bool StepNumbers { get; set; }
 
         /// <param name="cameraOverride">Camera preset to use instead of tileSet.cameraRig (Game scene setting), or null.</param>
         public void Init(TileSet tileSet, RectTransform labelLayer, Camera cam, CameraRig? cameraOverride = null)
@@ -346,8 +349,8 @@ namespace SevenSteps.Game
             {
                 if (footLabels[i] == null) continue;
                 bool has = marked.Contains(i);
-                if (feet[i] != null) feet[i].SetActive(has);
-                footLabels[i].Text.enabled = has;
+                if (feet[i] != null) feet[i].SetActive(has && StepNumbers);
+                footLabels[i].Text.enabled = has && StepNumbers;
             }
             marked.Clear();
 
@@ -359,7 +362,7 @@ namespace SevenSteps.Game
             player.SetActive(alive);
             Place(player, PlayerVisual, s.Pos);
             player.transform.localScale = PlayerScale;
-            playerLabel.Text.enabled = alive;
+            playerLabel.Text.enabled = alive && StepNumbers;
             int left = Rules.Steps - s.Used;
             playerLabel.Text.text = left.ToString();
             choosing = s.Status == Status.Choose;
@@ -649,7 +652,7 @@ namespace SevenSteps.Game
                 l.Text.rectTransform.anchoredPosition = local;
                 l.Text.fontSize = Mathf.Max(10, Mathf.RoundToInt(cellPx * l.Size));
             }
-            if (playerLabel != null) playerLabel.Text.enabled = player.activeSelf;
+            if (playerLabel != null) playerLabel.Text.enabled = player.activeSelf && StepNumbers;
             // KEEP/SWITCH choice: the player breathes until a choice is made.
             if (choosing && anim == null && player.activeSelf)
                 player.transform.localScale = PlayerScale * (1f + 0.06f * Mathf.Sin(Time.time * 6f));

@@ -146,8 +146,8 @@ namespace SevenSteps.Game
             board.InputBlocked = () => flow.IsLoading || (overlays.Count > 0 && !OnlyChapterCard());
             board.FlowTakes = flowController.TakesCommand;
 
-            hud.StageSelectRequested += flowController.OpenStageSelect;
-            hud.SettingsRequested += () => { if (!overlays.Contains(settings)) overlays.Push(settings); };
+            // The menu (settings, stage select, solution) is scene-flow's; until it lands the button opens the settings overlay.
+            hud.MenuRequested += () => { if (!overlays.Contains(settings)) overlays.Push(settings); };
             result.NextRequested += flowController.Next;
             result.RetryRequested += flowController.Again;
             result.StageSelectRequested += flowController.OpenStageSelect;

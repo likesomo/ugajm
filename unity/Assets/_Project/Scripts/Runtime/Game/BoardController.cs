@@ -86,7 +86,6 @@ namespace SevenSteps.Game
 
             hud.UndoRequested += () => Send(Command.Undo);
             hud.RestartRequested += Restart;
-            hud.HintRequested += ShowHint;
             hud.KeepRequested += () => Send(Command.Keep);
             hud.SwitchRequested += () => Send(Command.Switch);
 
@@ -100,6 +99,9 @@ namespace SevenSteps.Game
             session.Updated += OnSessionUpdated;
             session.Presented += OnPresented;
             if (telemetry is HttpTelemetry http) recorder = new TelemetryRecorder(this, session, http);
+            // Accessibility (docs 11.3.2): step numbers follow the setting, also when it changes while playing.
+            board.StepNumbers = hud.StepNumbers = save.Settings.showStepNumbers;
+            save.SettingsChanged += OnSettingsChanged;
         }
 
         /// Settings language toggle (docs/architecture.md 13.3): HUD words and fonts, the message line, the exit label.
@@ -114,9 +116,27 @@ namespace SevenSteps.Game
         void OnDestroy()
         {
             if (loc != null) loc.Changed -= OnLanguageChanged;
+            if (save != null) save.SettingsChanged -= OnSettingsChanged;
             recorder?.Dispose();
             audio?.Dispose();
             chapters?.Dispose();
+        }
+
+        void OnSettingsChanged(SettingsData settings)
+        {
+            if (settings.showStepNumbers != StepNumbers) StepNumbers = settings.showStepNumbers;
+        }
+
+        /// Accessibility "show step numbers" (SettingsData.showStepNumbers, off by default; the toggle is scene-flow's):
+        /// numeric footprints and the steps-left number on the board. Redraws at once.
+        public bool StepNumbers
+        {
+            get => board.StepNumbers;
+            set
+            {
+                board.StepNumbers = hud.StepNumbers = value;
+                if (session.State != null && !board.IsAnimating) board.Snap(session.State);
+            }
         }
 
         /// Smoke negative control (LaunchOptions.SmokeView.Empty): the board plays as usual but draws nothing.
