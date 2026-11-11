@@ -334,12 +334,12 @@ export const LEVELS = [
     ],
   },
   {
-    name: '홀수의 저주',
+    name: '홀수의 셈',
     chapter: 'frost',
     story: '바닥만으로는 일곱이 맞지 않는다.',
     hint: '7은 홀수. 바닥만 걸어서는 닿을 수 없는 칸이 있다. 얼음 위 미끄러짐은 몇 칸을 가도 1걸음이다.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'The Odd Curse', hint: '7 is odd. Some squares can never be reached on foot alone. A slide on ice is 1 step, however far.', story: 'The floor alone won\'t make seven.' }],
+    text: [{ lang: 'en', name: 'The Odd Count', hint: '7 is odd. Some squares can never be reached on foot alone. A slide on ice is 1 step, however far.', story: 'The floor alone won\'t make seven.' }],
     map: [
       '########',
       '#S~~~..#',
@@ -562,12 +562,12 @@ export const LEVELS = [
     ],
   },
   {
-    name: '무너진 길 위의 구멍',
+    name: '무너질 길',
     chapter: 'crumble',
     story: '무너질 길과 남길 길을 고른다.',
     hint: '지나간 바닥은 무너진다. 돌아올 길을 남겨 두자.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Holes in a Crumbling Road', hint: 'Floor you cross falls in. Leave yourself a way back.', story: 'Choose which road falls and which stays.' }],
+    text: [{ lang: 'en', name: 'The Road That Falls', hint: 'Floor you cross falls in. Leave yourself a way back.', story: 'Choose which road falls and which stays.' }],
     map: [
       '###########',
       '##E#.#xS..#',

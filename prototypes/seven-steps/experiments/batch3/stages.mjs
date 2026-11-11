@@ -31,7 +31,7 @@ export const STAGES = [
       '#########',
     ],
   },
-  old(7, { gimmickTiles: '~' }),               // 23 홀수의 저주 (keep 7)
+  old(7, { gimmickTiles: '~', name: '홀수의 셈' }), // 23 홀수의 셈 (keep 7, renamed from 홀수의 저주 2026-11-11 after blind QA)
   {
     name: '얼음 위의 숫자',                     // 24 new (stage-search gate-ice, seed 82 #1): slides and numbered doors, two brothers
     hint: '미끄럼 한 번도 한 걸음. 숫자 문은 몇 번째에?',
