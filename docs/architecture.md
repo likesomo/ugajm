@@ -1145,3 +1145,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | feat/view c58dfa4 승인(48ff6b4 M1 결과 별 키보드 초점 Tab·←→ 순환, M5 주석). R1 다음 커밋: 키 입력을 ResultView.Update에서 GameController로 옮김(메뉴 덮개 위에서 별 초점이 같이 움직임). `docs/reviews/2026-11-11-feat-view-c58dfa4.md` |
 | 2026-11-11 | 아키텍트 | feat/scene-flow cd38eb8 조건부 승인(새김 첫 등장·CarvingSeen 저장, 진실 다시 보기 세지 않음, 북극성, 타이틀 하늘, 앱 종료 저장). R1 병합 전 CarvingTap navigation None(별지도 방향키가 숨은 버튼에 멈춤), R2 진실 다시 보기 48px·키보드 경로. 4d41d15(14.7 Result clear·lose 검사)·01f4cc6(dipper 경고) 승인. `docs/reviews/2026-11-11-scene-flow-cd38eb8.md` |
 | 2026-11-11 | 아키텍트 | feat/scene-flow 6958352 승인(cd38eb8 R1·R2를 (a)로: 새김 탭 버튼 제거, 행성 카드 초점·hover로 진실 표시). 메모 N1 언어 변경 뒤 detailDefault 갱신. `docs/reviews/2026-11-11-scene-flow-cd38eb8.md` |
+| 2026-11-11 | 아키텍트 | feat/scene-flow 2fe7f4d 승인(N2 단계 패널 tagline 줄에 진실 금색, N1 언어 변경 뒤 detailDefault). `docs/reviews/2026-11-11-scene-flow-cd38eb8.md` |
