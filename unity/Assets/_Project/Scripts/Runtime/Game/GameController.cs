@@ -288,6 +288,14 @@ namespace SevenSteps.Game
             if (kb.leftBracketKey.wasPressedThisFrame) flowController.SelectStage(flow.Stage - 1);
             else if (kb.rightBracketKey.wasPressedThisFrame) flowController.SelectStage(flow.Stage + 1);
             else if ((kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) && flow.State == AppState.Result) flowController.Next();
+            else if (flow.State == AppState.Result && result.StarRowShown)
+            {
+                // What each star asks, by keyboard (14.7 focus); Left / Right never reach the board here (TakesCommand).
+                bool shift = kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed;
+                if (kb.tabKey.wasPressedThisFrame) result.FocusStar(shift ? -1 : 1);
+                else if (kb.rightArrowKey.wasPressedThisFrame) result.FocusStar(1);
+                else if (kb.leftArrowKey.wasPressedThisFrame) result.FocusStar(-1);
+            }
         }
 
         /// Stage -> its chapter's art preset: levels.json chapter -> chapters.json artPreset -> AppConfig.Chapter.
