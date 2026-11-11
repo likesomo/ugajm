@@ -6,7 +6,7 @@ namespace SevenSteps.Game.UI.Planets
 {
     /// <summary>
     /// The 3D space of the v4 stage select in the Title scene (view only): a world root for planet bodies, one directional
-    /// light, and the menu background drawn behind the bodies (a camera-space canvas far behind them, so the bodies are
+    /// light, and a quiet starfield drawn behind the bodies (a camera-space canvas far behind them, so the bodies are
     /// not covered by the screen-space UI). Takes the Title camera while entered and gives back its pose on exit.
     /// </summary>
     public sealed class PlanetSpace
@@ -56,8 +56,25 @@ namespace SevenSteps.Game.UI.Planets
             var solid = Ui.MakeImage(backdrop.transform, background, null, "Solid");
             solid.rectTransform.Stretch();
             solid.raycastTarget = false;
-            Ui.MenuBackground(backdrop.transform); // null when the theme has none: the solid colour shows
+            Stars(backdrop.transform);
             backdrop.SetActive(false);
+        }
+
+        /// A fixed scatter of small stars (seeded: the same sky every time) over the backdrop. The approved frames use the
+        /// chapter sky; a sky asset from art can replace this backdrop later.
+        static void Stars(Transform parent)
+        {
+            var rng = new System.Random(7);
+            for (int i = 0; i < 150; i++)
+            {
+                float size = 1.5f + (float)rng.NextDouble() * (i % 9 == 0 ? 2.5f : 1.2f);
+                var star = Ui.MakeImage(parent, new Color(1f, 0.97f, 0.9f, 0.25f + (float)rng.NextDouble() * 0.6f), Ui.Circle, "Star");
+                star.raycastTarget = false;
+                var r = star.rectTransform;
+                r.anchorMin = r.anchorMax = new Vector2((float)rng.NextDouble(), (float)rng.NextDouble());
+                r.sizeDelta = new Vector2(size, size);
+                r.anchoredPosition = Vector2.zero;
+            }
         }
 
         /// Shows the space and takes the camera (its pose is kept for <see cref="Exit"/>).
@@ -103,7 +120,9 @@ namespace SevenSteps.Game.UI.Planets
         public Vector2 ToCanvas(RectTransform rect, Vector3 world)
         {
             Vector2 screen = Camera.WorldToScreenPoint(world);
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, screen, null, out var local);
+            var canvas = rect.GetComponentInParent<Canvas>();
+            var uiCamera = canvas != null && canvas.rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.rootCanvas.worldCamera : null;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, screen, uiCamera, out var local);
             return local;
         }
 

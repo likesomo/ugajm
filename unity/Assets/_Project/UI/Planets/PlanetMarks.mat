@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: PlanetMarks
-  m_Shader: {fileID: 4800000, guid: 1a5623a354957e140973ec8395e97fce, type: 3}
+  m_Shader: {fileID: 4800000, guid: 2f3ca2ad87ab4cd08880ea4d829c0a7f, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []

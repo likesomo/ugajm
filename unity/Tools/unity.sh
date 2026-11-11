@@ -81,7 +81,10 @@ run_unity() {
     build-webgl) target=(-buildTarget WebGL) ;;
     build-win)   target=(-buildTarget Win64) ;;
   esac
-  (cd "$REPO" && "$U" -batchmode -nographics -projectPath unity "${target[@]}" -executeMethod "$method" -logFile "unity/Logs/batch-$name.log")
+  # Captures render with the GPU: no -nographics for them.
+  local gfx=(-nographics)
+  [ "$name" = stageselect-capture ] && gfx=()
+  (cd "$REPO" && "$U" -batchmode "${gfx[@]}" -projectPath unity "${target[@]}" -executeMethod "$method" -logFile "unity/Logs/batch-$name.log")
 }
 
 batch() {
@@ -123,6 +126,7 @@ case "$cmd" in
   compile)     batch compile BuildTools.CompileCheck ;;
   tileset)     batch tileset SevenSteps.EditorTools.TileSetBuilder.BatchBuild ;;
   tileset-validate) batch tileset-validate SevenSteps.EditorTools.TileSetValidator.BatchValidate ;;
+  stageselect-capture) batch stageselect-capture SevenSteps.EditorTools.StageSelectCapture.Batch ;;   # stage select v4 review PNGs -> reports/stage-select/
   scene-validate) batch scene-validate SevenSteps.EditorTools.SceneFlowValidator.BatchValidate ;;
   test)
     # EditMode tests (Tests/EditMode). Results: reports/editmode-results.xml
