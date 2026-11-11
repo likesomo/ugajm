@@ -37,9 +37,9 @@ namespace SevenSteps.Contracts
     /// The one place that owns the current State and the input lock (docs/architecture.md, "입력 락").
     /// - Every state change goes through Rules.Dispatch here. Views and HUD read <see cref="State"/> and <see cref="Updated"/>.
     /// - Move/Keep/Switch while a presentation runs are queued (FIFO, up to <see cref="QueueCapacity"/>; extra presses are dropped)
-    ///   and dispatched one by one after each presentation ends. A command that ends the brother (fall, bridge, KEEP,
-    ///   SWITCH, the last step: the body count changes) drops what is still queued when its presentation ends: those
-    ///   presses were meant for him, not for the next brother (blind QA-2).
+    ///   and dispatched one by one after each presentation ends. A command that changes the body count (fall, bridge,
+    ///   KEEP, SWITCH; a winning step does not) drops what is still queued, and again when its presentation ends: those
+    ///   presses were meant for that brother, not for the next one (blind QA-2, architecture.md 4.1).
     /// - Undo first removes the newest queued command, if any. Otherwise Undo/Restart/Load are never queued: they clear
     ///   the queue, cancel the presentation and Snap to the new snapshot.
     /// Pure C#: no Unity time or coroutines, so it is testable in EditMode with a fake presenter.
