@@ -28,9 +28,15 @@ namespace SevenSteps.Art
                     // All five silhouettes live on the lateral wings.
                     // At pitch 50 / yaw 0, lateral placement cannot project over the board or the exit.
                     const float moduleScale=1.45f;
+                    bool icicles=set.modules[i].name.Contains("IcicleFringe");
                     float x=(i%2==0?-1:1)*(w*.5f+1.70f);
                     float z=i%2==0?(i/2-1)*h*.30f:(i==1?-1:1)*h*.27f;
-                    var rotation=Quaternion.Euler(0,i%2==0?-12:16,0);
+                    if(icicles)
+                    {
+                        var hull=terrain.GetComponent<MeshFilter>().sharedMesh.bounds;
+                        x=i%2==0?hull.min.x+.07f:hull.max.x-.07f;
+                    }
+                    var rotation=Quaternion.Euler(0,icicles?90:(set.planetId=="carved"?180:0)+(i%2==0?-12:16),0);
                     float outwardRadius=0,moduleHeight=0;
                     foreach(var filter in set.modules[i].GetComponentsInChildren<MeshFilter>())
                         foreach(var vertex in filter.sharedMesh.vertices)
@@ -60,6 +66,7 @@ namespace SevenSteps.Art
                                 bool visible=true;
                                 foreach(var blocker in colliders)if(blocker.Raycast(sight,out var blocked,19.98f*parent.lossyScale.y)){visible=false;break;}
                                 float candidate=p.y+(visible?100:0)-Mathf.Abs(dz)*.03f;
+                                if(icicles)candidate=100-step*.4f+(visible?.1f:0)-Mathf.Abs(dz)*.03f;
                                 if(candidate>score){score=candidate;best=p.y;x=sx;z=sz;}
                             }
                         }
@@ -72,6 +79,8 @@ namespace SevenSteps.Art
                     var go=UnityEngine.Object.Instantiate(set.modules[i],root.transform);
                     go.name=set.modules[i].name;
                     go.transform.localPosition=new Vector3(x,best-.018f,z);
+                    // The supporting frost bar overlaps the raycast rim; the teeth overhang the open edge.
+                    if(icicles)go.transform.localPosition+=Vector3.right*Mathf.Sign(x)*.14f;
                     go.transform.localRotation=rotation;
                     go.transform.localScale=Vector3.one*moduleScale;
                     foreach(var renderer in go.GetComponentsInChildren<Renderer>())

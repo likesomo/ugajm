@@ -191,11 +191,19 @@ for identity,base in zip(IDS,PALETTES):
   for i in range(7):
    c=cone((-.55+i*.18,0,-.20-random.random()*.18),.085,.5+random.random()*.25,ice);c.rotation_euler.x=math.pi
   cube((0,0,.03),(1.26,.22,.11),snow,.025);save('IcicleFringe')
-  pts=[(math.sin(i*.48)*.13,-.66+i*.11,.045) for i in range(13)]
+  pts=[(math.sin(i*.30)*.13,-.72+i*.072,.055+.008*math.sin(i*.53)) for i in range(21)]
+  verts=[];faces=[]
+  for p in pts:
+   for z in (p[2]-.065,p[2]):
+    for side in (-1,1):verts.append((p[0]+side*.24,p[1],z))
+  for i in range(20):
+   a=i*4;b=a+4;faces.extend([(a+2,a+3,b+3,b+2),(a,b,b+1,a+1),(a,a+2,b+2,b),(a+1,b+1,b+3,a+3)])
+  faces.extend([(0,1,3,2),(80,82,83,81)])
+  mesh=bpy.data.meshes.new('Continuous frozen stream');mesh.from_pydata(verts,[],faces);ob=bpy.data.objects.new('Frozen water ribbon',mesh);scene.collection.objects.link(ob);finish(ob,ice)
   for i,p in enumerate(pts):
-   cube(p,(.48,.13,.07),ice,.025)
-   for side in (-1,1):rock((p[0]+side*.27,p[1],.04),(.09,.12,.075),snow)
-  for i in [2,6,9]:line([(pts[i][0]-.17,pts[i][1]-.04,.088),(pts[i][0],pts[i][1]+.02,.09),(pts[i][0]+.17,pts[i][1]-.02,.09)],.008,snow)
+   if i%3==0:
+    for side in (-1,1):rock((p[0]+side*.27,p[1],.04),(.08,.13,.065),snow)
+  for i in [3,9,15]:line([(pts[i][0]-.17,pts[i][1]-.04,pts[i][2]+.003),(pts[i][0],pts[i][1]+.02,pts[i][2]+.003),(pts[i][0]+.17,pts[i][1]-.02,pts[i][2]+.003)],.006,snow)
   save('FrozenStream');menhir(stone);rock((0,-.14,.65),(.27,.11,.56),ice,2);rock((0,0,1.18),(.30,.24,.07),snow);save('IceMenhir')
   for j in range(5):crystal((math.cos(j*1.4)*.20,math.sin(j*1.4)*.16,0),.4+j*.12,snow if j%2 else ice)
   save('QuartzFan')

@@ -365,7 +365,7 @@ namespace SevenSteps.EditorTools
                         bool last = st == c.Levels.Length - 1;
                         var chapter = last || LevelCatalog.ChapterKeyOf(st) != LevelCatalog.ChapterKeyOf(st + 1) ? LevelCatalog.ChapterOf(st) : null;
                         int bodies = c.Levels[st].Bodies;
-                        r.Show(ResultModel.Clear(st, bodies, bodies, bodies, bodies, last, 3, 3, chapter));
+                        r.Show(ResultModel.Clear(st, bodies, bodies, bodies, last, 3, 3, chapter));
                         if (showTip) OpenLongestTip(r);
                         return null; // not a modal: the scrim is ClearScrimAlpha (14.7)
                     }, Extra = (c, found) => ResultClearChecks(c, r, hud, showTip, found) },

@@ -43,6 +43,11 @@ namespace SevenSteps.Art
                     importer.mipmapEnabled=true;importer.wrapMode=TextureWrapMode.Repeat;importer.maxTextureSize=512;
                     importer.textureCompression=TextureImporterCompression.Uncompressed;importer.SaveAndReimport();
                 }
+                var kit=AssetDatabase.LoadAssetAtPath<BoardShapeAKit>(Art+"/BoardShapeA_Kit.asset");
+                var kerb=AssetDatabase.LoadAssetAtPath<GameObject>(Shared+"/PD_JoineryKerbLite.fbx");
+                if(!kerb)throw new Exception("Missing joinery kerb LOD; run build_dressing_kerb.py");
+                kit.dressingJoineryKerb=kerb.GetComponentInChildren<MeshFilter>().sharedMesh;EditorUtility.SetDirty(kit);
+                Debug.Log("[PlanetDressing] Joinery kerb "+kit.joineryKerb.triangles.Length/3+" -> "+kit.dressingJoineryKerb.triangles.Length/3+" tris (oak bevels, brass hardware and atlas preserved)");
                 for(int i=0;i<Ids.Length;i++)
                 {
                     string id=Ids[i];var mat=AssetDatabase.LoadAssetAtPath<Material>(Art+"/Materials/Environment_"+id+".mat");

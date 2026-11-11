@@ -61,12 +61,11 @@ namespace SevenSteps.Game.Telemetry
         /// HTTP status of the last answered POST, 0 = connection error, -1 = none yet this run.
         public long LastStatus { get; private set; } = -1;
 
-        /// <param name="minBodies">(1-based level, level) -> fewest bodies for level_clear.stars; null = the solver (TelemetryTracker).</param>
-        public HttpTelemetry(TelemetryContext context, ISaveStore store, Func<int, int> nextAttempt, Func<int, Level, int> minBodies = null)
+        public HttpTelemetry(TelemetryContext context, ISaveStore store, Func<int, int> nextAttempt)
         {
             Context = context;
             this.store = store;
-            Tracker = new TelemetryTracker(this, NowMs, nextAttempt, minBodies: minBodies);
+            Tracker = new TelemetryTracker(this, NowMs, nextAttempt);
             LoadQueue();
         }
 

@@ -48,6 +48,9 @@ MonoBehaviour:
   chapterId: crumble
   boardShape: {fileID: 11400000, guid: 0094accda97e29e47a800eaddc096043, type: 2}
   dressing: {fileID: 11400000, guid: 5f11c2879717fa640ace4648ffb44278, type: 2}
+  craterCrust: {fileID: 8460394909036436914, guid: 5b98aded9b2fdc946b31766676e8482d, type: 3}
+  craterCrustScale: {x: 100, y: 99.999985, z: 99.999985}
+  craterCrustEuler: {x: 270.01978, y: 0, z: 0}
   summitTint: {r: 0.63529414, g: 0.59607846, b: 0.5529412, a: 1}
   rimTint: {r: 0.54901963, g: 0.5019608, b: 0.45882353, a: 1}
   rockTint: {r: 0.44313726, g: 0.4, b: 0.3647059, a: 1}

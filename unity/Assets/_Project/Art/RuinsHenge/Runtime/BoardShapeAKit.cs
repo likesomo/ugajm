@@ -10,5 +10,6 @@ namespace SevenSteps.Art
         public Mesh rubble, fragment, crumbleShard, grass;
         public Mesh hollowArch, hollowStar, terrace, frostSpire, timberFrame, mossPatch;
         public Mesh hollowCrust, hollowKerb, carvedKerb, carvedKerbMarker, altarMenhir, joineryKerb, joineryCrust;
+        public Mesh dressingJoineryKerb;
     }
 }

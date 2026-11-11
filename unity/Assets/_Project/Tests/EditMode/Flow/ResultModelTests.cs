@@ -10,14 +10,14 @@ namespace SevenSteps.Tests
         [Test]
         public void ClearChecksBodyCountsAgainstTheStage()
         {
-            var m = ResultModel.Clear(stage: 15, levelBodies: 5, bodiesUsed: 4, minBodies: 3, bestBodies: 0, isLast: false);
+            var m = ResultModel.Clear(stage: 15, levelBodies: 5, bodiesUsed: 4, bestBodies: 0, isLast: false);
             Assert.IsTrue(m.Cleared);
             Assert.AreEqual(4, m.BodiesUsed);
-            Assert.Throws<ArgumentOutOfRangeException>(() => ResultModel.Clear(0, 2, 3, 0, 0, false));  // used > level bodies
-            Assert.Throws<ArgumentOutOfRangeException>(() => ResultModel.Clear(0, 3, 0, 0, 0, false));  // a clear uses a body
-            Assert.Throws<ArgumentOutOfRangeException>(() => ResultModel.Clear(0, 3, 1, 4, 0, false));  // min > level bodies
-            Assert.Throws<ArgumentOutOfRangeException>(() => ResultModel.Clear(0, 3, 1, 0, -1, false)); // best negative
-            Assert.Throws<ArgumentOutOfRangeException>(() => ResultModel.Clear(-1, 3, 1, 0, 0, false));
+            Assert.Throws<ArgumentOutOfRangeException>(() => ResultModel.Clear(0, 2, 3, 0, false));  // used > level bodies
+            Assert.Throws<ArgumentOutOfRangeException>(() => ResultModel.Clear(0, 3, 0, 0, false));  // a clear uses a body
+            Assert.Throws<ArgumentOutOfRangeException>(() => ResultModel.Clear(0, 3, 1, 4, false));  // best > level bodies
+            Assert.Throws<ArgumentOutOfRangeException>(() => ResultModel.Clear(0, 3, 1, -1, false)); // best negative
+            Assert.Throws<ArgumentOutOfRangeException>(() => ResultModel.Clear(-1, 3, 1, 0, false));
         }
 
         [Test]
@@ -27,7 +27,7 @@ namespace SevenSteps.Tests
             Assert.IsFalse(m.Cleared);
             Assert.AreEqual(0, m.BodiesUsed);
             Assert.IsTrue(m.IsLast);
-            Assert.Throws<ArgumentOutOfRangeException>(() => new ResultModel(2, false, 3, 1, 0, 0, false));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ResultModel(2, false, 3, 1, 0, false));
         }
 
         /// The panel in edit mode (replays snap to the end and never open it, so smoke cannot see it).
@@ -45,7 +45,7 @@ namespace SevenSteps.Tests
                 Assert.IsFalse(view.IsShown);
                 var hudHidden = new System.Collections.Generic.List<bool>();
                 view.HudHidden += hudHidden.Add;
-                view.Show(ResultModel.Clear(0, 3, 2, 1, 2, isLast: false));
+                view.Show(ResultModel.Clear(0, 3, 2, 2, isLast: false));
                 Assert.IsTrue(view.IsShown);
                 // Minimal clear over the board (docs 14.7): light scrim that still takes the clicks, HUD hidden, only Next.
                 Assert.AreEqual(ResultView.ClearScrimAlpha, view.scrim.color.a, 1e-4f);
@@ -64,7 +64,7 @@ namespace SevenSteps.Tests
                 Button(canvas, "다음 스테이지 (Enter)").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
                 Assert.AreEqual(1, next);
 
-                view.Show(ResultModel.Clear(16, 3, 3, 0, 0, isLast: true));
+                view.Show(ResultModel.Clear(16, 3, 3, 0, isLast: true));
                 Assert.IsTrue(Button(canvas, "다음 스테이지 (Enter)").activeSelf, "the last stage: [끝까지 보기] -> the ending (16.8)");
                 Assert.AreEqual("끝까지 보기", view.next.GetComponentInChildren<UnityEngine.UI.Text>().text);
                 Assert.IsTrue(view.body.transform.IsChildOf(view.finalePlate) && view.finalePlate.gameObject.activeSelf, "the journey line, bottom centre");
@@ -81,8 +81,9 @@ namespace SevenSteps.Tests
                 Assert.AreEqual("형제를 모두 잃었다", Text(canvas, "Title"));
 
                 // Star criteria: one line each, on tip plates that show only on hover / tap (hidden at first and for a loss).
-                view.Show(ResultModel.Clear(0, 3, 1, 1, 0, isLast: false, stars: 2, bestStars: 2));
-                Assert.AreEqual("풀이를 보지 않고 형제 1명으로", view.starLabels[1].text);
+                view.Show(ResultModel.Clear(0, 3, 1, 0, isLast: false, stars: 2, bestStars: 2));
+                Assert.AreEqual("풀이를 보지 않고", view.starLabels[1].text);
+                Assert.AreEqual("형제 3명을 모두 써서", view.starLabels[2].text);
                 Assert.IsTrue(System.Linq.Enumerable.All(view.starLabels, l => !l.transform.parent.gameObject.activeSelf));
                 UnityEngine.EventSystems.ExecuteEvents.Execute(view.stars[1].gameObject,
                     new UnityEngine.EventSystems.PointerEventData(null), UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);

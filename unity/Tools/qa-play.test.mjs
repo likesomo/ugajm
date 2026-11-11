@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { run, replayLine, stage, stateKey, keyHash, runTokens, QaError } from './qa-play.mjs';
 import { newState, step, choose, actions, minBodies, keyOf, DIRS } from '../../prototypes/seven-steps/src/core.js';
 import { LEVELS } from '../../prototypes/seven-steps/src/levels.js';
+import { solveAllBodies } from './all-brothers-check.mjs';
 
 const LETTER = { up: 'U', down: 'D', left: 'L', right: 'R', keep: 'K', switch: 'X' };
 const word = (path) => path.map((a) => LETTER[a]).join('');
@@ -65,21 +66,25 @@ test('commands before start, bad commands and level range fail at once', () => {
   assert.equal(lines().length, 0);
 });
 
-test('every stage clears with its minimum-body solution: 3 stars, the line replays', () => {
+// Stars (design/levels/stars.md 0): 1 clear, 2 no hint, 3 also every brother used (bodiesUsed == level bodies).
+test('every stage clears with its minimum-body solution: 3 stars only when that uses every brother, the line replays', () => {
   for (let n = 1; n <= LEVELS.length; n++) {
     run(['start', ...T, '--level', String(n)]);
     play(word(minBodies(stage(n).level).path));
     const l = last();
-    assert.equal(l.level, n); assert.equal(l.outcome, 'clear'); assert.equal(l.stars, 3, `stage ${n}`);
+    assert.equal(l.level, n); assert.equal(l.outcome, 'clear');
     assert.equal(l.bodiesUsed, stage(n).minBodies);
+    assert.equal(l.stars, l.bodiesUsed === stage(n).level.bodies ? 3 : 2, `stage ${n}`);
     assert.deepEqual(replayLine(l), [], `stage ${n}`);
   }
 });
 
-test('undo gives 2 stars, a hint 1 star, a counted restart 2 stars', () => {
-  const path = word(minBodies(stage(4).level).path);
+test('stage 4 with every brother: 3 stars even after undo or restart; a hint 1 star; fewer brothers 2 stars', () => {
+  const path = word(solveAllBodies(stage(4).level));
+  assert.ok(stage(4).minBodies < stage(4).level.bodies, 'stage 4 can be cleared with fewer brothers');
   run(['start', ...T, '--level', '4']); play(path[0] + 'Z' + path);
-  assert.equal(last().stars, 2); assert.equal(last().undos, 1); assert.equal(last().inputs, path[0] + 'Z' + path);
+  assert.equal(last().stars, 3); assert.equal(last().undos, 1); assert.equal(last().inputs, path[0] + 'Z' + path);
+  assert.equal(last().bodiesUsed, stage(4).level.bodies);
   run(['start', ...T, '--level', '4']); play('H' + path);
   assert.equal(last().stars, 1); assert.equal(last().hints, 1); assert.equal(last().attempt, 2);
   run(['start', ...T, '--level', '4']);
@@ -89,8 +94,10 @@ test('undo gives 2 stars, a hint 1 star, a counted restart 2 stars', () => {
   // The restart line ends before the restart; the counted restart is the '!' that starts the next attempt.
   assert.equal(last().outcome, 'restart'); assert.equal(last().inputs, path[0]); assert.equal(last().levelRestarts, 0); assert.equal(last().attempt, 3);
   play(path);
-  assert.equal(last().outcome, 'clear'); assert.equal(last().stars, 2); assert.equal(last().levelRestarts, 1); assert.equal(last().attempt, 4);
+  assert.equal(last().outcome, 'clear'); assert.equal(last().stars, 3); assert.equal(last().levelRestarts, 1); assert.equal(last().attempt, 4);
   assert.equal(last().inputs, path[0] + '!' + path); assert.equal(last().from, 1); assert.equal(last().steps, count(path));
+  run(['start', ...T, '--level', '4']); play(word(minBodies(stage(4).level).path));
+  assert.equal(last().stars, 2); assert.equal(last().bodiesUsed, stage(4).minBodies);
   for (const l of lines()) assert.deepEqual(replayLine(l), []);
 });
 
@@ -135,7 +142,7 @@ test('replayLine catches tampering; finalHash is the key hash; CLI exits 2 on er
   assert.equal(l.stateHash, keyHash(l.stateKey)); assert.match(l.stateHash, /^[0-9a-f]{8}$/);
   assert.equal(keyHash('a'), 'e40c292c'); // FNV-1a 32 reference value
   assert.match(l.stateKey, /|2|0$/); // status as the C# enum number (Win = 2)
-  assert.match(replayLine({ ...l, stars: 2 }).join(), /stars/);
+  assert.match(replayLine({ ...l, stars: 3 }).join(), /stars/); // the line has 2 (one brother of 3)
   assert.match(replayLine({ ...l, inputs: l.inputs + 'R' }).join(), /no effect/);
   assert.match(replayLine({ ...l, outcome: 'restart' }).join(), /status win/);
   assert.match(replayLine({ ...l, mapHash: 'x' }).join(), /map changed/);

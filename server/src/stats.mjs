@@ -148,12 +148,12 @@ export function stageResolver(levels = []) {
   };
 }
 
-// Stars of a cleared attempt: what the client sent, else plan B from the level_clear counts and the fewest bodies of
-// the stage's current map (null when that is unknown, e.g. the map changed since).
+// Stars of a cleared attempt: what the client sent, else core.js stars() (stars.md 0) from the level_clear hints and
+// level_start.bodies (null when that is unknown).
 export function attemptStars(a, stage) {
   if (a.outcome !== 'clear') return { stars: null, source: '' };
   if (a.clientStars) return { stars: a.clientStars, source: 'client' };
-  const stars = starsFor({ bodiesUsed: a.bodiesUsed, minBodies: stage.minBodies, ...a.clearCounts });
+  const stars = starsFor({ bodiesUsed: a.bodiesUsed, bodies: a.bodies, hints: a.clearCounts?.hints ?? 0 });
   return { stars, source: stars ? 'server' : '' };
 }
 

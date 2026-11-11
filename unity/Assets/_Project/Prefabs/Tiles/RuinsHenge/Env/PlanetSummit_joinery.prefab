@@ -48,6 +48,9 @@ MonoBehaviour:
   chapterId: joinery
   boardShape: {fileID: 11400000, guid: 0094accda97e29e47a800eaddc096043, type: 2}
   dressing: {fileID: 11400000, guid: 4e0584dc910df214aac3e7bff3bade0e, type: 2}
+  craterCrust: {fileID: -6111591125574177517, guid: 8d7ae6a373b20ea42b6c4e718e27d464, type: 3}
+  craterCrustScale: {x: 100, y: 99.999985, z: 99.999985}
+  craterCrustEuler: {x: 270.01978, y: 0, z: 0}
   summitTint: {r: 0.69803923, g: 0.5764706, b: 0.49803922, a: 1}
   rimTint: {r: 0.5882353, g: 0.45882353, b: 0.36862746, a: 1}
   rockTint: {r: 0.45490196, g: 0.33333334, b: 0.24705882, a: 1}

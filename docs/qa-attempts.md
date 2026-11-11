@@ -84,7 +84,7 @@ qa-play-plan 1절의 이름(`tester`, `level`, `stageName`, `attempt`, `outcome`
 | `undos` / `hints` | int | `inputs[from:]`의 `Z` / `H` 수 |
 | `levelUndos` `levelHints` `levelRestarts` | int | `inputs` 전체의 `Z` / `H` / `!` 수. 스테이지 세션 시작부터의 누계이며 게임 `AttemptCounts`와 같다 |
 | `bodiesUsed` | int | 지금 판(마지막 `!` 뒤)에서 쓴 형제 수 = `bodies − 남은 형제 + 1`. 패배(`lose`)면 스테이지 몸 수 전체(`bodies`). C#: `Math.Min(Stars.BodiesUsed(s), level.Bodies)` |
-| `stars` | int\|null | clear일 때만 `stars(bodiesUsed, expected.minBodies, levelHints, levelUndos, levelRestarts)` (C# `Stars.Of`), 그 밖에는 `null` |
+| `stars` | int\|null | clear일 때만 `stars({ bodiesUsed, bodies, hints: levelHints })` (C# `Stars.Of(bodiesUsed, level.Bodies, levelHints)`, design/levels/stars.md 0: ★2 힌트 없음, ★3 형제 모두), 그 밖에는 `null`. 2026-11-11 이전 줄의 `stars`는 B안(최소 몸·Z/R) 값이다 |
 | `stateKey` | string | 최종 상태 키 (6절) |
 | `stateHash` | string | `stateKey`의 해시 (6절) |
 | `startT` / `t` | string | 시도 시작·끝 시각 (ISO 8601 UTC). 비교 대상이 아니다 |

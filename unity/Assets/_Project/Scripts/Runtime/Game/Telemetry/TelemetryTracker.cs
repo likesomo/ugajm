@@ -27,40 +27,18 @@ namespace SevenSteps.Game.Telemetry
         readonly Func<long> now;
         readonly Func<int, int> nextAttempt;
         readonly long idleMs;
-        readonly Func<int, Level, int> minBodies;
 
         long? sessionT;
         long? lastInput;
         Run run;
 
         /// <param name="nextAttempt">1-based level -> attempt number of this start (ProgressData.CountStart in the game).</param>
-        /// <param name="minBodies">(1-based level, level) -> fewest bodies (levels.json expected.minBodies in the game, 0 = unknown),
-        /// for level_clear.stars. Null = solve it like telemetry.js minBodiesOf (Solver.MinBodies, cached by map).</param>
-        public TelemetryTracker(ITelemetry sink, Func<long> now, Func<int, int> nextAttempt, long idleMs = N.IdleMs, Func<int, Level, int> minBodies = null)
+        public TelemetryTracker(ITelemetry sink, Func<long> now, Func<int, int> nextAttempt, long idleMs = N.IdleMs)
         {
             this.sink = sink;
             this.now = now;
             this.nextAttempt = nextAttempt;
             this.idleMs = idleMs;
-            this.minBodies = minBodies ?? SolvedMinBodies;
-        }
-
-        static readonly System.Collections.Generic.Dictionary<string, int> SolvedByMap = new System.Collections.Generic.Dictionary<string, int>();
-
-        /// Domain reload off (Enter Play Mode options): start each play session with an empty solver cache.
-        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() => SolvedByMap.Clear();
-
-        /// telemetry.js minBodiesOf: the solver's fewest bodies, cached by levelKey; 0 when the level has no solution.
-        static int SolvedMinBodies(int levelNumber, Level level)
-        {
-            string key = TelemetryJson.LevelKey(level);
-            if (!SolvedByMap.TryGetValue(key, out int bodies))
-            {
-                bodies = Solver.MinBodies(level)?.BodiesUsed ?? 0;
-                SolvedByMap[key] = bodies;
-            }
-            return bodies;
         }
 
         public bool InLevel => run != null;
@@ -206,12 +184,12 @@ namespace SevenSteps.Game.Telemetry
             {
                 run.Done = true;
                 int bodiesUsed = Stars.BodiesUsed(after);
-                // Same judgement as the game (Core Stars.Of, docs 6.5) over this run's counts; 0 = unknown, field left out.
-                int stars = Stars.Of(bodiesUsed, minBodies(L, after.Level), run.Hints, run.Undos, run.Restarts);
+                // Same judgement as the game (Core Stars.Of, docs 6.5, stars.md 0): this run's hints, bodies used of the level's.
+                int stars = Stars.Of(bodiesUsed, after.Level.Bodies, run.Hints);
                 var clear = new TelemetryEvent(N.Types.LevelClear).With("level", L).With("durationMs", now() - run.T0).With("moves", run.Moves)
                     .With("undos", run.Undos).With("restarts", run.Restarts).With("hints", run.Hints).With("fails", run.Fails)
                     .With("bodiesUsed", bodiesUsed);
-                if (stars > 0) clear.With("stars", stars);
+                clear.With("stars", stars);
                 Emit(clear);
             }
         }

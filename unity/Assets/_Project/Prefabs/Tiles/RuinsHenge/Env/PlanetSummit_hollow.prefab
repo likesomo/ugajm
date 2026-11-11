@@ -48,6 +48,9 @@ MonoBehaviour:
   chapterId: hollow
   boardShape: {fileID: 11400000, guid: 0094accda97e29e47a800eaddc096043, type: 2}
   dressing: {fileID: 11400000, guid: d9b9a4c02b437d64fa72bc9abb1275ba, type: 2}
+  craterCrust: {fileID: -3153822274433420995, guid: 4caed6d82fa9ddf47b2eba6ad3788a00, type: 3}
+  craterCrustScale: {x: 100, y: 99.999985, z: 99.999985}
+  craterCrustEuler: {x: 270.01978, y: 0, z: 0}
   summitTint: {r: 0.5882353, g: 0.53333336, b: 0.60784316, a: 1}
   rimTint: {r: 0.53333336, g: 0.45882353, b: 0.5568628, a: 1}
   rockTint: {r: 0.40392157, g: 0.36078432, b: 0.44313726, a: 1}

@@ -99,7 +99,10 @@ Shader "SevenSteps/RuinsSurface"
      float2 px=i.positionWS.zy*.72,py=i.positionWS.xz*.72,pz=i.positionWS.xy*.72;
      half4 pigment=SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,px)*weights.x+SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,py)*weights.y+SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,pz)*weights.z;
      half4 detail=SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,px)*weights.x+SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,py)*weights.y+SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,pz)*weights.z;
-     half match=1-smoothstep(.04,.23,length(i.color.rgb-_PlanetPigment.rgb));
+     // Unity linearizes material Color properties; FBX vertex pigment remains the authored attribute.
+     half3 authored=LinearToSRGB(_PlanetPigment.rgb);
+     half pigmentDistance=min(length(i.color.rgb-_PlanetPigment.rgb),length(i.color.rgb-authored));
+     half match=1-smoothstep(.04,.23,pigmentDistance);
      color=lerp(i.color.rgb,pigment.rgb,match)*lerp(.85,1.05,detail.a);
      if(_PlanetIce>.5)color=lerp(color,color*lerp(half3(.75,.92,1),half3(1.12,1.08,1.02),pigment.r),.55);
      stoneRoughness=lerp(.78,.14,_PlanetIce);

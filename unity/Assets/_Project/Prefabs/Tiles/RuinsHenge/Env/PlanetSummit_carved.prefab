@@ -48,6 +48,9 @@ MonoBehaviour:
   chapterId: carved
   boardShape: {fileID: 11400000, guid: 0094accda97e29e47a800eaddc096043, type: 2}
   dressing: {fileID: 11400000, guid: c113e299075ecd540b1f9ad6f379025e, type: 2}
+  craterCrust: {fileID: -275333768202958899, guid: 3680162aae351c4409e2e6e467ca3b81, type: 3}
+  craterCrustScale: {x: 100, y: 99.999985, z: 99.999985}
+  craterCrustEuler: {x: 270.01978, y: 0, z: 0}
   summitTint: {r: 0.70980394, g: 0.6313726, b: 0.52156866, a: 1}
   rimTint: {r: 0.62352943, g: 0.5372549, b: 0.40784314, a: 1}
   rockTint: {r: 0.5254902, g: 0.4509804, b: 0.3529412, a: 1}

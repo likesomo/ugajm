@@ -67,28 +67,36 @@ namespace SevenSteps.Art
                     Destroy(root);Destroy(sky);yield return null;
                 }
             }
-            ValidateStageFits(data);
+            var validation=ValidateStageFits(data);while(validation.MoveNext())yield return validation.Current;
             File.WriteAllLines(Output+"/perf.csv",perf);
             Debug.Log("[PlanetDressingReview] COMPLETE: seven actual stages, before/after, frost detail, contrast and geometry verified");EditorApplication.Exit(0);
         }
-        void ValidateStageFits(LevelFileDto data)
+        IEnumerator ValidateStageFits(LevelFileDto data)
         {
-            var rows=new List<string>{"stage,planet,w,h,modules,sharedMeshSafe"};
+            var rows=new List<string>{"stage,planet,w,h,modules,sharedMeshSafe,stageTris,materials"};
             for(int i=0;i<data.levels.Length;i++)
             {
                 var dto=data.levels[i];string id=string.IsNullOrEmpty(dto.chapter)?"moss":dto.chapter;
                 var chapter=AssetDatabase.LoadAssetAtPath<ChapterPreset>(Art+"/Chapter_"+id+".asset");
                 if(!chapter)throw new Exception("Unknown stage chapter: "+id);
                 var level=Level.Parse(dto.name,dto.hint,dto.bodies,dto.map,dto.statueCount);
-                var planet=Instantiate(chapter.sky.planetPrefab).GetComponent<RuinsHengePlanet>();
+                Setup(chapter,dto,false);
+                yield return null;yield return null;
+                var planet=root.GetComponentInChildren<RuinsHengePlanet>();
+                VerifyClearance(planet,id);
+                long tris=root.GetComponentsInChildren<MeshFilter>().Concat(cam.GetComponentsInChildren<MeshFilter>()).Where(f=>f.sharedMesh).Sum(f=>Enumerable.Range(0,f.sharedMesh.subMeshCount).Sum(sm=>(long)f.sharedMesh.GetIndexCount(sm)/3));
+                int materials=root.GetComponentsInChildren<Renderer>().Concat(cam.GetComponentsInChildren<Renderer>()).SelectMany(r=>r.sharedMaterials).Distinct().Count();
                 var original=planet.dressing.modules[0].GetComponentInChildren<MeshFilter>().sharedMesh;
                 // A second Fit at non-unit scale and translated origin catches coordinate and ownership regressions.
-                planet.Fit(new BoardGrid(level));planet.Fit(new BoardGrid(level.W,level.H,.75f,new Vector3(2,1,-3)));
+                planet.Fit(new BoardGrid(level.W,level.H,.75f,new Vector3(2,1,-3)));
                 var dressing=planet.transform.Find("ThemedDressing_"+id);int count=dressing?dressing.childCount:0;
                 if(count<4)throw new Exception("Too few supported modules on stage "+(i+1)+": "+count);
-                DestroyImmediate(planet.gameObject);
+                DestroyImmediate(root);DestroyImmediate(sky);
+                yield return null;
                 if(!original)throw new Exception("Imported shared mesh was destroyed during Fit cleanup");
-                rows.Add($"{i+1},{id},{level.W},{level.H},{count},True");
+                rows.Add($"{i+1},{id},{level.W},{level.H},{count},True,{tris},{materials}");
+                if(materials>6)throw new Exception("Stage material budget exceeded: "+(i+1));
+                if(tris>50000)throw new Exception("Stage triangle budget exceeded: "+(i+1)+" "+tris);
             }
             File.WriteAllLines(Output+"/stage-fit-validation.csv",rows);
             Debug.Log("[PlanetDressingReview] All "+data.levels.Length+" stage bounds: repeat Fit, translated origin, .75 cell scale and imported mesh ownership PASS");
@@ -150,7 +158,7 @@ namespace SevenSteps.Art
             var materials=new HashSet<Material>(root.GetComponentsInChildren<Renderer>().Concat(cam.GetComponentsInChildren<Renderer>()).SelectMany(r=>r.sharedMaterials));
             perf.Add(string.Join(",",chapter.id,stage,before,tris,dressingTris,materials.Count,modules,floor.ToString("F4",CultureInfo.InvariantCulture),wall.ToString("F4",CultureInfo.InvariantCulture),contrast.ToString("F4",CultureInfo.InvariantCulture)));
             Debug.Log($"[PlanetDressingReview] {chapter.id} before={before} triangles={tris} dressing={dressingTris} modules={modules} materials={materials.Count} contrast={contrast:P1}");
-            if(!before&&(contrast<.30f||dressingTris>8000||materials.Count>6||modules<4))throw new Exception("Dressing budget, module count or readability failed: "+chapter.id);
+            if(!before&&(contrast<.30f||tris>50000||dressingTris>8000||materials.Count>6||modules<4))throw new Exception("Dressing budget, module count or readability failed: "+chapter.id);
         }
         void VerifyClearance(RuinsHengePlanet planet,string id)
         {
