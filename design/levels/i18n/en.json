@@ -177,8 +177,8 @@
     },
     {
       "n": 23,
-      "ko": "홀수의 저주",
-      "name": "The Odd Curse",
+      "ko": "홀수의 셈",
+      "name": "The Odd Count",
       "hint": "7 is odd. Some squares can never be reached on foot alone. A slide on ice is 1 step, however far.",
       "story": "The floor alone won't make seven."
     },
@@ -275,8 +275,8 @@
     },
     {
       "n": 37,
-      "ko": "무너진 길 위의 구멍",
-      "name": "Holes in a Crumbling Road",
+      "ko": "무너질 길",
+      "name": "The Road That Falls",
       "hint": "Floor you cross falls in. Leave yourself a way back.",
       "story": "Choose which road falls and which stays."
     },
