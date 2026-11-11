@@ -235,7 +235,7 @@ namespace SevenSteps.Art.StageSelectReview
         static long MeshTris(Mesh mesh){long n=0;for(int s=0;s<mesh.subMeshCount;s++)n+=mesh.GetIndexCount(s)/3;return n;}
         static void Save(string name)
         {
-            Canvas.ForceUpdateCanvases();cam.Render();var t=Read();File.WriteAllBytes(Path.Combine(Output,name+".png"),t.EncodeToPNG());Object.DestroyImmediate(t);
+            Canvas.ForceUpdateCanvases();if(PlanetBodyStudy.UseV4)cam.Render();cam.Render();var t=Read();File.WriteAllBytes(Path.Combine(Output,name+".png"),t.EncodeToPNG());Object.DestroyImmediate(t);
             var meshes=Object.FindObjectsByType<MeshFilter>(FindObjectsSortMode.None).Where(f=>f.sharedMesh).ToArray();
             var renders=Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None);long tris=meshes.Sum(f=>MeshTris(f.sharedMesh));
             var materials=new HashSet<Material>(renders.SelectMany(r=>r.sharedMaterials));int uiVerts=0;var uiMaterials=new HashSet<Material>();

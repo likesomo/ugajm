@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SevenSteps.Art.StageSelectReview
 {
     // Review-only faceted celestial bodies: vertex-colour geometry, no tile grid.
-    public sealed class PlanetBodyStudy
+    public sealed partial class PlanetBodyStudy
     {
         readonly List<Vector3> v=new List<Vector3>();readonly List<int> t=new List<int>();readonly List<Color> c=new List<Color>();
         public Func<Vector3,Vector3> Project;
@@ -44,6 +44,7 @@ namespace SevenSteps.Art.StageSelectReview
         }
         public static GameObject Build(int p,Material material,Transform parent,float yaw=0,bool clearSummit=false)
         {
+            if(UseV4)return BuildV4(p,material,parent,yaw,clearSummit);
             var m=new PlanetBodyStudy();const int rings=16,segs=32;
             for(int y=0;y<rings;y++)for(int x=0;x<segs;x++)
             {
