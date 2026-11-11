@@ -175,7 +175,7 @@ namespace SevenSteps.Game.UI
         {
             var badge = Ui.MakeButton(root, "EN / KO", 20, () => settingsController.ToggleLanguage(), out var text, "LanguageBadge");
             ((Image)badge.targetGraphic).color = new Color(0, 0, 0, 0);
-            ((RectTransform)badge.transform).TopLeft(1130, 18, 120, 34);
+            ((RectTransform)badge.transform).Place(Vector2.one, Vector2.one, new Vector2(-30, -18), new Vector2(120, 34)); // from the right edge (1280x800, 4:3)
             text.color = Ui.Gold;
             text.alignment = TextAnchor.MiddleRight;
             text.font = Ui.Theme.FontFor(localizer.Current, FontRole.Number); // Latin only: the number font in every language
