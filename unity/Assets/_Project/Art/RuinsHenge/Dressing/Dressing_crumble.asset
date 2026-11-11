@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bddbdd7b197081429d4248a051e9a7a, type: 3}
+  m_Name: Dressing_crumble
+  m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.PlanetDressingSet
+  planetId: crumble
+  modules:
+  - {fileID: 8180639356001510577, guid: 9deb477ee8df727488bdf6d1b8adef6c, type: 3}
+  - {fileID: 7689058910438447234, guid: e34dcbfbddc3d344e941ae01f7808b93, type: 3}
+  - {fileID: 3201655659897812224, guid: 9b0effb180e3ef745b3697e72198b0d0, type: 3}
+  - {fileID: 6336265847510337085, guid: 53041d47c9996ae42b48018e5b8ec9f2, type: 3}
+  - {fileID: 7814224500433742022, guid: 47ae00f339730ad4dac8ce73816001cd, type: 3}
+  material: {fileID: 2100000, guid: eaddc396ec4cc024aa8570bb790a51e2, type: 2}

@@ -18,6 +18,11 @@ Shader "SevenSteps/RuinsSurface"
   _BoardNormalStrength("BoardShapeA normal strength",Range(0,1))=.45
   _BoardStoneSlot("Stone recipe (0 granite, 8 basalt, 9 sandstone, 10 marble, 11 slate, 12 limestone, 13 sarsen)",Float)=0
   _SurfaceAlpha("Surface opacity (independent of packed shadow alpha)",Range(0,1))=1
+  _PlanetColor("Planet surface color",2D)="white"{}
+  _PlanetDetail("Planet RG normal B roughness A cavity",2D)="gray"{}
+  _PlanetDressing("Planet material identity",Range(0,1))=0
+  _PlanetIce("Cracked glossy ice",Range(0,1))=0
+  _PlanetPigment("Stone pigment",Color)=(.58,.61,.55,1)
   [HideInInspector] _SrcBlend("Source blend",Float)=1
   [HideInInspector] _DstBlend("Destination blend",Float)=0
   [HideInInspector] _ZWrite("Depth write",Float)=1
@@ -41,12 +46,16 @@ Shader "SevenSteps/RuinsSurface"
    TEXTURE2D(_WeatherMap); SAMPLER(sampler_WeatherMap);
    TEXTURE2D(_BoardShapeMap); SAMPLER(sampler_BoardShapeMap);
    TEXTURE2D(_BoardShapeNormal); SAMPLER(sampler_BoardShapeNormal);
+   TEXTURE2D(_PlanetColor); SAMPLER(sampler_PlanetColor);
+   TEXTURE2D(_PlanetDetail); SAMPLER(sampler_PlanetDetail);
    CBUFFER_START(UnityPerMaterial)
    float4 _BaseMap_ST,_BaseColor,_MossColor,_WallColor,_WeatherTint;
    float4 _BoardRockTint;
    float _BoardMoss,_BoardNormalStrength,_SurfaceAlpha,_BoardStoneSlot;
    float _EnvironmentDetail,_EnvironmentWood,_EnvironmentMoss;
    float _UseAtlas,_UseMoss,_UseVertexColor,_Unlit,_AmbientFloor;
+   float _PlanetDressing,_PlanetIce;
+   float4 _PlanetPigment;
    CBUFFER_END
    float4x4 _BSAWorldToLocal;
    int _BSAShadowCount;
@@ -82,7 +91,20 @@ Shader "SevenSteps/RuinsSurface"
     half3 color;
     half3 n=normalize(i.normalWS);
     half stoneRoughness=.72;
-    if(i.style.x>3.5)
+    if(i.style.x>8.5)
+    {
+     // Blender modules carry literal per-corner pigment (stone, foliage, timber, brass, ice).
+     // All modules still share the chapter's one material and its detail normal.
+     half3 weights=pow(abs(i.normalWS),4);weights/=max(dot(weights,half3(1,1,1)),.001);
+     float2 px=i.positionWS.zy*.72,py=i.positionWS.xz*.72,pz=i.positionWS.xy*.72;
+     half4 pigment=SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,px)*weights.x+SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,py)*weights.y+SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,pz)*weights.z;
+     half4 detail=SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,px)*weights.x+SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,py)*weights.y+SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,pz)*weights.z;
+     half match=1-smoothstep(.04,.23,length(i.color.rgb-_PlanetPigment.rgb));
+     color=lerp(i.color.rgb,pigment.rgb,match)*lerp(.85,1.05,detail.a);
+     if(_PlanetIce>.5)color=lerp(color,color*lerp(half3(.75,.92,1),half3(1.12,1.08,1.02),pigment.r),.55);
+     stoneRoughness=lerp(.78,.14,_PlanetIce);
+    }
+    else if(i.style.x>3.5)
     {
      float2 uv=i.uv;
      float sourceSlot=floor(uv.x*4)+floor(uv.y*4)*4;
@@ -131,6 +153,16 @@ Shader "SevenSteps/RuinsSurface"
      }
      color=baked.rgb*i.color.rgb;
      if(stone)color*=_BoardRockTint.rgb;
+     if(stone&&_PlanetDressing>.5)
+     {
+      // Three world projections keep crust walls and tile tops at a consistent real texture scale.
+      half3 weights=pow(abs(i.normalWS),4);weights/=max(dot(weights,half3(1,1,1)),.001);
+      float2 px=i.positionWS.zy*.72,py=i.positionWS.xz*.72,pz=i.positionWS.xy*.72;
+      half4 pigment=SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,px)*weights.x+SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,py)*weights.y+SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,pz)*weights.z;
+      half4 micro=SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,px)*weights.x+SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,py)*weights.y+SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,pz)*weights.z;
+      // Vertex pigment is the production floor/blocker value separation. Never normalize it away.
+      color=pigment.rgb*i.color.rgb;surface=micro;
+     }
      if(seam&&_BoardMoss>.01)color=lerp(half3(.34,.36,.30),color,_BoardMoss);
      // Linear packed RG tangent normal, B roughness, A AO. No importer swizzle.
      half2 normalXY=(surface.rg*2-1)*_BoardNormalStrength;
@@ -138,7 +170,7 @@ Shader "SevenSteps/RuinsSurface"
      stoneRoughness=saturate(surface.b+lerp(.20,-.12,saturate(i.normalWS.y)));
      color*=lerp(.80,1,surface.a);
      half3 tangent=normalize(i.tangentWS.xyz);
-     n=normalize(tangent*detail.x+cross(n,tangent)*i.tangentWS.w*detail.y+n*detail.z);
+     if(dot(tangent,tangent)>.01)n=normalize(tangent*detail.x+cross(n,tangent)*i.tangentWS.w*detail.y+n*detail.z);
     }
     else if(i.style.x>1.5&&i.style.x<2.5)
     {
@@ -168,7 +200,9 @@ Shader "SevenSteps/RuinsSurface"
     if(i.style.x>3.5){lighting=half3(.14,.17,.22)+i.fill*.20+l.color*(1.05*saturate(dot(n,l.direction)));color*=lerp(.48,1,saturate(n.y*1.2));if(i.normalWS.y>.4)color*=BoardShadow(i.positionWS);}
     half floorValue=i.style.x>3.5?.12:_AmbientFloor;
     color*=lerp(max(lighting,floorValue.xxx),half3(1,1,1),_Unlit);
-    if(i.style.x>3.5){half3 v=GetWorldSpaceNormalizeViewDir(i.positionWS);half spec=pow(saturate(dot(n,normalize(v+l.direction))),lerp(88,8,stoneRoughness));color+=l.color*spec*(1-stoneRoughness)*.14;}
+    if(i.style.x>3.5){half3 v=GetWorldSpaceNormalizeViewDir(i.positionWS);half spec=pow(saturate(dot(n,normalize(v+l.direction))),lerp(120,8,stoneRoughness));half pigmentValue=saturate(max(i.color.r,max(i.color.g,i.color.b)));color+=l.color*spec*(1-stoneRoughness)*lerp(.14,.55,_PlanetIce)*pigmentValue;
+     if(_PlanetIce>.5){half rim=pow(1-saturate(dot(n,v)),3);half veins=SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,i.positionWS.xz*.72).r;half rime=smoothstep(.64,.85,veins);color+=half3(.15,.28,.36)*(rim*.40+rime*.13)*pigmentValue;}
+    }
     return half4(MixFog(color,i.fog),_SurfaceAlpha);
    }
    ENDHLSL

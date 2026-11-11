@@ -8,7 +8,7 @@ namespace SevenSteps.Art
     // Builds one opaque renderer, once per Fit. Sources are Blender FBXs, not runtime primitives.
     public static class BoardShapeAAssembly
     {
-        public static GameObject Build(Transform parent, BoardShapeAKit kit, Material material, string chapter, int w, int h)
+        public static GameObject Build(Transform parent, BoardShapeAKit kit, Material material, string chapter, int w, int h, bool themedDressing=false)
         {
             if (w <= 0 || h <= 0 || !kit || !material || kit.crust == null || kit.crust.Length != 3)
                 throw new InvalidOperationException("BoardShapeA requires positive bounds and a complete imported kit");
@@ -17,6 +17,7 @@ namespace SevenSteps.Art
             float Noise(int seed){uint n=unchecked((uint)seed*2654435761u);n^=n>>15;return (n&65535)/65535f;}
             void Add(Mesh mesh, Vector3 p, Vector3 scale, float yaw = 0, bool decoration = false)
             {
+                if(themedDressing&&decoration)return;
                 if (!mesh || !mesh.isReadable) throw new InvalidOperationException("Missing/read-protected BoardShapeA source mesh");
                 var matrix = Matrix4x4.TRS(p, Quaternion.Euler(0,yaw,0), scale);
                 if (decoration)
@@ -121,7 +122,7 @@ namespace SevenSteps.Art
                 foreach(int sign in new[]{-1,1})foreach(float z in new[]{-1.8f,0f,1.8f})
                     Add(kit.altarMenhir?kit.altarMenhir:kit.menhirs[1],new Vector3(sign*(w*.5f+1.80f),-.10f,z),new Vector3(1.35f,2.25f,1.35f),sign*13,true);
             }
-            if(chapter=="frost")
+            if(chapter=="frost"&&!themedDressing)
             {
                 // Twelve three-shard quartz clusters create thirty-six readable columns around and beneath the crust.
                 foreach(float x in new[]{-3f,-1f,1f,3f})
@@ -189,7 +190,8 @@ namespace SevenSteps.Art
             if(cursor!=styles.Length)throw new InvalidOperationException("BoardShapeA combine lost UV seeds");
             mesh.uv2=styles;
             if(mesh.triangles.Length/3>50000)throw new InvalidOperationException("BoardShapeA environment exceeds 50k tris");
-            mesh.RecalculateBounds();mesh.UploadMeshData(true);
+            // Exterior dressing fits against this exact surface once, using a temporary MeshCollider.
+            mesh.RecalculateBounds();mesh.UploadMeshData(!themedDressing);
             var go=new GameObject("BoardShapeA_Combined",typeof(MeshFilter),typeof(MeshRenderer));
             go.transform.SetParent(parent,false);go.GetComponent<MeshFilter>().sharedMesh=mesh;
             var shadows=go.AddComponent<BoardShapeAShadowField>();

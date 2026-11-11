@@ -47,6 +47,7 @@ MonoBehaviour:
   surface: {fileID: 2100000, guid: df9ffb1a77172904393efba61f862de0, type: 2}
   chapterId: altar
   boardShape: {fileID: 11400000, guid: 0094accda97e29e47a800eaddc096043, type: 2}
+  dressing: {fileID: 11400000, guid: b6cb7c1b578d7624d9652feb843e7b0f, type: 2}
   summitTint: {r: 0.7372549, g: 0.68235296, b: 0.5372549, a: 1}
   rimTint: {r: 0.6392157, g: 0.5803922, b: 0.43529412, a: 1}
   rockTint: {r: 0.56078434, g: 0.5019608, b: 0.36862746, a: 1}

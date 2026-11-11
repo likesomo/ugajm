@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bddbdd7b197081429d4248a051e9a7a, type: 3}
+  m_Name: Dressing_moss
+  m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.PlanetDressingSet
+  planetId: moss
+  modules:
+  - {fileID: 5020331748293717141, guid: 2ff7b57a09500404bb090c90dec01d04, type: 3}
+  - {fileID: 3026134773079598931, guid: 10dbe73e1ae89e248ae183aca6f570f6, type: 3}
+  - {fileID: 3935286775120959047, guid: 7963f6fa3f1930840920405cb204f4f9, type: 3}
+  - {fileID: 338229385785721467, guid: c71562ccbb85f2b4fb3be8e8542566b1, type: 3}
+  - {fileID: 7340777464381164332, guid: 256e14c5ea1170740a587a6f2059cf04, type: 3}
+  material: {fileID: 2100000, guid: 9e59cf32aef50ad4c97c35ea132e735c, type: 2}
