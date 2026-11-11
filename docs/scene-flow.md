@@ -331,6 +331,9 @@ Scene root (MonoBehaviour 하나, 조립만)
 | `HudView` | `Refresh(State, HudModel{stageIdx, stageCount, message, progress})`. 이벤트 `StageSelectRequested`, `SettingsRequested`, `StageClicked(int)` / `UndoRequested`, `RestartRequested`, `HintRequested` | 앞 3개는 흐름 컨트롤러, 뒤 3개는 보드 컨트롤러 | `GameController` 직접 참조 제거. `NudgeChoice()`와 보드 피드백 메서드는 보드 컨트롤러 전용. 세쌍둥이 몸 아이콘 외형(`TileSet.BodyColor`)은 `HudModel`이 아니라 `HudView`가 읽는다. **S3에서 `TileSet`을 생성자/Init으로 주입**하고, 임시 조회 `HudView.BodyLook`(`GetComponent<BoardView>().TileSet`, feat/view eafd97b)는 게임플레이/UI가 지운다 |
 | `IOverlay` (설정, 크레딧, 이후 확인 창·챕터 전환) | `Show()`, `Hide()`, `event CloseRequested` | `BackNavigator` | 뷰는 스스로 닫지 않고 `CloseRequested`만 낸다. 열림 여부는 `OverlayStack`(`Contains`, `Count`) 하나가 가진다. 설정 저장은 `Hide`가 아니라 값이 바뀔 때 컨트롤러가 `SaveSystem` 명령으로 한다(Pop 경로와 무관) |
 | 보드 입력 차단 | `BoardInput`이 `OverlayStack.Count > 0`이면 보드 이벤트를 내지 않음 | 보드 컨트롤러 | — |
+| `MenuPanel` / `MenuController` (최소 UI, 2026-11-11) | `IMenuPanel : IOverlay` 이벤트 `SettingsRequested`, `StagesRequested`, `SolutionRequested`, `ControlsRequested`. `MenuController.Open/Toggle/IsOpen` | HUD 메뉴 버튼 → `GameController.Menu.Toggle` (gameplay-ui의 메뉴 버튼이 생길 때까지 HUD 설정 버튼이 연다) | 오버레이라 열려 있는 동안 보드 입력 없음, Esc로 닫힘. 다른 오버레이 위에서는 열리지 않음. 항목은 메뉴를 먼저 닫고: 설정 패널, 행성 지도(`OpenStageSelect`), 풀이(`BoardController.ShowHint`, H와 같은 계산), 조작법(`TutorialTracker.PlayControls`, 저장 안 함) |
+| `TutorialTracker` (최소 UI 한 번 안내) | `ShowMoveGuide`, `ShowChoiceGuide`, `ExplainChoices`, `ManualControls`, 이벤트 `Changed` | `GameController.Tutorial`을 HUD·선택 카드(gameplay-ui)가 읽고 `Changed`에 다시 그림 | `GameSession.Updated`의 Present(적용된 명령)만 센다: 첫 이동 적용 → `move@1` seen, Choose에서 K/X 적용 → `choose@1` seen + `ChoiceConfirms`(상한 3). Rebuild/Snap(로드·Undo·재시작·리플레이)은 표시만 갱신, seen을 되돌리지 않고 리플레이·QA 해시와 무관. 저장은 `SaveSystem` 튜토리얼 키(architect), -newplayer가 함께 지움. 개발 실행(리플레이·flowcheck·titlecheck·smoke)은 메모리 저장소에 모두 seen으로 시작 |
+| 설정 접근성 행 | `SettingsPanel` 이벤트 `StepNumbersToggled`, `ReduceMotionToggled` → `SettingsController` → `SaveSystem.SetShowStepNumbers/SetReduceMotion` | 표시 쪽은 `SaveSystem.SettingsChanged`를 듣는다(gameplay-ui) | 둘 다 기본 꺼짐. 행은 플레이 기록 행을 코드로 복제(프리팹 변경 없음), 패널 680×672 |
 
 ## 5. 단계별 이행 계획
 
@@ -480,3 +483,4 @@ Open Project 1은 미러의 파일 목록과 커밋 메시지만 확인했다(�
 | 2026-11-09 | (c) 12.8 챕터 연결 481e953. 남은 것: 별 3개(아키텍트 계약 뒤), 다국어 |
 | 2026-11-10 | (d) 별 3개 흐름 쪽 7028a00, HUD 프리팹(a68ee8b) 검토 OK |
 | 2026-11-10 | 리뷰 수정(F1~F3, ChapterCard, FinishedChapter), S7a 메뉴 시안 적용 |
+| 2026-11-11 | 최소 UI 씬 플로우 몫: 메뉴(MenuPanel/MenuController), 한 번 안내(TutorialTracker), 설정 접근성 2행. 4.7 표에 추가 |

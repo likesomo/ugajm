@@ -158,6 +158,14 @@ namespace SevenSteps.EditorTools
                 s.Show();
                 return s.gameObject;
             } }, "");
+            yield return (new Screen { Name = "Menu", Build = (c, root) =>
+            {
+                BuildTitle(c, root);
+                var m = new MenuPanel(root);
+                m.Apply(c.Loc);
+                m.Show();
+                return Find(root, "GameMenu");
+            } }, "");
             yield return (new Screen { Name = "StageSelect", Build = (c, root) => { BuildMap(c, root, planets); return null; } }, "map");
             for (int p = 0; p < planets.Count; p++)
             {
