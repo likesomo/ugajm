@@ -1,4 +1,5 @@
 using System;
+using SevenSteps.Contracts;
 using SevenSteps.Game;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -293,6 +294,10 @@ namespace SevenSteps.EditorTools
                 AssetDatabase.CreateAsset(ga, AssetsPath);
             }
             ga.levelsJson = Load<TextAsset>(LevelsPath);
+            // Story (docs/architecture.md 16): story.json from unity.sh levels, and the picture set (art fills its sprites;
+            // required stays false until every picture is in, 16.2). Made empty with the story.json keys when missing.
+            ga.storyJson = AssetDatabase.LoadAssetAtPath<TextAsset>(DataDir + "/story.json");
+            ga.storyImages = StoryImagesAsset(ga.storyJson);
             ga.font = Load<Font>(FontPath);
             ga.floorA = pFloorA; ga.floorB = pFloorB; ga.wall = pWall; ga.pit = pPit; ga.ice = pIce;
             ga.cracked = pCracked; ga.bridge = pBridge; ga.exit = pExit; ga.gate = pGate;
@@ -308,6 +313,22 @@ namespace SevenSteps.EditorTools
             EditorUtility.SetDirty(ga);
             AssetDatabase.SaveAssets();
             return ga;
+        }
+
+        const string StoryImagesPath = DataDir + "/StoryImages.asset";
+
+        /// Data/StoryImages.asset, created with one empty entry per story.json image key when it does not exist yet. An
+        /// existing set is art's and is left as it is.
+        static StoryImageSet StoryImagesAsset(TextAsset storyJson)
+        {
+            var set = AssetDatabase.LoadAssetAtPath<StoryImageSet>(StoryImagesPath);
+            if (set != null) return set;
+            set = ScriptableObject.CreateInstance<StoryImageSet>();
+            var keys = storyJson != null ? JsonUtility.FromJson<StoryFileDto>(storyJson.text).images : null;
+            set.entries = keys == null ? new StoryImageSet.Entry[0]
+                : System.Array.ConvertAll(keys, k => new StoryImageSet.Entry { key = k });
+            AssetDatabase.CreateAsset(set, StoryImagesPath);
+            return set;
         }
 
         static T Load<T>(string path) where T : Object

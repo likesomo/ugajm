@@ -69,6 +69,7 @@ namespace SevenSteps.Game.UI
             titleView = new TitleView(root);
             planets = PlanetEntry.FromCatalog(levels.Length);
             planetMap = new PlanetMapView(root, planets, levels);
+            planetMap.Story = Services.TryGet<StoryBook>(out var story) ? story : null; // carvings, lit dipper lines (story 0.5)
             planetStages = new PlanetStagesPanel(root);
             languagePanel = new LanguagePanel(root);
             bool telemetryDefault = Services.Get<AppConfig>().telemetryOnByDefault;
@@ -179,7 +180,7 @@ namespace SevenSteps.Game.UI
 
         void ApplyText()
         {
-            titleView.Apply(localizer);
+            titleView.Apply(localizer, Services.TryGet<StoryBook>(out var story) ? story.TitleLine(localizer.Current) : null);
             planetMap.Apply(localizer);
             languagePanel.Apply(localizer);
             creditsPanel.Apply(localizer);

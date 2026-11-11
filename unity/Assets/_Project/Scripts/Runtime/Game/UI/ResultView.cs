@@ -182,8 +182,9 @@ namespace SevenSteps.Game.UI
                 body.text = loc.Get("result.lost_body");
             }
             ShowStarLabels(m);
+            Set(Label(next), m.IsLast ? "result.ending" : "result.next"); // last stage: [끝까지 보기] -> the ending (16.8)
             if (redraw) return;
-            next.gameObject.SetActive(m.Cleared && !m.IsLast);
+            next.gameObject.SetActive(m.Cleared);
             again.gameObject.SetActive(m.Cleared);
             select.gameObject.SetActive(true);
             undo.gameObject.SetActive(!m.Cleared);

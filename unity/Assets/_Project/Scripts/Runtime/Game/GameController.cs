@@ -59,6 +59,9 @@ namespace SevenSteps.Game
         MenuPanel menuPanel;
         MenuController menu;
         TutorialTracker tutorial;
+        StoryBook story;
+        EndingView endingView;
+        EndingController ending;
 
         bool OnlyChapterCard() => chapterCard != null && overlays.Count == 1 && overlays.Top == chapterCard;
 
@@ -118,7 +121,10 @@ namespace SevenSteps.Game
             languagePanel.Apply(localizer);
             var menuPanel = this.menuPanel = new MenuPanel(overlayCanvas);
             menuPanel.Apply(localizer);
-            applyResultLanguage = _ => { result.Apply(localizer); languagePanel.Apply(localizer); menuPanel.Apply(localizer); }; // the HUD and board redraw in BoardController
+            // Story ending (docs/architecture.md 16.8): four cards after the last stage's [끝까지 보기].
+            story = Services.TryGet<StoryBook>(out var book) ? book : StoryBook.Off();
+            var endingView = this.endingView = new EndingView(overlayCanvas, assets.storyImages, localizer);
+            applyResultLanguage = _ => { result.Apply(localizer); languagePanel.Apply(localizer); menuPanel.Apply(localizer); endingView.Apply(localizer); }; // the HUD and board redraw in BoardController
             localizer.Changed += applyResultLanguage;
             // The theme's card prefab, else the code-built chapter entry screen (art concept chapter-entry). None in smoke /
             // replay runs: the screenshot must show the board.
@@ -178,6 +184,10 @@ namespace SevenSteps.Game
             board.Choice.ExplainChoices = () => tutorial.ExplainChoices;
             board.Choice.ShowGuide = () => tutorial.ShowChoiceGuide;
             tutorial.Changed += () => { hud.Guide = tutorial.ShowMoveGuide; board.Choice.Refresh(); };
+            ending = new EndingController(overlays, endingView);
+            ending.Finished += OnEndingFinished;
+            flowController.EndingRequested += BeginEnding;
+            flowController.ClearShown += story.Save; // 16.5: the finale line just shown is counted
             result.NextRequested += flowController.Next;
             result.RetryRequested += flowController.Again;
             result.StageSelectRequested += flowController.OpenStageSelect;
@@ -202,7 +212,7 @@ namespace SevenSteps.Game
             if (launch.FlowCheck && !string.IsNullOrEmpty(launch.Replay) && launch.DirectToGame)
             {
                 // -flowcheck: the replay wins for real, then Result -> Next -> chapter entry are checked (S8).
-                var check = new FlowCheck(flow, board, flowController, overlays, result, chapterStage, chapterIntro, localizer, presetFor);
+                var check = new FlowCheck(flow, board, flowController, overlays, result, chapterStage, chapterIntro, localizer, presetFor, ending, endingView);
                 StartCoroutine(check.Run(launch.TakeReplay(), launch.Screenshot));
                 return;
             }
@@ -224,6 +234,7 @@ namespace SevenSteps.Game
             languageController?.Dispose();
             chapterIntro?.Dispose();
             menu?.Dispose();
+            ending?.Dispose();
             if (board != null && tutorial != null)
             {
                 if (board.Session != null) board.Session.Updated -= tutorial.Apply;
@@ -234,13 +245,41 @@ namespace SevenSteps.Game
 
         void StopControlsGuide(int stage, string via) => tutorial.StopControls();
 
+        /// The ending for the won last stage, or straight to the star map when the story is off.
+        void BeginEnding()
+        {
+            var cards = board.State != null ? story.Ending(board.State, localizer.Current) : null;
+            if (cards == null) flowController.OpenStageSelect();
+            else ending.Begin(cards);
+        }
+
+        void OnEndingFinished(EndingModel cards, int seen, bool skipped)
+        {
+            story.EndingFinished(cards, seen);
+            flowController.OpenStageSelect();
+        }
+
+        /// The ending is the top overlay (its keys: Enter / Space / Right = next; Esc skips through the BackNavigator).
+        bool EndingOnTop => ending != null && ending.IsOpen && overlays.Top == endingView;
+
         /// Flow keys. Board keys are read by the board controller (blocked while an overlay is open or a scene loads).
         void Update()
         {
             var kb = Keyboard.current;
             if (kb == null || flow.IsLoading) return;
-            // Esc in one place: the top overlay closes first, otherwise AppFlow's back target (BackNavigator).
-            if (kb.escapeKey.wasPressedThisFrame) { back.Back(); return; }
+            // Esc in one place: the top overlay closes first; on the clear result the menu opens over it (14.7: the result
+            // has no stage select button); otherwise AppFlow's back target (BackNavigator).
+            if (kb.escapeKey.wasPressedThisFrame)
+            {
+                if (overlays.Count == 0 && flow.State == AppState.Result) menu.Open();
+                else back.Back();
+                return;
+            }
+            if (EndingOnTop && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.rightArrowKey.wasPressedThisFrame))
+            {
+                ending.Next();
+                return;
+            }
             // Chapter card: a board key dismisses it and still counts as a move (rehearsal 2026-11-10: the first arrow was lost).
             if (OnlyChapterCard() && BoardController.AnyBoardKeyPressed(kb)) back.Back();
             if (overlays.Count > 0) return;

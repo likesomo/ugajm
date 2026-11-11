@@ -92,6 +92,7 @@ namespace SevenSteps.Game
             CanvasGroup group, loading;
             LoadingView view;
             float loadingSince = -1;
+            int loads;
 
             public static Fader Create()
             {
@@ -128,7 +129,10 @@ namespace SevenSteps.Game
             public void BeginLoading()
             {
                 if (view == null || !Services.TryGet<Localizer>(out var loc)) return;
-                view.Begin(loc, UnityEngine.Random.Range(1, LoadingView.Tips + 1));
+                // Every other load shows the observer's carving instead of a rule tip (story-integration.md 9 Q4: alternate).
+                // None while story.json has no "loading" entry (out of the jam data, 0.1).
+                string carving = (loads++ & 1) == 1 && Services.TryGet<Flow.StoryBook>(out var story) ? story.LoadingLine(loc.Current) : null;
+                view.Begin(loc, UnityEngine.Random.Range(1, LoadingView.Tips + 1), carving);
                 loadingSince = Time.unscaledTime;
             }
 

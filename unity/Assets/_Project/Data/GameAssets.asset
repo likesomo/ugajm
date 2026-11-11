@@ -19,6 +19,8 @@ MonoBehaviour:
     json: {fileID: 4900000, guid: 2739d10b5766402eb4af1e67738413d3, type: 3}
   - language: 1
     json: {fileID: 4900000, guid: 5dd6d53150b6461d95cf23dbd0263852, type: 3}
+  storyJson: {fileID: 4900000, guid: 243f79a2596984d4cb559a522110da5c, type: 3}
+  storyImages: {fileID: 11400000, guid: f3146f6af9bdad11005be4b1286081cb, type: 2}
   font: {fileID: 12800000, guid: 6726afba0e987134bb60bf8a871ea91c, type: 3}
   uiTheme: {fileID: 11400000, guid: 5fb5bfb0b12b0b541b9acd8cfff3f58e, type: 2}
   tileSet: {fileID: 0}
