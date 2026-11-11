@@ -230,7 +230,10 @@ namespace SevenSteps.EditorTools
                 {
                     BuildMap(c, root, planets);
                     var list = new PlanetStagesPanel(root);
-                    list.Bind(planets[planet], FullProgress(c.Levels), c.Levels, c.Loc);
+                    // Full progress: every finale cleared, so the tagline row holds the planet's truth (review cd38eb8 N2).
+                    var story = StoryOf(c);
+                    string truth = story != null ? story.Line(story.Find(StoryRules.Finale(planets[planet].Key)), 0, c.Lang) : null;
+                    list.Bind(planets[planet], FullProgress(c.Levels), c.Levels, c.Loc, truth);
                     list.Show();
                     return Find(root, "PlanetStages");
                 } }, "list " + planets[p].Key);

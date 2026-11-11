@@ -154,7 +154,7 @@ namespace SevenSteps.Game.UI
         void OpenPlanet(int planet)
         {
             if (overlays.Count > 0) return;
-            planetStages.Bind(planets[planet], save.Progress, levels, localizer);
+            planetStages.Bind(planets[planet], save.Progress, levels, localizer, TruthOf(planet));
             openPlanet = planet;
             Open(planetStages);
         }
@@ -188,10 +188,14 @@ namespace SevenSteps.Game.UI
             languagePanel.Apply(localizer);
             creditsPanel.Apply(localizer);
             if (overlays.Contains(planetStages) && openPlanet >= 0)
-                planetStages.Bind(planets[openPlanet], save.Progress, levels, localizer);
+                planetStages.Bind(planets[openPlanet], save.Progress, levels, localizer, TruthOf(openPlanet));
         }
 
         void OnLanguageChanged(Language lang) => ApplyText();
+
+        /// A planet's truth for its stage list once its finale is cleared (story 0.5 #3), else null (the tagline).
+        string TruthOf(int planet) =>
+            Services.TryGet<StoryBook>(out var story) && story.FinaleCleared(planets[planet].Key) ? story.FinaleLine(planets[planet].Key, localizer.Current) : null;
 
         void OnDestroy()
         {

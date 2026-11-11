@@ -352,6 +352,7 @@ namespace SevenSteps.Game.UI
             totalLabel.rectTransform.sizeDelta = new Vector2(totalLabel.preferredWidth + 2, 40);
             totalValue.rectTransform.TopLeft(300 + totalLabel.preferredWidth + 12, 24, 200, 40);
             if (shown != null && panel.activeSelf) Show(shown, -1);
+            else detailDefault = detail.text; // review cd38eb8 N1: the closed map's default in the new language (Show redoes it)
         }
 
         /// A card was focused or hovered: its truth when it has a carving, else the usual detail line.
@@ -512,7 +513,9 @@ namespace SevenSteps.Game.UI
         }
 
         /// Fills the panel for a planet (call before Show; the root pushes it on the OverlayStack).
-        public void Bind(PlanetEntry planet, ProgressData progress, IReadOnlyList<Level> levels, Localizer loc)
+        /// <param name="truth">The planet's truth (StoryBook.FinaleLine) once its finale is cleared: shown in gold in the
+        /// tagline row instead of the tagline (review cd38eb8 N2: a tap opens this panel over the map's detail row). Null = the tagline.</param>
+        public void Bind(PlanetEntry planet, ProgressData progress, IReadOnlyList<Level> levels, Localizer loc, string truth = null)
         {
             if (planet == null) throw new ArgumentNullException(nameof(planet));
             if (progress == null) throw new ArgumentNullException(nameof(progress));
@@ -521,8 +524,10 @@ namespace SevenSteps.Game.UI
             if (planet.Stages.Count > MaxCards) throw new ArgumentException($"planet {planet.Key}: {planet.Stages.Count} stages, the panel holds {MaxCards}", nameof(planet));
             title.text = planet.Name(loc);
             title.font = Ui.Theme.FontFor(loc.Current, FontRole.Title);
-            string line = planet.Tagline(loc);
+            bool isTruth = !string.IsNullOrEmpty(truth);
+            string line = isTruth ? truth : planet.Tagline(loc);
             tagline.text = line;
+            tagline.color = isTruth ? Ui.Gold : Ui.Dim;
             tagline.font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
             tagline.gameObject.SetActive(!string.IsNullOrEmpty(line));
             UiText.Set(back, loc, "planets.list_back", FontRole.Body);
