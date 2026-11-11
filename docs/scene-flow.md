@@ -1,7 +1,7 @@
 # 일곱 걸음 씬 플로우 — Unity 씬 구조
 
 담당: 씬 플로우 엔지니어 (`feat/scene-flow`). 브리프: `agents/scene-flow.md`, `C:/unityjam/shared-assets/seven-steps/briefs/scene-flow-unity-2026-11-11.md`.
-상태: **제안 (2026-11-11, 사용자 지시로 다시 씀). 리드·아키텍트 검토와 리드 승인 전에는 구현하지 않는다.**
+상태: **리드 승인 (2026-11-11, 아키텍트 조건부 승인 `docs/reviews/2026-11-11-scene-flow-unity-structure.md`, M1~M3 반영). P1부터 구현 중.**
 
 이 문서는 **Unity 씬 구조**만 다룬다:
 - 어떤 씬이 빌드 목록 몇 번에 있는지
@@ -18,7 +18,7 @@
 
 - **지금 씬 세 개**: 0 `Boot`(화면 없음, 서비스 등록) → 1 `Title`(타이틀 + 행성 지도) → 2 `Game`(보드, HUD, 결과).
 - **씬 전환**: 모두 `LoadSceneMode.Single` + `SceneManager.LoadSceneAsync`다.
-  - 씬을 넘어 사는 것은 `DontDestroyOnLoad` 오브젝트 둘(텔레메트리 러너, 씬 페이더)뿐이다.
+  - 씬을 넘어 사는 것은 `DontDestroyOnLoad` 루트 오브젝트 최대 둘이다: `TelemetryRunner`(텔레메트리가 켜졌을 때만), `SceneFader`(첫 씬 로드 뒤).
   - Boot를 상주 씬으로 두고 다른 씬을 Additive로 붙이는 방식은 쓰지 않는다. WebGL에서는 메모리 회수(`Resources.UnloadUnusedAssets` 자동 호출)와 단순함이 더 중요하다(3장).
 - **첫 실행 로딩 씬(`Loading`)은 미구현·보류다** (사용자 지시 2026-11-11). 4장에 자리만 잡아 둔다: 이름, 빌드 목록 위치, `LoadSceneAsync` 연결 방식.
   - 씬 파일·애니메이션·아트는 만들지 않는다.
@@ -33,16 +33,16 @@
 | Unity 용어 (Manual / Scripting API) | 이 프로젝트 |
 |---|---|
 | [Scene](https://docs.unity3d.com/6/Documentation/Manual/CreatingScenes.html) | `unity/Assets/_Project/Scenes/*.unity`. 씬 이름 상수는 `AppScenes`(`Contracts/App/AppFlow.cs`) |
-| [Build Profiles — Scene List](https://docs.unity3d.com/6/Documentation/Manual/build-profile-scene-list.html), [`Scene.buildIndex`](https://docs.unity3d.com/6/Documentation/ScriptReference/SceneManagement.Scene-buildIndex.html) | `ProjectSettings/EditorBuildSettings.asset`(리드 소유). 목록 순서가 build index이고, 0번이 시작 씬이다. 프로필별 목록 덮어쓰기(Override Global Scene List)는 쓰지 않는다. `SceneUtility.GetBuildIndexByScenePath`가 전역 목록만 보는 [알려진 문제](https://issuetracker.unity.com/issues/21328/build-profile-with-override-global-scene-list-ignored-when-using-sceneutilitygetbuildindexbyscenepath-in-onbeforeserialize-before-domain-reload)가 있다 |
+| [Build Profiles — Scene List](https://docs.unity3d.com/6/Documentation/Manual/build-profile-scene-list.html), [`Scene.buildIndex`](https://docs.unity3d.com/6/Documentation/ScriptReference/SceneManagement.Scene-buildIndex.html) | `ProjectSettings/EditorBuildSettings.asset`(리드 소유). Scene List 페이지: 목록 순서대로 빌드한다. `Scene.buildIndex` 페이지: index는 목록 위치이고 0부터 센다(0번이 시작 씬). 프로필별 목록 덮어쓰기(Override Global Scene List)는 쓰지 않는다. 이유는 이슈 트래커의 [알려진 문제](https://issuetracker.unity.com/issues/21328/build-profile-with-override-global-scene-list-ignored-when-using-sceneutilitygetbuildindexbyscenepath-in-onbeforeserialize-before-domain-reload)다(`SceneUtility.GetBuildIndexByScenePath`가 전역 목록만 본다) |
 | [Splash Screen (Player Settings › Splash Image)](https://docs.unity.com/en-us/engine/6000.5/manual/unity-editor/editor-settings-reference/comp-manager-group/class-player-settings-splash-screen), [`PlayerSettings.SplashScreen`](https://docs.unity3d.com/ScriptReference/PlayerSettings.SplashScreen.html) | Unity 로고 스플래시다. 보류한 `Loading` 씬과는 다른 것이다. 지금 켜져 있다(`m_ShowUnitySplashScreen: 1`, 배경 `#231F20`). 4.3 참고 |
 | [`SceneManager.LoadSceneAsync`](https://docs.unity3d.com/6/Documentation/ScriptReference/SceneManagement.SceneManager.LoadSceneAsync.html), [`AsyncOperation`](https://docs.unity3d.com/6/Documentation/ScriptReference/AsyncOperation.html) (`progress`, [`allowSceneActivation`](https://docs.unity.com/en-us/engine/6000.0/script-reference/unityengine/asyncoperation/allowsceneactivation)) | `SceneLoader`(`Game/App/SceneLoader.cs`)만 부른다. `allowSceneActivation = false`면 `progress`가 0.9에서 멈추고 `isDone`은 거짓이다. 그동안 다른 비동기 씬 작업(언로드 포함)도 대기한다. 지금은 `-loadDelay`(개발용)만 이 보류를 쓴다 |
 | [`LoadSceneMode.Single` / `Additive`](https://docs.unity3d.com/6/Documentation/ScriptReference/SceneManagement.LoadSceneMode.html) | Single만 쓴다(3장). Single 로드는 이전 씬을 모두 닫고 `Resources.UnloadUnusedAssets`를 자동으로 부른다 |
 | Active scene: [`SceneManager.SetActiveScene`](https://docs.unity3d.com/6/Documentation/ScriptReference/SceneManagement.SceneManager.SetActiveScene.html), [`GetActiveScene`](https://docs.unity3d.com/6/Documentation/ScriptReference/SceneManagement.SceneManager.GetActiveScene.html) | Single만 쓰므로 로드된 씬이 곧 활성 씬이다. `SetActiveScene`은 부르지 않는다. 라이팅·`RenderSettings`는 활성 씬의 것을 쓴다([Multi-scene editing](https://docs.unity.com/en-us/engine/6000.5/manual/working-with-scenes/multi-scene-editing/setupmultiplescenes)). `SceneLoader.Current`는 활성 씬 이름이다 |
 | [`SceneManager.UnloadSceneAsync`](https://docs.unity.com/en-us/engine/6000.0/script-reference/unityengine/scenemanagement/scenemanager/unloadsceneasync) | 쓰지 않는다. 씬 오브젝트만 지우고 에셋은 남기므로 `Resources.UnloadUnusedAssets`를 따로 불러야 한다. 마지막 남은 씬은 언로드할 수 없다 |
 | [`Resources.UnloadUnusedAssets`](https://docs.unity3d.com/6/Documentation/ScriptReference/Resources.UnloadUnusedAssets.html) | Single 로드가 자동으로 부른다. 직접 부르지 않는다 |
-| [`Object.DontDestroyOnLoad`](https://docs.unity.com/en-us/engine/6000.6/script-reference/unityengine/object/dontdestroyonload) / 상주(bootstrap) 씬 | DDOL 루트 오브젝트는 `TelemetryRunner`와 `SceneFader` 둘이다. 상주 씬(항상 열린 Boot + Additive)은 쓰지 않는다 |
+| [`Object.DontDestroyOnLoad`](https://docs.unity.com/en-us/engine/6000.6/script-reference/unityengine/object/dontdestroyonload) / 상주(bootstrap) 씬 | DDOL 루트 오브젝트는 0~2개다: `TelemetryRunner`는 텔레메트리가 켜졌을 때만(엔드포인트가 없거나 `telemetry=off`면 `NullTelemetry`, 오브젝트 없음), `SceneFader`는 첫 `SceneLoader.Load` 뒤에 생긴다. 상주 씬(항상 열린 Boot + Additive)은 쓰지 않는다 |
 | [`RuntimeInitializeOnLoadMethod`](https://docs.unity3d.com/6/Documentation/ScriptReference/RuntimeInitializeOnLoadMethodAttribute.html) (`SubsystemRegistration`) | 정적 상태를 Play 시작 때 비운다(`Bootstrap.ResetForPlay`, `Services`, `LevelCatalog` 등). 도메인 리로드가 꺼져 있어서 필수다 |
-| [Enter Play Mode Options](https://docs.unity3d.com/6/Documentation/Manual/configurable-enter-play-mode.html), [도메인 리로드 끄기](https://docs.unity.cn/Manual/domain-reloading.html) | `ProjectSettings/EditorSettings.asset`: `m_EnterPlayModeOptionsEnabled: 1`, `m_EnterPlayModeOptions: 1`(도메인 리로드 끔, 씬 리로드는 함). 정적 필드와 정적 이벤트 구독이 Play 사이에 남는다 |
+| [Enter Play Mode Options](https://docs.unity3d.com/6/Documentation/Manual/configurable-enter-play-mode.html), [도메인 리로드 끄기](https://docs.unity3d.com/6000.0/Documentation/Manual/domain-reloading.html) | `ProjectSettings/EditorSettings.asset`: `m_EnterPlayModeOptionsEnabled: 1`, `m_EnterPlayModeOptions: 1`(도메인 리로드 끔, 씬 리로드는 함). 정적 필드와 정적 이벤트 구독이 Play 사이에 남는다 |
 | [Animation Clip](https://docs.unity3d.com/6000.4/Documentation/Manual/AnimationOverview.html) + Animator / Timeline | 보류한 `Loading` 씬에서 쓸 방식(4.2). 전체 Timeline 패키지는 없고 `timelinefoundation` 모듈만 있다 |
 
 ---
@@ -54,7 +54,7 @@
 | 0 | `Boot` | 시작 씬 | `Boot`(`BootScreen` → `Bootstrap.Run`). 화면 없음, 카메라 없음 | scene-flow |
 | 1 | `Title` | `LoadSceneAsync` Single | `Title`(`TitleScreen`), 카메라, 이벤트 시스템. 행성 지도(v4)·패널은 루트가 코드로 만든다 | scene-flow(씬 파일), gameplay-ui(화면 내용) |
 | 2 | `Game` | `LoadSceneAsync` Single | `Game`(`GameController`), 카메라, 조명 셋(key/fill/rim), 이벤트 시스템. 보드·HUD·결과는 루트가 만든다 | scene-flow(씬 파일), gameplay-ui(보드·HUD) |
-| — | (DDOL) | — | `TelemetryRunner`(Boot의 `Bootstrap.Run`이 생성), `SceneFader`(첫 `SceneLoader.Load`에서 생성) | scene-flow |
+| — | (DDOL, 0~2개) | — | `TelemetryRunner`(Boot의 `Bootstrap.Run`이 텔레메트리가 켜졌을 때만 생성), `SceneFader`(첫 `SceneLoader.Load`에서 생성) | scene-flow |
 | (1, 보류) | `Loading` | `LoadSceneAsync` Single | **미구현·보류.** 4장 | scene-flow |
 
 - 빌드 목록은 지금(`Boot`, `Title`, `Game`) 그대로다. 변경 요청은 없다. `Loading`을 만들 때 넣을 변경은 4.4에 적어 둔다.
@@ -75,7 +75,7 @@
 | 얻는 것 | 상주 오브젝트를 씬 파일(인스펙터)로 편집할 수 있다 | — |
 
 **결정: B 유지.**
-- 상주 오브젝트가 둘뿐이라 A의 이득(인스펙터 편집)이 작다.
+- 상주 오브젝트가 최대 둘뿐이라 A의 이득(인스펙터 편집)이 작다.
 - WebGL 힙은 작고, 한 번 늘면 줄지 않는다. 두 씬이 겹치는 순간이 없고 에셋 해제가 자동인 B가 안전하다.
 - 잼 이후 음악·오디오 매니저가 커지면 다시 본다.
 
@@ -176,7 +176,7 @@
                  ┌──────────────────────────┐                                       │
                  │  2 Game                   │ ──────────────────────────────────────┘
                  └──────────────────────────┘
-   모든 Single 로드: 이전 씬 언로드 + Resources.UnloadUnusedAssets(자동). DDOL 둘은 남는다.
+   모든 Single 로드: 이전 씬 언로드 + Resources.UnloadUnusedAssets(자동). DDOL 루트(최대 둘)는 남는다.
    Title→Game, Game→Title: SceneFader 0.15초 페이드 아웃 → LoadSceneAsync → (0.3초 넘으면 로딩 화면) → 페이드 인.
    sceneLoaded(새 씬 Awake 뒤, Start 전)에서 AppFlow의 로딩 상태가 풀린다.
 ```
@@ -217,7 +217,7 @@
 | 항목 | 내용 |
 |---|---|
 | 용어 정리 (코드 주석) | `SceneLoader`·`AppFlow`·`Bootstrap` 주석을 Unity 용어로 맞춘다(Single 로드, 활성 씬, DDOL 루트, build index). 동작은 그대로 |
-| `SceneFlowValidator` | 빌드 목록이 `AppScenes`와 같은 순서(Boot 0, Title 1, Game 2)인지 검사하고, DDOL을 만드는 코드가 두 곳뿐인지 문서로 고정한다 |
+| `SceneFlowValidator` | 빌드 목록이 기대 순서(Boot 0, Title 1, Game 2)인지 검사한다. 기대 순서는 `AppScenes.BuildOrder` 한 곳에서 가져온다(아키텍트 N3: `Loading`을 넣을 때 이 목록만 바꾼다). 그리고 DDOL을 만드는 코드가 두 곳뿐인지 문서로 고정한다 |
 | `Boot` 카메라 | Boot에 배경 `#101C32` 카메라 하나. 카메라 없는 씬이 한 프레임 그려질 때의 기본색(WebGL 회색/검정)을 로더 페이지 색으로 맞춘다. 씬 파일 변경이라 PlayMode 캡처로 확인 |
 | PlayMode 테스트 (새) | `Tests/PlayMode` 어셈블리 + `unity.sh playtest`(9장) |
 | Play Mode 캡처 (새) | 에디터 스크립트 + `unity.sh playcapture`(9장) |
@@ -242,16 +242,44 @@
 | 컴파일 | `unity.sh compile` (`BuildTools.CompileCheck`) |
 | 순수 로직 | EditMode 테스트 (`unity.sh test`): `AppFlow` 전이, 가짜 `ISceneLoader`, 흐름 컨트롤러, journey 모델 |
 | 씬 흐름 | **PlayMode 테스트**(새 `Tests/PlayMode` 어셈블리, `-runTests -testPlatform PlayMode`, `unity.sh playtest`). 항목은 아래 목록 |
-| 화면 | 에디터 스크립트가 Play Mode에 들어가 Game 뷰를 `ScreenCapture`로 찍는다(`unity.sh playcapture <경로>`) → `reports/playcapture/` |
+| 화면 | Play Mode 캡처(9.2, `unity.sh playcapture`) → `reports/playcapture/` |
 | 빌드 전 검사 | `unity.sh scene-validate` |
 
 PlayMode 테스트 항목:
-- Boot를 열면 Title이 활성 씬이 되고, `SceneManager.sceneCount == 1`, DDOL 루트가 둘이다.
-- Title → Game → Title 왕복 뒤에도 DDOL이 늘지 않는다.
+- Boot를 열면 Title이 활성 씬이 되고 `SceneManager.sceneCount == 1`이다.
+- DDOL 루트: 이름마다 1개를 넘지 않는다. 씬을 한 번이라도 로드한 뒤에는 `SceneFader`가 정확히 1개다. 테스트는 텔레메트리를 끄므로 `TelemetryRunner`는 0개다(아키텍트 M1).
+- Title → Game → Title 왕복 뒤에도 DDOL 루트 수가 늘지 않는다.
 - `-level`과 같은 시작으로 Boot → Game이 된다.
 - Title·Game을 바로 열어도 부트스트랩된다.
 - 두 번 연속 Play(도메인 리로드 없음)에서 서비스가 새로 만들어진다.
 - journey 이어 가기·행성 완료 복귀가 동작한다.
+
+### 9.1 PlayMode 테스트의 실행 환경 (아키텍트 N4·N5)
+
+- 어셈블리 `SevenSteps.Tests.PlayMode`(`Tests/PlayMode/`, asmdef는 아키텍트 소유):
+  - references: `SevenSteps.Core`, `SevenSteps.Contracts`, `SevenSteps.Game`, `UnityEngine.TestRunner` (`UnityEditor.TestRunner`는 넣지 않는다)
+  - `includePlatforms: []`, `overrideReferences` + `nunit.framework.dll`, `defineConstraints: ["UNITY_INCLUDE_TESTS"]` (플레이어 빌드에 들어가지 않는다)
+- 실행 옵션 주입: `-runTests` 실행에는 테스트마다 `-level`·`-telemetry off`·`-savekey`를 줄 수 없다. 그래서 `Bootstrap.UseLaunchOptionsForNextRun(LaunchOptions)`(테스트·캡처용 진입점)을 둔다. 다음 `Bootstrap.Run`은 명령줄 대신 이 값을 쓰고 한 번 쓰면 지운다. 정적 값이므로 `SubsystemRegistration`에서도 지운다.
+- 저장: 테스트는 `-savekey` 접미사 `playtest`로 저장 키를 나눈다(`SaveStores.For`). 시작할 때와 끝날 때 그 키를 지운다. 개발자의 PlayerPrefs 진행은 건드리지 않는다.
+- 텔레메트리: 테스트는 `telemetry=off`. 네트워크를 쓰지 않는다.
+- 도메인 리로드: Unity Test Framework는 프로젝트의 Enter Play Mode 설정을 그대로 쓴다. 그래서 "두 번 연속 Play" 항목이 실제 설정을 검사한다.
+
+### 9.2 Play Mode 캡처 (P2, 아키텍트 M3)
+
+- **방법**: `-batchmode` 없이 에디터를 연다. `-batchmode`에는 Game 뷰 창이 없고, `-nographics`면 아무것도 그려지지 않는다. 카메라 → `RenderTexture` → `ReadPixels`는 Screen Space - Overlay uGUI(HUD·타이틀·결과)를 찍지 못하므로 쓰지 않는다.
+  - `unity.sh playcapture <이름>`이 `Unity.exe -projectPath unity -executeMethod SevenSteps.EditorTools.PlayCapture.Run -playcapture <이름>`을 실행한다(에디터 창이 잠깐 뜬다).
+  - 에디터 스크립트 `PlayCapture`는 다음 순서로 동작한다:
+    1. Game 뷰 해상도를 고정한다.
+    2. 캡처 이름에 맞는 `LaunchOptions`를 9.1의 진입점으로 넣는다.
+    3. 시작 씬(Boot)을 열고 `EditorApplication.EnterPlaymode()`.
+    4. 정해진 시점(예: Title 활성 + 1초)에 `WaitForEndOfFrame` 뒤 `ScreenCapture.CaptureScreenshotAsTexture()`로 찍어 PNG로 저장한다.
+    5. `EditorApplication.ExitPlaymode()`, `EditorApplication.Exit(0)`.
+- **해상도**: 1280×720 고정. `PlayModeWindow.SetCustomRenderingResolution(1280, 720, "playcapture")`로 Game 뷰 크기를 정하고, 찍은 텍스처 크기가 1280×720이 아니면 실패로 본다.
+- **빈 화면 대조**(smoke-webgl의 `?smoke=empty`와 같은 뜻): 캡처마다 두 장을 찍는다.
+  - 본 캡처: `SmokeView.Board`(하늘·행성 끄고 카메라 배경 마젠타 `#FF00FF`, 화면 UI 숨김)로 보드 영역(가로 30~70%, 세로 33~66%)에서 마젠타와 다른 픽셀이 500 이상이어야 한다.
+  - 대조: `SmokeView.Empty`(보드까지 숨김)로 같은 영역이 500 미만이어야 한다. 대조가 500 이상이면 측정이 망가진 것으로 보고 실패.
+  - 보통 화면(UI 포함)은 같은 실행에서 따로 한 장 저장한다(눈으로 보는 용도). Title처럼 보드가 없는 화면은 대조를 "UI 켬 vs 숨김" 픽셀 차이로 한다.
+- 결과: `reports/playcapture/<이름>.png`, `<이름>-board.png`, `<이름>-empty.png`, 로그 한 줄 `[SevenSteps] Play capture <이름>: OK|FAIL (board N, empty M)`.
 
 기존 `smoke`(플레이어 빌드 리플레이·flowcheck·titlecheck·journey)는 리드의 빌드 확인용으로 남긴다. scene-flow는 같은 확인을 PlayMode 테스트로 옮긴다.
 
@@ -322,6 +350,6 @@ PlayMode 테스트 항목:
 - `Object.DontDestroyOnLoad`: https://docs.unity.com/en-us/engine/6000.6/script-reference/unityengine/object/dontdestroyonload
 - `RuntimeInitializeOnLoadMethodAttribute`: https://docs.unity3d.com/6/Documentation/ScriptReference/RuntimeInitializeOnLoadMethodAttribute.html
 - Configurable Enter Play Mode: https://docs.unity3d.com/6/Documentation/Manual/configurable-enter-play-mode.html
-- Enter Play Mode without domain reload: https://docs.unity.cn/Manual/domain-reloading.html
+- Enter Play Mode without domain reload: https://docs.unity3d.com/6000.0/Documentation/Manual/domain-reloading.html
 - Animation overview (Animation Clip, Animator Controller): https://docs.unity3d.com/6000.4/Documentation/Manual/AnimationOverview.html
 - 이전 조사 출처(2026-11-08): `docs/scene-flow-2026-11-08.md` 7장
