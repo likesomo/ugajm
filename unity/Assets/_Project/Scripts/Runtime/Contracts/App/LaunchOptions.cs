@@ -5,8 +5,8 @@ namespace SevenSteps.Contracts
 {
     /// <summary>
     /// Start options from the command line (desktop) or the page URL (WebGL). Same format as the web prototype:
-    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-settings] [-lang en] [-smoke board|empty] [-newplayer] [-loadDelay 1.5] [-flowcheck] [-titlecheck begin|continue|map]
-    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1&amp;loadDelay=1.5&amp;settings=1&amp;flowcheck=1&amp;titlecheck=map   (docs/telemetry.md section 4)
+    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-settings] [-lang en] [-smoke board|empty] [-newplayer] [-loadDelay 1.5] [-flowcheck] [-titlecheck begin|continue|map] [-newmap|-oldmap]
+    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1&amp;loadDelay=1.5&amp;settings=1&amp;flowcheck=1&amp;titlecheck=map&amp;newmap=1   (docs/telemetry.md section 4)
     /// Pure parsing: the caller passes Environment.GetCommandLineArgs() and Application.absoluteURL.
     /// Bad values are not exceptions (external input): they are skipped and described in <see cref="Warnings"/>,
     /// which the bootstrap logs (Contracts does not log). Read-only after parsing, except the two editor/once-only changes below.
@@ -56,6 +56,9 @@ namespace SevenSteps.Contracts
         /// (SaveStores.For), so builds run from different workspaces do not share progress and settings (Windows
         /// PlayerPrefs are one registry key per product). 1-32 of A-Z a-z 0-9 _ -. "" = the normal keys.
         public string SaveKey { get; private set; } = "";
+        /// Stage select v4 toggle (-newmap / -oldmap, ?newmap=1|0, ?oldmap=1): true = the planet-body map, false = the card map, null =
+        /// the build's default (Game.Flow.StageSelectToggle.DefaultOn). Playtest builds flip only the default.
+        public bool? NewMap { get; private set; }
 
         readonly List<string> warnings = new List<string>();
         /// What was ignored while parsing, one line each. Empty when everything parsed.
@@ -154,6 +157,8 @@ namespace SevenSteps.Contracts
                         case "-newplayer": o.NewPlayer = true; continue;
                         case "-flowcheck": o.FlowCheck = true; continue;
                         case "-artperf": o.ArtPerf = true; continue;
+                        case "-newmap": o.NewMap = true; continue;
+                        case "-oldmap": o.NewMap = false; continue;
                         case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": case "-loadDelay": case "-titlecheck": case "-savekey": break;
                         default: continue;
                     }
@@ -196,6 +201,15 @@ namespace SevenSteps.Contracts
                     case "titlecheck": o.SetTitleCheck("url", v); break;
                     case "artperf": o.SetArtPerf("url", v); break;
                     case "savekey": o.SetSaveKey("url", v); break;
+                    case "oldmap":
+                        if (v == "1" || v == "true") o.NewMap = false;
+                        else if (v != "0" && v != "false") o.warnings.Add($"url: oldmap \"{v}\" is not 1/true or 0/false; ignored");
+                        break;
+                    case "newmap":
+                        if (v == "1" || v == "true") o.NewMap = true;
+                        else if (v == "0" || v == "false") o.NewMap = false;
+                        else o.warnings.Add($"url: newmap \"{v}\" is not 1/true or 0/false; ignored");
+                        break;
                     case "newplayer":
                         if (v == "1" || v == "true") o.NewPlayer = true;
                         else if (v != "0" && v != "false") o.warnings.Add($"url: newplayer \"{v}\" is not 1 or 0; ignored");
