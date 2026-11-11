@@ -208,9 +208,10 @@ namespace SevenSteps.Game.UI
 
         const float FocusScale = 1.15f;
 
-        /// Star tip keyboard focus (docs 14.7 hover / focus / tap, review M1 on 48ff6b4): Tab and Right move to the next
-        /// star, Shift+Tab and Left to the previous one, wrapping; the first press shows star 1. Enter stays Next.
-        /// Only while a clear with its star row is shown.
+        /// Star tip keyboard focus (docs 14.7 hover / focus / tap, review M1 on 48ff6b4): +1 next star, -1 previous,
+        /// wrapping; the first press shows star 1 (or 3 going back). Only while a clear with its star row is shown. The keys
+        /// (Tab / Right, Shift+Tab / Left) are read by GameController with the other flow keys, under its overlay check
+        /// (review R1 on c58dfa4: a menu over the result must not move the focus).
         public void FocusStar(int delta)
         {
             if (!StarRowShown) return;
@@ -222,16 +223,6 @@ namespace SevenSteps.Game.UI
 
         /// A clear with stars is up (the row the tips belong to).
         public bool StarRowShown => IsShown && shown != null && shown.Cleared && stars[0].transform.parent.gameObject.activeInHierarchy;
-
-        void Update()
-        {
-            var kb = UnityEngine.InputSystem.Keyboard.current;
-            if (kb == null || !StarRowShown) return;
-            bool shift = kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed;
-            if (kb.tabKey.wasPressedThisFrame) FocusStar(shift ? -1 : 1);
-            else if (kb.rightArrowKey.wasPressedThisFrame) FocusStar(1);
-            else if (kb.leftArrowKey.wasPressedThisFrame) FocusStar(-1);
-        }
 
         /// Puts <paramref name="r"/> inside <paramref name="slot"/>, filling it (inset by <paramref name="pad"/>).
         static void Dock(RectTransform r, RectTransform slot, float pad)
