@@ -18,9 +18,9 @@ namespace SevenSteps.Art.StageSelectReview
     // Editor-only presentation study. Never changes scenes, save data, or production UI.
     // Planet thumbnails are rendered here from saved prefabs, packed once, then presented
     // by Unity UI. This keeps seven large worlds below the scene geometry/material budget.
-    public static class Capture
+    public static partial class Capture
     {
-        const string Output = "C:/unityjam/shared-assets/seven-steps/concepts/ui/stage-select-2026-11-11/v2";
+        static string Output = "C:/unityjam/shared-assets/seven-steps/concepts/ui/stage-select-2026-11-11/v2";
         static readonly string[] Ids = {"moss","hollow","carved","frost","joinery","crumble","altar"};
         static readonly Vector2[] A = {new Vector2(150,550),new Vector2(150,290),new Vector2(410,240),new Vector2(430,520),new Vector2(700,490),new Vector2(920,330),new Vector2(1120,180)};
         static readonly Vector2[] B = {new Vector2(220,475),new Vector2(430,485),new Vector2(470,285),new Vector2(245,285),new Vector2(700,335),new Vector2(920,410),new Vector2(1110,505)};
