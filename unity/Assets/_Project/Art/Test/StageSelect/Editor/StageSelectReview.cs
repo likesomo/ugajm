@@ -20,9 +20,9 @@ namespace SevenSteps.Art.StageSelectReview
     // by Unity UI. This keeps seven large worlds below the scene geometry/material budget.
     public static class Capture
     {
-        const string Output = "C:/unityjam/shared-assets/seven-steps/concepts/ui/stage-select-2026-11-11";
+        const string Output = "C:/unityjam/shared-assets/seven-steps/concepts/ui/stage-select-2026-11-11/v2";
         static readonly string[] Ids = {"moss","hollow","carved","frost","joinery","crumble","altar"};
-        static readonly Vector2[] A = {new Vector2(190,465),new Vector2(380,500),new Vector2(430,300),new Vector2(245,270),new Vector2(650,350),new Vector2(875,420),new Vector2(1085,510)};
+        static readonly Vector2[] A = {new Vector2(150,550),new Vector2(150,290),new Vector2(410,240),new Vector2(430,520),new Vector2(700,490),new Vector2(920,330),new Vector2(1120,180)};
         static readonly Vector2[] B = {new Vector2(220,475),new Vector2(430,485),new Vector2(470,285),new Vector2(245,285),new Vector2(700,335),new Vector2(920,410),new Vector2(1110,505)};
         static readonly Color Gold = new Color32(245,218,161,255), Quiet = new Color32(115,144,162,255);
         static Camera cam;
@@ -36,6 +36,7 @@ namespace SevenSteps.Art.StageSelectReview
         static Sprite[] worlds;
         static Sprite thinRing;
         static readonly List<string> perf = new List<string>{"capture,liveMeshTris,meshRenderers,uniqueMeshMaterials,uiVertices,uiMaterials,estimatedUnbatchedDrawUpperBound,unityStatsDrawCalls"};
+        static readonly List<string> targets = new List<string>{"planet,state,slot,visibleWidthPx,visibleHeightPx,targetPx"};
         static string direction, language;
         [Serializable] class Copy { public CopyChapter[] chapters; }
         [Serializable] class CopyChapter { public string id,intro,tagline; public CopyText en; }
@@ -45,7 +46,7 @@ namespace SevenSteps.Art.StageSelectReview
         static Copy copy;
         static Story story;
 
-        [MenuItem("Seven Steps/Art/Stage Select/Capture A and B")]
+        [MenuItem("Seven Steps/Art/Stage Select/Capture mixed v2")]
         public static void Run()
         {
             Directory.CreateDirectory(Output);
@@ -58,16 +59,13 @@ namespace SevenSteps.Art.StageSelectReview
                 copy=JsonUtility.FromJson<Copy>(File.ReadAllText("../design/story/copy-levels.json"));
                 story=JsonUtility.FromJson<Story>(File.ReadAllText("../design/story/story.json"));
                 worlds=BakeWorlds();
-                Before();
-                foreach(string d in new[]{"A","B"})
-                {
-                    direction=d;language="ko";
-                    Map("default",-1,0); Map("focused",0,0); Map("mid-game",3,3); Map("all-complete",-1,7);
-                    foreach(int p in new[]{0,6})
-                    { Stages(p,"default",-1,0);Stages(p,"focused",2,0);Stages(p,"cleared-mix",3,3); }
-                    language="en";Map("focused",0,0);
-                }
+                direction="A";language="ko";
+                Map("default",-1,0);Map("focused",0,0);Map("mid-game",3,3);Map("all-complete",-1,7);
+                direction="B";
+                foreach(int p in new[]{0,6}){Stages(p,"default",-1,0);Stages(p,"focused",3,0);Stages(p,"cleared-mix",3,3);}
+                direction="A";language="en";Map("focused",0,0);
                 File.WriteAllLines(Path.Combine(Output,"performance.csv"),perf);
+                File.WriteAllLines(Path.Combine(Output,"stage-targets.csv"),targets);
                 File.WriteAllText(Path.Combine(Output,"capture-source.txt"),"Unity "+Application.unityVersion+"; base e2b6932; 1280x720; real saved Chapter_* planet, sky and lighting presets.\nThumbnail cache generated from real Unity rendering, not painted mockups.\n");
                 Debug.Log("STAGE_SELECT_CAPTURE_PASS"); EditorApplication.Exit(0);
             }
@@ -110,12 +108,15 @@ namespace SevenSteps.Art.StageSelectReview
             for(int p=0;p<7;p++)
             {
                 Reset(p,false);Object.DestroyImmediate(canvas.gameObject);canvas=null;
-                cam.backgroundColor=Color.clear;cam.orthographicSize=8.3f;
-                Planet(p);cam.Render();
+                cam.backgroundColor=Color.clear;cam.orthographicSize=6.5f;
+                Planet(p);
+                cam.transform.rotation=Quaternion.Euler(50,0,0);
+                if(!cam.orthographic||Mathf.Abs(cam.transform.eulerAngles.x-50)>.01f||Mathf.Abs(cam.transform.eulerAngles.y)>.01f)throw new Exception("Atlas camera angle mismatch");
+                cam.Render();
                 var tex=Read();
-                // 4:3 region around the real world; preserve all silhouette features.
+                // Square source crop: 720x720 out of 1280x720, preserving the game camera's projection.
                 int ax=(p%4)*512,ay=(p/4)*512;
-                for(int y=0;y<512;y++)for(int x=0;x<512;x++)atlas.SetPixel(ax+x,ay+y,tex.GetPixelBilinear(.5f+(x/511f-.5f)*.70f,y/511f));
+                for(int y=0;y<512;y++)for(int x=0;x<512;x++)atlas.SetPixel(ax+x,ay+y,tex.GetPixelBilinear(.5f+(x/511f-.5f)*.5625f,y/511f));
                 long triangles=Object.FindObjectsByType<MeshFilter>(FindObjectsSortMode.None).Where(f=>f.sharedMesh).Sum(f=>MeshTris(f.sharedMesh));
                 bakePerf.Add(Ids[p]+","+triangles+","+Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None).SelectMany(r=>r.sharedMaterials).Distinct().Count());
                 Object.DestroyImmediate(tex);
@@ -147,8 +148,8 @@ namespace SevenSteps.Art.StageSelectReview
         {
             // Trails stop before the planets; dots and double highlights read as light, not diagram edges.
             var delta=b-a;var from=a+delta.normalized*52;var to=b-delta.normalized*52;
-            Line(from,to,lit?new Color(Gold.r,Gold.g,Gold.b,.65f):new Color(Quiet.r,Quiet.g,Quiet.b,.17f),lit?2:1);
-            if(lit)for(int i=1;i<7;i++)Dot(Vector2.Lerp(from,to,i/7f),i%2==0?3:2,Gold);
+            Line(from,to,lit?new Color(Gold.r,Gold.g,Gold.b,1f):new Color(Quiet.r,Quiet.g,Quiet.b,.42f),lit?5:2);
+            if(lit)for(int i=1;i<7;i++)Dot(Vector2.Lerp(from,to,i/7f),i%2==0?7:5,Gold);
         }
         static void Back()=>Text("‹",new Vector2(48,669),40,60);
         static string Name(int p)=>planets[p].Info.Planet(language=="ko"?Language.Ko:Language.En);
@@ -164,25 +165,26 @@ namespace SevenSteps.Art.StageSelectReview
             for(int p=0;p<7;p++)
             {
                 if(direction=="B")Ring(points[p]+Vector2.down*5,156,new Color(Quiet.r,Quiet.g,Quiet.b,.48f));
-                if(p==focus)Ring(points[p]+Vector2.down*9,direction=="A"?126:148,Gold);
-                Image("Actual Unity world "+Ids[p],points[p],Vector2.one*(direction=="A"?177:210),worlds[p],Color.white);
-                if(p<cleared)for(int s=0;s<3;s++)Image("Completed starlight",points[p]+new Vector2((s-1)*12,-65),Vector2.one*7,Ui.StarShape,Gold);
-                else Dot(points[p]+new Vector2(0,-65),3,Quiet);
+                if(p==focus)Ring(points[p]+Vector2.down*9,direction=="A"?216:216,Gold);
+                Image("Actual Unity world "+Ids[p],points[p],Vector2.one*(direction=="A"?290:290),worlds[p],Color.white);
+                if(p<cleared)for(int s=0;s<3;s++)Image("Completed starlight",points[p]+new Vector2((s-1)*20,-106),Vector2.one*16,Ui.StarShape,Gold);
+                else Dot(points[p]+new Vector2(0,-106),5,Quiet);
                 // Invisible button target, minimum 96 px. No card or frame.
                 var hit=Rect("Select "+Ids[p],points[p],Vector2.one*112).gameObject.AddComponent<Image>();hit.color=Color.clear;var button=hit.gameObject.AddComponent<Button>();button.targetGraphic=hit;
             }
-            if(focus>=0){Text(Name(focus),new Vector2(640,145),32);Text(Tagline(focus),new Vector2(640,100),20,1000,new Color(.71f,.78f,.79f,1));}
+            if(focus>=0){Text(Name(focus),new Vector2(780,656),32,480);Text(Tagline(focus),new Vector2(780,612),20,480,new Color(.71f,.78f,.79f,1));}
             if(cleared==7)
-            {var end=points[6]+new Vector2(65,20);Trail(points[6],new Vector2(1225,570),true);Ring(new Vector2(1210,570),30,Gold);}
+            {Trail(points[6],new Vector2(1240,65),true);Ring(new Vector2(1230,65),30,Gold);}
             Save(direction+"-"+language+"-map-"+state);
         }
         static void Stages(int p,string state,int focus,int cleared)
         {
             Reset(p);Back();var planet=Planet(p,p==6?9:5,p==6?9:5);
-            cam.orthographicSize=direction=="A"?(p==6?9.2f:7.4f):(p==6?13.4f:11.3f);
+            cam.orthographicSize=direction=="A"?(p==6?9.2f:7.4f):(p==6?14.5f:11.8f);
             Object.FindAnyObjectByType<RuinsHengeSky>().SendMessage("LateUpdate");
             Text(Name(p),new Vector2(640,666),26);
             int count=planets[p].Stages.Count;var positions=new List<Vector2>();
+            var dim=new Material(planet.surface);dim.SetColor("_BaseColor",new Color(.52f,.56f,.61f,1));
             // A walks across the summit. B follows a ring of satellite stepping stones.
             for(int s=0;s<count;s++)
             {
@@ -190,24 +192,30 @@ namespace SevenSteps.Art.StageSelectReview
                 if(direction=="A")
                 {float x=(s/(float)(count-1)-.5f)*(p==6?8:5.6f);float z=Mathf.Sin(s/(float)(count-1)*Mathf.PI*1.5f)*1.0f;pos=new Vector3(x,.55f,z);}
                 else
-                {float angle=(140-s*280f/(count-1))*Mathf.Deg2Rad;float radius=p==6?9.8f:7.8f;pos=new Vector3(0,-.6f,0)+cam.transform.right*Mathf.Cos(angle)*radius+cam.transform.up*Mathf.Sin(angle)*radius*.62f-cam.transform.forward*5;}
+                {float angle=(140-s*280f/(count-1))*Mathf.Deg2Rad;float radius=p==6?12.5f:10.4f;pos=new Vector3(0,-.6f,0)+cam.transform.right*Mathf.Cos(angle)*radius+cam.transform.up*Mathf.Sin(angle)*radius*.77f-cam.transform.forward*5;}
                 var visual=chapters[p].tileSet.floor;
-                var stone=Object.Instantiate(visual.prefab,world.transform);stone.name="Stage stepping stone "+s;stone.transform.position=pos+visual.offset;stone.transform.localRotation=visual.RotationFor(s);stone.transform.localScale=visual.Scale*.85f;ChapterMaterials.Apply(stone,chapters[p]);
+                var stone=Object.Instantiate(visual.prefab,world.transform);stone.name="Stage stepping stone "+s;stone.transform.position=pos+visual.offset;stone.transform.localRotation=visual.RotationFor(s);stone.transform.localScale=visual.Scale*2.3f;ChapterMaterials.Apply(stone,chapters[p]);
+                if(s>cleared)foreach(var r in stone.GetComponentsInChildren<Renderer>())r.sharedMaterial=dim;
+                var bounds=stone.GetComponentInChildren<Renderer>().bounds;var min=new Vector2(float.MaxValue,float.MaxValue);var max=new Vector2(float.MinValue,float.MinValue);
+                for(int corner=0;corner<8;corner++){var point=bounds.center+Vector3.Scale(bounds.extents,new Vector3((corner&1)==0?-1:1,(corner&2)==0?-1:1,(corner&4)==0?-1:1));var screen=(Vector2)cam.WorldToScreenPoint(point);min=Vector2.Min(min,screen);max=Vector2.Max(max,screen);}
+                targets.Add(Ids[p]+","+state+","+s+","+(max.x-min.x).ToString("F1",System.Globalization.CultureInfo.InvariantCulture)+","+(max.y-min.y).ToString("F1",System.Globalization.CultureInfo.InvariantCulture)+",80");
+                if(max.x-min.x<40||max.y-min.y<40)throw new Exception("Stone smaller than 40px: "+Ids[p]+"/"+s);
                 var sp=(Vector2)cam.WorldToScreenPoint(pos+Vector3.up*.24f);positions.Add(sp);
                 if(s>0)
                 {
                     var prev=positions[s-1];var tangent=(sp-prev).normalized;var normal=new Vector2(-tangent.y,tangent.x);
                     for(int k=1;k<5;k++)Dot(Vector2.Lerp(prev,sp,k/5f)+normal*(k%2==0?3:-3),s<cleared?3:2,s<cleared?Gold:new Color(Quiet.r,Quiet.g,Quiet.b,.45f));
                 }
-                if(s<cleared)Image("Cleared stage star",sp+new Vector2(0,17),Vector2.one*12,Ui.StarShape,Gold);
-                else Dot(sp+new Vector2(0,17),5,Quiet);
-                if(s==cleared)for(int scarf=0;scarf<3;scarf++)Dot(sp+new Vector2((scarf-1)*7,29),4,scarf==0?Gold:scarf==1?new Color(.55f,.80f,.83f):new Color(.85f,.66f,.58f));
-                if(s==focus){Ring(sp,54,Gold);Dot(sp+new Vector2(0,33),5,Gold);}
+                if(s<cleared)Image("Cleared stage star",sp,Vector2.one*27,Ui.StarShape,Gold);
+                if(s==cleared)for(int scarf=0;scarf<3;scarf++)Dot(sp+new Vector2((scarf-1)*12,6),9,scarf==0?Gold:scarf==1?new Color(.55f,.80f,.83f):new Color(.85f,.66f,.58f));
+                if(s==cleared){for(int glow=0;glow<4;glow++)Image("Gentle current glow",sp,Vector2.one*(72-glow*8),Ui.Circle,new Color(Gold.r,Gold.g,Gold.b,.025f));}
+                var target=Rect("Stage touch target "+s,sp,Vector2.one*80).gameObject.AddComponent<Image>();target.color=Color.clear;target.gameObject.AddComponent<Button>();
+                if(s==focus)Ring(sp,86,Gold);
             }
             if(focus>=0)
             {
-                int n=planets[p].Stages[focus]+1;
-                Text((language=="ko"?"걸음 ":"Step ")+n.ToString("00"),new Vector2(640,102),26);
+                int n=focus+1;
+                Text((language=="ko"?"걸음 ":"Step ")+n.ToString("00"),new Vector2(640,55),26);
                 // Numeric location is secondary and only appears on intentional focus.
             }
             Save(direction+"-"+language+"-"+Ids[p]+"-stages-"+state);
