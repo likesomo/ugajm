@@ -57,7 +57,7 @@ namespace SevenSteps.Tests
         }
 
         [Test]
-        public void EightBySixCellsGrowFromTheOldSymmetricFit()
+        public void EightBySixGetsTheProposedFraming()
         {
             var go = new GameObject("BoardFitTests Camera");
             try
@@ -65,8 +65,10 @@ namespace SevenSteps.Tests
                 var cam = go.AddComponent<Camera>();
                 cam.aspect = 16f / 9f;
                 BoardView.Fit(cam, new BoardGrid(8, 6), Rig(50f, 0.7f));
-                // Symmetric half-height (before): orthographic size 6.52, 55.2 px cells at 720. The min/max box: 5.82, 61.8 px.
-                Assert.AreEqual(61.8f, 720f / (2f * cam.orthographicSize), 0.1f);
+                // Minimal HUD frame (production/ui-minimal-plan.md): orthographic about 4.65 (cells about 77 px at 720), the proposal.
+                // The old frame (316,222 648x398) gave 5.82 / 61.8 px.
+                Assert.AreEqual(4.65f, cam.orthographicSize, 0.05f);
+                Assert.AreEqual(77.4f, 720f / (2f * cam.orthographicSize), 1f);
             }
             finally { Object.DestroyImmediate(go); }
         }

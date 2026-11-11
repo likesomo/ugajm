@@ -159,7 +159,11 @@ namespace SevenSteps.Game
             // One-time guides (ui-minimal). Dev runs (replay, flow / title checks, smoke) keep the profile untouched and start
             // with every guide seen, so their screenshots show the plain HUD.
             bool devRun = launch.SmokeView != SmokeView.None || !string.IsNullOrEmpty(launch.Replay) || launch.FlowCheck || launch.TitleCheck != "";
-            tutorial = new TutorialTracker(devRun ? new MemoryTutorialStore(allSeen: true) : (ITutorialStore)new SaveTutorialStore(save));
+            // "-guides fresh" (captures of the first-choice cards, v3-choose-first): a dev run with nothing seen yet, still in memory.
+            // Read here until scene-flow moves it into LaunchOptions.
+            bool freshGuides = Array.IndexOf(Environment.GetCommandLineArgs(), "-guides") is int gi && gi >= 0
+                && gi + 1 < Environment.GetCommandLineArgs().Length && Environment.GetCommandLineArgs()[gi + 1] == "fresh";
+            tutorial = new TutorialTracker(devRun ? new MemoryTutorialStore(allSeen: !freshGuides) : (ITutorialStore)new SaveTutorialStore(save));
             board.Session.Updated += tutorial.Apply;
             board.StageEntered += StopControlsGuide;
             menu = new MenuController(overlays, menuPanel,
@@ -167,10 +171,13 @@ namespace SevenSteps.Game
                 openStages: flowController.OpenStageSelect,
                 showSolution: board.ShowHint,
                 playControls: tutorial.PlayControls);
-
-            hud.StageSelectRequested += flowController.OpenStageSelect;
-            // Until the minimal HUD has its own menu button (gameplay-ui), the settings button opens the menu.
-            hud.SettingsRequested += menu.Toggle;
+            hud.MenuRequested += menu.Toggle; // the HUD menu button (settings, stages, solution, controls)
+            // Move guide (first play, or Menu > controls) in the HUD's left margin; the KEEP / SWITCH guide goes with the choice cards.
+            hud.Guide = tutorial.ShowMoveGuide;
+            // Choice cards: both result lines for the first confirms, the guide line the first time (shown after Presented, 4.4).
+            board.Choice.ExplainChoices = () => tutorial.ExplainChoices;
+            board.Choice.ShowGuide = () => tutorial.ShowChoiceGuide;
+            tutorial.Changed += () => { hud.Guide = tutorial.ShowMoveGuide; board.Choice.Refresh(); };
             result.NextRequested += flowController.Next;
             result.RetryRequested += flowController.Again;
             result.StageSelectRequested += flowController.OpenStageSelect;

@@ -216,16 +216,51 @@ namespace SevenSteps.EditorTools
             int? chooser = Enumerable.Range(0, levels.Length).Where(i => levels[i].StatueCount > 0).Concat(Enumerable.Range(0, levels.Length))
                 .Cast<int?>().FirstOrDefault(i => ChooseState(levels[i.Value]) != null);
             int longestRoute = LongestRoute(levels);
+            // 14.11 choice screens: the chooser stage and the widest board that reaches a choice within 7 moves, each with
+            // ExplainChoice true (both result lines + the TutorialIds.Choose guide, the most text) and false (no result lines).
+            int? widestChooser = Enumerable.Range(0, levels.Length).Where(i => ChooseState(levels[i]) != null)
+                .OrderByDescending(i => levels[i].W).ThenBy(i => i).Cast<int?>().FirstOrDefault();
+            var choosers = new List<int?> { chooser };
+            if (widestChooser != null && widestChooser != chooser) choosers.Add(widestChooser);
+            foreach (var who in choosers)
+                foreach (bool explain in new[] { true, false })
+                {
+                    var stage = who;
+                    bool ex = explain;
+                    string label = (stage != null ? $"stage {stage + 1} choose" : "choose") + (ex ? "" : " no explain");
+                    yield return (new Screen { Name = "HUD", GameplayUi = true, Build = (c, root) =>
+                    {
+                        if (stage == null) throw new Skipped("no stage reaches a KEEP / SWITCH choice within 7 moves: the side column is not checked");
+                        int st = stage.Value;
+                        string hint = new HintProvider(c.Levels, c.Loc).For(longestRoute);
+                        string msg = LongestMessage(c.Loc);
+                        var choose = ChooseState(c.Levels[st]);
+                        var hud = BuildHud(c, st, choose, hint.Length > msg.Length ? hint : msg);
+                        c.Board = BoardArea(c, st);
+                        // The choice cards (docs 4.4, 14.11) as the game shows them.
+                        ShowChoice(c, st, hud, choose, explain: ex, guide: ex);
+                        return null;
+                    } }, label);
+                }
+            // 14.11: the first-move guide (TutorialIds.Move) on the first stage, as a new player sees it.
             yield return (new Screen { Name = "HUD", GameplayUi = true, Build = (c, root) =>
             {
-                if (chooser == null) throw new Skipped("no stage reaches a KEEP / SWITCH choice within 7 moves: the side column is not checked");
-                int st = chooser.Value;
-                string hint = new HintProvider(c.Levels, c.Loc).For(longestRoute);
-                string msg = LongestMessage(c.Loc);
-                BuildHud(c, st, ChooseState(c.Levels[st]), hint.Length > msg.Length ? hint : msg);
-                c.Board = BoardArea(c, st);
+                var hud = BuildHud(c, 0);
+                hud.Guide = true;
+                c.Board = BoardArea(c, 0);
                 return null;
-            } }, chooser != null ? $"stage {chooser + 1} choose" : "choose");
+            } }, "stage 1 move guide");
+            // 14.11: "걸음 숫자 표시" on, widest board, a few steps walked. The numbers themselves are board world labels
+            // (BoardView, inside the board area); this checks the HUD drawn with the switch on.
+            yield return (new Screen { Name = "HUD", GameplayUi = true, Build = (c, root) =>
+            {
+                var walked = Walked(c.Levels[widest], 3);
+                var hud = HudView.Create(HudTileSet(c), c.Loc);
+                hud.StepNumbers = true;
+                hud.Refresh(walked, widest, LevelCatalog.TextOf(widest, c.Lang), "");
+                c.Board = BoardArea(c, widest);
+                return null;
+            } }, $"stage {widest + 1} step numbers");
             yield return (new Screen { Name = "Result", GameplayUi = true, Build = (c, root) =>
             {
                 BuildHud(c, longestHint);
@@ -255,10 +290,30 @@ namespace SevenSteps.EditorTools
 
         static HudView BuildHud(Ctx c, int stage) => BuildHud(c, stage, Rules.NewState(c.Levels[stage]), "");
 
+        static TileSet HudTileSet(Ctx c) =>
+            c.Assets.tileSet != null ? c.Assets.tileSet : AssetDatabase.FindAssets("t:TileSet").Select(g => AssetDatabase.LoadAssetAtPath<TileSet>(AssetDatabase.GUIDToAssetPath(g))).FirstOrDefault(t => t != null);
+
+        /// Up to <paramref name="steps"/> applied moves from the start (first open direction each time), still in Play.
+        static State Walked(Level level, int steps)
+        {
+            var s = Rules.NewState(level);
+            for (int k = 0; k < steps; k++)
+            {
+                State moved = null;
+                foreach (Dir d in Enum.GetValues(typeof(Dir)))
+                {
+                    var next = Rules.Dispatch(s, Command.Move(d)).State;
+                    if (!ReferenceEquals(next, s) && next.Status == Status.Play && next.Used > s.Used) { moved = next; break; }
+                }
+                if (moved == null) break;
+                s = moved;
+            }
+            return s;
+        }
+
         static HudView BuildHud(Ctx c, int stage, State state, string message)
         {
-            var set = c.Assets.tileSet != null ? c.Assets.tileSet : AssetDatabase.FindAssets("t:TileSet").Select(g => AssetDatabase.LoadAssetAtPath<TileSet>(AssetDatabase.GUIDToAssetPath(g))).FirstOrDefault(t => t != null);
-            var hud = HudView.Create(set, c.Loc);
+            var hud = HudView.Create(HudTileSet(c), c.Loc);
             hud.Refresh(state, stage, LevelCatalog.TextOf(stage, c.Lang), message);
             return hud;
         }
@@ -293,6 +348,27 @@ namespace SevenSteps.EditorTools
         }
 
         /// The first KEEP / SWITCH choice (Status.Choose) reachable by moves, depth first; null when none within 7 moves.
+        /// gameplay-ui's Edit Mode path for the choice screen (14.11): the cards of <paramref name="s"/> (Status.Choose) placed
+        /// beside the board area near the brother, exactly as ChoiceController does at runtime.
+        static void ShowChoice(Ctx c, int stage, HudView hud, State s, bool explain, bool guide)
+        {
+            if (!ChoicePreview.TryOf(s, out var p)) throw new InvalidOperationException($"stage {stage + 1}: not a Choose state");
+            hud.ShowChoice(new HudView.ChoiceCards { On = true, NextBody = p.NextBody, Explain = explain, Guide = guide, FocusKeep = true });
+            var info = LevelCatalog.ChapterOf(stage);
+            var preset = info != null && c.Config != null ? c.Config.Chapter(info.ArtPreset) : null;
+            var set = BoardController.TileSetFor(c.Config != null ? c.Config.tileSet : null, preset, c.Assets.tileSet);
+            var grid = set.GridFor(c.Levels[stage]);
+            var go = new GameObject("UiLayoutCheck Choice Camera");
+            try
+            {
+                var cam = go.AddComponent<Camera>();
+                cam.aspect = c.Units.x / c.Units.y;
+                BoardView.Fit(cam, grid, c.RigOverride ?? set.cameraRig);
+                hud.PlaceChoice(BoardArea(c, stage), BoardView.BrotherPoint(cam, grid, s.Pos, c.Units), c.Units);
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
+
         static State ChooseState(Level level)
         {
             State Walk(State s, int depth)

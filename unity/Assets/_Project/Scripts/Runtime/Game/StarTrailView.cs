@@ -165,7 +165,8 @@ namespace SevenSteps.Game
         public void Show(State s, bool animate)
         {
             var trail = StarTrail.Of(s, Known);
-            var marks = trail.Marks();
+            // The ring at the feet is drawn in screen space by BoardMarksView (never behind a tile); the map still has the cell.
+            var marks = trail.Marks().FindAll(m => m.Kind != TrailMarkKind.Ring);
             float now = Time.time;
             bool restart = s.Prev == null && items.Count > 0;
             var keep = new HashSet<TrailMark>(marks);
