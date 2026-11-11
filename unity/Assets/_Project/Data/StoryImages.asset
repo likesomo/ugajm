@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e917cde0dad68a8c87af943fc5b16109, type: 3}
+  m_Name: StoryImages
+  m_EditorClassIdentifier: SevenSteps.Contracts::SevenSteps.Contracts.StoryImageSet
+  entries:
+  - key: card.moss
+    sprite: {fileID: 0}
+  - key: card.hollow
+    sprite: {fileID: 0}
+  - key: card.carved
+    sprite: {fileID: 0}
+  - key: card.frost
+    sprite: {fileID: 0}
+  - key: card.joinery
+    sprite: {fileID: 0}
+  - key: card.crumble
+    sprite: {fileID: 0}
+  - key: card.altar
+    sprite: {fileID: 0}
+  - key: carving.moss
+    sprite: {fileID: 0}
+  - key: carving.hollow
+    sprite: {fileID: 0}
+  - key: carving.carved
+    sprite: {fileID: 0}
+  - key: carving.frost
+    sprite: {fileID: 0}
+  - key: carving.joinery
+    sprite: {fileID: 0}
+  - key: carving.crumble
+    sprite: {fileID: 0}
+  - key: carving.altar
+    sprite: {fileID: 0}
+  - key: ending.1
+    sprite: {fileID: 0}
+  - key: ending.2
+    sprite: {fileID: 0}
+  - key: ending.3
+    sprite: {fileID: 0}
+  - key: ending.4
+    sprite: {fileID: 0}
+  - key: title.key
+    sprite: {fileID: 0}
+  required: 0

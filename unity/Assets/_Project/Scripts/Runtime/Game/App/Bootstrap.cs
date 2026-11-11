@@ -55,6 +55,9 @@ namespace SevenSteps.Game
             Services.Register(telemetry);
             Services.Register(flow);
             Services.Register(EntryTracker.ForLaunch(launch.DirectToGame && !levelFromEditor));
+            // Story (docs/architecture.md 16): off when story.json is missing or broken (A8). Dev runs do not touch its save.
+            bool devRun = launch.SmokeView != SmokeView.None || !string.IsNullOrEmpty(launch.Replay) || launch.FlowCheck || launch.TitleCheck != "";
+            Services.Register(StoryLoad.FromAssets(assets, save, devRun));
             HasRunThisPlay = true;
 
             if (!enterFirstScreen) return;

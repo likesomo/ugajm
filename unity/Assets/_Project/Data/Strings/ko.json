@@ -95,6 +95,10 @@
     { "key": "result.star3", "text": "되돌리기 없이 한 번에" },
     { "key": "result.chapter_done", "text": "{0}\n다음 행성으로" },
     { "key": "result.journey_done", "text": "세 형제가 원형 제단에 닿았다" },
+    { "key": "result.ending", "text": "끝까지 보기" },
+    { "key": "ending.next", "text": "다음 (Enter)" },
+    { "key": "ending.skip", "text": "건너뛰기 (Esc)" },
+    { "key": "ending.to_map", "text": "지도로 (Enter)" },
 
     { "key": "board.exit", "text": "출구" },
 

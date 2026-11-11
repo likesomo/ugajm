@@ -55,7 +55,8 @@ namespace SevenSteps.Tests
                 Assert.AreEqual(1, next);
 
                 view.Show(ResultModel.Clear(16, 3, 3, 0, 0, isLast: true));
-                Assert.IsFalse(Button(canvas, "다음 스테이지 (Enter)").activeSelf, "no next after the last stage");
+                Assert.IsTrue(Button(canvas, "다음 스테이지 (Enter)").activeSelf, "the last stage: [끝까지 보기] -> the ending (16.8)");
+                Assert.AreEqual("끝까지 보기", view.next.GetComponentInChildren<UnityEngine.UI.Text>().text);
 
                 view.Show(ResultModel.Loss(4, 3, isLast: false));
                 Assert.IsFalse(Button(canvas, "다음 스테이지 (Enter)").activeSelf, "a loss never offers next");
