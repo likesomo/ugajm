@@ -380,7 +380,7 @@
       "n": 23,
       "ch": 4,
       "role": "응용",
-      "title": "홀수의 저주",
+      "title": "홀수의 셈",
       "src": "keep 7",
       "tags": [
         "ice",
@@ -587,7 +587,7 @@
       "n": 37,
       "ch": 6,
       "role": "응용",
-      "title": "무너진 길 위의 구멍",
+      "title": "무너질 길",
       "src": "new (batch4, 탐색 후보)",
       "tags": [
         "cracked",

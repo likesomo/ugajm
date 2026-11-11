@@ -637,7 +637,7 @@
     },
     {
       "stage": 23,
-      "name": "홀수의 저주",
+      "name": "홀수의 셈",
       "chapter": "frost",
       "bodies": 3,
       "ok": true,
@@ -1039,7 +1039,7 @@
     },
     {
       "stage": 37,
-      "name": "무너진 길 위의 구멍",
+      "name": "무너질 길",
       "chapter": "crumble",
       "bodies": 3,
       "ok": true,
