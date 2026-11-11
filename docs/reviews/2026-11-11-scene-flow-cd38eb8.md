@@ -44,3 +44,12 @@
 - **메모 N1 (막지 않음)**: 별지도에서 언어를 바꾸면 `Apply`가 상세 줄을 `planets.detail`로 다시 쓰지만, `detailDefault`는 마지막 `Show` 때 값(이전 언어, 또는 북극성 줄)이 남는다.
   - 그래서 언어를 바꾼 뒤 hover를 빼면 잠깐 이전 언어 문구가 보일 수 있다.
   - `Apply` 끝에서 `ShowStory`를 다시 부르거나 `detailDefault`를 다시 계산하면 된다. 언어를 바꾸는 일은 드물다.
+- **리드 질문 1: 클릭·Enter를 가로채는가 — 아니다.**
+  - `ExecuteEvents.Execute`는 대상 오브젝트에서 그 처리기 인터페이스를 가진 **모든** 컴포넌트를 부른다.
+  - `EventTrigger`가 `IPointerClickHandler`·`ISubmitHandler`·`IMoveHandler`를 구현하지만, 등록된 항목은 Select/PointerEnter/PointerExit뿐이다. 그래서 클릭·Submit에서는 아무것도 하지 않고, `Button.onClick`과 `Selectable.OnMove`(방향키 이동)는 그대로 불린다.
+  - titlecheck의 카드 누름 통과(scene-flow 보고)와도 맞는다.
+- **리드 질문 2: 터치에서 hover 없이 진실을 볼 수 있는가 — 간접적으로만 된다.**
+  - 탭하면 `Selectable.OnPointerDown`이 카드를 선택해 `Select` → 진실 표시가 되지만, 같은 탭의 클릭이 행성 단계 패널(전체 화면 덮개)을 바로 연다. 진실 줄은 그 뒤에 가려진다.
+  - 패널을 닫으면 카드가 선택된 채라 진실이 보인다. 그래서 "닫고 나서야 보인다".
+  - **권고 N2 (다음 커밋, 막지 않음)**: 행성 단계 패널의 머리 아래 줄(지금 `tagline` 자리)에 새김이 있으면 그 행성의 진실을 금색으로 보인다. 터치·마우스·키보드 모두 패널을 여는 순간 진실을 본다. 초점·hover 표시는 그대로 둔다.
+- 결론은 그대로 **승인**이다. dd5190a 문서와 함께 병합해도 된다.
