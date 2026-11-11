@@ -20,6 +20,13 @@ namespace SevenSteps.Game
 
         /// Opening <paramref name="tier"/> costs the ★2 (AttemptCounts.WithHint, telemetry hints).
         public static bool Costs(int tier) => tier >= 2 || !FirstTierFree;
+
+        /// Blind QA-2: a hint capped the attempt at 1 star without a word. The first H that would cost in an attempt only
+        /// says so ("hint.confirm"); the next H opens the tier. True = this press shows the warning and opens nothing.
+        /// <param name="costs">The tier this press would open costs (HintSteps.NextCosts; always for a stage without a route).</param>
+        /// <param name="hintsSoFar">Hints already counted in this attempt (AttemptCounts.Hints).</param>
+        /// <param name="warned">The warning was shown in this attempt.</param>
+        public static bool AsksFirst(bool costs, int hintsSoFar, bool warned) => costs && hintsSoFar == 0 && !warned;
     }
 
     /// <summary>How a body's run ends in the stored solution.</summary>
