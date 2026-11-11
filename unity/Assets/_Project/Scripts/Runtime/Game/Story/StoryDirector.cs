@@ -44,7 +44,7 @@ namespace SevenSteps.Game.Story
         readonly Func<bool> covered;
         readonly Action finaleShown;
         string held, waitingStart;
-        bool startUp;
+        bool startUp, finaleUsed;
 
         /// <param name="startLine">The current stage's start line ("" = none, <see cref="StartText"/>).</param>
         /// <param name="finaleLine">The current stage's finale line, null or "" when it is not a finale stage or the story is off.</param>
@@ -92,6 +92,20 @@ namespace SevenSteps.Game.Story
         /// The start line waits for the board to be uncovered.
         public bool StartWaiting => waitingStart != null;
 
+        /// Menu "다시 보기" (story-integration.md 0.2): the stage's start line again, with its full time; it waits while the
+        /// menu still covers the board and goes at the next move like the first time. False when the stage has none
+        /// (startLine "" or an empty text) or no stage is loaded; then nothing changes. Also in quiet runs: the player asked.
+        public bool ReplayStartLine()
+        {
+            if (session.State == null) return false;
+            string start = startLine() ?? "";
+            if (start.Length == 0) return false;
+            StartGone();
+            waitingStart = start;
+            CoverChanged();
+            return true;
+        }
+
         /// Overlays opened or closed: a start line on screen goes back to waiting under a cover, a waiting one shows when uncovered.
         public void CoverChanged()
         {
@@ -114,6 +128,14 @@ namespace SevenSteps.Game.Story
         /// finale up for it (0 = no line, the finale as it is).
         public float FinaleStarting()
         {
+            // Normally held at the Updated (it comes before the board's Present); if not, a won finale stage still gets it
+            // here (review M2 on 4ea1ec0: no reliance on the order the handlers ran in).
+            if (held == null && !finaleUsed && !quiet && session.State != null && session.State.Status == Status.Win)
+            {
+                string f = finaleLine();
+                if (!string.IsNullOrEmpty(f)) held = f;
+            }
+            finaleUsed = true;
             if (held == null) return 0f;
             string line = held;
             held = null;
@@ -125,6 +147,7 @@ namespace SevenSteps.Game.Story
 
         void OnUpdated(SessionUpdate u)
         {
+            finaleUsed = false;
             switch (u.Kind)
             {
                 case SessionUpdateKind.Rebuild:
@@ -156,6 +179,7 @@ namespace SevenSteps.Game.Story
         {
             if (s.Status != Status.Win) return;
             held = null; // the finale did not take it (no finale ran): the star map keeps the truth
+            finaleUsed = true;
             StartGone(); // the result opens now
         }
 
