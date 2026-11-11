@@ -100,3 +100,64 @@
 
 - scene-flow가 M1~M3을 문서에 반영하고 커밋을 알리면 그 수정만 다시 본다.
 - 리드가 구현(P1~P4)을 승인하면 P1 시작 때 N4의 asmdef를 요청받는다.
+
+## 수정 확인 + P1 검토: feat/scene-flow 4515ccf + a67fac6 (2026-11-11) — **승인**
+
+검토자: 아키텍트. 기준 7lucky 83fd385. 확인 범위는 아래와 같다.
+- 코드를 읽었다.
+- `unity.sh playtest`를 내 작업 공간에서 직접 돌렸다. origin/feat/scene-flow a67fac6을 detached로 받아 실행했다.
+  - 결과는 **PlayMode 6/6 통과**다.
+  - 로그(`unity/Logs/batch-playtest.log`)에 예외·오류가 없다.
+  - 실행 뒤 작업 트리는 깨끗하다. URP 설정 파일도 되돌려졌다.
+- EditMode 922/922는 scene-flow가 보고한 수치다.
+- 플레이어 빌드는 만들지 않았다.
+
+### 4515ccf (문서): M1~M3, N1·N3·N4·N5 해결
+- **M1**: 0·1·2·3·6·9장에서 DDOL 루트를 "0~2개"로 썼다. 러너가 생기는 조건과 페이더가 생기는 시점도 함께 적었다. 테스트 항목은 이름마다 1개 이하, 첫 로드 뒤 `SceneFader`는 정확히 1개, 텔레메트리를 끄면 러너 0개로 바뀌었다.
+- **M2**: 도메인 리로드 링크를 `docs.unity3d.com/6000.0/.../domain-reloading.html`로 바꿨다. 1장과 12장 모두 바뀌었다.
+- **M3**: 9.2를 새로 썼다. 승인한다.
+  - batchmode 없이 에디터를 열고 `EnterPlaymode` → `WaitForEndOfFrame` → `ScreenCapture.CaptureScreenshotAsTexture` 순서로 찍는다.
+  - `PlayModeWindow.SetCustomRenderingResolution`으로 1280×720을 고정하고, 크기가 다르면 실패로 본다.
+  - Board/Empty 대조를 한다. 기준은 smoke-webgl과 같은 500이다.
+  - 보드가 없는 Title은 UI 켬과 숨김을 비교한다.
+- **N1**: Scene List 페이지와 `Scene.buildIndex` 페이지, 이슈 트래커의 근거를 문장에서 나눠 적었다.
+- **N3**: 기대 순서를 `AppScenes.BuildOrder` 한 곳에서 가져온다(P3에서 구현).
+- **N4·N5**: 9.1에 적었다.
+
+### a67fac6 (P1)
+- **asmdef (소유자 검토): 승인.** `SevenSteps.Tests.PlayMode`는 N4 규격과 같다.
+  - references는 Core·Contracts·Game·`UnityEngine.TestRunner`다. Editor 어셈블리는 참조하지 않는다.
+  - `includePlatforms: []`, `overrideReferences` + `nunit.framework.dll`, `autoReferenced: false`.
+  - `defineConstraints: ["UNITY_INCLUDE_TESTS"]` 덕분에 테스트 실행 컴파일에서만 들어간다. 플레이어 빌드에는 빠진다.
+  - `BuildTools`에 `BuildOptions.IncludeTestAssemblies`가 없다. 그래서 빌드에 테스트가 섞이는 경로도 없다.
+  - 런타임 어셈블리가 이 어셈블리를 참조하지 않으므로 의존 방향(Core ← Game ← Tests)이 지켜진다.
+  - `.meta`가 둘 다 있다.
+- **Bootstrap 테스트 주입: 런타임 경로는 그대로다.**
+  - `nextRun`은 `UseLaunchOptionsForNextRun`만 채운다. 이 함수는 테스트(이후 캡처)만 부른다.
+  - 그래서 플레이어와 보통 에디터 Play에서는 `nextRun == null`이고, `ReadLaunchOptions`는 이전과 같이 `LaunchOptions.Parse(명령줄, URL)`을 돌려준다.
+  - 한 번 쓰면 지운다. `SubsystemRegistration`에서도 지운다(도메인 리로드 꺼짐 대비). 이미 값이 있으면 던진다. 단정적 규칙에 맞다.
+  - EditMode `PlayResetTests`의 "정적 보관소마다 초기화 고리 하나" 규칙도 지켜진다. 같은 `ResetForPlay`에 넣었다.
+- **저장 키 분리: 맞다.**
+  - 모든 테스트가 `-savekey playtest`로 실행된다. `Bootstrap.Run`이 `SaveStores.For(launch)`를 쓰므로 키 뒤에 `#playtest`가 붙는다.
+  - SetUp과 TearDown이 같은 접미사 저장소에서 `SaveSystem`의 키 5개(진행·설정·진행 백업·튜토리얼·이야기)를 지운다.
+  - 텔레메트리 큐 키는 `telemetry off`라 생기지 않는다. 옛 `seven-steps-cleared` 키는 읽기 전용 이전 키다.
+  - 개발자의 보통 키는 건드리지 않는다.
+- **테스트 6개**: 9장 항목과 대응한다.
+  - Boot→Title 단일 씬
+  - 왕복 DDOL 불변
+  - `-level 3` → Game 스테이지 2
+  - Title 직접 Play
+  - Game 직접 Play
+  - 같은 Play 안 두 번째 실행
+  - `WaitForState`는 상태, 로딩 끝, 활성 씬 이름을 모두 확인하고 15초 제한이 있다. 실패 메시지에 현재 상태가 들어간다.
+- **`unity.sh playtest`**: `-nographics` 없이 batchmode로 실행한다. URP 설정을 되돌리고, 결과는 `reports/playmode-results.xml`에 남긴다. 실패하면 실패한 테스트 이름을 출력한다. EditMode `test`와 같은 형식이다.
+
+### 메모 (막지 않음)
+- **P1-N1 "두 번째 실행" 테스트는 진입 초기화의 일부만 흉내 낸다.**
+  - `Bootstrap.ResetForTest`는 `Bootstrap`과 `Services`만 비운다. `LevelCatalog`·`Ui`·`TelemetryTracker`의 `SubsystemRegistration` 고리는 부르지 않는다.
+  - 지금은 같은 데이터를 다시 읽으므로 해가 없다.
+  - 다만 테스트 이름 "starts fresh"가 실제 Play 진입보다 넓게 들린다. 둘 중 하나를 고른다:
+    - (a) `PlayResetTests`처럼 리플렉션으로 `SubsystemRegistration` 고리를 모두 부르는 테스트 도우미를 쓴다.
+    - (b) 주석에 "Bootstrap·Services만"이라고 적는다.
+  - 실제 두 번 Play(진입 초기화 전체)는 Play Mode를 두 번 들어가야 하므로 P2 캡처 도구에서 볼 수 있다.
+- **P1-N2** `UseLaunchOptionsForNextRun`·`ResetForTest`는 플레이어에도 공개되어 있다. 문서 주석에 "테스트·캡처 전용"이라고 적혀 있고, 부르는 곳은 Tests와 이후 에디터 캡처뿐이다. 그대로 둔다. 게임 코드가 부르기 시작하면 다시 본다.
