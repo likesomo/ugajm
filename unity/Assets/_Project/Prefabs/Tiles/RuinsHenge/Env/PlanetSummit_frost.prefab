@@ -47,6 +47,7 @@ MonoBehaviour:
   surface: {fileID: 2100000, guid: 8990ab390a3b2f44bb545dc3e2da31b6, type: 2}
   chapterId: frost
   boardShape: {fileID: 11400000, guid: 0094accda97e29e47a800eaddc096043, type: 2}
+  dressing: {fileID: 11400000, guid: 35fab22b0a7d3124088ac3be5d1d619d, type: 2}
   craterCrust: {fileID: 6423927499115613617, guid: ea53efd0ad9d0e14e92b84fde1e3dfd7, type: 3}
   craterCrustScale: {x: 100, y: 99.999985, z: 99.999985}
   craterCrustEuler: {x: 270.01978, y: 0, z: 0}

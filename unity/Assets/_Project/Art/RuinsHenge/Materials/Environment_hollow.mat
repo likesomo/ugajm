@@ -35,6 +35,14 @@ Material:
         m_Texture: {fileID: 2800000, guid: 39116be60897e114b9cfff2911ecc548, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _PlanetColor:
+        m_Texture: {fileID: 2800000, guid: 601db5ec1f67dc34aa434199dc03f781, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _PlanetDetail:
+        m_Texture: {fileID: 2800000, guid: d1d5639d2640b8e4bad4b4a5591c13c1, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _WeatherMap:
         m_Texture: {fileID: 2800000, guid: fe2bb985ec15c734dba497ce54ee9a1a, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -43,12 +51,15 @@ Material:
     m_Floats:
     - _AmbientFloor: 0.3
     - _BoardMoss: 0.25
-    - _BoardNormalStrength: 0.42
+    - _BoardNormalStrength: 0.6
     - _BoardStoneSlot: 8
     - _DstBlend: 0
     - _EnvironmentDetail: 1
     - _EnvironmentMoss: 0.3
     - _EnvironmentWood: 0
+    - _PlanetDressing: 1
+    - _PlanetIce: 0
+    - _SlideIce: 0
     - _SrcBlend: 1
     - _SurfaceAlpha: 1
     - _Unlit: 0
@@ -60,6 +71,7 @@ Material:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _BoardRockTint: {r: 1, g: 1, b: 1, a: 1}
     - _MossColor: {r: 0.53333336, g: 0.45882353, b: 0.5568628, a: 1}
+    - _PlanetPigment: {r: 0.57, g: 0.4, b: 0.27, a: 1}
     - _WallColor: {r: 0.58274513, g: 0.552549, b: 0.6101961, a: 1}
     - _WeatherTint: {r: 0.34901962, g: 0.4, b: 0.30980393, a: 1}
   m_BuildTextureStacks: []

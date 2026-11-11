@@ -47,6 +47,7 @@ MonoBehaviour:
   surface: {fileID: 2100000, guid: df9ffb1a77172904393efba61f862de0, type: 2}
   chapterId: altar
   boardShape: {fileID: 11400000, guid: 0094accda97e29e47a800eaddc096043, type: 2}
+  dressing: {fileID: 11400000, guid: b6cb7c1b578d7624d9652feb843e7b0f, type: 2}
   craterCrust: {fileID: 4540438803527781607, guid: fb8a52005494e6947ae6dfbacd3373e7, type: 3}
   craterCrustScale: {x: 100, y: 99.999985, z: 99.999985}
   craterCrustEuler: {x: 270.01978, y: 0, z: 0}

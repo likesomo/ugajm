@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bddbdd7b197081429d4248a051e9a7a, type: 3}
+  m_Name: Dressing_carved
+  m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.PlanetDressingSet
+  planetId: carved
+  modules:
+  - {fileID: 5665668991046787606, guid: fa34b6909fb829840946fe0f50545f48, type: 3}
+  - {fileID: 857860053225598690, guid: cea0cf8b86f06eb499fe075e7feaf431, type: 3}
+  - {fileID: 2195827856250477464, guid: dc88e831260fcc44fbc644ebeeeacb46, type: 3}
+  - {fileID: 7263383457540325971, guid: 8aef437953fbcce48ad4417db18c579a, type: 3}
+  - {fileID: 9135684205724286220, guid: be82895d6e6e31d4c83297c61c889cf4, type: 3}
+  material: {fileID: 2100000, guid: 06654d197714637409779ac6f6a4a9ad, type: 2}

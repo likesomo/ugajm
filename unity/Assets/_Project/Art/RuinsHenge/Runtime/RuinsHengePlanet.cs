@@ -8,6 +8,7 @@ namespace SevenSteps.Art
         public Material surface;
         public string chapterId="moss";
         public BoardShapeAKit boardShape;
+        public PlanetDressingSet dressing;
         public Mesh craterCrust;
         public Vector3 craterCrustScale=Vector3.one,craterCrustEuler;
         public Color summitTint=new Color32(198,202,182,255),rimTint=new Color32(116,141,87,255),rockTint=new Color32(88,107,128,255),moonTint=new Color32(126,172,178,255);
@@ -15,7 +16,7 @@ namespace SevenSteps.Art
         void Awake(){if(Services.TryGet<LaunchOptions>(out var launch)&&launch.ArtPerf)gameObject.AddComponent<RuinsFrameSample>();}
         Color Tint(Color c)=>QualitySettings.activeColorSpace==ColorSpace.Linear?c.linear:c;
         static void Dispose(Object o){if(!o)return;if(Application.isPlaying)Destroy(o);else DestroyImmediate(o);}
-        void OnDestroy(){foreach(var f in GetComponentsInChildren<MeshFilter>())Dispose(f.sharedMesh);}
+        void OnDestroy(){foreach(var f in GetComponentsInChildren<MeshFilter>())if(f.sharedMesh&&(f.sharedMesh.name.StartsWith("BoardShapeA_")||f.sharedMesh.name.StartsWith("Ruins_")))Dispose(f.sharedMesh);}
         public void Fit(BoardGrid grid){if(grid.W<=0||grid.H<=0||grid.CellSize<=0)throw new System.ArgumentOutOfRangeException(nameof(grid));transform.position=grid.Origin;transform.localScale=Vector3.one*grid.CellSize;Rebuild(grid.W,grid.H);}
         public void Preview(int w,int h)=>Rebuild(w,h);
         Mesh Make(List<Vector3> v,List<int> t,List<Color> colors)
@@ -28,11 +29,11 @@ namespace SevenSteps.Art
         {
             var go=new GameObject(name,typeof(MeshFilter),typeof(MeshRenderer));go.transform.SetParent(transform,false);go.GetComponent<MeshFilter>().sharedMesh=Make(v,t,colors);go.GetComponent<MeshRenderer>().sharedMaterial=surface;return go;
         }
-        void Clear(GameObject go){if(!go)return;Dispose(go.GetComponent<MeshFilter>().sharedMesh);Dispose(go);}
+        void Clear(GameObject go){if(!go)return;var f=go.GetComponent<MeshFilter>();if(f)Dispose(f.sharedMesh);Dispose(go);}
         void Rebuild(int w,int h)
         {
             Clear(terrain);Clear(decor);foreach(var m in GetComponentsInChildren<RuinsMoon>())Clear(m.gameObject);
-            if(boardShape){terrain=BoardShapeAAssembly.Build(transform,boardShape,surface,chapterId,w,h,craterCrust,Matrix4x4.TRS(Vector3.zero,Quaternion.Euler(craterCrustEuler),craterCrustScale));decor=null;return;}
+            if(boardShape){terrain=BoardShapeAAssembly.Build(transform,boardShape,surface,chapterId,w,h,craterCrust,Matrix4x4.TRS(Vector3.zero,Quaternion.Euler(craterCrustEuler),craterCrustScale),dressing);decor=dressing?PlanetDressingPlacement.Build(transform,terrain,dressing,w,h):null;return;}
             // Flat supporting summit stays below y=0. Silhouette and strata change below it.
             const int n=64;float rx=w*.5f+2.2f,rz=h*.5f+2.2f,depth=Mathf.Clamp(w*.42f,2.5f,4);
             float[] ys={-.12f,-.35f,-.8f,-1.25f,-depth*.72f,-depth,-depth*1.2f};

@@ -47,6 +47,7 @@ MonoBehaviour:
   surface: {fileID: 2100000, guid: e60554b103945dc49839caf14d2f91be, type: 2}
   chapterId: joinery
   boardShape: {fileID: 11400000, guid: 0094accda97e29e47a800eaddc096043, type: 2}
+  dressing: {fileID: 11400000, guid: 4e0584dc910df214aac3e7bff3bade0e, type: 2}
   craterCrust: {fileID: -6111591125574177517, guid: 8d7ae6a373b20ea42b6c4e718e27d464, type: 3}
   craterCrustScale: {x: 100, y: 99.999985, z: 99.999985}
   craterCrustEuler: {x: 270.01978, y: 0, z: 0}

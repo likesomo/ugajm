@@ -1,0 +1,1 @@
+{"name":"SevenSteps.PlanetDressing.Review","references":["SevenSteps.Art","SevenSteps.Art.Editor","SevenSteps.Core","SevenSteps.Contracts","SevenSteps.Game"],"includePlatforms":[],"defineConstraints":["UNITY_EDITOR"],"autoReferenced":false}
