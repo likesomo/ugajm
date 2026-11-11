@@ -1035,3 +1035,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | scene-flow c513108 검토 승인(메뉴 오버레이·`TutorialTracker`·접근성 설정 연결, 검사 실행은 모두 seen인 메모리 저장소). 메모 C1 선택 카드·안내는 `Presented` 뒤 표시(gameplay-ui), C2 메모리 저장소 상한, C3 임시 설정 버튼 연결 정리. `docs/reviews/2026-11-11-scene-flow-c513108.md` |
 | 2026-11-11 | 아키텍트 | feat/view cce7783·740a516·fdd9651(최소 HUD, 선택 UI v3, 발치 별) 조건부 승인: 계약 4.4·14.11 대조 맞음(BoardFrame 8×6 ortho 4.67 셀 77px). R1 카드 Button 선택이 남아 Enter가 Submit과 `choice.Confirm` 두 경로로 갈 수 있음, R2 확정 Present 문 여러 개면 0.5초 초과·움직임 줄이기에서도 문 대기. `docs/reviews/2026-11-11-feat-view-fdd9651.md` |
 | 2026-11-11 | 아키텍트 | scene-flow b619811(14.11 등록 4종, C2) 승인, 병합은 gameplay-ui `LayoutChoice` 수정 뒤. 14.11 보강: 카드 비겹침 대상에 보이는 HUD 판·버튼 포함, 피할 후보가 없으면 카드가 보이는 동안 메시지 줄을 숨김, 상시 버튼 자리는 후보에서 뺌. `docs/reviews/2026-11-11-scene-flow-b619811.md` |
+| 2026-11-11 | 아키텍트 | feat/view 71a8f9c 승인(R1 Enter 한 경로, R2 확정 Present 최대 0.42초·움직임 줄이기 0, M2 고스트 Behaviour 끔, 14.11 보이는 HUD 판 회피·메시지 숨김). b619811과 함께 병합 가능 |
