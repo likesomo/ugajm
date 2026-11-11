@@ -180,6 +180,12 @@ namespace SevenSteps.Game
         }
 
         public HintPlan Plan => plan;
+        /// Tier 1 (the principle) is part of this stage's hint.
+        public bool HasPrinciple => principle;
+        /// Tiers as the player counts them: from the first one this stage opens (a stage that started with its hint
+        /// text has no tier 1, so its first H reads 1 / N - 1; review M2 on 4024c25). Telemetry keeps the absolute tier.
+        public int Shown(int tier) => principle ? tier : tier - 1;
+        public int ShownTiers => principle ? plan.Tiers : plan.Tiers - 1;
         public int Opened => opened;
 
         /// The tier the next H opens (no state change).

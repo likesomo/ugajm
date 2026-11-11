@@ -130,6 +130,9 @@ namespace SevenSteps.Tests
             var steps = new HintSteps(plan, principle: false); // startLine "hint": tier 1 was the start line
             var start = Rules.NewState(level);
             Assert.AreEqual(2, steps.NextTier(start));
+            Assert.AreEqual(1, steps.Shown(2), "the screen counts from the first tier this stage opens (review M2)");
+            Assert.AreEqual(plan.Tiers - 1, steps.ShownTiers);
+            Assert.AreEqual(plan.Tiers, new HintSteps(plan, principle: true).ShownTiers);
             Assert.IsTrue(steps.NextCosts(start), "the first H of a hint-start stage already costs (the HUD marks it)");
 
             // Off the route: a move the route does not start with.

@@ -302,10 +302,7 @@ namespace SevenSteps.Game
             if (hintSteps == null || hintStage != stage)
             {
                 hintStage = stage;
-                string path = LevelCatalog.PathOf(stage);
-                hintSteps = path.Length > 0
-                    ? new HintSteps(HintPlan.From(levels[stage], path), LevelCatalog.TextOf(stage, loc.Current).hint.Length > 0 && LevelCatalog.StartLineOf(stage) != "hint")
-                    : null;
+                hintSteps = StepsFor(stage);
             }
             if (hintSteps == null)
             {
@@ -333,6 +330,23 @@ namespace SevenSteps.Game
         HintSteps hintSteps;
         int hintStage = -1;
 
+        /// The staged hint of a stage, or null (the whole route at once) when it has no stored route or the route does
+        /// not follow (bad data: logged, the H still helps; review M1 on 4024c25).
+        HintSteps StepsFor(int stage)
+        {
+            string path = LevelCatalog.PathOf(stage);
+            if (path.Length == 0) return null;
+            HintPlan plan;
+            try { plan = HintPlan.From(levels[stage], path); }
+            catch (ArgumentException e)
+            {
+                Debug.LogError($"[SevenSteps] Staged hint off for stage {stage + 1}: {e.Message}");
+                return null;
+            }
+            bool principle = LevelCatalog.TextOf(stage, loc.Current).hint.Length > 0 && LevelCatalog.StartLineOf(stage) != "hint";
+            return new HintSteps(plan, principle);
+        }
+
         /// The tier's line on the message line, worded on each read (a language change rewords it).
         string HintText(int stage, HintTier t, bool nextCosts)
         {
@@ -342,7 +356,7 @@ namespace SevenSteps.Game
                 HintTier.Shows.Goal => loc.Format("hint.goal", loc.Get($"hint.brother{t.Goal.Body % 3 + 1}"), GoalWords(t.Goal)),
                 _ => hints.For(stage),
             };
-            string head = loc.Format("hint.tier", t.Tier, t.Tiers);
+            string head = loc.Format("hint.tier", hintSteps.Shown(t.Tier), hintSteps.ShownTiers);
             if (t.FromStart) head += " " + loc.Get("hint.from_start");
             string line = loc.Format("hint.line", head, body);
             return nextCosts ? line + " " + loc.Get("hint.next_costs") : line;
