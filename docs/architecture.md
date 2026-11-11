@@ -1150,3 +1150,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | feat/view 378bf38 승인(ResultView.Update 삭제로 c58dfa4 R1 종료: 별 초점 키는 GameController Result 분기 한 곳). `docs/reviews/2026-11-11-feat-view-c58dfa4.md` |
 | 2026-11-11 | 아키텍트 | 14장 UiLayoutCheck 해상도에 1024x768(4:3) 경고 추가 승인(scene-flow 제안, QA 1차 1280x800 경고 정리와 4:3 창 대비, 목표 경고 0, 세로 화면은 범위 밖). 영향: 씬 플로우(Resolutions 한 줄), gameplay-ui(Result 1024x768 경고 20건) |
 | 2026-11-11 | 아키텍트 | feat/view 4ea1ec0 승인(이야기 S4 보드 쪽: StoryDirector, 시작 줄 startLine, 피날레 줄 보류·표시, HUD 잠깐 줄 하나). 메뉴 다시 보기 나눔: gameplay-ui StoryDirector.ShowStartAgain, scene-flow 메뉴 항목. `docs/reviews/2026-11-11-feat-view-4ea1ec0.md` |
+| 2026-11-11 | 아키텍트 | feat/view ebdb653 승인(StoryDirector.ReplayStartLine, 메뉴 다시 보기 진입점. 메뉴 항목 연결은 scene-flow). `docs/reviews/2026-11-11-feat-view-4ea1ec0.md` |

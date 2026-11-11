@@ -28,3 +28,11 @@
 - 메뉴가 덮고 있는 동안에는 기다렸다가 메뉴가 닫히면 보이므로, 기존 덮개 처리를 그대로 쓴다.
 - 시작 줄이 ""인 스테이지에서는 항목을 숨기거나 비활성으로 둔다.
 - 순서: gameplay-ui의 메서드가 먼저 들어가고, scene-flow가 레이아웃 커밋 뒤에 연결한다. 리드가 배분을 바꾸면 그에 따른다.
+
+## 이어서: feat/view ebdb653 (메뉴 다시 보기 진입점) — **승인**
+코드만 읽었다. EditMode 874/874는 gameplay-ui 보고 수치다.
+- 위 결정과 같다. 이름만 `ReplayStartLine()`(bool)이다. 시작 줄을 처음과 같은 시간으로 `waitingStart`에 넣고 `CoverChanged()`를 부른다. 그래서 메뉴가 닫힐 때 보이고, 다음 이동에 사라진다.
+- 줄이 없거나 스테이지가 없으면 false이고 상태를 바꾸지 않는다. scene-flow는 이 값으로 항목을 비활성으로 둘 수 있다(미리 알려면 같은 조건의 `HasStartLine` 속성이 필요하다. 필요하면 요청한다).
+- 조용한 실행에서도 보이는 것은 맞다. 플레이어가 누른 것이다.
+- **메모 N1**: 클리어 결과 위에서 Esc 메뉴를 열고 누르면 줄이 숨겨진 HUD(14.7 `Conceal`)에 걸려 보이지 않는다. 다음 스테이지의 Rebuild에서 지워지니 해는 없다. 결과 상태에서는 항목을 숨기거나, `ReplayStartLine`이 Result에서 false를 돌려주는 쪽이 깔끔하다(scene-flow가 연결할 때 정한다).
+- 연결(scene-flow): `MenuController`에 `() => storyLines.ReplayStartLine()`를 넘긴다. `storyLines`가 `menu`보다 뒤에 만들어지므로 람다로 늦게 읽는다.
