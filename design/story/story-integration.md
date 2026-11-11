@@ -223,11 +223,11 @@ Assets/_Project/Data/story.json ──────────────┐   
 | `seventhFirst` | 6 첫 7번째 걸음 | `brother` | 1개 (`brother 0`) |
 | `keep` `switch` `bridge` | 7 순간 문구 | `brother` | 각 형제 1~3, 줄 2개 이상 |
 | `seal` `fall` `vanish` | 7 순간 문구 | `brother` | 각 1개 이상 (`brother 0` 허용) |
-| `lose` | 12 실패 | — | 1개 (제목·본문은 줄 2개: `id` `title`, `body`) |
+| `lose` | 12 실패 | — | 1개. 최소 UI는 아이콘 위 한마디라 줄마다 한 문장이고, 줄 풀을 차례로 돈다(4단계) |
 | `finale` | 8 피날레 한 줄 = 진실 | `chapter` | 챕터마다 1개 (피날레 스테이지는 `ChapterKeyOf` 경계, A4·A9) |
 | `constellation` | 9 별자리 완성 | `chapter` | 7챕터 각 1개 |
 | `ending` | 10 엔딩 | `card`, `brother`, `stones`, `after` | 카드 1: 형제 1~3. 카드 2: 선돌 0~2. 카드 3: `after ""`와 `"allTruths"`. 카드 4: 1개 (0.5) |
-| `stillStar` | 엔딩 뒤 북극성 줄 | `after "allStars"` | 1개 |
+| `stillStar` | 엔딩 뒤 북극성 줄 | `after "allStars"` | 선택. 있으면 1개(상한은 타이틀과 같은 20/44) |
 
 스테이지 한 줄(지점 5)과 행성 카드(4)·행성 설명(3)은 `levels.js`/`chapters.json`에 있다. 같은 검사 도구가 그 파일들의 해당 필드에도 글자 수와 글자 검사를 한다(3.1).
 
@@ -235,7 +235,7 @@ Assets/_Project/Data/story.json ──────────────┐   
 
 ### 3.1 export 단정 검사 (`story-check`, node, Unity 없이)
 
-`design/story/tools/check-story.mjs`(스토리 디렉터가 만든다)가 검사한다. 하나라도 실패하면 exit 1이고, `unity.sh levels`는 `Data/story.json`을 쓰지 않는다.
+`design/story/tools/check-story.mjs`(4단계에 만듦, `copy-stage4.md`)가 검사한다. #13은 지금 레벨 데이터에 경고, 스토리 디렉터의 제안 원고 `copy-levels.json`에 오류이고, `--strict-levels`면 레벨 데이터도 오류다. 하나라도 실패하면 exit 1이고, `unity.sh levels`는 `Data/story.json`을 쓰지 않는다.
 
 | # | 검사 | 실패 예 |
 |---|---|---|
