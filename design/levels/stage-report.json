@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-09",
+  "generated": "2026-11-11",
   "stateLimit": 600000,
   "problems": [],
   "rows": [
@@ -585,10 +585,10 @@
       "bodies": 3,
       "ok": true,
       "minBodies": 3,
-      "minPath": "RLRRRRUKUUDUDUDXUDLLLUU",
+      "minPath": "RLRRRURKULLLUURXLRLRLRL",
       "minInputs": 23,
       "minDirInputs": 21,
-      "shortestPath": "RLRRRRUKUUDUDUDXUDLLLUU",
+      "shortestPath": "RLRRRURKULLLUURXLRLRLRL",
       "shortestInputs": 23,
       "shortestBodies": 3,
       "winBodies": [
@@ -596,7 +596,7 @@
       ],
       "star2Splits": false,
       "needsSwitch": true,
-      "states": 1229,
+      "states": 3759,
       "capped": false,
       "levelsJsonMatches": true,
       "stars": {
@@ -1044,18 +1044,18 @@
       "bodies": 3,
       "ok": true,
       "minBodies": 3,
-      "minPath": "LRRLRLRXRDDLLLDXLLLUULU",
-      "minInputs": 23,
+      "minPath": "LDDUDUULDUDUDLLDLLLLU",
+      "minInputs": 21,
       "minDirInputs": 21,
-      "shortestPath": "LRRLRLRXRDDLLLDXLLLUULU",
-      "shortestInputs": 23,
+      "shortestPath": "LDDUDUULDUDUDLLDLLLLU",
+      "shortestInputs": 21,
       "shortestBodies": 3,
       "winBodies": [
         3
       ],
       "star2Splits": false,
-      "needsSwitch": true,
-      "states": 4685,
+      "needsSwitch": false,
+      "states": 9362,
       "capped": false,
       "levelsJsonMatches": true,
       "stars": {

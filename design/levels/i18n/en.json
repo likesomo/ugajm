@@ -165,7 +165,7 @@
       "n": 21,
       "ko": "새김돌의 계산",
       "name": "The Carvers' Sum",
-      "hint": "One stone, one handover, one gate. Count every brother's steps.",
+      "hint": "A number door opens only on that step. Count every step of all three brothers.",
       "story": "The old stones are just their height."
     },
     {

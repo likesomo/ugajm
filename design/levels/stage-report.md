@@ -1,6 +1,6 @@
 # 스테이지 솔버 리포트 (50스테이지)
 
-생성: `node unity/Tools/stage-report.mjs` (2026-11-09, 코어). 입력: `prototypes/seven-steps/src/levels.js` + `core.js` 솔버, `levels.json` expected 대조.
+생성: `node unity/Tools/stage-report.mjs` (2026-11-11, 코어). 입력: `prototypes/seven-steps/src/levels.js` + `core.js` 솔버, `levels.json` expected 대조.
 스테이지를 바꾸면 다시 실행한다. 리플레이 형식: U D L R 이동, K KEEP, X SWITCH (`-replay` / `?replay=`).
 
 ## 별 기준 (design/levels/stars.md 0, B안 — `core.js` `stars()` / C# `Stars.Of`)
@@ -40,7 +40,7 @@
 | 18 | carved | 처음부터 다시 세기 | 3 | 2 | 2/3 | 갈림 | 예 | 15 (14) | 15 | 228 | `RLRLRRRXRRRRLRR` |
 | 19 | carved | 숫자와 구멍 | 3 | 2 | 2/3 | 갈림 |  | 14 (14) | 14 | 123 | `UDUDUDRRRRRRLR` |
 | 20 | carved | 두 숫자 | 3 | 2 | 2/3 | 갈림 | 예 | 15 (14) | 15 | 4721 | `LUUDUURXRRDDDUD` |
-| 21 | carved | 새김돌의 계산 | 3 | 3 | 3 | 자동 | 예 | 23 (21) | 23 | 1229 | `RLRRRRUKUUDUDUDXUDLLLUU` |
+| 21 | carved | 새김돌의 계산 | 3 | 3 | 3 | 자동 | 예 | 23 (21) | 23 | 3759 | `RLRRRURKULLLUURXLRLRLRL` |
 | 22 | frost | 미끄러운 첫걸음 | 3 | 1 | 1/3 | 갈림 |  | 7 (7) | 7 | 468 | `RDDLLLL` |
 | 23 | frost | 홀수의 셈 | 3 | 1 | 1/2/3 | 갈림 |  | 7 (7) | 7 | 23677 | `DUDURDD` |
 | 24 | frost | 얼음 위의 숫자 | 3 | 2 | 2/3 | 갈림 | 예 | 15 (14) | 15 | 35637 | `DUDUDUDXLULULLU` |
@@ -56,7 +56,7 @@
 | 34 | joinery | 레버와 바통 | 3 | 3 | 3 | 자동 | 예 | 23 (21) | 23 | 15219 | `UDUDUDUXDUDUDDRXLULLULL` |
 | 35 | joinery | 결구의 장치 | 3 | 3 | 3 | 자동 | 예 | 23 (21) | 23 | 11963 | `UDUDULRXUDLDDRRKRRUDDDR` |
 | 36 | crumble | 한 번만 버티는 바닥 | 3 | 3 | 3 | 자동 |  | 22 (21) | 22 | 399 | `RLRLRRRRLRRRRRKRRRRDDR` |
-| 37 | crumble | 무너질 길 | 3 | 3 | 3 | 자동 | 예 | 23 (21) | 23 | 4685 | `LRRLRLRXRDDLLLDXLLLUULU` |
+| 37 | crumble | 무너질 길 | 3 | 3 | 3 | 자동 |  | 21 (21) | 21 | 9362 | `LDDUDUULDUDUDLLDLLLLU` |
 | 38 | crumble | 하나만 남겨라 | 3 | 2 | 2 | 자동 |  | 15 (14) | 15 | 1268 | `DUDUDURKDDRRRRR` |
 | 39 | crumble | 열쇠가 되는 형제 | 3 | 3 | 3 | 자동 |  | 23 (21) | 23 | 497 | `UDUDUDUKDURRRRRKDDRRRRR` |
 | 40 | crumble | 남기기 전에 지나가라 | 3 | 3 | 3 | 자동 | 예 | 23 (21) | 23 | 612 | `RLRRRRRXLLLLLRRKRDUDUDD` |

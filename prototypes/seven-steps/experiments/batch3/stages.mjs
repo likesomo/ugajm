@@ -6,14 +6,15 @@ const old = (n, extra = {}) => ({ ...LEVELS[n - 1], bodies: 3, ...extra });
 export const STAGES = [
   {
     name: '새김돌의 계산',                     // 21 new (stage-search gate-plate, seed 95 #1): keep on the plate past the 5 door, hand over, walk through A
-    hint: '선돌 하나, 바통 하나, 숫자 문 하나. 세 형제의 걸음을 모두 세자.',
+    // QA-1 fix (design/levels/qa-1.md 3.3): 5 door moved to the exit column so it is needed (before: dead); hint no longer gives the body split
+    hint: '숫자 문은 그 숫자 번째 걸음에만 열린다. 세 형제의 걸음을 모두 세자.',
     bodies: 3,
     gimmickTiles: '1234567aA',
     map: [
       '##########',
       '#E..#....#',
-      '#.##....##',
-      '#...A##5a#',
+      '#5##....##',
+      '#...A##.a#',
       '#..#S....#',
       '##########',
     ],
