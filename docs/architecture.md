@@ -1156,3 +1156,6 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | 단계형 힌트 계약 판단(QA 1 (A), 코드 전): 방향 찬성. hints = 2단계 이상을 연 횟수(1단계 원리 무료, 사용자 결정 대기), Stars.Of·core.js·골든·서버 재계산 불변, hint 이벤트 tier·tiers 선택 필드(v 그대로), 칸은 저장된 풀이를 Rules.Dispatch로 따라가 구함(처음부터 기준), LevelDto 변경 없음. 6.5 본문은 사용자 결정 뒤 고침. `docs/reviews/2026-11-11-staged-hint-contract.md` |
 | 2026-11-11 | 아키텍트 | 단계형 힌트 판단 보완(level-design 의견): 풀이는 expected.path 재생(런타임 BFS 없음), 단계는 몸의 끝(KEEP·SWITCH·다리·굳힘 아이콘, 레버 겹침, 마지막 몸은 바로 전체 경로), 몸 경계 Rules.Key가 같으면 이어서 보기. `docs/reviews/2026-11-11-staged-hint-contract.md` |
 | 2026-11-11 | 아키텍트 | feat/view ecf50a2 승인(4:3 결과 행성·여정 줄 판을 같은 여백으로 늘려 [다음]과 비겹침, UiLayout 경고 0) + 1458ea0 병합의 UiLayoutCheck 맞춤 확인. `docs/reviews/2026-11-11-feat-view-ecf50a2.md` |
+| 2026-11-11 | 아키텍트 | feat/view 4024c25 승인(단계형 힌트: HintPlan expected.path 재생, 몸의 끝 목표, Rules.Key 이어서 보기, HintRules 스위치 FirstTierFree·TelemetryTier 기본 꺼짐, Core·골든 불변). 메모 M1 HintPlan 예외 시 전체 경로로 물러서기. `docs/reviews/2026-11-11-feat-view-4024c25.md` |
+| 2026-11-11 | 아키텍트 | feat/view c5a3657 승인(4024c25 M1 HintPlan 예외 시 전체 경로, M2 화면 단계 번호는 열 수 있는 단계만). `docs/reviews/2026-11-11-feat-view-4024c25.md` |
+| 2026-11-11 | 아키텍트 | feat/view b6ad087 승인(c5a3657 N1: 힌트 줄이 HintSteps를 잡아 둠). `docs/reviews/2026-11-11-feat-view-4024c25.md` |
