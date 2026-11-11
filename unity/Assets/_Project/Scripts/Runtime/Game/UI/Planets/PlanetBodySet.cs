@@ -32,9 +32,9 @@ namespace SevenSteps.Game.UI.Planets
             public float boardScale = 0.22f;
         }
 
-        [Tooltip("Shared vertex-colour stone material (RuinsSurface, _UseVertexColor 1)")]
+        [Tooltip("Shared vertex-colour stone material (UI/Planets/PlanetStone.mat, SevenSteps/PlanetStone v4b lighting)")]
         public Material material;
-        [Tooltip("Ground marks on the surface path (stars, scarf dots, footprints): the same shader, unlit")]
+        [Tooltip("Ground marks on the surface path (stars, scarf dots, footprints): the same shader, _Unlit 1")]
         public Material marksMaterial;
         public Entry[] planets = new Entry[0];
 

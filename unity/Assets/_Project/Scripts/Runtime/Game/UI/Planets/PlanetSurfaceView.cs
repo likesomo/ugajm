@@ -181,6 +181,15 @@ namespace SevenSteps.Game.UI.Planets
             mapBodies(true);
         }
 
+        /// Focuses a place as if chosen with the arrows (-1 = none) and runs one frame of placement (editor captures, tests).
+        public void Preview(int slot)
+        {
+            armed = slot >= 0;
+            if (slot >= 0) focused = slot;
+            Tick();
+            Refresh();
+        }
+
         /// A stage choice from this view is pending (dive): overlay hidden, input off, the body stops turning.
         public void SetPending(bool on)
         {

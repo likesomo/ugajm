@@ -59,28 +59,38 @@ namespace SevenSteps.Game.UI.Planets
         }
 
         /// Where to centre a focus label of <paramref name="size"/> for a body at <paramref name="center"/> with radius
-        /// <paramref name="radius"/> (canvas units, y up): under the body first, then beside it (right, left), then above;
+        /// <paramref name="radius"/> (canvas units, y up): under the body first, then under and to the right / left (the v4
+        /// "label / lit trail" fix: about 110 units aside), then beside it (right, left), then above;
         /// the first spot whose box (plus 6 units of air) crosses no trail segment and stays inside <paramref name="bounds"/>.
         /// <paramref name="below"/> is the extra room under the body (the star row). None fits: under the body.
-        public static Vector2 LabelSpot(Vector2 center, float radius, Vector2 size, float below, IReadOnlyList<(Vector2 a, Vector2 b)> segments, Rect bounds)
+        /// <paramref name="avoid"/>: boxes the label must not cover either (other bodies, star rows, the brothers' marker).
+        public static Vector2 LabelSpot(Vector2 center, float radius, Vector2 size, float below, IReadOnlyList<(Vector2 a, Vector2 b)> segments, Rect bounds,
+            IReadOnlyList<Rect> avoid = null)
         {
             if (segments == null) throw new ArgumentNullException(nameof(segments));
             var spots = new[]
             {
                 center + new Vector2(0, -(radius + below + size.y / 2)),
+                center + new Vector2(110, -(radius + below + size.y / 2)),
+                center + new Vector2(-110, -(radius + below + size.y / 2)),
                 center + new Vector2(radius * 0.55f + size.x / 2 + 8, -(radius * 0.75f + size.y / 2)),
                 center + new Vector2(-(radius * 0.55f + size.x / 2 + 8), -(radius * 0.75f + size.y / 2)),
                 center + new Vector2(0, radius + size.y / 2 + 12),
             };
+            // The first clear spot; none clear: the one inside the bounds that crosses the fewest things.
+            Vector2 best = spots[0];
+            int bestHits = int.MaxValue;
             foreach (var s in spots)
             {
                 var box = new Rect(s - size / 2 - Vector2.one * 6, size + Vector2.one * 12);
                 if (box.xMin < bounds.xMin || box.xMax > bounds.xMax || box.yMin < bounds.yMin || box.yMax > bounds.yMax) continue;
-                bool hit = false;
-                foreach (var (a, b) in segments) if (SegmentHitsRect(a, b, box)) { hit = true; break; }
-                if (!hit) return s;
+                int hits = 0;
+                foreach (var (a, b) in segments) if (SegmentHitsRect(a, b, box)) hits++;
+                if (avoid != null) foreach (var r in avoid) if (r.Overlaps(box)) hits++;
+                if (hits == 0) return s;
+                if (hits < bestHits) { bestHits = hits; best = s; }
             }
-            return spots[0];
+            return best;
         }
 
         /// The segment a-b touches the rectangle (inside or crossing an edge). Liang-Barsky clipping.

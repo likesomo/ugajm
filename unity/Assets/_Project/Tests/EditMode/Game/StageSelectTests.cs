@@ -55,6 +55,18 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void TheFinaleLightsTheTrailBeforeEveryStageIsCleared()
+        {
+            // As the journey return (scene-flow) and the story: the planet's last stage cleared = completed for the trails.
+            var m = Model(Rows(new[] { true, false, true }, new bool[3], new bool[2]), 0, 2);
+            Assert.IsTrue(m.FinaleCleared(0));
+            Assert.IsFalse(m.Complete(0));
+            Assert.IsTrue(m.TrailLit(0));
+            Assert.IsTrue(m.ChoosePlays(0, out int slot), "a click still plays the unfinished stage 2");
+            Assert.AreEqual(1, slot);
+        }
+
+        [Test]
         public void MarkerAndCurrentPlace()
         {
             var m = Model(Rows(new[] { true, false, false }, new bool[3], new bool[2]), 0, 2);
