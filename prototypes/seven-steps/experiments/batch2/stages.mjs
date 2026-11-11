@@ -33,7 +33,7 @@ export const STAGES = [
   },
   {
     name: '구멍 둘, 형제 셋',                   // 13 new: two pits, two bridges, the third walks
-    hint: '구멍이 둘. 다리도 둘.',
+    hint: '다리가 된 형제는 다시 걷지 못한다. 형제는 셋.',
     bodies: 3,
     gimmickTiles: 'o',
     map: [
