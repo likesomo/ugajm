@@ -66,6 +66,8 @@ namespace SevenSteps.EditorTools
             public bool GameplayUi;
             /// Builds under the canvas; returns the modal root (or null).
             public Func<Ctx, RectTransform, GameObject> Build;
+            /// Optional checks of this screen after the common ones (laid out, still built). Adds problems to the list.
+            public Action<Ctx, List<string>> Extra;
         }
 
         sealed class Ctx
@@ -118,6 +120,7 @@ namespace SevenSteps.EditorTools
                             var modal = screen.Build(ctx, canvas);
                             Layout(res.Units);
                             CheckScreen(label, res.Units, modal, ctx, found, exemptions, res == Resolutions[0]);
+                            screen.Extra?.Invoke(ctx, found);
                             screensBuilt++;
                         }
                         catch (Skipped e) { found.Add(e.Message); }
@@ -298,20 +301,85 @@ namespace SevenSteps.EditorTools
                 c.Board = BoardArea(c, widest);
                 return null;
             } }, $"stage {widest + 1} step numbers");
-            yield return (new Screen { Name = "Result", GameplayUi = true, Build = (c, root) =>
+            // 14.7 'Result clear' (over the board): not a modal, so instead of the scrim-alpha rule ResultClearChecks looks at
+            // the full-canvas raycast scrim at ClearScrimAlpha and the hidden HUD; the common checks keep every result text,
+            // plate and button off the board area (14.11 projection + 8, ctx.Board). Stages: the last one (journey line,
+            // [끝까지 보기]), the last stage of a planet (planet line), and the tallest and the widest board (the band above
+            // the board is tightest). Each also with the star criteria tip open, the longest one in that language.
+            int lastStage = levels.Length - 1;
+            int planetEnd = Enumerable.Range(0, lastStage).FirstOrDefault(i => LevelCatalog.ChapterKeyOf(i) != LevelCatalog.ChapterKeyOf(i + 1));
+            foreach (int stage in new[] { lastStage, planetEnd, tallest, widest }.Distinct())
+                foreach (bool tip in new[] { false, true })
+                {
+                    int st = stage;
+                    bool showTip = tip;
+                    HudView hud = null;
+                    ResultView r = null;
+                    yield return (new Screen { Name = "Result", GameplayUi = true, Build = (c, root) =>
+                    {
+                        hud = BuildHud(c, st);
+                        r = ResultView.Create();
+                        r.HudHidden += hud.Conceal;
+                        r.Apply(c.Loc);
+                        c.Board = BoardArea(c, st);
+                        bool last = st == c.Levels.Length - 1;
+                        var chapter = last || LevelCatalog.ChapterKeyOf(st) != LevelCatalog.ChapterKeyOf(st + 1) ? LevelCatalog.ChapterOf(st) : null;
+                        int bodies = c.Levels[st].Bodies;
+                        r.Show(ResultModel.Clear(st, bodies, bodies, bodies, bodies, last, 3, 3, chapter));
+                        if (showTip) OpenLongestTip(r);
+                        return null; // not a modal: the scrim is ClearScrimAlpha (14.7)
+                    }, Extra = (c, found) => ResultClearChecks(c, r, hud, showTip, found) },
+                    $"clear stage {st + 1}" + (showTip ? " tip" : ""));
+                }
+            // 14.7 'Result lose': the modal (scrim >= 0.6 by the common check, LossScrimAlpha here), HUD left as it is.
             {
-                // Clear over the board (docs 14.7, 9eda0b0): the HUD hides, the result keeps clear of the board area.
-                // Interim glue by gameplay-ui so the new ResultView builds; scene-flow finishes the 'Result clear' checks
-                // (scrim raycast, HUD hidden, the star tip shown).
-                var hud = BuildHud(c, longestHint);
-                var r = ResultView.Create();
-                r.HudHidden += hud.Conceal;
-                r.Apply(c.Loc);
-                bool last = c.Levels.Length > 0;
-                c.Board = BoardArea(c, c.Levels.Length - 1);
-                r.Show(ResultModel.Clear(c.Levels.Length - 1, 3, 3, 1, 1, last, 3, 3));
-                return null; // not a modal: the scrim is 0.25 (14.7)
-            } }, "clear");
+                HudView hud = null;
+                ResultView r = null;
+                yield return (new Screen { Name = "Result", GameplayUi = true, Build = (c, root) =>
+                {
+                    hud = BuildHud(c, longestHint);
+                    r = ResultView.Create();
+                    r.HudHidden += hud.Conceal;
+                    r.Apply(c.Loc);
+                    r.Show(ResultModel.Loss(longestHint, c.Levels[longestHint].Bodies, false));
+                    return r.overlay;
+                }, Extra = (c, found) =>
+                {
+                    if (Mathf.Abs(r.scrim.color.a - ResultView.LossScrimAlpha) > 0.01f) found.Add($"result lose: scrim alpha {r.scrim.color.a:0.00}, expected {ResultView.LossScrimAlpha} (14.7)");
+                    if (hud.Concealed) found.Add("result lose: the HUD is hidden (only a clear hides it, 14.7)");
+                } }, "lose");
+            }
+        }
+
+        /// Opens the star criteria tip with the longest text, as a tap on that star does (the star's EventTrigger click).
+        static void OpenLongestTip(ResultView r)
+        {
+            int k = Enumerable.Range(0, r.starLabels.Length).OrderByDescending(i => r.starLabels[i].text.Length).First();
+            var trigger = r.stars[k].GetComponent<UnityEngine.EventSystems.EventTrigger>()
+                ?? throw new InvalidOperationException($"result star {k + 1} has no EventTrigger (hover / tap tip)");
+            var click = trigger.triggers.FirstOrDefault(e => e.eventID == UnityEngine.EventSystems.EventTriggerType.PointerClick)
+                ?? throw new InvalidOperationException($"result star {k + 1} has no click entry");
+            click.callback.Invoke(null);
+        }
+
+        /// 14.7 clear over the board: scrim over the whole canvas taking raycasts at ClearScrimAlpha, the HUD hidden
+        /// (CanvasGroup alpha 0, no raycasts), and with <paramref name="tip"/> a criteria tip actually showing.
+        static void ResultClearChecks(Ctx c, ResultView r, HudView hud, bool tip, List<string> found)
+        {
+            var s = r.scrim;
+            var corners = new Vector3[4];
+            s.rectTransform.GetWorldCorners(corners);
+            var canvas = (RectTransform)s.canvas.transform;
+            var cc = new Vector3[4];
+            canvas.GetWorldCorners(cc);
+            bool full = corners[0].x <= cc[0].x + 1 && corners[0].y <= cc[0].y + 1 && corners[2].x >= cc[2].x - 1 && corners[2].y >= cc[2].y - 1;
+            if (!s.gameObject.activeInHierarchy || !full) found.Add("result clear: the scrim does not cover the whole canvas (14.7)");
+            if (!s.raycastTarget) found.Add("result clear: the scrim takes no raycasts: the board would get clicks under the result (14.7)");
+            if (Mathf.Abs(s.color.a - ResultView.ClearScrimAlpha) > 0.01f) found.Add($"result clear: scrim alpha {s.color.a:0.00}, expected {ResultView.ClearScrimAlpha} (14.7)");
+            if (!hud.Concealed) found.Add("result clear: the HUD is not hidden (CanvasGroup alpha 0, 14.7)");
+            else if (hud.TryGetComponent<CanvasGroup>(out var g) && g.blocksRaycasts) found.Add("result clear: the hidden HUD still takes raycasts (14.7)");
+            if (tip && !r.starLabels.Any(l => l.gameObject.activeInHierarchy && !string.IsNullOrEmpty(l.text)))
+                found.Add("result clear: no star criteria tip is showing after a tap (14.7)");
         }
 
         static void BuildTitle(Ctx c, RectTransform root, string storyLine = null)
