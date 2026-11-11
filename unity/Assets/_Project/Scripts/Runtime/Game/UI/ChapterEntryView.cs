@@ -54,9 +54,26 @@ namespace SevenSteps.Game.UI
             planet.rectTransform.TopLeft(216, 205, 848, 100);
             chips = new Image[MaxPlanets];
             chipNames = new Text[MaxPlanets];
+            // The row spans the canvas inside the 24 safe margin: chips take 164 wide where there is room (1280x720) and
+            // shrink together on narrower canvases (1280x800: 1214, 4:3: 1108 units; QA 1).
+            var row = Ui.Rect("Row", root);
+            row.anchorMin = new Vector2(0, 1);
+            row.anchorMax = new Vector2(1, 1);
+            row.pivot = new Vector2(0.5f, 1);
+            row.anchoredPosition = new Vector2(0, -372);
+            row.sizeDelta = new Vector2(-48, 112);
+            var group = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+            group.spacing = 12;
+            group.childAlignment = TextAnchor.MiddleCenter;
+            group.childControlWidth = group.childControlHeight = true;
+            group.childForceExpandWidth = false;
+            group.childForceExpandHeight = true;
             for (int i = 0; i < MaxPlanets; i++)
             {
-                chips[i] = Ui.Card(root, "Planet " + (i + 1));
+                chips[i] = Ui.Card(row, "Planet " + (i + 1));
+                var size = chips[i].gameObject.AddComponent<LayoutElement>();
+                size.minWidth = 60;
+                size.preferredWidth = 164;
                 chipNames[i] = Ui.Label(chips[i].transform, "", 22, Ui.Ink, TextAnchor.MiddleCenter, "Name");
                 chipNames[i].rectTransform.Stretch();
                 // inside the card border (12) + 8; long names take two lines (14.2: never under 22)
@@ -83,16 +100,12 @@ namespace SevenSteps.Game.UI
             intro.text = model.Intro;
             intro.font = Ui.Theme.FontFor(lang, FontRole.Body);
             int n = model.Planets.Count;
-            float step = n > 0 ? Mathf.Min(176f, 1232f / n) : 0;
-            float width = Mathf.Min(164f, step - 12);
-            float x0 = (1280 - (n - 1) * step - width) / 2;
             var body = Ui.Theme.FontFor(lang, FontRole.Body);
             for (int i = 0; i < MaxPlanets; i++)
             {
                 bool used = i < n;
                 chips[i].gameObject.SetActive(used);
                 if (!used) continue;
-                chips[i].rectTransform.TopLeft(x0 + i * step, 372, width, 112);
                 bool current = i == model.Number - 1;
                 chips[i].color = Ui.Theme.card != null ? (current ? Ui.Gold : Color.white) : (current ? Ui.Gold : Ui.ButtonBg);
                 chipNames[i].text = model.Planets[i];
