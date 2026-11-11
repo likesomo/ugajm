@@ -91,6 +91,7 @@
     { "key": "hint.kind_fall", "text": "구멍에 떨어짐" },
     { "key": "hint.with_lever", "text": "{0} (레버)" },
     { "key": "hint.next_costs", "text": "다음 H부터 별은 최대 1개" },
+    { "key": "hint.confirm", "text": "풀이를 보면 이번 판은 별 최대 1개. 한 번 더 누르면 힌트가 열립니다." },
 
     { "key": "result.clear", "text": "클리어" },
     { "key": "result.bodies", "text": "형제 {0}명" },

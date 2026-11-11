@@ -28,6 +28,52 @@ namespace SevenSteps.Tests
         }
 
         static Level Corridor() => Level.Parse("t", "", 3, new[] { "#########", "#S......#", "#########" });
+        /// A pit right next to the start: one step right and the brother falls.
+        static Level PitNextToStart() => Level.Parse("t", "", 3, new[] { "#########", "#So.....#", "#########" });
+
+        [Test]
+        public void PressesQueuedWhileABrotherFallsDoNotMoveTheNextOne()
+        {
+            // Blind QA-2: after a fall the waiting presses went to the next brother.
+            var board = new FakeBoard();
+            var s = new GameSession(board);
+            s.Load(PitNextToStart());
+            int bodies = s.State.Bodies;
+
+            Assert.AreEqual(SendOutcome.Applied, s.Send(Command.Move(Dir.Right)));
+            Assert.AreEqual(bodies - 1, s.State.Bodies, "the step into the pit ends the brother");
+            Assert.AreEqual(SendOutcome.Queued, s.Send(Command.Move(Dir.Right)), "pressed during the fall");
+            Assert.AreEqual(SendOutcome.Queued, s.Send(Command.Move(Dir.Right)));
+            var after = s.State;
+
+            board.Finish();
+            Assert.AreEqual(0, s.QueuedCount, "the presses meant for the fallen brother are dropped");
+            Assert.IsFalse(s.IsLocked);
+            Assert.AreSame(after, s.State, "the next brother has not moved");
+            Assert.AreEqual(1, board.Calls.FindAll(c => c == "Present").Count);
+
+            Assert.AreEqual(SendOutcome.Applied, s.Send(Command.Move(Dir.Right)), "a press after the fall moves him as usual");
+        }
+
+        [Test]
+        public void AQueuedStepThatEndsTheBrotherDropsThePressesBehindIt()
+        {
+            var board = new FakeBoard();
+            var s = new GameSession(board);
+            s.Load(Level.Parse("t", "", 3, new[] { "#########", "#S.o....#", "#########" }));
+            int bodies = s.State.Bodies;
+
+            s.Send(Command.Move(Dir.Right));                          // to the cell before the pit
+            Assert.AreEqual(SendOutcome.Queued, s.Send(Command.Move(Dir.Right))); // into the pit
+            Assert.AreEqual(SendOutcome.Queued, s.Send(Command.Move(Dir.Right))); // meant for him too
+            board.Finish();                                            // the queued step runs: he falls
+            Assert.AreEqual(bodies - 1, s.State.Bodies);
+            Assert.AreEqual(0, s.QueuedCount, "the press behind the fatal step is dropped at once");
+            var after = s.State;
+            board.Finish();
+            Assert.AreSame(after, s.State, "the next brother has not moved");
+            Assert.IsFalse(s.IsLocked);
+        }
 
         [Test]
         public void MovesDuringPresentationAreQueuedInOrder()

@@ -49,6 +49,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SevenSteps.Art.RuinsHengePlanet
   surface: {fileID: 2100000, guid: c38ccdba49b258446a7b458cfb37786b, type: 2}
+  chapterId: moss
+  boardShape: {fileID: 11400000, guid: 0094accda97e29e47a800eaddc096043, type: 2}
+  craterCrust: {fileID: -672807524522685444, guid: bf86b877c3ef4ba4ea9672918d442b61, type: 3}
+  craterCrustScale: {x: 100, y: 99.999985, z: 99.999985}
+  craterCrustEuler: {x: 270.01978, y: 0, z: 0}
+  summitTint: {r: 0.7764706, g: 0.7921569, b: 0.7137255, a: 1}
+  rimTint: {r: 0.45490196, g: 0.5529412, b: 0.34117648, a: 1}
+  rockTint: {r: 0.34509805, g: 0.41960785, b: 0.5019608, a: 1}
+  moonTint: {r: 0.49411765, g: 0.6745098, b: 0.69803923, a: 1}
 --- !u!1 &5895547825314822252
 GameObject:
   m_ObjectHideFlags: 0
@@ -289,6 +298,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SevenSteps.Art.RuinsHengeSky
   space: {fileID: 2100000, guid: e6ffd8589b79ac145a2f66b46406ffda, type: 2}
+  lowSpecSpace: {fileID: 0}
+  distantWorlds: 0
+  worldStyle: 0
+  nebulaTint: {r: 0.21960784, g: 0.31764707, b: 0.46666667, a: 1}
+  backgroundTint: {r: 0.03529412, g: 0.08235294, b: 0.17254902, a: 1}
+  secondaryTint: {r: 0.34509805, g: 0.23137255, b: 0.4117647, a: 1}
 --- !u!114 &8600173393879688598
 MonoBehaviour:
   m_ObjectHideFlags: 0

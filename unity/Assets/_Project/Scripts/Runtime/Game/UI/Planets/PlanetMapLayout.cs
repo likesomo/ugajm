@@ -109,6 +109,18 @@ namespace SevenSteps.Game.UI.Planets
             return Clip(-d.x, a.x - r.xMin) && Clip(d.x, r.xMax - a.x) && Clip(-d.y, a.y - r.yMin) && Clip(d.y, r.yMax - a.y);
         }
 
+        /// Where a story node (story.json dipper "circle") sits, canvas units: it carries the trail on in the direction it
+        /// came into <paramref name="from"/> (from <paramref name="cameFrom"/>; none: away from <paramref name="centroid"/>),
+        /// <paramref name="reach"/> past the body's rim, then kept inside <paramref name="bounds"/> shrunk by
+        /// <paramref name="margin"/> (v3 all-complete: past the altar toward the lower right corner).
+        public static Vector2 NodePoint(Vector2 from, float radius, Vector2? cameFrom, Vector2 centroid, float reach, float margin, Rect bounds)
+        {
+            var dir = from - (cameFrom ?? centroid);
+            if (dir.sqrMagnitude < 1e-4f) dir = Vector2.right;
+            var p = from + dir.normalized * (radius + reach);
+            return new Vector2(Mathf.Clamp(p.x, bounds.xMin + margin, bounds.xMax - margin), Mathf.Clamp(p.y, bounds.yMin + margin, bounds.yMax - margin));
+        }
+
         /// The part of a trail line between two bodies that is outside both (canvas units): from a's rim + gap to b's rim
         /// - gap. False when the bodies are too close for a visible line.
         public static bool TrailSegment(Vector2 a, float ra, Vector2 b, float rb, float gap, out Vector2 from, out Vector2 to)

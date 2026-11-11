@@ -46,6 +46,10 @@ namespace SevenSteps.Game.UI.Planets
         readonly RectTransform marker, label, trailLayer;
         readonly Text nameText, taglineText;
         readonly List<(Image dim, Image lit)> lines = new List<(Image, Image)>();
+        /// Lit trails to story nodes (dipper altar -> circle): a gold line and a small gold ring where the node is.
+        readonly List<(Image line, Image ring)> nodeLines = new List<(Image, Image)>();
+        /// Node ring size and how far past the body's rim the node sits (canvas units).
+        const float NodeRing = 26f, NodeReach = 70f;
         readonly Vector2[] centers;
         readonly float[] radii;
         readonly List<(Vector2 a, Vector2 b)> segments = new List<(Vector2, Vector2)>();
@@ -340,6 +344,58 @@ namespace SevenSteps.Game.UI.Planets
                 lines.Add((dim, lit));
             }
             for (int k = 0; k < lines.Count; k++) lines[k].dim.gameObject.SetActive(k < model.Trails.Count);
+            while (nodeLines.Count < model.NodeTrails.Count)
+            {
+                var line = Ui.MakeImage(trailLayer, Ui.Gold, null, "NodeTrail");
+                line.raycastTarget = false;
+                line.rectTransform.anchorMin = line.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                line.rectTransform.pivot = new Vector2(0, 0.5f);
+                var ring = Ui.MakeImage(trailLayer, Ui.Gold, Ui.RingShape, "Node");
+                ring.raycastTarget = false;
+                ring.rectTransform.anchorMin = ring.rectTransform.anchorMax = ring.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                ring.rectTransform.sizeDelta = new Vector2(NodeRing, NodeRing);
+                nodeLines.Add((line, ring));
+            }
+            for (int k = model.NodeTrails.Count; k < nodeLines.Count; k++) { nodeLines[k].line.gameObject.SetActive(false); nodeLines[k].ring.gameObject.SetActive(false); }
+        }
+
+        /// Trails to story nodes: drawn only when lit, carrying on the direction of the trail that came into the planet.
+        void LayoutNodes()
+        {
+            var bounds = new Rect(rect.rect.xMin, rect.rect.yMin, rect.rect.width, rect.rect.height);
+            var centroid = Vector2.zero;
+            foreach (var c in centers) centroid += c;
+            centroid /= Mathf.Max(1, centers.Length);
+            for (int k = 0; k < model.NodeTrails.Count; k++)
+            {
+                var (a, _) = model.NodeTrails[k];
+                var (line, ring) = nodeLines[k];
+                bool lit = model.NodeTrailLit(k, held);
+                line.gameObject.SetActive(lit);
+                ring.gameObject.SetActive(lit);
+                if (!lit) continue;
+                Vector2? cameFrom = null;
+                foreach (var (f, t) in model.Trails) if (t == a) cameFrom = centers[f];
+                var node = PlanetMapLayout.NodePoint(centers[a], radii[a], cameFrom, centroid, NodeReach, 24 + NodeRing, bounds);
+                ring.rectTransform.anchoredPosition = node;
+                if (!PlanetMapLayout.TrailSegment(centers[a], radii[a], node, NodeRing / 2, 8, out var from, out var to)) { line.gameObject.SetActive(false); continue; }
+                segments.Add((from, to));
+                float len = Vector2.Distance(from, to);
+                var lr = line.rectTransform;
+                lr.anchoredPosition = from;
+                lr.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(to.y - from.y, to.x - from.x) * Mathf.Rad2Deg);
+                float grow = NodeGrow(a);
+                lr.sizeDelta = new Vector2(len * grow, LitWidth);
+                ring.color = new Color(Ui.Gold.r, Ui.Gold.g, Ui.Gold.b, grow >= 1f ? 1f : 0f);
+            }
+        }
+
+        /// 0..1: a node trail lighting with its planet's return (the same 0.8 s as the planet trails), else 1.
+        float NodeGrow(int planet)
+        {
+            if (lighting < 0 || planet != lighting) return 1f;
+            float t = Mathf.Clamp01((Time.unscaledTime - lightStart) / LightSeconds);
+            return t * t * (3 - 2 * t);
         }
 
         /// Places the overlay over the bodies as the camera sees them now.
@@ -378,6 +434,7 @@ namespace SevenSteps.Game.UI.Planets
                 r.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(to.y - from.y, to.x - from.x) * Mathf.Rad2Deg);
                 lit.rectTransform.sizeDelta = new Vector2(LitLength(k, len), LitWidth);
             }
+            LayoutNodes();
             // Arrows: left / right = story order, up / down = nearest that way on screen (y down for Neighbor).
             var points = new Vector2[centers.Length];
             for (int i = 0; i < points.Length; i++) points[i] = new Vector2(centers[i].x, -centers[i].y);
@@ -428,6 +485,8 @@ namespace SevenSteps.Game.UI.Planets
                 avoid.Add(new Rect(centers[i] + new Vector2(-w / 2, -(radii[i] + 14 + StarSize / 2)), new Vector2(w, StarSize))); // star rows
             }
             if (model.MarkerPlanet >= 0) avoid.Add(new Rect(marker.anchoredPosition - marker.sizeDelta / 2, marker.sizeDelta));
+            foreach (var (_, ring) in nodeLines)
+                if (ring.gameObject.activeSelf) avoid.Add(new Rect(ring.rectTransform.anchoredPosition - Vector2.one * NodeRing / 2, Vector2.one * NodeRing));
             // The box is the text's measured width (a 360-unit box rarely fits between lines), the full height.
             float textW = Mathf.Min(LabelSize.x, Mathf.Max(nameText.preferredWidth, taglineText.gameObject.activeSelf ? taglineText.preferredWidth : 0) + 16);
             label.anchoredPosition = PlanetMapLayout.LabelSpot(centers[p], radii[p], new Vector2(textW, LabelSize.y), 26, segments, bounds, avoid);
@@ -442,9 +501,12 @@ namespace SevenSteps.Game.UI.Planets
                 for (int k = 0; k < model.Trails.Count; k++)
                     if (model.Trails[k].from == lighting && lines[k].dim.gameObject.activeSelf)
                         lines[k].lit.rectTransform.sizeDelta = new Vector2(LitLength(k, lines[k].dim.rectTransform.sizeDelta.x), LitWidth);
+                bool nodes = model.NodeTrails.Count > 0;
+                if (nodes) Layout(); // a node line grows with its planet's trails (0.8 s; cheap: 7 bodies)
                 if (Time.unscaledTime - lightStart >= LightSeconds)
                 {
                     lighting = -1;
+                    if (nodes) Layout(); // full length, the node ring shows
                     TrailLit?.Invoke();
                 }
             }

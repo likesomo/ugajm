@@ -91,6 +91,7 @@
     { "key": "hint.kind_fall", "text": "fall into the hole" },
     { "key": "hint.with_lever", "text": "{0} (lever)" },
     { "key": "hint.next_costs", "text": "From the next H: 1 star at most" },
+    { "key": "hint.confirm", "text": "A hint caps this try at 1 star. Press again to open it." },
 
     { "key": "result.clear", "text": "Clear!" },
     { "key": "result.bodies", "text": "Brothers used: {0}" },

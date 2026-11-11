@@ -37,7 +37,9 @@ namespace SevenSteps.Contracts
     /// The one place that owns the current State and the input lock (docs/architecture.md, "입력 락").
     /// - Every state change goes through Rules.Dispatch here. Views and HUD read <see cref="State"/> and <see cref="Updated"/>.
     /// - Move/Keep/Switch while a presentation runs are queued (FIFO, up to <see cref="QueueCapacity"/>; extra presses are dropped)
-    ///   and dispatched one by one after each presentation ends.
+    ///   and dispatched one by one after each presentation ends. A command that changes the body count (fall, bridge,
+    ///   KEEP, SWITCH; a winning step does not) drops what is still queued, and again when its presentation ends: those
+    ///   presses were meant for that brother, not for the next one (blind QA-2, architecture.md 4.1).
     /// - Undo first removes the newest queued command, if any. Otherwise Undo/Restart/Load are never queued: they clear
     ///   the queue, cancel the presentation and Snap to the new snapshot.
     /// Pure C#: no Unity time or coroutines, so it is testable in EditMode with a fake presenter.
@@ -49,6 +51,8 @@ namespace SevenSteps.Contracts
         readonly IBoardPresenter board;
         readonly List<Command> queue = new List<Command>(QueueCapacity);
         int presentToken;
+        /// The presentation running now ends a brother: drop the queue when it finishes.
+        bool bodyEnding;
 
         /// Board may be null (headless: tests, solver tools). Then nothing locks.
         public GameSession(IBoardPresenter board = null) { this.board = board; }
@@ -130,9 +134,12 @@ namespace SevenSteps.Contracts
                 return SendOutcome.Rejected;
             }
             State = r.State;
+            bool endsBody = State.Bodies != prev.Bodies;
+            if (endsBody) queue.Clear(); // pressed for this brother before his last step
             Raise(new SessionUpdate(SessionUpdateKind.Present, cmd, prev, State, r));
             if (board != null)
             {
+                bodyEnding = endsBody;
                 IsLocked = true;
                 int token = ++presentToken;
                 board.Present(prev, r, () => OnPresented(token));
@@ -145,6 +152,8 @@ namespace SevenSteps.Contracts
         {
             if (token != presentToken || !IsLocked) return; // stale callback of a cancelled presentation
             IsLocked = false;
+            if (bodyEnding) queue.Clear(); // pressed while he fell / turned to stone: not the next brother's moves
+            bodyEnding = false;
             Presented?.Invoke(State);
             while (!IsLocked && queue.Count > 0)
             {
@@ -158,6 +167,7 @@ namespace SevenSteps.Contracts
         {
             queue.Clear();
             IsLocked = false;
+            bodyEnding = false;
             presentToken++;
         }
 
