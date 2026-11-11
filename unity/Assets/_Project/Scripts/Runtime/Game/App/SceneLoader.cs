@@ -9,8 +9,9 @@ using UnityEngine.UI;
 namespace SevenSteps.Game
 {
     /// <summary>
-    /// <see cref="ISceneLoader"/> over SceneManager with a fade (docs/architecture.md 11.1, docs/scene-flow.md S5): fade to
-    /// black, LoadSceneAsync, raise Loaded from SceneManager.sceneLoaded (after the new scene's Awake, before its Start), then
+    /// <see cref="ISceneLoader"/> over SceneManager with a fade (docs/architecture.md 11.1, docs/scene-flow.md 6): fade to
+    /// black, SceneManager.LoadSceneAsync with LoadSceneMode.Single (the previous scene is unloaded, Resources.UnloadUnusedAssets
+    /// runs automatically, the new scene becomes the active scene), raise Loaded from SceneManager.sceneLoaded (after the new scene's Awake, before its Start), then
     /// fade back in. Leaving the Boot scene does not fade out (it shows nothing). Same-scene transitions never reach here.
     /// Failure: a scene that cannot be loaded throws in Load, before anything starts, so AppFlow is not left loading
     /// (architect S2 note); AppFlow rolls its state back. The fade canvas lives on its own DontDestroyOnLoad object
