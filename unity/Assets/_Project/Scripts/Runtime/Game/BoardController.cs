@@ -137,6 +137,9 @@ namespace SevenSteps.Game
         /// The KEEP / SWITCH cards, ghosts and focus (docs 4.4). The scene root sets its tutorial funcs.
         public ChoiceController Choice => choice;
 
+        /// The board view, for the journey transitions' hooks (BoardView.CameraHeld, DetachSnapshot, BoardRoot; scene-flow).
+        public BoardView View => board;
+
         /// Accessibility "show step numbers" (SettingsData.showStepNumbers, off by default; the toggle is scene-flow's):
         /// numeric footprints and the steps-left number on the board. Redraws at once.
         public bool StepNumbers

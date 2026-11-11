@@ -185,6 +185,18 @@ case "$cmd" in
       grep -qF "$want" "$out/title-$path.log" || { echo "[unity.sh] smoke title $path: expected \"$want\""; fail=1; }
       if grep -qE "^[A-Za-z.]*Exception" "$out/title-$path.log"; then grep -E "^[A-Za-z.]*Exception" "$out/title-$path.log"; fail=1; fi
     done
+    # Journey step (docs/stage-select-transitions.md, stage select v4 behind -newmap): stage 1's win advances to stage 2 with
+    # no result panel; the first planet's last stage pulls back to the star map and lights the trail. Screenshots
+    # journey-KIND-mid.png / -end.png (complete also -pullback.png from the Game scene).
+    for spec in $(node "$HERE/flow-stages.mjs" "$(cygpath -w "$REPO/unity/Assets/_Project/Data/levels.json")" --journey); do
+      IFS=: read -r kind lv rp <<< "$spec"
+      winout="$(cygpath -w "$out")"
+      "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -savekey "$SAVEKEY" -lang ko -newmap \
+        -level "$lv" -replay "$rp" -journeycheck "$kind" -screenshot "$winout\\journey-$kind.png" -logFile "$winout\\journey-$kind.log" > /dev/null || true
+      grep -h "\[SevenSteps\] Journey check" "$out/journey-$kind.log" || { echo "[unity.sh] smoke journey $kind: no result line"; fail=1; }
+      grep -q "\[SevenSteps\] Journey check $kind: OK" "$out/journey-$kind.log" || fail=1
+      if grep -qE "^[A-Za-z.]*Exception" "$out/journey-$kind.log"; then grep -E "^[A-Za-z.]*Exception" "$out/journey-$kind.log"; fail=1; fi
+    done
     [ "$fail" -eq 0 ] && echo "[unity.sh] smoke OK -> reports/smoke/" || { echo "[unity.sh] smoke FAILED"; exit 1; } ;;
   smoke-webgl)
     # Opens Builds/WebGL in Orca's built-in browser and screenshots 3 replays three ways (docs: CLAUDE.md "WebGL 3D 보드 누락"):
