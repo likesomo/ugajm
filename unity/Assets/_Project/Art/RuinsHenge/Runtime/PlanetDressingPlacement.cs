@@ -22,26 +22,31 @@ namespace SevenSteps.Art
             }
             try
             {
-                for(int i=0;i<set.modules.Length;i++)
+                int[][] scatter={new[]{0,1,4,3,0,1,3,0},new[]{0,1,2,3,4,0,2,1},new[]{0,1,2,3,4,0,1,2},new[]{0,1,3,0,1,3,0,2},new[]{0,4,2,4,0,2,4,1},new[]{0,1,3,1,4,3,1,3},new[]{1,0,2,3,1,0,2,4}};
+                string[] planets={"moss","hollow","carved","frost","joinery","crumble","altar"};
+                int planetIndex=Array.IndexOf(planets,set.planetId);if(planetIndex<0)planetIndex=0;
+                int hero=planetIndex==3?0:planetIndex==5||planetIndex==6?1:0;
+                for(int i=0;i<set.modules.Length+8;i++)
                 {
-                    if(!set.modules[i])continue;
-                    // All five silhouettes live on the lateral wings.
+                    bool extra=i>=set.modules.Length;int moduleIndex=extra?scatter[planetIndex][i-set.modules.Length]:i;
+                    var module=set.modules[moduleIndex];if(!module)continue;
+                    // The hero, five source silhouettes and eight scatter instances occupy lateral crater shoulders.
                     // At pitch 50 / yaw 0, lateral placement cannot project over the board or the exit.
-                    const float moduleScale=1.45f;
-                    bool icicles=set.modules[i].name.Contains("IcicleFringe");
-                    float x=(i%2==0?-1:1)*(w*.5f+1.70f);
-                    float z=i%2==0?(i/2-1)*h*.30f:(i==1?-1:1)*h*.27f;
+                    float moduleScale=extra?.70f+(i%3)*.14f:i==hero?2.05f:1.45f;
+                    bool icicles=module.name.Contains("IcicleFringe");
+                    float x=(i%2==0?-1:1)*(w*.5f+(extra?1.25f+(i%3)*.45f:1.70f));
+                    float z=extra?((i-set.modules.Length)/2-1.5f)*(h*.30f+.22f):i%2==0?(i/2-1)*h*.30f:(i==1?-1:1)*h*.27f;
                     if(icicles)
                     {
                         var hull=terrain.GetComponent<MeshFilter>().sharedMesh.bounds;
                         x=i%2==0?hull.min.x+.07f:hull.max.x-.07f;
                     }
-                    var rotation=Quaternion.Euler(0,icicles?90:(set.planetId=="carved"?180:0)+(i%2==0?-12:16),0);
+                    var rotation=Quaternion.Euler(0,icicles?90:(set.planetId=="carved"?180:0)+(i%2==0?-12:16)+(extra?(i%3-1)*23:0),0);
                     float outwardRadius=0,moduleHeight=0;
-                    foreach(var filter in set.modules[i].GetComponentsInChildren<MeshFilter>())
+                    foreach(var filter in module.GetComponentsInChildren<MeshFilter>())
                         foreach(var vertex in filter.sharedMesh.vertices)
                         {
-                            var local=set.modules[i].transform.InverseTransformPoint(filter.transform.TransformPoint(vertex));
+                            var local=module.transform.InverseTransformPoint(filter.transform.TransformPoint(vertex));
                             float vx=(rotation*(local*moduleScale)).x;
                             outwardRadius=Mathf.Max(outwardRadius,i%2==0?vx:-vx);
                             moduleHeight=Mathf.Max(moduleHeight,local.y*moduleScale);
@@ -73,11 +78,11 @@ namespace SevenSteps.Art
                     
                     if(float.IsNegativeInfinity(best))
                     {
-                        Debug.LogWarning("[PlanetDressing] No crust beneath "+set.planetId+"/"+set.modules[i].name+"; module omitted");
+                        Debug.LogWarning("[PlanetDressing] No crust beneath "+set.planetId+"/"+module.name+"; module omitted");
                         continue;
                     }
-                    var go=UnityEngine.Object.Instantiate(set.modules[i],root.transform);
-                    go.name=set.modules[i].name;
+                    var go=UnityEngine.Object.Instantiate(module,root.transform);
+                    go.name=module.name+(extra?"_Scatter_"+i:i==hero?"_Hero":"");
                     go.transform.localPosition=new Vector3(x,best-.018f,z);
                     // The supporting frost bar overlaps the raycast rim; the teeth overhang the open edge.
                     if(icicles)go.transform.localPosition+=Vector3.right*Mathf.Sign(x)*.14f;

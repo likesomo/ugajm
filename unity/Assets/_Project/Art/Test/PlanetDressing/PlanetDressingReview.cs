@@ -60,6 +60,7 @@ namespace SevenSteps.Art
                         VerifyClearance(root.GetComponentInChildren<RuinsHengePlanet>(),chapter.id);
                         if(chapter.id=="frost")
                         {
+                            FrostDifference(stage);
                             cam.orthographicSize=1.7f;cam.transform.position=new Vector3(-grid.W*.5f-.90f,.18f,.10f)-cam.transform.forward*30;
                             Capture("frost-closeup.png");
                         }
@@ -70,6 +71,23 @@ namespace SevenSteps.Art
             var validation=ValidateStageFits(data);while(validation.MoveNext())yield return validation.Current;
             File.WriteAllLines(Output+"/perf.csv",perf);
             Debug.Log("[PlanetDressingReview] COMPLETE: seven actual stages, before/after, frost detail, contrast and geometry verified");EditorApplication.Exit(0);
+        }
+        void FrostDifference(LevelDto dto)
+        {
+            var floors=new List<float>();var ice=new List<float>();
+            float Sample(char kind)
+            {
+                var values=new List<float>();
+                for(int y=0;y<grid.H;y++)for(int x=0;x<grid.W;x++)if(dto.map[y][x]==kind)values.Add(Luma(grid.CellToWorld(x,y)+Vector3.up*.01f));
+                values.Sort();if(values.Count==0)throw new Exception("Frost fixture requires snow and sliding ice");return values[values.Count/2];
+            }
+            float snowY=Sample('.'),iceY=Sample('~');
+            Shader.SetGlobalFloat("_DressingGlossReview",1);Capture("frost-gloss-diagnostic.png");
+            float snowGloss=Sample('.'),iceGloss=Sample('~');Shader.SetGlobalFloat("_DressingGlossReview",0);
+            File.WriteAllLines(Output+"/frost-readability.csv",new[]{"surface,luminance,gloss",$"ordinary snow floor,{snowY:F4},{snowGloss:F4}",$"sliding ice,{iceY:F4},{iceGloss:F4}"});
+            if(snowGloss>.08f||iceGloss<.65f||snowY<iceY*1.15f)throw new Exception("Frost snow/slide distinction failed");
+            Capture("frost-board-readability.png");
+            Debug.Log($"[FrostReadability] snow Y={snowY:F4} gloss={snowGloss:F4}; sliding ice Y={iceY:F4} gloss={iceGloss:F4}");
         }
         IEnumerator ValidateStageFits(LevelFileDto data)
         {
@@ -90,7 +108,7 @@ namespace SevenSteps.Art
                 // A second Fit at non-unit scale and translated origin catches coordinate and ownership regressions.
                 planet.Fit(new BoardGrid(level.W,level.H,.75f,new Vector3(2,1,-3)));
                 var dressing=planet.transform.Find("ThemedDressing_"+id);int count=dressing?dressing.childCount:0;
-                if(count<4)throw new Exception("Too few supported modules on stage "+(i+1)+": "+count);
+                if(count<11)throw new Exception("Too few supported modules on stage "+(i+1)+": "+count);
                 DestroyImmediate(root);DestroyImmediate(sky);
                 yield return null;
                 if(!original)throw new Exception("Imported shared mesh was destroyed during Fit cleanup");
@@ -158,7 +176,7 @@ namespace SevenSteps.Art
             var materials=new HashSet<Material>(root.GetComponentsInChildren<Renderer>().Concat(cam.GetComponentsInChildren<Renderer>()).SelectMany(r=>r.sharedMaterials));
             perf.Add(string.Join(",",chapter.id,stage,before,tris,dressingTris,materials.Count,modules,floor.ToString("F4",CultureInfo.InvariantCulture),wall.ToString("F4",CultureInfo.InvariantCulture),contrast.ToString("F4",CultureInfo.InvariantCulture)));
             Debug.Log($"[PlanetDressingReview] {chapter.id} before={before} triangles={tris} dressing={dressingTris} modules={modules} materials={materials.Count} contrast={contrast:P1}");
-            if(!before&&(contrast<.30f||tris>50000||dressingTris>8000||materials.Count>6||modules<4))throw new Exception("Dressing budget, module count or readability failed: "+chapter.id);
+            if(!before&&(contrast<.30f||tris>50000||dressingTris>8000||materials.Count>6||modules<11))throw new Exception("Dressing budget, module count or readability failed: "+chapter.id);
         }
         void VerifyClearance(RuinsHengePlanet planet,string id)
         {

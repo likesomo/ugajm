@@ -59,6 +59,7 @@ Material:
     - _EnvironmentWood: 0
     - _PlanetDressing: 1
     - _PlanetIce: 1
+    - _SlideIce: 0
     - _SrcBlend: 1
     - _SurfaceAlpha: 1
     - _Unlit: 0.35

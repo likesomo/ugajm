@@ -48,6 +48,17 @@ namespace SevenSteps.Art
                 if(!kerb)throw new Exception("Missing joinery kerb LOD; run build_dressing_kerb.py");
                 kit.dressingJoineryKerb=kerb.GetComponentInChildren<MeshFilter>().sharedMesh;EditorUtility.SetDirty(kit);
                 Debug.Log("[PlanetDressing] Joinery kerb "+kit.joineryKerb.triangles.Length/3+" -> "+kit.dressingJoineryKerb.triangles.Length/3+" tris (oak bevels, brass hardware and atlas preserved)");
+                // Role tag 7 preserves existing readable geometry/pigment while separating board snow from crust ice.
+                foreach(string guid in AssetDatabase.FindAssets("t:Mesh",new[]{"Assets/_Project/Prefabs/Tiles/RuinsHenge/Readability"}))
+                {
+                    var mesh=AssetDatabase.LoadAssetAtPath<Mesh>(AssetDatabase.GUIDToAssetPath(guid));var styles=mesh.uv2;
+                    for(int v=0;v<styles.Length;v++)styles[v].x=7;
+                    mesh.uv2=styles;EditorUtility.SetDirty(mesh);
+                }
+                var slide=AssetDatabase.LoadAssetAtPath<Material>(Art+"/Materials/FrostOpaque.mat");
+                slide.SetFloat("_PlanetIce",1);slide.SetFloat("_SlideIce",1);slide.SetFloat("_PlanetDressing",1);
+                slide.SetTexture("_PlanetColor",AssetDatabase.LoadAssetAtPath<Texture2D>(Shared+"/PD_frost_Color.png"));
+                slide.SetTexture("_PlanetDetail",AssetDatabase.LoadAssetAtPath<Texture2D>(Shared+"/PD_frost_Detail.png"));EditorUtility.SetDirty(slide);
                 for(int i=0;i<Ids.Length;i++)
                 {
                     string id=Ids[i];var mat=AssetDatabase.LoadAssetAtPath<Material>(Art+"/Materials/Environment_"+id+".mat");
@@ -80,6 +91,11 @@ namespace SevenSteps.Art
                     finally{PrefabUtility.UnloadPrefabContents(planetRoot);}
                     Debug.Log("[PlanetDressing] "+id+" source tris="+tris+" modules="+set.modules.Length+" material="+mat.name);
                 }
+                // Prefab import can reload shared material properties; persist the gameplay ice after all imports.
+                slide.SetFloat("_PlanetIce",1);slide.SetFloat("_SlideIce",1);slide.SetFloat("_PlanetDressing",1);
+                slide.SetTexture("_PlanetColor",AssetDatabase.LoadAssetAtPath<Texture2D>(Shared+"/PD_frost_Color.png"));
+                slide.SetTexture("_PlanetDetail",AssetDatabase.LoadAssetAtPath<Texture2D>(Shared+"/PD_frost_Detail.png"));
+                EditorUtility.SetDirty(slide);AssetDatabase.SaveAssetIfDirty(slide);
                 AssetDatabase.SaveAssets();Debug.Log("[PlanetDressing] BUILD COMPLETE");
             }
             catch(Exception e){Debug.LogException(e);EditorApplication.Exit(1);}

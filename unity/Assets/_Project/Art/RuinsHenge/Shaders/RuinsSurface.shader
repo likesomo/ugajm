@@ -22,6 +22,7 @@ Shader "SevenSteps/RuinsSurface"
   _PlanetDetail("Planet RG normal B roughness A cavity",2D)="gray"{}
   _PlanetDressing("Planet material identity",Range(0,1))=0
   _PlanetIce("Cracked glossy ice",Range(0,1))=0
+  _SlideIce("Gameplay sliding ice",Range(0,1))=0
   _PlanetPigment("Stone pigment",Color)=(.58,.61,.55,1)
   [HideInInspector] _SrcBlend("Source blend",Float)=1
   [HideInInspector] _DstBlend("Destination blend",Float)=0
@@ -55,8 +56,10 @@ Shader "SevenSteps/RuinsSurface"
    float _EnvironmentDetail,_EnvironmentWood,_EnvironmentMoss;
    float _UseAtlas,_UseMoss,_UseVertexColor,_Unlit,_AmbientFloor;
    float _PlanetDressing,_PlanetIce;
+   float _SlideIce;
    float4 _PlanetPigment;
    CBUFFER_END
+   float _DressingGlossReview;
    float4x4 _BSAWorldToLocal;
    int _BSAShadowCount;
    float4 _BSAShadowRects[64],_BSAShadowProfiles[64];
@@ -91,6 +94,7 @@ Shader "SevenSteps/RuinsSurface"
     half3 color;
     half3 n=normalize(i.normalWS);
     half stoneRoughness=.72;
+    bool frostSnow=_PlanetIce>.5&&i.style.x>6.5&&i.style.x<7.5;
     if(i.style.x>8.5)
     {
      // Blender modules carry literal per-corner pigment (stone, foliage, timber, brass, ice).
@@ -165,12 +169,20 @@ Shader "SevenSteps/RuinsSurface"
       half4 micro=SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,px)*weights.x+SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,py)*weights.y+SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,pz)*weights.z;
       // Vertex pigment is the production floor/blocker value separation. Never normalize it away.
       color=pigment.rgb*i.color.rgb;surface=micro;
+      if(_PlanetIce>.5&&!frostSnow&&_SlideIce<.5)color*=.62;
+      if(frostSnow)
+      {
+       half grain=frac(sin(dot(floor(i.positionWS.xz*180),float2(12.9898,78.233)))*43758.5453);
+       color=half3(.52,.55,.58)*i.color.rgb*lerp(.96,1.02,grain);
+       surface=half4(.5,.5,.98,1);
+      }
      }
      if(seam&&_BoardMoss>.01)color=lerp(half3(.34,.36,.30),color,_BoardMoss);
      // Linear packed RG tangent normal, B roughness, A AO. No importer swizzle.
      half2 normalXY=(surface.rg*2-1)*_BoardNormalStrength;
      half3 detail=half3(normalXY,sqrt(saturate(1-dot(normalXY,normalXY))));
      stoneRoughness=saturate(surface.b+lerp(.20,-.12,saturate(i.normalWS.y)));
+     if(frostSnow)stoneRoughness=.98;
      color*=lerp(.80,1,surface.a);
      half3 tangent=normalize(i.tangentWS.xyz);
      if(dot(tangent,tangent)>.01)n=normalize(tangent*detail.x+cross(n,tangent)*i.tangentWS.w*detail.y+n*detail.z);
@@ -197,14 +209,16 @@ Shader "SevenSteps/RuinsSurface"
      }
      if(i.style.x>2.5)color=lerp(color,half3(.70,.66,.56),step(.70,i.style.y)*.85);
     }
+    if(_SlideIce>.5)stoneRoughness=.06;
+    if(_DressingGlossReview>.5)return half4((1-stoneRoughness).xxx,1);
     Light l=GetMainLight(TransformWorldToShadowCoord(i.positionWS));
     half3 lighting=SampleSH(n)+i.fill+l.color*saturate(dot(n,l.direction))*l.shadowAttenuation;
     // Neutral stone fill keeps baked contrast visible without realtime shadows or SSAO.
     if(i.style.x>3.5){lighting=half3(.14,.17,.22)+i.fill*.20+l.color*(1.05*saturate(dot(n,l.direction)));color*=lerp(.48,1,saturate(n.y*1.2));if(i.normalWS.y>.4)color*=BoardShadow(i.positionWS);}
     half floorValue=i.style.x>3.5?.12:_AmbientFloor;
     color*=lerp(max(lighting,floorValue.xxx),half3(1,1,1),_Unlit);
-    if(i.style.x>3.5){half3 v=GetWorldSpaceNormalizeViewDir(i.positionWS);half spec=pow(saturate(dot(n,normalize(v+l.direction))),lerp(120,8,stoneRoughness));half pigmentValue=saturate(max(i.color.r,max(i.color.g,i.color.b)));color+=l.color*spec*(1-stoneRoughness)*lerp(.14,.55,_PlanetIce)*pigmentValue;
-     if(_PlanetIce>.5){half rim=pow(1-saturate(dot(n,v)),3);half veins=SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,i.positionWS.xz*.72).r;half rime=smoothstep(.64,.85,veins);color+=half3(.15,.28,.36)*(rim*.40+rime*.13)*pigmentValue;}
+    if(i.style.x>3.5){half3 v=GetWorldSpaceNormalizeViewDir(i.positionWS);half spec=pow(saturate(dot(n,normalize(v+l.direction))),lerp(120,8,stoneRoughness));half pigmentValue=saturate(max(i.color.r,max(i.color.g,i.color.b)));if(!frostSnow)color+=l.color*spec*(1-stoneRoughness)*lerp(.14,.55,_PlanetIce)*pigmentValue;
+     if(_PlanetIce>.5&&!frostSnow){half rim=pow(1-saturate(dot(n,v)),3);half veins=SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,i.positionWS.xz*.72).r;half rime=smoothstep(.64,.85,veins);color+=half3(.15,.28,.36)*(rim*.40+rime*.13)*pigmentValue;}
     }
     return half4(MixFog(color,i.fog),_SurfaceAlpha);
    }

@@ -13,18 +13,33 @@ The before fixture uses the same new crater crust, stage, readable tiles and cam
 
 ## Measured geometry, materials and readability
 
-Counts include all instantiated board, environment, player, exit and camera-attached sky meshes after startup. Triangles are `GetIndexCount / 3`, counted per instance and submesh; materials are distinct shared materials, not draw calls. Dressing has five modules in every stage. `perf.csv` records the representative before/after fixtures; `stage-fit-validation.csv` records all 50 initial stage configurations. No frame-rate claim is made.
+Counts include all instantiated board, environment, player, exit and camera-attached sky meshes after startup. Triangles are `GetIndexCount / 3`, counted per instance and submesh; materials are distinct shared materials, not draw calls. Dressing has 13 instances of five source modules in every stage: one enlarged hero and eight additional rotated/scaled instances beyond v1. `perf.csv` records the representative before/after fixtures; `stage-fit-validation.csv` records all 50 initial stage configurations. No frame-rate claim is made.
 
 
 | Planet | Stage | Before tris | After tris | Net | Dressing tris | Materials | Contrast | Largest chapter stage |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| moss | 1 | 35565 | 35200 | -365 | 2476 | 4 | 80.1% | 38110 |
-| hollow | 8 | 36630 | 35926 | -704 | 1652 | 4 | 84.2% | 38326 |
-| carved | 15 | 33546 | 32280 | -1266 | 1032 | 4 | 86.0% | 34708 |
-| frost | 22 | 36870 | 33494 | -3376 | 1076 | 5 | 82.8% | 36630 |
-| joinery | 29 | 49597 | 41329 | -8268 | 3104 | 4 | 83.9% | 45215 |
-| crumble | 36 | 35630 | 34712 | -918 | 2054 | 4 | 84.6% | 36812 |
-| altar | 43 | 34943 | 32054 | -2889 | 1380 | 4 | 84.1% | 37946 |
+| moss | 1 | 35565 | 37860 | 2295 | 5136 | 4 | 80.1% | 40770 |
+| hollow | 8 | 36630 | 38346 | 1716 | 4072 | 4 | 84.2% | 40746 |
+| carved | 15 | 33546 | 33736 | 190 | 2488 | 4 | 86.0% | 36164 |
+| frost | 22 | 36870 | 34688 | -2182 | 2270 | 5 | 83.4% | 37824 |
+| joinery | 29 | 49597 | 44137 | -5460 | 5912 | 4 | 83.9% | 48023 |
+| crumble | 36 | 35630 | 37006 | 1376 | 4348 | 4 | 84.6% | 39106 |
+| altar | 43 | 34943 | 33998 | -945 | 3324 | 4 | 84.1% | 39890 |
+
+## V2 review fixes: frost rule readability and dressing density
+
+The v1 images remain beside these as *-v1.png, including seven-planets-sheet-v1.png and every before-after-<planet>-v1.png; README-v1.md and the v1 CSVs preserve the previous report.
+
+Ordinary frost floors now read as matte white-grey packed snow / frosted marble with fine grain, without ice cracks, ice rim lighting or specular highlights. The readable wall meshes use the same dry surface with their original dark vertex pigment. Mesh UV2 role tag 7 distinguishes these board surfaces without changing geometry or adding materials; all other planets retain their previous material appearance. The crust remains blue ice with its pigment toned to 62 percent, so the snow board is brighter. The actual sliding-ice material retains its streak lines, has blue ice shading and a fixed roughness of 0.06. A dedicated diagnostic render returns the shader's gloss (1 - roughness) rather than relying on an estimate from a lit highlight.
+
+| Frost surface | Measured linear luminance | Measured gloss |
+|---|---:|---:|
+| Ordinary snow floor | 0.6664 | 0.0203 |
+| Sliding ice tile | 0.2850 | 0.9387 |
+
+The ordinary snow floor is 133.8 percent brighter than sliding ice in stage 22; sliding ice gloss is 0.9184 higher on the 0-1 scale. See frost-board-readability.png, frost-gloss-diagnostic.png and frost-readability.csv. Gloss is measured from the same cell-centre patches as luminance, after rendering the gloss diagnostic; the existing sliding ice alpha also composites its background. Snow roughness is 0.98, with specular contribution explicitly disabled.
+
+Every planet now has 13 dressing instances: five original modules, one of those enlarged from scale 1.45 to 2.05 as the hero, and eight extra instances at varied scales and rotations. The hero choices are moss boulder, pumice ring, rune slab, ice cluster, timber frame, dripping stone and menhir ring segment. Extra instances reuse meshes and the existing chapter material, with actual crust raycasts, the 0.20-cell exclusion and projected board/exit clearance still enforced. Joinery adds only 2808 dressing triangles; the all-stage CSV verifies the complete final total remains below 50k on every stage.
 
 Every one of the 50 stage fixtures is below 50k triangles and uses at most five materials. Every dressing library is below 8k triangles. The joinery kerb variant retains the oak bevels, mortise shoulders, brass strips and pegs, while changing the eight tiny brass fittings to square edges: 484 to 228 triangles per repeated module. This frees budget for larger stages without removing a themed object or reducing the crater mesh.
 
@@ -37,7 +52,7 @@ Contrast is `(floor luminance - blocker luminance) / floor luminance` in linear 
 | moss | Grey granite grains and irregular green moss | moss boulder, fern, flower clump, footprint stone, fern rock |
 | hollow | Brown pumice with round mineral pores | pumice ring, arch, spires, star window, perforated boulder |
 | carved | Red sandstone with broken sediment bands | rune slab, strata pillar, broken stela, spiral stele, rune tablet |
-| frost | Blue-white cracked ice, pale rime, glossy highlights and marble-like cloudy veins | ice cluster, ice menhir, edge icicle fringe, quartz fan, continuous frozen stream |
+| frost | Icy crust; matte packed-snow / frosted-marble board; glossy streaked sliding ice | ice cluster, ice menhir, edge icicle fringe, quartz fan, continuous frozen stream |
 | joinery | Dark slate strata, original atlas oak and brass kerb fittings | braced timber frame, gear and lever machine, scaffold, rope coil, plank stack |
 | crumble | Cream travertine pores and drip staining | mineral pool, dripping stone, warm lamp, broken tiles, cascade pools |
 | altar | Warm sarsen with ochre lichen | lintel, menhir ring segment, lichen stone, grass tuft, seven-star altar disc |
@@ -50,7 +65,7 @@ Production routing remains `Chapter_<planet> -> Sky_<planet> -> PlanetSummit_<pl
 
 `BoardShapeAAssembly` omits the old generic exterior decorations and old timber frames when themed dressing is present. It retains the supplied crater mesh and existing board structure. `PlanetDressingPlacement` creates temporary colliders against the actual fitted crust, samples supported shoulders and their visibility, and removes the colliders after placement. Icicles use the actual outer hull bounds. Every prop vertex stays outside the board with a 0.20-cell margin, and the review checks each projected triangle against the full board/exit interval. No playable cell receives dressing.
 
-All 50 stages pass projected clearance, repeated Fit at cell size 0.75 and origin (2,1,-3), minimum four supported modules (actual result: five everywhere), and imported mesh ownership checks. TileSet/Chapter validation passes with zero errors; pre-existing warnings are four conditional-door heights and the placeholder set's missing mud. Unity Search emits its existing nonfatal index startup exception; the complete capture and validation finish with exit code 0.
+All 50 stages pass projected clearance, repeated Fit at cell size 0.75 and origin (2,1,-3), minimum eleven supported instances (actual result: thirteen everywhere), and imported mesh ownership checks. TileSet/Chapter validation passes with zero errors; pre-existing warnings are four conditional-door heights and the placeholder set's missing mud. Unity Search emits its existing nonfatal index startup exception; the complete capture and validation finish with exit code 0.
 
 ## Source, storage and reproduction
 

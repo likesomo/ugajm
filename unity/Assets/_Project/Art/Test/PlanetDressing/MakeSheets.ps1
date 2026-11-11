@@ -35,7 +35,7 @@ for($i=0;$i -lt 7;$i++) {
     $contrast=([double]$row.contrast*100).ToString('F1')
     $g.DrawString("$($row.stageTris) tris | $($row.materials) materials | contrast $contrast%",$small,$white,$x+16,$y+413)
 }
-$g.DrawString("35 FREE PROCEDURAL BLENDER MODULES`n512 px color + packed surface maps`n5 modules per planet, one surface material`nCamera: ortho / pitch 50 / yaw 0",$font,$white,1950,650)
+$g.DrawString("35 FREE PROCEDURAL BLENDER MODULES`n13 instances per planet / one larger hero`nMatte snow floor / glossy sliding ice`nCamera: ortho / pitch 50 / yaw 0",$font,$white,1950,650)
 $sheet.Save("$output/seven-planets-sheet.png",[Drawing.Imaging.ImageFormat]::Png)
 $g.Dispose();$sheet.Dispose();$font.Dispose();$small.Dispose()
 Write-Output 'Seven comparison pairs and seven-planets-sheet.png saved.'
