@@ -19,7 +19,7 @@ namespace SevenSteps.EditorTools
     /// <summary>
     /// UI layout rules of docs/architecture.md 14, checked on screens built in Edit Mode (14.9). Each screen is built under
     /// a world-space canvas of the canvas-unit size (CanvasScaler 1280x720, match 0.5: 1280x720 and 1920x1080 are both
-    /// 1280x720 units, 1280x800 is 1214x759), in every language, with the longest level / chapter texts and the
+    /// 1280x720 units, 1280x800 is 1214x759, 1024x768 (4:3) is 1108x831; portrait is out of scope), in every language, with the longest level / chapter texts and the
     /// longest numbers, then:
     ///   size      effective font size (fontSize x language scale, best fit = resizeTextMinSize) >= 22, or 18 when
     ///             UiLayout.secondary; 18 can not be exempted (14.2)
@@ -52,6 +52,7 @@ namespace SevenSteps.EditorTools
         {
             new Res { Name = "1280x720+1920x1080", Units = new Vector2(1280, 720), Errors = true },
             new Res { Name = "1280x800", Units = CanvasUnits(1280, 800), Errors = false },
+            new Res { Name = "1024x768", Units = CanvasUnits(1024, 768), Errors = false },
         };
 
         /// Canvas size in units for a screen size (CanvasScaler ScaleWithScreenSize, 1280x720, match 0.5).
