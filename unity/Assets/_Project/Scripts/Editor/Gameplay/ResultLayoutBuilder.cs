@@ -29,7 +29,7 @@ namespace SevenSteps.EditorTools
         // Clear over the board (1280 x 720 units, safe edge 24, board frame from y 80).
         const float Safe = 24, StarSize = 44, StarGap = 34, StarsPad = 22, BandH = 54;
         static readonly Vector2 NextSize = new Vector2(252, 64); // the loss buttons' size (labels 8 inside the frame)
-        static readonly Vector2 FinaleSize = new Vector2(640, 72);
+        const float FinaleH = 72;
         /// Modal scrim over the HUD (docs/architecture.md 14.7: alpha 0.6 or more over the whole screen).
         const float ScrimAlpha = 0.72f;
 
@@ -142,8 +142,14 @@ namespace SevenSteps.EditorTools
                 var oldEnd = slot.Find("ToEnding") ?? overlay.Find("ToEnding");
                 if (oldEnd != null) Object.DestroyImmediate(oldEnd.gameObject);
 
-                // The planet / journey line, bottom centre (body docks here for a clear).
-                var finale = Plate("FinalePlate", clear, new Vector2(.5f, 0), new Vector2(.5f, 0), new Vector2(0, Safe + 12), FinaleSize);
+                // The planet / journey line, bottom centre (body docks here for a clear). Stretched between equal insets
+                // that clear the next slot (its width + 16 gap), so it stays centred and off the button at every aspect
+                // (680 wide at 1280, narrower at 4:3, docs 14 1024x768).
+                var finale = Plate("FinalePlate", clear, new Vector2(.5f, 0), new Vector2(.5f, 0), Vector2.zero, Vector2.zero);
+                float inset = Safe + 8 + NextSize.x + 16;
+                finale.anchorMin = new Vector2(0, 0); finale.anchorMax = new Vector2(1, 0);
+                finale.offsetMin = new Vector2(inset, Safe + 12);
+                finale.offsetMax = new Vector2(-inset, Safe + 12 + FinaleH);
                 view.finalePlate = finale;
                 finale.gameObject.SetActive(false);
                 clear.gameObject.SetActive(false);

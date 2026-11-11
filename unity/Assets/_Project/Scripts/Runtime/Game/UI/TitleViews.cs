@@ -200,6 +200,7 @@ namespace SevenSteps.Game.UI
         readonly Image[] carvings;
         readonly Image polaris;
         readonly int polarisPlanet;
+        readonly Vector2[] pos; // card centers on the 1280x720 reference
         Localizer loc;
         int truthShown = -1, focused = -1;
         string detailDefault = "";
@@ -231,22 +232,21 @@ namespace SevenSteps.Game.UI
             var s = panel.transform;
             Ui.Wash(s, 0.985f); // the board and menhirs stay far behind the cards
             head = Ui.Label(s, "", 48, Ui.Ink, TextAnchor.MiddleLeft, "Head");
-            head.rectTransform.TopLeft(40, 30, 1070, 72);
+            TopStretch(head.rectTransform, 40, 30, 170, 72);
             detail = Ui.Label(s, "", 24, Ui.Dim, TextAnchor.MiddleLeft, "Detail");
-            detail.rectTransform.TopLeft(42, 100, 1160, 48);
+            TopStretch(detail.rectTransform, 42, 100, 78, 48);
 
-            var pos = new Vector2[planets.Count];
+            // Card centers on the 1280-wide reference; FitToWidth places the cards for narrower canvases (1280x800: 1214,
+            // 4:3: 1108 units) inside the safe margin without overlaps (CardCenters; QA 1: planet 7 at 1280x800).
+            pos = new Vector2[planets.Count];
             for (int i = 0; i < pos.Length; i++) pos[i] = Position(i, pos.Length);
-            // Dipper lines from card edge to card edge (never under a card's text).
+            // Dipper lines from card edge to card edge (never under a card's text), placed again for the canvas width.
             if (planets.Count <= 7)
                 foreach (var (a, b) in UiTheme.DipperEdges)
-                    if (a < pos.Length && b < pos.Length)
+                    if (a < pos.Length && b < pos.Length && Cut(pos[a], pos[b]) < 0.5f) // cards side by side: no room for a line
                     {
-                        var d = pos[b] - pos[a];
-                        float cut = Mathf.Min(d.x != 0 ? CardW / 2 / Mathf.Abs(d.x) : float.MaxValue, d.y != 0 ? CardH / 2 / Mathf.Abs(d.y) : float.MaxValue) + 6f / d.magnitude;
-                        if (cut >= 0.5f) continue; // cards side by side: no room for a line
-                        var line = Ui.Line(s, pos[a] + d * cut, pos[b] - d * cut, Ui.Dim, "Edge");
-                        line.rectTransform.sizeDelta = new Vector2(line.rectTransform.sizeDelta.x, 3);
+                        var line = Ui.MakeImage(s, Ui.Dim, null, "Edge");
+                        line.raycastTarget = false;
                         edges.Add((a, b, line));
                     }
 
@@ -260,7 +260,7 @@ namespace SevenSteps.Game.UI
                 var p = pos[i];
                 // One card per planet: number, name (up to 2 lines), star count.
                 var card = Ui.Card(s, "Planet " + (i + 1));
-                card.rectTransform.TopLeft(p.x - CardW / 2, p.y - CardH / 2, CardW, CardH);
+                card.rectTransform.TopLeft(p.x - CardW / 2, p.y - CardH / 2, CardW, CardH); // FitToWidth places it for the canvas
                 card.raycastTarget = true;
                 cards[i] = card.gameObject.AddComponent<Button>();
                 var colors = cards[i].colors;
@@ -306,7 +306,8 @@ namespace SevenSteps.Game.UI
 
             // Bottom band: back, all stars, note on one plate.
             var band = Ui.MakeImage(s, new Color(Ui.PanelBg.r, Ui.PanelBg.g, Ui.PanelBg.b, 0.92f), null, "Band");
-            band.rectTransform.TopLeft(0, BandY, 1280, 720 - BandY);
+            band.rectTransform.Place(Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(0, 720 - BandY)); // the bottom edge, full width
+            band.rectTransform.anchorMax = new Vector2(1, 0);
             var bt = band.transform; // children of the band: one plate, positions from the band top
             totalLabel = Ui.Label(bt, "", 28, Ui.Gold, TextAnchor.MiddleLeft, "TotalLabel");
             totalLabel.rectTransform.TopLeft(300, 24, 300, 40);
@@ -314,8 +315,83 @@ namespace SevenSteps.Game.UI
             var backButton = Ui.MenuButton(bt, 25, () => BackRequested?.Invoke(), out back, "Back");
             ((RectTransform)backButton.transform).TopLeft(40, 14, 230, 72);
             note = Ui.Label(bt, "", 22, Ui.Ink, TextAnchor.MiddleRight, "Note");
-            note.rectTransform.TopLeft(640, 26, 600, 36);
+            note.rectTransform.Place(Vector2.one, Vector2.one, new Vector2(-40, -26), new Vector2(600, 36)); // from the right edge
+            panel.AddComponent<ResizeHook>().Resized = FitToWidth;
+            FitToWidth();
             panel.SetActive(false);
+        }
+
+        /// Line from a to b: the share of it under each card, plus 6 units of air.
+        static float Cut(Vector2 a, Vector2 b)
+        {
+            var d = b - a;
+            return Mathf.Min(d.x != 0 ? CardW / 2 / Mathf.Abs(d.x) : float.MaxValue, d.y != 0 ? CardH / 2 / Mathf.Abs(d.y) : float.MaxValue) + 6f / d.magnitude;
+        }
+
+        static void TopStretch(RectTransform r, float left, float y, float right, float h)
+        {
+            r.anchorMin = new Vector2(0, 1);
+            r.anchorMax = new Vector2(1, 1);
+            r.pivot = new Vector2(0, 1);
+            r.anchoredPosition = new Vector2(left, -y);
+            r.sizeDelta = new Vector2(-(left + right), h);
+        }
+
+        /// Card centers for a canvas width: the reference positions pulled in between the side insets (down to the 24 safe
+        /// margin), then cards whose rows overlap kept a card width + 36 apart (a line still fits) (4:3: the handle 4-5-6-7 and the bowl 2-3).
+        /// 1280 wide: the reference positions, the handle 5-6-7 within ~15 units of them.
+        public static Vector2[] CardCenters(IReadOnlyList<Vector2> reference, float width)
+        {
+            const float Gap = 36, Edge = UiSafe + CardW / 2; // 36: room for a Dipper line between cards side by side
+            int n = reference.Count;
+            float refL = reference.Min(p => p.x), refR = 1280 - reference.Max(p => p.x);
+            float shrink = Mathf.Max(0, (1280 - width) / 2);
+            float l = Mathf.Max(Mathf.Min(refL, Edge), refL - shrink), r = Mathf.Max(Mathf.Min(refR, Edge), refR - shrink);
+            float refSpan = 1280 - refL - refR, span = width - l - r;
+            var c = new Vector2[n];
+            for (int i = 0; i < n; i++)
+                c[i] = new Vector2(refSpan > 0 ? l + (reference[i].x - refL) / refSpan * span : width / 2, reference[i].y);
+            var order = Enumerable.Range(0, n).OrderBy(i => reference[i].x).ToArray();
+            bool SameRow(int a, int b) => Mathf.Abs(c[a].y - c[b].y) < CardH + 12;
+            const float Need = CardW + Gap;
+            for (int j = 0; j < n; j++) // left to right: push right
+                for (int i = 0; i < j; i++)
+                    if (SameRow(order[i], order[j])) c[order[j]].x = Mathf.Max(c[order[j]].x, c[order[i]].x + Need);
+            for (int j = n - 1; j >= 0; j--) // right to left: back inside the right inset
+            {
+                c[order[j]].x = Mathf.Min(c[order[j]].x, width - r);
+                for (int k = j + 1; k < n; k++)
+                    if (SameRow(order[j], order[k])) c[order[j]].x = Mathf.Min(c[order[j]].x, c[order[k]].x - Need);
+            }
+            return c;
+        }
+
+        const float UiSafe = 24; // docs/architecture.md 14 safe margin (UiLayoutCheck.Safe)
+
+        /// Cards and Dipper lines for the panel's width. A line with no room left (cards side by side) hides.
+        void FitToWidth()
+        {
+            float w = ((RectTransform)panel.transform).rect.width;
+            if (w <= 0) w = 1280;
+            var at = CardCenters(pos, w);
+            for (int i = 0; i < cards.Length; i++)
+                ((RectTransform)cards[i].transform).TopLeft(at[i].x - CardW / 2, at[i].y - CardH / 2, CardW, CardH);
+            foreach (var (a, b, line) in edges)
+            {
+                Vector2 pa = at[a], pb = at[b];
+                float cut = Cut(pa, pb);
+                bool room = cut < 0.5f && (1 - 2 * cut) * (pb - pa).magnitude >= 12;
+                line.gameObject.SetActive(room);
+                if (!room) continue;
+                var d = pb - pa;
+                Vector2 from = pa + d * cut, to = pb - d * cut;
+                var r = line.rectTransform;
+                r.anchorMin = r.anchorMax = new Vector2(0, 1);
+                r.pivot = new Vector2(0, 0.5f);
+                r.anchoredPosition = new Vector2(from.x, -from.y);
+                r.sizeDelta = new Vector2(Vector2.Distance(from, to), 3);
+                r.localRotation = Quaternion.Euler(0, 0, -Mathf.Atan2(to.y - from.y, to.x - from.x) * Mathf.Rad2Deg);
+            }
         }
 
         /// A planet's card center in top-left reference pixels: the Dipper for up to 7 planets, else one row.
@@ -385,6 +461,7 @@ namespace SevenSteps.Game.UI
             if (loc == null) throw new InvalidOperationException("PlanetMapView.Show before Apply");
             shown = progress;
             panel.SetActive(true);
+            FitToWidth(); // the canvas may have changed size while the map was closed
             int earnedAll = 0, maxAll = 0;
             for (int i = 0; i < planets.Count; i++)
             {
@@ -474,7 +551,7 @@ namespace SevenSteps.Game.UI
             panel = Ui.Rect("PlanetStages", root).Stretch().gameObject;
             var blocker = Ui.Wash(panel.transform, 0.6f, "Blocker");
             blocker.raycastTarget = true;
-            var frame = Ui.Panel(panel.transform, "Frame").rectTransform.TopLeft(140, 60, 1000, 600);
+            var frame = Ui.Panel(panel.transform, "Frame").rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1000, 600)); // centered: 4:3 is 1108 units wide
             title = Ui.Label(frame, "", 52, Ui.Gold, TextAnchor.MiddleCenter, "Planet");
             title.rectTransform.TopLeft(40, 36, 920, 72);
             tagline = Ui.Label(frame, "", 24, Ui.Dim, TextAnchor.MiddleCenter, "Tagline");

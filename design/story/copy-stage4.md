@@ -146,3 +146,43 @@ intro = **가야 하는 이유**(moss만 위기의 대가), tagline = 장소의 
 | 씬 플로우 | 타이틀 한 줄·하늘, 별지도 새김·`dipper` 선, 엔딩 카드 9갈래, 피날레 줄 다시 보기 |
 | 게임플레이/UI | 잠깐 줄(`TransientLineView`): 스테이지 시작 줄, 피날레 줄. 실패 한마디 |
 | 아트(Codex, 코디네이터 경유) | `ending.1`~`4`(11/14 이후), `carving.<id>` 7, 별지도 국자 기울기, 타이틀 별 두 상태 |
+
+## 5. 블라인드 QA 1차 관찰 대응: 이야기 줄과 힌트가 겹침 (2026-11-11)
+
+**관찰**(리드 전달): 게임 화면 왼쪽 패널에서 이야기 줄과 힌트가 거의 같은 말을 한다(예: 29 "일곱째의 손잡이가 벽을 뒤집는다"와 레버 힌트).
+
+**원인**: 3장의 소개 스테이지 줄은 최소 UI(시작 때 둘 중 **하나만** 보임, `startLine`)를 전제로 **힌트를 세계의 말로 쓴 것**이다. 지금 빌드처럼 패널에 둘을 함께 보이면 겹친다. 소개가 아닌 스테이지 가운데도 기존 힌트와 내용이 가까운 줄이 있다(19, 41, 44 등).
+
+**결론 (리드, 2026-11-11, gameplay-ui 재현)**: (가) 문구는 그대로 둔다. 지금 빌드의 왼쪽 판에는 이야기 줄 하나만 보이고, 레벨 `hint`는 런타임에 나오지 않는다. S4에서는 `startLine`에 따라 story, hint, 없음 가운데 하나만 잠깐 띄운다. 그래서 `alt`를 `story`로 옮기지 않는다.
+
+**대안 줄** (`copy-levels.json`의 `alt`, 검사 통과): 힌트를 되풀이하지 않는 장면 줄이다. 런타임에 쓰지 않고, 단계형 힌트를 설계할 때 참고 자료로 남긴다.
+
+| n | 지금 story | alt ko | alt en |
+|---|---|---|---|
+| 1 | 하나부터 센다. 일곱째에 열린다. | 고향의 땅이 걸음에 늦게 대답한다. (19) | Home's ground answers steps slowly now. (39) |
+| 3 | 길은 많아도, 일곱 걸음 길은 하나. | 갈림길마다 셋이 걸음을 맞춰 본다. (19) | At every fork, the three count again. (37) |
+| 4 | 일곱째에 서면 돌이 되어 붙든다. | 첫 이별, 하늘이 맞으면 돌아온다. (19) | The first goodbye. Back when stars align. (41) |
+| 6 | 붙든 돌이, 지름길도 막는다. | 고향의 첫 선돌이 관측소를 지킨다. (19) | The first stone keeps watch at home. (36) |
+| 8 | 그 자리에서 지도를 건넬 수도 있다. | 남지 않고도 도울 수 있다. (15) | One can help without staying. (29) |
+| 10 | 일곱째 걸음에만 구멍이 다리가 된다. | 구멍 아래로 별이 흐른다. (14) | Stars drift below the holes. (28) |
+| 15 | 문에 새긴 수는 지나갈 걸음의 차례. | 기둥마다 관측자의 손이 남아 있다. (19) | The watchers' hands live on the pillars. (40) |
+| 19 | 다리를 건너는 걸음도 셈에 든다. | 구멍 위로 새김이 이어진다. (15) | The carvings run on across the holes. (37) |
+| 22 | 얼음 위에선 미끄러져도 한 걸음. | 차가운 달, 발이 멈추지 않는다. (18) | A cold moon. Feet won't stay put. (33) |
+| 23 | 바닥만으로는 일곱이 맞지 않는다. | 얼음은 셈을 흔든다. (11) | The ice shakes the count. (25) |
+| 25 | 벽이 없으면, 서 있는 돌이 멈춘다. | 얼음 위에서 셋이 서로를 붙든다. (18) | The three steady each other on ice. (35) |
+| 26 | 멈춰 준 돌이, 다음 길을 막는다. | 기대 선 형제 곁으로 얼음이 흐른다. (20) | Ice flows past a brother leaning still. (39) |
+| 29 | 일곱째의 손잡이가 벽을 뒤집는다. | 나무와 놋쇠가 숨을 죽이고 있다. (18) | Timber and brass wait, holding still. (37) |
+| 30 | 하나가 열리면, 하나가 닫힌다. | 다 열 수는 없는 장치다. (14) | Not every door can stand open. (30) |
+| 31 | 올라온 벽도 미끄럼을 멈춘다. | 반쯤 내려앉은 벽이 기다린다. (16) | The sunken walls are waiting. (29) |
+| 32 | 손잡이는 한 번, 발판은 계속. | 놋쇠는 차갑고, 나무는 따뜻하다. (18) | Cold brass, warm timber. (24) |
+| 36 | 지난 곳은 무너지고 선 곳은 굳는다. | 발자국마다 금이 퍼진다. (13) | Cracks spread from every footprint. (35) |
+| 38 | 문은 서 있는 선돌의 수를 센다. | 옛 문이 무언가를 세고 있다. (16) | The old gate is counting something. (35) |
+| 40 | 아무도 서지 않아야 열리는 문. | 이 문은 텅 빈 원을 품고 있다. (18) | This gate bears an empty ring. (30) |
+| 41 | 굳은 바닥은 길일 뿐, 돌이 아니다. | 흔적에도 여러 모양이 있다. (15) | Traces come in many shapes. (27) |
+| 43 | 늪의 진흙은 한 칸에 두 걸음. | 늪의 진흙이 발을 붙잡는다. (15) | Bog mud grabs at their feet. (28) |
+| 44 | 진흙을 밟으면 셈 하나를 건너뛴다. | 늪이 걸음을 무겁게 센다. (14) | The bog counts every step heavy. (32) |
+| 45 | 얼음은 빠르고, 진흙은 무겁다. | 빠른 얼음과 무거운 늪 사이. (16) | Between swift ice and heavy bog. (32) |
+| 49 | 일곱 칸 일곱 줄, 원이 가까워진다. | 원이 보인다. 마지막 방이다. (16) | The circle in sight. One last room. (35) |
+
+- 참고(레벨 디자인 몫): 지금 일부 힌트는 풀이를 말한다(예: 48 "두 형제가 모두 길이 된다", 50 "두 형제가 선돌로 서면 제단이 열린다"). 이야기 줄은 그렇게 쓰지 않았다.
+- **스테이지 이름 변경(23·37)**: `story.json`과 `copy-levels.json`은 스테이지 이름을 쓰지 않는다(번호와 챕터 id만). 맞출 곳이 없다. `seven-planets-story.md`의 옛 이름은 이름 변경을 권한 검토 기록이라 그대로 둔다.
