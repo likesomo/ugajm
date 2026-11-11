@@ -89,6 +89,8 @@ namespace SevenSteps.Game.Flow
         /// The body a choice dives into.
         PlanetBody Body(int planet, StageChoiceSource source);
         Camera MapCamera { get; }
+        /// The settled map camera pose for the current screen (the journey return pullback ends here).
+        void MapPose(out Vector3 position, out Quaternion rotation, out float orthoSize);
     }
 
     /// <summary>
@@ -117,6 +119,8 @@ namespace SevenSteps.Game.Flow
         public StageSelectModel Model => model;
         public Camera MapCamera => view.MapCamera;
         public PlanetBody Body(int planet) => view.Body(planet, StageChoiceSource.Map);
+        /// The settled map camera pose (end of the journey return pullback; the camera itself is not there while JourneyReturn is pending).
+        public void MapPose(out Vector3 position, out Quaternion rotation, out float orthoSize) => view.MapPose(out position, out rotation, out orthoSize);
 
         /// <param name="buildModel">The model for the current save (called on every Show).</param>
         /// <param name="stages">Each planet's stage indices (PlanetEntry.Stages), map order.</param>

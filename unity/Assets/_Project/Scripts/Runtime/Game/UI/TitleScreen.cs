@@ -4,6 +4,7 @@ using System.Linq;
 using SevenSteps.Contracts;
 using SevenSteps.Core;
 using SevenSteps.Game.Flow;
+using SevenSteps.Game.UI.Planets;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -47,6 +48,14 @@ namespace SevenSteps.Game.UI
         BackNavigator back;
         int openPlanet = -1;
         LanguageController language;
+        GameObject menuBackground;
+        // Stage select v4 (StageSelectToggle, docs/stage-select-transitions.md): null when the run uses the card map.
+        bool newMap;
+        PlanetSpace planetSpace;
+        StageSelectViews stageViews;
+
+        /// The v4 stage select controller (scene-flow's TitleJourney subscribes StageChosen); null when the new map is off.
+        public StageSelectController StageSelect { get; private set; }
 
         void Awake()
         {
@@ -66,7 +75,8 @@ namespace SevenSteps.Game.UI
                 new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
             var root = BuildCanvas();
-            Ui.MenuBackground(root); // null when the theme has none: the camera color shows
+            menuBackground = Ui.MenuBackground(root); // null when the theme has none: the camera color shows
+            newMap = StageSelectToggle.On(Services.Get<LaunchOptions>());
             titleView = new TitleView(root);
             planets = PlanetEntry.FromCatalog(levels.Length);
             planetMap = new PlanetMapView(root, planets, levels);
@@ -74,13 +84,22 @@ namespace SevenSteps.Game.UI
             planetMap.ReduceMotion = save.Settings.reduceMotion;
             if (story != null && story.On) titleView.ShowSky(story.Catalog.ChapterIds.Select(story.FinaleCleared).ToArray());
             planetStages = new PlanetStagesPanel(root);
+            if (newMap)
+            {
+                if (assets.planetBodies == null) throw new MissingReferenceException($"[SevenSteps] {name}: GameAssets.planetBodies is not set (Data/PlanetBodies.asset) and the new map is on");
+                if (cam == null) throw new MissingReferenceException($"[SevenSteps] {name}: the Title scene has no Main Camera (the new map draws planet bodies)");
+                planetSpace = new PlanetSpace(cam, assets.background);
+                var map3d = new PlanetMap3DView(root, planetSpace, assets.planetBodies, planets);
+                var surface = new PlanetSurfaceView(root, planetSpace, assets.planetBodies, planets, map3d.SetBodiesVisible);
+                stageViews = new StageSelectViews(map3d, surface, overlays = new OverlayStack());
+            }
             languagePanel = new LanguagePanel(root);
             bool telemetryDefault = Services.Get<AppConfig>().telemetryOnByDefault;
             settings = SettingsPanel.Create(root, save, telemetryDefault, localizer);
             settingsController = new SettingsController(save, settings, telemetryDefault, localizer);
             creditsPanel = new CreditsPanel(root, credits, licenses);
             BuildLanguageBadge(root);
-            overlays = new OverlayStack();
+            if (overlays == null) overlays = new OverlayStack();
             // Text in the current language; redraw when the language changes (docs/architecture.md 13.3).
             ApplyText();
             localizer.Changed += OnLanguageChanged;
@@ -96,6 +115,13 @@ namespace SevenSteps.Game.UI
             planetMap.PlanetClicked += OpenPlanet;
             planetMap.BackRequested += flowController.Back;
             planetStages.StageClicked += flowController.PlayStage;
+            if (newMap)
+            {
+                var stages = planets.Select(p => p.Stages).ToList();
+                StageSelect = new StageSelectController(stageViews, BuildStageSelectModel, stages, flow.CanGoToGame, flowController.PlayStage,
+                    Services.TryGet<JourneyReturn>(out var journey) ? journey : null);
+                stageViews.Map.BackRequested += flowController.Back;
+            }
             language = new LanguageController(languagePanel, overlays, localizer, save, Services.Get<LaunchOptions>().Language);
             settingsController.OpenLanguage = OpenLanguage; // the settings language button opens the picker
             overlays.Changed += OnOverlaysChanged;
@@ -140,6 +166,15 @@ namespace SevenSteps.Game.UI
                     titleView.StagesButton.onClick.Invoke();
                     yield return null;
                     int planet = Mathf.Min(1, planets.Count - 1);
+                    if (newMap)
+                    {
+                        // The planet plays its first unfinished stage, or (complete) opens the surface path: press place 1 there.
+                        stageViews.Map.Target(planet).onClick.Invoke();
+                        yield return null;
+                        if (stageViews.Surface.Visible) stageViews.Surface.Place(0).onClick.Invoke();
+                        // A journey dive (scene-flow) takes 1.5 s before the scene changes: the 10 s wait below covers it.
+                        break;
+                    }
                     planetMap.Card(planet).onClick.Invoke();
                     yield return null;
                     planetStages.Card(0).onClick.Invoke();
@@ -165,7 +200,13 @@ namespace SevenSteps.Game.UI
         void OnOverlaysChanged()
         {
             if (overlays.Count > 0) return;
-            if (flow.State == AppState.StageSelect && openPlanet >= 0) planetMap.Focus(openPlanet);
+            if (newMap && flow.State == AppState.StageSelect)
+            {
+                stageViews.Map.Frame(); // the surface path had the camera
+                if (stageViews.LastSurfacePlanet >= 0) stageViews.Map.Focus(stageViews.LastSurfacePlanet);
+                stageViews.ForgetSurface();
+            }
+            else if (flow.State == AppState.StageSelect && openPlanet >= 0) planetMap.Focus(openPlanet);
             else if (!flow.IsLoading) Show(flow.State);
             openPlanet = -1;
         }
@@ -185,6 +226,11 @@ namespace SevenSteps.Game.UI
         {
             titleView.Apply(localizer, Services.TryGet<StoryBook>(out var story) ? story.TitleLine(localizer.Current) : null);
             planetMap.Apply(localizer);
+            if (newMap)
+            {
+                stageViews.Map.Apply(localizer);
+                stageViews.Surface.Apply(localizer);
+            }
             languagePanel.Apply(localizer);
             creditsPanel.Apply(localizer);
             if (overlays.Contains(planetStages) && openPlanet >= 0)
@@ -200,6 +246,7 @@ namespace SevenSteps.Game.UI
         void OnDestroy()
         {
             flowController?.Dispose();
+            StageSelect?.Dispose();
             settingsController?.Dispose();
             language?.Dispose();
             if (localizer != null) localizer.Changed -= OnLanguageChanged;
@@ -211,7 +258,14 @@ namespace SevenSteps.Game.UI
         {
             if (titleView == null) throw new InvalidOperationException("[SevenSteps] TitleScreen.Show before Awake");
             if (state == AppState.Title) titleView.Show(flowController.CanContinue); else titleView.Hide();
-            if (state == AppState.StageSelect) planetMap.Show(save.Progress, -1); else planetMap.Hide();
+            bool select = state == AppState.StageSelect;
+            if (newMap)
+            {
+                planetMap.Hide();
+                if (menuBackground != null) menuBackground.SetActive(!select); // the planet space draws it behind the bodies
+                if (select) StageSelect.Show(); else stageViews.Map.Hide();
+            }
+            else if (select) planetMap.Show(save.Progress, -1); else planetMap.Hide();
         }
 
         /// Esc in one place: the top overlay closes first, otherwise AppFlow's back target (BackNavigator). Arrows and Enter
@@ -221,6 +275,20 @@ namespace SevenSteps.Game.UI
             var kb = Keyboard.current;
             if (kb == null || flow.IsLoading) return;
             if (kb.escapeKey.wasPressedThisFrame) back.Back();
+        }
+
+        /// The v4 stage select model for the save now: cleared stages, the last played one, and the star-trail edges
+        /// (story.json "dipper" when the story is on, else the Dipper lines).
+        StageSelectModel BuildStageSelectModel()
+        {
+            var keys = planets.Select(p => p.Key).ToList();
+            List<(int from, int to)> trails;
+            if (Services.TryGet<StoryBook>(out var story) && story.On)
+                trails = StageSelectModel.TrailsByKey(keys, story.Catalog.Dipper.Select(d => (d.from, d.to)));
+            else
+                trails = UiTheme.DipperEdges.Where(e => e.a < keys.Count && e.b < keys.Count).Select(e => (e.a, e.b)).ToList();
+            int last = string.IsNullOrEmpty(save.Progress.lastStage) ? -1 : save.Progress.LastStageIndex(levels);
+            return StageSelectModel.From(keys, planets.Select(p => p.Stages).ToList(), s => save.Progress.IsCleared(levels[s]), last, trails);
         }
 
         static Transform BuildCanvas()

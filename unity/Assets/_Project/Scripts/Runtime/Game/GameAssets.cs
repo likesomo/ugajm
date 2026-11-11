@@ -24,6 +24,8 @@ namespace SevenSteps.Game
         public Font font;
         [Tooltip("UI look: font, colors, panel prefabs (docs/scene-flow.md S6). Default Data/UiTheme_Default.asset")]
         public UI.UiTheme uiTheme;
+        [Tooltip("Stage select v4 planet bodies (meshes, materials; docs/stage-select-transitions.md). Data/PlanetBodies.asset")]
+        public UI.Planets.PlanetBodySet planetBodies;
 
         [Header("Board art")]
         [Tooltip("Tile/actor prefab mapping used by the board (docs/architecture.md 7). AppConfig.tileSet overrides this when set.")]

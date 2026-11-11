@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 550d8a8c60a84551bd06852173eae731, type: 3}
+  m_Name: PlanetBodies
+  m_EditorClassIdentifier: SevenSteps.Game::SevenSteps.Game.UI.Planets.PlanetBodySet
+  material: {fileID: 2100000, guid: f0223332965249a69f5bb1be82c6326f, type: 2}
+  marksMaterial: {fileID: 2100000, guid: e0dddf6ff7d14e939737e5996775acaf, type: 2}
+  planets:
+  - key: moss
+    mesh: {fileID: 0}
+    seatedMesh: {fileID: 0}
+    material: {fileID: 0}
+    radius: 3.65
+    seatHeight: 2.3
+    boardScale: 0.22
+  - key: hollow
+    mesh: {fileID: 0}
+    seatedMesh: {fileID: 0}
+    material: {fileID: 0}
+    radius: 3.65
+    seatHeight: 2.3
+    boardScale: 0.22
+  - key: carved
+    mesh: {fileID: 0}
+    seatedMesh: {fileID: 0}
+    material: {fileID: 0}
+    radius: 3.65
+    seatHeight: 2.3
+    boardScale: 0.22
+  - key: frost
+    mesh: {fileID: 0}
+    seatedMesh: {fileID: 0}
+    material: {fileID: 0}
+    radius: 3.65
+    seatHeight: 2.3
+    boardScale: 0.22
+  - key: joinery
+    mesh: {fileID: 0}
+    seatedMesh: {fileID: 0}
+    material: {fileID: 0}
+    radius: 3.65
+    seatHeight: 2.3
+    boardScale: 0.22
+  - key: crumble
+    mesh: {fileID: 0}
+    seatedMesh: {fileID: 0}
+    material: {fileID: 0}
+    radius: 3.65
+    seatHeight: 2.3
+    boardScale: 0.22
+  - key: altar
+    mesh: {fileID: 0}
+    seatedMesh: {fileID: 0}
+    material: {fileID: 0}
+    radius: 3.65
+    seatHeight: 2.3
+    boardScale: 0.22
