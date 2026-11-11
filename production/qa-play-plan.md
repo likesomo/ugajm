@@ -36,7 +36,7 @@
   - B: 탐색형. 바로 시도하고 실패에서 배운다.
   - C: 초보형. 힌트 문구를 적극 사용한다.
 - 작업 공간: 읽기 전용 QA 워크트리 `qa`.
-- **금지 파일**: `design/levels/stage-report*`, `stage-plan-50*`, `batch*.md`, `judgement.json`, `experiments/`, `design/story/`(최소 몸 해 성질 포함, 2026-11-10 추가), `unity/Assets/_Project/Data/story.json`(design/story 복사본, 엔딩 갈래 포함; 생기면), 솔버 코드, levels.json의 `expected`. 브리프에 명시하고, 보고에 "금지 파일을 열지 않음"을 적게 한다.
+- **금지 파일**: `design/levels/stage-report*`, `stage-plan-50*`, `batch*.md`, `judgement.json`, `all-brothers-check.json`(모든 형제 클리어 가능 여부·최소 걸음, 2026-11-11 추가), `experiments/`, `design/story/`(최소 몸 해 성질 포함, 2026-11-10 추가), `unity/Assets/_Project/Data/story.json`(design/story 복사본, 엔딩 갈래 포함; 생기면), 솔버 코드, levels.json의 `expected`. 브리프에 명시하고, 보고에 "금지 파일을 열지 않음"을 적게 한다.
 - 규칙 학습은 게임 안 정보만 쓴다. 대상은 튜토리얼 문구, 스테이지 이야기와 힌트(`show`가 출력), GDD의 플레이어용 규칙 요약 1장이다.
 - 1→50 순서로 진행한다. 레벨당 **최대 15시도**이고, 넘으면 `gave_up`으로 기록하고 다음으로 간다(난이도 경고 신호).
 - 레벨마다 한 줄 메모를 남긴다(막힌 이유, 깨달은 순간). 위치: `reports/qa/notes-<tester>.md`.

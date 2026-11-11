@@ -30,9 +30,11 @@
 - 씬/프리팹(YAML) 충돌은 UnityYAMLMerge 드라이버가 처리하도록 로컬 git 설정이 되어 있다
 - 같은 씬 파일을 여러 사람/에이전트가 동시에 고치지 않는다. 작업 단위를 프리팹으로 나눈다
 
-## 검증 규칙 (사용자 지시 2026-11-11)
-- 동작·화면을 확인하려고 플레이어 빌드(WebGL/Standalone)를 만들지 않는다. 에디터 Play Mode로 확인한다: 흐름은 PlayMode 테스트(`-runTests -testPlatform PlayMode`), 화면은 Play Mode에 들어가 Game 뷰를 `ScreenCapture`로 찍는 에디터 스크립트. CompileCheck·EditMode 테스트는 그대로
-- `build-win`·`smoke`·`build-webgl`·`smoke-webgl`은 **리드가 플레이테스트·출시 빌드를 만들 때만** 돌린다
+## 검증 규칙 (사용자 지시 2026-11-11, 토큰 비용으로 갱신)
+- **헤드리스 배치 모드만 쓴다**: `Unity -batchmode -nographics` + `-executeMethod`(Play Mode 진입·카메라를 PNG로 렌더하는 스크립트), 흐름은 `-runTests -testPlatform PlayMode` (`unity.sh playtest`), 그리고 CompileCheck·EditMode. 카메라 렌더에 GPU가 꼭 필요할 때만 `-nographics`를 빼되 여전히 `-batchmode`
+- **Unity 에디터 GUI를 열지 않는다. computer-use·get-app-state로 창을 조작해 확인하지 않는다** (GUI Play Mode 작업 약 670만 토큰·컨텍스트 2회 소진, 플레이어 빌드 한 바퀴 약 980만, 헤드리스 배치 캡처 약 390만으로 측정됨). 에디터 창을 띄우는 `unity.sh playcapture`도 쓰지 않는다(배치 방식으로 바꿀 때까지)
+- 플레이어 빌드(`build-win`·`smoke`·`build-webgl`·`smoke-webgl`)는 **리드가 플레이테스트·출시 빌드를 만들 때만**
+- 도구 출력은 짧게 (로그는 tail·grep)
 - 씬 플로우는 Unity 씬 구조(Build Profiles 씬 목록, `LoadSceneAsync`, Single/Additive)를 뜻한다. 행성 다이브·전진 같은 카메라 이동은 씬 안 전환(`docs/stage-select-transitions.md`). 브리프 `C:/unityjam/shared-assets/seven-steps/briefs/scene-flow-unity-2026-11-11.md`
 
 ## 배치 명령 (에디터가 같은 프로젝트를 열고 있으면 실패함. 먼저 에디터를 닫을 것)
@@ -56,6 +58,7 @@ unity/Tools/unity.sh sfx          # 임시 효과음 11개 합성 → Assets/Sha
 unity/Tools/unity.sh setup        # 머티리얼·프리팹·GameAssets 생성, Game 씬(없을 때만), 빌드/플레이어 설정
 unity/Tools/unity.sh golden       # 규칙 골든값(core.js → Tests/Golden) + 텔레메트리 골든값(server/fixtures) 다시 생성. core.js 나 스테이지를 바꾸면 실행 후 커밋
 unity/Tools/unity.sh test         # EditMode 테스트 (Tests/EditMode) → reports/editmode-results.xml
+unity/Tools/unity.sh playtest     # PlayMode 테스트 (Tests/PlayMode, 에디터 Play Mode의 씬 흐름) → reports/
 unity/Tools/unity.sh scene-validate   # 빌드 목록 = AppScenes, 씬 루트·필수 참조(폰트 등 공유 에셋 포함) 검사. build-win/build-webgl 도 빌드 전에 같은 검사를 하고 오류면 빌드하지 않는다
 unity/Tools/unity.sh tileset-validate # 모든 TileSet 을 docs/architecture.md 12장 규격으로 검사 (오류면 실패). 아트 TileSet 을 합치기 전 필수
 unity/Tools/unity.sh tileset      # 임시 TileSet 다시 생성 (Data/TileSets/TopDown_Placeholder.asset)
