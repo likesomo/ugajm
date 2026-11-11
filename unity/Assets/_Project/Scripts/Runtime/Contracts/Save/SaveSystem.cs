@@ -104,6 +104,8 @@ namespace SevenSteps.Contracts
         public const string ProgressBackupKey = "seven-steps.progress.v1";
         /// One-time guides and the KEEP / SWITCH confirm count (TutorialData, 11.3.2).
         public const string TutorialKey = "seven-steps.tutorial";
+        /// Story lines shown, ending / carvings / final truth seen (StoryProgress, docs/architecture.md 16.5).
+        public const string StoryKey = "seven-steps.story";
         const string LegacyClearedKey = "seven-steps-cleared";
 
         readonly ISaveStore store;
@@ -111,10 +113,14 @@ namespace SevenSteps.Contracts
         bool progressReadOnly; // set on load; StartNewPlayer clears it
         /// Same for the tutorial data.
         bool tutorialReadOnly;
+        /// Same for the story data.
+        bool storyReadOnly;
 
         public ProgressData Progress { get; private set; }
         public SettingsData Settings { get; private set; }
         public TutorialData Tutorial { get; private set; }
+        /// Story presentation memory (16.5). Change it through its Mark methods, then call SaveStory at the save points.
+        public StoryProgress Story { get; private set; }
 
         /// Raised after SaveSettings, so audio/telemetry can react to volume or opt-out changes.
         public event Action<SettingsData> SettingsChanged;
@@ -124,7 +130,8 @@ namespace SevenSteps.Contracts
             this.store = store ?? throw new ArgumentNullException(nameof(store));
             Progress = LoadProgress(out progressReadOnly);
             Tutorial = LoadTutorial(out tutorialReadOnly);
-            Settings = Read<SettingsData>(SettingsKey);
+            Story = LoadStory(out storyReadOnly);
+            Settings =Read<SettingsData>(SettingsKey);
             if (Settings == null)
             {
                 // First run (13.3): the UI language follows the system (Korean → ko, otherwise en).
@@ -141,8 +148,9 @@ namespace SevenSteps.Contracts
 
         /// Playtest facilitator: the next tester starts fresh (-newplayer / ?newplayer=1, LaunchOptions.NewPlayer).
         /// Empty progress (cleared stages, best bodies and stars, attempt counts) and no playerId (telemetry makes a new
-        /// one), and no finished guides (TutorialData: the next tester sees them again); volumes, consent, language and the
-        /// accessibility options stay. Overrides a newer build's read-only progress / tutorial data: this is deliberate.
+        /// one), no finished guides (TutorialData: the next tester sees them again) and no story memory (StoryProgress: the
+        /// next tester does not start on the after-ending branch); volumes, consent, language and the accessibility options
+        /// stay. Overrides a newer build's read-only progress / tutorial / story data: this is deliberate.
         public void StartNewPlayer()
         {
             Progress = new ProgressData();
@@ -151,6 +159,9 @@ namespace SevenSteps.Contracts
             Tutorial = new TutorialData();
             tutorialReadOnly = false;
             SaveTutorial();
+            Story = new StoryProgress();
+            storyReadOnly = false;
+            SaveStory();
             Settings.playerId = "";
             SaveSettings();
         }
@@ -200,6 +211,36 @@ namespace SevenSteps.Contracts
             if (t.seen == null) t.seen = new System.Collections.Generic.List<string>();
             t.choiceConfirms = Mathf.Clamp(t.choiceConfirms, 0, TutorialData.ChoiceExplainCount);
             return t;
+        }
+
+        // ---------- Story (16.5): Mark* on Story change memory only; write at the save points ----------
+
+        /// Write the story memory: after the result panel opens, at the end of the ending, after a star-map carving
+        /// appears, and on app quit. Not per line (WebGL: every save is an IndexedDB write).
+        public void SaveStory()
+        {
+            if (storyReadOnly) return;
+            store.Set(StoryKey, JsonUtility.ToJson(Story));
+            store.Flush();
+        }
+
+        StoryProgress LoadStory(out bool readOnly)
+        {
+            readOnly = false;
+            var s = Read<StoryProgress>(StoryKey);
+            if (s == null)
+            {
+                if (!string.IsNullOrEmpty(store.Get(StoryKey))) Debug.LogWarning("[SevenSteps] Story save is not valid JSON: starting from nothing seen");
+                return new StoryProgress();
+            }
+            if (s.version > StoryProgress.Version)
+            {
+                Debug.LogWarning($"[SevenSteps] Story save version {s.version} is newer than this build ({StoryProgress.Version}): not loaded, not overwritten");
+                readOnly = true;
+                return new StoryProgress();
+            }
+            s.Repair();
+            return s;
         }
 
         /// Accessibility: step count as digits (11.3.2). Saves and raises SettingsChanged.
