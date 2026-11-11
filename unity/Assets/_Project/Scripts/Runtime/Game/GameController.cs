@@ -63,6 +63,7 @@ namespace SevenSteps.Game
         Story.StoryDirector storyLines;
         EndingView endingView;
         EndingController ending;
+        GameJourney journey; // stage select v4 transitions; null when JourneyToggle is off
 
         bool OnlyChapterCard() => chapterCard != null && overlays.Count == 1 && overlays.Top == chapterCard;
 
@@ -160,7 +161,15 @@ namespace SevenSteps.Game
             this.result = result;
             presetFor = ChapterPresetFor(cfg);
             // The chapter card alone does not hold the board: a board key closes it and plays (Update below).
-            board.InputBlocked = () => flow.IsLoading || (overlays.Count > 0 && !OnlyChapterCard());
+            // Stage select v4 journey (docs/stage-select-transitions.md): clears lead on to the next board or back to the map.
+            if (JourneyToggle.On(launch))
+            {
+                var runner = JourneyRunner.Create(transform);
+                runner.ReduceMotion = save.Settings.reduceMotion;
+                journey = new GameJourney(flowController, board, cam, runner, Services.Get<JourneyReturn>(), Services.Get<JourneyDive>(),
+                    stage => JourneyRoute.PlanetIndex(ChaptersWithStages(), LevelCatalog.ChapterKeyOf(stage)), LevelCatalog.ChapterKeyOf);
+            }
+            board.InputBlocked = () => flow.IsLoading || (journey != null && journey.Blocks) || (overlays.Count > 0 && !OnlyChapterCard());
             board.FlowTakes = flowController.TakesCommand;
 
             // One-time guides (ui-minimal). Dev runs (replay, flow / title checks, smoke) keep the profile untouched and start
@@ -218,6 +227,7 @@ namespace SevenSteps.Game
         void Start()
         {
             flowController.Start(launch.DirectToGame ? Bootstrap.FirstStage(launch, flow.StageCount) : 0);
+            journey?.ArriveIfDiving(flow.Stage); // the second half of the map → board dive
             if (launch.OpenSettings && !overlays.Contains(settingsPanel)) overlays.Push(settingsPanel); // -settings / ?settings=1
 
             if (launch.TitleCheck != "" && !launch.DirectToGame)
@@ -264,6 +274,7 @@ namespace SevenSteps.Game
             chapterIntro?.Dispose();
             menu?.Dispose();
             ending?.Dispose();
+            journey?.Dispose();
             if (board != null && tutorial != null)
             {
                 if (board.Session != null) board.Session.Updated -= tutorial.Apply;
@@ -296,6 +307,7 @@ namespace SevenSteps.Game
         {
             var kb = Keyboard.current;
             if (kb == null || flow.IsLoading) return;
+            if (journey != null && journey.Blocks) return; // a transition plays, or this press skipped one
             // Esc in one place: the top overlay closes first; on the clear result the menu opens over it (14.7: the result
             // has no stage select button); otherwise AppFlow's back target (BackNavigator).
             if (kb.escapeKey.wasPressedThisFrame)
@@ -323,6 +335,15 @@ namespace SevenSteps.Game
                 else if (kb.rightArrowKey.wasPressedThisFrame) result.FocusStar(1);
                 else if (kb.leftArrowKey.wasPressedThisFrame) result.FocusStar(-1);
             }
+        }
+
+        /// Chapters that have stages, in chapters.json order: the star map's planets (JourneyRoute.PlanetIndex).
+        static System.Collections.Generic.List<string> ChaptersWithStages()
+        {
+            var keys = new System.Collections.Generic.List<string>();
+            foreach (var c in LevelCatalog.Chapters)
+                if (LevelCatalog.StagesOf(c.id).Length > 0) keys.Add(c.id);
+            return keys;
         }
 
         /// Stage -> its chapter's art preset: levels.json chapter -> chapters.json artPreset -> AppConfig.Chapter.

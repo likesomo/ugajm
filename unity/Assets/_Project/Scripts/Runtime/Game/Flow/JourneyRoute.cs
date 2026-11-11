@@ -24,5 +24,16 @@ namespace SevenSteps.Game.Flow
             if (!journeyOn || stage == stageCount - 1) return ClearExit.Result;
             return (chapterOf(stage) ?? "") == (chapterOf(stage + 1) ?? "") ? ClearExit.Advance : ClearExit.PlanetComplete;
         }
+
+        /// 0-based star map planet of a chapter: its place among the chapters that have stages, in chapters.json order (the
+        /// map's order, PlanetEntry.FromCatalog). No chapters at all: one planet, 0. A chapter not on the map: -1.
+        public static int PlanetIndex(System.Collections.Generic.IReadOnlyList<string> chaptersWithStages, string chapterKey)
+        {
+            if (chaptersWithStages == null) throw new ArgumentNullException(nameof(chaptersWithStages));
+            if (chaptersWithStages.Count == 0) return 0;
+            for (int i = 0; i < chaptersWithStages.Count; i++)
+                if (chaptersWithStages[i] == (chapterKey ?? "")) return i;
+            return -1;
+        }
     }
 }
