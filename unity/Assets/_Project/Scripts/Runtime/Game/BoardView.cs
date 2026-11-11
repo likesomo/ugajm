@@ -433,6 +433,17 @@ namespace SevenSteps.Game
             done?.Invoke();
         }
 
+        int hintGoal = -1;
+
+        /// The staged hint's goal square (cell index, a gold ring on the board marks), -1 = none. Stays until changed.
+        public void ShowHintGoal(int cell)
+        {
+            hintGoal = cell;
+            if (marks != null) marks.SetGoal(cell >= 0, cell >= 0 ? grid.CellToWorld(cell) : Vector3.zero);
+        }
+
+        public int HintGoal => hintGoal;
+
         // ---------- Drawing from State ----------
 
         /// Draws state s. With pop, things that appeared since prev get a small tween (only after Present).
