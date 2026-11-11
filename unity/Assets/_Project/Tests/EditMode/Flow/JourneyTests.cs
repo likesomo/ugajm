@@ -171,7 +171,7 @@ namespace SevenSteps.Tests
             board = new Board();
             panel = new Panel();
             save = new SaveSystem(new MemoryStore());
-            ctl = new GameFlowController(flow, EntryTracker.ForLaunch(false), save, board, panel, _ => 0, Chapters);
+            ctl = new GameFlowController(flow, EntryTracker.ForLaunch(false), save, board, panel, Chapters);
         }
 
         [TearDown] public void TearDown() => ctl?.Dispose();

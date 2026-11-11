@@ -19,7 +19,6 @@ namespace SevenSteps.Game.Flow
         readonly SaveSystem save;
         readonly IStageBoard board;
         readonly IResultPanel result;
-        readonly Func<int, int> minBodies;
         readonly Func<int, string> chapterOf;
         readonly Func<int, ChapterInfo> chapterInfoOf;
         string enteredChapter;
@@ -50,11 +49,10 @@ namespace SevenSteps.Game.Flow
         /// JourneyReturn and calls <see cref="OpenStageSelect"/>. Must have a handler while <see cref="Journey"/> is on.
         public event Action<int> PlanetCompleting;
 
-        /// <param name="minBodies">Solver's fewest bodies per stage, 0 = unknown (LevelCatalog.MinBodies).</param>
         /// <param name="chapterOf">Chapter key per stage (LevelCatalog.ChapterKeyOf).</param>
         /// <param name="chapterInfoOf">Optional: the chapters.json planet of a stage (LevelCatalog.ChapterOf), for the result
         /// panel when the last stage of a planet is cleared. Null = never shown.</param>
-        public GameFlowController(AppFlow flow, EntryTracker entries, SaveSystem save, IStageBoard board, IResultPanel result, Func<int, int> minBodies, Func<int, string> chapterOf,
+        public GameFlowController(AppFlow flow, EntryTracker entries, SaveSystem save, IStageBoard board, IResultPanel result, Func<int, string> chapterOf,
             Func<int, ChapterInfo> chapterInfoOf = null)
         {
             this.flow = flow ?? throw new ArgumentNullException(nameof(flow));
@@ -62,7 +60,6 @@ namespace SevenSteps.Game.Flow
             this.save = save ?? throw new ArgumentNullException(nameof(save));
             this.board = board ?? throw new ArgumentNullException(nameof(board));
             this.result = result ?? throw new ArgumentNullException(nameof(result));
-            this.minBodies = minBodies ?? throw new ArgumentNullException(nameof(minBodies));
             this.chapterOf = chapterOf ?? throw new ArgumentNullException(nameof(chapterOf));
             this.chapterInfoOf = chapterInfoOf;
             flow.Changed += OnFlowChanged;
@@ -180,25 +177,17 @@ namespace SevenSteps.Game.Flow
         /// level_start.via of the last stage entry (-titlecheck logs it).
         public string LastVia { get; private set; } = "";
 
-        /// Stars of the clear being shown (0 = unknown minimum), set on Won for the result panel.
+        /// Stars of the clear being shown (1..3), set on Won for the result panel.
         int clearStars;
 
         void OnWon(State s)
         {
             if (flow.State != AppState.Game) return;
-            // 3 stars (docs/architecture.md 6.5): judged by Core, counts from the board's attempt.
-            var a = board.Attempt;
-            clearStars = Stars.Of(BodiesUsed(s), MinBodies(s), a.Hints, a.Undos, a.Restarts);
-            if (clearStars > 0) save.Progress.MarkCleared(s.Level, BodiesUsed(s), clearStars);
-            else save.Progress.MarkCleared(s.Level, BodiesUsed(s)); // unknown minimum: no stars
+            // 3 stars (docs/architecture.md 6.5, design/levels/stars.md 0): judged by Core from the board's attempt hints and
+            // the bodies used against the level's bodies.
+            clearStars = Stars.Of(BodiesUsed(s), s.Level.Bodies, board.Attempt.Hints);
+            save.Progress.MarkCleared(s.Level, BodiesUsed(s), clearStars);
             save.SaveProgress();
-        }
-
-        /// The solver's fewest bodies for the stage on the board; 0 (unknown) when it does not fit this stage's bodies.
-        int MinBodies(State s)
-        {
-            int min = minBodies(flow.Stage);
-            return min > s.Level.Bodies ? 0 : min;
         }
 
         void OnWinPresented(State s)
@@ -234,7 +223,7 @@ namespace SevenSteps.Game.Flow
             var s = board.State ?? throw new InvalidOperationException("Result without a board state");
             int stage = flow.Stage, bodies = s.Level.Bodies;
             int best = save.Progress.BestBodies(s.Level); // 0 = none, other map or out of range (11.3.1)
-            result.Show(ResultModel.Clear(stage, bodies, BodiesUsed(s), MinBodies(s), best, IsLast,
+            result.Show(ResultModel.Clear(stage, bodies, BodiesUsed(s), best, IsLast,
                 clearStars, save.Progress.BestStars(s.Level), FinishedChapter(stage)));
             ClearShown?.Invoke();
         }

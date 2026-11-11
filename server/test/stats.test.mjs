@@ -184,21 +184,21 @@ test('stage heatmap uses only attempts on the current map', () => {
   assert.equal(stageHeatmap(buildA, LV_B, 3, NOW).cells.length, 0); // no cell events, but the attempt is found
 });
 
-test('stars: client value first, else computed from level_clear and the stage map; best per player', () => {
+test('stars: client value first, else computed from level_clear and level_start.bodies; best per player', () => {
   const lv = [{ n: 1, name: 'one', key: 'aaaaaaa1', minBodies: 1 }];
-  const start = { level: 1, levelName: 'one', levelKey: 'aaaaaaa1', attempt: 1 };
+  const start = { level: 1, levelName: 'one', levelKey: 'aaaaaaa1', attempt: 1, bodies: 3 };
   const p1 = rows([
     [0, 'level_start', start],
-    [10, 'level_clear', { level: 1, durationMs: 10, moves: 7, bodiesUsed: 1, hints: 0, undos: 1, restarts: 0 }], // no stars sent: 2
+    [10, 'level_clear', { level: 1, durationMs: 10, moves: 7, bodiesUsed: 1, hints: 0, undos: 1, restarts: 0 }], // no stars sent: 2 (1 of 3 brothers)
     [20, 'level_start', { ...start, attempt: 2 }],
     [30, 'level_clear', { level: 1, durationMs: 10, moves: 7, bodiesUsed: 1, hints: 0, undos: 0, restarts: 0, stars: 3 }],
   ]);
   const p2 = rows([
     [0, 'level_start', start],
-    [10, 'level_clear', { level: 1, durationMs: 10, moves: 14, bodiesUsed: 2, hints: 0, undos: 0, restarts: 0 }], // 1
+    [10, 'level_clear', { level: 1, durationMs: 10, moves: 21, bodiesUsed: 3, hints: 1, undos: 0, restarts: 0 }], // 1 (hint)
   ], P2);
-  const p3 = rows([ // old map of the same stage: fewest bodies unknown, no stars
-    [0, 'level_start', { ...start, levelKey: 'aaaaaaa0' }],
+  const p3 = rows([ // level_start without bodies (old client): no stars
+    [0, 'level_start', { ...start, levelKey: 'aaaaaaa0', bodies: undefined }],
     [10, 'level_clear', { level: 1, durationMs: 10, moves: 7, bodiesUsed: 1, hints: 0, undos: 0, restarts: 0 }],
   ], P3);
   const [s] = levelStats([...p1, ...p2, ...p3], lv, NOW);

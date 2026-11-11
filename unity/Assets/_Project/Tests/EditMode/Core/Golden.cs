@@ -111,10 +111,10 @@ namespace SevenSteps.Tests
     [Serializable] public sealed class GoldenStarsFile { public string generator; public GoldenStarCase[] cases; public GoldenStarStage[] stages; }
     [Serializable] public sealed class GoldenStarCase
     {
-        public int bodiesUsed, minBodies, hints, undos, restarts, stars;
-        public override string ToString() => $"used{bodiesUsed} min{minBodies} h{hints} z{undos} r{restarts}";
+        public int bodiesUsed, bodies, hints, stars;
+        public override string ToString() => $"used{bodiesUsed} of{bodies} h{hints}";
     }
-    [Serializable] public sealed class GoldenStarStage { public string name, path; public int minBodies, bodiesUsed, stars; public override string ToString() => name; }
+    [Serializable] public sealed class GoldenStarStage { public string name, path; public int bodies, bodiesUsed, stars; public override string ToString() => $"{name} {bodiesUsed}/{bodies}"; }
 
     [Serializable] public sealed class GoldenTracesFile { public string generator; public int steps; public GoldenTrace[] traces; }
 

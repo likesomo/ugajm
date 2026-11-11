@@ -24,15 +24,6 @@ namespace SevenSteps.Game.Telemetry
         [DllImport("__Internal")] static extern void SevenSteps_RegisterVisibility(string objectName);
 #endif
 
-        /// level_clear.stars in the game: levels.json expected.minBodies (no solving at clear time; the export checks it
-        /// matches the solver, which is what the golden test's default uses).
-        static int LevelsJsonMinBodies(int levelNumber, Core.Level level)
-        {
-            if (!ReferenceEquals(LevelCatalog.At(levelNumber - 1), level))
-                throw new InvalidOperationException($"TelemetryRunner: level {levelNumber} is not the stage in levels.json");
-            return LevelCatalog.MinBodies(levelNumber - 1);
-        }
-
         /// Bootstrap: the ITelemetry to register (docs/architecture.md 11.4). Endpoint = ?telemetry=<url> / -telemetry <url>,
         /// else AppConfig.telemetryEndpoint; none, or telemetry=off, gives NullTelemetry. Otherwise an HttpTelemetry driven
         /// by a new runner, enabled by the saved consent (SettingsData.telemetryChoice).
@@ -64,7 +55,7 @@ namespace SevenSteps.Game.Telemetry
 #endif
                 Build = build.Length > 40 ? build.Substring(0, 40) : build,
             };
-            var t = new HttpTelemetry(ctx, SaveStores.For(launch), level => save.Progress.CountStart(LevelCatalog.At(level - 1)), LevelsJsonMinBodies);
+            var t = new HttpTelemetry(ctx, SaveStores.For(launch), level => save.Progress.CountStart(LevelCatalog.At(level - 1)));
             var go = new GameObject(ObjectName);
             DontDestroyOnLoad(go);
             go.AddComponent<TelemetryRunner>().telemetry = t;

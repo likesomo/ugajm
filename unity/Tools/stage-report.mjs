@@ -74,44 +74,48 @@ const rows = LEVELS.map((def, i) => {
 
 // Star thresholds per stage, straight from core.js stars() so the table cannot drift from the rule.
 for (const r of rows.filter((r) => r.ok)) {
-  const m = r.minBodies;
+  const m = r.minBodies, b = r.bodies;
   r.stars = {
-    star3: stars({ bodiesUsed: m, minBodies: m }) === 3,
-    star2WithUndo: stars({ bodiesUsed: m, minBodies: m, undos: 1 }) === 2,
-    star1WithExtraBody: m < r.bodies ? stars({ bodiesUsed: m + 1, minBodies: m }) === 1 : null,
-    star1WithHint: stars({ bodiesUsed: m, minBodies: m, hints: 1 }) === 1,
+    star3AllBodies: stars({ bodiesUsed: b, bodies: b }) === 3,
+    star3WithUndoRestart: stars({ bodiesUsed: b, bodies: b, undos: 1, restarts: 1 }) === 3,
+    star2FewerBodies: m < b ? stars({ bodiesUsed: m, bodies: b }) === 2 : null,
+    star1WithHint: stars({ bodiesUsed: b, bodies: b, hints: 1 }) === 1,
   };
+  // ★3 needs a win on the last body (design/levels/all-brothers-check.json has the same answer).
+  r.star3Possible = r.winBodies.includes(b);
   if (!Object.values(r.stars).every((v) => v !== false)) problems.push(`${r.stage}. ${r.name}: stars() thresholds unexpected`);
 }
 
 const gen = new Date().toISOString().slice(0, 10);
 const ok = rows.filter((r) => r.ok);
 const splits = ok.filter((r) => r.star2Splits).length;
+const no3 = ok.filter((r) => !r.star3Possible);
 const md = [
   `# 스테이지 솔버 리포트 (${rows.length}스테이지)`,
   '',
   `생성: \`node unity/Tools/stage-report.mjs\` (${gen}, 코어). 입력: \`prototypes/seven-steps/src/levels.js\` + \`core.js\` 솔버, \`levels.json\` expected 대조.`,
   '스테이지를 바꾸면 다시 실행한다. 리플레이 형식: U D L R 이동, K KEEP, X SWITCH (`-replay` / `?replay=`).',
   '',
-  '## 별 기준 (design/levels/stars.md 0, B안 — `core.js` `stars()` / C# `Stars.Of`)',
+  '## 별 기준 (design/levels/stars.md 0, 가정 2026-11-11 — `core.js` `stars()` / C# `Stars.Of`)',
   '',
   '| 별 | 조건 (한 시도 안에서) |',
   '|---|---|',
   '| ★1 | 클리어 |',
-  '| ★2 | ★1 + 풀이 보기(H) 0회 + 쓴 몸 수 ≤ 최소 몸 |',
-  '| ★3 | ★2 + 되돌리기(Z)·재시작(R) 0회 |',
+  '| ★2 | ★1 + 풀이 보기(H) 0회 |',
+  '| ★3 | ★2 + 형제를 모두 씀 (쓴 몸 수 = 몸) |',
   '',
-  `- ★2가 갈리는 스테이지(최소 몸보다 많은 몸으로도 이길 수 있음): **${splits}/${ok.length}**. 나머지는 깨면 ★2가 자동(힌트를 안 썼다면)`,
+  `- ★3이 불가능한 스테이지(몸을 모두 써서 이길 수 없음): **${no3.length ? no3.map((r) => r.stage).join(', ') : '없음'}**`,
+  `- 최소 몸보다 많은 몸으로도 이길 수 있는 스테이지: ${splits}/${ok.length}`,
   '- 최단 입력 = 몸 수와 상관없이 입력(이동+K/X)이 가장 적은 해. 최소 몸 해와 다르면 "최단"에 몸 수를 적는다',
   `- 상태 수 = 몸 예산 전체로 BFS 한 상태 수(한도 ${STATE_LIMIT}). 난이도 직접 지표는 아니고 탐색 공간 크기`,
   `- 문제: ${problems.length ? problems.length + '건 (아래)' : '없음 (모든 스테이지 풀이 가능, 몸 ≤ 3, levels.json 최신)'}`,
   '',
   '## 스테이지별',
   '',
-  '| # | 챕터 | 이름 | 몸 | 최소 몸 | 이기는 몸 수 | ★2 | SWITCH 필수 | 최소 몸 해 입력(방향) | 최단 입력 | 상태 수 | 최소 몸 해 (리플레이) |',
+  '| # | 챕터 | 이름 | 몸 | 최소 몸 | 이기는 몸 수 | ★3 | SWITCH 필수 | 최소 몸 해 입력(방향) | 최단 입력 | 상태 수 | 최소 몸 해 (리플레이) |',
   '|---|---|---|---|---|---|---|---|---|---|---|---|',
   ...rows.map((r) => r.ok
-    ? `| ${r.stage} | ${r.chapter} | ${r.name} | ${r.bodies} | ${r.minBodies} | ${r.winBodies.join('/')} | ${r.star2Splits ? '갈림' : '자동'} | ${r.needsSwitch ? '예' : ''} | ${r.minInputs} (${r.minDirInputs}) | ${r.shortestInputs}${r.shortestBodies !== r.minBodies ? ` (몸 ${r.shortestBodies})` : ''} | ${r.states}${r.capped ? '+' : ''} | \`${r.minPath}\` |`
+    ? `| ${r.stage} | ${r.chapter} | ${r.name} | ${r.bodies} | ${r.minBodies} | ${r.winBodies.join('/')} | ${r.star3Possible ? '가능' : '**불가**'} | ${r.needsSwitch ? '예' : ''} | ${r.minInputs} (${r.minDirInputs}) | ${r.shortestInputs}${r.shortestBodies !== r.minBodies ? ` (몸 ${r.shortestBodies})` : ''} | ${r.states}${r.capped ? '+' : ''} | \`${r.minPath}\` |`
     : `| ${r.stage} | ${r.chapter} | ${r.name} | ${r.bodies} | **풀이 없음** | | | | | | | |`),
   '',
   ...(problems.length ? ['## 문제', '', ...problems.map((p) => `- ${p}`), ''] : []),
