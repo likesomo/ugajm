@@ -169,6 +169,7 @@ session.Replay("LRRRRDDK");                      // ?replay= / -replay
 | 규칙이 거부 (`Bump` 등) | `Feedback` 업데이트만, 잠그지 않음 | — | — | — |
 
 - 큐를 쓰는 이유: 걸음 수를 세는 퍼즐이라 빠르게 누른 입력이 사라지면 안 된다. 2개 제한은 연출이 길게 밀리는 것을 막는다.
+- **형제가 끝나는 명령**(결과의 `State.Bodies`가 바뀜: 떨어짐·다리·KEEP·SWITCH)은 그때 남은 큐를 버리고, 그 연출이 끝날 때 연출 중에 쌓인 큐도 버린다. 그 입력은 끝난 형제에게 누른 것이라 다음 형제를 움직이면 안 된다(블라인드 QA-2, feat/view 2821647). `Replay`·헤드리스 세션(`QaReplay`)은 큐를 쓰지 않으므로 영향 없음.
 - 큐에 입력이 남아 있으면(`QueuedCount > 0`) 보드는 연출을 빠르게(권장 2배) 재생해도 된다.
 - 잠금은 `IBoardPresenter.Present`가 `done`을 부를 때 풀린다. **보드는 `done`을 반드시 정확히 한 번 부른다** (`Snap`/`Rebuild`로 취소된 경우는 부르지 않음. 늦게 불러도 세션이 토큰으로 무시한다).
 - 입력 처리(키보드, 클릭, UI 버튼)는 `IsLocked`를 직접 보지 않는다. 그냥 `Send`한다. 잠금 판단은 세션만 한다.
@@ -1164,3 +1165,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | feat/scene-flow 21ea3d8 조건부 승인(scene-flow.md를 Unity 씬 구조로 다시 씀: Boot 0·Title 1·Game 2, Single + DDOL 유지, `Loading`은 보류 자리만, 에디터 Play Mode 확인 P1~P4). 고칠 것 M1 DDOL 수 0~2, M2 도메인 리로드 Unity 6 링크, M3 Play Mode 캡처 방식·빈 화면 대조. 9장 구조 원칙 참조를 scene-flow.md 11장·scene-flow-2026-11-08.md 5장으로 수정. `docs/reviews/2026-11-11-scene-flow-unity-structure.md` |
 | 2026-11-11 | 아키텍트 | feat/scene-flow 4515ccf+a67fac6 승인(21ea3d8 M1~M3·N1/N3/N4/N5 문서 반영, P1: `SevenSteps.Tests.PlayMode` asmdef 소유자 검토 승인(UNITY_INCLUDE_TESTS, 플레이어 빌드 제외), `Bootstrap.UseLaunchOptionsForNextRun`/`ResetForTest` 런타임 경로 불변, 저장 키 `#playtest` 분리, SceneFlowTests 6개, `unity.sh playtest` 직접 실행 6/6). 메모 P1-N1 ResetForTest 범위, P1-N2 테스트 진입점 공개. `docs/reviews/2026-11-11-scene-flow-unity-structure.md` |
 | 2026-11-11 | 아키텍트 | feat/scene-flow f40d292+975d2ce+ac632a9 승인(P2 PlayCapture 에디터 전용·1280×720·Board/Empty 대조, P3 Contracts `AppScenes.BuildOrder` 추가(빌드 목록 순서의 한 곳, 검증기 `ValidateBuildOrder`)·Boot 배경 카메라(씬 오브젝트, DDOL 아님, cullingMask 0)·주석, P4 JourneyFlowTests·PlayEnv, playtest 직접 실행 8/8). 메모 P2-N1~N3, P3-N1. `docs/reviews/2026-11-11-scene-flow-unity-structure.md` |
+| 2026-11-12 | 아키텍트 | feat/view 2821647 승인: 4.1 입력 락에 "형제가 끝나는 명령(Bodies 변화)은 남은 큐와 그 연출 중 큐를 버림" 추가(Contracts `GameSession`, Core·골든·리플레이 영향 없음). H 첫 누름 경고(Game 층). 헤드리스 EditMode 774/774. `docs/reviews/2026-11-12-feat-view-2821647.md` |
