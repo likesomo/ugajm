@@ -109,7 +109,7 @@ export const STAGES = [
   },
   {
     name: '길이 된 형제들', // 48 new (stage-search cracked-pit on a skeleton, seed 126): one brother seals the cracked floor, one bridges the pit
-    hint: '두 형제가 모두 길이 된다.',
+    hint: '금 간 바닥은 지나가면 무너지고, 7번째 걸음으로 서면 굳는다.',
     bodies: 3,
     gimmickTiles: 'xo',
     map: [
@@ -141,7 +141,7 @@ export const STAGES = [
   },
   {
     name: '원형 제단', // 50 new (ring skeleton search): two brothers stand as menhirs (one on the plate), the third steps onto the altar on the 7th
-    hint: '두 형제가 선돌로 서면 제단이 열린다.',
+    hint: '제단의 문은 서 있는 선돌 수를 센다.',
     bodies: 3,
     statueCount: 2,
     gimmickTiles: 'QaA~m',

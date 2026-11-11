@@ -138,6 +138,7 @@
     { "key": "menu.stages", "text": "스테이지" },
     { "key": "menu.solution", "text": "풀이 보기 (H)" },
     { "key": "menu.controls", "text": "조작법" },
+    { "key": "menu.replay_line", "text": "시작 줄 다시 보기" },
     { "key": "menu.close", "text": "닫기 (Esc)" },
 
     { "key": "credits.title", "text": "크레딧" },
