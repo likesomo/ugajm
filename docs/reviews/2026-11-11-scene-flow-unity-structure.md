@@ -226,3 +226,12 @@
   - `unity.sh` 경로에는 해당하지 않는다.
 - **P2-N3** 지울 저장 키 5개 목록이 `PlayEnv`와 `PlayCapture`에 따로 있다. 키가 늘면 둘 다 고쳐야 한다. 다음에 손댈 때 `SaveSystem`에 "모든 키" 목록을 하나 두는 것을 제안한다(Contracts라 그때 내가 넣는다).
 - **P3-N1** Boot 카메라는 `allowHDR`/`allowMSAA`가 기본값(켬)이다. 지운 색만 그리므로 꺼도 결과가 같다. 끄면 URP 중간 버퍼를 만들지 않는다. 몇 프레임뿐이라 이득은 작다. `BootSceneCamera`를 다시 돌릴 때 같이 꺼도 되고, 꺼지 않아도 된다.
+
+## 규칙 갱신에 따른 정정 (2026-11-11, CLAUDE.md b19c1ae: 헤드리스 배치 모드만)
+
+- M3에서 권한 "batchmode 없이 에디터를 열어 Game 뷰를 `ScreenCapture`로 찍는다"(9.2, P2 `PlayCapture`)는 **이제 쓰지 않는다.** 에디터 GUI를 열지 않는다.
+- 배치 방식으로 바꿀 때 지킬 것(scene-flow, 다음 P2 수정):
+  - 실행: `-batchmode` + `-executeMethod`로 Play Mode에 들어간다. 카메라를 PNG로 렌더할 때만 `-nographics`를 빼고, `-batchmode`는 유지한다(`-nographics`면 아무것도 그려지지 않는다. 기존 `stageselect-capture`와 같은 방식).
+  - 오버레이 UI: batchmode에는 Game 뷰가 없어서 `ScreenCapture`를 쓸 수 없다. 카메라 → `RenderTexture` 렌더는 Screen Space - Overlay 캔버스를 찍지 못한다. UI까지 보려면 캡처하는 동안만 캔버스를 Screen Space - Camera(그 카메라, 같은 크기)로 바꾸어 찍는다. 런타임 코드는 바꾸지 않고, 캡처 스크립트(Editor)에서만 바꾼다.
+  - 그 밖의 M3 조건은 그대로다: 1280×720 고정·크기 검사, 한 가지 색 검사, Board ≥ 500 / Empty < 500 대조.
+- 흐름 확인은 그대로 `unity.sh playtest`(`-batchmode -runTests -testPlatform PlayMode`)다.
