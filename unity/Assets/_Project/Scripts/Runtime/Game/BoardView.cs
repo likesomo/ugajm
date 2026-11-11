@@ -31,6 +31,7 @@ namespace SevenSteps.Game
         sealed class Cell
         {
             public GameObject Go;
+            public TilePropView Prop;
             public TileId Id;
             public bool HasId;
             public bool Active;
@@ -459,6 +460,7 @@ namespace SevenSteps.Game
                 {
                     if (c.Go != null) Destroy(c.Go);
                     c.Go = Spawn(v, i, $"{id} {i}");
+                    c.Prop = c.Go != null ? c.Go.GetComponent<TilePropView>() : null;
                     c.Id = id;
                     c.HasId = true;
                     c.ActiveKnown = false;
@@ -466,7 +468,9 @@ namespace SevenSteps.Game
                     if (pop && c.Go != null && (id.Kind == TileKind.Bridge || id.Kind == TileKind.FlipWall)) Tween(c.Go.transform, v.Scale * grid.CellSize);
                 }
 
+                c.Prop?.SetData(id.Variant, level.StatueCount, s.Statues.Length);
                 bool active = IsActive(s, id, i);
+                if (!pop) c.Prop?.SetActiveVisual(active, false); // Snap settles an in-flight slab even when its state is unchanged.
                 if (!c.ActiveKnown || c.Active != active)
                 {
                     bool changed = c.ActiveKnown;
@@ -475,7 +479,7 @@ namespace SevenSteps.Game
                     ApplyActive(c.Go, v, active, pop && changed);
                 }
 
-                if (c.Label != null)
+                if (c.Label != null && !v.hideLabel)
                 {
                     c.Label.World = grid.CellToWorld(i) + v.LabelOffset(active) * grid.CellSize;
                     bool covered = Rules.Contains(s.Statues, i) || (i == s.Pos && s.Status != Status.Lose);
@@ -582,6 +586,7 @@ namespace SevenSteps.Game
                 var v = set.Get(id);
                 if (c.Go != null) Destroy(c.Go);
                 c.Go = Spawn(v, i, $"{id} {i}");
+                c.Prop = c.Go != null ? c.Go.GetComponent<TilePropView>() : null;
                 c.Id = id;
                 c.HasId = true;
                 c.ActiveKnown = false;
@@ -615,6 +620,7 @@ namespace SevenSteps.Game
         void ApplyActive(GameObject go, TileVisual v, bool active, bool animate)
         {
             if (go == null) return;
+            go.GetComponent<TilePropView>()?.SetActiveVisual(active, animate);
             if (!string.IsNullOrEmpty(v.activeChild)) { var t = go.transform.Find(v.activeChild); if (t != null) t.gameObject.SetActive(active); }
             if (!string.IsNullOrEmpty(v.inactiveChild)) { var t = go.transform.Find(v.inactiveChild); if (t != null) t.gameObject.SetActive(!active); }
             var mat = Chapter(active ? v.activeMaterial : v.inactiveMaterial);
@@ -631,6 +637,7 @@ namespace SevenSteps.Game
 
         void SetCellLabel(Cell c, TileId id, int i, TileVisual v)
         {
+            if (v.hideLabel) { if (c.Label != null) c.Label.Text.enabled = false; return; }
             string text = id.Kind switch
             {
                 TileKind.Gate => id.Variant.ToString(),
@@ -669,6 +676,7 @@ namespace SevenSteps.Game
             var go = Instantiate(v.prefab, root);
             go.name = name;
             ChapterMaterials.Apply(go, chapter); // 12.8, once per spawned prefab
+            go.GetComponent<TilePropView>()?.UsePlanet(chapter != null ? chapter.id : null);
             Place(go, v, cell);
             go.transform.localScale = v.Scale * grid.CellSize;
             return go;
