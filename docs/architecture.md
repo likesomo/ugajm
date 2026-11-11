@@ -1160,3 +1160,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | feat/view c5a3657 승인(4024c25 M1 HintPlan 예외 시 전체 경로, M2 화면 단계 번호는 열 수 있는 단계만). `docs/reviews/2026-11-11-feat-view-4024c25.md` |
 | 2026-11-11 | 아키텍트 | feat/view b6ad087 승인(c5a3657 N1: 힌트 줄이 HintSteps를 잡아 둠). `docs/reviews/2026-11-11-feat-view-4024c25.md` |
 | 2026-11-11 | 아키텍트 | feat/scene-flow 7452b11+426ce76 승인(메뉴 시작 줄 다시 보기: MenuController canReplayLine/replayLine, MenuPanel 보이는 행만 배치·높이 가운데, 결과 위에서는 행 없음). 메모 M1 ReplayStartLine 문서 주석 자리. `docs/reviews/2026-11-11-scene-flow-7452b11.md` |
+| 2026-11-11 | 아키텍트 | feat/scene-flow 93b5e04 승인(7452b11 M1: ReplayStartLine 문서 주석 자리, 순서만). `docs/reviews/2026-11-11-scene-flow-7452b11.md` |
