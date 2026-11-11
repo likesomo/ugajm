@@ -34,12 +34,25 @@ namespace SevenSteps.EditorTools
         }
 
         /// A world-space canvas covering the orthographic view 1 unit in front of the camera, 1280x720 units.
-        static void PlaceCanvas(Camera cam, RectTransform canvas)
+        static void PlaceCanvas(Camera cam, RectTransform canvas, float distance = 0.8f)
         {
             canvas.sizeDelta = new Vector2(W, H);
             canvas.pivot = new Vector2(0.5f, 0.5f);
-            canvas.SetPositionAndRotation(cam.transform.position + cam.transform.forward * (cam.nearClipPlane + 0.5f), cam.transform.rotation);
+            canvas.SetPositionAndRotation(cam.transform.position + cam.transform.forward * distance, cam.transform.rotation);
             canvas.localScale = Vector3.one * (2 * cam.orthographicSize / H);
+        }
+
+        /// The UI canvas just in front of the camera, the planet backdrop far behind the bodies (as PlanetSpace places it).
+        static void PlaceAll(Camera cam, GameObject ui)
+        {
+            PlaceCanvas(cam, (RectTransform)ui.transform);
+            var backdrop = GameObject.Find("StageSelectBackdrop");
+            if (backdrop == null) return;
+            var c = backdrop.GetComponent<Canvas>();
+            c.renderMode = RenderMode.WorldSpace;
+            c.worldCamera = cam;
+            Object.DestroyImmediate(backdrop.GetComponent<UnityEngine.UI.CanvasScaler>());
+            PlaceCanvas(cam, (RectTransform)backdrop.transform, 90f);
         }
 
         static void Capture(bool batch)
@@ -96,10 +109,10 @@ namespace SevenSteps.EditorTools
                     var surface = new PlanetSurfaceView(uiGo.transform, space, assets.planetBodies, planets, map.SetBodiesVisible);
                     map.Apply(loc);
                     surface.Apply(loc);
-                    PlaceCanvas(cam, (RectTransform)uiGo.transform);
+                    PlaceAll(cam, uiGo);
                     Canvas.ForceUpdateCanvases();
                     pose(map, surface);
-                    PlaceCanvas(cam, (RectTransform)uiGo.transform); // on the posed camera, then lay out again on it
+                    PlaceAll(cam, uiGo); // on the posed camera, then lay out again on it
                     Canvas.ForceUpdateCanvases();
                     pose(map, surface);
                     Canvas.ForceUpdateCanvases();
