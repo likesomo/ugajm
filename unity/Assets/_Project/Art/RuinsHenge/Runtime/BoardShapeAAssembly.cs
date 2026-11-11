@@ -84,7 +84,7 @@ namespace SevenSteps.Art
                     if(chapter=="joinery")depth=.25f+Noise(seed+11)*.16f;
                     if(chapter=="crumble"){p.x+=(Noise(seed+4)-.5f)*.42f;p.z+=(Noise(seed+7)-.5f)*.35f;depth=.44f+Noise(seed)*.40f;}
                     bool cave=chapter=="hollow"&&side==0&&(i==1||i==count-2);
-                    if(cave)Add(chapter=="hollow"&&kit.hollowStar?kit.hollowStar:kit.hollowArch,p,new Vector3(length/count*.94f,1,1),0);
+                    if(cave&&!crater)Add(chapter=="hollow"&&kit.hollowStar?kit.hollowStar:kit.hollowArch,p,new Vector3(length/count*.94f,1,1),0);
                     else if(chapter!="hollow"&&chapter!="carved")
                         Add(chapter=="joinery"&&kit.joineryCrust?kit.joineryCrust:kit.crust[(i+side)%3],p+Vector3.down*(Noise(seed+9)*.10f),new Vector3(length/count*(1.27f+Noise(seed+2)*.12f),depth,1.40f+Noise(seed+3)*.18f),(side<2?0:90)+(Noise(seed+5)-.5f)*20);
                     if(chapter=="carved")
@@ -93,7 +93,7 @@ namespace SevenSteps.Art
                         // One irregular full-height sediment face per span carries six broken ledges.
                         Add(kit.terrace,p+Vector3.down*.88f+outward*.38f,new Vector3(length/count*1.08f,1.82f,1.70f),side<2?(side==0?0:180):(side==2?-90:90));
                     }
-                    if(chapter=="joinery"&&i%8==0)
+                    if(chapter=="joinery"&&i%8==0&&side>=2)
                     {
                         var outward=side<2?new Vector3(0,0,side==0?-1:1):new Vector3(side==2?-1:1,0,0);
                         Add(kit.timberFrame,p+Vector3.down*.32f+outward*1.02f,new Vector3(length/count*1.06f,1.52f,1.58f),side<2?0:90);
