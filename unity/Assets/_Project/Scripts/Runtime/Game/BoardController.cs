@@ -202,6 +202,7 @@ namespace SevenSteps.Game
             lost = false;
             attempt = default; // a new attempt: select, next, again, [ ]
             hintSteps = null; // the staged hint starts again (contract review (3))
+            hintWarned = false; // a new attempt asks again before its first costing hint (QA-2)
             LastHint = null;
             board.ShowHintGoal(-1);
             // One line per stage load for performance checks (WebGL console, player log): where a planet change spends time.
@@ -307,6 +308,13 @@ namespace SevenSteps.Game
                 hintStage = stage;
                 hintSteps = StepsFor(stage);
             }
+            bool costs = hintSteps == null || hintSteps.NextCosts(session.State);
+            if (HintRules.AsksFirst(costs, attempt.Hints, hintWarned))
+            {
+                hintWarned = true; // the next H (or the menu's solution again) opens it
+                messages.Show(() => loc.Get("hint.confirm"));
+                return;
+            }
             if (hintSteps == null)
             {
                 LastHint = null;
@@ -332,6 +340,8 @@ namespace SevenSteps.Game
         public HintTier? LastHint { get; private set; }
 
         HintSteps hintSteps;
+        /// The "a hint caps this attempt at 1 star" warning was shown in this attempt (HintRules.AsksFirst).
+        bool hintWarned;
         int hintStage = -1;
 
         /// The staged hint of a stage, or null (the whole route at once) when it has no stored route or the route does
