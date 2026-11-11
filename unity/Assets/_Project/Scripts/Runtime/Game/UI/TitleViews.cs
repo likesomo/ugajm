@@ -181,8 +181,8 @@ namespace SevenSteps.Game.UI
     /// Story (story-integration.md 0.5 #1, #2): with <see cref="Story"/> on, a planet whose finale is cleared shows its
     /// carving mark and lights the story.json "dipper" lines leaving it (the order of clears does not matter); with every
     /// star earned, the detail line is the still-star line. A carving rises once the first time it is shown
-    /// (StoryProgress.CarvingSeen, saved), and a tap on it brings back that planet's truth (its finale line) in the detail
-    /// row (0.5 #3). With every truth found and the final truth not seen yet, a star marks the planet of the last stage:
+    /// (StoryProgress.CarvingSeen, saved), and focusing or hovering a card with a carving brings back that planet's truth
+    /// (its finale line) in the detail row (0.5 #3). With every truth found and the final truth not seen yet, a star marks the planet of the last stage:
     /// play it again to see the ending's last truth (0.5 #7).
     /// </summary>
     public sealed class PlanetMapView
@@ -201,7 +201,8 @@ namespace SevenSteps.Game.UI
         readonly Image polaris;
         readonly int polarisPlanet;
         Localizer loc;
-        int truthShown = -1;
+        int truthShown = -1, focused = -1;
+        string detailDefault = "";
 
         /// The run's story (StoryBook): carvings, lit lines, still-star line. Null or off = the plain map.
         public StoryBook Story { get; set; }
@@ -282,14 +283,19 @@ namespace SevenSteps.Game.UI
                 carvings[i].rectTransform.TopLeft(26, 62, 12, 12); // under the number: the name may take two lines, the star row is the total
                 carvings[i].rectTransform.localRotation = Quaternion.Euler(0, 0, 45);
                 carvings[i].raycastTarget = false;
-                // Its tap area (inside the card, clear of the number, name and total glyphs): the planet's truth again.
-                var hit = Ui.MakeImage(carvings[i].transform.parent, new Color(0, 0, 0, 0), null, "CarvingTap");
-                hit.rectTransform.TopLeft(18, 60, 26, 22);
-                hit.raycastTarget = true;
-                hit.gameObject.AddComponent<Button>().onClick.AddListener(() => ShowTruth(idx));
-                hit.transform.SetParent(carvings[i].transform, true); // shown and hidden with the carving
-                hit.rectTransform.localRotation = Quaternion.Euler(0, 0, -45);
                 carvings[i].gameObject.SetActive(false);
+                // Truth again (0.5 #3, review cd38eb8 R2 (a)): the card itself, focused (arrows, Tab) or hovered, shows its
+                // planet's truth in the detail row while it has a carving. No extra button: navigation and Enter stay the card's.
+                var trigger = card.gameObject.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+                void On(UnityEngine.EventSystems.EventTriggerType type, Action act)
+                {
+                    var e = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = type };
+                    e.callback.AddListener(_ => act());
+                    trigger.triggers.Add(e);
+                }
+                On(UnityEngine.EventSystems.EventTriggerType.Select, () => { focused = idx; Hint(idx); });
+                On(UnityEngine.EventSystems.EventTriggerType.PointerEnter, () => Hint(idx));
+                On(UnityEngine.EventSystems.EventTriggerType.PointerExit, () => Hint(focused));
             }
             // Polaris (story 0.5 #7): a star above the top right corner of the planet holding the last stage.
             polarisPlanet = PlanetOf(levels.Count - 1);
@@ -348,8 +354,18 @@ namespace SevenSteps.Game.UI
             if (shown != null && panel.activeSelf) Show(shown, -1);
         }
 
-        /// The detail row says planet <paramref name="planet"/>'s truth (its finale line, story.json "finale"); a tap on
-        /// its carving. Back to the usual detail on the next Show. Nothing without a story or before its finale is cleared.
+        /// A card was focused or hovered: its truth when it has a carving, else the usual detail line.
+        void Hint(int planet)
+        {
+            ShowTruth(planet);
+            if (truthShown == planet && planet >= 0) return;
+            truthShown = -1;
+            detail.text = detailDefault;
+            detail.color = Ui.Dim;
+        }
+
+        /// The detail row says planet <paramref name="planet"/>'s truth (its finale line, story.json "finale"): its card is
+        /// focused or hovered. Nothing without a story or before its finale is cleared.
         public void ShowTruth(int planet)
         {
             var story = Story != null && Story.On ? Story : null;
@@ -411,6 +427,7 @@ namespace SevenSteps.Game.UI
             string still = story != null && allStars ? story.StillStarLine(loc.Current) : null;
             if (!string.IsNullOrEmpty(still)) detail.text = still;
             else UiText.Set(detail, loc, "planets.detail", FontRole.Body);
+            detailDefault = detail.text;
         }
 
         /// The planet holding a stage (0 when none does).
