@@ -105,18 +105,24 @@ Shader "SevenSteps/RuinsSurface"
       // round pores and mineral grains without stretching across the ellipsoid.
       half3 weights=pow(abs(normalize(i.normalWS)),4);
       weights/=max(weights.x+weights.y+weights.z,.001);
-      float2 qx=clamp(frac(i.positionWS.zy*.28),.015,.985);
-      float2 qy=clamp(frac(i.positionWS.xz*.28),.015,.985);
-      float2 qz=clamp(frac(i.positionWS.xy*.28),.015,.985);
+      float2 px=i.positionWS.zy*.28;
+      float2 py=i.positionWS.xz*.28;
+      float2 pz=i.positionWS.xy*.28;
+      float2 qx=clamp(frac(px),.015,.985);
+      float2 qy=clamp(frac(py),.015,.985);
+      float2 qz=clamp(frac(pz),.015,.985);
       float2 ux=(float2(0,2)+qx)/4.0;
       float2 uy=(float2(0,2)+qy)/4.0;
       float2 uz=(float2(0,2)+qz)/4.0;
-      baked=SAMPLE_TEXTURE2D(_BoardShapeMap,sampler_BoardShapeMap,ux)*weights.x+
-            SAMPLE_TEXTURE2D(_BoardShapeMap,sampler_BoardShapeMap,uy)*weights.y+
-            SAMPLE_TEXTURE2D(_BoardShapeMap,sampler_BoardShapeMap,uz)*weights.z;
-      surface=SAMPLE_TEXTURE2D(_BoardShapeNormal,sampler_BoardShapeNormal,ux)*weights.x+
-              SAMPLE_TEXTURE2D(_BoardShapeNormal,sampler_BoardShapeNormal,uy)*weights.y+
-              SAMPLE_TEXTURE2D(_BoardShapeNormal,sampler_BoardShapeNormal,uz)*weights.z;
+      // frac() wraps atlas-local coordinates. Use gradients from the unwrapped
+      // projections so the derivative does not spike at each repeat boundary.
+      float2 dx=ddx(px)/4.0, dy=ddy(px)/4.0;
+      baked=SAMPLE_TEXTURE2D_GRAD(_BoardShapeMap,sampler_BoardShapeMap,ux,dx,dy)*weights.x+
+            SAMPLE_TEXTURE2D_GRAD(_BoardShapeMap,sampler_BoardShapeMap,uy,ddx(py)/4.0,ddy(py)/4.0)*weights.y+
+            SAMPLE_TEXTURE2D_GRAD(_BoardShapeMap,sampler_BoardShapeMap,uz,ddx(pz)/4.0,ddy(pz)/4.0)*weights.z;
+      surface=SAMPLE_TEXTURE2D_GRAD(_BoardShapeNormal,sampler_BoardShapeNormal,ux,dx,dy)*weights.x+
+              SAMPLE_TEXTURE2D_GRAD(_BoardShapeNormal,sampler_BoardShapeNormal,uy,ddx(py)/4.0,ddy(py)/4.0)*weights.y+
+              SAMPLE_TEXTURE2D_GRAD(_BoardShapeNormal,sampler_BoardShapeNormal,uz,ddx(pz)/4.0,ddy(pz)/4.0)*weights.z;
      }
      else
      {
