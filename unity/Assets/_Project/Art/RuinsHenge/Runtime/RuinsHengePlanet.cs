@@ -8,6 +8,8 @@ namespace SevenSteps.Art
         public Material surface;
         public string chapterId="moss";
         public BoardShapeAKit boardShape;
+        public Mesh craterCrust;
+        public Vector3 craterCrustScale=Vector3.one,craterCrustEuler;
         public Color summitTint=new Color32(198,202,182,255),rimTint=new Color32(116,141,87,255),rockTint=new Color32(88,107,128,255),moonTint=new Color32(126,172,178,255);
         GameObject terrain,decor;
         void Awake(){if(Services.TryGet<LaunchOptions>(out var launch)&&launch.ArtPerf)gameObject.AddComponent<RuinsFrameSample>();}
@@ -30,7 +32,7 @@ namespace SevenSteps.Art
         void Rebuild(int w,int h)
         {
             Clear(terrain);Clear(decor);foreach(var m in GetComponentsInChildren<RuinsMoon>())Clear(m.gameObject);
-            if(boardShape){terrain=BoardShapeAAssembly.Build(transform,boardShape,surface,chapterId,w,h);decor=null;return;}
+            if(boardShape){terrain=BoardShapeAAssembly.Build(transform,boardShape,surface,chapterId,w,h,craterCrust,Matrix4x4.TRS(Vector3.zero,Quaternion.Euler(craterCrustEuler),craterCrustScale));decor=null;return;}
             // Flat supporting summit stays below y=0. Silhouette and strata change below it.
             const int n=64;float rx=w*.5f+2.2f,rz=h*.5f+2.2f,depth=Mathf.Clamp(w*.42f,2.5f,4);
             float[] ys={-.12f,-.35f,-.8f,-1.25f,-depth*.72f,-depth,-depth*1.2f};

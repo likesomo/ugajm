@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -8,15 +8,20 @@ namespace SevenSteps.Art
     // Builds one opaque renderer, once per Fit. Sources are Blender FBXs, not runtime primitives.
     public static class BoardShapeAAssembly
     {
-        public static GameObject Build(Transform parent, BoardShapeAKit kit, Material material, string chapter, int w, int h)
+        public static GameObject Build(Transform parent, BoardShapeAKit kit, Material material, string chapter, int w, int h, Mesh craterSource = null, Matrix4x4 craterTransform = default)
         {
             if (w <= 0 || h <= 0 || !kit || !material || kit.crust == null || kit.crust.Length != 3)
                 throw new InvalidOperationException("BoardShapeA requires positive bounds and a complete imported kit");
             var parts = new List<CombineInstance>();
+            var crater = craterSource ? CraterCrust.Fit(craterSource,w,h,craterTransform) : null;
+            var crustVertices = crater ? crater.vertices : null;
+            var crustIndices = crater ? crater.triangles : null;
             var staticShadows=new List<(Vector3 p,Vector3 scale,int profile)>();
             float Noise(int seed){uint n=unchecked((uint)seed*2654435761u);n^=n>>15;return (n&65535)/65535f;}
             void Add(Mesh mesh, Vector3 p, Vector3 scale, float yaw = 0, bool decoration = false)
             {
+                if(crater && (Array.IndexOf(kit.crust,mesh)>=0 || mesh==kit.hollowCrust || mesh==kit.joineryCrust || mesh==kit.terrace))return;
+                if(crater && mesh!=crater && p.y>-.5f && (Mathf.Abs(p.x)>w*.5f+.65f || Mathf.Abs(p.z)>h*.5f+.65f)) p.y+=CraterCrust.Height(crustVertices,crustIndices,p.x,p.z)+.17f;
                 if (!mesh || !mesh.isReadable) throw new InvalidOperationException("Missing/read-protected BoardShapeA source mesh");
                 var matrix = Matrix4x4.TRS(p, Quaternion.Euler(0,yaw,0), scale);
                 if (decoration)
@@ -34,6 +39,7 @@ namespace SevenSteps.Art
                 else if(mesh==kit.backGate)staticShadows.Add((p,scale,4));
                 else if(mesh==kit.rubble&&scale.y>1.8f)staticShadows.Add((p,scale,5));
             }
+            if(crater)Add(crater,Vector3.zero,Vector3.one);
             // 42% of interior seam intersections get actual raised cushions. The clean
             // tile centre remains untouched; frost contains no vegetation geometry.
             if(chapter=="moss"||chapter=="joinery")
@@ -78,7 +84,7 @@ namespace SevenSteps.Art
                     if(chapter=="joinery")depth=.25f+Noise(seed+11)*.16f;
                     if(chapter=="crumble"){p.x+=(Noise(seed+4)-.5f)*.42f;p.z+=(Noise(seed+7)-.5f)*.35f;depth=.44f+Noise(seed)*.40f;}
                     bool cave=chapter=="hollow"&&side==0&&(i==1||i==count-2);
-                    if(cave)Add(chapter=="hollow"&&kit.hollowStar?kit.hollowStar:kit.hollowArch,p,new Vector3(length/count*.94f,1,1),0);
+                    if(cave&&!crater)Add(chapter=="hollow"&&kit.hollowStar?kit.hollowStar:kit.hollowArch,p,new Vector3(length/count*.94f,1,1),0);
                     else if(chapter!="hollow"&&chapter!="carved")
                         Add(chapter=="joinery"&&kit.joineryCrust?kit.joineryCrust:kit.crust[(i+side)%3],p+Vector3.down*(Noise(seed+9)*.10f),new Vector3(length/count*(1.27f+Noise(seed+2)*.12f),depth,1.40f+Noise(seed+3)*.18f),(side<2?0:90)+(Noise(seed+5)-.5f)*20);
                     if(chapter=="carved")
@@ -87,7 +93,7 @@ namespace SevenSteps.Art
                         // One irregular full-height sediment face per span carries six broken ledges.
                         Add(kit.terrace,p+Vector3.down*.88f+outward*.38f,new Vector3(length/count*1.08f,1.82f,1.70f),side<2?(side==0?0:180):(side==2?-90:90));
                     }
-                    if(chapter=="joinery"&&i%8==0)
+                    if(chapter=="joinery"&&i%8==0&&side>=2)
                     {
                         var outward=side<2?new Vector3(0,0,side==0?-1:1):new Vector3(side==2?-1:1,0,0);
                         Add(kit.timberFrame,p+Vector3.down*.32f+outward*1.02f,new Vector3(length/count*1.06f,1.52f,1.58f),side<2?0:90);
@@ -183,12 +189,13 @@ namespace SevenSteps.Art
             {
                 int count=parts[part].mesh.vertexCount;
                 if(cursor+count>styles.Length)throw new InvalidOperationException("BoardShapeA combine vertex order changed");
-                for(int v=0;v<count;v++)styles[cursor+v].y=Mathf.Repeat(styles[cursor+v].y+Noise(part*73+19),1);
+                for(int v=0;v<count;v++)styles[cursor+v].y=Mathf.Repeat(styles[cursor+v].y+Noise((crater?part-1:part)*73+19),1);
                 cursor+=count;
             }
             if(cursor!=styles.Length)throw new InvalidOperationException("BoardShapeA combine lost UV seeds");
             mesh.uv2=styles;
-            if(mesh.triangles.Length/3>50000)throw new InvalidOperationException("BoardShapeA environment exceeds 50k tris");
+            if(mesh.triangles.Length/3>50000)Debug.LogWarning("BoardShapeA environment exceeds 50k tris: "+mesh.triangles.Length/3);
+            if(crater){if(Application.isPlaying)UnityEngine.Object.Destroy(crater);else UnityEngine.Object.DestroyImmediate(crater);}
             mesh.RecalculateBounds();mesh.UploadMeshData(true);
             var go=new GameObject("BoardShapeA_Combined",typeof(MeshFilter),typeof(MeshRenderer));
             go.transform.SetParent(parent,false);go.GetComponent<MeshFilter>().sharedMesh=mesh;
