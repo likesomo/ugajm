@@ -122,6 +122,7 @@
     { "key": "menu.stages", "text": "Stages" },
     { "key": "menu.solution", "text": "Show solution (H)" },
     { "key": "menu.controls", "text": "Controls" },
+    { "key": "menu.replay_line", "text": "Start line again" },
     { "key": "menu.close", "text": "Close (Esc)" },
 
     { "key": "credits.title", "text": "Credits" },
