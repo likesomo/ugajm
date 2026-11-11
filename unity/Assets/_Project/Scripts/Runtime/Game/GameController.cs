@@ -60,6 +60,7 @@ namespace SevenSteps.Game
         MenuController menu;
         TutorialTracker tutorial;
         StoryBook story;
+        Story.StoryDirector storyLines;
         EndingView endingView;
         EndingController ending;
 
@@ -195,6 +196,19 @@ namespace SevenSteps.Game
             result.RestartRequested += board.Restart;
             // Clear over the board (docs 14.7): the HUD hides while the result shows.
             result.HudHidden += hud.Conceal;
+
+            // Story on the board (docs 16.7 / 16.8, story-integration.md 0.2): the stage's start line and a planet's finale
+            // line on the HUD's passing line. Quiet in dev runs and art perf, like the guides.
+            var chapterKeys = new string[levels.Length];
+            for (int i = 0; i < chapterKeys.Length; i++) chapterKeys[i] = LevelCatalog.ChapterKeyOf(i);
+            bool FinaleHere() => story.On && StoryTruths.IsFinaleStage(chapterKeys, board.LevelIndex);
+            storyLines = new Story.StoryDirector(board.Session, hud, devRun || launch.ArtPerf,
+                startLine: () => Story.StoryDirector.StartText(LevelCatalog.TextOf(board.LevelIndex, localizer.Current), LevelCatalog.StartLineOf(board.LevelIndex)),
+                finaleLine: () => FinaleHere() ? story.FinaleLine(chapterKeys[board.LevelIndex], localizer.Current) : null,
+                finaleShown: () => story.Progress.MarkShown(story.Catalog.Find(StoryRules.Finale(chapterKeys[board.LevelIndex])).id),
+                covered: () => overlays.Count > 0);
+            board.FinaleStarting = storyLines.FinaleStarting;
+            overlays.Changed += storyLines.CoverChanged;
         }
 
         void Start()
@@ -229,8 +243,14 @@ namespace SevenSteps.Game
                 }));
         }
 
+        /// Menu "다시 보기" (story-integration.md 0.2): the stage's start line again once the menu closes. False when the
+        /// stage has none (the menu item can say so or stay quiet), and over a result (its HUD is hidden, review N1 on
+        /// ebdb653). The menu item and its wiring are scene-flow's.
+        public bool ReplayStartLine() => storyLines != null && flow.State != AppState.Result && storyLines.ReplayStartLine();
+
         void OnDestroy()
         {
+            storyLines?.Dispose();
             flowController?.Dispose();
             settingsController?.Dispose();
             languageController?.Dispose();
@@ -288,6 +308,14 @@ namespace SevenSteps.Game
             if (kb.leftBracketKey.wasPressedThisFrame) flowController.SelectStage(flow.Stage - 1);
             else if (kb.rightBracketKey.wasPressedThisFrame) flowController.SelectStage(flow.Stage + 1);
             else if ((kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) && flow.State == AppState.Result) flowController.Next();
+            else if (flow.State == AppState.Result && result.StarRowShown)
+            {
+                // What each star asks, by keyboard (14.7 focus); Left / Right never reach the board here (TakesCommand).
+                bool shift = kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed;
+                if (kb.tabKey.wasPressedThisFrame) result.FocusStar(shift ? -1 : 1);
+                else if (kb.rightArrowKey.wasPressedThisFrame) result.FocusStar(1);
+                else if (kb.leftArrowKey.wasPressedThisFrame) result.FocusStar(-1);
+            }
         }
 
         /// Stage -> its chapter's art preset: levels.json chapter -> chapters.json artPreset -> AppConfig.Chapter.

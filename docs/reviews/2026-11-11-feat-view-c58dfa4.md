@@ -17,3 +17,18 @@
   - 덮개 확인은 `GameController.Update`에만 있다(`overlays.Count > 0`이면 return).
   - 고치는 법: 키 세 줄을 `GameController.Update`의 Result 분기(Enter → `flowController.Next` 옆)로 옮기고 `result.FocusStar(±1)`만 부른다. `ResultView`에는 `FocusStar`와 `StarRowShown`만 남긴다. 덮개가 열려 있으면 이미 그 위에서 return하므로 따로 막을 필요가 없다.
 - 실제 키 입력 확인은 리드의 플레이테스트 리허설 때 한 번 본다. 확인할 순서: 클리어 → Tab×3(순환) → Esc 메뉴에서 ←/→ → 메뉴 닫기 → 별 초점이 그대로인지.
+
+## R1 수정 확인: feat/view bdaa019 (2026-11-11) — **반려 (한 줄 남음)**
+코드만 읽었다. EditMode 863/863은 gameplay-ui 보고 수치다.
+- `GameController.Update`의 Result 분기에 키 세 줄을 넣은 것은 맞다. 덮개 확인(`overlays.Count > 0`이면 return) 뒤라 메뉴가 열려 있으면 닿지 않는다.
+- **R1' (병합 전) `ResultView.Update`를 지우지 않았다.** 주석만 바뀌고 `Keyboard.current`를 읽는 `Update`(지금 227~235줄)가 그대로 남았다.
+  - 그래서 덮개가 없을 때는 같은 키를 두 곳이 읽어 `FocusStar`가 한 프레임에 두 번 불린다. Tab 한 번에 별 1 → 별 2를 건너 별 3처럼 두 칸씩 움직인다(처음 누르면 별 2, 그다음 별 1 …).
+  - 메뉴가 열려 있을 때는 `ResultView.Update`가 여전히 초점을 바꾼다. 원래 R1 문제가 그대로다.
+  - 고치는 법: `ResultView.Update` 메서드 전체를 지운다. `FocusStar`와 `StarRowShown`만 남긴다.
+- 테스트가 이 경로를 잡지 못한다(키 입력 없음). 고친 뒤 `grep -n "Keyboard" ResultView.cs`가 비어야 한다.
+
+## R1' 수정 확인: feat/view 378bf38 (2026-11-11) — **승인**
+코드만 읽었다. EditMode 864/864는 gameplay-ui 보고 수치다. 실제 키 입력은 미검증이다(리허설 때 확인).
+- 자기 변경은 `ResultView.Update` 삭제뿐이다(나머지는 7lucky e339cf1 병합).
+- `ResultView.cs`에 `Keyboard`가 0건이다. `FocusStar`를 부르는 곳은 `GameController` Result 분기(덮개 확인 뒤) 한 곳과 EditMode 테스트뿐이다.
+- 그래서 키 한 번에 한 칸만 움직이고, 메뉴가 열려 있으면 별 초점이 바뀌지 않는다. c58dfa4 R1을 닫는다.

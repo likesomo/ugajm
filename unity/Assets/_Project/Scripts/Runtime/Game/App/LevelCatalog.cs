@@ -57,6 +57,14 @@ namespace SevenSteps.Game
             return minBodies != null && stage >= 0 && stage < minBodies.Length ? minBodies[stage] : 0;
         }
 
+        /// Which line a stage starts with (levels.json startLine, docs/architecture.md 16.7): "story", "hint" or "". Call after Load.
+        public static string StartLineOf(int stage)
+        {
+            if (dtos == null) throw new InvalidOperationException("LevelCatalog.StartLineOf before Load");
+            if (stage < 0 || stage >= dtos.Length) throw new ArgumentOutOfRangeException(nameof(stage), stage, $"stage must be 0..{dtos.Length - 1}");
+            return dtos[stage].StartLine;
+        }
+
         /// Name, hint and story of a stage in a language (levels.json text, docs/architecture.md 13.5): ko = the base fields,
         /// a missing translation throws KeyNotFoundException (the export check catches it before a build). Call after Load.
         public static LevelTextDto TextOf(int stage, Language lang)

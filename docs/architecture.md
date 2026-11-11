@@ -864,7 +864,7 @@ namespace SevenSteps.Game.UI {
 - `UiLayoutCheck`는 끝에 허용 개수를 화면별로 출력한다(`exempt 3: StageSelect/Map/BigDipper Decoration "..."`). 허용을 늘리는 커밋은 아키텍트 리뷰에서 이유를 본다.
 
 ### 14.9 검사 방법 (`UiLayoutCheck`, 씬 플로우 구현)
-- 화면: 위 목록 전부, **ko·en 각각**, 해상도 1280×720·1920×1080(16:9, WebGL 템플릿이 16:9 비율 유지로 맞추므로 이 둘이면 된다). Windows 빌드용 1280×800(16:10)은 **경고**만.
+- 화면: 위 목록 전부, **ko·en 각각**, 해상도 1280×720·1920×1080(16:9, WebGL 템플릿이 16:9 비율 유지로 맞추므로 이 둘이면 된다). Windows 빌드용 1280×800(16:10)과 4:3 창 1024×768(캔버스 약 1108×831 단위)은 **경고**만이고, 목표는 경고 0이다. 세로 화면(720×1280)은 범위 밖이다.
 - 문자열: 각 키에 그 언어의 실제 문구, 레벨·챕터 텍스트는 언어별 **가장 긴 값**(이름·힌트·이야기·행성 이름·소개), 숫자는 가장 긴 값(`150/150`, `50`, `7/7`).
 - 화면을 Play 없이 Edit Mode에서 만들 수 있어야 한다(빌더나 뷰의 `Build`를 `Localizer`·데이터로 호출 → `Canvas.ForceUpdateCanvases`·`LayoutRebuilder.ForceRebuildLayoutImmediate`). 지금 Play에서만 만들어지는 뷰는 이 경로를 추가한다(각 화면 소유자).
 - 위반 출력은 `화면/언어/해상도: 규칙 — 요소 경로 (수치)` 한 줄씩. 하나라도 있으면 실패.
@@ -898,7 +898,7 @@ namespace SevenSteps.Game.UI {
     - UI `Image`로 한다면 HUD 맨 뒤 형제이고 `raycastTarget` 끔이다.
     - 그리고 `UiLayout.exempt = Decoration | Board`, reason "choose dim 30% (ui-minimal v3)"을 단다. 막 알파 0.6 미만이라 모달이 아니다.
     - 형제 링·연결선·고스트는 3D 표시다(UI로 그리면 장식 규칙을 따른다).
-- **등록 화면**: 씬 플로우가 `UiLayoutCheck`에 등록하고, gameplay-ui는 각 뷰의 Edit Mode `Build` 경로(14.9)를 준다. 모두 ko·en, 1280×720(1920×1080은 같은 캔버스 단위), 1280×800은 경고다.
+- **등록 화면**: 씬 플로우가 `UiLayoutCheck`에 등록하고, gameplay-ui는 각 뷰의 Edit Mode `Build` 경로(14.9)를 준다. 모두 ko·en, 1280×720(1920×1080은 같은 캔버스 단위), 1280×800·1024×768은 경고다.
   1. HUD 평소: 기존 넷(가장 긴 힌트·이름, 가장 넓은·높은 판)을 새 HUD로 본다.
   2. HUD + 걸음 숫자 표시 켬: 가장 넓은 판.
   3. 1회 이동 안내(`TutorialIds.Move`): 첫 스테이지.
@@ -1062,7 +1062,7 @@ namespace SevenSteps.Game.UI {
 ### 16.7 `LevelDto.startLine` (최소 UI 시작 한 줄)
 - `"story"`, `"hint"`, `""`(없음) 중 하나다. 필드가 없거나 null이면 `"story"`로 읽는다(`LevelDto.StartLine`). 그 밖의 값은 `ArgumentException`이다.
 - 채우기는 레벨 디자인(`levels.js`, `export-levels.mjs` 검사)이다. 코어 파일의 필드 한 줄은 아키텍트가 리드 지시로 넣었다.
-- 시작 한 줄 View(`TransientLineView`)와 다시 보기는 gameplay-ui 몫이다.
+- 시작 한 줄은 `Game/Story/StoryDirector`가 정하고 HUD 잠깐 줄(`ITransientLine`)에 보인다(gameplay-ui). 메뉴 다시 보기의 진입점은 `GameController.ReplayStartLine()`(bool: 결과 화면이거나 줄·스테이지가 없으면 false, 메뉴가 덮는 동안 기다림. 안에서 `StoryDirector.ReplayStartLine()`을 부름, 54fab4a)이고, 메뉴 항목과 연결은 scene-flow 몫이다(`MenuController`에 람다로 넘김).
 
 ### 16.8 흐름 쪽 약속 (씬 플로우·게임플레이/UI, 계약 아님)
 - 50 결과의 [다음]은 [끝까지 보기]가 되고, 엔딩 4장으로 이어진다(9장 질문 1). 엔딩 카드 이미지는 `entry.image`에서 온다.
@@ -1146,3 +1146,13 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | feat/scene-flow cd38eb8 조건부 승인(새김 첫 등장·CarvingSeen 저장, 진실 다시 보기 세지 않음, 북극성, 타이틀 하늘, 앱 종료 저장). R1 병합 전 CarvingTap navigation None(별지도 방향키가 숨은 버튼에 멈춤), R2 진실 다시 보기 48px·키보드 경로. 4d41d15(14.7 Result clear·lose 검사)·01f4cc6(dipper 경고) 승인. `docs/reviews/2026-11-11-scene-flow-cd38eb8.md` |
 | 2026-11-11 | 아키텍트 | feat/scene-flow 6958352 승인(cd38eb8 R1·R2를 (a)로: 새김 탭 버튼 제거, 행성 카드 초점·hover로 진실 표시). 메모 N1 언어 변경 뒤 detailDefault 갱신. `docs/reviews/2026-11-11-scene-flow-cd38eb8.md` |
 | 2026-11-11 | 아키텍트 | feat/scene-flow 2fe7f4d 승인(N2 단계 패널 tagline 줄에 진실 금색, N1 언어 변경 뒤 detailDefault). `docs/reviews/2026-11-11-scene-flow-cd38eb8.md` |
+| 2026-11-11 | 아키텍트 | feat/view bdaa019 반려(c58dfa4 R1: 키를 GameController로 옮겼지만 ResultView.Update가 남아 키당 FocusStar 두 번, 메뉴 위에서도 초점 이동). ResultView.Update 삭제 후 병합. `docs/reviews/2026-11-11-feat-view-c58dfa4.md` |
+| 2026-11-11 | 아키텍트 | feat/view 378bf38 승인(ResultView.Update 삭제로 c58dfa4 R1 종료: 별 초점 키는 GameController Result 분기 한 곳). `docs/reviews/2026-11-11-feat-view-c58dfa4.md` |
+| 2026-11-11 | 아키텍트 | 14장 UiLayoutCheck 해상도에 1024x768(4:3) 경고 추가 승인(scene-flow 제안, QA 1차 1280x800 경고 정리와 4:3 창 대비, 목표 경고 0, 세로 화면은 범위 밖). 영향: 씬 플로우(Resolutions 한 줄), gameplay-ui(Result 1024x768 경고 20건) |
+| 2026-11-11 | 아키텍트 | feat/view 4ea1ec0 승인(이야기 S4 보드 쪽: StoryDirector, 시작 줄 startLine, 피날레 줄 보류·표시, HUD 잠깐 줄 하나). 메뉴 다시 보기 나눔: gameplay-ui StoryDirector.ReplayStartLine, scene-flow 메뉴 항목. `docs/reviews/2026-11-11-feat-view-4ea1ec0.md` |
+| 2026-11-11 | 아키텍트 | feat/view ebdb653 승인(StoryDirector.ReplayStartLine, 메뉴 다시 보기 진입점. 메뉴 항목 연결은 scene-flow). `docs/reviews/2026-11-11-feat-view-4ea1ec0.md` |
+| 2026-11-11 | 아키텍트 | 16.7 시작 한 줄 담당 갱신: StoryDirector + ITransientLine(gameplay-ui), 메뉴 다시 보기 진입점 이름 StoryDirector.ReplayStartLine()(bool, ebdb653), 메뉴 항목·연결은 scene-flow |
+| 2026-11-11 | 아키텍트 | feat/view 54fab4a 승인(M2 FinaleStarting 순서 무관, N1 메뉴 진입점 GameController.ReplayStartLine 결과에선 false, 16.7 이름 갱신). feat/scene-flow 3a7804e 승인(QA 1 UiLayoutCheck 경고 정리, 1024x768 경고, 별지도 CardCenters). `docs/reviews/2026-11-11-feat-view-4ea1ec0.md`, `docs/reviews/2026-11-11-scene-flow-3a7804e.md` |
+| 2026-11-11 | 아키텍트 | 단계형 힌트 계약 판단(QA 1 (A), 코드 전): 방향 찬성. hints = 2단계 이상을 연 횟수(1단계 원리 무료, 사용자 결정 대기), Stars.Of·core.js·골든·서버 재계산 불변, hint 이벤트 tier·tiers 선택 필드(v 그대로), 칸은 저장된 풀이를 Rules.Dispatch로 따라가 구함(처음부터 기준), LevelDto 변경 없음. 6.5 본문은 사용자 결정 뒤 고침. `docs/reviews/2026-11-11-staged-hint-contract.md` |
+| 2026-11-11 | 아키텍트 | 단계형 힌트 판단 보완(level-design 의견): 풀이는 expected.path 재생(런타임 BFS 없음), 단계는 몸의 끝(KEEP·SWITCH·다리·굳힘 아이콘, 레버 겹침, 마지막 몸은 바로 전체 경로), 몸 경계 Rules.Key가 같으면 이어서 보기. `docs/reviews/2026-11-11-staged-hint-contract.md` |
+| 2026-11-11 | 아키텍트 | feat/view ecf50a2 승인(4:3 결과 행성·여정 줄 판을 같은 여백으로 늘려 [다음]과 비겹침, UiLayout 경고 0) + 1458ea0 병합의 UiLayoutCheck 맞춤 확인. `docs/reviews/2026-11-11-feat-view-ecf50a2.md` |

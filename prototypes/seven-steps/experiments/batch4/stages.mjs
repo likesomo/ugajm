@@ -66,7 +66,7 @@ export const STAGES = [
     ],
   },  old(11, { gimmickTiles: 'xaA' }),          // 36 한 번만 버티는 바닥 (keep 11)
   {
-    name: '무너진 길 위의 구멍', // 37 new (stage-search cracked-pit, seed 105 #0): cracked floor and a pit close the short ways
+    name: '무너질 길', // 37 (renamed from 무너진 길 위의 구멍 2026-11-11 after blind QA) new (stage-search cracked-pit, seed 105 #0): cracked floor and a pit close the short ways
     hint: '지나간 바닥은 무너진다. 돌아올 길을 남겨 두자.',
     bodies: 3,
     gimmickTiles: 'xo',

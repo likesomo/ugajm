@@ -39,6 +39,8 @@ namespace SevenSteps.Game
         TelemetryRecorder recorder;
 
         public GameSession Session => session;
+        /// The win finale starts; returns seconds to keep it up (the story's finale line, StoryDirector.FinaleStarting).
+        public Func<float> FinaleStarting { set => board.FinaleStarting = value ?? throw new ArgumentNullException(nameof(value)); }
         public State State => session?.State;
         /// IStageBoard: hints / real undos / restarts after moving, since the last LoadStage (docs/architecture.md 6.5).
         public AttemptCounts Attempt => attempt;
