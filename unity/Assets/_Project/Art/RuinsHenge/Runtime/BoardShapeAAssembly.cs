@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -28,7 +28,7 @@ namespace SevenSteps.Art
                     }
                 parts.Add(new CombineInstance {mesh=mesh,transform=matrix});
                 // Bake receivers use a shared profile, so props retain one combined draw.
-                if(mesh==kit.menhirs[0]||mesh==kit.menhirs[1]||mesh==kit.altarMenhir)staticShadows.Add((p,scale,1));
+                if((mesh==kit.menhirs[0]||mesh==kit.menhirs[1]||mesh==kit.altarMenhir)&&!(chapter=="altar"&&scale.y<1f))staticShadows.Add((p,scale,1));
                 else if(mesh==kit.chest)staticShadows.Add((p,scale,2));
                 else if(mesh==kit.wall)staticShadows.Add((p,scale,3));
                 else if(mesh==kit.backGate)staticShadows.Add((p,scale,4));
