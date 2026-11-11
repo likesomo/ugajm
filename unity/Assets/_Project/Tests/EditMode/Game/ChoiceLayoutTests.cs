@@ -54,6 +54,21 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void VisibleHudPlatesAreAvoided()
+        {
+            // 17 x 3 (stage 14) with the explained cards: only the bottom candidate fits, and the message plate is there.
+            var board = Rect.MinMaxRect(100, 200, 1180, 430);
+            var v = new Vector2(HudView.CardW, 2 * HudView.CardH + HudView.CardGap);
+            var h = new Vector2(2 * HudView.CardW + HudView.CardGap, HudView.CardH);
+            var r = HudView.LayoutChoice(board, new Vector2(640, 320), Canvas, v, h, null, out _, out bool fits);
+            Assert.IsTrue(fits);
+            var message = Rect.MinMaxRect(280, 590, 1000, 696); // the longest message (H solution), several lines
+            Assert.IsTrue(r.Overlaps(message), "the case b619811 found");
+            HudView.LayoutChoice(board, new Vector2(640, 320), Canvas, v, h, new[] { message }, out _, out fits);
+            Assert.IsFalse(fits, "no candidate clears the message: the HUD hides the message while the cards show");
+        }
+
+        [Test]
         public void NoRoomIsReported()
         {
             var board = Rect.MinMaxRect(40, 40, 1240, 680);
@@ -64,7 +79,8 @@ namespace SevenSteps.Tests
         [Test]
         public void ConfirmFitsTheLimit()
         {
-            Assert.LessOrEqual(BoardView.ConfirmSeconds(false) + 0.12f, ChoicePreview.ConfirmSecondsMax, "burst + a door's 0.12 s");
+            Assert.LessOrEqual(BoardView.ConfirmPresentMax(false), ChoicePreview.ConfirmSecondsMax, "burst + one wait for all doors (review R2)");
+            Assert.AreEqual(0f, BoardView.ConfirmPresentMax(true), "reduce motion: no burst, no door wait");
             Assert.AreEqual(0f, BoardView.ConfirmSeconds(true), "reduce motion");
         }
     }

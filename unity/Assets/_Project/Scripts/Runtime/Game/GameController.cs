@@ -159,7 +159,11 @@ namespace SevenSteps.Game
             // One-time guides (ui-minimal). Dev runs (replay, flow / title checks, smoke) keep the profile untouched and start
             // with every guide seen, so their screenshots show the plain HUD.
             bool devRun = launch.SmokeView != SmokeView.None || !string.IsNullOrEmpty(launch.Replay) || launch.FlowCheck || launch.TitleCheck != "";
-            tutorial = new TutorialTracker(devRun ? new MemoryTutorialStore(allSeen: true) : (ITutorialStore)new SaveTutorialStore(save));
+            // "-guides fresh" (captures of the first-choice cards, v3-choose-first): a dev run with nothing seen yet, still in memory.
+            // Read here until scene-flow moves it into LaunchOptions.
+            bool freshGuides = Array.IndexOf(Environment.GetCommandLineArgs(), "-guides") is int gi && gi >= 0
+                && gi + 1 < Environment.GetCommandLineArgs().Length && Environment.GetCommandLineArgs()[gi + 1] == "fresh";
+            tutorial = new TutorialTracker(devRun ? new MemoryTutorialStore(allSeen: !freshGuides) : (ITutorialStore)new SaveTutorialStore(save));
             board.Session.Updated += tutorial.Apply;
             board.StageEntered += StopControlsGuide;
             menu = new MenuController(overlays, menuPanel,

@@ -31,6 +31,9 @@ namespace SevenSteps.EditorTools
         const float Safe = 24, Pad = 12, Icon = 48, Margin = 192;
         /// Title plate: 22 px hand-font glyphs (about 29 tall) + 8 above and below with room for their offset; centred on the menu button.
         const float TitleH = 56;
+        /// 30% darker as seen: UI blends in linear space, where alpha .3 black darkens sRGB values by only ~16% (lead 2026-11-11);
+        /// .5 gives ~30%. Below the 14.7 modal scrim alpha (.6).
+        const float ChooseDimAlpha = 0.5f;
 
         static Dictionary<string, Sprite> sprites;
         static Font font;
@@ -94,7 +97,7 @@ namespace SevenSteps.EditorTools
             var root = go.transform;
 
             // While choosing: the board dimmed 30% (behind everything, docs 14.11 UI variant with its exemption).
-            hud.chooseDim = Image("ChooseDim", root, null, new Color(0, 0, 0, 0.3f), new Vector2(.5f, .5f), Vector2.zero, Vector2.zero);
+            hud.chooseDim = Image("ChooseDim", root, null, new Color(0, 0, 0, ChooseDimAlpha), new Vector2(.5f, .5f), Vector2.zero, Vector2.zero);
             hud.chooseDim.rectTransform.Stretch();
             Ui.Exempt(hud.chooseDim.gameObject, UiLayoutRule.Decoration | UiLayoutRule.Board, "choose dim 30% (ui-minimal v3)");
             hud.chooseDim.gameObject.SetActive(false);
@@ -169,6 +172,11 @@ namespace SevenSteps.EditorTools
             (hud.switchBody, hud.switchDesc, hud.switchPicture, hud.switchEdges) = Card(choice, "Switch", "X", 1);
             hud.bodySprites = new[] { Sprite("body_a"), Sprite("body_b"), Sprite("body_c") };
             hud.stoneSprite = Sprite("body_stone");
+            var focusPlate = Plate("FocusPlate", choice, new Vector2(0, 1), Vector2.zero, new Vector2(HudView.CardW, 80));
+            hud.focusLine = Text(focusPlate, "FocusLine", "", 22, Ui.Ink, TextAnchor.UpperLeft);
+            Inside(hud.focusLine.rectTransform, Pad);
+            hud.focusLine.horizontalOverflow = HorizontalWrapMode.Wrap;
+            focusPlate.gameObject.SetActive(false);
             choice.gameObject.SetActive(false);
 
             // Bottom left: undo, restart (icons, 48 touch targets).

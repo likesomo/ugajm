@@ -87,6 +87,10 @@ namespace SevenSteps.Game
         /// Confirm presentation of a KEEP / SWITCH, seconds (inside that command's Present, docs 4.4): 0 with reduce motion.
         /// With a door the statue opens (0.12 s) the Present stays within ChoicePreview.ConfirmSecondsMax.
         public static float ConfirmSeconds(bool reduceMotion) => reduceMotion ? 0f : 0.3f;
+        /// One wait for every door a KEEP / SWITCH opens or closes (0 with reduce motion).
+        public const float ConfirmDoorSeconds = 0.12f;
+        /// The longest a KEEP / SWITCH Present can take at normal speed (tests: <= ChoicePreview.ConfirmSecondsMax).
+        public static float ConfirmPresentMax(bool reduceMotion) => ConfirmSeconds(reduceMotion) + (reduceMotion ? 0f : ConfirmDoorSeconds);
 
         BoardMarksView marks;
         /// Screen-space marks on the board (foot stars, choice ring, KEEP dots, SWITCH knot); tests and captures read it.
@@ -216,6 +220,8 @@ namespace SevenSteps.Game
             var go = Instantiate(v.prefab, root);
             go.name = name;
             go.transform.localScale = v.Scale * grid.CellSize;
+            // A clone of a gameplay prefab: whatever behaviours it carries (animators, scripts, lights) stay off (review M2).
+            foreach (var b in go.GetComponentsInChildren<Behaviour>(true)) b.enabled = false;
             go.AddComponent<DestroyWith>().Target = mat;
             foreach (var r in go.GetComponentsInChildren<Renderer>(true))
             {
@@ -346,7 +352,8 @@ namespace SevenSteps.Game
             var pt = player.transform;
             var lift = PlayerVisual.offset * grid.CellSize;
             // KEEP / SWITCH confirmed (docs 4.4): the choice marks go, a short burst on the cell, then the result draws.
-            if (prev != null && prev.Status == Status.Choose)
+            bool confirm = prev != null && prev.Status == Status.Choose, doorsMoved = false;
+            if (confirm)
             {
                 ShowChoice(false, default, BoardMarksView.ChoiceFocus.None);
                 var color = set.BodyColor(BodyIndex.Current(r.State));
@@ -385,7 +392,9 @@ namespace SevenSteps.Game
                     var c = cells[e.At];
                     bool open = e.Type == GameEventType.DoorOpen;
                     if (c.HasId) { c.Active = open; c.ActiveKnown = true; ApplyActive(c.Go, set.Get(c.Id), open, true); }
-                    yield return new WaitForSeconds(0.12f / Speed);
+                    // A confirm changes all its doors at once and waits once below (review R2: within ConfirmSecondsMax).
+                    if (confirm) doorsMoved = true;
+                    else yield return new WaitForSeconds(0.12f / Speed);
                 }
                 if (e.Type == GameEventType.Fall || e.Type == GameEventType.Bridge)
                 {
@@ -401,6 +410,7 @@ namespace SevenSteps.Game
                 }
             }
 
+            if (doorsMoved && !ReduceMotion) yield return new WaitForSeconds(ConfirmDoorSeconds / Speed);
             trail.Remember(r);
             Draw(r.State, true, prev);
             if (r.Has(GameEventType.Respawn)) Tween(player.transform, PlayerScale);
@@ -527,7 +537,7 @@ namespace SevenSteps.Game
             // Stars at the feet (15.6, ui-minimal v3): the walking brother only; screen space, so never behind a tile.
             if (marks != null)
                 marks.SetFeet(alive && s.Status == Status.Play, player.transform,
-                    -PlayerVisual.offset * grid.CellSize + new Vector3(0, 0, -0.42f * grid.CellSize),
+                    -PlayerVisual.offset * grid.CellSize, // the arc centre: the floor under the brother
                     set.BodyColor(body), s.Used, ReduceMotion, cam != null ? CellPixels() * grid.CellSize : 77f);
             DrawChoice();
 

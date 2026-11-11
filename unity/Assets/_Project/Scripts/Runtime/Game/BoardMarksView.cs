@@ -21,12 +21,18 @@ namespace SevenSteps.Game
     /// </summary>
     public sealed class BoardMarksView : MonoBehaviour
     {
-        /// Star size at the feet, canvas units (v3 default 16 at 1280 x 720), and the pulse range of the last star.
-        public const float FootStar = 16f, PulseMin = 17f, PulseMax = 23f, PulsePeriod = 1.4f;
+        /// Star size at the feet, canvas units at 1280 x 720, and the pulse range of the last star. v3 had 16 / 17-23 in a
+        /// row; on the real 1280 x 720 board that read small (lead 2026-11-11), so 22 / 23-30 on an arc round the feet.
+        public const float FootStar = 22f, PulseMin = 23f, PulseMax = 30f, PulsePeriod = 1.4f;
+        /// The arc: half-ellipse in front of the feet, radii in cells (x wide enough for seven stars side by side).
+        const float ArcX = 0.95f, ArcY = 0.34f, ArcFrom = 200f, ArcTo = 340f;
         /// Inner star (fill) and the dark outline behind each star (contrast on light stone, ui-minimal "암부 외곽").
         const float Inner = 0.62f, Shadow = 1.3f;
         static readonly Color EmptyFill = new Color(0.06f, 0.10f, 0.13f, 1f);
-        static readonly Color ShadowColor = new Color(0f, 0f, 0f, 0.6f);
+        static readonly Color ShadowColor = new Color(0f, 0f, 0f, 0.8f);
+        /// A soft dark ellipse under the arc: contrast on every planet's stone (frost and altar are near white).
+        static readonly Color BackingColor = new Color(0.02f, 0.04f, 0.06f, 0.5f);
+        Image backing;
 
         RectTransform layer;
         Func<Vector3, Vector2> toCanvas;
@@ -66,6 +72,7 @@ namespace SevenSteps.Game
         {
             this.layer = layer != null ? layer : throw new ArgumentNullException(nameof(layer));
             this.toCanvas = toCanvas ?? throw new ArgumentNullException(nameof(toCanvas));
+            backing = Make("Foot Stars Backing", Ui.Circle);
             ring = Make("Choice Ring", Ui.RingShape);
             dots.Capacity = 64;
             knotA = Make("Knot A", null);
@@ -131,21 +138,27 @@ namespace SevenSteps.Game
             float scale = Mathf.Clamp(cellPx / 77f, 0.85f, 1.25f);
             // Feet: a shallow smile of seven stars under the brother.
             for (int k = 0; k < Rules.Steps; k++) shadow[k].enabled = outer[k].enabled = inner[k].enabled = feetOn;
+            backing.enabled = feetOn;
             calm.enabled = feetOn && pulse && reduceMotion;
             if (feetOn)
             {
                 Vector2 c = toCanvas(follow.position + footOffset);
-                float gap = Mathf.Max(19f, 0.26f * cellPx);
+                float rx = Mathf.Max(70f, ArcX * cellPx), ry = Mathf.Max(24f, ArcY * cellPx);
+                float star = FootStar * scale;
+                Put(backing, c + new Vector2(0, -0.67f * ry), 0, BackingColor, new Vector2(1.9f * rx + 1.6f * star, 0.7f * ry + 1.8f * star));
                 for (int k = 0; k < Rules.Steps; k++)
                 {
-                    float u = (k - 3) / 3f;
-                    var p = c + new Vector2((k - 3) * gap, -4f * (1f - u * u));
+                    // Left to right along the front of the feet (step 1 on the left), canvas y up.
+                    float a = Mathf.Lerp(ArcFrom, ArcTo, k / (Rules.Steps - 1f)) * Mathf.Deg2Rad;
+                    var p = c + new Vector2(Mathf.Cos(a) * rx, Mathf.Sin(a) * ry);
                     float size = FootStar * scale;
-                    if (pulse && k == Rules.Steps - 1)
+                    bool calling = pulse && k == Rules.Steps - 1;
+                    if (calling)
                         size = reduceMotion ? (PulseMin + PulseMax) * 0.5f * scale
                             : Mathf.Lerp(PulseMin, PulseMax, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 2f * Mathf.PI / PulsePeriod)) * scale;
                     Put(shadow[k], p, size * Shadow, ShadowColor);
-                    Put(outer[k], p, size, body);
+                    // The last step's star calls in gold (a dark empty star alone was weak on moss, lead 2026-11-11).
+                    Put(outer[k], p, size, calling ? Ui.Gold : body);
                     Put(inner[k], p, size * Inner, k < used ? Ui.Ink : EmptyFill);
                     if (k == Rules.Steps - 1 && calm.enabled) Put(calm, p, size * 1.6f, new Color(body.r, body.g, body.b, 0.7f));
                 }

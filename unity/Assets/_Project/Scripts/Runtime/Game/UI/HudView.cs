@@ -54,6 +54,8 @@ namespace SevenSteps.Game.UI
         public Image[] keepEdges = new Image[4], switchEdges = new Image[4];
         [Tooltip("\"How will you pass it on?\" on its plate (the plate is the text's parent): the first choice only")]
         public Text choiceGuide;
+        [Tooltip("After the first explained choices: the focused card's result line, on one plate under the compact cards")]
+        public Text focusLine;
         [Tooltip("Full-screen 30% dim behind the HUD while choosing (exempt Decoration | Board, docs 14.11)")]
         public Image chooseDim;
         [Tooltip("Body A, B, C portraits (cycled), and the statue")]
@@ -154,6 +156,8 @@ namespace SevenSteps.Game.UI
                 if (edges == null || edges.Length != 4) issues.Add($"HudView {name}: {field} needs 4 lines");
                 else for (int k = 0; k < 4; k++) Need(edges[k], $"{field}[{k}]");
             Need(choiceGuide, nameof(choiceGuide)); Need(chooseDim, nameof(chooseDim)); Need(stoneSprite, nameof(stoneSprite));
+            Need(focusLine, nameof(focusLine));
+            if (focusLine != null && focusLine.transform.parent == transform) issues.Add($"HudView {name}: focusLine needs its plate as parent");
             if (bodySprites == null || bodySprites.Length == 0) issues.Add($"HudView {name}: bodySprites needs at least one sprite");
             else for (int k = 0; k < bodySprites.Length; k++) Need(bodySprites[k], $"bodySprites[{k}]");
             if (choiceGuide != null && choiceGuide.transform.parent == transform) issues.Add($"HudView {name}: choiceGuide needs its plate as parent");
@@ -198,6 +202,7 @@ namespace SevenSteps.Game.UI
             Set(Label(keep), "hud.keep", FontRole.Title);
             Set(Label(switchBody), "hud.switch", FontRole.Title);
             Set(choiceGuide, "hud.choose_guide", FontRole.Body);
+            focusLine.font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
             title.font = Ui.Theme.FontFor(loc.Current, FontRole.Title);
             Font body = Ui.Theme.FontFor(loc.Current, FontRole.Body);
             foreach (var t in new[] { story, message, statues }) t.font = body;
@@ -275,7 +280,7 @@ namespace SevenSteps.Game.UI
 
             RefreshBodies(s);
             message.text = msg;
-            message.transform.parent.gameObject.SetActive(msg.Length > 0);
+            RefreshMessage();
             RefreshStatues(s);
         }
 
@@ -299,10 +304,14 @@ namespace SevenSteps.Game.UI
 
         public void ShowChoice(ChoiceCards c)
         {
+            bool was = shownCards.On;
             shownCards = c;
             choice.gameObject.SetActive(c.On);
             chooseDim.gameObject.SetActive(c.On);
-            if (!c.On) return;
+            // One keyboard confirm path (review R1): Enter belongs to the choice controller (focused card); a card left
+            // selected by an earlier click would also Submit. Cleared whenever the cards appear or go.
+            if (c.On != was) ClearSelection();
+            if (!c.On) { RefreshMessage(); return; }
             var color = bodyLook.BodyColor(c.NextBody);
             foreach (var e in keepEdges) e.color = color;
             foreach (var e in switchEdges) e.color = color;
@@ -310,10 +319,20 @@ namespace SevenSteps.Game.UI
             Thick(switchEdges, c.FocusKeep ? 2f : 4f);
             keepPicture.sprite = stoneSprite;
             switchPicture.sprite = bodySprites[c.NextBody % bodySprites.Length];
-            keepDesc.gameObject.SetActive(c.Explain || c.FocusKeep);
-            switchDesc.gameObject.SetActive(c.Explain || !c.FocusKeep);
+            // First choices: both cards explain themselves. Later: compact cards (picture, name, badge) of equal height and
+            // the focused card's result line on one plate under them (lead 2026-11-11: no empty card body).
+            keepDesc.gameObject.SetActive(c.Explain);
+            switchDesc.gameObject.SetActive(c.Explain);
+            focusLine.transform.parent.gameObject.SetActive(!c.Explain);
+            focusLine.text = c.FocusKeep ? keepDesc.text : switchDesc.text;
             choiceGuide.transform.parent.gameObject.SetActive(c.Guide);
             ArrangeChoice(vertical);
+        }
+
+        static void ClearSelection()
+        {
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es != null) es.SetSelectedGameObject(null);
         }
 
         /// Puts the cards beside the board: <paramref name="board"/> = the projected board area (14.6) and
@@ -325,16 +344,64 @@ namespace SevenSteps.Game.UI
         public bool PlaceChoice(Rect board, Vector2 brother, Vector2 canvas)
         {
 
-            var r = LayoutChoice(board, brother, canvas, shownCards.Guide, out vertical, out bool fits);
+            // docs 14.11 (29ae00f): clear of the HUD plates shown right now (story / move guide, statues, message); the
+            // always-on buttons and dots are outside every candidate already. Cards first: if only the message plate is in
+            // the way, the message hides while the cards show and comes back with them gone.
+            var avoid = new List<Rect>();
+            foreach (var go in new[] { guidePanel, statues.transform.parent.gameObject })
+                if (go.activeSelf) avoid.Add(CanvasRect((RectTransform)go.transform, canvas));
+            var msgPlate = (RectTransform)message.transform.parent;
+            bool msgOn = shownMessage.Length > 0;
+            Rect msgRect = msgOn ? CanvasRect(msgPlate, canvas) : default;
+            if (msgOn) avoid.Add(msgRect);
+            var v = GroupSize(true); var h = GroupSize(false);
+            var r = LayoutChoice(board, brother, canvas, v, h, avoid, out vertical, out bool fits);
+            if (!fits && msgOn)
+            {
+                avoid.Remove(msgRect);
+                r = LayoutChoice(board, brother, canvas, v, h, avoid, out vertical, out fits);
+            }
             choice.anchorMin = choice.anchorMax = choice.pivot = new Vector2(0, 1);
             choice.anchoredPosition = new Vector2(r.x, -r.y);
             choice.sizeDelta = r.size;
             ArrangeChoice(vertical);
+            choiceRect = r;
+            placedCanvas = canvas;
+            RefreshMessage();
             return fits;
         }
 
+        Rect choiceRect;
+
+        /// The message plate shows its line unless the choice cards are up and sit where it is (docs 14.11).
+        void RefreshMessage()
+        {
+            var plate = (RectTransform)message.transform.parent;
+            bool on = shownMessage.Length > 0;
+            if (on && shownCards.On && CanvasRect(plate, placedCanvas).Overlaps(choiceRect)) on = false;
+            plate.gameObject.SetActive(on);
+        }
+
+        /// <paramref name="r"/> (a plate placed directly on the HUD root with a point anchor) on a canvas of
+        /// <paramref name="canvas"/> units, top-left origin, after its content size fitter ran. From the anchors, not world
+        /// corners, so it is the same in the game and under UiLayoutCheck's canvas.
+        static Rect CanvasRect(RectTransform r, Vector2 canvas)
+        {
+            bool was = r.gameObject.activeSelf;
+            if (!was) r.gameObject.SetActive(true);
+            UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(r);
+            var size = r.sizeDelta;
+            float x = r.anchorMin.x * canvas.x + r.anchoredPosition.x - r.pivot.x * size.x;
+            float yUp = r.anchorMin.y * canvas.y + r.anchoredPosition.y - r.pivot.y * size.y;
+            if (!was) r.gameObject.SetActive(false);
+            return new Rect(x, canvas.y - yUp - size.y, size.x, size.y);
+        }
+
+        /// The canvas size the cards were last placed on (RefreshMessage measures the message plate on the same).
+        Vector2 placedCanvas = new Vector2(1280, 720);
+
         bool vertical = true;
-        public const float CardW = 216, CardH = 170, CardGap = 12, GuideH = 84;
+        public const float CardW = 216, CardH = 170, CompactH = 72, CardGap = 12, GuideH = 84;
         /// Clear of the top band (menu, title: to 76), the statue plate on the right (to 132), the undo / restart buttons
         /// (bottom left, from 648) and the message plate (bottom centre, x 280..1000).
         const float TopLimit = 84, RightTopLimit = 140, Safe = 24, ButtonsTop = 636, ButtonsRight = 148;
@@ -344,8 +411,18 @@ namespace SevenSteps.Game.UI
         public static Rect LayoutChoice(Rect board, Vector2 brother, Vector2 canvas, bool guide, out bool vertical, out bool fits)
         {
             float g = guide ? GuideH + CardGap : 0;
-            var v = new Vector2(CardW, 2 * CardH + CardGap + g);
-            var h = new Vector2(2 * CardW + CardGap, CardH + g);
+            return LayoutChoice(board, brother, canvas, new Vector2(CardW, 2 * CardH + CardGap + g), new Vector2(2 * CardW + CardGap, CardH + g),
+                out vertical, out fits);
+        }
+
+        public static Rect LayoutChoice(Rect board, Vector2 brother, Vector2 canvas, Vector2 v, Vector2 h, out bool vertical, out bool fits) =>
+            LayoutChoice(board, brother, canvas, v, h, null, out vertical, out fits);
+
+        /// <param name="v">Group size stacked (left / right).</param> <param name="h">Group size side by side (top / bottom).</param>
+        /// <param name="avoid">HUD plates shown now (canvas, top-left origin): a candidate crossing one (+ 8) is left out.</param>
+        public static Rect LayoutChoice(Rect board, Vector2 brother, Vector2 canvas, Vector2 v, Vector2 h, IList<Rect> avoid,
+            out bool vertical, out bool fits)
+        {
             var candidates = new List<(Rect r, bool vert)>();
             {
                 float x = board.xMin - CardGap - v.x, y = Mathf.Clamp(brother.y - v.y * 0.5f, TopLimit, ButtonsTop - v.y);
@@ -363,6 +440,13 @@ namespace SevenSteps.Game.UI
                 float y = board.yMax + CardGap, x = Mathf.Clamp(brother.x - h.x * 0.5f, ButtonsRight, canvas.x - Safe - h.x);
                 if (y + h.y <= canvas.y - Safe) candidates.Add((new Rect(x, y, h.x, h.y), false));
             }
+            if (avoid != null)
+                candidates.RemoveAll(c =>
+                {
+                    var grown = new Rect(c.r.x - 8, c.r.y - 8, c.r.width + 16, c.r.height + 16);
+                    foreach (var a in avoid) if (a.width > 0 && grown.Overlaps(a)) return true;
+                    return false;
+                });
             fits = candidates.Count > 0;
             if (!fits)
             {
@@ -384,11 +468,35 @@ namespace SevenSteps.Game.UI
         /// Children of the choice group: the guide plate on top, then the cards stacked (vertical) or side by side.
         void ArrangeChoice(bool vert)
         {
-            float g = shownCards.Guide ? GuideH + CardGap : 0;
+            float g = shownCards.Guide ? GuideH + CardGap : 0, w = vert ? CardW : 2 * CardW + CardGap;
+            float ch = shownCards.Explain ? CardH : CompactH;
             var guidePlate = (RectTransform)choiceGuide.transform.parent;
-            TopLeft(guidePlate, 0, 0, vert ? CardW : 2 * CardW + CardGap, GuideH);
-            TopLeft((RectTransform)keep.transform, 0, g, CardW, CardH);
-            TopLeft((RectTransform)switchBody.transform, vert ? 0 : CardW + CardGap, vert ? g + CardH + CardGap : g, CardW, CardH);
+            TopLeft(guidePlate, 0, 0, w, GuideH);
+            TopLeft((RectTransform)keep.transform, 0, g, CardW, ch);
+            TopLeft((RectTransform)switchBody.transform, vert ? 0 : CardW + CardGap, vert ? g + ch + CardGap : g, CardW, ch);
+            float cardsBottom = g + (vert ? 2 * ch + CardGap : ch);
+            TopLeft((RectTransform)focusLine.transform.parent, 0, cardsBottom + CardGap, w, FocusLineH(w));
+        }
+
+        /// The focus plate's height at width <paramref name="w"/>: the taller of the two result lines (so it does not jump
+        /// when the focus moves) + 12 inside above and below.
+        float FocusLineH(float w)
+        {
+            var settings = focusLine.GetGenerationSettings(new Vector2(w - 24, 0));
+            var gen = focusLine.cachedTextGeneratorForLayout;
+            float ppu = focusLine.pixelsPerUnit > 0 ? focusLine.pixelsPerUnit : 1f;
+            float a = gen.GetPreferredHeight(keepDesc.text, settings) / ppu, b = gen.GetPreferredHeight(switchDesc.text, settings) / ppu;
+            return Mathf.Ceil(Mathf.Max(a, b)) + 24;
+        }
+
+        /// The whole choice group (guide, cards, focus plate) stacked or side by side, for the current cards.
+        Vector2 GroupSize(bool vert)
+        {
+            float g = shownCards.Guide ? GuideH + CardGap : 0, w = vert ? CardW : 2 * CardW + CardGap;
+            float ch = shownCards.Explain ? CardH : CompactH;
+            float cards = vert ? 2 * ch + CardGap : ch;
+            float line = shownCards.Explain ? 0 : CardGap + FocusLineH(w);
+            return new Vector2(w, g + cards + line);
         }
 
         static void TopLeft(RectTransform r, float x, float y, float w, float h)
@@ -410,6 +518,7 @@ namespace SevenSteps.Game.UI
         /// Pointer enter / select on a card focuses that choice (keyboard Tab and Enter go through the controller).
         void Focusable(Button b, bool isKeep)
         {
+            b.navigation = new Navigation { mode = Navigation.Mode.None }; // Tab / Enter are the controller's (review R1)
             var trigger = b.gameObject.GetComponent<UnityEngine.EventSystems.EventTrigger>() ?? b.gameObject.AddComponent<UnityEngine.EventSystems.EventTrigger>();
             foreach (var type in new[] { UnityEngine.EventSystems.EventTriggerType.PointerEnter, UnityEngine.EventSystems.EventTriggerType.Select })
             {

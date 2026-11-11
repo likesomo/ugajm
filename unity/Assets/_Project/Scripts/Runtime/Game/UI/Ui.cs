@@ -50,7 +50,7 @@ namespace SevenSteps.Game.UI
             // Distance-like coverage from a polar star outline: radius between inner .42 and outer 1 by angle.
             float a = Mathf.Atan2(x, y), r = Mathf.Sqrt(x * x + y * y);
             float k = Mathf.Abs(Mathf.Repeat(a / (2 * Mathf.PI) * 5f, 1f) - 0.5f) * 2f; // 1 at a point, 0 between points
-            float edge = Mathf.Lerp(0.5f, 0.98f, k * k);
+            float edge = Mathf.Lerp(0.58f, 0.98f, k * k);
             return (edge - r) * 32f;
         });
 
