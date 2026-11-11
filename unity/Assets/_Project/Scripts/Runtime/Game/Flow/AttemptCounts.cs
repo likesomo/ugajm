@@ -1,4 +1,6 @@
 using System;
+using SevenSteps.Contracts;
+using SevenSteps.Core;
 
 namespace SevenSteps.Game.Flow
 {
@@ -28,6 +30,19 @@ namespace SevenSteps.Game.Flow
         public AttemptCounts WithHint() => new AttemptCounts(Hints + 1, Undos, Restarts);
         public AttemptCounts WithUndo() => new AttemptCounts(Hints, Undos + 1, Restarts);
         public AttemptCounts WithRestart() => new AttemptCounts(Hints, Undos, Restarts + 1);
+
+        /// The counts after one session update (docs 6.5): an Undo counts when the core went back a state (its Undo event;
+        /// also after Lose). A Restart counts when the state before it was not the stage start (the start state has no Prev:
+        /// NewState, or undone back to it). Hints are not session updates: add them with WithHint. Used by the game
+        /// (BoardController) and the QA replay, so both judge stars the same way.
+        public AttemptCounts After(SessionUpdate u)
+        {
+            if (u.Result == null) return this;
+            var a = this;
+            if (u.Result.Has(GameEventType.Undo)) a = a.WithUndo();
+            if (u.Result.Has(GameEventType.Restart) && u.Prev != null && u.Prev.Prev != null) a = a.WithRestart();
+            return a;
+        }
 
         public override string ToString() => $"hints {Hints}, undos {Undos}, restarts {Restarts}";
     }

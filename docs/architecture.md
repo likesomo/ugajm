@@ -1,3 +1,5 @@
+| 2026-11-10 | 게임플레이/UI·아키텍트 | 14.6 `BoardView.Fit` 맞춤 식: 대칭 반폭 대신 투영 min/max 상자, 중심 +0.3 들어올림 제거(시그니처 그대로). feat/view 1f689b0 검토 승인 |
+| 2026-11-10 | 아트·아키텍트 | 7.2 `TileVisual.labelScale`(선택, 0 = 기존 기본 글자 크기, 양수 = 셀 한 변 px × 값), `BoardView.SetCellLabel` 1줄. feat/art 4760464 검토 승인 |
 # 일곱 걸음 Unity 아키텍처
 
 담당: 아키텍트 (`feat/architecture`). 기준 코드: v0 (`7lucky` 0568bfb).
@@ -197,6 +199,21 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
 
 - `Present`가 끝난 그림과 `Snap(result.State)`의 그림은 같아야 한다. 연출 중 만든 임시 오브젝트(링, 파편)는 `Snap`이 모두 정리한다.
 
+### 4.4 KEEP/SWITCH 선택 화면 (최소 UI v3, 2026-11-11 사용자 승인, `Contracts/ChoicePreview.cs`)
+기준: `production/ui-minimal-plan.md` "승인된 결정", feat/art `design/art/ui-minimal.md` UI v3, 참고 구현 feat/art 2cd08fb `Art/Test/UiV3`(리뷰 전용, 복사하지 않음). 규칙 코드는 바꾸지 않는다.
+- **판단**: 선택 UI는 화면의 State가 `Status.Choose`일 때만 보인다. 다른 것(구덩이·출구·출발점·금 간 바닥·마지막 형제의 자동 선돌)은 Status가 Choose가 아니므로 표시가 없다. 판정을 따로 만들지 않는다.
+  - 보이는 시점: Present로 Choose가 되었으면 `Presented(state)`(일곱째 걸음 연출 끝) 뒤. Snap(Undo로 돌아옴)·Rebuild면 그 `Updated`에서 바로.
+  - 숨는 시점: Status가 Choose가 아닌 `Updated`를 받으면 즉시(확정 명령의 Present `Updated`는 보드 연출 시작 전에 온다).
+- **미리보기(고스트·카드 문구)**: `ChoicePreview.TryOf(state, out p)`. `Rules.Dispatch(choose, Keep/Switch)` 순수 호출 두 번이고 세션에 보내지 않는다. 그래서 세션 State·Undo 사슬·텔레메트리·리플레이가 그대로다. 테스트 `MinimalUiContractTests`가 "미리보기 = 세션이 실제 적용한 결과"(`Rules.Key` 비교)를 고정한다.
+  - KEEP 고스트: `p.Cell`의 선돌 + `p.KeepStart`의 다음 형제 + 둘 사이 점선. SWITCH 고스트: `p.SwitchStart`(= `p.Cell`)의 다음 형제 + 매듭.
+  - KEEP으로 문이 바뀌면 `p.Keep.Events`·`p.Keep.State`로 보여 줄 수 있다(선택).
+  - 카드 테두리 = 형제 색[`p.NextBody`](`BodyIndex`, 15.1과 같은 출처).
+  - `Updated`마다 다시 만든다(Undo·언어 변경). 미리보기 State를 `StarTrailMap`·텔레메트리·저장에 쓰지 않는다.
+- **입력**: 카드 클릭·탭·Enter는 `session.Send(Command.Keep / Command.Switch)`이고 K/X와 같은 경로다. 카드는 `IsLocked`를 보지 않는다(4.1). 호버·포커스는 표시만 바꾸고 명령이 아니다. 선택 중 이동은 규칙이 `Feedback`으로 거부한다. 방향 버튼을 끄는 것은 표시일 뿐이다.
+- **확정 연출**: 그 Keep/Switch 명령의 `IBoardPresenter.Present` 안에서 재생한다. 경로·이벤트·새 형제 등장까지 **`ChoicePreview.ConfirmSecondsMax` 0.5초 이하**이고, 움직임 줄이기(11.3.2)면 0초(바로 `done`)다. 잠금은 4.1 그대로다: 그 사이 입력은 큐(최대 2), Undo·Restart는 연출을 끊고 `Snap`. `done`은 정확히 한 번. 카드가 사라지는 UI 애니메이션은 잠금과 무관하고 상태 반영을 늦추지 않는다.
+- **Z**: 선택 중 Z = 일곱째 걸음 전(6걸음 진행). 확정 뒤 Z = 선택 화면(`p.Keep.State.Prev`가 Choose 상태)이고 카드가 Snap으로 다시 뜬다. 기존 Undo 그대로이며 새 코드가 없다.
+- **확정 횟수**: `Updated`가 Present이고 `Command.Type`이 Keep/Switch일 때 세션 구독 컨트롤러(Game, 한 곳)가 `save.CountChoiceConfirm()`을 부른다. Feedback·Snap·Rebuild·Replay는 세지 않고 Undo로 줄지 않는다. 설명 밀도는 `save.ExplainChoice`(처음 3회: 두 결과 설명, 이후: 포커스한 쪽만), 11.3.2.
+
 ---
 
 ## 5. Undo: 상태 스냅샷 재그리기 (필수)
@@ -336,6 +353,7 @@ State ──TileId.At(state, i)──▶ TileId(Kind, Variant) ──tileSet.Get
 | `materialTarget`, `activeMaterial`, `inactiveMaterial` | 상태별 머티리얼 교체 | 게이트 `"Arch"` 금색/기본 |
 | `appearTrigger`, `vanishTrigger`, `activateTrigger`, `deactivateTrigger` | Animator 트리거 이름. 비우면 보드의 코드 트윈 | 3D 모델 애니메이션 |
 | `labelOffset`, `activeLabelOffset` | 숫자/글자 라벨 위치(셀 단위) | 쿼터뷰에서 기둥 높이가 다를 때 |
+| `labelScale` | 선택적 글자 크기 = 투영된 셀 한 변 px × 값, 0이면 기존 기본값. 0 또는 0.2~0.8(`TileVisual.IsValidLabelScale`, 밖이면 `tileset-validate` 오류) | 큰 숫자 문의 판독성 조정; 게임 규칙에는 영향 없음 |
 
 **활성(active)의 뜻**: 문·석상 수 문 = 열림(`Rules.DoorOpen`), 레버 = 당겨짐(`State.Flipped`), (뒤집힘 벽은 활성 대신 variant가 현재 모양), 게이트 = 다음 걸음에 통과 가능, 발판 = 눌림, 출구 = 다음 걸음이 7번째. 이 값은 보드가 `Rules.DoorOpen`, `state.Used`, `state.Statues`에서 읽는다.
 
@@ -529,6 +547,18 @@ else flow.Go(AppState.Title);
 
 **구현 담당 제안**: 아키텍트가 Contracts(`ProgressData` v2, `StageRecord`, `ProgressMigration`, EditMode 테스트: v0·v1 이전, `levelKey` 불일치, 미래 버전)와 **호출부 기계적 수정을 한 커밋에** 넣는다(공용 API가 바뀌어 나눠 넣으면 7lucky 컴파일이 깨짐). 호출부: `GameFlowController`·`TitleFlowController`(씬 플로우), `TitleViews`·`HudView`·`TelemetryRunner`(게임플레이/UI), `LevelCatalog` 이름 중복 검사(씬 플로우). 각 소유자가 자기 파일을 검토한다. **R1(첫 50스테이지 묶음) 합류 전에** 들어가야 한다.
 
+#### 11.3.2 1회 안내와 접근성 설정 (최소 UI v3, 2026-11-11, scene-flow 제안 채택, `Contracts/Save/Tutorial.cs`)
+- **키 `seven-steps.tutorial`** → `TutorialData { version 1, seen: ["move@1", ...], choiceConfirms 0..3 }`. 설정 키에 두지 않는 이유: `StartNewPlayer`(`-newplayer`)가 진행 기록과 함께 지워야 다음 테스터가 안내를 다시 본다. 설정은 남는 값이다.
+- **안내 ID** = `이름@버전`(이름 a-z 0-9 -, 버전 1~99, `TutorialIds.IsValid`). 안내 내용을 바꾸면 버전을 올린다. 그러면 새 ID라 한 번 더 보인다. 정해진 것: `TutorialIds.Move = "move@1"`(첫 이동), `TutorialIds.Choose = "choose@1"`(첫 선택 화면의 "걷기 잠김, 하나를 고른다"). 새 ID는 씬 플로우가 `TutorialIds`에 상수로 더한다(아키텍트 리뷰).
+- **명령**(모두 바로 저장): `TutorialSeen(id)`, `MarkTutorialSeen(id)`(잘못된 ID는 `ArgumentException`), `ChoiceConfirms`, `ExplainChoice`(= 확정 3회 미만), `CountChoiceConfirm()`(3에서 멈춤).
+- **seen 시점**: 안내가 가리킨 조작이 처음 **적용된** 때(`Updated` Present). 막힌 입력(Feedback)은 소비하지 않는다. Undo·Restart·언어 변경은 seen을 바꾸지 않는다. 메뉴의 조작법 다시 보기도 seen을 바꾸지 않는다.
+- **리플레이·검사 실행**: `LaunchOptions.Replay`가 있거나 `SmokeView`가 켜진 실행은 안내를 띄우지 않고 세지도 않는다(스크린샷·보드 픽셀 측정 보호). Replay는 Snap이라 확정 횟수에도 저절로 안 들어간다. `Rules.Key`·QA 시도 줄·텔레메트리에는 들어가지 않는다.
+- **이전·손상**: 값이 없거나 깨졌으면 기본값이다. `version`이 1보다 크면(새 빌드의 저장) 읽지 않고 덮어쓰지 않는다(progress와 같다). `choiceConfirms`는 0~3으로 자른다.
+- **접근성**: `SettingsData.showStepNumbers`·`reduceMotion`(기본 false, 필드 추가만이라 `version` 1 그대로, 옛 저장은 false로 읽힘). 명령 `SetShowStepNumbers(on)`·`SetReduceMotion(on)`은 저장하고 `SettingsChanged`를 낸다. 뷰는 그 이벤트로 다시 그린다.
+  - 설정이라 `StartNewPlayer`가 남긴다(음량·언어와 같음). 플레이테스트 진행자는 테스터를 바꿀 때 둘 다 꺼져 있는지 본다(playtest-guide에 한 줄).
+  - 걸음 숫자 표시: 발치 별 옆 한 곳에 걸은 수/7, 숫자 발자국(gameplay-ui). `StarTrailMap` 데이터는 그대로다.
+  - 움직임 줄이기: 맥동 대신 이중 테두리(`_StarTrailPulse` x·z는 0으로 고정, 뷰가 표시를 바꿈), 각성·피날레 광선은 끝 그림으로 바로, 확정 연출 0초(4.4). 규칙·입력 타이밍은 바뀌지 않는다.
+
 ### 11.4 텔레메트리 (`ITelemetry`, 스키마 v1)
 
 스키마·전송 사양의 기준은 **`docs/telemetry.md` v1**(백엔드/분석)이고, 이벤트 생성 기준 구현은 `prototypes/seven-steps/src/telemetry.js`의 `Tracker`다. Unity는 같은 입력에 같은 이벤트를 낸다. 공용 타입(`Contracts/Telemetry/`):
@@ -662,6 +692,8 @@ else flow.Go(AppState.Title);
 **검사**: `TileSetValidator`가 `ChapterPreset`도 본다: id 비었거나 중복이면 오류, `tileSet` 없으면 오류, 빈 머티리얼 교체 오류, `lighting`·`sky` 없음 경고, `planetPrefab` 루트에 `IStageEnvironment` 없으면 경고. `levels.json` `chapter` id가 `AppConfig.chapters`에 다 있는지는 필드가 생기면 추가.
 
 **WebGL 예산**: 챕터 에셋은 `AppConfig.chapters` 참조로 모두 빌드에 들어간다(Addressables 안 씀). 행성을 늘리면 빌드 크기를 잰다. 1280×720 draw call 400 안팎(유적 레벨 8: 403). 바닥·벽은 SRP Batcher, 하늘·장식은 결합 메시. 후처리는 Bloom·톤매핑까지(Mobile 렌더러).
+- 행성 환경 결합 메시(`BoardShapeAAssembly`)의 삼각형 상한은 런타임 가드다. 50k로 두고, 환경 드로우 1개를 유지한다(2026-11-11 e05c3c1, 실제 최대는 joinery 12×5 31,830). 예산 판단은 표준 Chrome 60 FPS이고, 가장 큰 판(14 hollow 17×3, 31 joinery 10×7, 49 altar 9×9)을 측정에 포함한다. 정적 그림자 한도는 48이다(`BoardShapeAShadowField`).
+- 리뷰·프리뷰 코드 asmdef는 `defineConstraints: UNITY_EDITOR || SEVENSTEPS_ART_PREVIEW`로 게임 빌드에서 뺀다. 리뷰용 데이터는 `Resources`에 두지 않는다.
 
 ### 12.9 smoke-webgl 판정 (팔레트 무관, 리드가 구현)
 
@@ -788,11 +820,30 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 - 검사 범위: 가장 큰 보드(가로·세로 칸 수 최대 스테이지 각각)와 23번처럼 힌트가 가장 긴 스테이지.
 - 구현(feat/view f525128): HUD가 비워 두는 칸은 `HudView.BoardFrame`(1280×720 기준 316,222 648×398), `BoardView.FitCamera`가 보드를 그 안에 맞춘다. `UiLayoutCheck`는 이 상수를 믿지 말고 **실제 HUD 사각형과 보드 투영**을 비교한다(상수가 HUD 배치와 어긋나면 잡히도록).
 - 구현(feat/scene-flow 17cbddf): 카메라 맞춤은 `BoardView.Fit(cam, grid, rig)`(Game, public static, 게임플레이/UI 소유) 하나를 게임(`FitCamera`)과 `UiLayoutCheck`가 같이 쓴다. 시그니처를 바꿀 때는 씬 플로우와 같이 바꾼다. 배우 높이 `BoardView.ActorHeight`(1.2칸).
+- 맞춤 식(feat/view 1f689b0): 여백(`rig.padding` 칸) 포함 보드의 바닥(y 0)과 배우 높이 8모서리를 카메라 공간으로 돌린 **min/max 상자**를 `BoardViewport`의 결속 축에 꽉 채우고, 상자 중심을 틀 중심에 둔다. 직교 크기 하한 3.2. 원근은 같은 needH로 거리만 정한다(근사).
 
 ### 14.7 모달
 - Result, Settings, 언어 선택, 챕터 진입 카드, Credits, 확인 창은 모달이다. 모달이 뜨면 **화면 전체를 덮는 막(`Image`, 캔버스 전체로 늘림, 알파 0.6 이상, `raycastTarget` 켬)**이 모달 아래·다른 UI 위에 그려진다(정렬 순서가 더 높은 캔버스나 마지막 형제). 막 아래 UI는 입력을 받지 않는다.
 - 아래 UI가 모달 패널 가장자리에 잘려 보이면 안 된다: 막 알파 0.6 이상이면 아래 UI는 겹침 검사에서 빠지고, 그보다 옅게 하려면 아래 HUD를 숨긴다(`CanvasGroup.alpha = 0`).
 - 모달 패널도 14.2~14.6을 그대로 따른다.
+- **클리어 결과는 "보드 위 결과"다**(2026-11-11, 최소 UI "결과 화면은 별, 별자리, 다음 버튼만", gameplay-ui 제안 채택). 위 둘째 항목(옅은 막 + HUD 숨김)을 쓴다.
+  - **막**: 화면 전체를 덮고 `raycastTarget`을 켠다. 알파는 0.25이고, 피날레 별자리(보드)가 보이게 한다.
+  - **HUD**: `CanvasGroup.alpha = 0`, `blocksRaycasts = false`로 숨긴다.
+  - **배치**: 결과 요소는 보드 영역(14.11 투영 + 8)과 겹치지 않는다.
+    - 별 3개는 `BoardFrame` 위 띠(y < 80)에 판(14.4)과 함께 둔다.
+    - [다음]은 우하단, 안전 영역 24 안에 둔다.
+  - **별 조건 문구**: 별에 hover·focus·tap할 때만 보조 글자 판으로 보인다. 그 판도 보드 영역과 다른 결과 요소를 피한다.
+  - **이야기 피날레 줄**: 결과가 열리면 사라지므로(16.8) 결과에 자리를 비워 두지 않는다.
+  - **버튼**: 다시 하기와 스테이지 선택 버튼은 결과에서 뺀다(사용자 승인 범위). 대신 클리어 결과가 떠 있는 동안 두 키가 동작해야 한다.
+    - **R**: 그 스테이지를 다시 한다. ★ 다시 도전 경로다.
+    - **Esc**: 메뉴(14.11 5번)가 결과 위에 열리고, 스테이지 선택으로 갈 수 있다.
+    - 포인터만 쓰는 플레이어는 [다음] 뒤 HUD 메뉴로 간다. 플레이테스트 관찰 항목이다.
+  - **패배 결과**는 지금처럼 알파 0.6 이상 막의 모달이다. 50 결과의 [다음]은 [끝까지 보기]다(16.8).
+  - **UiLayoutCheck(scene-flow)**: 'Result clear' 화면은 막 알파 검사 대신 셋을 확인한다.
+    - 막이 화면 전체이고 `raycastTarget`이 켜져 있다.
+    - HUD의 `CanvasGroup` 알파가 0이다.
+    - 결과 요소가 보드 영역과 겹치지 않는다.
+  - 별 조건 판이 보이는 상태(가장 긴 문구, ko·en)도 등록한다. 'Result lose'는 기존 막 검사를 그대로 한다.
 
 ### 14.8 허용 목록 (`UiLayout` 컴포넌트)
 검사를 일부러 비켜야 하는 요소는 그 GameObject에 컴포넌트를 붙인다. 이름·경로 문자열 목록은 쓰지 않는다(코드로 만든 UI는 이름이 자주 바뀐다).
@@ -821,11 +872,202 @@ namespace SevenSteps.Game.UI {
 ### 14.10 화면별 수치 (ui-layout-fix 반영)
 - Loading: 북두칠성 진행 표시 너비 = 화면 너비 40~50%, 진행 숫자 본문 이상.
 - StageSelect 지도: 행성 하나 = 이름·번호·별 개수 한 카드(판), 전체 별 수는 하단 정보 띠(판). 배경 보드·선돌은 노드 뒤에서 어둡게(판 규칙으로 해결되지 않는 대비 문제는 화면 소유자 판단).
-- Result: 14.7 막, 별 조건 문구 본문 크기.
+- Result: 클리어는 14.7 "보드 위 결과"(막 0.25 + HUD 숨김)이고, 패배는 14.7 막이다. 별 조건 문구는 본문 크기다(hover·focus·tap 때만 보인다).
 - HUD: 상태 라벨은 아이콘 옆(같은 카드), 조작 안내는 보조 18 이상 + 판, 버튼 줄과 8 이상 띄움.
 - 전후 캡처: 각 작업 공간 `reports/ui-layout/<화면>-<ko|en>-<1280|webgl>-<before|after>.png`(커밋하지 않음).
 
+### 14.11 최소 UI v3 등록 (2026-11-11 사용자 승인, `production/ui-minimal-plan.md`)
+14.1~14.9 규칙은 그대로다. 바뀌는 것은 HUD 배치와 `UiLayoutCheck`에 등록할 화면이다.
+- **보드 틀** `HudView.BoardFrame` 제안은 **(276, 80, 728, 496)**이다(1280×720, 왼쪽 위 원점).
+  - 위 HUD 띠(메뉴·제목·형제 점, y 24~72) + 8부터, 아래 Undo·Reset(y 644~) 위까지이다. 양옆 252씩은 선택 카드와 1회 안내 자리다.
+  - 8×6(pitch 50)에서 `BoardView.Fit`이 padding 0.7이면 셀 약 77px, 0.5이면 약 81px를 준다.
+  - Codex 값 ortho 4.65·중심 (0,−0.75,0)은 8×6의 목표치다. 카메라를 그 값으로 고정하지 않고, Fit이 틀에서 판마다 계산한다(가장 넓은 판 17×3도 같은 틀).
+  - gameplay-ui가 수치를 바꿔도 된다. `UiLayoutCheck`는 상수가 아니라 실제 HUD 사각형과 보드 투영을 비교한다(14.6).
+- **상시 HUD**는 메뉴·제목·Undo·Reset·형제 점 3이다.
+  - 버튼은 48×48 이상(터치)이다.
+  - 제목은 본문 22 이상이다. **시안의 20px는 14.2 위반**이라 22로 올린다.
+  - 형제 점은 장식이다(14.3 대비 3:1, 색 말고 모양으로도 구분).
+  - 상시 조작키 줄과 방향 버튼은 1회 안내 화면에만 있다.
+- **선택 화면**(4.4)
+  - 카드(판·이름·그림·K/X 배지·결과 한 줄)와 설명 판은 보드 영역(14.6) 밖에 두고, 서로 겹치지 않는다. 배지 글자는 보조 18 이상, 나머지는 본문 22 이상이다. 다음 형제 색 테두리는 장식이다(3:1, 굵기 2).
+  - 배치: 보드 영역의 좌·우·위·아래 후보 중 형제 투영점에 가장 가까운, 겹치지 않는 후보를 쓴다. 후보가 없으면 칸 위에 얹지 않는다. 등록 화면에서 오류로 나오므로 틀을 고친다.
+  - **겹치지 않음의 대상**(2026-11-11 추가, scene-flow b619811이 찾음): 보드 영역뿐 아니라 그 순간 보이는 다른 HUD 판·버튼(메시지 줄, 이야기·이동 안내, 상시 버튼)도 포함한다. 카드와 설명 판의 높이는 실제 크기다(ExplainChoice 참 + 안내가 가장 크다).
+    - 선택 중에는 카드가 우선이다. 어느 후보도 메시지 판을 피하지 못하면 메시지 줄은 카드가 보이는 동안 숨겼다가, 카드가 숨으면 다시 보인다(문구는 그대로).
+    - 상시 버튼·형제 점은 숨기지 않는다. 그래서 그 자리는 처음부터 후보에서 뺀다.
+  - **보드 30% 암부**: 3D 쪽(셰이더가 `_StarTrailState.y == 1` 선택 단계를 읽음, 또는 카메라 앞 quad)을 권한다.
+    - UI `Image`로 한다면 HUD 맨 뒤 형제이고 `raycastTarget` 끔이다.
+    - 그리고 `UiLayout.exempt = Decoration | Board`, reason "choose dim 30% (ui-minimal v3)"을 단다. 막 알파 0.6 미만이라 모달이 아니다.
+    - 형제 링·연결선·고스트는 3D 표시다(UI로 그리면 장식 규칙을 따른다).
+- **등록 화면**: 씬 플로우가 `UiLayoutCheck`에 등록하고, gameplay-ui는 각 뷰의 Edit Mode `Build` 경로(14.9)를 준다. 모두 ko·en, 1280×720(1920×1080은 같은 캔버스 단위), 1280×800은 경고다.
+  1. HUD 평소: 기존 넷(가장 긴 힌트·이름, 가장 넓은·높은 판)을 새 HUD로 본다.
+  2. HUD + 걸음 숫자 표시 켬: 가장 넓은 판.
+  3. 1회 이동 안내(`TutorialIds.Move`): 첫 스테이지.
+  4. 선택 화면: 기존 chooser 스테이지와, 7수 안에 Choose에 닿는 가장 넓은 판(있으면). 각각 `ExplainChoice` 참(두 설명 + `TutorialIds.Choose` 안내)과 거짓(포커스 하나)이다.
+  5. 메뉴(씬 플로우, 설정·스테이지·풀이 보기): 14.7 모달.
+  6. Result(최소: 별·별자리·다음): 기존 등록을 새 배치로 본다.
+- HUD·Result·선택 화면 위반은 지금처럼 오류다(`HudResultAreErrors`). 새 `exempt`는 아키텍트 리뷰에서 이유를 본다(14.8).
+
 ---
+
+## 15. 별 흔적 셰이더 입력 (2026-11-10, 사용자 승인 `production/star-trail-plan.md`)
+
+시안과 기술 메모는 `design/art/star-trail.md`(origin/feat/art-world 3c870b9)다. 기본안은 **추가 드로우콜 0**이다. 공유 타일 셰이더(아트, `RuinsSurface`)가 전역 보드 데이터 텍스처 하나를 읽어 별 발자국·경로·선돌 별을 그린다. 렌더러마다 머티리얼이나 `MaterialPropertyBlock`을 붙이지 않는다(URP SRP Batcher 유지). 타일 메시가 공유 에셋이라 vertex color 방식은 칸마다 메시 복사가 필요하므로 쓰지 않는다.
+
+### 15.1 전역 프로퍼티 (`Contracts.StarTrailMap`의 상수)
+| 이름 | 형 | 뜻 |
+|---|---|---|
+| `_StarTrailMap` | Texture2D | 15.2 배치. RGBA32, **linear**(sRGB 아님), Point, Clamp, 밉 없음, 크기 (2W)×H |
+| `_StarTrailWorldToCell` | float4x4 | 월드 위치 → (cx, cy). 칸 (x, y) 중심이 정수 (x, y)이고 cy는 맵 아래로 커진다(levels.json 행). `StarTrailMap.WorldToCell(BoardGrid)` |
+| `_StarTrailParams` | float4 | (W, H, 켜짐 0/1, 페이드 0..1). 설정 안 된 전역은 0이라, 뷰가 없으면(타이틀, 아트 리뷰 씬) 셰이더가 아무것도 그리지 않는다 |
+| `_StarTrailPulse` | float4 | (최신 칸 맥동 0..1, 일곱째 각성 0..1, 마지막 한 걸음 고리 맥동 0..1, 0). 뷰가 프레임마다 애니메이션 |
+| `_StarTrailState` | float4 | (현재 형제 0..2, 단계 0 진행 / 1 선택 / 2 승리 / 3 패배, 피날레 0..1, 쓴 걸음 0..7), 15.5·15.6 |
+| `_StarTrailColors` | float4[3] | 형제 0·1·2의 linear 색. HUD 형제 색과 같은 출처(gameplay-ui) |
+
+### 15.2 텍스처 배치 (칸마다 텍셀 2개, 행 y = 맵 행 y)
+- **층 0** `(2x, y)`
+  - R·G·B = 형제 0·1·2(`BodyIndex`). 비트 k−1(k = 1..7) = 그 형제의 k번째 걸음이 이 칸에 닿음. 진흙처럼 한 칸에 두 걸음이면 두 비트가 다 켜진다.
+  - 비트 7 = 그 형제의 KEEP 선돌이 이 칸에 서 있음(`BodyIndex.OfStatue`).
+  - A 비트 0 = 가장 최근 걸음 칸(맥동), 비트 1 = 걷는 형제가 선 칸(별 일곱 고리의 중심, 15.6). 나머지 비트는 0(예약).
+- **층 1** `(2x+1, y)`
+  - R·G·B = 형제 0·1·2의 경로 변. 비트 0은 x+1, 비트 1은 x−1, 비트 2는 y+1(맵 아래), 비트 3은 y−1 쪽 변이다.
+  - 연속한 두 발자국 사이의 경로는 양 끝 칸의 마주 보는 변을 켜고, 사이 칸(얼음 미끄러짐)은 양쪽 변을 다 켠다(`AddPath`).
+  - 나머지 비트는 0(예약). A는 형제가 끝난 방식이다(15.5).
+- 셰이더 읽기(아트):
+  - 표본 위치는 `cell = floor(c + 0.5)`, `local = c − cell`(−0.5..0.5, x 오른쪽, y 맵 아래), `uv = ((2·cell.x + 층 + 0.5) / (2W), (cell.y + 0.5) / H)`이다.
+  - 표본은 `SAMPLE_TEXTURE2D_LOD(..., point clamp, 0)`으로 읽는다.
+  - 바이트 값은 `floor(v·255 + 0.5)`이고, 비트는 `fmod(floor(b / 2^k), 2)`로 꺼낸다(GLES3 정수 연산에 기대지 않음).
+  - 켜짐이 0이거나 보드 밖이면 건너뛴다.
+  - 전역은 `UnityPerMaterial` 밖에 선언한다.
+  - 숫자 영역(칸 중앙 40%)·기믹 실루엣 보호, 겹친 림 분할, 밝기 상한(시안 메모: 기본 0.8, 각성 1.2, 흰 HUD의 65% 이하)은 셰이더 쪽 규칙이다.
+
+### 15.3 쓰는 쪽 (gameplay-ui `StarTrailView`, Game)
+- **원칙**: `GameSession.Updated`의 Present·Snap·Rebuild마다 `State`에서 **처음부터 다시 채운다**(`Clear` 후 기록). 이벤트를 누적하지 않으므로 Undo·Restart·리플레이가 저절로 맞는다. Feedback(막힘)은 상태가 그대로라 건너뛴다. 큐에 있던 명령을 지우는 Undo는 업데이트를 내지 않으므로 흔적도 그대로다(이것이 맞다).
+- **형제별 경로**:
+  - 현재 형제는 `State.Trail`(`Footprint.Cell`, `Step`)이다.
+  - 앞선 형제는 `State.Prev` 사슬을 거슬러 `Bodies`가 바뀌기 직전 상태의 `Trail`을 쓴다. KEEP·SWITCH로 끝난 형제는 Choose 상태에 일곱 걸음이 다 있다.
+  - 형제 번호는 `BodyIndex.Current(그 상태)`다.
+  - 1~6걸음에 떨어진 형제의 마지막 칸(구멍)은 어느 `State`에도 없다. 그리려면 직전 상태에서 네 방향 `Rules.Dispatch`를 해 보고 `Rules.Key`가 다음 상태와 같은 결과의 `Path`·`Fall` 이벤트를 쓴다(순수 함수, 저렴, 리플레이에도 맞음). v1에서는 그리지 않아도 된다.
+- **최신 칸**은 Present일 때 결과 상태의 마지막 발자국이고, Snap·Rebuild에서는 끈다.
+- **각성·맥동**은 `StepResult.Events`(StepIdx 7, Choose·Win)로 시작해 `_StarTrailPulse`만 움직인다. 입력이나 상태 반영을 연출 때문에 늦추지 않는다.
+- **Restart 잔광**: 이전 텍스처를 0.25초 `페이드`로 줄인 뒤 새 상태로 다시 채운다. 상태는 이미 바뀌어 있고, 다음 업데이트가 오면 바로 덮는다.
+- **텍스처 관리**: 보드 크기가 바뀔 때(Load) 만들고, 갱신은 `SetPixelData(Bytes)` + `Apply(false)`로 한다(할당 없음). 비활성·파괴 시 `켜짐 = 0`과 텍스처 `Destroy`. 프레임마다 다시 계산하지 않는다(업데이트 때만).
+- 비용: 가장 큰 판 17×9는 34×9 텍셀(1.2KB)이다. `Prev` 사슬 걷기는 업데이트마다 명령 수만큼이다(`BodyIndex`와 같은 비용).
+
+### 15.4 아트 쪽 (Codex, `Art/**`)
+- `RuinsSurface`(타일·선돌)가 15.1~15.2를 읽는다. 별 모양은 아틀라스 남는 채널이나 공용 R8 마스크를 쓴다. 추가 라이트·드로우 0.
+- 머티리얼 수치(밝기, 별 크기)는 머티리얼 프로퍼티(아트)에 둔다. 형제 색은 15.1 전역에서 읽는다(HUD와 한 출처).
+- `TileVisual`/`TileSet` 확장이 필요하면 0/null이면 기존 동작인 선택 필드로 더하고 `tileset-validate` 검사를 붙인다(7.2 `labelScale`와 같은 방식).
+- 확인: `scene-validate`(보드 대비·UiLayoutCheck 보드 영역), 표준 Chrome 1/29/50에서 60 FPS, 드로우 수 그대로.
+
+### 15.5 상태 머신과 행성별 값 (`StarTrailPreset`, 2026-11-10 리드 추가 지시, gameplay-ui와 합의)
+- **상태 판정**은 View 쪽 순수 C# `StarTrail.Of(State)`(gameplay-ui)에서 한다.
+  - 입력은 `Trail`과 `Prev` 사슬이다.
+  - 끝난 형제는 끝난 방식으로 나눈다: 낙하, 다리, 봉인, 사라짐, 선돌(KEEP), SWITCH, 승리.
+  - 한 이동 안에서 끝난 형제의 마지막 칸은 Present의 `StepResult` 캐시에서 얻고, 캐시가 없으면 15.3의 네 방향 재실행으로 얻는다.
+  - 규칙 코드는 그대로다.
+- **셰이더에 넘기는 것**:
+  - 층 1 A에 끝난 방식 비트를 둔다: 0 SWITCH 바통 이음매(새 출발점), 1 다리·봉인(`State.Bridges`, 가라앉은 별), 2 낙하(구멍), 3 사라짐(출발점에서 일곱째). 비트의 주인은 그 칸에 7번째(또는 마지막) 걸음이 있는 형제다.
+  - 전역 `_StarTrailState`는 (현재 형제 0..2, 단계 0 진행 / 1 선택 / 2 승리 / 3 패배 = Core `Status` 순서, 피날레 0..1, 0)이다.
+  - 셰이더는 현재 형제보다 앞선 형제를 "굳은 별자리"(실선, 선돌 별)로, 현재 형제를 "진행 중"(걸음마다 커지는 점)으로 그린다. 승리 단계에서는 피날레 값에 따라 세 색 별자리를 함께 밝힌다.
+  - Undo·Restart는 15.3대로 다시 채우고 페이드한다.
+- **행성별 값**은 `Contracts.StarTrailPreset`(ScriptableObject)에 둔다.
+  - `ChapterPreset.starTrail`이 이것을 참조한다(조명·하늘과 같은 방식). 비어 있으면 `StarTrailPreset.Default`(필드 기본값 = 시안 메모 초기값)를 쓴다.
+  - 아트가 `Art/<Set>/StarTrail_<id>.asset` 7개를 채운다.
+  - 셰이더 값은 `StarTrailPreset.SetGlobals(preset)`이 챕터가 바뀔 때 전역 네 개로 넘긴다.
+    - `_StarTrailStyleA` = (점 크기 최소, 최대, 불투명도 최소, 최대)
+    - `_StarTrailStyleB` = (발광, 각성 발광, 선 굵기, 선 불투명도)
+    - `_StarTrailStyleC` = (선돌 별 크기, 이음매 굵기, 가라앉음, 음각 깊이)
+    - `_StarTrailTint` = (석질 색조 linear rgb, 섞는 양)
+  - View만 쓰는 값: 시간(각성 0.18, Undo 0.12, 실패 0.20, Restart 0.25, 피날레 1.2초), 불꽃 입자 수(0..12, 공유 풀), 모양 마스크 번호(0..3).
+  - 형제 색은 프리셋에 두지 않는다(HUD와 한 출처, 15.1).
+- **검사**: `tileset-validate`가 `ChapterPreset.starTrail`이 있으면 `StarTrailPreset.Validate()` 범위를 오류로 검사한다. 비어 있으면 검사하지 않는다(기본값).
+  - 범위: 크기 0.01~0.2이고 최소 ≤ 최대, 불투명도 0~1, 발광 0~1.5이고 각성 ≥ 기본, 섞는 양 ≤ 0.5, 시간 0~2초(피날레 0~5), 입자 0~12, 마스크 0~3.
+- **임시 렌더**: 셰이더 마스크(아트)가 오기 전, gameplay-ui의 결합 quad 메시 1개(+1 드로우, 코드 생성 아틀라스)는 개발용으로 허용한다. 최종은 15.2 전역 텍스처(추가 드로우 0)다. 아트 v2 시안에서 배치(비트)를 바꿔야 하면 아키텍트가 15.2와 `StarTrailMap`을 함께 고친다.
+
+### 15.6 형제 발치의 별 일곱 고리 (2026-11-10, 리드 지시 ui-minimal 예고, feat/view 535e775)
+- 걷는 중(`Status.Play`)인 형제 발치에 별 일곱 개가 고리로 놓인다. k걸음을 쓰면 k번째 별이 채워진다(2026-11-11 승인 시안: 채운 별 = 걸은 수, 빈 별 = 남은 수, 숫자 없음). 6걸음 뒤에는 마지막 빈 별이 맥동한다(움직임 줄이기면 이중 테두리, 11.3.2).
+- **데이터**: 위치는 층 0 A 비트 1(`StarTrailMap.SetPlayer(State.Pos)`), 쓴 걸음은 `_StarTrailState.w`(`StateVector(..., used)`), 맥동은 `_StarTrailPulse.z`다. 선택·승리·패배 단계에서는 비트를 쓰지 않는다(고리 없음).
+- 같은 State에서 다시 계산하므로 Undo·Restart가 저절로 맞는다. 이동 중에는 고리가 도착 칸에 있다(Present 뒤 갱신).
+- 임시 quad가 그리는 동안(`StarTrailView.UseQuad`)은 뷰가 같은 값으로 그린다. 셰이더가 그리게 되면 셰이더가 이 세 값만 읽는다.
+
+## 16. 이야기 계약 (2026-11-11 S2, 사용자 승인 구조 `design/story/story-integration.md`, 사전 검토 A1~A13)
+
+이야기는 규칙 코드를 바꾸지 않는다. 판정 입력은 `SessionUpdate`·`State`와 흐름 쪽 사실(클리어 기록, 챕터 경계)뿐이다. 모든 타입은 `Contracts/Story/`에 있고 네임스페이스는 평평한 `SevenSteps.Contracts`다(A1).
+
+### 16.1 파일과 소유
+| 무엇 | 위치 | 소유 |
+|---|---|---|
+| 원고 | `design/story/story.json` | 스토리 디렉터(S1, `check-story.mjs`가 1차 검사) |
+| 런타임 입력 | `Data/story.json` | 생성물(`unity.sh levels`가 검사 통과 뒤 복사, S3) |
+| `GameAssets.storyJson`(TextAsset), `GameAssets.storyImages`(`StoryImageSet`) | `Game/GameAssets.cs` | 아키텍트(필드), 게임플레이/UI(연결), 아트(이미지 값) |
+| `StoryFileDto`·`StoryEntryDto`·`StoryLineDto`·`StoryBrotherDto`·`StoryDipperDto`·`StoryBeatDto` | `StoryFile.cs` | 아키텍트. 모양은 story-integration 2.2 |
+
+### 16.2 이미지 (`StoryImageSet`, A7)
+- ScriptableObject `entries: {key, Sprite}[]`, `Get(key)`(없으면 null → 글만 보인다), `required`(기본 false).
+- `scene-validate`(scene-flow)가 `story.json` `images`의 키마다 Sprite가 있는지 본다. `required`가 거짓이면 경고, 참이면 오류다. 엔딩 이미지는 11/14 뒤에 오므로 그때까지 거짓이다. 아트가 다 채우고 켠다.
+
+### 16.3 `StoryCatalog` (로드 검사 = 단정, A8)
+- `FromJson(json, chapterIds)` — `chapterIds`는 `LevelCatalog.Chapters`의 id 순서다. 실패하면 `InvalidDataException`이고, 메시지에 entry id(줄이면 `id/lineId`)와 이유가 있다.
+  - 검사 항목:
+    - `version == 1`이고, `languages`는 `ko`로 시작하며 이 빌드의 모든 언어(`Languages.All`)를 포함한다.
+    - 형제 1·2·3이 한 번씩 있고, 이름과 번역이 있다.
+    - entry id는 `[a-z0-9.]+`이고 서로 다르다. line id는 entry 안에서 다르다. ko와 모든 번역이 비어 있지 않다.
+    - `on`은 `StoryOns` 코드다. 한정자 범위는 chapter = chapters id, brother 0~3, stones −1~2, card 0~4(ending만), after는 `""`/`ending`/`allStars`/`allTruths`다.
+    - `image`는 `images`에 있는 키다.
+    - 치환은 `{brother}`만 쓴다. `{brother}`는 형제를 아는 지점(순간 문구, `seventhFirst`, 엔딩 카드 1)에서만 쓴다.
+    - **모호함**: 같은 `on`에서 같은 구체성의 두 entry가 함께 맞는 cue가 있고, 그 cue를 더 구체적인 entry가 덮지 않으면 오류다.
+    - **필수 갈래**(최소 UI, story-integration 0.3·0.5): `title`(`after ""`, `"ending"`), `lose`, 챕터마다 `finale`, `ending` 카드 1 형제 1~3 · 카드 2 선돌 0~2 · 카드 3 `""`와 `allTruths` · 카드 4. 갈래는 **써 있어야** 한다(아무거나 entry가 대신하면 오류).
+    - `dipper`: from은 챕터 id, to는 챕터 id 또는 `circle`이다. 중복이 없고, 모든 챕터가 from에 한 번 이상 나온다(A13).
+  - 글자 수, KS X 1001, 기호, 금지어, 받침 검사는 `check-story.mjs`와 GlyphCheck가 한다.
+  - Boot에서 실패하면 오류 로그를 남기고 이야기만 끈다. 게임은 계속된다(호출하는 쪽 일).
+- `Find(cue)`는 한정자가 모두 맞는 entry 가운데 가장 구체적인 것을 고르고, 없으면 `KeyNotFoundException`이다. `TryFind`는 선택 지점용이다.
+- `Pick(entry, shownCount)` = `shownCount % lines.Length`(난수 없음), `Line(entry, i, lang)`, `BrotherName(n, lang)`.
+- `Text(cue, progress, lang, out entry)`는 Find, Pick, `{brother}` 치환을 한 번에 한다. **세지 않는다.** 실제로 보였을 때 호출하는 쪽이 `progress.MarkShown(entry.id)`를 부른다.
+- `ImageKeys`, `Dipper`, `Entries`, `ChapterIds`(읽기 전용).
+
+### 16.4 `StoryCue`·`StoryRules` (순수, 상태 없음, A2·A3·A11)
+- `StoryOn`(끝에만 추가)과 `StoryOns.Code/TryParse`가 있다. `StoryCue(on, chapter, brother, stones, card, after)`의 빈 값은 `""`/0/−1/0/`""`이고, 생성자가 범위를 검사한다.
+- `TryMoment(SessionUpdate u, out cue)`:
+  - Present만 본다. 결과가 Win·Lose면 내지 않는다(결과·실패 패널이 말한다).
+  - Keep → `keep`, Switch → `switch`, Move면 Fall > Vanish > Bridge > Seal 순으로 고른다.
+  - 형제는 `BodyIndex.Current(u.Prev) % 3 + 1`이다. 변환은 `StoryRules.Brother` 한 곳에서만 한다.
+- `TrySeventh(u, out cue)`: 일곱째 걸음이 된 이동이면 늘 낸다. "처음 한 번" 거르기, 시도당 1회, `QueuedCount > 0` 건너뛰기는 `StoryDirector`(S4)가 한다.
+- `Ending(State win, int card, int truths, int chapterCount)`:
+  - 카드 1: 형제 = 출구에 닿은 몸
+  - 카드 2: 선돌 = `min(2, Statues.Length)`
+  - 카드 3: `truths == chapterCount`이면 `after = allTruths`
+  - 카드 4: 고정
+  - 이긴 State가 아니거나 범위를 벗어나면 예외다.
+- `Finale(chapterId)`.
+- 최소 UI에서는 순간 문구와 `seventhFirst`를 잼에서 뺐다(story-integration 0.1). 함수는 남겨 두고 데이터 entry는 선택이다.
+
+### 16.5 저장: `SaveSystem.Story` (A5·A12)
+- 키 `seven-steps.story`, 타입 `StoryProgress { version 1, counts[{id,n}], endingSeen, carvingSeen[](챕터 id), finalTruthSeen }`.
+- `Count`·`MarkShown`·`EndingSeen`·`MarkEndingSeen`·`CarvingSeen(id)`·`MarkCarvingSeen(id)`·`FinalTruthSeen`·`MarkFinalTruthSeen`은 **메모리만** 바꾼다.
+- `SaveSystem.SaveStory()`를 부르는 때: 결과 패널이 열린 뒤, 엔딩 끝, 별지도 새김 연출 끝, 앱 종료.
+- 손상되면 기본값으로 읽고 경고한다. 새 버전이면 읽지도 덮어쓰지도 않는다. 중복·음수 count와 중복 id는 읽을 때 정리한다.
+- `StartNewPlayer`(`-newplayer`)가 지운다. 리플레이 해시·QA 줄·텔레메트리에는 섞지 않는다.
+
+### 16.6 `StoryTruths` (A4·A9·A10, 저장 없음)
+- 입력은 `levels`, 스테이지마다 챕터 키(`LevelCatalog.ChapterKeyOf`), `ProgressData`다.
+- `FinaleStage(keys, id)`:
+  - 챕터의 마지막 스테이지다.
+  - 게임의 마지막 스테이지를 가진 챕터는 그 바로 앞 스테이지다.
+  - 지금 데이터로는 7·14·21·28·35·42·49다(0부터 세면 6…48).
+- `IsFinaleStage`, `IsEndingStage`(마지막 스테이지 = 엔딩).
+- `FinaleCleared(…, id)`는 스테이지 **이름**으로 클리어를 본다.
+- `Truths(…, chapterIds)`. 다 모았는지는 `Truths == chapterIds.Count`로 본다.
+- `ChapterComplete`는 별자리(`constellation`)용이다.
+
+### 16.7 `LevelDto.startLine` (최소 UI 시작 한 줄)
+- `"story"`, `"hint"`, `""`(없음) 중 하나다. 필드가 없거나 null이면 `"story"`로 읽는다(`LevelDto.StartLine`). 그 밖의 값은 `ArgumentException`이다.
+- 채우기는 레벨 디자인(`levels.js`, `export-levels.mjs` 검사)이다. 코어 파일의 필드 한 줄은 아키텍트가 리드 지시로 넣었다.
+- 시작 한 줄 View(`TransientLineView`)와 다시 보기는 gameplay-ui 몫이다.
+
+### 16.8 흐름 쪽 약속 (씬 플로우·게임플레이/UI, 계약 아님)
+- 50 결과의 [다음]은 [끝까지 보기]가 되고, 엔딩 4장으로 이어진다(9장 질문 1). 엔딩 카드 이미지는 `entry.image`에서 온다.
+- `EndingModel.Truths`는 scene-flow가 `StoryTruths.Truths`로 센다. 텔레메트리 `ending_view.truths`는 백엔드가 스키마와 골든을 같이 바꾼다.
+- 피날레 한 줄은 `Updated(Present, Win)`에서 피날레 스테이지인지 판정해 보류한다. 별자리 피날레 동안 잠깐 줄 자리에 보이고, 결과가 열리면 사라진다(story-integration 0.1).
 
 ## 변경 기록
 
@@ -884,3 +1126,16 @@ namespace SevenSteps.Game.UI {
 | 2026-11-10 | 아키텍트 | 11장 SaveKey 연결: `Bootstrap`(SaveSystem)·`TelemetryRunner.CreateTelemetry`(큐)가 `SaveStores.For(launch)` (리드 지시로 아키텍트가 소유자 대신 두 줄 수정, 리드가 씬 플로우·게임플레이/UI에 알림). `unity.sh smoke -savekey`는 코어 |
 | 2026-11-10 | 씬 플로우·아키텍트 | 14.6 보드 영역 검사 구현: `BoardView.Fit` public static(게임과 검사기가 같은 맞춤 식), `BoardView.ActorHeight`, `UiLayoutRule.Board` 면제. feat/scene-flow 17cbddf 검토 승인(B1: Choose 상태·긴 메시지 HUD 변형 추가 요청) |
 | 2026-11-10 | 게임플레이/UI·씬 플로우·아키텍트 | 14.9 HUD·결과 위반도 오류(`UiLayoutCheck.HudResultAreErrors = true`, HUD/결과 0건 달성, feat/view d170385 검토 승인). 이제 14장 위반은 모든 화면에서 빌드를 막는다 |
+| 2026-11-10 | 씬 플로우·아키텍트 | Game: `AttemptCounts.After(SessionUpdate)`(6.5 Undo·Restart 세기, `BoardController`와 QA 리플레이가 공유), `Game.Flow.QaReplay`(attempts.jsonl 교차 검사, 재시작 글자·해시는 docs/qa-attempts.md 확정 전 임시). feat/scene-flow 332498f 검토 승인 |
+| 2026-11-10 | 아키텍트 | 15장 별 흔적 셰이더 입력: 전역 `_StarTrailMap`((2W)×H RGBA32, 층 0 걸음·선돌·최신, 층 1 경로 변)·`_StarTrailWorldToCell`·`_StarTrailParams`·`_StarTrailPulse`·`_StarTrailColors`, Contracts `StarTrailMap`(배치·쓰기 도우미·`WorldToCell`). 추가 드로우 0, State에서 매번 다시 채움 |
+| 2026-11-10 | 아키텍트·게임플레이/UI | 15.5 별 흔적 상태 머신(층 1 A 끝난 방식 비트, 전역 `_StarTrailState`)과 행성별 값 `StarTrailPreset`(Contracts SO, `ChapterPreset.starTrail`, 비면 Default, `SetGlobals` → `_StarTrailStyleA/B/C`·`_StarTrailTint`, `tileset-validate` 범위 검사) |
+| 2026-11-10 | 아키텍트·게임플레이/UI | 15.6 별 일곱 고리: 층 0 A 비트 1(`SetPlayer`), `_StarTrailState.w` = 쓴 걸음, `_StarTrailPulse.z` = 마지막 걸음 고리 맥동. feat/view 535e775 검토 |
+| 2026-11-11 | 아키텍트·씬 플로우 | 최소 UI v3 계약: 4.4 선택 화면(`ChoicePreview.TryOf` = `Rules.Dispatch` 순수 호출 미리보기, 확정 연출 0.5초 이하는 기존 Present 잠금, Z는 선택 전, 확정 횟수는 Present Keep/Switch만). 11.3.2 키 `seven-steps.tutorial`(`TutorialData` seen `이름@버전`·choiceConfirms 상한 3, `StartNewPlayer`가 지움, 리플레이·smoke 실행 제외), 접근성 `SettingsData.showStepNumbers`·`reduceMotion`(기본 끔). 14.11 BoardFrame 제안 (276,80,728,496)·상시 HUD·선택 화면 배치·등록 화면 6종. 15.6 채운 별 = 걸은 수로 문구 정정. 테스트 `MinimalUiContractTests` 7개 |
+| 2026-11-11 | 아키텍트 | scene-flow c513108 검토 승인(메뉴 오버레이·`TutorialTracker`·접근성 설정 연결, 검사 실행은 모두 seen인 메모리 저장소). 메모 C1 선택 카드·안내는 `Presented` 뒤 표시(gameplay-ui), C2 메모리 저장소 상한, C3 임시 설정 버튼 연결 정리. `docs/reviews/2026-11-11-scene-flow-c513108.md` |
+| 2026-11-11 | 아키텍트 | feat/view cce7783·740a516·fdd9651(최소 HUD, 선택 UI v3, 발치 별) 조건부 승인: 계약 4.4·14.11 대조 맞음(BoardFrame 8×6 ortho 4.67 셀 77px). R1 카드 Button 선택이 남아 Enter가 Submit과 `choice.Confirm` 두 경로로 갈 수 있음, R2 확정 Present 문 여러 개면 0.5초 초과·움직임 줄이기에서도 문 대기. `docs/reviews/2026-11-11-feat-view-fdd9651.md` |
+| 2026-11-11 | 아키텍트 | scene-flow b619811(14.11 등록 4종, C2) 승인, 병합은 gameplay-ui `LayoutChoice` 수정 뒤. 14.11 보강: 카드 비겹침 대상에 보이는 HUD 판·버튼 포함, 피할 후보가 없으면 카드가 보이는 동안 메시지 줄을 숨김, 상시 버튼 자리는 후보에서 뺌. `docs/reviews/2026-11-11-scene-flow-b619811.md` |
+| 2026-11-11 | 아키텍트 | feat/view 71a8f9c 승인(R1 Enter 한 경로, R2 확정 Present 최대 0.42초·움직임 줄이기 0, M2 고스트 Behaviour 끔, 14.11 보이는 HUD 판 회피·메시지 숨김). b619811과 함께 병합 가능 |
+| 2026-11-11 | 아키텍트 | feat/art e05c3c1(행성 2~7 모델링)+2cd08fb 조건부 승인. 12.8에 환경 삼각형 런타임 가드 50k(예산은 Chrome 60 FPS, 큰 판 14·31·49 측정)와 리뷰 asmdef 빌드 제외 규칙 추가. 병합 전 B1 concepts PNG 75개·실행 로그 제외, R1 `SevenSteps.Art.Review` defineConstraints와 ReviewLevels.json Resources 밖으로. R2 altar 9×9 정적 그림자 47/48. `docs/reviews/2026-11-11-feat-art-e05c3c1.md` |
+| 2026-11-11 | 아키텍트 | 16장 이야기 계약 S2(A1~A13): `Contracts/Story/` `StoryCatalog`(로드 단정, 구체성 Find, 모호함·필수 갈래 검사), `StoryCue`/`StoryOn`, `StoryRules`(TryMoment·TrySeventh·Ending·Finale), `StoryProgress` + `SaveSystem.Story`/`SaveStory`/키 `seven-steps.story`(-newplayer가 지움), `StoryTruths`(ChapterKeyOf 경계 피날레·Truths), `StoryImageSet`(required 기본 false), `GameAssets.storyJson`/`storyImages`, `LevelDto.startLine`(기본 story). 테스트 `StoryContractTests` 12개 |
+| 2026-11-11 | 아키텍트 | 14.7 클리어 결과 = 보드 위 결과(막 0.25 + raycast, HUD CanvasGroup 0, 별 3은 BoardFrame 위 띠, 다음은 우하단, 별 조건은 hover/focus/tap, 다시 하기·스테이지 선택 버튼 빼고 R·Esc 동작). 패배는 0.6 모달. UiLayoutCheck Result clear는 막 raycast·HUD 숨김·보드 비겹침 검사 |
+| 2026-11-11 | 아키텍트 | feat/levels-2 dc6cea2(S3) 승인: b03ce11 위 병합 EditMode 852/852(실제 Data/story.json StoryCatalog 로드 통과), startLine hint 4·8, 피날레 스테이지 7·14·…·49 데이터 경계와 일치. QA 끝까지 qa 워크트리 고정에 동의. `docs/reviews/2026-11-11-levels-2-dc6cea2.md` |

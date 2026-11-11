@@ -1,0 +1,23 @@
+{
+    "name": "SevenSteps.Art.Review",
+    "rootNamespace": "SevenSteps.Art.Review",
+    "references": [
+        "SevenSteps.Art",
+        "SevenSteps.Core",
+        "SevenSteps.Contracts",
+        "SevenSteps.Game",
+        "Unity.InputSystem",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_EDITOR || SEVENSTEPS_ART_PREVIEW"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

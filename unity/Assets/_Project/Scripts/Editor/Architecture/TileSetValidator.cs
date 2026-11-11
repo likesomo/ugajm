@@ -65,6 +65,8 @@ namespace SevenSteps.EditorTools
             float cs = ts.cellSize;
             void Check(string name, TileVisual v, bool required, bool flatTop, bool fitsCell, bool wallHeight = false)
             {
+                if (!TileVisual.IsValidLabelScale(v.labelScale))
+                { issues.Add($"ERROR {name}: labelScale {v.labelScale:0.###} must be 0 (default) or {TileVisual.LabelScaleMin}-{TileVisual.LabelScaleMax} (docs 7.2)"); errors++; }
                 if (!v.HasPrefab)
                 {
                     if (required) { issues.Add($"ERROR {name}: no prefab"); errors++; }
@@ -192,6 +194,8 @@ namespace SevenSteps.EditorTools
                 if (c.tileSet == null) { issues.Add("ERROR no tileSet"); e++; }
                 if (c.lighting == null) issues.Add("WARN no lighting (scene keeps its current lights)");
                 if (c.sky == null) issues.Add("WARN no sky");
+                if (c.starTrail != null)
+                    foreach (var p in c.starTrail.Validate()) { issues.Add($"ERROR starTrail {c.starTrail.name}: {p} (docs 15.5)"); e++; }
                 if (c.materialOverrides != null)
                     for (int k = 0; k < c.materialOverrides.Length; k++)
                         if (c.materialOverrides[k].from == null || c.materialOverrides[k].to == null)

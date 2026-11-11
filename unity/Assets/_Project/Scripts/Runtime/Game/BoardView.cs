@@ -58,6 +58,7 @@ namespace SevenSteps.Game
         readonly List<GameObject> transients = new List<GameObject>();
         readonly StringBuilder sb = new StringBuilder(16);
         GameObject player, startMarker, oldStartMarker;
+        StarTrailView trail;
         WorldLabel playerLabel;
         int playerBody = -1; // BodyIndex.Current of the player instance on the board; -1 before Rebuild
         bool choosing;
@@ -77,6 +78,23 @@ namespace SevenSteps.Game
         public bool IsAnimating => anim != null;
         /// Word on the exit tile in the UI language (board.exit), set by BoardController; the next draw uses it.
         public string ExitLabel { get; set; } = "EXIT";
+        /// Accessibility "show step numbers" (off by default, production/ui-minimal-plan.md): numeric footprints on the cells
+        /// walked and the steps-left number over the player. Off, steps are read from the star trail and the stars at the feet.
+        public bool StepNumbers { get; set; }
+        /// Accessibility "reduce motion" (SettingsData.reduceMotion): no confirm burst, no pulsing; steady marks instead.
+        public bool ReduceMotion { get; set; }
+
+        /// Confirm presentation of a KEEP / SWITCH, seconds (inside that command's Present, docs 4.4): 0 with reduce motion.
+        /// With a door the statue opens (0.12 s) the Present stays within ChoicePreview.ConfirmSecondsMax.
+        public static float ConfirmSeconds(bool reduceMotion) => reduceMotion ? 0f : 0.3f;
+        /// One wait for every door a KEEP / SWITCH opens or closes (0 with reduce motion).
+        public const float ConfirmDoorSeconds = 0.12f;
+        /// The longest a KEEP / SWITCH Present can take at normal speed (tests: <= ChoicePreview.ConfirmSecondsMax).
+        public static float ConfirmPresentMax(bool reduceMotion) => ConfirmSeconds(reduceMotion) + (reduceMotion ? 0f : ConfirmDoorSeconds);
+
+        BoardMarksView marks;
+        /// Screen-space marks on the board (foot stars, choice ring, KEEP dots, SWITCH knot); tests and captures read it.
+        public BoardMarksView Marks => marks;
 
         /// <param name="cameraOverride">Camera preset to use instead of tileSet.cameraRig (Game scene setting), or null.</param>
         public void Init(TileSet tileSet, RectTransform labelLayer, Camera cam, CameraRig? cameraOverride = null)
@@ -85,6 +103,142 @@ namespace SevenSteps.Game
             this.labelLayer = labelLayer;
             this.cam = cam;
             rigOverride = cameraOverride;
+            if (marks == null && labelLayer != null)
+            {
+                var layer = Ui.Rect("Board Marks", labelLayer).Stretch();
+                marks = layer.gameObject.AddComponent<BoardMarksView>();
+                marks.Init(layer, ToCanvas);
+            }
+        }
+
+        /// World point → anchored position on the label layer (canvas units, centre origin), as the world labels use.
+        Vector2 ToCanvas(Vector3 world)
+        {
+            if (cam == null) return Vector2.zero;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(labelLayer, cam.WorldToScreenPoint(world), null, out var local);
+            return local;
+        }
+
+        /// The board area of docs 14.6 on the HUD canvas, top-left origin (cells and actors projected, grown by 8): where the
+        /// choice cards must not go. Same corners as UiLayoutCheck.
+        public Rect ProjectedArea()
+        {
+            if (cam == null || level == null) return default;
+            var b = grid.Bounds;
+            float top = ActorHeight * grid.CellSize, w = labelLayer.rect.width, h = labelLayer.rect.height;
+            float x0 = float.MaxValue, y0 = float.MaxValue, x1 = float.MinValue, y1 = float.MinValue;
+            for (int k = 0; k < 8; k++)
+            {
+                var p = b.center + new Vector3((k & 1) == 0 ? -b.extents.x : b.extents.x, (k & 2) == 0 ? 0 : top, (k & 4) == 0 ? -b.extents.z : b.extents.z);
+                var v = cam.WorldToViewportPoint(p);
+                float x = v.x * w, y = (1 - v.y) * h;
+                x0 = Mathf.Min(x0, x); x1 = Mathf.Max(x1, x); y0 = Mathf.Min(y0, y); y1 = Mathf.Max(y1, y);
+            }
+            return Rect.MinMaxRect(x0 - 8, y0 - 8, x1 + 8, y1 + 8);
+        }
+
+        /// The brother's head on the HUD canvas, top-left origin (choice card placement).
+        public Vector2 BrotherOnCanvas()
+        {
+            if (cam == null || player == null) return default;
+            return BrotherPoint(cam, grid, 0, labelLayer.rect.size, player.transform.position);
+        }
+
+        /// The head of a brother standing on <paramref name="cell"/> (or at <paramref name="at"/>) through <paramref name="cam"/>
+        /// on a canvas of <paramref name="canvas"/> units, top-left origin. Edit Mode checks (UiLayoutCheck 14.11) place the
+        /// choice cards with it: HudView.ShowChoice, then HudView.PlaceChoice(board area, this).
+        public static Vector2 BrotherPoint(Camera cam, BoardGrid grid, int cell, Vector2 canvas, Vector3? at = null)
+        {
+            var v = cam.WorldToViewportPoint((at ?? grid.CellToWorld(cell)) + Vector3.up * 0.6f * grid.CellSize);
+            return new Vector2(v.x * canvas.x, (1 - v.y) * canvas.y);
+        }
+
+        // ---------- KEEP / SWITCH choice (docs 4.4): ghosts and marks, from a ChoicePreview ----------
+
+        GameObject ghostBody, ghostStone;
+        int ghostBodyIndex = -1;
+        bool choiceShown;
+        ChoicePreview choicePreview;
+        BoardMarksView.ChoiceFocus choiceFocus;
+
+        /// Shows (or with <paramref name="on"/> false hides) the choice on the board: the ring round the brother and, for the
+        /// focused choice only, the next brother's ghost where he would wake (KEEP: the start, with the statue ghost here and a
+        /// dotted line; SWITCH: here, with the knot). Pure view: the preview comes from ChoicePreview.TryOf.
+        public void ShowChoice(bool on, ChoicePreview p, BoardMarksView.ChoiceFocus focus)
+        {
+            choiceShown = on;
+            choicePreview = p;
+            choiceFocus = on ? focus : BoardMarksView.ChoiceFocus.None;
+            DrawChoice();
+        }
+
+        /// The next brother's ghost while a choice is focused (tests, captures).
+        public GameObject ChoiceGhost => ghostBody != null && ghostBody.activeSelf ? ghostBody : null;
+        public GameObject StatueGhost => ghostStone != null && ghostStone.activeSelf ? ghostStone : null;
+
+        void DrawChoice()
+        {
+            if (level == null || marks == null) return;
+            bool on = choiceShown && choicePreview.Keep != null;
+            var p = choicePreview;
+            int next = on ? p.NextBody : 0;
+            Color nextColor = set.BodyColor(next), curColor = set.BodyColor(Mathf.Max(0, playerBody));
+            marks.SetChoice(on, on ? grid.CellToWorld(p.Cell) : Vector3.zero, on ? grid.CellToWorld(p.KeepStart) : Vector3.zero,
+                nextColor, curColor, choiceFocus);
+            bool keep = on && choiceFocus == BoardMarksView.ChoiceFocus.Keep, sw = on && choiceFocus == BoardMarksView.ChoiceFocus.Switch;
+            if (keep || sw)
+            {
+                if (ghostBody == null || ghostBodyIndex != next)
+                {
+                    if (ghostBody != null) Destroy(ghostBody);
+                    ghostBody = Ghost(set.PlayerFor(next), "Ghost (next body)", nextColor);
+                    ghostBodyIndex = next;
+                }
+                if (ghostBody != null) { ghostBody.SetActive(true); Place(ghostBody, set.PlayerFor(next), keep ? p.KeepStart : p.Cell); }
+            }
+            else if (ghostBody != null) ghostBody.SetActive(false);
+            if (keep)
+            {
+                if (ghostStone == null) ghostStone = Ghost(set.Get(ActorKind.Statue), "Ghost (statue)", new Color(0.85f, 0.88f, 0.85f));
+                if (ghostStone != null) { ghostStone.SetActive(true); Place(ghostStone, set.Get(ActorKind.Statue), p.Cell); }
+            }
+            else if (ghostStone != null) ghostStone.SetActive(false);
+        }
+
+        /// Resources/ChoiceGhost.mat: URP Unlit, transparent (a Resources asset, so its variant is always in the build).
+        public const string GhostMaterial = "ChoiceGhost";
+
+        /// A see-through copy of an actor prefab in one flat colour (URP Unlit ignores the art's vertex colours). One
+        /// material per ghost (two at most), destroyed with it.
+        GameObject Ghost(TileVisual v, string name, Color color)
+        {
+            if (!v.HasPrefab || root == null) return null;
+            var src = Resources.Load<Material>(GhostMaterial);
+            if (src == null) { Debug.LogError($"[SevenSteps] Resources/{GhostMaterial}.mat missing: no choice ghost"); return null; }
+            var mat = new Material(src) { name = name };
+            mat.SetColor("_BaseColor", new Color(color.r, color.g, color.b, 0.45f));
+            var go = Instantiate(v.prefab, root);
+            go.name = name;
+            go.transform.localScale = v.Scale * grid.CellSize;
+            // A clone of a gameplay prefab: whatever behaviours it carries (animators, scripts, lights) stay off (review M2).
+            foreach (var b in go.GetComponentsInChildren<Behaviour>(true)) b.enabled = false;
+            go.AddComponent<DestroyWith>().Target = mat;
+            foreach (var r in go.GetComponentsInChildren<Renderer>(true))
+            {
+                var mats = new Material[r.sharedMaterials.Length];
+                for (int i = 0; i < mats.Length; i++) mats[i] = mat;
+                r.sharedMaterials = mats;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+            foreach (var c in go.GetComponentsInChildren<Collider>(true)) Destroy(c);
+            return go;
+        }
+
+        /// Destroys a runtime asset (the ghost's material) together with its object.
+        sealed class DestroyWith : MonoBehaviour
+        {
+            public UnityEngine.Object Target;
+            void OnDestroy() { if (Target != null) Destroy(Target); }
         }
 
         /// Chapter change (12.8): the next Rebuild draws with <paramref name="tileSet"/> and swaps materials through
@@ -101,6 +255,10 @@ namespace SevenSteps.Game
         {
             StopAnim();
             if (root != null) Destroy(root.gameObject);
+            ghostBody = ghostStone = null;
+            ghostBodyIndex = -1;
+            choiceShown = false;
+            marks?.Clear();
             foreach (var l in labels) if (l.Text != null) Destroy(l.Text.gameObject);
             labels.Clear();
             statues.Clear();
@@ -111,6 +269,10 @@ namespace SevenSteps.Game
             grid = set.GridFor(level);
             root = new GameObject("Board").transform;
             root.SetParent(transform, false);
+            trail = new GameObject("Star Trail").AddComponent<StarTrailView>();
+            trail.transform.SetParent(root, false);
+            trail.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity); // marks are built in world space
+            trail.Init(grid, set, cam, chapter != null ? chapter.starTrail : null); // planet look (docs 15.5)
             int n = level.Count;
             cells = new Cell[n];
             feet = new GameObject[n];
@@ -164,6 +326,7 @@ namespace SevenSteps.Game
             if (shake != null) { StopCoroutine(shake); shake = null; }
             foreach (var t in transients) if (t != null) Destroy(t);
             transients.Clear();
+            marks?.StopBursts();
             // Settle every scale tween so the picture is exactly the snapshot (Snap = State).
             foreach (var tw in tweens)
             {
@@ -188,6 +351,14 @@ namespace SevenSteps.Game
         {
             var pt = player.transform;
             var lift = PlayerVisual.offset * grid.CellSize;
+            // KEEP / SWITCH confirmed (docs 4.4): the choice marks go, a short burst on the cell, then the result draws.
+            bool confirm = prev != null && prev.Status == Status.Choose, doorsMoved = false;
+            if (confirm)
+            {
+                ShowChoice(false, default, BoardMarksView.ChoiceFocus.None);
+                var color = set.BodyColor(BodyIndex.Current(r.State));
+                if (marks != null) yield return marks.Burst(grid.CellToWorld(prev.Pos), color, ConfirmSeconds(ReduceMotion));
+            }
             // Ice (Slide event): the first cell is a step, the rest of the path is a glide without hops.
             bool slide = r.Has(GameEventType.Slide);
             for (int p = 0; p < r.Path.Length; p++)
@@ -221,7 +392,9 @@ namespace SevenSteps.Game
                     var c = cells[e.At];
                     bool open = e.Type == GameEventType.DoorOpen;
                     if (c.HasId) { c.Active = open; c.ActiveKnown = true; ApplyActive(c.Go, set.Get(c.Id), open, true); }
-                    yield return new WaitForSeconds(0.12f / Speed);
+                    // A confirm changes all its doors at once and waits once below (review R2: within ConfirmSecondsMax).
+                    if (confirm) doorsMoved = true;
+                    else yield return new WaitForSeconds(0.12f / Speed);
                 }
                 if (e.Type == GameEventType.Fall || e.Type == GameEventType.Bridge)
                 {
@@ -237,8 +410,11 @@ namespace SevenSteps.Game
                 }
             }
 
+            if (doorsMoved && !ReduceMotion) yield return new WaitForSeconds(ConfirmDoorSeconds / Speed);
+            trail.Remember(r);
             Draw(r.State, true, prev);
             if (r.Has(GameEventType.Respawn)) Tween(player.transform, PlayerScale);
+            if (r.State.Status == Status.Win) yield return trail.Finale(Speed); // the paths join up before the result
             anim = null;
             done?.Invoke();
         }
@@ -339,8 +515,8 @@ namespace SevenSteps.Game
             {
                 if (footLabels[i] == null) continue;
                 bool has = marked.Contains(i);
-                if (feet[i] != null) feet[i].SetActive(has);
-                footLabels[i].Text.enabled = has;
+                if (feet[i] != null) feet[i].SetActive(has && StepNumbers);
+                footLabels[i].Text.enabled = has && StepNumbers;
             }
             marked.Clear();
 
@@ -352,11 +528,21 @@ namespace SevenSteps.Game
             player.SetActive(alive);
             Place(player, PlayerVisual, s.Pos);
             player.transform.localScale = PlayerScale;
-            playerLabel.Text.enabled = alive;
+            playerLabel.Text.enabled = alive && StepNumbers;
             int left = Rules.Steps - s.Used;
             playerLabel.Text.text = left.ToString();
             choosing = s.Status == Status.Choose;
             playerLabel.Text.color = choosing || left == 1 ? Ui.Gold : Ui.Ink;
+
+            // Stars at the feet (15.6, ui-minimal v3): the walking brother only; screen space, so never behind a tile.
+            if (marks != null)
+                marks.SetFeet(alive && s.Status == Status.Play, player.transform,
+                    -PlayerVisual.offset * grid.CellSize, // the arc centre: the floor under the brother
+                    set.BodyColor(body), s.Used, ReduceMotion, cam != null ? CellPixels() * grid.CellSize : 77f);
+            DrawChoice();
+
+            // Star trail (design/art/star-trail.md): rebuilt from s, lights up new marks only after Present.
+            trail.Show(s, pop);
         }
 
         /// Flip event: rebuild the flip-wall cells whose shape changed and show the lever as pulled.
@@ -434,6 +620,7 @@ namespace SevenSteps.Game
                 return;
             }
             float size = id.Kind switch { TileKind.Gate => 0.5f, TileKind.Exit => 0.26f, _ => 0.4f };
+            if(v.labelScale>0)size=v.labelScale;
             if (c.Label == null) c.Label = AddLabel(text, Vector3.zero, size, Ui.Ink);
             c.Label.Text.text = text;
             c.Label.Size = size;
@@ -578,24 +765,26 @@ namespace SevenSteps.Game
             cam.transform.rotation = rot;
             cam.orthographic = rig.orthographic;
 
-            // Board extents (with a little height for actors) in camera space.
+            // The projected box of the padded board and its actors (tiles at y 0 to ActorHeight) in camera space: min / max,
+            // not a symmetric half-size, since actor height makes it reach further up than down (the back row stands up).
             var b = grid.Bounds;
             float pad = rig.padding * grid.CellSize;
             Vector3 ext = new Vector3(b.extents.x + pad, 0, b.extents.z + pad);
             var inv = Quaternion.Inverse(rot);
-            float halfX = 0, halfY = 0;
+            Vector2 min = new Vector2(float.MaxValue, float.MaxValue), max = new Vector2(float.MinValue, float.MinValue);
             for (int k = 0; k < 8; k++)
             {
                 var p = new Vector3((k & 1) == 0 ? -ext.x : ext.x, (k & 2) == 0 ? 0 : ActorHeight * grid.CellSize, (k & 4) == 0 ? -ext.z : ext.z);
                 var q = inv * p;
-                halfX = Mathf.Max(halfX, Mathf.Abs(q.x));
-                halfY = Mathf.Max(halfY, Mathf.Abs(q.y));
+                min = Vector2.Min(min, q);
+                max = Vector2.Max(max, q);
             }
-            // Inside the HUD's board frame (docs/architecture.md 14.6): half-heights in the frame's share of the screen.
+            // Inside the HUD's board frame (docs/architecture.md 14.6): the box's half-sizes in the frame's share of the screen.
             var frame = HudView.BoardViewport(cam.aspect);
-            float needH = Mathf.Max(3.2f, halfY / frame.height, halfX / frame.width / cam.aspect);
-            Vector3 center = b.center + Vector3.up * 0.3f;
-            // Camera moved so the board centre lands on the frame centre (viewport 0.5 = camera axis).
+            Vector2 half = (max - min) * 0.5f, mid = (max + min) * 0.5f;
+            float needH = Mathf.Max(3.2f, half.y / frame.height, half.x / frame.width / cam.aspect);
+            // The camera axis goes through the box centre, then moves so that centre lands on the frame centre.
+            Vector3 center = b.center + rot * new Vector3(mid.x, mid.y, 0);
             float shiftX = (frame.center.x - 0.5f) * 2f * needH * cam.aspect;
             float lift = (frame.center.y - 0.5f) * 2f * needH;
             float dist = Mathf.Max(rig.distance, 1f);
@@ -636,7 +825,7 @@ namespace SevenSteps.Game
                 l.Text.rectTransform.anchoredPosition = local;
                 l.Text.fontSize = Mathf.Max(10, Mathf.RoundToInt(cellPx * l.Size));
             }
-            if (playerLabel != null) playerLabel.Text.enabled = player.activeSelf;
+            if (playerLabel != null) playerLabel.Text.enabled = player.activeSelf && StepNumbers;
             // KEEP/SWITCH choice: the player breathes until a choice is made.
             if (choosing && anim == null && player.activeSelf)
                 player.transform.localScale = PlayerScale * (1f + 0.06f * Mathf.Sin(Time.time * 6f));
@@ -651,6 +840,7 @@ namespace SevenSteps.Game
         {
             if (root != null) foreach (var r in root.GetComponentsInChildren<Renderer>()) r.enabled = false;
             foreach (var l in labels) if (l.Text != null) l.Text.enabled = false;
+            if (marks != null) marks.gameObject.SetActive(false);
         }
 
         static class ListPool

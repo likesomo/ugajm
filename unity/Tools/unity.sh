@@ -2,6 +2,8 @@
 # Seven Steps Unity runner (Git Bash). Run from anywhere:  unity/Tools/unity.sh <command>
 #
 #   levels       export prototypes/seven-steps levels + JS solver answers -> Assets/_Project/Data/levels.json
+#   story-check  check design/story/story.json (+ copy-levels.json) with design/story/tools/check-story.mjs (node, no Unity);
+#                levels also runs it and copies story.json -> Assets/_Project/Data/story.json only when it passes
 #   sfx          synthesize placeholder sound effects -> Assets/Shared/Audio/*.wav (git 밖)
 #   golden       regenerate rule golden data (core.js -> Tests/Golden) and telemetry golden (server/fixtures)
 #   setup        (batch) generate materials/prefabs/GameAssets, Game scene if missing, build/player settings
@@ -13,6 +15,7 @@
 #   scene-validate (batch) check build list = AppScenes, scene roots and their references (errors -> exit 1)
 #   build-win    (batch) Windows build -> Builds/Windows/Seven Steps.exe
 #   build-webgl  (batch) WebGL build -> Builds/WebGL/
+#   qa-replay    (batch) replay reports/qa/attempts.jsonl in C# (BuildTools.QaReplay, docs/qa-attempts.md) -> reports/qa/unity-replay.json
 #   play         run the Windows build
 #   smoke        run the Windows build on 7 replays, save screenshots + logs to reports/smoke/
 #   smoke-webgl  open Builds/WebGL in the Orca browser on 3 replays (+ ?smoke=board, + a ?smoke=empty control), fail if the board is missing
@@ -108,6 +111,7 @@ batch() {
 cmd="${1:-help}"
 case "$cmd" in
   levels)      node "$HERE/export-levels.mjs" ;;
+  story-check) node "$REPO/design/story/tools/check-story.mjs" "${@:2}" ;;
   sfx)         node "$HERE/gen-sfx.mjs" ;;
   golden)
     # Rule golden first: the telemetry golden reads Tests/Golden/traces.golden.json as input.
@@ -137,6 +141,7 @@ case "$cmd" in
     echo "[unity.sh] test OK" ;;
   build-win)   batch build-win BuildTools.BuildWindows ;;
   build-webgl) batch build-webgl BuildTools.BuildWebGL ;;
+  qa-replay)   batch qa-replay BuildTools.QaReplay ;;   # replays reports/qa/attempts.jsonl in C# (docs/qa-attempts.md 7) -> reports/qa/unity-replay.json
   play)        "$REPO/Builds/Windows/Seven Steps.exe" & ;;
   smoke)
     # Runs the Windows build on a few replays, saves screenshots + logs to reports/smoke/, fails on exceptions.

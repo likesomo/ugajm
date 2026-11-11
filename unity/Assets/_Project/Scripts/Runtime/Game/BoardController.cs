@@ -86,7 +86,6 @@ namespace SevenSteps.Game
 
             hud.UndoRequested += () => Send(Command.Undo);
             hud.RestartRequested += Restart;
-            hud.HintRequested += ShowHint;
             hud.KeepRequested += () => Send(Command.Keep);
             hud.SwitchRequested += () => Send(Command.Switch);
 
@@ -100,6 +99,11 @@ namespace SevenSteps.Game
             session.Updated += OnSessionUpdated;
             session.Presented += OnPresented;
             if (telemetry is HttpTelemetry http) recorder = new TelemetryRecorder(this, session, http);
+            choice = new ChoiceController(session, hud, board, Send);
+            // Accessibility (docs 11.3.2): step numbers and reduce motion follow the settings, also when changed while playing.
+            board.StepNumbers = hud.StepNumbers = save.Settings.showStepNumbers;
+            board.ReduceMotion = save.Settings.reduceMotion;
+            save.SettingsChanged += OnSettingsChanged;
         }
 
         /// Settings language toggle (docs/architecture.md 13.3): HUD words and fonts, the message line, the exit label.
@@ -114,9 +118,33 @@ namespace SevenSteps.Game
         void OnDestroy()
         {
             if (loc != null) loc.Changed -= OnLanguageChanged;
+            if (save != null) save.SettingsChanged -= OnSettingsChanged;
+            choice?.Dispose();
             recorder?.Dispose();
             audio?.Dispose();
             chapters?.Dispose();
+        }
+
+        void OnSettingsChanged(SettingsData settings)
+        {
+            board.ReduceMotion = settings.reduceMotion;
+            if (settings.showStepNumbers != StepNumbers) StepNumbers = settings.showStepNumbers;
+        }
+
+        ChoiceController choice;
+        /// The KEEP / SWITCH cards, ghosts and focus (docs 4.4). The scene root sets its tutorial funcs.
+        public ChoiceController Choice => choice;
+
+        /// Accessibility "show step numbers" (SettingsData.showStepNumbers, off by default; the toggle is scene-flow's):
+        /// numeric footprints and the steps-left number on the board. Redraws at once.
+        public bool StepNumbers
+        {
+            get => board.StepNumbers;
+            set
+            {
+                board.StepNumbers = hud.StepNumbers = value;
+                if (session.State != null && !board.IsAnimating) board.Snap(session.State);
+            }
         }
 
         /// Smoke negative control (LaunchOptions.SmokeView.Empty): the board plays as usual but draws nothing.
@@ -218,6 +246,8 @@ namespace SevenSteps.Game
                 else if (kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame) Send(Command.Move(Dir.Down));
                 else if (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame) Send(Command.Move(Dir.Left));
                 else if (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame) Send(Command.Move(Dir.Right));
+                else if (kb.tabKey.wasPressedThisFrame && choice.Shown) choice.ToggleFocus();
+                else if ((kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) && choice.Shown) choice.Confirm();
                 else if (kb.kKey.wasPressedThisFrame) Send(Command.Keep);
                 else if (kb.xKey.wasPressedThisFrame) Send(Command.Switch);
                 else if (kb.zKey.wasPressedThisFrame || kb.backspaceKey.wasPressedThisFrame) Send(Command.Undo);
@@ -291,14 +321,8 @@ namespace SevenSteps.Game
             else if (s.Status != Status.Lose && lost) { lost = false; Recovered?.Invoke(); }
         }
 
-        /// docs 6.5: an Undo counts when the core went back a state (its Undo event; also after Lose). A Restart counts when
-        /// the state before it was not the stage start (the start state has no Prev: NewState, or undone back to it).
-        void CountAttempt(SessionUpdate u)
-        {
-            if (u.Result == null) return;
-            if (u.Result.Has(GameEventType.Undo)) attempt = attempt.WithUndo();
-            if (u.Result.Has(GameEventType.Restart) && u.Prev != null && u.Prev.Prev != null) attempt = attempt.WithRestart();
-        }
+        /// docs 6.5 counting rule: AttemptCounts.After (shared with the QA replay).
+        void CountAttempt(SessionUpdate u) => attempt = attempt.After(u);
 
         /// A presentation finished (docs/architecture.md 4.2). A clear shows the Result panel only now.
         void OnPresented(State s)

@@ -56,6 +56,9 @@ namespace SevenSteps.Game
         Action<Language> applyResultLanguage;
         SettingsPanel settingsPanel;
         IChapterCard chapterCard;
+        MenuPanel menuPanel;
+        MenuController menu;
+        TutorialTracker tutorial;
 
         bool OnlyChapterCard() => chapterCard != null && overlays.Count == 1 && overlays.Top == chapterCard;
 
@@ -64,6 +67,11 @@ namespace SevenSteps.Game
         /// Stage on the board and the stage list (art preview scripts read these).
         public int LevelIndex => board.LevelIndex;
         public SevenSteps.Core.Level[] Levels => board.Levels;
+        /// One-time guides of the minimal UI (move guide, KEEP / SWITCH guide, choice result lines). The HUD and the choice
+        /// cards read it and redraw on Changed (gameplay-ui).
+        public TutorialTracker Tutorial => tutorial;
+        /// The in-game menu (settings, stages, solution, controls). The HUD menu button calls Menu.Toggle.
+        public MenuController Menu => menu;
 
         void Awake()
         {
@@ -108,13 +116,17 @@ namespace SevenSteps.Game
             var settings = settingsPanel = SettingsPanel.Create(overlayCanvas, save, cfg.telemetryOnByDefault, localizer);
             var languagePanel = new LanguagePanel(overlayCanvas); // opened from the settings language button
             languagePanel.Apply(localizer);
-            applyResultLanguage = _ => { result.Apply(localizer); languagePanel.Apply(localizer); }; // the HUD and board redraw in BoardController
+            var menuPanel = this.menuPanel = new MenuPanel(overlayCanvas);
+            menuPanel.Apply(localizer);
+            applyResultLanguage = _ => { result.Apply(localizer); languagePanel.Apply(localizer); menuPanel.Apply(localizer); }; // the HUD and board redraw in BoardController
             localizer.Changed += applyResultLanguage;
             // The theme's card prefab, else the code-built chapter entry screen (art concept chapter-entry). None in smoke /
             // replay runs: the screenshot must show the board.
             IChapterCard chapterCard = launch.SmokeView != SmokeView.None || (!string.IsNullOrEmpty(launch.Replay) && !launch.FlowCheck) ? null
                 : (IChapterCard)ChapterCardView.CreateOptional(overlayCanvas) ?? ChapterEntryView.Create(overlayCanvas, localizer);
             this.chapterCard = chapterCard;
+            // Win finale (star trail) at a quarter of its length in dev runs, so replays and smoke reach the result quickly.
+            StarTrailView.FinaleSpeed = launch.SmokeView != SmokeView.None || launch.FlowCheck || !string.IsNullOrEmpty(launch.Replay) ? 4f : 1f;
             settingsController = new SettingsController(save, settings, cfg.telemetryOnByDefault, localizer);
             overlays = new OverlayStack();
             languageController = new LanguageController(languagePanel, overlays, localizer, save, launch.Language);
@@ -144,8 +156,28 @@ namespace SevenSteps.Game
             board.InputBlocked = () => flow.IsLoading || (overlays.Count > 0 && !OnlyChapterCard());
             board.FlowTakes = flowController.TakesCommand;
 
-            hud.StageSelectRequested += flowController.OpenStageSelect;
-            hud.SettingsRequested += () => { if (!overlays.Contains(settings)) overlays.Push(settings); };
+            // One-time guides (ui-minimal). Dev runs (replay, flow / title checks, smoke) keep the profile untouched and start
+            // with every guide seen, so their screenshots show the plain HUD.
+            bool devRun = launch.SmokeView != SmokeView.None || !string.IsNullOrEmpty(launch.Replay) || launch.FlowCheck || launch.TitleCheck != "";
+            // "-guides fresh" (captures of the first-choice cards, v3-choose-first): a dev run with nothing seen yet, still in memory.
+            // Read here until scene-flow moves it into LaunchOptions.
+            bool freshGuides = Array.IndexOf(Environment.GetCommandLineArgs(), "-guides") is int gi && gi >= 0
+                && gi + 1 < Environment.GetCommandLineArgs().Length && Environment.GetCommandLineArgs()[gi + 1] == "fresh";
+            tutorial = new TutorialTracker(devRun ? new MemoryTutorialStore(allSeen: !freshGuides) : (ITutorialStore)new SaveTutorialStore(save));
+            board.Session.Updated += tutorial.Apply;
+            board.StageEntered += StopControlsGuide;
+            menu = new MenuController(overlays, menuPanel,
+                openSettings: () => { if (!overlays.Contains(settings)) overlays.Push(settings); },
+                openStages: flowController.OpenStageSelect,
+                showSolution: board.ShowHint,
+                playControls: tutorial.PlayControls);
+            hud.MenuRequested += menu.Toggle; // the HUD menu button (settings, stages, solution, controls)
+            // Move guide (first play, or Menu > controls) in the HUD's left margin; the KEEP / SWITCH guide goes with the choice cards.
+            hud.Guide = tutorial.ShowMoveGuide;
+            // Choice cards: both result lines for the first confirms, the guide line the first time (shown after Presented, 4.4).
+            board.Choice.ExplainChoices = () => tutorial.ExplainChoices;
+            board.Choice.ShowGuide = () => tutorial.ShowChoiceGuide;
+            tutorial.Changed += () => { hud.Guide = tutorial.ShowMoveGuide; board.Choice.Refresh(); };
             result.NextRequested += flowController.Next;
             result.RetryRequested += flowController.Again;
             result.StageSelectRequested += flowController.OpenStageSelect;
@@ -191,8 +223,16 @@ namespace SevenSteps.Game
             settingsController?.Dispose();
             languageController?.Dispose();
             chapterIntro?.Dispose();
+            menu?.Dispose();
+            if (board != null && tutorial != null)
+            {
+                if (board.Session != null) board.Session.Updated -= tutorial.Apply;
+                board.StageEntered -= StopControlsGuide;
+            }
             if (localizer != null) localizer.Changed -= applyResultLanguage;
         }
+
+        void StopControlsGuide(int stage, string via) => tutorial.StopControls();
 
         /// Flow keys. Board keys are read by the board controller (blocked while an overlay is open or a scene loads).
         void Update()

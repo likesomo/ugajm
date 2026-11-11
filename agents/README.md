@@ -15,6 +15,7 @@
 | [level-design.md](level-design.md) | 레벨 디자이너 | Claude | `feat/levels` | Orca 작업 공간 신규 생성 |
 | [scene-flow.md](scene-flow.md) | 씬 플로우 엔지니어 (씬 구조·화면 흐름) | Claude | `feat/scene-flow` | Orca 작업 공간 `scene-flow` (2026-11-08 추가) |
 | [backend-analytics.md](backend-analytics.md) | 백엔드/분석 (수집 서버·대시보드) | Claude | `feat/server` | Orca 작업 공간 `server` |
+| [story.md](story.md) | 스토리 디렉터 (플롯 구조·세계관·이야기 반영 구조) | Claude | `feat/story` | Orca 작업 공간 `story` (2026-11-10 추가) |
 
 `number-chemical` 에이전트는 종료한다. 작업 공간과 브랜치는 남긴다.
 
@@ -79,7 +80,8 @@ Unity 씬·프리팹은 git으로 합치기 어렵다. **한 파일은 한 에�
 | `Assets/Shared/**` (git 밖 공유 폴더, **아트만 추가·수정**), `Assets/_Project/Art/**`, `Assets/_Project/Prefabs/Tiles/**`, `Assets/Settings/*RPAsset*`, `design/art/**` (`design/art/CREDITS.md` 포함) | 아트 |
 | `*.asmdef`, `docs/architecture.md`, 공용 인터페이스(아키텍트가 지정한 파일), `Packages/manifest.json` | 아키텍트 |
 | `server/**`, `docs/telemetry.md`, `prototypes/seven-steps/src/telemetry.js`, `prototypes/seven-steps/src/main.js`의 텔레메트리 훅 부분 (main.js의 나머지는 건드리지 않는다) | 백엔드/분석 |
-| `CLAUDE.md`, `design/**`, `agents/**`, `ProjectSettings/EditorBuildSettings.asset`, `Assets/_Project/Scripts/Editor/BuildTools.cs` | 리드 |
+| `design/story/**` (이야기 데이터 반영은 레벨 디자인, 코드는 리드가 배분) | 스토리 디렉터 |
+| `CLAUDE.md`, `design/**`(위 소유 영역 제외), `agents/**`, `ProjectSettings/EditorBuildSettings.asset`, `Assets/_Project/Scripts/Editor/BuildTools.cs` | 리드 |
 
 `Prefabs/Generated/**`는 v0에서 리드가 만든 임시 프리팹이다. 최종 타일 프리팹은 아트가 `Prefabs/Tiles/**`에 만들고, 아키텍트의 `TileSet` 매핑으로 교체한다.
 

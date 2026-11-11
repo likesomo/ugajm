@@ -21,7 +21,7 @@ namespace SevenSteps.Art
             var args=Environment.GetCommandLineArgs();int k=Array.IndexOf(args,"-boardshape-capture");
             if(k<0||k+1>=args.Length)yield break;
             string output=args[k+1];Directory.CreateDirectory(output);var camera=Camera.main;
-            var csv=new List<string>{"id,w,h,proposedFraming,tris,renderers,materials,cellWidthPx,cellHeightPx"};
+            var csv=new List<string>{"id,w,h,proposedFraming,tris,renderers,materials,cellWidthPx,cellHeightPx,digitGlyphPx,digitToCellHeight"};
             foreach(var chapter in chapters)
             {
                 foreach(var size in new[]{new Vector2Int(8,6),new Vector2Int(12,5),new Vector2Int(10,3),new Vector2Int(7,7)})
@@ -70,20 +70,34 @@ namespace SevenSteps.Art
                             var go=new GameObject(value,typeof(RectTransform),typeof(Text));go.transform.SetParent(canvas.transform,false);var text=go.GetComponent<Text>();text.font=numberFont;text.text=value;text.fontSize=fontSize;text.color=new Color(1,.91f,.71f);text.alignment=TextAnchor.MiddleCenter;text.raycastTarget=false;
                             var rt=text.rectTransform;rt.anchorMin=rt.anchorMax=Vector2.zero;rt.pivot=Vector2.one*.5f;rt.sizeDelta=new Vector2(320,75);rt.anchoredPosition=pos;return text;
                         }
-                        Text(chapter.id+"  "+size.x+" x "+size.y,new Vector2(180,665),28);
-                        Text(proposed?"Proposed framing / pitch 50":"Default framing / pitch 50",new Vector2(190,615),20);
-                        Text("Wall / Pit / Ice / Door / Mud",new Vector2(185,proposed?30:100),17);
                         var number=Text("3",Vector2.zero,proposed?32:26);number.color=new Color(1,.94f,.78f);
                         yield return null;yield return new WaitForSeconds(.4f);
                         var sp=camera.WorldToScreenPoint(grid.CellToWorld(2,Mathf.Max(0,specialY-1))+set.gate.labelOffset);number.rectTransform.anchoredPosition=sp;
                         var a=camera.WorldToScreenPoint(grid.CellToWorld(1,1));var bx=camera.WorldToScreenPoint(grid.CellToWorld(2,1));var by=camera.WorldToScreenPoint(grid.CellToWorld(1,0));
+                        number.fontSize=Mathf.CeilToInt(Mathf.Abs(bx.x-a.x)*set.gate.labelScale);
+                        numberFont.RequestCharactersInTexture("3",number.fontSize,FontStyle.Normal);
+                        if(!numberFont.GetCharacterInfo('3',out var glyph,number.fontSize,FontStyle.Normal))throw new Exception("Missing review digit glyph");
+                        float digitHeight=glyph.maxY-glyph.minY,cellHeight=Mathf.Abs(by.y-a.y);
+                        if(digitHeight<cellHeight*.5f)throw new Exception("Number door digit is below half the projected cell height");
                         var filters=root.GetComponentsInChildren<MeshFilter>();long tris=0;foreach(var mf in filters)for(int sm=0;sm<mf.sharedMesh.subMeshCount;sm++)tris+=mf.sharedMesh.GetIndexCount(sm)/3;
                         var materials=new HashSet<Material>();foreach(var r in root.GetComponentsInChildren<Renderer>())foreach(var m in r.sharedMaterials)materials.Add(m);
-                        csv.Add(chapter.id+","+size.x+","+size.y+","+proposed+","+tris+","+root.GetComponentsInChildren<Renderer>().Length+","+materials.Count+","+Mathf.Abs(bx.x-a.x).ToString("F2")+","+Mathf.Abs(by.y-a.y).ToString("F2"));
+                        csv.Add(chapter.id+","+size.x+","+size.y+","+proposed+","+tris+","+root.GetComponentsInChildren<Renderer>().Length+","+materials.Count+","+Mathf.Abs(bx.x-a.x).ToString("F2")+","+cellHeight.ToString("F2")+","+digitHeight+","+(digitHeight/cellHeight).ToString("F3"));
                         yield return new WaitForEndOfFrame();
                         string name=chapter.id+"-"+size.x+"x"+size.y+(proposed?"-proposed":"-ortho")+".png";
                         string file=Path.Combine(output,name);ScreenCapture.CaptureScreenshot(file);yield return new WaitForSeconds(.3f);
                         if(!File.Exists(file))throw new IOException("Unity screenshot was not saved: "+file);
+                        if(proposed&&size==new Vector2Int(8,6))
+                        {
+                            // Actual Unity close-up: worn block, slab tops and rough sides.
+                            // Hide screen labels calculated for the previous camera projection.
+                            canvas.SetActive(false);camera.orthographicSize=1.65f;
+                            var focus=grid.CellToWorld(0,0)+new Vector3(.65f,.10f,-.55f);
+                            camera.transform.position=focus-camera.transform.forward*cameraRig.distance;
+                            yield return new WaitForEndOfFrame();
+                            var detail=Path.Combine(output,chapter.id+"-stone-closeup.png");
+                            ScreenCapture.CaptureScreenshot(detail);yield return new WaitForSeconds(.3f);
+                            if(!File.Exists(detail))throw new IOException("Missing actual Unity stone close-up: "+detail);
+                        }
                         Destroy(canvas);Destroy(sky);Destroy(root);yield return null;
                     }
                 }

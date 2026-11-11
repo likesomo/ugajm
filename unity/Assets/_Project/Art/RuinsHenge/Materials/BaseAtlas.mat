@@ -19,7 +19,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties:
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -43,17 +43,22 @@ Material:
     m_Floats:
     - _AmbientFloor: 0.3
     - _BoardMoss: 1
-    - _BoardNormalStrength: 0.12
+    - _BoardNormalStrength: 0.42
+    - _BoardStoneSlot: 0
+    - _DstBlend: 0
     - _EnvironmentDetail: 0
     - _EnvironmentMoss: 0
     - _EnvironmentWood: 0
+    - _SrcBlend: 1
+    - _SurfaceAlpha: 1
     - _Unlit: 0
     - _UseAtlas: 1
     - _UseMoss: 1
     - _UseVertexColor: 0
+    - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _BoardRockTint: {r: 0.77254903, g: 0.7882353, b: 0.7764706, a: 1}
+    - _BoardRockTint: {r: 1, g: 1, b: 1, a: 1}
     - _MossColor: {r: 0.43529412, g: 0.54509807, b: 0.30588236, a: 1}
     - _WallColor: {r: 0.3764706, g: 0.46666667, b: 0.5411765, a: 1}
     - _WeatherTint: {r: 0.23999995, g: 0.29999998, b: 0.20999995, a: 1}

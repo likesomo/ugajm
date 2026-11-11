@@ -10,7 +10,9 @@
         "SevenSteps.Editor",
         "UnityEngine.UI",
         "Unity.RenderPipelines.Core.Runtime",
-        "Unity.RenderPipelines.Universal.Runtime"
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.InputSystem",
+        "SevenSteps.Art.Review"
     ],
     "includePlatforms": [
         "Editor"

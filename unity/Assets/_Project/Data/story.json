@@ -1,0 +1,199 @@
+{
+  "about": "Story lines for Seven Steps (design/story/story-integration.md 0.5 and 2). ko base + text[] per language like chapters.json (architecture 13.5). Source: design/story; unity.sh levels copies it to Assets/_Project/Data/story.json after check-story passes. Stage lines and planet cards live in levels.js / chapters.json (proposal: design/story/copy-levels.json).",
+  "version": 1,
+  "languages": ["ko", "en"],
+  "brothers": [
+    { "n": 1, "name": "첫째", "text": [{ "lang": "en", "name": "the eldest" }] },
+    { "n": 2, "name": "둘째", "text": [{ "lang": "en", "name": "the middle one" }] },
+    { "n": 3, "name": "셋째", "text": [{ "lang": "en", "name": "the youngest" }] }
+  ],
+  "beats": [
+    { "chapter": "moss", "star": 1, "part": "bowl", "beat": "departure", "focus": 1 },
+    { "chapter": "hollow", "star": 2, "part": "bowl", "beat": "trial", "focus": 2 },
+    { "chapter": "carved", "star": 3, "part": "bowl", "beat": "discovery", "focus": 3 },
+    { "chapter": "frost", "star": 4, "part": "bowl", "beat": "midpoint", "focus": 0 },
+    { "chapter": "joinery", "star": 5, "part": "handle", "beat": "cost", "focus": 2 },
+    { "chapter": "crumble", "star": 6, "part": "handle", "beat": "loss", "focus": 1 },
+    { "chapter": "altar", "star": 7, "part": "handle", "beat": "return", "focus": 3 }
+  ],
+  "images": [
+    "card.moss", "card.hollow", "card.carved", "card.frost", "card.joinery", "card.crumble", "card.altar",
+    "carving.moss", "carving.hollow", "carving.carved", "carving.frost", "carving.joinery", "carving.crumble", "carving.altar",
+    "ending.1", "ending.2", "ending.3", "ending.4",
+    "title.key"
+  ],
+  "dipper": [
+    { "from": "moss", "to": "hollow" },
+    { "from": "hollow", "to": "carved" },
+    { "from": "carved", "to": "frost" },
+    { "from": "frost", "to": "moss" },
+    { "from": "frost", "to": "joinery" },
+    { "from": "joinery", "to": "crumble" },
+    { "from": "crumble", "to": "altar" },
+    { "from": "altar", "to": "circle" }
+  ],
+  "entries": [
+    {
+      "id": "title",
+      "on": "title", "chapter": "", "brother": 0, "stones": -1, "card": 0, "after": "",
+      "image": "",
+      "lines": [
+        { "id": "1", "line": "별이 다 꺼지기 전에, 다시 잇는다.", "text": [{ "lang": "en", "line": "Join the stars again before they go out." }] }
+      ]
+    },
+    {
+      "id": "title.ending",
+      "on": "title", "chapter": "", "brother": 0, "stones": -1, "card": 0, "after": "ending",
+      "image": "",
+      "lines": [
+        { "id": "1", "line": "일곱 별이 다시 이어졌다.", "text": [{ "lang": "en", "line": "The Seven Stars are joined again." }] }
+      ]
+    },
+    {
+      "id": "stillstar",
+      "on": "stillStar", "chapter": "", "brother": 0, "stones": -1, "card": 0, "after": "allStars",
+      "image": "",
+      "lines": [
+        { "id": "1", "line": "움직이지 않는 별 아래, 다음 지도.", "text": [{ "lang": "en", "line": "Under the still star, the next map." }] }
+      ]
+    },
+    {
+      "id": "finale.moss",
+      "on": "finale", "chapter": "moss", "brother": 0, "stones": -1, "card": 0, "after": "",
+      "image": "",
+      "lines": [
+        { "id": "1", "line": "지도는 셋의 손에서만 빛났다.", "text": [{ "lang": "en", "line": "The map shone only in their hands." }] }
+      ]
+    },
+    {
+      "id": "finale.hollow",
+      "on": "finale", "chapter": "hollow", "brother": 0, "stones": -1, "card": 0, "after": "",
+      "image": "",
+      "lines": [
+        { "id": "1", "line": "건넨 자리에서 다음이 깼다.", "text": [{ "lang": "en", "line": "Each woke where the map was handed." }] }
+      ]
+    },
+    {
+      "id": "finale.carved",
+      "on": "finale", "chapter": "carved", "brother": 0, "stones": -1, "card": 0, "after": "",
+      "image": "",
+      "lines": [
+        { "id": "1", "line": "옛 선돌은 누군가의 자리였다.", "text": [{ "lang": "en", "line": "Someone stood in every old stone." }] }
+      ]
+    },
+    {
+      "id": "finale.frost",
+      "on": "finale", "chapter": "frost", "brother": 0, "stones": -1, "card": 0, "after": "",
+      "image": "",
+      "lines": [
+        { "id": "1", "line": "바퀴마다 누군가 다시 걸었다.", "text": [{ "lang": "en", "line": "Every turn, someone walked again." }] }
+      ]
+    },
+    {
+      "id": "finale.joinery",
+      "on": "finale", "chapter": "joinery", "brother": 0, "stones": -1, "card": 0, "after": "",
+      "image": "",
+      "lines": [
+        { "id": "1", "line": "장치는 뒤에 올 손을 알았다.", "text": [{ "lang": "en", "line": "The gears were made for those after." }] }
+      ]
+    },
+    {
+      "id": "finale.crumble",
+      "on": "finale", "chapter": "crumble", "brother": 0, "stones": -1, "card": 0, "after": "",
+      "image": "",
+      "lines": [
+        { "id": "1", "line": "지나가는 것도 돕는 일이었다.", "text": [{ "lang": "en", "line": "Moving on was a way to help, too." }] }
+      ]
+    },
+    {
+      "id": "finale.altar",
+      "on": "finale", "chapter": "altar", "brother": 0, "stones": -1, "card": 0, "after": "",
+      "image": "",
+      "lines": [
+        { "id": "1", "line": "원은 지도를 건네는 곳이었다.", "text": [{ "lang": "en", "line": "The map changed hands at the circle." }] }
+      ]
+    },
+    {
+      "id": "ending.1.b1",
+      "on": "ending", "chapter": "", "brother": 1, "stones": -1, "card": 1, "after": "",
+      "image": "ending.1",
+      "lines": [
+        { "id": "1", "line": "첫째가 디딘 곳에 별이 맞춰졌다.", "text": [{ "lang": "en", "line": "The eldest's step lined up the stars." }] }
+      ]
+    },
+    {
+      "id": "ending.1.b2",
+      "on": "ending", "chapter": "", "brother": 2, "stones": -1, "card": 1, "after": "",
+      "image": "ending.1",
+      "lines": [
+        { "id": "1", "line": "둘째가 닿자, 일곱 별이 섰다.", "text": [{ "lang": "en", "line": "The middle one ran in. The sky lined up." }] }
+      ]
+    },
+    {
+      "id": "ending.1.b3",
+      "on": "ending", "chapter": "", "brother": 3, "stones": -1, "card": 1, "after": "",
+      "image": "ending.1",
+      "lines": [
+        { "id": "1", "line": "셋째가 끝까지 세고 디뎠다.", "text": [{ "lang": "en", "line": "The youngest counted, then stepped in." }] }
+      ]
+    },
+    {
+      "id": "ending.2.s0",
+      "on": "ending", "chapter": "", "brother": 0, "stones": 0, "card": 2, "after": "",
+      "image": "ending.2",
+      "lines": [
+        { "id": "1", "line": "셋이 섰다. 남은 돌은 없었다.", "text": [{ "lang": "en", "line": "The three stood. No stone remained." }] }
+      ]
+    },
+    {
+      "id": "ending.2.s1",
+      "on": "ending", "chapter": "", "brother": 0, "stones": 1, "card": 2, "after": "",
+      "image": "ending.2",
+      "lines": [
+        { "id": "1", "line": "셋이 섰다. 돌 하나가 남았다.", "text": [{ "lang": "en", "line": "The three stood. One stone remained." }] }
+      ]
+    },
+    {
+      "id": "ending.2.s2",
+      "on": "ending", "chapter": "", "brother": 0, "stones": 2, "card": 2, "after": "",
+      "image": "ending.2",
+      "lines": [
+        { "id": "1", "line": "셋이 섰다. 돌 둘이 남았다.", "text": [{ "lang": "en", "line": "The three stood. Two stones remained." }] }
+      ]
+    },
+    {
+      "id": "ending.3",
+      "on": "ending", "chapter": "", "brother": 0, "stones": -1, "card": 3, "after": "",
+      "image": "ending.3",
+      "lines": [
+        { "id": "1", "line": "아직 흐린 새김이 있다.", "text": [{ "lang": "en", "line": "Some carvings are still dim." }] }
+      ]
+    },
+    {
+      "id": "ending.3.all",
+      "on": "ending", "chapter": "", "brother": 0, "stones": -1, "card": 3, "after": "allTruths",
+      "image": "ending.3",
+      "lines": [
+        { "id": "1", "line": "지도는 셋에게 건네진 것이었다.", "text": [{ "lang": "en", "line": "The map had been handed to them." }] }
+      ]
+    },
+    {
+      "id": "ending.4",
+      "on": "ending", "chapter": "", "brother": 0, "stones": -1, "card": 4, "after": "",
+      "image": "ending.4",
+      "lines": [
+        { "id": "1", "line": "다음 길은 우리가 그린다.", "text": [{ "lang": "en", "line": "The next road is ours to draw." }] }
+      ]
+    },
+    {
+      "id": "lose",
+      "on": "lose", "chapter": "", "brother": 0, "stones": -1, "card": 0, "after": "",
+      "image": "",
+      "lines": [
+        { "id": "1", "line": "별이 덜 모였다.", "text": [{ "lang": "en", "line": "Not all the stars came." }] },
+        { "id": "2", "line": "하늘이 아직이었다.", "text": [{ "lang": "en", "line": "The sky wasn't ready." }] },
+        { "id": "3", "line": "셋은 다시 센다.", "text": [{ "lang": "en", "line": "The three count again." }] }
+      ]
+    }
+  ]
+}

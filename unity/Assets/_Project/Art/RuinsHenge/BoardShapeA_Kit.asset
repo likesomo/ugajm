@@ -20,6 +20,7 @@ MonoBehaviour:
   - {fileID: -4510477397162200456, guid: d2c4081b71f681d4b945053f65bebdab, type: 3}
   - {fileID: 8703103834048919220, guid: 61c9e50b85053d24bb6ef672308cc467, type: 3}
   kerb: {fileID: -7867998212604372291, guid: 259ce55c083e2ee47988d5b914843aa1, type: 3}
+  plainKerb: {fileID: -2405149135905739062, guid: 2a37d7810e67fbb42844af886a64e80a, type: 3}
   corner: {fileID: 3993233782142208818, guid: 4df01038fc4d9784daadaa78b543a4ea, type: 3}
   medallion: {fileID: -4315219843679237468, guid: b1f1c756035e6914ba600ecf24b8168e, type: 3}
   chest: {fileID: 9066884066910292466, guid: 88cfc509f1085fc419a43647c074a83f, type: 3}
@@ -28,4 +29,18 @@ MonoBehaviour:
   joist: {fileID: -4130697691098149145, guid: 9079a123f38f5414ea73f69cb3f022dd, type: 3}
   rubble: {fileID: 1182497776389938457, guid: 64867a9ca51288d4e85a8cd30ddc88b0, type: 3}
   fragment: {fileID: -80577718331875683, guid: 950e18729e83b684da1264189adc76a0, type: 3}
+  crumbleShard: {fileID: 2339805031423416736, guid: a1440c754ed1d3e41b12a38ec3119e2c, type: 3}
   grass: {fileID: -8808126164064023102, guid: 6ed28444f804f204e8eb1de987d56e0c, type: 3}
+  hollowArch: {fileID: 449165768373052684, guid: b9077a83b820c7a4d876319b3df580ba, type: 3}
+  hollowStar: {fileID: 296005602962762605, guid: 2cd82324a01a05f42865310101bb141e, type: 3}
+  terrace: {fileID: -454346185614569159, guid: 754e15ab0abb36943b853397d58155f4, type: 3}
+  frostSpire: {fileID: 5498393017138259647, guid: 793899c993da42b4d8ccb54dba82eb00, type: 3}
+  timberFrame: {fileID: -2505178694896368991, guid: b70df6fa7aa2e3d4b8ada08aef945e8f, type: 3}
+  mossPatch: {fileID: -8993601259506670756, guid: 9c1766da68d1c7e489fddab29658be4b, type: 3}
+  hollowCrust: {fileID: -8119048611242822523, guid: a9fb3d79e3044aa47a5c118f8227465c, type: 3}
+  hollowKerb: {fileID: -8420432847489966153, guid: f1fecc7819562864395cd741c9992a27, type: 3}
+  carvedKerb: {fileID: -8001428490906264753, guid: 3eb44c6dba796a547ae53f9ec84959b9, type: 3}
+  carvedKerbMarker: {fileID: -7675507899081236842, guid: d79495554d44e774e9d1fc69489e01f7, type: 3}
+  altarMenhir: {fileID: 7990961134020157916, guid: 9a9f35c6196d394438e20fc26d8654cb, type: 3}
+  joineryKerb: {fileID: -369742588959352630, guid: 1e27312459217d14f998ecb5eb3ce226, type: 3}
+  joineryCrust: {fileID: 7652732416409778683, guid: b72888c0ebb042348be75a4f3110a8b5, type: 3}

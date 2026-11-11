@@ -46,6 +46,7 @@ U="/c/Program Files/Unity/Hub/Editor/6000.6.8f1/Editor/Unity.exe"
 위 배치 명령을 감싼 스크립트. 배치 명령은 에디터를 닫고 실행한다. 로그는 `unity/Logs/batch-<명령>.log`.
 ```bash
 unity/Tools/unity.sh levels       # levels.js + JS 솔버 답 → Assets/_Project/Data/levels.json (스테이지를 바꾸면 실행)
+unity/Tools/unity.sh story-check  # design/story/story.json(+copy-levels.json) 검사 (node, check-story.mjs). levels 도 같은 검사 후 통과할 때만 Data/story.json 으로 복사
 unity/Tools/unity.sh sfx          # 임시 효과음 11개 합성 → Assets/Shared/Audio/*.wav (공유 폴더, 아트 담당)
 unity/Tools/unity.sh setup        # 머티리얼·프리팹·GameAssets 생성, Game 씬(없을 때만), 빌드/플레이어 설정
 unity/Tools/unity.sh golden       # 규칙 골든값(core.js → Tests/Golden) + 텔레메트리 골든값(server/fixtures) 다시 생성. core.js 나 스테이지를 바꾸면 실행 후 커밋

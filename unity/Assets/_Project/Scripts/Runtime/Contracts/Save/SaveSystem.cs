@@ -83,6 +83,12 @@ namespace SevenSteps.Contracts
         /// The player picked the language (first-run picker or the settings toggle), not only the system default (13.3).
         /// Saves from before this field read as false: the picker shows once for them too.
         public bool languageChosen;
+        /// Accessibility (11.3.2): show the step count as digits (numbered footprints, steps left). Default off: the seven
+        /// foot stars carry it. Saves from before this field read as false.
+        public bool showStepNumbers;
+        /// Accessibility (11.3.2): no pulses, awaken / finale rays or long slides; a double outline or the end picture
+        /// instead. Default off.
+        public bool reduceMotion;
     }
 
     /// <summary>
@@ -96,14 +102,25 @@ namespace SevenSteps.Contracts
         public const string ProgressKey = "seven-steps.progress";
         public const string SettingsKey = "seven-steps.settings";
         public const string ProgressBackupKey = "seven-steps.progress.v1";
+        /// One-time guides and the KEEP / SWITCH confirm count (TutorialData, 11.3.2).
+        public const string TutorialKey = "seven-steps.tutorial";
+        /// Story lines shown, ending / carvings / final truth seen (StoryProgress, docs/architecture.md 16.5).
+        public const string StoryKey = "seven-steps.story";
         const string LegacyClearedKey = "seven-steps-cleared";
 
         readonly ISaveStore store;
         /// The stored progress is from a newer build: keep it, do not write over it.
         bool progressReadOnly; // set on load; StartNewPlayer clears it
+        /// Same for the tutorial data.
+        bool tutorialReadOnly;
+        /// Same for the story data.
+        bool storyReadOnly;
 
         public ProgressData Progress { get; private set; }
         public SettingsData Settings { get; private set; }
+        public TutorialData Tutorial { get; private set; }
+        /// Story presentation memory (16.5). Change it through its Mark methods, then call SaveStory at the save points.
+        public StoryProgress Story { get; private set; }
 
         /// Raised after SaveSettings, so audio/telemetry can react to volume or opt-out changes.
         public event Action<SettingsData> SettingsChanged;
@@ -112,7 +129,9 @@ namespace SevenSteps.Contracts
         {
             this.store = store ?? throw new ArgumentNullException(nameof(store));
             Progress = LoadProgress(out progressReadOnly);
-            Settings = Read<SettingsData>(SettingsKey);
+            Tutorial = LoadTutorial(out tutorialReadOnly);
+            Story = LoadStory(out storyReadOnly);
+            Settings =Read<SettingsData>(SettingsKey);
             if (Settings == null)
             {
                 // First run (13.3): the UI language follows the system (Korean → ko, otherwise en).
@@ -129,15 +148,106 @@ namespace SevenSteps.Contracts
 
         /// Playtest facilitator: the next tester starts fresh (-newplayer / ?newplayer=1, LaunchOptions.NewPlayer).
         /// Empty progress (cleared stages, best bodies and stars, attempt counts) and no playerId (telemetry makes a new
-        /// one); volumes, consent and language stay. Overrides a newer build's read-only progress: this is deliberate.
+        /// one), no finished guides (TutorialData: the next tester sees them again) and no story memory (StoryProgress: the
+        /// next tester does not start on the after-ending branch); volumes, consent, language and the accessibility options
+        /// stay. Overrides a newer build's read-only progress / tutorial / story data: this is deliberate.
         public void StartNewPlayer()
         {
             Progress = new ProgressData();
             progressReadOnly = false;
             SaveProgress();
+            Tutorial = new TutorialData();
+            tutorialReadOnly = false;
+            SaveTutorial();
+            Story = new StoryProgress();
+            storyReadOnly = false;
+            SaveStory();
             Settings.playerId = "";
             SaveSettings();
         }
+
+        // ---------- One-time guides (11.3.2). Counted only from applied commands (SessionUpdate Present), never from Snap,
+        // Rebuild or Replay; language change, Undo and Restart leave them as they are. Not part of any replay / QA hash. ----------
+
+        /// This guide (TutorialIds, "name@version") was finished.
+        public bool TutorialSeen(string id) => Tutorial.IsSeen(id);
+
+        /// The guide was finished (its first successful use). Saves when it changed. Invalid id: ArgumentException.
+        public void MarkTutorialSeen(string id)
+        {
+            if (Tutorial.MarkSeen(id)) SaveTutorial();
+        }
+
+        /// Confirmed KEEP / SWITCH choices so far, 0..TutorialData.ChoiceExplainCount.
+        public int ChoiceConfirms => Tutorial.choiceConfirms;
+
+        /// The choice cards still explain both outcomes (fewer than TutorialData.ChoiceExplainCount confirmed choices).
+        public bool ExplainChoice => Tutorial.ExplainChoice;
+
+        /// A KEEP / SWITCH was applied (SessionUpdate Present with a Keep or Switch command). Saves while under the cap.
+        public void CountChoiceConfirm()
+        {
+            if (Tutorial.CountChoice()) SaveTutorial();
+        }
+
+        void SaveTutorial()
+        {
+            if (tutorialReadOnly) return;
+            store.Set(TutorialKey, JsonUtility.ToJson(Tutorial));
+            store.Flush();
+        }
+
+        TutorialData LoadTutorial(out bool readOnly)
+        {
+            readOnly = false;
+            var t = Read<TutorialData>(TutorialKey);
+            if (t == null) return new TutorialData();
+            if (t.version > TutorialData.Version)
+            {
+                Debug.LogWarning($"[SevenSteps] Tutorial save version {t.version} is newer than this build ({TutorialData.Version}): not loaded, not overwritten");
+                readOnly = true;
+                return new TutorialData();
+            }
+            if (t.seen == null) t.seen = new System.Collections.Generic.List<string>();
+            t.choiceConfirms = Mathf.Clamp(t.choiceConfirms, 0, TutorialData.ChoiceExplainCount);
+            return t;
+        }
+
+        // ---------- Story (16.5): Mark* on Story change memory only; write at the save points ----------
+
+        /// Write the story memory: after the result panel opens, at the end of the ending, after a star-map carving
+        /// appears, and on app quit. Not per line (WebGL: every save is an IndexedDB write).
+        public void SaveStory()
+        {
+            if (storyReadOnly) return;
+            store.Set(StoryKey, JsonUtility.ToJson(Story));
+            store.Flush();
+        }
+
+        StoryProgress LoadStory(out bool readOnly)
+        {
+            readOnly = false;
+            var s = Read<StoryProgress>(StoryKey);
+            if (s == null)
+            {
+                if (!string.IsNullOrEmpty(store.Get(StoryKey))) Debug.LogWarning("[SevenSteps] Story save is not valid JSON: starting from nothing seen");
+                return new StoryProgress();
+            }
+            if (s.version > StoryProgress.Version)
+            {
+                Debug.LogWarning($"[SevenSteps] Story save version {s.version} is newer than this build ({StoryProgress.Version}): not loaded, not overwritten");
+                readOnly = true;
+                return new StoryProgress();
+            }
+            s.Repair();
+            return s;
+        }
+
+        /// Accessibility: step count as digits (11.3.2). Saves and raises SettingsChanged.
+        public void SetShowStepNumbers(bool on) { Settings.showStepNumbers = on; SaveSettings(); }
+
+        /// Accessibility: reduce motion (11.3.2). Saves and raises SettingsChanged.
+        public void SetReduceMotion(bool on) { Settings.reduceMotion = on; SaveSettings(); }
 
         public void SaveSettings()
         {
