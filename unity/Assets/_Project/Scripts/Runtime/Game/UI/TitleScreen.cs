@@ -148,6 +148,12 @@ namespace SevenSteps.Game.UI
             if (!save.LanguageChosen && launch.Language == null && flow.State == AppState.Title) OpenLanguage();
             if (launch.OpenSettings) Open(settings); // -settings / ?settings=1 (development, screenshots)
             if (launch.TitleCheck != "" && !launch.DirectToGame) StartCoroutine(TitleCheck(launch.TitleCheck));
+            if (launch.JourneyCheck == "complete" && StageSelect != null)
+            {
+                // -journeycheck complete (scene-flow): the planet-complete return arrived here; its own screenshots and quit.
+                StartCoroutine(JourneyCheck.RunTitle(flow, StageSelect, stageViews.Map, Services.Get<JourneyReturn>(), launch.Screenshot));
+                return;
+            }
             // Smoke test without -level: "-screenshot title.png" [-stageselect] [-credits] opens that panel first.
             if (!string.IsNullOrEmpty(launch.Screenshot))
             {

@@ -62,6 +62,10 @@ namespace SevenSteps.Contracts
         /// Journey transitions of stage select v4 (dive, advance, planet-complete return; docs/stage-select-transitions.md), only
         /// when the new map is on: -journey on|off, ?journey=1|0. null = on with the new map (Game.Flow.JourneyToggle).
         public bool? Journey { get; private set; }
+        /// -journeycheck advance|complete, ?journeycheck= (smoke, docs/stage-select-transitions.md): with -newmap -level -replay, the
+        /// replay wins and the journey transition is checked in the player (advance: the next stage of the planet; complete: back
+        /// on the star map with the trail lit). Logs "[SevenSteps] Journey check <kind>: OK|FAIL ..." and quits. "" = off.
+        public string JourneyCheck { get; private set; } = "";
 
         readonly List<string> warnings = new List<string>();
         /// What was ignored while parsing, one line each. Empty when everything parsed.
@@ -132,6 +136,12 @@ namespace SevenSteps.Contracts
             else warnings.Add($"{source}: savekey \"{v}\" is not 1-32 of A-Z a-z 0-9 _ -; ignored");
         }
 
+        void SetJourneyCheck(string source, string v)
+        {
+            if (v == "advance" || v == "complete") JourneyCheck = v;
+            else warnings.Add(source + ": journeycheck \"" + v + "\" is not advance or complete; ignored");
+        }
+
         void SetJourney(string source, string v)
         {
             if (v == "1" || v == "true" || v == "on") Journey = true;
@@ -169,7 +179,7 @@ namespace SevenSteps.Contracts
                         case "-artperf": o.ArtPerf = true; continue;
                         case "-newmap": o.NewMap = true; continue;
                         case "-oldmap": o.NewMap = false; continue;
-                        case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": case "-loadDelay": case "-titlecheck": case "-savekey": case "-journey": break;
+                        case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": case "-loadDelay": case "-titlecheck": case "-savekey": case "-journey": case "-journeycheck": break;
                         default: continue;
                     }
                     if (k + 1 >= args.Length || args[k + 1].StartsWith("-", StringComparison.Ordinal))
@@ -190,6 +200,7 @@ namespace SevenSteps.Contracts
                         case "-titlecheck": o.SetTitleCheck("command line", v); break;
                         case "-savekey": o.SetSaveKey("command line", v); break;
                         case "-journey": o.SetJourney("command line", v); break;
+                        case "-journeycheck": o.SetJourneyCheck("command line", v); break;
                     }
                 }
 
@@ -213,6 +224,7 @@ namespace SevenSteps.Contracts
                     case "artperf": o.SetArtPerf("url", v); break;
                     case "savekey": o.SetSaveKey("url", v); break;
                     case "journey": o.SetJourney("url", v); break;
+                    case "journeycheck": o.SetJourneyCheck("url", v); break;
                     case "oldmap":
                         if (v == "1" || v == "true") o.NewMap = false;
                         else if (v != "0" && v != "false") o.warnings.Add($"url: oldmap \"{v}\" is not 1/true or 0/false; ignored");

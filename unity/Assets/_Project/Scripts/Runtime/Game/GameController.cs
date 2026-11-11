@@ -245,6 +245,12 @@ namespace SevenSteps.Game
                 Application.Quit();
                 return;
             }
+            if (launch.JourneyCheck != "" && !string.IsNullOrEmpty(launch.Replay) && launch.DirectToGame)
+            {
+                // -journeycheck advance|complete (stage select v4 journey, smoke): the replay wins, the transition is checked.
+                StartCoroutine(JourneyCheck.RunGame(launch.JourneyCheck, flow, board, journey, result, overlays, launch.TakeReplay(), launch.Screenshot));
+                return;
+            }
             if (launch.FlowCheck && !string.IsNullOrEmpty(launch.Replay) && launch.DirectToGame)
             {
                 // -flowcheck: the replay wins for real, then Result -> Next -> chapter entry are checked (S8).
