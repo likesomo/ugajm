@@ -799,12 +799,15 @@ namespace SevenSteps.Game
         /// A frozen copy of the board drawn now, for the advance transition: the board root is taken away from this view
         /// (scripts on it disabled, world labels and screen marks cleared), so the next Rebuild builds a fresh one beside it.
         /// The caller owns the snapshot and destroys it. Throws before the first Rebuild or while a step is animating.
+        /// Call <see cref="Rebuild"/> (BoardController.LoadStage) right after: until then the cell, foot and trail references
+        /// still point into the snapshot, so no other presenter call (Draw, Snap, settings redraw) may come in between.
         public BoardSnapshot DetachSnapshot()
         {
             if (root == null) throw new InvalidOperationException("BoardView.DetachSnapshot before the first Rebuild");
             if (anim != null) throw new InvalidOperationException("BoardView.DetachSnapshot while a step is animating");
             var snap = new BoardSnapshot(root.gameObject, player != null ? player.transform : null, grid);
             foreach (var b in root.GetComponentsInChildren<Behaviour>(true)) b.enabled = false; // no logic: the star trail stops
+            if (player != null) foreach (var an in player.GetComponentsInChildren<Animator>(true)) an.enabled = true; // the brothers keep walking out (review N2)
             root.SetParent(null, true);
             root.name = "Board (snapshot)";
             root = null;
