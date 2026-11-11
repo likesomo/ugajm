@@ -768,12 +768,63 @@ namespace SevenSteps.Game
             if (ring != null) Destroy(ring);
         }
 
+        // ---------- Journey transitions (docs/stage-select-transitions.md, scene-flow) ----------
+
+        bool cameraHeld;
+
+        /// A journey transition (dive arrival, advance, planet-complete pullback) drives the camera: while true the board
+        /// does not refit it (aspect changes included). Set back to false: the board fits it once, at once.
+        public bool CameraHeld
+        {
+            get => cameraHeld;
+            set
+            {
+                if (cameraHeld == value) return;
+                cameraHeld = value;
+                if (!value) FitCamera();
+            }
+        }
+
+        /// The camera rig the board frames itself with (Game scene override, else the TileSet's preset).
+        public CameraRig Rig => rigOverride ?? set.cameraRig;
+
+        /// The current board's root (tiles, statues, player, star trail), parent of everything the board draws in the world.
+        /// Null before the first Rebuild. Transitions may move it (rise from the surface); the board does not reset it.
+        public Transform BoardRoot => root;
+
+        /// The player instance on the board (null before the first Rebuild). Transitions may hide it while the brothers
+        /// walk in from the previous board.
+        public GameObject Player => player;
+
+        /// A frozen copy of the board drawn now, for the advance transition: the board root is taken away from this view
+        /// (scripts on it disabled, world labels and screen marks cleared), so the next Rebuild builds a fresh one beside it.
+        /// The caller owns the snapshot and destroys it. Throws before the first Rebuild or while a step is animating.
+        public BoardSnapshot DetachSnapshot()
+        {
+            if (root == null) throw new InvalidOperationException("BoardView.DetachSnapshot before the first Rebuild");
+            if (anim != null) throw new InvalidOperationException("BoardView.DetachSnapshot while a step is animating");
+            var snap = new BoardSnapshot(root.gameObject, player != null ? player.transform : null, grid);
+            foreach (var b in root.GetComponentsInChildren<Behaviour>(true)) b.enabled = false; // no logic: the star trail stops
+            root.SetParent(null, true);
+            root.name = "Board (snapshot)";
+            root = null;
+            player = null;
+            ghostBody = ghostStone = null;
+            marks?.Clear();
+            foreach (var l in labels) if (l.Text != null) Destroy(l.Text.gameObject);
+            labels.Clear();
+            statues.Clear();
+            statueOwners.Clear();
+            transients.Clear();
+            return snap;
+        }
+
         // ---------- Camera ----------
 
         /// Frames the board with the TileSet's CameraRig inside the part of the screen the HUD leaves free (HudView.BoardFrame).
         void FitCamera()
         {
-            if (cam == null || level == null) return;
+            if (cam == null || level == null || cameraHeld) return;
             fittedAspect = cam.aspect;
             Fit(cam, grid, rigOverride ?? set.cameraRig);
         }
@@ -851,7 +902,8 @@ namespace SevenSteps.Game
                 l.Text.rectTransform.anchoredPosition = local;
                 l.Text.fontSize = Mathf.Max(10, Mathf.RoundToInt(cellPx * l.Size));
             }
-            if (playerLabel != null) playerLabel.Text.enabled = player.activeSelf && StepNumbers;
+            if (player == null) return; // snapshot taken (DetachSnapshot), the next Rebuild is on its way
+            if (playerLabel != null && playerLabel.Text != null) playerLabel.Text.enabled = player.activeSelf && StepNumbers;
             // KEEP/SWITCH choice: the player breathes until a choice is made.
             if (choosing && anim == null && player.activeSelf)
                 player.transform.localScale = PlayerScale * (1f + 0.06f * Mathf.Sin(Time.time * 6f));
@@ -873,6 +925,22 @@ namespace SevenSteps.Game
         {
             static readonly List<int> ints = new List<int>(32);
             public static List<int> Ints { get { ints.Clear(); return ints; } }
+        }
+    }
+
+    /// <summary>A board taken away from <see cref="BoardView"/> by DetachSnapshot: its root, player and grid (world space).</summary>
+    public readonly struct BoardSnapshot
+    {
+        public readonly GameObject Root;
+        /// The player instance in the snapshot (the brothers walking out); null when the board had none.
+        public readonly Transform Player;
+        public readonly BoardGrid Grid;
+
+        public BoardSnapshot(GameObject root, Transform player, BoardGrid grid)
+        {
+            Root = root != null ? root : throw new ArgumentNullException(nameof(root));
+            Player = player;
+            Grid = grid;
         }
     }
 }
