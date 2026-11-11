@@ -30,6 +30,11 @@
 - 씬/프리팹(YAML) 충돌은 UnityYAMLMerge 드라이버가 처리하도록 로컬 git 설정이 되어 있다
 - 같은 씬 파일을 여러 사람/에이전트가 동시에 고치지 않는다. 작업 단위를 프리팹으로 나눈다
 
+## 검증 규칙 (사용자 지시 2026-11-11)
+- 동작·화면을 확인하려고 플레이어 빌드(WebGL/Standalone)를 만들지 않는다. 에디터 Play Mode로 확인한다: 흐름은 PlayMode 테스트(`-runTests -testPlatform PlayMode`), 화면은 Play Mode에 들어가 Game 뷰를 `ScreenCapture`로 찍는 에디터 스크립트. CompileCheck·EditMode 테스트는 그대로
+- `build-win`·`smoke`·`build-webgl`·`smoke-webgl`은 **리드가 플레이테스트·출시 빌드를 만들 때만** 돌린다
+- 씬 플로우는 Unity 씬 구조(Build Profiles 씬 목록, `LoadSceneAsync`, Single/Additive)를 뜻한다. 행성 다이브·전진 같은 카메라 이동은 씬 안 전환(`docs/stage-select-transitions.md`). 브리프 `C:/unityjam/shared-assets/seven-steps/briefs/scene-flow-unity-2026-11-11.md`
+
 ## 배치 명령 (에디터가 같은 프로젝트를 열고 있으면 실패함. 먼저 에디터를 닫을 것)
 ```bash
 U="/c/Program Files/Unity/Hub/Editor/6000.6.8f1/Editor/Unity.exe"

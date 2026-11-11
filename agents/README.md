@@ -29,6 +29,7 @@ v0(2026-11-07)에서 시작해 2.5·4단계까지 끝났고, 3단계(플레이�
 - **아트**: RuinsHenge 타일 세트와 행성 7개 `ChapterPreset`(`AppConfig.chapters`), 세쌍둥이 A/B/C 색과 중성 KEEP 선돌, 메뉴 배경 `MenhirJoineryBackground`(선돌+곧은 결구 들보). 붉은 문(도리이 닮은 것)은 폐기
 - **흐름**: Boot → Title(타이틀·행성 지도·스테이지 목록·설정·언어) → Game(챕터 진입·로딩·HUD·결과) (`docs/scene-flow.md`)
 - **검증**: `unity/Tools/unity.sh` test · verify(50/50) · scene-validate · tileset-validate · smoke(리플레이·행성 경계 흐름·타이틀 경로) · smoke-webgl(보드 픽셀, empty 대조)
+- **검증 규칙 (사용자 지시 2026-11-11)**: 동작·화면 확인용 플레이어 빌드(WebGL/Standalone, `build-win`·`smoke`·`build-webgl`·`smoke-webgl`)를 만들지 않는다. 에디터 Play Mode로 확인한다 — 흐름은 PlayMode 테스트(`-runTests -testPlatform PlayMode`), 화면은 Play Mode에 들어가 Game 뷰를 `ScreenCapture`로 찍는 에디터 스크립트. CompileCheck·EditMode는 그대로. WebGL 빌드는 리드가 플레이테스트·출시 빌드 때만 만든다
 - **텔레메트리**: `server/`(수집·대시보드·내보내기), WebGL은 `/webgl/`로 제공 (`docs/telemetry.md`)
 
 **v0가 `7lucky`에 커밋·푸시된 뒤에** 다른 에이전트의 작업 공간을 만든다. 그래야 모두 같은 코드에서 시작한다.
