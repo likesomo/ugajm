@@ -17,6 +17,7 @@ namespace SevenSteps.Game.Flow
         readonly string[] keys;
         readonly bool[][] cleared;
         readonly (int from, int to)[] trails;
+        readonly (int from, string node)[] nodeTrails;
 
         public int PlanetCount => keys.Length;
         public string Key(int planet) => keys[Check(planet)];
@@ -26,12 +27,17 @@ namespace SevenSteps.Game.Flow
         public int MarkerSlot { get; }
         /// Star-trail edges between planets (story.json "dipper" order, else the Dipper lines), as planet indices.
         public IReadOnlyList<(int from, int to)> Trails => trails;
+        /// Star-trail edges from a planet to a story node that is not a planet (story.json "dipper" altar -> "circle", the
+        /// last stage's node). Drawn only once lit (the v3 all-complete map). Data, not a code branch: any such edge.
+        public IReadOnlyList<(int from, string node)> NodeTrails => nodeTrails;
 
         /// <param name="keys">Chapter key per planet (map order).</param>
         /// <param name="cleared">Per planet, per stage slot: cleared.</param>
         /// <param name="markerPlanet">-1 or the last played planet; <paramref name="markerSlot"/> its slot.</param>
         /// <param name="trails">Edges as planet indices; each in range and not a loop.</param>
-        public StageSelectModel(IReadOnlyList<string> keys, IReadOnlyList<IReadOnlyList<bool>> cleared, int markerPlanet, int markerSlot, IReadOnlyList<(int from, int to)> trails)
+        /// <param name="nodeTrails">Edges from a planet to a non-planet story node (<see cref="NodeTrailsByKey"/>); null = none.</param>
+        public StageSelectModel(IReadOnlyList<string> keys, IReadOnlyList<IReadOnlyList<bool>> cleared, int markerPlanet, int markerSlot, IReadOnlyList<(int from, int to)> trails,
+            IReadOnlyList<(int from, string node)> nodeTrails = null)
         {
             if (keys == null) throw new ArgumentNullException(nameof(keys));
             if (cleared == null) throw new ArgumentNullException(nameof(cleared));
@@ -59,12 +65,21 @@ namespace SevenSteps.Game.Flow
                 if (a < 0 || a >= keys.Count || b < 0 || b >= keys.Count || a == b) throw new ArgumentException($"trail {k} ({a} -> {b}) is not between two planets", nameof(trails));
                 this.trails[k] = (a, b);
             }
+            nodeTrails = nodeTrails ?? Array.Empty<(int, string)>();
+            this.nodeTrails = new (int, string)[nodeTrails.Count];
+            for (int k = 0; k < nodeTrails.Count; k++)
+            {
+                var (a, node) = nodeTrails[k];
+                if (a < 0 || a >= keys.Count) throw new ArgumentException($"node trail {k} starts at planet {a}, not on the map", nameof(nodeTrails));
+                if (string.IsNullOrEmpty(node) || IndexOf(keys, node) >= 0) throw new ArgumentException($"node trail {k}: \"{node}\" is not a non-planet node", nameof(nodeTrails));
+                this.nodeTrails[k] = (a, node);
+            }
         }
 
         /// The model for a save: <paramref name="stages"/> are each planet's stage indices (PlanetEntry.Stages);
         /// <paramref name="isCleared"/> and <paramref name="lastStage"/> (-1 = none) read the progress save.
         public static StageSelectModel From(IReadOnlyList<string> keys, IReadOnlyList<IReadOnlyList<int>> stages, Func<int, bool> isCleared, int lastStage,
-            IReadOnlyList<(int from, int to)> trails)
+            IReadOnlyList<(int from, int to)> trails, IReadOnlyList<(int from, string node)> nodeTrails = null)
         {
             if (stages == null) throw new ArgumentNullException(nameof(stages));
             if (isCleared == null) throw new ArgumentNullException(nameof(isCleared));
@@ -80,7 +95,7 @@ namespace SevenSteps.Game.Flow
                 }
                 rows.Add(row);
             }
-            return new StageSelectModel(keys, rows, mp, ms, trails);
+            return new StageSelectModel(keys, rows, mp, ms, trails, nodeTrails);
         }
 
         /// Trail edges by key pairs (story.json "dipper"); pairs naming a planet that is not on the map are skipped.
@@ -93,6 +108,20 @@ namespace SevenSteps.Game.Flow
             {
                 int a = IndexOf(keys, f), b = IndexOf(keys, t);
                 if (a >= 0 && b >= 0 && a != b) list.Add((a, b));
+            }
+            return list;
+        }
+
+        /// Dipper pairs from a planet on the map to a key that is not a planet (a story node such as "circle").
+        public static List<(int from, string node)> NodeTrailsByKey(IReadOnlyList<string> keys, IEnumerable<(string from, string to)> pairs)
+        {
+            if (keys == null) throw new ArgumentNullException(nameof(keys));
+            if (pairs == null) throw new ArgumentNullException(nameof(pairs));
+            var list = new List<(int, string)>();
+            foreach (var (f, t) in pairs)
+            {
+                int a = IndexOf(keys, f);
+                if (a >= 0 && !string.IsNullOrEmpty(t) && IndexOf(keys, t) < 0) list.Add((a, t));
             }
             return list;
         }
@@ -161,6 +190,13 @@ namespace SevenSteps.Game.Flow
         public bool TrailLit(int edge, int held = -1)
         {
             var (a, _) = trails[edge];
+            return a != held && FinaleCleared(a);
+        }
+
+        /// A node trail is lit like a planet trail: its planet's finale is cleared (and it is not held for the return pullback).
+        public bool NodeTrailLit(int edge, int held = -1)
+        {
+            var (a, _) = nodeTrails[edge];
             return a != held && FinaleCleared(a);
         }
 

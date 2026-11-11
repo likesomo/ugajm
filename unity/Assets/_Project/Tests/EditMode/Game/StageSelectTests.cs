@@ -103,6 +103,35 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void TheLastDipperEdgeToTheCircleIsANodeTrailLitByItsFinale()
+        {
+            var pairs = new[] { ("moss", "hollow"), ("hollow", "carved"), ("carved", "circle"), ("ghost", "circle") };
+            var nodes = StageSelectModel.NodeTrailsByKey(Keys, pairs);
+            CollectionAssert.AreEqual(new[] { (2, "circle") }, nodes, "from a planet on the map to a key that is not a planet");
+            var open = new StageSelectModel(Keys, Rows(new bool[3], new bool[3], new[] { true, false }), -1, -1, Chain, nodes);
+            Assert.IsFalse(open.NodeTrailLit(0), "carved's finale not cleared: no line to the circle yet");
+            var done = new StageSelectModel(Keys, Rows(new bool[3], new bool[3], new[] { false, true }), -1, -1, Chain, nodes);
+            Assert.IsTrue(done.NodeTrailLit(0), "the finale lights it, as the planet trails");
+            Assert.IsFalse(done.NodeTrailLit(0, held: 2), "held for the journey return pullback");
+            Assert.Throws<ArgumentException>(() => new StageSelectModel(Keys, Rows(new bool[1], new bool[1], new bool[1]), -1, -1, Chain, new[] { (0, "hollow") }),
+                "a planet key is a planet trail, not a node");
+        }
+
+        [Test]
+        public void TheNodeCarriesTheTrailOnAndStaysOnScreen()
+        {
+            var bounds = new Rect(-640, -360, 1280, 720);
+            // Came in from the upper left (crumble -> altar on the v4 map): the node goes on toward the lower right.
+            var p = PlanetMapLayout.NodePoint(new Vector2(480, -180), 90, new Vector2(280, -30), Vector2.zero, 70, 50, bounds);
+            Assert.Greater(p.x, 480);
+            Assert.Less(p.y, -180);
+            Assert.LessOrEqual(p.x, 640 - 50);
+            Assert.GreaterOrEqual(p.y, -360 + 50);
+            var free = PlanetMapLayout.NodePoint(new Vector2(100, 0), 50, null, Vector2.zero, 70, 50, bounds);
+            Assert.AreEqual(new Vector2(220, 0), free, "no incoming trail: away from the map's centre");
+        }
+
+        [Test]
         public void BadInputThrows()
         {
             Assert.Throws<ArgumentException>(() => new StageSelectModel(Keys, Rows(new bool[1], new bool[1]), -1, -1, Chain));
