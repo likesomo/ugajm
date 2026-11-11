@@ -21,19 +21,34 @@ namespace SevenSteps.Art
             var model=AssetDatabase.LoadAssetAtPath<GameObject>(Shared+"/SS_BSA_"+name+".fbx");
             if(!model)throw new Exception("Run Blender MCP production script first: "+name);
             var mesh=model.GetComponentInChildren<MeshFilter>().sharedMesh;
-            if(mesh.subMeshCount!=1||mesh.uv2.Length!=mesh.vertexCount||mesh.uv2[0].x!=4)throw new Exception("Invalid BoardShapeA FBX channels: "+name);
+            if(mesh.subMeshCount!=1||mesh.uv2.Length!=mesh.vertexCount||Mathf.Abs(mesh.uv2[0].x-4f)>.0001f)throw new Exception("Invalid BoardShapeA FBX channels: "+name);
             return mesh;
         }
         static void Textures(Material m,string id)
         {
             m.SetTexture("_BoardShapeMap",AssetDatabase.LoadAssetAtPath<Texture2D>(Shared+"/BSA_ColorAO.png"));
             m.SetTexture("_BoardShapeNormal",AssetDatabase.LoadAssetAtPath<Texture2D>(Shared+"/BSA_NormalRough.png"));
-            m.SetFloat("_BoardNormalStrength",.42f);m.SetFloat("_BoardMoss",Moss(id));
+            m.SetFloat("_BoardNormalStrength",.42f);m.SetFloat("_BoardMoss",Moss(id));m.SetFloat("_Unlit",id=="frost"?.35f:0f);
             int k=Array.IndexOf(Ids,id);int[] slots={0,8,9,10,11,12,13};
             m.SetFloat("_BoardStoneSlot",k<0?0:slots[k]);m.SetColor("_BoardRockTint",Color.white);
             m.enableInstancing=true;EditorUtility.SetDirty(m);
         }
-        static float Moss(string id)=>id=="frost"?0:id=="moss"?1:id=="altar"?.75f:id=="joinery"?.1f:.25f;
+        static float Moss(string id)=>id=="frost"||id=="carved"?0:id=="moss"?1:id=="altar"||id=="joinery"?.10f:.25f;
+        static bool AltarPillarProjectionSafe(int w,int h)
+        {
+            float pitch=50*Mathf.Deg2Rad,sin=Mathf.Sin(pitch),cos=Mathf.Cos(pitch),boardY=h*.5f*sin;
+            bool Overlap(float x,float z,float height)
+            {
+                float radius=.52f*1.35f;
+                float y0=-.10f*cos+z*sin,y1=(-.10f+height)*cos+z*sin;
+                return x-radius<w*.5f&&x+radius>-w*.5f&&y0<=boardY&&y1>=-boardY;
+            }
+            foreach(int sign in new[]{-1,1})foreach(float x in new[]{-3f,0f,3f})
+                if(Overlap(x,sign*(h*.5f+1.80f),1.82f*(sign<0?.28f:2.25f)))return false;
+            foreach(int sign in new[]{-1,1})foreach(float z in new[]{-1.8f,0f,1.8f})
+                if(Overlap(sign*(w*.5f+1.80f),z,1.82f*2.25f))return false;
+            return true;
+        }
         static GameObject Part(Transform parent,string name,Mesh mesh,Material material)
         {
             var go=new GameObject(name,typeof(MeshFilter),typeof(MeshRenderer));go.transform.SetParent(parent,false);
@@ -82,9 +97,16 @@ namespace SevenSteps.Art
             var kit=AssetDatabase.LoadAssetAtPath<BoardShapeAKit>(Art+"/BoardShapeA_Kit.asset");
             if(!kit){kit=ScriptableObject.CreateInstance<BoardShapeAKit>();AssetDatabase.CreateAsset(kit,Art+"/BoardShapeA_Kit.asset");}
             kit.crust=Enumerable.Range(0,3).Select(i=>Mesh("Crust_"+i)).ToArray();kit.menhirs=Enumerable.Range(0,2).Select(i=>Mesh("Menhir_"+i)).ToArray();
-            kit.kerb=Mesh("Kerb");kit.corner=Mesh("Corner");kit.medallion=Mesh("Medallion");kit.chest=Mesh("Chest");kit.backGate=Mesh("BackGate");kit.wall=Mesh("Wall");kit.joist=Mesh("Joist");EditorUtility.SetDirty(kit);
-            kit.rubble=Mesh("Rubble");kit.fragment=Mesh("Fragment");kit.grass=Mesh("Grass");
+            kit.kerb=Mesh("Kerb");kit.plainKerb=Mesh("PlainKerb");kit.corner=Mesh("Corner");kit.medallion=Mesh("Medallion");kit.chest=Mesh("Chest");kit.backGate=Mesh("BackGate");kit.wall=Mesh("Wall");kit.joist=Mesh("Joist");EditorUtility.SetDirty(kit);
+            kit.rubble=Mesh("Rubble");kit.fragment=Mesh("Fragment");kit.crumbleShard=Mesh("CrumbleShard");kit.grass=Mesh("Grass");
             kit.hollowArch=Mesh("HollowArch");kit.terrace=Mesh("Terrace");kit.frostSpire=Mesh("FrostSpire");kit.timberFrame=Mesh("TimberFrame");kit.mossPatch=Mesh("MossPatch");
+            kit.hollowStar=Mesh("HollowStar");
+            kit.hollowCrust=Mesh("HollowCrust");kit.hollowKerb=Mesh("HollowKerb");
+            kit.carvedKerb=Mesh("CarvedKerb");
+            kit.carvedKerbMarker=Mesh("CarvedKerbMarker");
+            kit.altarMenhir=Mesh("AltarMenhir");
+            kit.joineryKerb=Mesh("JoineryKerb");
+            kit.joineryCrust=Mesh("JoineryCrust");
             var material=AssetDatabase.LoadAssetAtPath<Material>(Art+"/Materials/BaseAtlas.mat");Textures(material,"moss");
             Replace("Floor",material,"Floor_0");Replace("FloorAlt",material,"Floor_1");Replace("FloorThird",material,"Floor_2");
             foreach(string actor in new[]{"PlayerA","PlayerB","PlayerC","Statue","FlipUp","FlipDown","Lever"})
@@ -161,6 +183,7 @@ namespace SevenSteps.Art
             var lines=new List<string>{"chapter,width,height,environmentTris,fullCleanBoardTris,environmentDraws"};
             foreach(string id in Ids)foreach(var size in new[]{new Vector2Int(8,6),new Vector2Int(12,5),new Vector2Int(10,3),new Vector2Int(7,7)})
             {
+                if(id=="altar"&&!AltarPillarProjectionSafe(size.x,size.y))throw new Exception("Altar menhir projection overlaps playable cells: "+size);
                 var chapter=AssetDatabase.LoadAssetAtPath<ChapterPreset>(Art+"/Chapter_"+id+".asset");
                 var root=UnityEngine.Object.Instantiate(chapter.sky.planetPrefab);
                 try

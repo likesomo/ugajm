@@ -70,9 +70,6 @@ namespace SevenSteps.Art
                             var go=new GameObject(value,typeof(RectTransform),typeof(Text));go.transform.SetParent(canvas.transform,false);var text=go.GetComponent<Text>();text.font=numberFont;text.text=value;text.fontSize=fontSize;text.color=new Color(1,.91f,.71f);text.alignment=TextAnchor.MiddleCenter;text.raycastTarget=false;
                             var rt=text.rectTransform;rt.anchorMin=rt.anchorMax=Vector2.zero;rt.pivot=Vector2.one*.5f;rt.sizeDelta=new Vector2(320,75);rt.anchoredPosition=pos;return text;
                         }
-                        Text(chapter.id+"  "+size.x+" x "+size.y,new Vector2(180,665),28);
-                        Text(proposed?"Proposed framing / pitch 50":"Default framing / pitch 50",new Vector2(190,615),20);
-                        Text("Wall / Pit / Ice / Door / Mud",new Vector2(185,proposed?30:100),17);
                         var number=Text("3",Vector2.zero,proposed?32:26);number.color=new Color(1,.94f,.78f);
                         yield return null;yield return new WaitForSeconds(.4f);
                         var sp=camera.WorldToScreenPoint(grid.CellToWorld(2,Mathf.Max(0,specialY-1))+set.gate.labelOffset);number.rectTransform.anchoredPosition=sp;

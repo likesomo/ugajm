@@ -6,8 +6,9 @@ namespace SevenSteps.Art
     public sealed class BoardShapeAKit : ScriptableObject
     {
         public Mesh[] crust, menhirs;
-        public Mesh kerb, corner, medallion, chest, backGate, wall, joist;
-        public Mesh rubble, fragment, grass;
-        public Mesh hollowArch, terrace, frostSpire, timberFrame, mossPatch;
+        public Mesh kerb, plainKerb, corner, medallion, chest, backGate, wall, joist;
+        public Mesh rubble, fragment, crumbleShard, grass;
+        public Mesh hollowArch, hollowStar, terrace, frostSpire, timberFrame, mossPatch;
+        public Mesh hollowCrust, hollowKerb, carvedKerb, carvedKerbMarker, altarMenhir, joineryKerb, joineryCrust;
     }
 }

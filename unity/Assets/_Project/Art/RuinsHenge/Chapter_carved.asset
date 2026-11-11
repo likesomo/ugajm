@@ -20,3 +20,4 @@ MonoBehaviour:
     to: {fileID: 2100000, guid: 06654d197714637409779ac6f6a4a9ad, type: 2}
   lighting: {fileID: 11400000, guid: 10000e85e1cf58244ba423cfd34b0f36, type: 2}
   sky: {fileID: 11400000, guid: 8e26ab2400a003f49b27a62de6afe2cd, type: 2}
+  starTrail: {fileID: 0}

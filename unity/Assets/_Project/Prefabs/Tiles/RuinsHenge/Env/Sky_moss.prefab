@@ -42,7 +42,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f7de2e4c73890394d8fbf3d98391fb58, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.RuinsHengeSky
   space: {fileID: 2100000, guid: e6ffd8589b79ac145a2f66b46406ffda, type: 2}
   lowSpecSpace: {fileID: 2100000, guid: b23ba78b2a13bcd48bc9892e03ce788f, type: 2}

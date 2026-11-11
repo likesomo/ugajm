@@ -10,9 +10,9 @@ from pathlib import Path
 from mathutils import Vector
 
 ROOT = Path('C:/unityjam/shared-assets/seven-steps')
-OUT = ROOT / 'Assets/Art/RuinsHenge/BoardShapeA'
-SOURCE = ROOT / 'Source/Blender/SS_BoardShapeA.blend'
-REVIEW = ROOT / 'concepts/themes/board-shape-2026-11-10-r2/unity'
+OUT = Path(globals().get('BSA_OUT', ROOT / 'Assets/Art/RuinsHenge/BoardShapeA'))
+SOURCE = Path(globals().get('BSA_SOURCE', ROOT / 'Source/Blender/SS_BoardShapeA.blend'))
+REVIEW = Path(globals().get('BSA_REVIEW', ROOT / 'concepts/themes/board-shape-2026-11-10-r2/unity'))
 REVIEW_TARGET=REVIEW/'stone-pass/after'
 REVIEW_TARGET.mkdir(parents=True,exist_ok=True)
 sys.dont_write_bytecode=True
@@ -34,10 +34,11 @@ scene.unit_settings.scale_length = 1
 library = bpy.data.collections.new('01_EXPORT_LIBRARY_BSA'); scene.collection.children.link(library)
 preview = bpy.data.collections.new('02_BOARD_INSTANCES_BSA'); scene.collection.children.link(preview)
 studio = bpy.data.collections.new('99_STUDIO_NO_EXPORT_BSA'); scene.collection.children.link(studio)
+highpoly = bpy.data.collections.new('03_HIGH_POLY_SOURCES'); scene.collection.children.link(highpoly)
 
 # Sixteen 256px swatches in TWO 1024-square sheets. The extra rows contain
 # actual geological recipes, not chapter tints of the same grey crack pattern.
-COLORS = [(.43,.45,.44),(.37,.39,.38),(.34,.20,.105),(.60,.38,.15),(.19,.44,.42),(.65,.30,.17),(.262,.323,.060),(.66,.81,.88)]+[(.5,.5,.5)]*8
+COLORS = [(.43,.45,.44),(.37,.39,.38),(.69,.52,.31),(.60,.38,.15),(.19,.44,.42),(.65,.30,.17),(.262,.323,.060),(.66,.81,.88)]+[(.5,.5,.5)]*8
 def mat():
     m = bpy.data.materials.get('SS_M_BoardShapeA') or bpy.data.materials.new('SS_M_BoardShapeA')
     m.use_nodes = True
