@@ -17,6 +17,10 @@ namespace SevenSteps.Game
         public TextAsset chaptersJson;
         [Tooltip("UI string tables per language, Data/Strings/<code>.json (docs/architecture.md 13.2). ko is required.")]
         public SevenSteps.Contracts.StringTableAsset[] strings = new SevenSteps.Contracts.StringTableAsset[0];
+        [Tooltip("Data/story.json (docs/architecture.md 16, StoryCatalog). Empty = no story lines (the game runs without them).")]
+        public TextAsset storyJson;
+        [Tooltip("Story pictures by key (StoryImageSet, art). Empty = text without pictures.")]
+        public StoryImageSet storyImages;
         public Font font;
         [Tooltip("UI look: font, colors, panel prefabs (docs/scene-flow.md S6). Default Data/UiTheme_Default.asset")]
         public UI.UiTheme uiTheme;
