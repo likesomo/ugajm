@@ -1,7 +1,7 @@
 # 사람 플레이테스트 안내 (50스테이지, Unity WebGL / 웹 프로토타입)
 
 목적: 흥미도 모델(`interest-model.md`)이 예측한 막힘·지루함 지점이 실제와 맞는지 확인하고, 가중치를 보정할 기록(`telemetry-mapping.md`)을 모은다. 그리고 15 숫자 문 보강과 힌트 문구 변경을 할지 7장 기준으로 결정한다.
-대상: 50스테이지 7행성(`levels.js`, feat/levels-r1 bd9273b부터. 계획 `stage-plan-50.md`, 곡선 `interest-curve.html`). 테스트에 쓸 빌드 커밋은 리드가 `production/playtest-1-prep.md` A에 정하면 여기에도 적는다. 분석은 스테이지 이름으로 한다(진행 기록 v2·텔레메트리도 이름 기준).
+대상: 50스테이지 7행성(`levels.js`, feat/levels-r1 bd9273b부터. 계획 `stage-plan-50.md`, 곡선 `interest-curve.html`). 테스트에 쓸 빌드 커밋은 리드가 `production/playtest-1-prep.md` A에 정하면 여기에도 적는다. **현재 후보: `56fce3e`** (2026-11-11, `e2b6932` 위에 별 흔적 v2·보드 위 클리어 결과·이야기 S4 흐름; 검증 기록은 prep A). 단계 힌트·메뉴 "시작 줄 다시 보기"(`bec0339`, `5c104d6`)가 들어간 7lucky로 테스트 직전 다시 돌려 최종 해시로 바꾼다. 새 스테이지 선택(행성 지도 v4)은 병합·안정화되지 않으면 이번 테스트에 넣지 않는다. 분석은 스테이지 이름으로 한다(진행 기록 v2·텔레메트리도 이름 기준).
 
 두 빌드는 같은 `levels.js`(Unity는 export한 `levels.json`)와 같은 규칙(C# 이식, `verify`·골든 테스트로 일치 확인)을 쓰고, 같은 스키마로 같은 서버에 기록을 보낸다. 대시보드에서는 **클라이언트 필터**로 나눠 본다.
 
