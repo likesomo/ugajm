@@ -125,6 +125,6 @@ namespace SevenSteps.Game.Flow
         public bool Seen(string id) => seen.Contains(id);
         public void MarkSeen(string id) => seen.Add(id);
         public int ChoiceConfirms { get; private set; }
-        public void CountChoiceConfirm() => ChoiceConfirms++;
+        public void CountChoiceConfirm() { if (ChoiceConfirms < TutorialData.ChoiceExplainCount) ChoiceConfirms++; } // capped like the save (review C2)
     }
 }
