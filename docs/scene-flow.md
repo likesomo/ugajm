@@ -1,7 +1,7 @@
 # 일곱 걸음 씬 플로우 — Unity 씬 구조
 
 담당: 씬 플로우 엔지니어 (`feat/scene-flow`). 브리프: `agents/scene-flow.md`, `C:/unityjam/shared-assets/seven-steps/briefs/scene-flow-unity-2026-11-11.md`.
-상태: **리드 승인 (2026-11-11, 아키텍트 조건부 승인 `docs/reviews/2026-11-11-scene-flow-unity-structure.md`, M1~M3 반영). P1부터 구현 중.**
+상태: **리드 승인 (2026-11-11, 아키텍트 조건부 승인 `docs/reviews/2026-11-11-scene-flow-unity-structure.md`, M1~M3 반영). P1~P4 구현 완료(10장 끝).**
 
 이 문서는 **Unity 씬 구조**만 다룬다:
 - 어떤 씬이 빌드 목록 몇 번에 있는지
@@ -296,6 +296,12 @@ PlayMode 테스트 항목:
 | P3 | `SceneFlowValidator` 빌드 목록 순서 검사, `Boot` 배경 카메라, 코드 주석 용어 정리 | scene-validate, PlayMode, 캡처 |
 | P4 | journey 확인(`-journeycheck advance/complete`)을 PlayMode 테스트로 옮김 | PlayMode |
 | (보류) | `Loading` 씬(4장): 사용자가 다시 요청할 때 | — |
+
+진행 (2026-11-11, `feat/scene-flow`):
+- P1 완료 a67fac6: PlayMode 6/6 (아키텍트 승인, 7lucky 9858b43)
+- P2 완료 f40d292: `unity.sh playcapture` OK (title·game 보통 화면, game-board 73138, game-empty 대조 0)
+- P3 완료 975d2ce: 빌드 목록 순서 검사(`AppScenes.BuildOrder`), Boot 배경 카메라 `#101C32`, 주석 용어. scene-validate OK
+- P4 완료: `JourneyFlowTests`(이어 가기 1→2, 첫 행성 완료 → 지도·`JourneyReturn`·별 길 켜짐). PlayMode 8/8. 플레이어 빌드 smoke의 `-journeycheck`는 리드의 빌드 확인용으로 남긴다
 
 ---
 
