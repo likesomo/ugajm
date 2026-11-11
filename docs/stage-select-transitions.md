@@ -42,3 +42,13 @@
 - 여정 전환(다이브·이어 가기·복귀): 새 지도일 때만 켜짐, `-journey off` / `?journey=0`으로 따로 끔 (scene-flow). 꺼지면 예전 흐름(결과 패널, 바로 이동).
 - Commit/Cancel은 한 번만(assert + 예외). 다이브 중 Esc는 Cancel(카메라가 지도 자세로 돌아가고 선택이 풀림). 다른 입력(두 번째 클릭 포함)은 건너뛰기: 도착 자세로 가서 Commit을 **한 번** 부른다. 두 번째 클릭이 또 Commit하는 일은 없다.
 - 병합 조건: 토글이 꺼진 상태에서 기존 smoke·smoke-webgl·flowcheck(타이틀 경로 3/3)가 그대로 통과.
+
+## 5. 확인 (smoke 여정 단계)
+
+- `unity.sh smoke` 마지막 단계: `-newmap -level N -replay <풀이> -journeycheck advance|complete` (`flow-stages.mjs --journey`).
+  - advance(스테이지 1): 결과 패널 없이 2로 들어가고, 전환이 끝나면 사본 보드가 없어지고 보드 루트가 제자리, 카메라가 보드 것으로 돌아오고 형제가 보인다.
+  - complete(첫 행성의 마지막 스테이지): Game 씬이 뒤로 빠지고, Title 씬 지도에서 `JourneyReturn`이 풀리고 `TrailLit`이 나고, 카메라가 `MapPose`에서 끝난다.
+  - 스크린샷 `reports/smoke/journey-*-mid.png`, `-end.png`, `journey-complete-pullback.png`. 로그 "[SevenSteps] Journey check KIND: OK".
+- 전환 시계는 한 프레임에 최대 0.05초만 센다(`JourneyRunner.MaxFrameSeconds`). 씬 로드 뒤 첫 프레임(300ms 넘음)이 0.9초 복귀를 한두 프레임에 끝내던 문제.
+- 2026-11-11 결과(feat/scene-flow 6cbd5ea): compile OK, EditMode 921/921, scene-validate OK, smoke 전부 OK(리플레이 7, flowcheck 9, titlecheck 3, journey 2), build-webgl(Mobile_RPAsset) + smoke-webgl OK(보드 56536/84031/89367, 대조 0).
+- 아직 자동 확인이 없는 것: 지도 → 보드 다이브(Title 씬 입력 경로). 눈으로 확인하거나 다음에 `-journeycheck dive`를 더한다.

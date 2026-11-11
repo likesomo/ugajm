@@ -13,6 +13,9 @@ namespace SevenSteps.Game.Flow
     /// </summary>
     public sealed class JourneyRunner : MonoBehaviour
     {
+        /// The longest frame a transition counts (20 fps).
+        public const float MaxFrameSeconds = 0.05f;
+
         TransitionClock clock;
         Action<float> apply;
         Action done, cancel;
@@ -65,7 +68,9 @@ namespace SevenSteps.Game.Flow
                 if (cancel != null && EscPressed()) { consumedFrame = Time.frameCount; Cancel(); return; }
                 if (AnyPressed()) { consumedFrame = Time.frameCount; clock.Skip(); }
             }
-            if (!clock.Done) clock.Tick(Time.unscaledDeltaTime);
+            // At most MaxFrameSeconds per frame: the first frames after a scene load take 300+ ms (smoke: "slowest 364 ms")
+            // and would swallow most of a 0.75 s transition. A slow machine plays it a little longer instead.
+            if (!clock.Done) clock.Tick(Mathf.Min(Time.unscaledDeltaTime, MaxFrameSeconds));
             if (clock.Done) Finish();
             else apply(clock.Eased);
         }
