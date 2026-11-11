@@ -88,7 +88,17 @@ namespace SevenSteps.Tests
                     new UnityEngine.EventSystems.PointerEventData(null), UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
                 Assert.IsTrue(view.starLabels[1].transform.parent.gameObject.activeSelf, "a tap shows what the star asks");
                 Assert.IsFalse(view.starLabels[0].transform.parent.gameObject.activeSelf);
+                // Keyboard focus (M1 on 48ff6b4): Tab / Right to the next star, Shift+Tab / Left back, wrapping.
+                Assert.IsTrue(view.StarRowShown);
+                view.FocusStar(1);
+                Assert.IsTrue(view.starLabels[2].transform.parent.gameObject.activeSelf, "from star 2 to star 3");
+                view.FocusStar(1);
+                Assert.IsTrue(view.starLabels[0].transform.parent.gameObject.activeSelf, "wraps to star 1");
+                view.FocusStar(-1);
+                Assert.IsTrue(view.starLabels[2].transform.parent.gameObject.activeSelf, "back to star 3");
+                Assert.Greater(view.stars[2].rectTransform.localScale.x, 1f, "the focused star is larger");
                 view.Show(ResultModel.Loss(4, 3, isLast: false));
+                Assert.IsFalse(view.StarRowShown);
                 Assert.IsTrue(System.Linq.Enumerable.All(view.starLabels, l => !l.transform.parent.gameObject.activeSelf));
 
                 // Language switch while open: the panel rewords itself (docs/architecture.md 13.3).

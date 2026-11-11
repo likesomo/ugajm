@@ -196,12 +196,41 @@ namespace SevenSteps.Game.UI
         int tip = -1;
         bool tipPinned;
 
-        /// Shows what star <paramref name="k"/> asks on its tip plate (-1: none).
+        /// Shows what star <paramref name="k"/> asks on its tip plate (-1: none); that star is drawn a little larger.
         void ShowTip(int k)
         {
             tip = k;
             if (k < 0) tipPinned = false;
             for (int i = 0; i < starLabels.Length; i++) starLabels[i].transform.parent.gameObject.SetActive(i == k);
+            if (reveal == null)
+                for (int i = 0; i < stars.Length; i++) stars[i].rectTransform.localScale = Vector3.one * (i == k ? FocusScale : 1f);
+        }
+
+        const float FocusScale = 1.15f;
+
+        /// Star tip keyboard focus (docs 14.7 hover / focus / tap, review M1 on 48ff6b4): Tab and Right move to the next
+        /// star, Shift+Tab and Left to the previous one, wrapping; the first press shows star 1. Enter stays Next.
+        /// Only while a clear with its star row is shown.
+        public void FocusStar(int delta)
+        {
+            if (!StarRowShown) return;
+            int n = stars.Length;
+            int k = tip < 0 ? (delta >= 0 ? 0 : n - 1) : ((tip + delta) % n + n) % n;
+            ShowTip(k);
+            tipPinned = true;
+        }
+
+        /// A clear with stars is up (the row the tips belong to).
+        public bool StarRowShown => IsShown && shown != null && shown.Cleared && stars[0].transform.parent.gameObject.activeInHierarchy;
+
+        void Update()
+        {
+            var kb = UnityEngine.InputSystem.Keyboard.current;
+            if (kb == null || !StarRowShown) return;
+            bool shift = kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed;
+            if (kb.tabKey.wasPressedThisFrame) FocusStar(shift ? -1 : 1);
+            else if (kb.rightArrowKey.wasPressedThisFrame) FocusStar(1);
+            else if (kb.leftArrowKey.wasPressedThisFrame) FocusStar(-1);
         }
 
         /// Puts <paramref name="r"/> inside <paramref name="slot"/>, filling it (inset by <paramref name="pad"/>).
