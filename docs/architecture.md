@@ -864,7 +864,7 @@ namespace SevenSteps.Game.UI {
 - `UiLayoutCheck`는 끝에 허용 개수를 화면별로 출력한다(`exempt 3: StageSelect/Map/BigDipper Decoration "..."`). 허용을 늘리는 커밋은 아키텍트 리뷰에서 이유를 본다.
 
 ### 14.9 검사 방법 (`UiLayoutCheck`, 씬 플로우 구현)
-- 화면: 위 목록 전부, **ko·en 각각**, 해상도 1280×720·1920×1080(16:9, WebGL 템플릿이 16:9 비율 유지로 맞추므로 이 둘이면 된다). Windows 빌드용 1280×800(16:10)은 **경고**만.
+- 화면: 위 목록 전부, **ko·en 각각**, 해상도 1280×720·1920×1080(16:9, WebGL 템플릿이 16:9 비율 유지로 맞추므로 이 둘이면 된다). Windows 빌드용 1280×800(16:10)과 4:3 창 1024×768(캔버스 약 1108×831 단위)은 **경고**만이고, 목표는 경고 0이다. 세로 화면(720×1280)은 범위 밖이다.
 - 문자열: 각 키에 그 언어의 실제 문구, 레벨·챕터 텍스트는 언어별 **가장 긴 값**(이름·힌트·이야기·행성 이름·소개), 숫자는 가장 긴 값(`150/150`, `50`, `7/7`).
 - 화면을 Play 없이 Edit Mode에서 만들 수 있어야 한다(빌더나 뷰의 `Build`를 `Localizer`·데이터로 호출 → `Canvas.ForceUpdateCanvases`·`LayoutRebuilder.ForceRebuildLayoutImmediate`). 지금 Play에서만 만들어지는 뷰는 이 경로를 추가한다(각 화면 소유자).
 - 위반 출력은 `화면/언어/해상도: 규칙 — 요소 경로 (수치)` 한 줄씩. 하나라도 있으면 실패.
@@ -898,7 +898,7 @@ namespace SevenSteps.Game.UI {
     - UI `Image`로 한다면 HUD 맨 뒤 형제이고 `raycastTarget` 끔이다.
     - 그리고 `UiLayout.exempt = Decoration | Board`, reason "choose dim 30% (ui-minimal v3)"을 단다. 막 알파 0.6 미만이라 모달이 아니다.
     - 형제 링·연결선·고스트는 3D 표시다(UI로 그리면 장식 규칙을 따른다).
-- **등록 화면**: 씬 플로우가 `UiLayoutCheck`에 등록하고, gameplay-ui는 각 뷰의 Edit Mode `Build` 경로(14.9)를 준다. 모두 ko·en, 1280×720(1920×1080은 같은 캔버스 단위), 1280×800은 경고다.
+- **등록 화면**: 씬 플로우가 `UiLayoutCheck`에 등록하고, gameplay-ui는 각 뷰의 Edit Mode `Build` 경로(14.9)를 준다. 모두 ko·en, 1280×720(1920×1080은 같은 캔버스 단위), 1280×800·1024×768은 경고다.
   1. HUD 평소: 기존 넷(가장 긴 힌트·이름, 가장 넓은·높은 판)을 새 HUD로 본다.
   2. HUD + 걸음 숫자 표시 켬: 가장 넓은 판.
   3. 1회 이동 안내(`TutorialIds.Move`): 첫 스테이지.
@@ -1148,3 +1148,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | feat/scene-flow 2fe7f4d 승인(N2 단계 패널 tagline 줄에 진실 금색, N1 언어 변경 뒤 detailDefault). `docs/reviews/2026-11-11-scene-flow-cd38eb8.md` |
 | 2026-11-11 | 아키텍트 | feat/view bdaa019 반려(c58dfa4 R1: 키를 GameController로 옮겼지만 ResultView.Update가 남아 키당 FocusStar 두 번, 메뉴 위에서도 초점 이동). ResultView.Update 삭제 후 병합. `docs/reviews/2026-11-11-feat-view-c58dfa4.md` |
 | 2026-11-11 | 아키텍트 | feat/view 378bf38 승인(ResultView.Update 삭제로 c58dfa4 R1 종료: 별 초점 키는 GameController Result 분기 한 곳). `docs/reviews/2026-11-11-feat-view-c58dfa4.md` |
+| 2026-11-11 | 아키텍트 | 14장 UiLayoutCheck 해상도에 1024x768(4:3) 경고 추가 승인(scene-flow 제안, QA 1차 1280x800 경고 정리와 4:3 창 대비, 목표 경고 0, 세로 화면은 범위 밖). 영향: 씬 플로우(Resolutions 한 줄), gameplay-ui(Result 1024x768 경고 20건) |
