@@ -196,6 +196,11 @@ if (copy) {
     if (s.startLine !== undefined && !['story', 'hint', ''].includes(s.startLine)) err(13, where, `startLine "${s.startLine}"`);
     checkText(err, where, 'ko', s.story, LIMIT.stage, { maxWords: STAGE_MAX_WORDS });
     checkText(err, where, 'en', s.en, LIMIT.stage, { maxWords: STAGE_MAX_WORDS });
+    if (s.alt !== undefined) {
+      checkText(err, `${where} alt`, 'ko', s.alt.story, LIMIT.stage, { maxWords: STAGE_MAX_WORDS });
+      checkText(err, `${where} alt`, 'en', s.alt.en, LIMIT.stage, { maxWords: STAGE_MAX_WORDS });
+      if (s.alt.story === s.story) err(13, where, `alt repeats story`);
+    }
   }
   const copyIds = (copy.chapters ?? []).map(c => c.id);
   if (JSON.stringify(copyIds) !== JSON.stringify(chapterIds)) err(13, 'copy-levels', `chapters ${JSON.stringify(copyIds)} != chapters.json`);
