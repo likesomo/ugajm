@@ -19,7 +19,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties:
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -42,7 +42,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _AmbientFloor: 0.3
-    - _BoardMoss: 0.75
+    - _BoardMoss: 0.1
     - _BoardNormalStrength: 0.42
     - _BoardStoneSlot: 13
     - _DstBlend: 0

@@ -19,7 +19,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties:
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -51,7 +51,7 @@ Material:
     - _EnvironmentWood: 0
     - _SrcBlend: 1
     - _SurfaceAlpha: 1
-    - _Unlit: 0
+    - _Unlit: 0.35
     - _UseAtlas: 1
     - _UseMoss: 0
     - _UseVertexColor: 0

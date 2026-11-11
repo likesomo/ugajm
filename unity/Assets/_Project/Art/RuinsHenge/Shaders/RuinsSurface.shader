@@ -89,21 +89,44 @@ Shader "SevenSteps/RuinsSurface"
      bool seam=sourceSlot==6;
      if(seam&&_BoardMoss<.01)uv.x+=.25;
      bool stone=sourceSlot<2||sourceSlot>=8;
+     float slot=_BoardStoneSlot>0?_BoardStoneSlot:sourceSlot;
      if(stone)
      {
-      float slot=_BoardStoneSlot>0?_BoardStoneSlot:sourceSlot;
       float2 q=frac(uv*4);
       // Capped crop/offset avoids seams and palette bleed. Joined blocks carry
       // distinct UV2 seeds; individual tiles also get an object-origin seed.
       q=clamp((q-.5)*.85+.5+float2(i.style.y,frac(i.style.y*7.13))*.12-.06,.015,.985);
       uv=(float2(fmod(slot,4),floor(slot/4))+q)/4;
      }
-     half4 baked=SAMPLE_TEXTURE2D(_BoardShapeMap,sampler_BoardShapeMap,uv);
+     half4 baked,surface;
+     if(stone&&slot>7.5&&slot<8.5)
+     {
+      // Hollow pumice is world-space triplanar so every perforated face keeps
+      // round pores and mineral grains without stretching across the ellipsoid.
+      half3 weights=pow(abs(normalize(i.normalWS)),4);
+      weights/=max(weights.x+weights.y+weights.z,.001);
+      float2 qx=clamp(frac(i.positionWS.zy*.28),.015,.985);
+      float2 qy=clamp(frac(i.positionWS.xz*.28),.015,.985);
+      float2 qz=clamp(frac(i.positionWS.xy*.28),.015,.985);
+      float2 ux=(float2(0,2)+qx)/4.0;
+      float2 uy=(float2(0,2)+qy)/4.0;
+      float2 uz=(float2(0,2)+qz)/4.0;
+      baked=SAMPLE_TEXTURE2D(_BoardShapeMap,sampler_BoardShapeMap,ux)*weights.x+
+            SAMPLE_TEXTURE2D(_BoardShapeMap,sampler_BoardShapeMap,uy)*weights.y+
+            SAMPLE_TEXTURE2D(_BoardShapeMap,sampler_BoardShapeMap,uz)*weights.z;
+      surface=SAMPLE_TEXTURE2D(_BoardShapeNormal,sampler_BoardShapeNormal,ux)*weights.x+
+              SAMPLE_TEXTURE2D(_BoardShapeNormal,sampler_BoardShapeNormal,uy)*weights.y+
+              SAMPLE_TEXTURE2D(_BoardShapeNormal,sampler_BoardShapeNormal,uz)*weights.z;
+     }
+     else
+     {
+      baked=SAMPLE_TEXTURE2D(_BoardShapeMap,sampler_BoardShapeMap,uv);
+      surface=SAMPLE_TEXTURE2D(_BoardShapeNormal,sampler_BoardShapeNormal,uv);
+     }
      color=baked.rgb*i.color.rgb;
      if(stone)color*=_BoardRockTint.rgb;
      if(seam&&_BoardMoss>.01)color=lerp(half3(.34,.36,.30),color,_BoardMoss);
      // Linear packed RG tangent normal, B roughness, A AO. No importer swizzle.
-     half4 surface=SAMPLE_TEXTURE2D(_BoardShapeNormal,sampler_BoardShapeNormal,uv);
      half2 normalXY=(surface.rg*2-1)*_BoardNormalStrength;
      half3 detail=half3(normalXY,sqrt(saturate(1-dot(normalXY,normalXY))));
      stoneRoughness=saturate(surface.b+lerp(.20,-.12,saturate(i.normalWS.y)));
