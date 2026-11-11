@@ -1147,3 +1147,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | feat/scene-flow 6958352 승인(cd38eb8 R1·R2를 (a)로: 새김 탭 버튼 제거, 행성 카드 초점·hover로 진실 표시). 메모 N1 언어 변경 뒤 detailDefault 갱신. `docs/reviews/2026-11-11-scene-flow-cd38eb8.md` |
 | 2026-11-11 | 아키텍트 | feat/scene-flow 2fe7f4d 승인(N2 단계 패널 tagline 줄에 진실 금색, N1 언어 변경 뒤 detailDefault). `docs/reviews/2026-11-11-scene-flow-cd38eb8.md` |
 | 2026-11-11 | 아키텍트 | feat/view bdaa019 반려(c58dfa4 R1: 키를 GameController로 옮겼지만 ResultView.Update가 남아 키당 FocusStar 두 번, 메뉴 위에서도 초점 이동). ResultView.Update 삭제 후 병합. `docs/reviews/2026-11-11-feat-view-c58dfa4.md` |
+| 2026-11-11 | 아키텍트 | feat/view 378bf38 승인(ResultView.Update 삭제로 c58dfa4 R1 종료: 별 초점 키는 GameController Result 분기 한 곳). `docs/reviews/2026-11-11-feat-view-c58dfa4.md` |

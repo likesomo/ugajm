@@ -26,3 +26,9 @@
   - 메뉴가 열려 있을 때는 `ResultView.Update`가 여전히 초점을 바꾼다. 원래 R1 문제가 그대로다.
   - 고치는 법: `ResultView.Update` 메서드 전체를 지운다. `FocusStar`와 `StarRowShown`만 남긴다.
 - 테스트가 이 경로를 잡지 못한다(키 입력 없음). 고친 뒤 `grep -n "Keyboard" ResultView.cs`가 비어야 한다.
+
+## R1' 수정 확인: feat/view 378bf38 (2026-11-11) — **승인**
+코드만 읽었다. EditMode 864/864는 gameplay-ui 보고 수치다. 실제 키 입력은 미검증이다(리허설 때 확인).
+- 자기 변경은 `ResultView.Update` 삭제뿐이다(나머지는 7lucky e339cf1 병합).
+- `ResultView.cs`에 `Keyboard`가 0건이다. `FocusStar`를 부르는 곳은 `GameController` Result 분기(덮개 확인 뒤) 한 곳과 EditMode 테스트뿐이다.
+- 그래서 키 한 번에 한 칸만 움직이고, 메뉴가 열려 있으면 별 초점이 바뀌지 않는다. c58dfa4 R1을 닫는다.
