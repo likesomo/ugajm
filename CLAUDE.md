@@ -56,6 +56,7 @@ unity/Tools/unity.sh sfx          # 임시 효과음 11개 합성 → Assets/Sha
 unity/Tools/unity.sh setup        # 머티리얼·프리팹·GameAssets 생성, Game 씬(없을 때만), 빌드/플레이어 설정
 unity/Tools/unity.sh golden       # 규칙 골든값(core.js → Tests/Golden) + 텔레메트리 골든값(server/fixtures) 다시 생성. core.js 나 스테이지를 바꾸면 실행 후 커밋
 unity/Tools/unity.sh test         # EditMode 테스트 (Tests/EditMode) → reports/editmode-results.xml
+unity/Tools/unity.sh playtest     # PlayMode 테스트 (Tests/PlayMode, 에디터 Play Mode의 씬 흐름) → reports/
 unity/Tools/unity.sh scene-validate   # 빌드 목록 = AppScenes, 씬 루트·필수 참조(폰트 등 공유 에셋 포함) 검사. build-win/build-webgl 도 빌드 전에 같은 검사를 하고 오류면 빌드하지 않는다
 unity/Tools/unity.sh tileset-validate # 모든 TileSet 을 docs/architecture.md 12장 규격으로 검사 (오류면 실패). 아트 TileSet 을 합치기 전 필수
 unity/Tools/unity.sh tileset      # 임시 TileSet 다시 생성 (Data/TileSets/TopDown_Placeholder.asset)

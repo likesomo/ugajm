@@ -143,6 +143,22 @@ case "$cmd" in
     grep -o '<test-case [^>]*result="Failed"[^>]*' "$REPO/reports/editmode-results.xml" 2>/dev/null | grep -o 'fullname="[^"]*"' || true
     if [ "$code" -ne 0 ]; then echo "[unity.sh] test FAILED (exit $code)"; exit "$code"; fi
     echo "[unity.sh] test OK" ;;
+  playtest)
+    # PlayMode tests (Tests/PlayMode, docs/scene-flow.md 9): the Unity scene flow in the Editor Play Mode, no player build.
+    # Batchmode with graphics (scenes render offscreen; no -nographics). Results: reports/playmode-results.xml
+    mkdir -p "$REPO/reports" "$PROJ/Logs"
+    echo "[unity.sh] playtest: PlayMode (log: unity/Logs/batch-playtest.log)"
+    rm -f "$REPO/reports/playmode-results.xml"
+    code=0
+    (cd "$REPO" && "$U" -batchmode -projectPath unity -runTests -testPlatform PlayMode \
+      -testResults "$(cygpath -w "$REPO/reports/playmode-results.xml")" -logFile unity/Logs/batch-playtest.log) || code=$?
+    restore_urp_settings || true
+    restore_whitespace_only
+    summary="$(grep -o '<test-run [^>]*' "$REPO/reports/playmode-results.xml" 2>/dev/null | grep -o '\(total\|passed\|failed\|skipped\)="[0-9]*"' | tr '\n' ' ')"
+    echo "[unity.sh] playtest: ${summary:-no results}"
+    grep -o '<test-case [^>]*result="Failed"[^>]*' "$REPO/reports/playmode-results.xml" 2>/dev/null | grep -o 'fullname="[^"]*"' || true
+    if [ "$code" -ne 0 ]; then echo "[unity.sh] playtest FAILED (exit $code)"; exit "$code"; fi
+    echo "[unity.sh] playtest OK" ;;
   build-win)   batch build-win BuildTools.BuildWindows ;;
   build-webgl) batch build-webgl BuildTools.BuildWebGL ;;
   qa-replay)   batch qa-replay BuildTools.QaReplay ;;   # replays reports/qa/attempts.jsonl in C# (docs/qa-attempts.md 7) -> reports/qa/unity-replay.json
