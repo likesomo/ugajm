@@ -224,16 +224,6 @@ namespace SevenSteps.Game.UI
         /// A clear with stars is up (the row the tips belong to).
         public bool StarRowShown => IsShown && shown != null && shown.Cleared && stars[0].transform.parent.gameObject.activeInHierarchy;
 
-        void Update()
-        {
-            var kb = UnityEngine.InputSystem.Keyboard.current;
-            if (kb == null || !StarRowShown) return;
-            bool shift = kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed;
-            if (kb.tabKey.wasPressedThisFrame) FocusStar(shift ? -1 : 1);
-            else if (kb.rightArrowKey.wasPressedThisFrame) FocusStar(1);
-            else if (kb.leftArrowKey.wasPressedThisFrame) FocusStar(-1);
-        }
-
         /// Puts <paramref name="r"/> inside <paramref name="slot"/>, filling it (inset by <paramref name="pad"/>).
         static void Dock(RectTransform r, RectTransform slot, float pad)
         {
