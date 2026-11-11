@@ -20,19 +20,17 @@ namespace SevenSteps.Game.UI
         public int LevelBodies { get; }
         /// Bodies used for the clear, 1..LevelBodies. 0 for a loss.
         public int BodiesUsed { get; }
-        /// Fewest bodies the solver needs, 0 = unknown.
-        public int MinBodies { get; }
         /// Player's best for this stage, 0 = no record.
         public int BestBodies { get; }
         public bool IsLast { get; }
-        /// Stars of this clear, 0..3 (0 = unknown minimum or a loss). docs/architecture.md 6.5.
+        /// Stars of this clear, 0..3 (0 = a loss, or not judged). docs/architecture.md 6.5.
         public int Stars { get; }
         /// Best stars recorded for the stage, 0..3, at least <see cref="Stars"/> (the clear is saved first).
         public int BestStars { get; }
         /// The planet this clear finishes (its last stage, not the final stage), null otherwise: the panel says goodbye to it.
         public ChapterInfo FinishedChapter { get; }
 
-        public ResultModel(int stage, bool cleared, int levelBodies, int bodiesUsed, int minBodies, int bestBodies, bool isLast,
+        public ResultModel(int stage, bool cleared, int levelBodies, int bodiesUsed, int bestBodies, bool isLast,
             int stars = 0, int bestStars = 0, ChapterInfo finishedChapter = null)
         {
             if (!cleared && finishedChapter != null) throw new ArgumentException("a loss finishes no planet", nameof(finishedChapter));
@@ -45,13 +43,11 @@ namespace SevenSteps.Game.UI
             if (cleared && (bodiesUsed < 1 || bodiesUsed > levelBodies))
                 throw new ArgumentOutOfRangeException(nameof(bodiesUsed), bodiesUsed, $"a clear uses 1..{levelBodies} bodies");
             if (!cleared && bodiesUsed != 0) throw new ArgumentOutOfRangeException(nameof(bodiesUsed), bodiesUsed, "a loss has no body count");
-            if (minBodies < 0 || minBodies > levelBodies) throw new ArgumentOutOfRangeException(nameof(minBodies), minBodies, $"0 (unknown) or 1..{levelBodies}");
             if (bestBodies < 0 || bestBodies > levelBodies) throw new ArgumentOutOfRangeException(nameof(bestBodies), bestBodies, $"0 (no record) or 1..{levelBodies}");
             Stage = stage;
             Cleared = cleared;
             LevelBodies = levelBodies;
             BodiesUsed = bodiesUsed;
-            MinBodies = minBodies;
             BestBodies = bestBodies;
             IsLast = isLast;
             Stars = stars;
@@ -59,12 +55,12 @@ namespace SevenSteps.Game.UI
             FinishedChapter = finishedChapter;
         }
 
-        public static ResultModel Clear(int stage, int levelBodies, int bodiesUsed, int minBodies, int bestBodies, bool isLast,
+        public static ResultModel Clear(int stage, int levelBodies, int bodiesUsed, int bestBodies, bool isLast,
             int stars = 0, int bestStars = 0, ChapterInfo finishedChapter = null) =>
-            new ResultModel(stage, true, levelBodies, bodiesUsed, minBodies, bestBodies, isLast, stars, bestStars, finishedChapter);
+            new ResultModel(stage, true, levelBodies, bodiesUsed, bestBodies, isLast, stars, bestStars, finishedChapter);
 
         public static ResultModel Loss(int stage, int levelBodies, bool isLast) =>
-            new ResultModel(stage, false, levelBodies, 0, 0, 0, isLast);
+            new ResultModel(stage, false, levelBodies, 0, 0, isLast);
     }
 
     /// <summary>
@@ -325,16 +321,16 @@ namespace SevenSteps.Game.UI
 
         /// 0 hides the row (loss, or no minimum to judge by). Otherwise all three start empty and the earned ones fill in
         /// order with a small pop (unscaled time; outside play mode they are set at once).
-        /// The three criteria (docs/architecture.md 6.5) under the stars: clear / no solution shown and at most the fewest
-        /// brothers / no undo or restart. Words only; whether a star was earned comes from the model.
+        /// The three criteria (docs/architecture.md 6.5) under the stars: clear / no solution shown / every brother used
+        /// (design/levels/stars.md 0). Words only; whether a star was earned comes from the model.
         void ShowStarLabels(ResultModel m)
         {
             if (!(m.Cleared && m.Stars > 0)) { ShowTip(-1); return; }
             var font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
             // One line each on the tip plate beside the stars (the table strings break for the old two-line columns).
             starLabels[0].text = OneLine(loc.Get("result.star1"));
-            starLabels[1].text = OneLine(loc.Format(m.MinBodies == 1 ? "result.star2_one" : "result.star2_many", m.MinBodies));
-            starLabels[2].text = OneLine(loc.Get("result.star3"));
+            starLabels[1].text = OneLine(loc.Get("result.star2"));
+            starLabels[2].text = OneLine(loc.Format(m.LevelBodies == 1 ? "result.star3_one" : "result.star3_many", m.LevelBodies));
             for (int k = 0; k < starLabels.Length; k++)
             {
                 starLabels[k].font = font;

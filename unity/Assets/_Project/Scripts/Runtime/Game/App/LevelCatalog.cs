@@ -11,7 +11,6 @@ namespace SevenSteps.Game
     {
         static Level[] cached;
         static TextAsset source;
-        static int[] minBodies;
         static string[] chapterIds;
         static LevelDto[] dtos; // stage texts per language (LevelDto.TextFor, 13.5)
         static ChapterFileDto chapters; // null = no chapters.json yet
@@ -22,7 +21,6 @@ namespace SevenSteps.Game
         {
             cached = null;
             source = null;
-            minBodies = null;
             chapterIds = null;
             dtos = null;
             chapters = null;
@@ -40,7 +38,6 @@ namespace SevenSteps.Game
             foreach (var l in parsed)
                 if (!names.Add(l.Name)) throw new InvalidOperationException($"[SevenSteps] levels.json: stage name \"{l.Name}\" is used twice (it is the save key)");
             cached = parsed;
-            minBodies = file.levels.Select(d => d.expected != null ? d.expected.minBodies : 0).ToArray();
             dtos = file.levels;
             chapterIds = file.levels.Select(d => d.chapter ?? "").ToArray(); // LevelDto.chapter (6.4), not part of Core Level
             chapters = assets.chaptersJson != null ? JsonUtility.FromJson<ChapterFileDto>(assets.chaptersJson.text) : null;
@@ -49,12 +46,6 @@ namespace SevenSteps.Game
                 for (int k = 0; k < chapterIds.Length; k++) chapters.Get(chapterIds[k]); // unknown id throws: levels.json and chapters.json disagree
             source = assets.levelsJson;
             return cached;
-        }
-
-        /// Fewest bodies the JS solver needs for a stage (levels.json expected.minBodies), 0 if unknown. Call after Load.
-        public static int MinBodies(int stage)
-        {
-            return minBodies != null && stage >= 0 && stage < minBodies.Length ? minBodies[stage] : 0;
         }
 
         /// The stored solution of a stage (levels.json expected.path, the JS solver's fewest-bodies route checked by

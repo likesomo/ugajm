@@ -57,7 +57,7 @@ test('blocked move, idle after a long pause, undo and restart (R at the stage st
   assert.equal(events[7].moves, 2);
   const clear = play('일곱 걸음', '*RRRRRRR').events.find((e) => e.type === 'level_clear');
   assert.equal(clear.restarts, 0);
-  assert.equal(clear.stars, 3);
+  assert.equal(clear.stars, 2); // one brother of three (stars.md 0)
 });
 
 test('pit without the 7th step: fell + body_lost wasted', () => {
@@ -119,15 +119,14 @@ test('mud costs 2 steps: a 7th step reached through mud is recorded; tile names'
   assert.deepEqual([1, 2, 3, 4, 5].map((x) => tileKind(st, x)), ['mud', 'lever', 'flip_up', 'flip_down', 'door']);
 });
 
-test('stars (plan B): hint caps at 1, fewest bodies for 2, no undo or restart for 3', () => {
-  assert.equal(starsFor({ bodiesUsed: 1, minBodies: 1, hints: 0, undos: 0, restarts: 0 }), 3);
-  assert.equal(starsFor({ bodiesUsed: 1, minBodies: 1, hints: 0, undos: 2, restarts: 0 }), 2);
-  assert.equal(starsFor({ bodiesUsed: 1, minBodies: 1, hints: 0, undos: 0, restarts: 1 }), 2);
-  assert.equal(starsFor({ bodiesUsed: 2, minBodies: 1, hints: 0, undos: 0, restarts: 0 }), 1);
-  assert.equal(starsFor({ bodiesUsed: 1, minBodies: 1, hints: 1, undos: 0, restarts: 0 }), 1);
-  assert.equal(starsFor({ bodiesUsed: 1, minBodies: null, hints: 0, undos: 0, restarts: 0 }), null);
+test('stars (stars.md 0): hint caps at 1, every brother used for 3; undo and restart do not matter', () => {
+  assert.equal(starsFor({ bodiesUsed: 3, bodies: 3, hints: 0 }), 3);
+  assert.equal(starsFor({ bodiesUsed: 3, bodies: 3, hints: 0, undos: 2, restarts: 1 }), 3);
+  assert.equal(starsFor({ bodiesUsed: 2, bodies: 3, hints: 0 }), 2);
+  assert.equal(starsFor({ bodiesUsed: 3, bodies: 3, hints: 1 }), 1);
+  assert.equal(starsFor({ bodiesUsed: 1, bodies: null, hints: 0 }), null);
   const clearOf = (cmds) => play('일곱 걸음', cmds).events.find((e) => e.type === 'level_clear');
-  assert.equal(clearOf('RRRRRRR').stars, 3);
+  assert.equal(clearOf('RRRRRRR').stars, 2);
   assert.equal(clearOf('RRZRRRRRR').stars, 2);
   assert.equal(clearOf('HRRRRRRR').stars, 1);
 });

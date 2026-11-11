@@ -157,7 +157,7 @@ namespace SevenSteps.Game
                 foreach (var c in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
                     if (c.isRootCanvas && c.gameObject != hud.gameObject) c.enabled = false;
             }
-            flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, result, LevelCatalog.MinBodies, LevelCatalog.ChapterKeyOf, LevelCatalog.ChapterOf);
+            flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, result, LevelCatalog.ChapterKeyOf, LevelCatalog.ChapterOf);
             back = new BackNavigator(overlays, flowController.Back);
             chapterIntro = new ChapterIntroController(flowController, overlays, chapterCard, key => LevelCatalog.ChapterCard(key, localizer.Current));
             this.result = result;

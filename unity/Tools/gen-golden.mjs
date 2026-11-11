@@ -15,6 +15,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STEPS, parseLevel, newState, dispatch, solve, minBodies, stars, bodiesUsed } from '../../prototypes/seven-steps/src/core.js';
 import { LEVELS } from '../../prototypes/seven-steps/src/levels.js';
+import { solveAllBodies } from './all-brothers-check.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = join(here, '..', 'Assets', '_Project', 'Tests', 'Golden');
@@ -290,26 +291,29 @@ const write = (file, key, lines) => {
 write('levels.golden.json', 'levels', LEVELS.map((def) => `    ${json(levelRecord(def))}`));
 write('traces.golden.json', 'traces', traces.map(({ steps, ...head }) =>
   `    ${json(head).slice(0, -1)},\n     "steps": [\n${steps.map((st) => `      ${json(st)}`).join(',\n')}\n    ]}`));
-// Stars (stars.md 0): every input combination, and each stage's fewest-bodies solution played in one go (must be 3).
-// JsonUtility cannot read null ints, so "unknown" (core.js null) is written as 0, the C# value.
+// Stars (stars.md 0): every input combination; each stage's fewest-bodies solution (3 only when that is every brother,
+// else 2) and, where one exists, its shortest every-brother solution (3). Undo and restart are not star inputs.
 const starCases = [];
-for (const min of [0, 1, 2, 3])
-  for (const used of [1, 2, 3])
+for (const bodies of [1, 2, 3])
+  for (let used = 1; used <= bodies; used++)
     for (const hints of [0, 1, 2])
-      for (const undos of [0, 1, 3])
-        for (const restarts of [0, 1])
-          starCases.push({ bodiesUsed: used, minBodies: min, hints, undos, restarts, stars: stars({ bodiesUsed: used, minBodies: min, hints, undos, restarts }) ?? 0 });
-const starStages = LEVELS.map((def) => {
-  const level = parseLevel(def);
-  const best = minBodies(level);
+      starCases.push({ bodiesUsed: used, bodies, hints, stars: stars({ bodiesUsed: used, bodies, hints }) });
+const playStars = (def, level, path, want) => {
   let s = newState(level);
-  for (const c of letters(best.path)) s = dispatch(s, CMD[c]).state;
+  for (const c of letters(path)) s = dispatch(s, CMD[c]).state;
   if (s.status !== 'win') throw new Error(`stars: "${def.name}" solution does not win`);
   const used = bodiesUsed(s);
-  const got = stars({ bodiesUsed: used, minBodies: best.bodies, hints: 0, undos: 0, restarts: 0 });
-  if (got !== 3) throw new Error(`stars: "${def.name}" fewest-bodies solution gives ${got}`);
-  return { name: def.name, minBodies: best.bodies, path: letters(best.path), bodiesUsed: used, stars: got };
-});
+  const got = stars({ bodiesUsed: used, bodies: level.bodies, hints: 0 });
+  if (got !== want(used)) throw new Error(`stars: "${def.name}" solution gives ${got}`);
+  return { name: def.name, bodies: level.bodies, path: letters(path), bodiesUsed: used, stars: got };
+};
+const starStages = [];
+for (const def of LEVELS) {
+  const level = parseLevel(def);
+  starStages.push(playStars(def, level, minBodies(level).path, (used) => (used === level.bodies ? 3 : 2)));
+  const all = solveAllBodies(level);
+  if (all) starStages.push(playStars(def, level, all, () => 3));
+}
 const rows = (list) => list.map((c) => `    ${json(c)}`).join(',\n');
 writeFileSync(join(outDir, 'stars.golden.json'),
   `{\n${header}\n  "cases": [\n${rows(starCases)}\n  ],\n  "stages": [\n${rows(starStages)}\n  ]\n}\n`);

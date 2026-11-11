@@ -248,12 +248,13 @@ export function minBodies(level) {
 // Bodies spent so far in this run, counting the current one (1 = first body). On a win: the bodies it took.
 export const bodiesUsed = (s) => s.level.bodies - s.bodies + 1;
 
-// Stars for one cleared attempt (design/levels/stars.md 0, plan B). An attempt runs from level_start to the clear;
-// restarts inside it belong to the same attempt. minBodies is levels.json expected.minBodies (the solver's fewest bodies).
-// 1 = cleared; 2 = also no hint and bodiesUsed == minBodies; 3 = also no undo and no restart.
-// null when minBodies is unknown (0, null or undefined). Only the best stars per stage name are kept; nothing is locked.
-export function stars({ bodiesUsed: used, minBodies: min, hints = 0, undos = 0, restarts = 0 }) {
-  if (!min) return null;
-  if (hints > 0 || used > min) return 1;
-  return undos === 0 && restarts === 0 ? 3 : 2;
+// Stars for one cleared attempt (design/levels/stars.md 0; ASSUMPTION 2026-11-11, user to confirm). An attempt runs from
+// level_start to the clear; restarts inside it belong to the same attempt. bodies is the level's body count (level.bodies).
+// 1 = cleared; 2 = also no hint (H) in the attempt; 3 = also every brother used: bodiesUsed == bodies.
+// Undo and restart do not matter. null when bodies is unknown (0, null or undefined: server rows without level_start.bodies).
+// Only the best stars per stage name are kept; nothing is locked.
+export function stars({ bodiesUsed: used, bodies, hints = 0 }) {
+  if (!bodies) return null;
+  if (hints > 0) return 1;
+  return used === bodies ? 3 : 2;
 }

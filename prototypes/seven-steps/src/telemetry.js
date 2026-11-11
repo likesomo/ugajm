@@ -1,7 +1,7 @@
 // Anonymous play telemetry (schema: docs/telemetry.md, v1). Owned by backend/analytics.
 // Tracker turns dispatch() results into events and is pure (clock and output injected), so the fake-data
 // generator in server/tools reuses it. initTelemetry() wires it to the browser: local queue, batching, sendBeacon.
-import { STEPS, tileAt, minBodies, stars as coreStars } from './core.js';
+import { STEPS, tileAt, stars as coreStars } from './core.js';
 
 export const SCHEMA_VERSION = 1;
 export const IDLE_MS = 30000;
@@ -47,16 +47,8 @@ export function levelKey(level) {
   return fnv1a(`${level.bodies}\n${rows.join('\n')}`);
 }
 
-// Stars (design/levels/stars.md, plan B): core.js stars(), under the name the server and tests use.
+// Stars (design/levels/stars.md 0): core.js stars(), under the name the server and tests use.
 export const starsFor = coreStars;
-
-// Fewest bodies for a level (solver), cached by map. levels.json carries it as expected.minBodies.
-const MIN_BODIES = new Map();
-export function minBodiesOf(level) {
-  const key = levelKey(level);
-  if (!MIN_BODIES.has(key)) MIN_BODIES.set(key, minBodies(level)?.bodies ?? null);
-  return MIN_BODIES.get(key);
-}
 
 const xy = (s, i) => (i < 0 || i == null ? null : [i % s.level.w, Math.floor(i / s.level.w)]);
 const bodyNo = (s) => s.level.bodies - s.bodies + 1;
@@ -192,7 +184,7 @@ export class Tracker {
     if (after.status === 'win' && !run.done) {
       run.done = true;
       const bodiesUsed = bodyNo(after);
-      const stars = starsFor({ bodiesUsed, minBodies: minBodiesOf(after.level), hints: run.hints, undos: run.undos, restarts: run.restarts });
+      const stars = starsFor({ bodiesUsed, bodies: after.level.bodies, hints: run.hints });
       this.send('level_clear', {
         level: L, durationMs: Math.round(this.now() - run.t0), moves: run.moves, undos: run.undos,
         restarts: run.restarts, hints: run.hints, fails: run.fails, bodiesUsed, ...(stars ? { stars } : {}),

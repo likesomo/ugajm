@@ -3,7 +3,7 @@ using System;
 namespace SevenSteps.Core
 {
     /// <summary>
-    /// Stars for one cleared attempt (design/levels/stars.md 0, plan B). Port of core.js stars().
+    /// Stars for one cleared attempt (design/levels/stars.md 0; ASSUMPTION 2026-11-11, user to confirm). Port of core.js stars().
     /// An attempt runs from level_start to the clear; restarts inside it belong to the same attempt.
     /// Only the best stars per stage name are kept (progress v2); stars lock nothing.
     /// </summary>
@@ -11,20 +11,17 @@ namespace SevenSteps.Core
     {
         public const int Max = 3;
 
-        /// 1 = cleared; 2 = also no hint and <paramref name="bodiesUsed"/> == <paramref name="minBodies"/>;
-        /// 3 = also no undo and no restart in the attempt.
-        /// <paramref name="minBodies"/> is levels.json expected.minBodies (the solver's fewest bodies).
-        /// Returns 0 when minBodies is unknown (&lt;= 0), where core.js returns null.
-        /// Throws ArgumentOutOfRangeException when bodiesUsed &lt; 1 or a count is negative (caller bug; core.js does not check).
-        public static int Of(int bodiesUsed, int minBodies, int hints, int undos, int restarts)
+        /// 1 = cleared; 2 = also no hint (H) in the attempt; 3 = also every brother used: <paramref name="bodiesUsed"/> ==
+        /// <paramref name="bodies"/> (the level's body count, Level.Bodies). Undo and restart do not matter.
+        /// Throws ArgumentOutOfRangeException when bodies &lt; 1, bodiesUsed is not 1..bodies or hints &lt; 0 (caller bug).
+        /// core.js returns null for an unknown body count (server rows); the game always knows it.
+        public static int Of(int bodiesUsed, int bodies, int hints)
         {
-            if (bodiesUsed < 1) throw new ArgumentOutOfRangeException(nameof(bodiesUsed), bodiesUsed, "a clear uses at least one body");
+            if (bodies < 1) throw new ArgumentOutOfRangeException(nameof(bodies), bodies, "a level has at least one body");
+            if (bodiesUsed < 1 || bodiesUsed > bodies) throw new ArgumentOutOfRangeException(nameof(bodiesUsed), bodiesUsed, $"1..{bodies}");
             if (hints < 0) throw new ArgumentOutOfRangeException(nameof(hints), hints, "count");
-            if (undos < 0) throw new ArgumentOutOfRangeException(nameof(undos), undos, "count");
-            if (restarts < 0) throw new ArgumentOutOfRangeException(nameof(restarts), restarts, "count");
-            if (minBodies <= 0) return 0;
-            if (hints > 0 || bodiesUsed > minBodies) return 1;
-            return undos == 0 && restarts == 0 ? 3 : 2;
+            if (hints > 0) return 1;
+            return bodiesUsed == bodies ? 3 : 2;
         }
 
         /// Bodies spent so far in this run, counting the current one (1 = first body). On a win: the bodies it took.

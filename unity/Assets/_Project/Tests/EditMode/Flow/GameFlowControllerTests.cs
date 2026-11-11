@@ -65,7 +65,7 @@ namespace SevenSteps.Tests
             board = new Board();
             panel = new Panel();
             save = new SaveSystem(new MemoryStore());
-            ctl = new GameFlowController(flow, EntryTracker.ForLaunch(levelFromLaunch), save, board, panel, stage => stage == 0 ? 1 : 0, stage => stage < 2 ? "" : "moss",
+            ctl = new GameFlowController(flow, EntryTracker.ForLaunch(levelFromLaunch), save, board, panel, stage => stage < 2 ? "" : "moss",
                 stage => new ChapterInfo { id = stage < 2 ? "ruins" : "moss", planet = stage < 2 ? "폐허" : "이끼" });
         }
 
@@ -103,7 +103,6 @@ namespace SevenSteps.Tests
             Assert.IsNotNull(panel.Shown);
             Assert.IsTrue(panel.Shown.Cleared);
             Assert.AreEqual(1, panel.Shown.BodiesUsed);
-            Assert.AreEqual(1, panel.Shown.MinBodies);
             Assert.AreEqual(1, panel.Shown.BestBodies);
 
             Assert.IsTrue(ctl.TakesCommand(Command.Restart), "R in Result is the flow's");
@@ -135,37 +134,32 @@ namespace SevenSteps.Tests
         [Test]
         public void StarsFromTheAttemptAreSavedAndShown()
         {
-            Make(3, false);            // stage 0: minBodies 1, the test win uses 1 body
+            // Stars (design/levels/stars.md 0): the test win uses 1 of the level's 3 brothers, so 2 at most.
+            Make(3, false);
             ctl.Start(0);
-            board.Win();               // no hint, no undo, no restart
-            Assert.AreEqual(3, panel.Shown.Stars);
-            Assert.AreEqual(3, panel.Shown.BestStars);
-            Assert.AreEqual(3, save.Progress.BestStars(board.State.Level));
+            board.Win();               // no hint
+            Assert.AreEqual(2, panel.Shown.Stars);
+            Assert.AreEqual(2, panel.Shown.BestStars);
+            Assert.AreEqual(2, save.Progress.BestStars(board.State.Level));
 
-            ctl.Again();               // a new attempt: a hint makes it 1 star, the best stays 3
+            ctl.Again();               // a new attempt: a hint makes it 1 star, the best stays 2
             board.Attempt = new AttemptCounts(1, 0, 0);
             board.Win();
             Assert.AreEqual(1, panel.Shown.Stars);
-            Assert.AreEqual(3, panel.Shown.BestStars);
+            Assert.AreEqual(2, panel.Shown.BestStars);
 
-            ctl.Again();               // undo only: 2 stars
-            board.Attempt = new AttemptCounts(0, 2, 0);
+            ctl.Again();               // undo and restart do not cost stars
+            board.Attempt = new AttemptCounts(0, 2, 1);
             board.Win();
             Assert.AreEqual(2, panel.Shown.Stars);
         }
 
         [Test]
-        public void UnknownMinimumGivesNoStars()
+        public void ResultModelRejectsStarsItCannotHave()
         {
-            Make(3, false);            // stage 1: minBodies 0 (unknown)
-            ctl.Start(1);
-            board.Win();
-            Assert.AreEqual(0, panel.Shown.Stars);
-            Assert.AreEqual(0, save.Progress.BestStars(board.State.Level));
-            Assert.IsTrue(save.Progress.IsCleared(board.State.Level), "still a clear");
-            Assert.Throws<ArgumentOutOfRangeException>(() => ResultModel.Clear(0, 3, 1, 1, 1, false, stars: 3, bestStars: 2),
+            Assert.Throws<ArgumentOutOfRangeException>(() => ResultModel.Clear(0, 3, 1, 1, false, stars: 3, bestStars: 2),
                 "best below this clear");
-            Assert.Throws<ArgumentOutOfRangeException>(() => new ResultModel(0, false, 3, 0, 0, 0, false, stars: 1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ResultModel(0, false, 3, 0, 0, false, stars: 1));
         }
 
         [Test]

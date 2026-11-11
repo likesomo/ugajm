@@ -96,9 +96,9 @@ namespace SevenSteps.Game.Flow
         /// Input tokens besides the replay letters U D L R K X (docs/qa-attempts.md 3).
         public const char Undo = 'Z', Hint = 'H', Restart = '!';
 
-        /// Replays <paramref name="inputs"/> from Rules.NewState. <paramref name="minBodies"/>: levels.json expected.minBodies.
+        /// Replays <paramref name="inputs"/> from Rules.NewState.
         /// <paramref name="from"/>: this attempt's first token (counts of steps..hints start there).
-        public static QaReplayResult Run(Level level, int minBodies, string inputs, int from = 0)
+        public static QaReplayResult Run(Level level, string inputs, int from = 0)
         {
             if (level == null) throw new ArgumentNullException(nameof(level));
             inputs ??= "";
@@ -147,7 +147,7 @@ namespace SevenSteps.Game.Flow
                 : s.Status == Status.Lose ? (last != null && last.Has(GameEventType.Fall) ? "fell" : "out_of_bodies")
                 : "open";
             if (s.Status == Status.Lose) r.failReason = LossOf(last);
-            if (s.Status == Status.Win) r.stars = Stars.Of(r.bodiesUsed, minBodies, counts.Hints, counts.Undos, counts.Restarts);
+            if (s.Status == Status.Win) r.stars = Stars.Of(r.bodiesUsed, level.Bodies, counts.Hints);
             r.stateKey = Rules.Key(s);
             r.stateHash = KeyHash(r.stateKey);
             return r;
@@ -210,13 +210,12 @@ namespace SevenSteps.Game.Flow
             return list;
         }
 
-        /// Replays every record and lists the differences (docs 7). <paramref name="minBodies"/> and <paramref name="mapRows"/>
-        /// take a 0-based stage; mapRows null = mapHash not compared. A bad line becomes a mismatch, not an exception.
-        public static QaReplayReport Check(IReadOnlyList<Level> levels, Func<int, int> minBodies, IReadOnlyList<QaAttemptRecord> records,
+        /// Replays every record and lists the differences (docs 7). <paramref name="mapRows"/>
+        /// takes a 0-based stage; mapRows null = mapHash not compared. A bad line becomes a mismatch, not an exception.
+        public static QaReplayReport Check(IReadOnlyList<Level> levels, IReadOnlyList<QaAttemptRecord> records,
             Func<int, string[]> mapRows = null)
         {
             if (levels == null) throw new ArgumentNullException(nameof(levels));
-            if (minBodies == null) throw new ArgumentNullException(nameof(minBodies));
             if (records == null) throw new ArgumentNullException(nameof(records));
             var entries = new List<QaReplayEntry>();
             var all = new List<string>();
@@ -236,7 +235,7 @@ namespace SevenSteps.Game.Flow
                 else if (rec.from < 0 || rec.from > rec.inputs.Length) diffs.Add($"from {rec.from} is not 0..{rec.inputs.Length}");
                 else
                 {
-                    e.unity = Run(levels[stage], minBodies(stage), rec.inputs, rec.from);
+                    e.unity = Run(levels[stage], rec.inputs, rec.from);
                     if (e.unity.error.Length > 0) diffs.Add(e.unity.error);
                     else Compare(rec, e.unity, diffs);
                 }
