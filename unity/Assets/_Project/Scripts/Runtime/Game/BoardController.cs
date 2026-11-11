@@ -317,7 +317,8 @@ namespace SevenSteps.Game
                 LastHint = t;
                 if (t.Costs) attempt = attempt.WithHint();
                 bool warn = HintRules.FirstTierFree && !t.Costs && attempt.Hints == 0 && t.Tier < t.Tiers && hintSteps.NextCosts(session.State);
-                messages.Show(() => HintText(stage, t, warn));
+                var steps = hintSteps; // captured: LoadStage clears the field before the Rebuild clears the line (review N1 on c5a3657)
+                messages.Show(() => HintText(stage, steps, t, warn));
                 board.ShowHintGoal(t.What == HintTier.Shows.Goal ? t.Goal.Cell : -1);
             }
             HintShown?.Invoke();
@@ -348,7 +349,7 @@ namespace SevenSteps.Game
         }
 
         /// The tier's line on the message line, worded on each read (a language change rewords it).
-        string HintText(int stage, HintTier t, bool nextCosts)
+        string HintText(int stage, HintSteps steps, HintTier t, bool nextCosts)
         {
             string body = t.What switch
             {
@@ -356,7 +357,7 @@ namespace SevenSteps.Game
                 HintTier.Shows.Goal => loc.Format("hint.goal", loc.Get($"hint.brother{t.Goal.Body % 3 + 1}"), GoalWords(t.Goal)),
                 _ => hints.For(stage),
             };
-            string head = loc.Format("hint.tier", hintSteps.Shown(t.Tier), hintSteps.ShownTiers);
+            string head = loc.Format("hint.tier", steps.Shown(t.Tier), steps.ShownTiers);
             if (t.FromStart) head += " " + loc.Get("hint.from_start");
             string line = loc.Format("hint.line", head, body);
             return nextCosts ? line + " " + loc.Get("hint.next_costs") : line;
