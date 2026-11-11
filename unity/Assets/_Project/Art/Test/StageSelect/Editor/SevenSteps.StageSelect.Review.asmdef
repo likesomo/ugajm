@@ -1,0 +1,6 @@
+{
+  "name": "SevenSteps.StageSelect.Review",
+  "references": ["SevenSteps.Art", "SevenSteps.Core", "SevenSteps.Contracts", "SevenSteps.Game", "UnityEngine.UI"],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": false
+}
