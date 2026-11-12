@@ -92,6 +92,8 @@ namespace SevenSteps.Game
         {
             CanvasGroup group, loading;
             LoadingView view;
+            // U5 (UiStyleToggle, asked once when the fader is made): three scarf sparks instead of the loading screen.
+            ScarfSparks sparks;
             float loadingSince = -1;
             int loads;
 
@@ -115,7 +117,15 @@ namespace SevenSteps.Game
                 img.color = Ui.HasTheme ? new Color(Ui.PanelBg.r, Ui.PanelBg.g, Ui.PanelBg.b, 1f) : Color.black;
                 var f = go.AddComponent<Fader>();
                 f.group = go.AddComponent<CanvasGroup>();
-                if (Ui.HasTheme)
+                bool u5 = Services.TryGet<LaunchOptions>(out var launch) && UiStyleToggle.U5(launch);
+                if (Ui.HasTheme && u5)
+                {
+                    f.sparks = new ScarfSparks(go.transform);
+                    f.loading = f.sparks.Root.gameObject.AddComponent<CanvasGroup>();
+                    f.loading.alpha = 0f;
+                    f.loading.blocksRaycasts = false;
+                }
+                else if (Ui.HasTheme)
                 {
                     f.view = new LoadingView(go.transform);
                     f.loading = f.view.Root.gameObject.AddComponent<CanvasGroup>();
@@ -129,6 +139,7 @@ namespace SevenSteps.Game
             /// The scene load starts behind the dark screen: text in the current language, a random tip, hidden for now.
             public void BeginLoading()
             {
+                if (sparks != null) { loadingSince = Time.unscaledTime; return; } // U5: no words, no tip
                 if (view == null || !Services.TryGet<Localizer>(out var loc)) return;
                 // Every other load shows the observer's carving instead of a rule tip (story-integration.md 9 Q4: alternate).
                 // None while story.json has no "loading" entry (out of the jam data, 0.1).
@@ -137,17 +148,19 @@ namespace SevenSteps.Game
                 loadingSince = Time.unscaledTime;
             }
 
-            /// Load progress 0..1 (LoadingView); shows the screen once the load is slower than LoadingDelay.
+            /// Load progress 0..1 (LoadingView); shows the screen (or the U5 sparks) once the load is slower than LoadingDelay.
             public void Progress(float t)
             {
-                if (view == null || loadingSince < 0) return;
+                if (loading == null || loadingSince < 0) return;
                 if (Time.unscaledTime - loadingSince >= LoadingDelay) loading.alpha = 1f;
-                view.Progress(t);
+                view?.Progress(t); // the sparks show no progress
             }
 
             void Update()
             {
-                if (view != null && loadingSince >= 0) view.Animate(Time.unscaledTime);
+                if (loadingSince < 0) return;
+                view?.Animate(Time.unscaledTime);
+                sparks?.Animate(Time.unscaledTime);
             }
 
             public void EndLoading()
