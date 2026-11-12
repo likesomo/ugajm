@@ -123,6 +123,27 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
+        /// U5 boot treatment (-ui5 -loadDelay 3): the Boot -> Title load behind the fader with the three scarf sparks.
+        /// `unity.sh playcapture U5Boot`.
+        [UnityTest]
+        public IEnumerator U5Boot()
+        {
+            Rig.Ensure();
+            Bootstrap.UseLaunchOptionsForNextRun(PlayEnv.Launch("-ui5", "-loadDelay", "3"));
+            SceneManager.LoadScene(AppScenes.Boot, LoadSceneMode.Single);
+            float t0 = Time.realtimeSinceStartup;
+            GameObject sparks = null;
+            while (sparks == null || sparks.GetComponent<CanvasGroup>().alpha < 0.5f)
+            {
+                Assert.Less(Time.realtimeSinceStartup - t0, 10f, "the sparks to show");
+                sparks = GameObject.Find("SceneFader/Scarf sparks");
+                yield return null;
+            }
+            var px = new Pixels();
+            yield return Capture("u5-boot", px, 0.4f);
+            yield return PlayEnv.WaitForState(AppState.Title, AppScenes.Title, 15f);
+        }
+
         /// U5 map and planet surface (-ui5; back 48 and settings 48 only): the first planet cleared, then its surface path.
         /// Before = `map` (current controls). `unity.sh playcapture U5Map`.
         [UnityTest]
@@ -426,7 +447,7 @@ namespace SevenSteps.Tests.PlayMode
         {
             public const string ObjectName = "PlayCapture rig";
             public static RenderTexture Target { get; private set; }
-            /// Draws the converted canvases: still, far from the scene (y 10000), UI layer only, last. A canvas on a moving
+            /// Draws the converted canvases: still, far from the scene (y 10000), last. A canvas on a moving
             /// scene camera would lag a frame behind it, and views that project world points (the star map) would place
             /// against the old pose; an overlay canvas never moves, and neither does this one.
             static Camera ui;
@@ -448,7 +469,7 @@ namespace SevenSteps.Tests.PlayMode
                 camGo.transform.position = new Vector3(0, 10000, 0);
                 ui = camGo.AddComponent<Camera>();
                 ui.orthographic = true;
-                ui.cullingMask = 1 << 5; // UI
+                ui.cullingMask = ~0; // every layer: an overlay canvas draws whatever its layer (the SceneFader is on Default); nothing else is near y 10000
                 ui.clearFlags = CameraClearFlags.SolidColor;
                 ui.backgroundColor = new Color(0, 0, 0, 0);
                 ui.depth = 1000;

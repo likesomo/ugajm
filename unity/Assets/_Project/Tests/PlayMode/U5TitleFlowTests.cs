@@ -95,6 +95,26 @@ namespace SevenSteps.Tests.PlayMode
             Assert.IsFalse(title.U5Map.Visible);
         }
 
+        /// A slow load under -ui5 (-loadDelay) shows the scarf sparks on the fader, not the loading screen.
+        [UnityTest]
+        public IEnumerator SlowLoadShowsTheScarfSparks()
+        {
+            Bootstrap.UseLaunchOptionsForNextRun(PlayEnv.Launch("-ui5", "-loadDelay", "2"));
+            SceneManager.LoadScene(AppScenes.Boot, LoadSceneMode.Single);
+            bool seen = false;
+            float t0 = Time.realtimeSinceStartup;
+            while (Time.realtimeSinceStartup - t0 < 10f)
+            {
+                var sparks = GameObject.Find("SceneFader/Scarf sparks");
+                if (sparks != null && sparks.GetComponent<CanvasGroup>().alpha > 0.5f) { seen = true; break; }
+                yield return null;
+            }
+            Assert.IsTrue(seen, "the sparks show during the slow Boot -> Title load");
+            Assert.IsNull(GameObject.Find("SceneFader/Loading"), "no loading screen under U5");
+            yield return PlayEnv.WaitForState(AppState.Title, AppScenes.Title, 15f);
+            Assert.Less(GameObject.Find("SceneFader/Scarf sparks").GetComponent<CanvasGroup>().alpha, 0.5f, "gone once the title is up");
+        }
+
         [UnityTest]
         public IEnumerator PlayStoneBeginsStageOneOnAFreshSave()
         {

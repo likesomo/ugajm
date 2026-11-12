@@ -202,6 +202,33 @@ namespace SevenSteps.Tests.Game
         }
 
         [Test]
+        public void BootSparksAreThreeScarvesLightingInTurn()
+        {
+            var canvas = Canvas();
+            var v = new ScarfSparks(canvas);
+            UnityEngine.Canvas.ForceUpdateCanvases();
+            for (int k = 0; k < 3; k++)
+            {
+                var r = OnCanvas(canvas, v.Spark(k).rectTransform);
+                Assert.AreEqual(640 + (k - 1) * ScarfSparks.Pitch, r.center.x, 0.6f, $"spark {k + 1} x");
+                Assert.AreEqual(ScarfSparks.CenterY, r.center.y, 0.6f, $"spark {k + 1} y");
+                var scarf = SevenSteps.Game.UI.Planets.PlanetMap3DView.Scarves[k];
+                Assert.AreEqual(scarf.r, v.Spark(k).color.r, 0.001f, "the brother's scarf colour");
+            }
+            Assert.AreEqual(0, canvas.GetComponentsInChildren<Text>(true).Length, "no words, no progress");
+            int Brightest(float t)
+            {
+                v.Animate(t);
+                int best = 0;
+                for (int k = 1; k < 3; k++) if (v.Spark(k).color.a > v.Spark(best).color.a) best = k;
+                return best;
+            }
+            float third = ScarfSparks.Period / 3f;
+            CollectionAssert.AreEqual(new[] { 0, 1, 2 }, new[] { Brightest(third * 0.5f), Brightest(third * 1.5f), Brightest(third * 2.5f) }, "left to right");
+            Assert.Throws<ArgumentNullException>(() => new ScarfSparks(null));
+        }
+
+        [Test]
         public void ViewsAssertTheirArguments()
         {
             var canvas = Canvas();

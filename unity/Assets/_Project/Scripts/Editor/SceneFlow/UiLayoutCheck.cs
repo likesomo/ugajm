@@ -308,6 +308,13 @@ namespace SevenSteps.EditorTools
                     return null;
                 } }, "tip " + which);
             }
+            // U5 boot / loading: the three scarf sparks only (no words, no progress), as the fader shows them.
+            yield return (new Screen { Name = "U5 Boot", Build = (c, root) =>
+            {
+                var v = new ScarfSparks(root);
+                v.Animate(0.5f);
+                return null;
+            } }, "");
             // U5 map / surface controls (back, settings; the v4 map's own overlay is not on this canvas). With a tip each.
             foreach (string which in new[] { "", "back", "settings" })
             {
