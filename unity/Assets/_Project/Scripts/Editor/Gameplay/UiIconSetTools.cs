@@ -18,7 +18,13 @@ namespace SevenSteps.EditorTools
         public const string AssetPath = "Assets/_Project/Data/UiIconSet.asset";
         public const string ManifestPath = "Assets/_Project/Art/UI/U5/u5-icons.json";
 
-        [Serializable] public sealed class ManifestDto { public int version; public EntryDto[] icons = Array.Empty<EntryDto>(); }
+        [Serializable] public sealed class ManifestDto { public int version; public EntryDto[] icons = Array.Empty<EntryDto>(); public WorldStarDto worldStar; }
+        [Serializable] public sealed class AssetRefDto { public string path = ""; public string guid = ""; }
+        [Serializable] public sealed class WorldStarDto
+        {
+            public string path = ""; public string guid = "";
+            public AssetRefDto litMaterial, unlitMaterial, shellMaterial;
+        }
         [Serializable] public sealed class EntryDto { public string id = ""; public string path = ""; public string guid = ""; public int size; }
 
         /// scene-validate: GameAssets.uiIcons set (error), every UiIcon with art (warning per missing id).
@@ -61,6 +67,22 @@ namespace SevenSteps.EditorTools
                       ?? throw new FileNotFoundException("UiIconSet asset not found", assetPath);
             var dto = JsonUtility.FromJson<ManifestDto>(File.ReadAllText(manifestPath));
             int count = Apply(set, dto, ResolveSprite, log);
+            if (dto.worldStar != null && !string.IsNullOrEmpty(dto.worldStar.guid))
+            {
+                T Load<T>(string guid, string path) where T : UnityEngine.Object
+                {
+                    string p = string.IsNullOrEmpty(guid) ? "" : AssetDatabase.GUIDToAssetPath(guid);
+                    var o = AssetDatabase.LoadAssetAtPath<T>(string.IsNullOrEmpty(p) ? path : p);
+                    if (o == null) log.Add($"WARN worldStar: no {typeof(T).Name} at {guid} / {path}");
+                    return o;
+                }
+                var w = dto.worldStar;
+                set.worldStarStone = Load<GameObject>(w.guid, w.path);
+                if (w.litMaterial != null) set.starLit = Load<Material>(w.litMaterial.guid, w.litMaterial.path);
+                if (w.unlitMaterial != null) set.starUnlit = Load<Material>(w.unlitMaterial.guid, w.unlitMaterial.path);
+                if (w.shellMaterial != null) set.stoneShell = Load<Material>(w.shellMaterial.guid, w.shellMaterial.path);
+                if (set.worldStarStone != null) count++;
+            }
             EditorUtility.SetDirty(set);
             AssetDatabase.SaveAssets();
             return count;

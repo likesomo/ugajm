@@ -309,7 +309,65 @@ namespace SevenSteps.Tests.PlayMode
                 AssertVaried(name, px.Value);
                 var u5 = Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ClearView>();
                 if (name.StartsWith("u5")) Assert.IsTrue(u5 != null && u5.IsShown, $"{name}: the U5 clear is up");
+                if (u5 != null)
+                    foreach (var w in u5.WorldStoneObjects)
+                    {
+                        var rs = w != null ? w.GetComponentsInChildren<Renderer>() : new Renderer[0];
+                        Debug.Log($"[SevenSteps] Play capture {name}: world stones {u5.WorldStones}, stone {(w == null ? "null" : $"{w.activeInHierarchy} at {w.transform.position} scale {w.transform.lossyScale} renderers {string.Join("+", System.Linq.Enumerable.Select(rs, r => r.name + ":" + (r.sharedMaterial != null ? r.sharedMaterial.name : "-")))} bounds {(rs.Length > 0 ? rs[0].bounds.ToString() : "-")} mat {(rs.Length > 0 && rs[0].sharedMaterial != null ? rs[0].sharedMaterial.shader.name : "-")}")}");
+                    }
                 else Assert.IsNull(u5, $"{name}: no U5 clear with the toggle off");
+            }
+        }
+
+        /// U5 pause, settings and failure before / after (U5-pause, U5-settings, U5-failure): the menu opened from the HUD
+        /// (u4: the current menu panel; u5: the icon row), the settings (u4: -settings; u5: the row's settings icon) and a
+        /// loss shown by its view (u4: the current loss panel; u5: the failure line). `unity.sh playcapture U5Rows`.
+        [UnityTest]
+        public IEnumerator U5Rows()
+        {
+            foreach (bool u5 in new[] { false, true })
+            {
+                string ui = u5 ? "u5" : "u4";
+                PlayEnv.Reset();
+                yield return Start(AppState.Game, AppScenes.Game, u5 ? new[] { "-ui5", "-level", "4", "-replay", "D" } : new[] { "-level", "4", "-replay", "D" });
+                var game = Object.FindAnyObjectByType<GameController>();
+                game.Menu.Open();
+                var px = new Pixels();
+                yield return Capture($"{ui}-pause", px);
+                AssertVaried($"{ui}-pause", px.Value);
+                if (u5)
+                {
+                    var pause = Object.FindObjectsByType<SevenSteps.Game.UI.U5.U5RowOverlay>(FindObjectsInactive.Include).First(o => o.name == "U5 Pause");
+                    Assert.IsTrue(pause.Visible, "the U5 pause row is the menu");
+                    pause.Row.Buttons[4].Press(); // settings
+                    px = new Pixels();
+                    yield return Capture("u5-settings", px);
+                    AssertVaried("u5-settings", px.Value);
+                    Assert.IsTrue(Object.FindObjectsByType<SevenSteps.Game.UI.U5.U5RowOverlay>(FindObjectsInactive.Include).First(o => o.name == "U5 Settings").Visible);
+                    pause.Plate.Model.Clear();
+                }
+                game.Menu.Toggle();
+                PlayEnv.Reset();
+                yield return Start(AppState.Game, AppScenes.Game, u5 ? new[] { "-ui5", "-level", "4", "-replay", "DUR" } : new[] { "-settings", "-level", "4", "-replay", "DUR" });
+                if (!u5)
+                {
+                    px = new Pixels();
+                    yield return Capture("u4-settings", px);
+                    AssertVaried("u4-settings", px.Value);
+                    game = Object.FindAnyObjectByType<GameController>();
+                    game.Menu.Toggle(); // nothing: settings are open; Esc path is the overlay stack's
+                }
+                // A loss, shown by the result view the flow uses (the board stays as the replay left it).
+                var loss = SevenSteps.Game.UI.ResultModel.Loss(3, 3, false);
+                if (u5) Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ClearView>(FindObjectsInactive.Include).Show(loss);
+                else
+                {
+                    foreach (var o in Object.FindObjectsByType<SevenSteps.Game.UI.SettingsPanel>(FindObjectsInactive.Exclude)) o.Hide();
+                    Object.FindAnyObjectByType<SevenSteps.Game.UI.ResultView>().Show(loss);
+                }
+                px = new Pixels();
+                yield return Capture($"{ui}-failure", px);
+                AssertVaried($"{ui}-failure", px.Value);
             }
         }
 
