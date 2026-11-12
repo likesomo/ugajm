@@ -105,6 +105,9 @@ namespace SevenSteps.Game.UI.U5
             return string.IsNullOrEmpty(tip.Shortcut) ? s : s + " · " + tip.Shortcut;
         }
 
+        /// Places the shown tip again (its owner moved, or the canvas changed size).
+        public void Refresh() => Redraw();
+
         void Redraw()
         {
             var tip = model.Current;
@@ -142,7 +145,28 @@ namespace SevenSteps.Game.UI.U5
             float w = gen.GetPreferredWidth(words, settings) / ppu, h = gen.GetPreferredHeight(words, settings) / ppu;
             float need = Mathf.Ceil(w) + pad.x + pad.z;
             if (need > MaxWidth) Debug.LogError($"[SevenSteps] FocusPlate: \"{words}\" needs {need:0} > {MaxWidth} (shorten the string)");
-            return new Vector2(Mathf.Clamp(need, BaseWidth, MaxWidth), Mathf.Ceil(Mathf.Max(h, t.fontSize)) + pad.y + pad.w);
+            float width = Mathf.Clamp(need, BaseWidth, MaxWidth);
+            return new Vector2(width, PlateHeight(t, words, width, Mathf.Max(pad.y, pad.w)));
+        }
+
+        /// Height of a plate whose (vertically centred) text keeps <paramref name="pad"/> clear above and below its drawn
+        /// glyphs: twice the glyphs' larger reach from the centre, plus the padding. The Jua glyph quads are taller than the
+        /// font size and sit low (14.4 "glyphs + 8 inside", scene-flow UiLayoutCheck finding on 1f90617), so the line
+        /// height alone is not enough. Empty text: the font size.
+        public static float PlateHeight(Text t, string words, float width, float pad)
+        {
+            if (t == null) throw new ArgumentNullException(nameof(t));
+            float reach = t.fontSize / 2f;
+            if (!string.IsNullOrEmpty(words))
+            {
+                var gen = new TextGenerator();
+                var settings = t.GetGenerationSettings(new Vector2(Mathf.Max(width, 1f), 1000f));
+                settings.textAnchor = TextAnchor.MiddleCenter;
+                gen.Populate(words, settings);
+                float ppu = t.pixelsPerUnit > 0 ? t.pixelsPerUnit : 1f;
+                foreach (var v in gen.verts) reach = Mathf.Max(reach, Mathf.Abs(v.position.y / ppu));
+            }
+            return Mathf.Ceil(2 * reach + 2 * pad);
         }
 
         /// <paramref name="owner"/>'s rect on the canvas <paramref name="space"/>, top-left origin, y down.

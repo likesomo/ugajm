@@ -19,7 +19,7 @@ namespace SevenSteps.Game.UI.U5
     /// </summary>
     public sealed class U5GameHud : MonoBehaviour, IChoiceView
     {
-        public const float Safe = 24, TitleY = 16, TitleH = 36, DotsY = 58, DotSize = 12, DotPitch = 22, GlyphGap = 12;
+        public const float Safe = 24, TitleY = 24, TitleH = 40, DotsY = 72, DotSize = 12, DotPitch = 22, GlyphGap = 12;
         /// Above the current HUD (0), under the overlays (10) so the menu, settings and result cover it.
         public const int SortingOrder = 5;
 
@@ -142,6 +142,7 @@ namespace SevenSteps.Game.UI.U5
         {
             avoidRects.Clear();
             if (BoardArea != null) avoidRects.Add(BoardArea());
+            else if (placedBoard.width > 0) avoidRects.Add(placedBoard); // Edit Mode checks: the board PlaceChoice was given
             if (glyphs.gameObject.activeSelf) avoidRects.Add(GlyphRect);
             return avoidRects;
         }
@@ -175,7 +176,9 @@ namespace SevenSteps.Game.UI.U5
             if (name.Length == 0) return;
             var gen = title.cachedTextGeneratorForLayout;
             float w = gen.GetPreferredWidth(name, title.GetGenerationSettings(Vector2.zero)) / Mathf.Max(0.01f, title.pixelsPerUnit);
-            titlePlate.rectTransform.sizeDelta = new Vector2(Mathf.Ceil(w) + 24, TitleH);
+            float h = FocusPlate.PlateHeight(title, name, w, 8); // 14.4: 8 clear above and below the drawn glyphs
+            titlePlate.rectTransform.sizeDelta = new Vector2(Mathf.Ceil(w) + 24, h);
+            dotsRoot.anchoredPosition = new Vector2(0, -(TitleY + h + 6 + DotSize / 2)); // the dots right under the plate
         }
 
         void RefreshDots(State s)
@@ -285,8 +288,11 @@ namespace SevenSteps.Game.UI.U5
         public bool PlaceChoice(Rect board, Vector2 brother, IList<Rect> avoid) =>
             PlaceChoice(board, brother, ((RectTransform)transform).rect.size, avoid);
 
+        Rect placedBoard;
+
         public bool PlaceChoice(Rect board, Vector2 brother, Vector2 canvas, IList<Rect> avoid = null)
         {
+            placedBoard = board;
             float g = GlyphButton.Size, pair = 2 * g + GlyphGap;
             var all = new List<Rect>();
             if (avoid != null) all.AddRange(avoid);
@@ -309,6 +315,7 @@ namespace SevenSteps.Game.UI.U5
             Put(keep.Rect, keepRing.rectTransform, 0, 0);
             Put(switchBody.Rect, switchRing.rectTransform, vertical ? 0 : g + GlyphGap, vertical ? g + GlyphGap : 0);
             placedVertical = vertical;
+            plate.Refresh(); // the words follow the pair
             return fits;
         }
 
@@ -353,13 +360,15 @@ namespace SevenSteps.Game.UI.U5
         }
 
         /// Hides what U5 replaces in the current HUD (its menu, undo, restart buttons, title, brother dots, statue-count
-        /// plate; its KEEP / SWITCH cards are never shown because the choice is on U5). CanvasGroups, not SetActive, where the current HUD switches the object itself on each refresh.
+        /// plate, story / guide plate; its KEEP / SWITCH cards are never shown because the choice is on U5). CanvasGroups, not SetActive, where the current HUD switches the object itself on each refresh.
         public static void HideClassic(HudView hud)
         {
             if (hud == null) throw new ArgumentNullException(nameof(hud));
             foreach (var b in new Component[] { hud.menu, hud.undo, hud.restart }) b.gameObject.SetActive(false);
             // The statue-count plate too: U5 keeps board information on the board (the count door's sockets, TilePropView).
-            foreach (var go in new[] { hud.title.transform.parent.gameObject, hud.bodyDots[0].root.parent.gameObject, hud.statues.transform.parent.gameObject })
+            // And the left-margin story / controls-guide plate (lead 2026-11-12: it showed beside the U5 HUD during the
+            // journey advance); the message line at the bottom centre stays (bumps, the hint warning).
+            foreach (var go in new[] { hud.title.transform.parent.gameObject, hud.bodyDots[0].root.parent.gameObject, hud.statues.transform.parent.gameObject, hud.guidePanel })
             {
                 if (!go.TryGetComponent<CanvasGroup>(out var g)) g = go.AddComponent<CanvasGroup>();
                 g.alpha = 0;

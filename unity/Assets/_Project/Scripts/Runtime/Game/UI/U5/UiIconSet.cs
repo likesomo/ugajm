@@ -32,6 +32,12 @@ namespace SevenSteps.Game.UI.U5
         [Tooltip("step-star / step-star-link: step stars C (core's StepSkyView reads them here)")]
         public Sprite stepStar, stepStarLink;
 
+        [Header("World star stone (manifest worldStar): the clear's three stones beside the exit, in 3D")]
+        [Tooltip("world-star-stone.fbx (nodes Stone, StarInlay; front -Z)")]
+        public GameObject worldStarStone;
+        [Tooltip("StarInlay lit / unlit, Stone shell")]
+        public Material starLit, starUnlit, stoneShell;
+
         /// Manifest id of an icon (u5-icons.json, docs 1.1): lower-case kebab of the enum name (SoundOn = "sound-on").
         public static string ManifestId(UiIcon id)
         {
