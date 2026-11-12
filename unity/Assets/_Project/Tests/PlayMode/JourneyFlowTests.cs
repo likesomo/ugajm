@@ -109,6 +109,41 @@ namespace SevenSteps.Tests.PlayMode
             Assert.IsTrue(lit, "the completed planet's outgoing trail is lit");
         }
 
+        /// The last stage under -ui5: the U5 clear, its Next asks for the ending, the U5 ending cards step through with Next
+        /// and the last card's map goes to the star map (the story off: straight to the map).
+        [UnityTest]
+        public IEnumerator U5EndingStepsThroughTheCardsToTheMap()
+        {
+            yield return Boot("-ui5", "-level", "1");
+            var game = Object.FindAnyObjectByType<GameController>();
+            int lastStage = Services.Get<AppFlow>().StageCount - 1;
+            Services.Get<AppFlow>().GoToGame(lastStage);
+            yield return WaitFor(() => game.LevelIndex == lastStage && Services.Get<AppFlow>().State == AppState.Game, "the last stage on the board");
+            var clear = Object.FindAnyObjectByType<U5ClearView>(FindObjectsInactive.Include);
+            Win(game, lastStage);
+            yield return WaitFor(() => Services.Get<AppFlow>().State == AppState.Result && clear.IsShown, "the last clear");
+            clear.Next.Press(); // the last stage: [끝까지 보기]
+            yield return null;
+            var flow = Services.Get<AppFlow>();
+            if (game.Ending.IsOpen)
+            {
+                Assert.IsNotNull(game.U5Ending, "-ui5: the U5 ending cards");
+                Assert.IsTrue(game.U5Ending.Visible);
+                int guard = 0;
+                while (!game.U5Ending.Map.Shown)
+                {
+                    Assert.IsTrue(game.U5Ending.Next.Shown, "next on every card but the last");
+                    game.U5Ending.Next.Press();
+                    yield return null;
+                    Assert.Less(++guard, 10, "the cards end");
+                }
+                Assert.IsFalse(game.U5Ending.Skip.Shown, "the last card has no skip");
+                game.U5Ending.Map.Press();
+            }
+            yield return PlayEnv.WaitForState(AppState.StageSelect, AppScenes.Title, Timeout);
+            Assert.AreEqual(AppState.StageSelect, flow.State);
+        }
+
         [UnityTest]
         public IEnumerator U5ClearMapReturnsWithoutLighting()
         {

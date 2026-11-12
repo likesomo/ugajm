@@ -62,6 +62,9 @@ namespace SevenSteps.Game
         StoryBook story;
         Story.StoryDirector storyLines;
         EndingView endingView;
+        // U5 (UiStyleToggle): the ending cards with icon controls; the controller drives this one (endingPanel) when it is set.
+        UI.U5EndingView u5Ending;
+        IEndingView endingPanel;
         EndingController ending;
         GameJourney journey; // stage select v4 transitions; null when JourneyToggle is off
 
@@ -79,6 +82,9 @@ namespace SevenSteps.Game
         public GameJourney Journey => journey;
         /// The stage flow (Next, map, again from the clear; the journey after the clear). PlayMode tests and captures read it.
         public GameFlowController Flow => flowController;
+        /// The ending (tests, captures): its controller, and the U5 ending view (null when U5 is off).
+        public EndingController Ending => ending;
+        public UI.U5EndingView U5Ending => u5Ending;
         /// The in-game menu (settings, stages, solution, controls). The HUD menu button calls Menu.Toggle.
         public MenuController Menu => menu;
 
@@ -138,7 +144,9 @@ namespace SevenSteps.Game
             // Story ending (docs/architecture.md 16.8): four cards after the last stage's [끝까지 보기].
             story = Services.TryGet<StoryBook>(out var book) ? book : StoryBook.Off();
             var endingView = this.endingView = new EndingView(overlayCanvas, assets.storyImages, localizer);
-            applyResultLanguage = _ => { result.Apply(localizer); languagePanel.Apply(localizer); menuPanel.Apply(localizer); endingView.Apply(localizer); if (u5Hud != null) u5Hud.Apply(localizer); if (u5Clear != null) u5Clear.Apply(localizer); u5Pause?.Apply(localizer); u5Settings?.Apply(localizer); }; // the HUD and board redraw in BoardController
+            endingPanel = endingView;
+            if (u5Hud != null) endingPanel = u5Ending = new UI.U5EndingView(overlayCanvas, assets.storyImages, localizer, assets.uiIcons);
+            applyResultLanguage = _ => { result.Apply(localizer); languagePanel.Apply(localizer); menuPanel.Apply(localizer); endingView.Apply(localizer); u5Ending?.Apply(localizer); if (u5Hud != null) u5Hud.Apply(localizer); if (u5Clear != null) u5Clear.Apply(localizer); u5Pause?.Apply(localizer); u5Settings?.Apply(localizer); }; // the HUD and board redraw in BoardController
             localizer.Changed += applyResultLanguage;
             // The theme's card prefab, else the code-built chapter entry screen (art concept chapter-entry). None in smoke /
             // replay runs: the screenshot must show the board.
@@ -244,7 +252,7 @@ namespace SevenSteps.Game
             board.Choice.ExplainChoices = () => tutorial.ExplainChoices;
             board.Choice.ShowGuide = () => tutorial.ShowChoiceGuide;
             tutorial.Changed += () => { hud.Guide = tutorial.ShowMoveGuide; board.Choice.Refresh(); };
-            ending = new EndingController(overlays, endingView);
+            ending = new EndingController(overlays, endingPanel);
             ending.Finished += OnEndingFinished;
             flowController.EndingRequested += BeginEnding;
             flowController.ClearShown += story.Save; // 16.5: the finale line just shown is counted
@@ -367,7 +375,7 @@ namespace SevenSteps.Game
         }
 
         /// The ending is the top overlay (its keys: Enter / Space / Right = next; Esc skips through the BackNavigator).
-        bool EndingOnTop => ending != null && ending.IsOpen && overlays.Top == endingView;
+        bool EndingOnTop => ending != null && ending.IsOpen && overlays.Top == endingPanel;
 
         /// Flow keys. Board keys are read by the board controller (blocked while an overlay is open or a scene loads).
         void Update()

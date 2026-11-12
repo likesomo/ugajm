@@ -308,6 +308,22 @@ namespace SevenSteps.EditorTools
                     return null;
                 } }, "tip " + which);
             }
+            // U5 ending cards: each card's longest line; next + skip, the last card the map icon only. A tip on card 1 (U5Kit).
+            for (int card = 1; card <= StoryRules.EndingCards + 1; card++)
+            {
+                int k = Math.Min(card, StoryRules.EndingCards);
+                bool tip = card > StoryRules.EndingCards;
+                yield return (new Screen { Name = "U5 Ending", U5Kit = tip, Build = (c, root) =>
+                {
+                    var story = StoryOf(c);
+                    if (story == null) throw new Skipped("story.json does not load (SceneFlowValidator reports it)");
+                    var v = new U5EndingView(root, null, c.Loc, c.Assets.uiIcons);
+                    v.ShowPage(tip ? 0 : k - 1, StoryRules.EndingCards, new EndingPage(LongestLine(story, c.Lang, e => e.on == "ending" && e.card == (tip ? 1 : k)), "", "check"));
+                    v.Show();
+                    if (tip) root.GetComponentInChildren<FocusPlate>(true).Model.Enter(TipSource.Hover, v.Next, v.Next.TipKey, v.Next.Shortcut);
+                    return Find(root, "Ending U5");
+                } }, tip ? "card 1 tip" : "card " + k);
+            }
             // U5 boot / loading: the three scarf sparks only (no words, no progress), as the fader shows them.
             yield return (new Screen { Name = "U5 Boot", Build = (c, root) =>
             {

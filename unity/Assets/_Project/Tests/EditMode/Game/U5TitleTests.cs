@@ -229,6 +229,33 @@ namespace SevenSteps.Tests.Game
         }
 
         [Test]
+        public void EndingCardsUseIconsAndTheLastOneOffersTheMap()
+        {
+            var canvas = Canvas();
+            var loc = Loc(Language.Ko);
+            var v = new U5EndingView(canvas, null, loc, Assets().uiIcons);
+            int next = 0, skip = 0;
+            v.NextRequested += () => next++;
+            v.SkipRequested += () => skip++;
+            v.ShowPage(0, 4, new EndingPage("첫 장", "", "a"));
+            v.Show();
+            Assert.IsTrue(v.Visible);
+            Assert.AreEqual("첫 장", v.Text);
+            Assert.IsTrue(v.Next.Shown && v.Skip.Shown && !v.Map.Shown, "a middle card: next and skip");
+            v.Next.Press();
+            v.Skip.Press();
+            Assert.AreEqual((1, 1), (next, skip));
+            v.ShowPage(3, 4, new EndingPage("함께, 다시 한 걸음", "", "d"));
+            Assert.IsTrue(v.Map.Shown && !v.Next.Shown && !v.Skip.Shown, "the last card: the map only");
+            v.Map.Press();
+            Assert.AreEqual(2, next, "the map is the last card's next (to the map)");
+            Assert.AreEqual("ending.to_map", v.Map.TipKey);
+            Assert.AreEqual(0, canvas.GetComponentsInChildren<Button>(true).Length - 1, "no text buttons: only the card's own click (scrim)");
+            Assert.Throws<ArgumentOutOfRangeException>(() => v.ShowPage(4, 4, new EndingPage("x", "", "x")));
+            Assert.Throws<ArgumentNullException>(() => new U5EndingView(null, null, loc, null));
+        }
+
+        [Test]
         public void ViewsAssertTheirArguments()
         {
             var canvas = Canvas();
