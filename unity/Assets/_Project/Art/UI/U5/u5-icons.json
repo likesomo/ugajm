@@ -1,0 +1,1090 @@
+{
+    "version":  1,
+    "contract":  "docs/ui-u5-kit.md section 1.1 @ 673973b",
+    "icons":  [
+                  {
+                      "id":  "undo",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/undo.png",
+                      "guid":  "4e1bcb22531ff924cbdfaecc18d85c32",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/undo.png",
+                                          "guid":  "e25b6d8922b2c144abba6887cfea312b",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200,
+                                          "sha256":  "45b2b1aa0d2b6e8e09829c63e71836c0c933cab81fb99f347bc019a2568967e0"
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/undo.png",
+                                          "guid":  "4e1bcb22531ff924cbdfaecc18d85c32",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400,
+                                          "sha256":  "3bcc1330c75a331e3750f41f3d964409e8945b63f985f626bc482de837efd85a"
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 },
+                      "glyphDescription":  "Short open curved back arrow: undo one move"
+                  },
+                  {
+                      "id":  "restart",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/restart.png",
+                      "guid":  "0ce6dbc9fe69e224882bc3cebb47bc6e",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/restart.png",
+                                          "guid":  "a4778bb1cdf2018468c4b5a673be6104",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200,
+                                          "sha256":  "408dc047f9dcf48bc0d308d63b570794a6c4a40df06a89d46fd4c97d2e6f8c00"
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/restart.png",
+                                          "guid":  "0ce6dbc9fe69e224882bc3cebb47bc6e",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400,
+                                          "sha256":  "5db11e8efc92f14fa2b20579ffd141700e6c461b6c3ea8c954926e92b5f5ec68"
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 },
+                      "glyphDescription":  "Existing clockwise restart arrow, empty centre"
+                  },
+                  {
+                      "id":  "hint",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/hint.png",
+                      "guid":  "3b0e3252c04d40f4b9c763f773a56b10",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/hint.png",
+                                          "guid":  "9a25178ccdfbed5429a6203637c97f68",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/hint.png",
+                                          "guid":  "3b0e3252c04d40f4b9c763f773a56b10",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 }
+                  },
+                  {
+                      "id":  "pause",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/pause.png",
+                      "guid":  "3b127bbbcbf104d4ab62a3c35db1bcd5",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/pause.png",
+                                          "guid":  "25d4ede4b0df92540a3f106b03e22fb9",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/pause.png",
+                                          "guid":  "3b127bbbcbf104d4ab62a3c35db1bcd5",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 }
+                  },
+                  {
+                      "id":  "play",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/play.png",
+                      "guid":  "29fb4fb4a6ee4944d8774d83de453782",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/play.png",
+                                          "guid":  "680ed88cbf9f46d499a4685322865b51",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/play.png",
+                                          "guid":  "29fb4fb4a6ee4944d8774d83de453782",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 }
+                  },
+                  {
+                      "id":  "settings",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/settings.png",
+                      "guid":  "835f44f14544c9e4592f12757aae1444",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/settings.png",
+                                          "guid":  "c9e0d5bd472a7cf46bda87db8c0a9310",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/settings.png",
+                                          "guid":  "835f44f14544c9e4592f12757aae1444",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 }
+                  },
+                  {
+                      "id":  "map",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/map.png",
+                      "guid":  "9f688ae5b63b29940b9d5b0f42773045",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/map.png",
+                                          "guid":  "f8ece8923cfd9a341a666075f80660f1",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/map.png",
+                                          "guid":  "9f688ae5b63b29940b9d5b0f42773045",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 }
+                  },
+                  {
+                      "id":  "retry",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/retry.png",
+                      "guid":  "4baa4c12af5fbe147acf96728471dbf1",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/retry.png",
+                                          "guid":  "bb2c245fe2f57a346b74cf107cd8e975",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200,
+                                          "sha256":  "979b1ba7ba47066b0124bb1a0b0735b11c9bedfe9448db8021b511b77e10a75d"
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/retry.png",
+                                          "guid":  "4baa4c12af5fbe147acf96728471dbf1",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400,
+                                          "sha256":  "e89ec89d14bd9a3e27983c2518af6ebc8407714b5c8967e57f35cd79e7027be8"
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 },
+                      "glyphDescription":  "Full circular replay arrow enclosing a chamfered stage stone"
+                  },
+                  {
+                      "id":  "next",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/next.png",
+                      "guid":  "cf2d588e0f667024dac669a6f3452041",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/next.png",
+                                          "guid":  "6a5ff01b078fa954ea7bb29c84e2fd72",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/next.png",
+                                          "guid":  "cf2d588e0f667024dac669a6f3452041",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 }
+                  },
+                  {
+                      "id":  "back",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/back.png",
+                      "guid":  "17b614452124f92459a316d9cd2dba9f",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/back.png",
+                                          "guid":  "e897a3c2d13b67d4a8febd31565bda55",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/back.png",
+                                          "guid":  "17b614452124f92459a316d9cd2dba9f",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 }
+                  },
+                  {
+                      "id":  "language",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/language.png",
+                      "guid":  "a40a27f140535534083ceadd573f02a0",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/language.png",
+                                          "guid":  "cc604bddad8b21f47a8a6b9203cbd5a8",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/language.png",
+                                          "guid":  "a40a27f140535534083ceadd573f02a0",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 }
+                  },
+                  {
+                      "id":  "credits",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/credits.png",
+                      "guid":  "cf9e11503f9b1f945b825b9807ee9c13",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/credits.png",
+                                          "guid":  "be7574f82db0d704b8c8e426896efe1e",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200,
+                                          "sha256":  "bd8a1bb8d50c8b9dc70fc8b2d932b07abcc3fb320a5d9550d3fb58d224484fea"
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/credits.png",
+                                          "guid":  "cf9e11503f9b1f945b825b9807ee9c13",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400,
+                                          "sha256":  "eda72c29ab29a354b4661b8f796789cafee788f1902eb01944837bd03d6ed029"
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 },
+                      "glyphDescription":  "Curled scroll with three text strokes"
+                  },
+                  {
+                      "id":  "info",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/info.png",
+                      "guid":  "cc8a6fa727bd89e42909df35b033ddb6",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/info.png",
+                                          "guid":  "e78176342fdd8ed4eacb0caf7a7b387d",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200,
+                                          "sha256":  "bbf5296760514aa5d02fdbb1ee7e3cab214d49b708125d0ae4afe438c2382be1"
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/info.png",
+                                          "guid":  "cc8a6fa727bd89e42909df35b033ddb6",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400,
+                                          "sha256":  "ff08d3dedf6fcd6ea15b115b61971d2a242112014f64214639ddda68c769190d"
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 },
+                      "glyphDescription":  "Circled information i, unchanged"
+                  },
+                  {
+                      "id":  "sound-on",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/sound-on.png",
+                      "guid":  "0faf8aba060fac346911b98455ff8af2",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/sound-on.png",
+                                          "guid":  "82e23890989f238489228a238cb3ffb3",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/sound-on.png",
+                                          "guid":  "0faf8aba060fac346911b98455ff8af2",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 }
+                  },
+                  {
+                      "id":  "sound-off",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/sound-off.png",
+                      "guid":  "36aa1ed50089dbb4e948dd0ae7bed7d4",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/sound-off.png",
+                                          "guid":  "75b990f9f5a347f4c8af882a7293d81b",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/sound-off.png",
+                                          "guid":  "36aa1ed50089dbb4e948dd0ae7bed7d4",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 }
+                  },
+                  {
+                      "id":  "motion",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/motion.png",
+                      "guid":  "520dcb63091004f49984847018bfa6ae",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/motion.png",
+                                          "guid":  "bcad320aa22944f43bb2e1e02694e4a7",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/motion.png",
+                                          "guid":  "520dcb63091004f49984847018bfa6ae",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  },
+                                     "on":  {
+                                                "tint":  "#E9BC65FF"
+                                            },
+                                     "off":  {
+                                                 "tint":  "#EEE7D0FF"
+                                             }
+                                 },
+                      "semantics":  "One reduce-motion icon: on tint #E9BC65FF; off tint #EEE7D0FF. No second sprite."
+                  },
+                  {
+                      "id":  "close",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/close.png",
+                      "guid":  "940bc8c78c5a8b44998452b0305fb8bd",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/close.png",
+                                          "guid":  "b25d5167b55d6444497ca87f978c518d",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/close.png",
+                                          "guid":  "940bc8c78c5a8b44998452b0305fb8bd",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 }
+                  },
+                  {
+                      "id":  "keep",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/keep.png",
+                      "guid":  "e1cb111340d323d46b6593fb6a439f38",
+                      "size":  224,
+                      "logicalSize":  56,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/keep.png",
+                                          "guid":  "8043eeaf578cf1c4ca09b37bcfa1a1d3",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/keep.png",
+                                          "guid":  "e1cb111340d323d46b6593fb6a439f38",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  },
+                                     "focused":  {
+                                                     "path":  "Assets/Shared/Art/UI/U5/4x/keep_focused.png",
+                                                     "guid":  "a0b3582fc266fcf4682845cf3e796c37",
+                                                     "tint":  "#E9BC65FF",
+                                                     "sources":  [
+                                                                     {
+                                                                         "path":  "Assets/Shared/Art/UI/U5/2x/keep_focused.png",
+                                                                         "guid":  "a407266971c3e9e40a5b4b48d17565a6",
+                                                                         "fileId":  21300000,
+                                                                         "scale":  2,
+                                                                         "pixelsPerUnit":  200
+                                                                     },
+                                                                     {
+                                                                         "path":  "Assets/Shared/Art/UI/U5/4x/keep_focused.png",
+                                                                         "guid":  "a0b3582fc266fcf4682845cf3e796c37",
+                                                                         "fileId":  21300000,
+                                                                         "scale":  4,
+                                                                         "pixelsPerUnit":  400
+                                                                     }
+                                                                 ]
+                                                 }
+                                 }
+                  },
+                  {
+                      "id":  "switch",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/switch.png",
+                      "guid":  "f6b0bdc8e80db124ab1758c6f0a8f9b0",
+                      "size":  224,
+                      "logicalSize":  56,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/switch.png",
+                                          "guid":  "713f24107820a6e4281da2d5c5f354e8",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/switch.png",
+                                          "guid":  "f6b0bdc8e80db124ab1758c6f0a8f9b0",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "tint":  "#E9BC65FF",
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  },
+                                     "focused":  {
+                                                     "path":  "Assets/Shared/Art/UI/U5/4x/switch_focused.png",
+                                                     "guid":  "b5e670875cc31f84080e23be8e873028",
+                                                     "tint":  "#E9BC65FF",
+                                                     "sources":  [
+                                                                     {
+                                                                         "path":  "Assets/Shared/Art/UI/U5/2x/switch_focused.png",
+                                                                         "guid":  "465e69c4ba979b74884b1ab421fba79c",
+                                                                         "fileId":  21300000,
+                                                                         "scale":  2,
+                                                                         "pixelsPerUnit":  200
+                                                                     },
+                                                                     {
+                                                                         "path":  "Assets/Shared/Art/UI/U5/4x/switch_focused.png",
+                                                                         "guid":  "b5e670875cc31f84080e23be8e873028",
+                                                                         "fileId":  21300000,
+                                                                         "scale":  4,
+                                                                         "pixelsPerUnit":  400
+                                                                     }
+                                                                 ]
+                                                 }
+                                 }
+                  },
+                  {
+                      "id":  "caption-plate",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/caption-plate.png",
+                      "guid":  "a1e4d56bd32e3054c9eae0e2d357ce71",
+                      "size":  1000,
+                      "logicalSize":  250,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/caption-plate.png",
+                                          "guid":  "7ac01dc618d7aba40a04e37220879d5a",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/caption-plate.png",
+                                          "guid":  "a1e4d56bd32e3054c9eae0e2d357ce71",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "width":  1000,
+                      "height":  120,
+                      "logicalWidth":  250,
+                      "logicalHeight":  30,
+                      "border":  [
+                                     32,
+                                     32,
+                                     32,
+                                     32
+                                 ],
+                      "logicalBorder":  [
+                                            8,
+                                            8,
+                                            8,
+                                            8
+                                        ],
+                      "renderMode":  "Sliced",
+                      "notes":  "Source is 250x30 logical. Render height is text preferred height + 16; width 250 to 320, per shared contract."
+                  },
+                  {
+                      "id":  "scarf-dot",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/scarf-dot.png",
+                      "guid":  "d893dc20f90ad724bad841aba7fb89d7",
+                      "size":  32,
+                      "logicalSize":  8,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/scarf-dot.png",
+                                          "guid":  "52cd51a13438d2c4a9d448cc0d109d14",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/scarf-dot.png",
+                                          "guid":  "d893dc20f90ad724bad841aba7fb89d7",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "tints":  {
+                                    "ochre":  "#B99A57",
+                                    "teal":  "#568C88",
+                                    "terracotta":  "#B96C59"
+                                },
+                      "variants":  [
+                                       {
+                                           "path":  "Assets/Shared/Art/UI/U5/4x/scarf-dot-teal.png",
+                                           "guid":  "c9526ff2fcebbfb48883985083392122",
+                                           "fileId":  21300000,
+                                           "scale":  4,
+                                           "pixelsPerUnit":  400
+                                       },
+                                       {
+                                           "path":  "Assets/Shared/Art/UI/U5/4x/scarf-dot-ochre.png",
+                                           "guid":  "47044dd49f4d48245ae6c9ed1f038652",
+                                           "fileId":  21300000,
+                                           "scale":  4,
+                                           "pixelsPerUnit":  400
+                                       },
+                                       {
+                                           "path":  "Assets/Shared/Art/UI/U5/4x/scarf-dot-terracotta.png",
+                                           "guid":  "27396572284744d4cb8514e098af37f6",
+                                           "fileId":  21300000,
+                                           "scale":  4,
+                                           "pixelsPerUnit":  400
+                                       }
+                                   ]
+                  },
+                  {
+                      "id":  "star-stone-lit",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/star-stone-lit.png",
+                      "guid":  "136c32a27b4df0d429d09757fc59ce52",
+                      "size":  128,
+                      "logicalSize":  32,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/star-stone-lit.png",
+                                          "guid":  "a7016f8d5b3604b46b796df4f5509815",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/star-stone-lit.png",
+                                          "guid":  "136c32a27b4df0d429d09757fc59ce52",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ]
+                  },
+                  {
+                      "id":  "star-stone-unlit",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/star-stone-unlit.png",
+                      "guid":  "777599913cf1255479da3e5da6178eff",
+                      "size":  128,
+                      "logicalSize":  32,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/star-stone-unlit.png",
+                                          "guid":  "495aa80e9a193a54c96fc37fa50bb198",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/star-stone-unlit.png",
+                                          "guid":  "777599913cf1255479da3e5da6178eff",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ]
+                  },
+                  {
+                      "id":  "step-star",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/step-star.png",
+                      "guid":  "d0fc11d0455813d458641e2ed7cd52c8",
+                      "size":  96,
+                      "logicalSize":  24,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/step-star.png",
+                                          "guid":  "6c4024d324439e948a650d58e31ff817",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/step-star.png",
+                                          "guid":  "d0fc11d0455813d458641e2ed7cd52c8",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "states":  {
+                                     "empty":  {
+                                                   "path":  "Assets/Shared/Art/UI/U5/4x/step-star-empty.png",
+                                                   "guid":  "93f2f5551d111ff41bc410532c7259c7",
+                                                   "fileId":  21300000,
+                                                   "scale":  4,
+                                                   "pixelsPerUnit":  400
+                                               },
+                                     "filled":  {
+                                                    "path":  "Assets/Shared/Art/UI/U5/4x/step-star.png",
+                                                    "guid":  "d0fc11d0455813d458641e2ed7cd52c8",
+                                                    "fileId":  21300000,
+                                                    "scale":  4,
+                                                    "pixelsPerUnit":  400
+                                                },
+                                     "pulsing-next":  {
+                                                          "path":  "Assets/Shared/Art/UI/U5/4x/step-star-next.png",
+                                                          "guid":  "ebc8f4dae40721748a622cc5be25b50e",
+                                                          "fileId":  21300000,
+                                                          "scale":  4,
+                                                          "pixelsPerUnit":  400
+                                                      }
+                                 },
+                      "animation":  {
+                                        "scaleMin":  0.9,
+                                        "reduceMotion":  "Static next sprite, scale 1",
+                                        "scaleMax":  1.12,
+                                        "periodSeconds":  1.2
+                                    }
+                  },
+                  {
+                      "id":  "step-star-link",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/step-star-link.png",
+                      "guid":  "3dce7be3120394d45afe4b334e17a5b5",
+                      "size":  128,
+                      "logicalSize":  32,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/step-star-link.png",
+                                          "guid":  "32dbe5040dac2e043a2e5db263ffb800",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/step-star-link.png",
+                                          "guid":  "3dce7be3120394d45afe4b334e17a5b5",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400
+                                      }
+                                  ],
+                      "width":  128,
+                      "height":  16,
+                      "logicalWidth":  32,
+                      "logicalHeight":  4,
+                      "border":  [
+                                     8,
+                                     0,
+                                     8,
+                                     0
+                                 ],
+                      "logicalBorder":  [
+                                            2,
+                                            0,
+                                            2,
+                                            0
+                                        ],
+                      "renderMode":  "Sliced"
+                  }
+              ],
+    "worldStar":  {
+                      "litMaterial":  {
+                                          "path":  "Assets/_Project/Art/UI/U5/U5StarLit.mat",
+                                          "guid":  "f8968ba8646242dcb648e86cf7d1eba5",
+                                          "fileId":  2100000
+                                      },
+                      "path":  "Assets/Shared/Art/UI/U5/world-star-stone.fbx",
+                      "triangles":  96,
+                      "stoneNode":  "Stone",
+                      "guid":  "e2f37efdf653a9c43a30c9633ceaf192",
+                      "front":  "Unity -Z",
+                      "shellMaterial":  {
+                                            "path":  "Assets/_Project/Art/UI/U5/U5StoneShell.mat",
+                                            "guid":  "53cf0cb644974648bb875769c3bd5bcf",
+                                            "fileId":  2100000
+                                        },
+                      "starNode":  "StarInlay",
+                      "unlitMaterial":  {
+                                            "path":  "Assets/_Project/Art/UI/U5/U5StarUnlit.mat",
+                                            "guid":  "8fd85f5ca8774757ac094fcc1c96ab2b",
+                                            "fileId":  2100000
+                                        }
+                  },
+    "importPolicy":  {
+                         "mesh":  "FullRect",
+                         "filter":  "Bilinear",
+                         "selectedSource":  "4x",
+                         "wrap":  "Clamp",
+                         "mipmaps":  false,
+                         "webgl":  "RGBA32, no block compression, no crunch",
+                         "alpha":  "Straight alpha / alphaIsTransparency true",
+                         "pixelsPerUnit":  "100 times source scale; SetNativeSize is logical size with referencePixelsPerUnit 100",
+                         "textureType":  "Sprite (2D and UI)",
+                         "spriteMode":  "Single"
+                     },
+    "committedImportSettings":  "design/art/ui-u5-import-settings/U5",
+    "artRevision":  2
+}
