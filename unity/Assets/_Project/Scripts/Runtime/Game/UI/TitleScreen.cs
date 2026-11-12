@@ -120,7 +120,7 @@ namespace SevenSteps.Game.UI
                 if (cam == null) throw new MissingReferenceException($"[SevenSteps] {name}: the Title scene has no Main Camera (the new map draws planet bodies)");
                 planetSpace = new PlanetSpace(cam, assets.background);
                 var map3d = new PlanetMap3DView(root, planetSpace, assets.planetBodies, planets, assets.PlanetMapSprites);
-                var surface = new PlanetSurfaceView(root, planetSpace, assets.planetBodies, planets, map3d.SetBodiesVisible);
+                var surface = new PlanetSurfaceView(root, planetSpace, assets.planetBodies, planets, map3d.SetBodiesVisible, assets.PlanetSurfaceArt);
                 stageViews = new StageSelectViews(map3d, surface, overlays = new OverlayStack());
             }
             if (u5) u5Language = new U5LanguageView(root, assets.uiIcons, tips);

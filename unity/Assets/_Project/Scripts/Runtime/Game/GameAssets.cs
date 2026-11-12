@@ -31,6 +31,11 @@ namespace SevenSteps.Game
         /// <see cref="planetMapSprites"/> as the map reads it; null when unset. Set but not an IPlanetMapSprites: an error.
         public UI.Planets.IPlanetMapSprites PlanetMapSprites =>
             planetMapSprites == null ? null : planetMapSprites as UI.Planets.IPlanetMapSprites ?? throw new System.InvalidOperationException($"[SevenSteps] GameAssets.planetMapSprites ({planetMapSprites.name}) is not an IPlanetMapSprites");
+        [Tooltip("Planet surface paintings (V7, S2: projected on the surface body): Art's mapping, an IPlanetSurfaceArt. Empty = the planetBodies body on the surface")]
+        public ScriptableObject planetSurfaceArt;
+        /// <see cref="planetSurfaceArt"/> as the surface view reads it; null when unset. Set but not an IPlanetSurfaceArt: an error.
+        public UI.Planets.IPlanetSurfaceArt PlanetSurfaceArt =>
+            planetSurfaceArt == null ? null : planetSurfaceArt as UI.Planets.IPlanetSurfaceArt ?? throw new System.InvalidOperationException($"[SevenSteps] GameAssets.planetSurfaceArt ({planetSurfaceArt.name}) is not an IPlanetSurfaceArt");
         [Tooltip("U5 icons and sprites (docs/ui-u5-kit.md 1, 1.1): Data/UiIconSet.asset, filled from the Codex manifest; empty entries draw line placeholders")]
         public UI.U5.UiIconSet uiIcons;
 

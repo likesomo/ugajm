@@ -214,6 +214,66 @@ namespace SevenSteps.Tests.PlayMode
             AssertVaried("u5-surface", px.Value);
         }
 
+#if UNITY_EDITOR
+        /// S2 surface (user choice 2026-11-12): the V7 surface painting projected on the surface body, with a stand-in for
+        /// Art's mapping (feat/art-surface-v7, not landed) over the imported PlanetsV7Surface textures, set on GameAssets
+        /// for this test only. Before = `u5-surface` (U5Map). `unity.sh playcapture SurfaceS2`.
+        [UnityTest]
+        public IEnumerator SurfaceS2()
+        {
+            var assets = UnityEditor.AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset");
+            Assert.IsNotNull(assets);
+            var art = ScriptableObject.CreateInstance<SurfaceArtStandIn>();
+            foreach (var key in new[] { "moss", "frost", "altar" })
+            {
+                var tex = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>($"Assets/Shared/Art/Map/PlanetsV7Surface/{key}.png");
+                Assert.IsNotNull(tex, $"PlanetsV7Surface/{key}.png (shared assets junction)");
+                art.Paintings[key] = tex;
+            }
+            var before = assets.planetSurfaceArt;
+            assets.planetSurfaceArt = art;
+            try
+            {
+                yield return Start(AppState.Title, AppScenes.Title, "-ui5");
+                var save = Services.Get<SaveSystem>();
+                var title = Object.FindAnyObjectByType<SevenSteps.Game.UI.TitleScreen>();
+                var levels = LevelCatalog.Load(title.assets);
+                for (int s = 0; s < levels.Length && LevelCatalog.ChapterKeyOf(s) == LevelCatalog.ChapterKeyOf(0); s++)
+                    save.Progress.MarkCleared(levels[s], levels[s].Bodies, 3);
+                title.U5Title.Map.Press();
+                yield return PlayEnv.WaitForState(AppState.StageSelect, AppScenes.Title);
+                GameObject.Find("TitleUI/PlanetMap3D/Planet 1").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+                float t0 = Time.realtimeSinceStartup;
+                while (GameObject.Find("TitleUI/PlanetSurface") == null)
+                {
+                    Assert.Less(Time.realtimeSinceStartup - t0, 10f, "the surface path");
+                    yield return null;
+                }
+                var body = Object.FindObjectsByType<SevenSteps.Game.UI.Planets.PlanetBody>(FindObjectsInactive.Exclude).Single(b => b.transform.parent != null && b.transform.parent.name == "Surface");
+                Assert.IsTrue(body.Projected, $"the surface body {body.Key} carries its painting");
+                var px = new Pixels();
+                yield return Capture("u5-surface-s2", px);
+                AssertVaried("u5-surface-s2", px.Value);
+            }
+            finally
+            {
+                assets.planetSurfaceArt = before;
+                Object.Destroy(art);
+            }
+        }
+
+        sealed class SurfaceArtStandIn : ScriptableObject, SevenSteps.Game.UI.Planets.IPlanetSurfaceArt
+        {
+            public readonly Dictionary<string, Texture> Paintings = new Dictionary<string, Texture>();
+
+            public bool TryGetSurface(string planetId, out Texture texture, out Material material)
+            {
+                material = null;
+                return Paintings.TryGetValue(planetId, out texture);
+            }
+        }
+#endif
+
         /// The v4 star map (-newmap) with a save where the first planet is cleared (lit trail, stars, the brothers' dots).
         [UnityTest]
         public IEnumerator Map()

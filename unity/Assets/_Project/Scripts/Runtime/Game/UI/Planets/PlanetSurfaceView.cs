@@ -33,6 +33,7 @@ namespace SevenSteps.Game.UI.Planets
         readonly Image ring;
         readonly List<Button> targets = new List<Button>();
         readonly Transform root;
+        readonly IPlanetSurfaceArt art;
 
         Localizer loc;
         StageSelectModel model;
@@ -58,8 +59,12 @@ namespace SevenSteps.Game.UI.Planets
         public Button Place(int slot) => targets[slot];
 
         /// <param name="mapBodies">Shows / hides the map's bodies (the surface body takes their space while open).</param>
-        public PlanetSurfaceView(Transform uiRoot, PlanetSpace space, PlanetBodySet set, IReadOnlyList<PlanetEntry> planets, Action<bool> mapBodies)
+        /// <param name="art">GameAssets.PlanetSurfaceArt: the V7 paintings projected on the body (S2); null, or a planet
+        /// without one, = the current body.</param>
+        public PlanetSurfaceView(Transform uiRoot, PlanetSpace space, PlanetBodySet set, IReadOnlyList<PlanetEntry> planets, Action<bool> mapBodies,
+            IPlanetSurfaceArt art = null)
         {
+            this.art = art;
             if (uiRoot == null) throw new ArgumentNullException(nameof(uiRoot));
             this.space = space ?? throw new ArgumentNullException(nameof(space));
             this.set = set != null ? set : throw new ArgumentNullException(nameof(set));
@@ -132,6 +137,8 @@ namespace SevenSteps.Game.UI.Planets
             planet = p;
             if (body != null) UnityEngine.Object.Destroy(body.gameObject);
             body = PlanetBody.Create(set, planets[p].Key, p, root, seated: true);
+            if (art != null && art.TryGetSurface(planets[p].Key, out var painting, out var material))
+                body.UseProjection(painting, material, PlanetMapLayout.Rotation, Quaternion.Euler(0, BaseYaw, 0));
             BuildPlaces();
             title.text = planets[p].Name(loc);
             PlateFit(title);

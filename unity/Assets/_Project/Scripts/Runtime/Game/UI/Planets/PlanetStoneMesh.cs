@@ -18,6 +18,8 @@ namespace SevenSteps.Game.UI.Planets
     {
         public const float Radius = 3.65f, Squash = 0.88f, SeatCut = 2.25f, SeatTop = 2.30f;
         public const int MinTriangles = 4000, MaxTriangles = 6000;
+        /// The crust comes first in every look's mesh (the subdivided icosahedron); the details follow it.
+        public const int CrustTriangles = 5120;
         /// The review's world order (chapters.json): the look index of a chapter key.
         public static readonly string[] Looks = { "moss", "hollow", "carved", "frost", "joinery", "crumble", "altar" };
 

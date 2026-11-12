@@ -110,6 +110,76 @@ namespace SevenSteps.Game.UI.Planets
             go.AddComponent<FaceCamera>().Target = facing;
             Renderer.enabled = false;
         }
+
+        /// The body is drawn with a front-projected painting (<see cref="UseProjection"/>).
+        public bool Projected => projectedMesh != null;
+
+        Mesh projectedMesh;
+        Material ownMaterial;
+
+        /// Paints the body with <paramref name="texture"/> projected from the front (S2, v7-surface README): the painting is
+        /// laid on the crust as the camera sees it at <paramref name="restRotation"/> (the body's local rotation at rest) under
+        /// <paramref name="viewRotation"/> (the camera's world rotation), its width the body's diameter x <see cref="SpriteFill"/>
+        /// (the V7 cutout's fill), so the arrival matches the map sprite and the painting turns with the body. The run-time
+        /// stone keeps its crust only (the v4 details are trimmed). With no <paramref name="material"/> the default projected
+        /// look is built (URP Lit, transparent, depth writes on so the back cannot show through). Once per body.
+        public void UseProjection(Texture texture, Material material, Quaternion viewRotation, Quaternion restRotation)
+        {
+            if (texture == null && material == null) throw new ArgumentException($"PlanetBody {Key}: a projection needs a texture or a material");
+            if (Impostor != null || Projected) throw new InvalidOperationException($"PlanetBody {Key}: already drawn with a sprite or a projection");
+            var filter = GetComponent<MeshFilter>();
+            var source = filter.sharedMesh;
+            var mesh = Instantiate(source);
+            mesh.name = $"Planet {Key} (projected)";
+            if (!Authored)
+            {
+                var triangles = source.triangles;
+                if (triangles.Length < PlanetStoneMesh.CrustTriangles * 3) throw new InvalidOperationException($"PlanetBody {Key}: the stone mesh has fewer than {PlanetStoneMesh.CrustTriangles} triangles");
+                var crust = new int[PlanetStoneMesh.CrustTriangles * 3];
+                Array.Copy(triangles, crust, crust.Length);
+                mesh.triangles = crust;
+            }
+            var vertices = mesh.vertices;
+            var uv = new Vector2[vertices.Length];
+            var right = viewRotation * Vector3.right;
+            var up = viewRotation * Vector3.up;
+            var scale = transform.localScale;
+            float diameter = 2f * radius * Mathf.Max(scale.x, Mathf.Max(scale.y, scale.z)) * SpriteFill;
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                var rel = restRotation * Vector3.Scale(vertices[i], scale);
+                uv[i] = new Vector2(0.5f + Vector3.Dot(rel, right) / diameter, 0.5f + Vector3.Dot(rel, up) / diameter);
+            }
+            mesh.uv = uv;
+            mesh.RecalculateBounds();
+            filter.sharedMesh = projectedMesh = mesh;
+            Renderer.sharedMaterial = material != null ? material : ownMaterial = DefaultProjected(texture, Key);
+        }
+
+        static Material DefaultProjected(Texture texture, string key)
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null) throw new MissingReferenceException("[SevenSteps] URP Lit shader missing (the default projected planet material)");
+            var m = new Material(shader) { name = $"Planet {key} (projected)", renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent };
+            m.SetTexture("_BaseMap", texture);
+            m.SetColor("_BaseColor", Color.white);
+            m.SetFloat("_Surface", 1f);
+            m.SetFloat("_Blend", 0f);
+            m.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.SetFloat("_ZWrite", 1f);
+            m.SetFloat("_Cull", (float)UnityEngine.Rendering.CullMode.Back);
+            m.SetFloat("_Smoothness", 0.35f);
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            return m;
+        }
+
+        void OnDestroy()
+        {
+            if (projectedMesh != null) Destroy(projectedMesh);
+            if (ownMaterial != null) Destroy(ownMaterial);
+        }
     }
 
     /// <summary>Keeps a flat sprite turned to the camera (its rotation, so an orthographic map shows it face on).</summary>

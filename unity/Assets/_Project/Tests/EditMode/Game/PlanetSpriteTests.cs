@@ -62,6 +62,64 @@ namespace SevenSteps.Tests
             Assert.Throws<System.ArgumentNullException>(() => Body("hollow").UseSprite(null, cam));
         }
 
+        /// S2 (user choice 2026-11-12): the V7 painting is projected from the front onto the surface body. The run-time stone
+        /// keeps its crust only, the painting's centre lands on the point facing the camera at rest and its edge on the
+        /// silhouette at SpriteFill, the default material carries the texture, and the body still turns (the UVs ride along).
+        [Test]
+        public void ProjectionPaintsTheCrustFromTheFront()
+        {
+            var body = Body("moss");
+            float radius = body.Radius;
+            var tex = Make(new Texture2D(16, 16));
+            var view = PlanetMapLayout.Rotation;
+            var rest = Quaternion.Euler(0, -8, 0);
+            body.UseProjection(tex, null, view, rest);
+            made.Add(body.GetComponent<MeshFilter>().sharedMesh);
+            made.Add(body.Renderer.sharedMaterial);
+
+            Assert.IsTrue(body.Projected);
+            Assert.IsTrue(body.Renderer.enabled, "the body itself draws (no sprite)");
+            Assert.AreEqual(radius, body.Radius, 1e-5f, "same radius for the dive");
+            var mesh = body.GetComponent<MeshFilter>().sharedMesh;
+            Assert.AreEqual(PlanetStoneMesh.CrustTriangles * 3, mesh.triangles.Length, "the v4 details are trimmed");
+            Assert.AreSame(tex, body.Renderer.sharedMaterial.GetTexture("_BaseMap"));
+            Assert.AreEqual(1f, body.Renderer.sharedMaterial.GetFloat("_ZWrite"), "depth writes: the back cannot show through");
+
+            // The crust vertex nearest the camera at rest maps near the painting's centre; the widest one to its edge.
+            var toCamera = -(view * Vector3.forward);
+            var vertices = mesh.vertices;
+            var uv = mesh.uv;
+            int front = 0, side = 0;
+            float best = float.MinValue, wide = float.MinValue;
+            var right = view * Vector3.right;
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                var rel = rest * Vector3.Scale(vertices[i], body.transform.localScale);
+                float d = Vector3.Dot(rel.normalized, toCamera);
+                if (d > best) { best = d; front = i; }
+                float x = Vector3.Dot(rel, right);
+                if (x > wide) { wide = x; side = i; }
+            }
+            Assert.AreEqual(0.5f, uv[front].x, 0.05f);
+            Assert.AreEqual(0.5f, uv[front].y, 0.12f, "near the centre (the seat cut and squash move it a little)");
+            Assert.AreEqual(0.5f + wide / (2f * radius * PlanetBody.SpriteFill), uv[side].x, 1e-4f);
+            Assert.Greater(uv[side].x, 0.95f, "the widest crust point reaches the painting's edge");
+
+            Assert.Throws<System.InvalidOperationException>(() => body.UseProjection(tex, null, view, rest), "once per body");
+            Assert.Throws<System.ArgumentException>(() => Body("hollow").UseProjection(null, null, view, rest));
+        }
+
+        [Test]
+        public void ProjectionUsesTheArtsMaterialAsGiven()
+        {
+            var body = Body("frost");
+            var material = Make(new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard")));
+            body.UseProjection(null, material, PlanetMapLayout.Rotation, Quaternion.identity);
+            made.Add(body.GetComponent<MeshFilter>().sharedMesh);
+            Assert.AreSame(material, body.Renderer.sharedMaterial);
+            Assert.IsTrue(body.Projected);
+        }
+
         /// The shipped set (GameAssets.planetMapSprites) gives a sprite for every chapter with stages. Its references once
         /// pointed at "*_0" sub-sprites that a Single-mode import does not have (sprite id 21300000), so every lookup failed
         /// and the map silently kept the meshes. Needs the shared assets junction (tools/link-shared-assets.ps1).
