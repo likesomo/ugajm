@@ -50,6 +50,10 @@ namespace SevenSteps.Game.UI.Planets
         {
             if (parent == null) throw new ArgumentNullException(nameof(parent));
             layer = Ui.Rect("Constellation", parent).Stretch();
+            // Its own canvas: the pulse and twinkle change colours every frame and rebuild only this batch, not the surface
+            // canvas (architect N2, 2ed1665). A nested canvas raycasts with its own GraphicRaycaster.
+            layer.gameObject.AddComponent<Canvas>();
+            layer.gameObject.AddComponent<GraphicRaycaster>();
             links = Ui.Rect("Links", layer).Stretch();
         }
 

@@ -129,14 +129,16 @@ namespace SevenSteps.Tests.PlayMode
             var node = stars.Button(2).gameObject;
             UnityEngine.EventSystems.ExecuteEvents.Execute(node, data, UnityEngine.EventSystems.ExecuteEvents.pointerDownHandler);
             UnityEngine.EventSystems.ExecuteEvents.Execute(node, data, UnityEngine.EventSystems.ExecuteEvents.beginDragHandler);
-            stars.Button(2).onClick.Invoke();
+            stars.Button(2).onClick.Invoke(); // a click an input module might still send before the drag ends
             yield return null;
             Assert.AreEqual(AppState.StageSelect, flow.State, "a dragged press does not play");
-
-            // An untouched stage (3, nothing cleared) plays on release.
-            UnityEngine.EventSystems.ExecuteEvents.Execute(node, data, UnityEngine.EventSystems.ExecuteEvents.pointerDownHandler);
             UnityEngine.EventSystems.ExecuteEvents.Execute(node, data, UnityEngine.EventSystems.ExecuteEvents.pointerUpHandler);
-            stars.Button(2).onClick.Invoke();
+            UnityEngine.EventSystems.ExecuteEvents.Execute(node, data, UnityEngine.EventSystems.ExecuteEvents.endDragHandler);
+            yield return null;
+            Assert.AreEqual(AppState.StageSelect, flow.State);
+
+            // After the drag (no click), keyboard Submit on the node plays it (architect R1): an untouched stage, no locks.
+            UnityEngine.EventSystems.ExecuteEvents.Execute(node, new UnityEngine.EventSystems.BaseEventData(es), UnityEngine.EventSystems.ExecuteEvents.submitHandler);
             yield return PlayEnv.WaitForState(AppState.Game, AppScenes.Game, 20f);
             Assert.AreEqual(third, flow.Stage, "stage 3 of the first planet");
         }

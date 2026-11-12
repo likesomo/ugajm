@@ -216,6 +216,9 @@ namespace SevenSteps.Game.UI.Planets
             On(trigger, EventTriggerType.PointerDown, _ => { hovered = slot; pressed = slot; dragCancelled = false; Refresh(); });
             On(trigger, EventTriggerType.PointerUp, _ => { if (pressed == slot) pressed = -1; Refresh(); });
             if (stars != null) On(trigger, EventTriggerType.BeginDrag, _ => { dragCancelled = true; pressed = -1; Refresh(); });
+            // A drag ends with no click from the EventSystem (on release it sends up, a click only when eligible, then end drag),
+            // so the flag drops here: the next Enter / Submit plays (architect R1, 2ed1665).
+            if (stars != null) On(trigger, EventTriggerType.EndDrag, _ => dragCancelled = false);
         }
 
         public void Show()
