@@ -21,6 +21,8 @@ MonoBehaviour:
     json: {fileID: 4900000, guid: 5dd6d53150b6461d95cf23dbd0263852, type: 3}
   storyJson: {fileID: 4900000, guid: 243f79a2596984d4cb559a522110da5c, type: 3}
   storyImages: {fileID: 11400000, guid: f3146f6af9bdad11005be4b1286081cb, type: 2}
+  cutscenesJson: {fileID: 4900000, guid: 0376a4b7e526647f2c411a705c7520c0, type: 3}
+  cutsceneImages: {fileID: 11400000, guid: 33afe651a11d40ff50f7f448ceeb4412, type: 2}
   font: {fileID: 12800000, guid: 6726afba0e987134bb60bf8a871ea91c, type: 3}
   uiTheme: {fileID: 11400000, guid: 5fb5bfb0b12b0b541b9acd8cfff3f58e, type: 2}
   planetBodies: {fileID: 11400000, guid: 81c13fbda8464096a19fff74c390296f, type: 2}

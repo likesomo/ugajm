@@ -281,6 +281,24 @@ namespace SevenSteps.EditorTools
                     return v.gameObject;
                 } }, key);
             }
+            // Storybook viewer (gameplay-ui, design/story/cutscenes.md 2): every page with all its lines out, on the plain card
+            // (art may be missing), the skip icon focused (its plate up). Own canvas, like the chapter card.
+            var cutscenes = CutsceneCatalogOrNull();
+            if (cutscenes != null)
+                foreach (var scene in cutscenes.Scenes)
+                    foreach (var page in scene.pages)
+                    {
+                        var (s, p) = (scene, page);
+                        yield return (new Screen { Name = "U5 Cutscene", GameplayUi = true, U5Kit = true, Build = (c, root) =>
+                        {
+                            var v = SevenSteps.Game.UI.U5.U5CutsceneView.Build(null, c.Assets.uiIcons, c.Loc);
+                            var lines = CutsceneCatalog.Lines(p, c.Lang);
+                            v.ShowFrame(new SevenSteps.Game.Flow.CutsceneFrame(s.id, Array.IndexOf(s.pages, p), s.pages.Length, p.image, lines, lines.Length));
+                            v.Show();
+                            v.Skip.OnSelect(null);
+                            return v.gameObject;
+                        } }, p.image);
+                    }
             // ---- U5 (UiStyleToggle on; docs/ui-u5-kit.md 3, 6): the title, language and credits (scene-flow), the HUD and
             // the 7th-step choice (gameplay-ui, warnings until HudResultAreErrors). The toggle-off screens above and below
             // stay as they are.
@@ -658,6 +676,15 @@ namespace SevenSteps.EditorTools
         {
             var assets = AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset");
             return assets != null ? LocalizationCheck.StoryCatalogOf(assets) : null;
+        }
+
+        /// cutscenes.json as the player loads it, or null (SceneFlowValidator.ValidateCutscenes reports a missing or broken one).
+        static CutsceneCatalog CutsceneCatalogOrNull()
+        {
+            var assets = AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset");
+            if (assets == null || assets.cutscenesJson == null) return null;
+            try { return CutsceneCatalog.FromJson(assets.cutscenesJson.text); }
+            catch (FormatException) { return null; }
         }
 
         /// The longest line (in characters, {brother} as the longest brother name) of the matching entries in a language.

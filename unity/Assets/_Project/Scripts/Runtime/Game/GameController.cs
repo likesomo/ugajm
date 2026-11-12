@@ -66,6 +66,10 @@ namespace SevenSteps.Game
         UI.U5EndingView u5Ending;
         IEndingView endingPanel;
         EndingController ending;
+        // The storybook epilogue after the ending (null when the data has none, or a dev run).
+        CutsceneSceneDto epilogue;
+        UI.U5.U5CutsceneView cutsceneView;
+        CutsceneController cutscene;
         GameJourney journey; // stage select v4 transitions; null when JourneyToggle is off
 
         bool OnlyChapterCard() => chapterCard != null && overlays.Count == 1 && overlays.Top == chapterCard;
@@ -85,6 +89,9 @@ namespace SevenSteps.Game
         /// The ending (tests, captures): its controller, and the U5 ending view (null when U5 is off).
         public EndingController Ending => ending;
         public UI.U5EndingView U5Ending => u5Ending;
+        /// The epilogue player and viewer (tests); null without an epilogue.
+        public CutsceneController Cutscene => cutscene;
+        public UI.U5.U5CutsceneView CutsceneView => cutsceneView;
         /// The in-game menu (settings, stages, solution, controls). The HUD menu button calls Menu.Toggle.
         public MenuController Menu => menu;
 
@@ -259,6 +266,16 @@ namespace SevenSteps.Game
             tutorial.FirstSlide += () => board.ShowGuideLine(TutorialTracker.SlideLineKey);
             ending = new EndingController(overlays, endingPanel);
             ending.Finished += OnEndingFinished;
+            // Storybook epilogue (design/story/cutscenes.md 2, optional): after the ending cards when the data has one and the
+            // ending was read through; dev runs (flow check) go straight to the map as before.
+            var cutscenes = devRun ? null : CutsceneLoad.Catalog(assets);
+            epilogue = cutscenes?.SceneFor(CutsceneCatalog.WhenAfterEnding);
+            if (epilogue != null)
+            {
+                cutsceneView = UI.U5.U5CutsceneView.Build(assets.cutsceneImages, assets.uiIcons, localizer);
+                cutscene = new CutsceneController(overlays, cutsceneView, () => localizer.Current);
+                localizer.Changed += RedrawCutscene;
+            }
             flowController.EndingRequested += BeginEnding;
             flowController.ClearShown += story.Save; // 16.5: the finale line just shown is counted
             result.NextRequested += flowController.Next;
@@ -354,6 +371,8 @@ namespace SevenSteps.Game
             chapterIntro?.Dispose();
             menu?.Dispose();
             ending?.Dispose();
+            cutscene?.Dispose();
+            if (cutscene != null && localizer != null) localizer.Changed -= RedrawCutscene;
             journey?.Dispose();
             if (board != null && tutorial != null)
             {
@@ -376,8 +395,11 @@ namespace SevenSteps.Game
         void OnEndingFinished(EndingModel cards, int seen, bool skipped)
         {
             story.EndingFinished(cards, seen);
-            flowController.OpenStageSelect();
+            if (epilogue == null || skipped) { flowController.OpenStageSelect(); return; }
+            cutscene.Begin(epilogue, _ => flowController.OpenStageSelect());
         }
+
+        void RedrawCutscene(Language _) => cutscene.Redraw();
 
         /// The ending is the top overlay (its keys: Enter / Space / Right = next; Esc skips through the BackNavigator).
         bool EndingOnTop => ending != null && ending.IsOpen && overlays.Top == endingPanel;

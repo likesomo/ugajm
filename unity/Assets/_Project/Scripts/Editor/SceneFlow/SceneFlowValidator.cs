@@ -99,6 +99,7 @@ namespace SevenSteps.EditorTools
             {
                 ValidateThemes(gameAssets, issues);
                 ValidateStory(gameAssets, issues); // 16.2 / 16.3: story.json load check, picture keys
+                ValidateCutscenes(gameAssets, issues); // cutscenes.json load check, picture keys (warnings while art is out)
                 LocalizationCheck.Check(gameAssets, issues); // 13.6: tables, keys in code, glyphs per language
                 UiIconSetTools.Check(gameAssets, issues); // U5 icon set (docs/ui-u5-kit.md 1.1): placeholders warn
                 UiLayoutCheck.Check(gameAssets, sharedConfig, issues); // 14: text size, plates, overlaps on screens built in Edit Mode
@@ -249,6 +250,22 @@ namespace SevenSteps.EditorTools
             var missing = story.ImageKeys.Where(k => images.Get(k) == null).ToArray();
             if (missing.Length > 0)
                 issues.Add($"{(images.required ? "ERROR" : "WARN")} {AssetDatabase.GetAssetPath(images)}: no sprite for {missing.Length} story image key(s): {string.Join(", ", missing)}");
+        }
+
+        /// cutscenes.json (design/story/cutscenes.md) must pass CutsceneCatalog's load check (a failure turns the cutscenes off
+        /// in the player). Every page's picture key needs a sprite in GameAssets.cutsceneImages: a warning while
+        /// StoryImageSet.required is false (the plain card shows; Codex art comes later), an error once art turns it on.
+        public static void ValidateCutscenes(GameAssets gameAssets, List<string> issues)
+        {
+            if (gameAssets.cutscenesJson == null) { issues.Add("ERROR GameAssets.cutscenesJson is not set (Data/cutscenes.json, unity.sh levels then setup)"); return; }
+            CutsceneCatalog cutscenes;
+            try { cutscenes = CutsceneCatalog.FromJson(gameAssets.cutscenesJson.text); }
+            catch (FormatException e) { issues.Add($"ERROR {AssetDatabase.GetAssetPath(gameAssets.cutscenesJson)}: {e.Message}"); return; }
+            var images = gameAssets.cutsceneImages;
+            if (images == null) { issues.Add("WARN GameAssets.cutsceneImages is not set: cutscenes show plain cards"); return; }
+            var missing = cutscenes.ImageKeys.Where(k => images.Get(k) == null).ToArray();
+            if (missing.Length > 0)
+                issues.Add($"{(images.required ? "ERROR" : "WARN")} {AssetDatabase.GetAssetPath(images)}: no sprite for {missing.Length} cutscene picture(s), plain cards: {string.Join(", ", missing)}");
         }
 
         static void ValidateThemes(GameAssets gameAssets, List<string> issues)

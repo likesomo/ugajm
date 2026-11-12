@@ -11,14 +11,14 @@ namespace SevenSteps.Game.UI
     /// <summary>
     /// U5 title (docs/ui-u5-kit.md 3, concept U5-title.png; UiStyleToggle on): the name carved on a stone above the title
     /// planet (TitleWorld draws the planet and the brothers), one 64 play stone with its caption (continue / first step),
-    /// and four 48 corner icons: map top left, settings top right, language bottom right, credits bottom left. The story's
+    /// and four 48 corner icons: map top left (the story entry beside it), settings top right, language bottom right, credits bottom left. The story's
     /// title sentence, when there is one, sits under the stone. No menu panel. Names of the icons show on the canvas's one
     /// <see cref="FocusPlate"/>. View only: it raises the requests, the title root decides (docs/ui-u5-kit.md 7).
     /// Positions are 1280x720 canvas units, top-left origin (touch-targets.csv U5 rows).
     /// </summary>
     public sealed class U5TitleView
     {
-        public const float PlaySize = 64, Safe = 24;
+        public const float PlaySize = 64, Safe = 24, StoryGap = 16;
         /// Play stone centre and the corner icons' top-left corners (touch-targets.csv, U5 title).
         public static readonly Vector2 PlayCenter = new Vector2(640, 535);
         public static readonly Rect StoneRect = new Rect(480, 120, 320, 88);
@@ -26,16 +26,18 @@ namespace SevenSteps.Game.UI
         readonly GameObject panel;
         readonly Text name, tagline, caption;
         readonly Image tagPlate, captionPlate;
-        readonly IconButton play, map, settings, language, credits;
+        readonly IconButton play, map, story, settings, language, credits;
         Localizer loc;
         bool canContinue;
 
-        public event Action PlayRequested, MapRequested, SettingsRequested, LanguageRequested, CreditsRequested;
+        public event Action PlayRequested, MapRequested, StoryRequested, SettingsRequested, LanguageRequested, CreditsRequested;
 
         public IconButton Play => play;
         /// The button the first arrow / Enter selects (TitleScreen.Update): the play stone.
         public IconButton DefaultButton => play;
         public IconButton Map => map;
+        /// The story entry (replays the prologue; hidden when there is no cutscene to replay, <see cref="SetStoryShown"/>).
+        public IconButton Story => story;
         public IconButton Settings => settings;
         public IconButton Language => language;
         public IconButton Credits => credits;
@@ -73,12 +75,14 @@ namespace SevenSteps.Game.UI
             caption = Ui.Label(t, "", 22, Ui.Ink, TextAnchor.MiddleCenter, "Caption");
 
             map = Corner(t, UiIcon.Map, new Vector2(0, 1), () => MapRequested?.Invoke());
+            story = Corner(t, UiIcon.Story, new Vector2(0, 1), () => StoryRequested?.Invoke());
+            story.Rect.anchoredPosition += new Vector2(IconButton.Size + StoryGap, 0); // beside the map icon
             settings = Corner(t, UiIcon.Settings, new Vector2(1, 1), () => SettingsRequested?.Invoke());
             language = Corner(t, UiIcon.Language, new Vector2(1, 0), () => LanguageRequested?.Invoke());
             credits = Corner(t, UiIcon.Credits, new Vector2(0, 0), () => CreditsRequested?.Invoke());
-            foreach (var b in new[] { play, map, settings, language, credits }) tips.Track(b);
+            foreach (var b in new[] { play, map, story, settings, language, credits }) tips.Track(b);
             // Keyboard: one row in reading order around the play stone (explicit links, docs/ui-u5-kit.md 4).
-            IconNav.Row(new[] { credits, map, play, settings, language });
+            IconNav.Row(new[] { credits, map, story, play, settings, language });
             panel.SetActive(false);
 
             // Anchored to its corner, 24 in (14.6 safe area), so 4:3 and 16:10 canvases keep the margin.
@@ -130,6 +134,9 @@ namespace SevenSteps.Game.UI
         }
 
         public void Hide() => panel.SetActive(false);
+
+        /// Shows or hides the story entry (TitleScreen: there is a cutscene the title replays).
+        public void SetStoryShown(bool shown) => story.gameObject.SetActive(shown);
 
         /// Sizes <paramref name="t"/> to its one line and its plate around it (14.4: glyphs + 8 inside the plate).
         public static void PlateAround(Image plate, Text t, Vector2 center, float maxWidth)

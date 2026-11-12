@@ -11,6 +11,7 @@ namespace SevenSteps.Game.UI.U5
     {
         Undo, Restart, Hint, Pause, Play, Settings, Map, Retry, Next, Back, Language, Credits, Info, SoundOn, SoundOff, Motion,
         Close, Keep, Switch,
+        Story, Skip, // storybook cutscenes: the title's story entry, skip (appended: the set stores ids by value)
     }
 
     /// <summary>
@@ -101,6 +102,13 @@ namespace SevenSteps.Game.UI.U5
                 case UiIcon.Switch: // a brother and the arrow to the next
                     Arc(-0.1f, 0.15f, 0.09f, 0, 360); L(-0.1f, 0.04f, -0.1f, -0.2f); L(-0.1f, -0.06f, -0.22f, -0.17f); L(-0.1f, -0.06f, 0.03f, -0.17f);
                     L(0.05f, 0.15f, 0.3f, 0.15f); L(0.21f, 0.24f, 0.3f, 0.15f); L(0.3f, 0.15f, 0.21f, 0.06f); break;
+                case UiIcon.Story: // an open book
+                    L(0, -0.2f, 0, 0.18f); L(0, 0.18f, -0.3f, 0.22f); L(-0.3f, 0.22f, -0.3f, -0.16f); L(-0.3f, -0.16f, 0, -0.2f);
+                    L(0, 0.18f, 0.3f, 0.22f); L(0.3f, 0.22f, 0.3f, -0.16f); L(0.3f, -0.16f, 0, -0.2f);
+                    L(-0.22f, 0.08f, -0.08f, 0.06f); L(0.08f, 0.06f, 0.22f, 0.08f); break;
+                case UiIcon.Skip: // two chevrons and a bar
+                    L(-0.26f, -0.2f, -0.06f, 0); L(-0.06f, 0, -0.26f, 0.2f); L(-0.04f, -0.2f, 0.16f, 0); L(0.16f, 0, -0.04f, 0.2f);
+                    L(0.24f, -0.2f, 0.24f, 0.2f); break;
                 default: throw new ArgumentOutOfRangeException(nameof(id), id, "no placeholder drawing");
             }
             return s;
