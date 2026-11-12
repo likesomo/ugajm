@@ -82,8 +82,9 @@ namespace SevenSteps.Game.Flow
         void ShowMap(StageSelectModel model, int focus, int held);
         /// The journey return settled: light <paramref name="planet"/>'s outgoing trail (animated) and focus <paramref name="focus"/>.
         void LightTrail(StageSelectModel model, int planet, int focus);
-        /// Opens a planet's surface path over the map.
-        void OpenSurface(StageSelectModel model, int planet);
+        /// Opens a planet's surface path over the map. <paramref name="news">: that planet's clears not shown yet (empty = none),
+        /// replayed from their before state (the U5 first-clear trace); the list is the controller's, read it during the call.
+        void OpenSurface(StageSelectModel model, int planet, IReadOnlyList<ClearNote> news);
         /// A choice is pending (dive running): input off, labels / back / star rows / marker hidden, camera and bodies still.
         void SetPending(bool pending);
         /// The body a choice dives into.
@@ -107,6 +108,8 @@ namespace SevenSteps.Game.Flow
         readonly Func<int, bool> canPlay;
         readonly Action<int> play;
         readonly JourneyReturn journey;
+        readonly ClearNews news;
+        readonly List<ClearNote> taken = new List<ClearNote>();
         StageSelectModel model;
         StageChoice pending;
         int heldPlanet = -1;
@@ -132,8 +135,9 @@ namespace SevenSteps.Game.Flow
         public bool SurfaceFirst { get; set; }
 
         public StageSelectController(IStageSelectView view, Func<StageSelectModel> buildModel, IReadOnlyList<IReadOnlyList<int>> stages,
-            Func<int, bool> canPlay, Action<int> play, JourneyReturn journey)
+            Func<int, bool> canPlay, Action<int> play, JourneyReturn journey, ClearNews news = null)
         {
+            this.news = news;
             this.view = view ?? throw new ArgumentNullException(nameof(view));
             this.buildModel = buildModel ?? throw new ArgumentNullException(nameof(buildModel));
             this.stages = stages ?? throw new ArgumentNullException(nameof(stages));
@@ -177,7 +181,15 @@ namespace SevenSteps.Game.Flow
         {
             if (model == null || Pending != null || heldPlanet >= 0) return; // a dive or a return pullback is running
             if (!SurfaceFirst && model.ChoosePlays(planet, out int slot)) Choose(planet, slot, StageChoiceSource.Map);
-            else view.OpenSurface(model, planet);
+            else OpenSurface(planet);
+        }
+
+        /// Opens the surface with the planet's untaken clears (ClearNews, null = none): taken here, once, not by the view.
+        void OpenSurface(int planet)
+        {
+            taken.Clear();
+            news?.TryTake(stages[planet], taken);
+            view.OpenSurface(model, planet, taken);
         }
 
         void OnPlaceChosen(int planet, int slot)

@@ -94,6 +94,7 @@ namespace SevenSteps.Game
             Services.Register(flow);
             Services.Register(EntryTracker.ForLaunch(launch.DirectToGame && !levelFromEditor));
             Services.Register(new JourneyReturn()); // planet complete → map hand-off (docs/stage-select-transitions.md)
+            Services.Register(new ClearNews()); // win -> U5 surface first-clear trace (stage-select-transitions.md 4); empty at boot, not saved
             Services.Register(new JourneyDive()); // map → board dive hand-off (same doc)
             // Story (docs/architecture.md 16): off when story.json is missing or broken (A8). Dev runs do not touch its save.
             bool devRun = launch.SmokeView != SmokeView.None || !string.IsNullOrEmpty(launch.Replay) || launch.FlowCheck || launch.TitleCheck != "";

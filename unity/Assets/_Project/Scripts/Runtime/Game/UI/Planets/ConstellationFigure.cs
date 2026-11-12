@@ -62,6 +62,14 @@ namespace SevenSteps.Game.UI.Planets
 
         /// A stage edge is drawn (warm) once its earlier stage is cleared (the route toward the next one opens); a closing
         /// edge once the planet is complete.
+        public static bool Drawn(IReadOnlyList<bool> cleared, (int a, int b, bool closing) edge)
+        {
+            if (!edge.closing) return cleared[Math.Min(edge.a, edge.b)];
+            foreach (bool c in cleared) if (!c) return false;
+            return true;
+        }
+
+        /// The same for a planet of the model.
         public static bool Drawn(StageSelectModel model, int planet, (int a, int b, bool closing) edge) =>
             edge.closing ? model.Complete(planet) : model.IsCleared(planet, Math.Min(edge.a, edge.b));
 
