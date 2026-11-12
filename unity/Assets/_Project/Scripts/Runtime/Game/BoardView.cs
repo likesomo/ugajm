@@ -97,8 +97,16 @@ namespace SevenSteps.Game
         public static float ConfirmPresentMax(bool reduceMotion) => ConfirmSeconds(reduceMotion) + (reduceMotion ? 0f : ConfirmDoorSeconds);
 
         BoardMarksView marks;
-        /// Screen-space marks on the board (foot stars, choice ring, KEEP dots, SWITCH knot); tests and captures read it.
+        /// Screen-space marks on the board (choice ring, KEEP dots, SWITCH knot, hint goal); tests and captures read it.
         public BoardMarksView Marks => marks;
+        StepSkyView sky;
+        /// The step constellation above the board (user decision 2026-11-12 "C"); tests and captures read it.
+        public StepSkyView Sky => sky;
+        /// The step sky's box on the HUD canvas (canvas units, top-left origin, like ProjectedArea), width 0 when no sky is
+        /// shown: the choice UI keeps out of it (gameplay-ui 2026-11-12).
+        public Rect StepSkyBand => sky != null ? sky.Band() : default;
+        /// World box of the playable (non-wall) cells with the actors' height: the step sky stays above it on screen.
+        Bounds playable;
 
         /// <param name="cameraOverride">Camera preset to use instead of tileSet.cameraRig (Game scene setting), or null.</param>
         public void Init(TileSet tileSet, RectTransform labelLayer, Camera cam, CameraRig? cameraOverride = null)
@@ -113,13 +121,22 @@ namespace SevenSteps.Game
                 marks = layer.gameObject.AddComponent<BoardMarksView>();
                 marks.Init(layer, ToCanvas);
             }
+            if (sky == null && labelLayer != null)
+            {
+                var layer = Ui.Rect("Step Sky", labelLayer).Stretch();
+                sky = layer.gameObject.AddComponent<StepSkyView>();
+                sky.Init(layer, ToCanvas);
+            }
         }
 
         /// World point → anchored position on the label layer (canvas units, centre origin), as the world labels use.
         Vector2 ToCanvas(Vector3 world)
         {
             if (cam == null) return Vector2.zero;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(labelLayer, cam.WorldToScreenPoint(world), null, out var local);
+            // Overlay canvas: no UI camera. Screen Space - Camera (the headless capture switches overlays to it): its camera.
+            var canvas = labelLayer.GetComponentInParent<Canvas>();
+            var uiCam = canvas != null && canvas.rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.rootCanvas.worldCamera : null;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(labelLayer, cam.WorldToScreenPoint(world), uiCam, out var local);
             return local;
         }
 
@@ -263,6 +280,7 @@ namespace SevenSteps.Game
             ghostBodyIndex = -1;
             choiceShown = false;
             marks?.Clear();
+            sky?.Clear();
             foreach (var l in labels) if (l.Text != null) Destroy(l.Text.gameObject);
             labels.Clear();
             statues.Clear();
@@ -278,6 +296,7 @@ namespace SevenSteps.Game
             trail.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity); // marks are built in world space
             trail.Init(grid, set, cam, chapter != null ? chapter.starTrail : null); // planet look (docs 15.5)
             int n = level.Count;
+            playable = PlayableBox(level, grid);
             cells = new Cell[n];
             feet = new GameObject[n];
             footLabels = new WorldLabel[n];
@@ -563,11 +582,10 @@ namespace SevenSteps.Game
             choosing = s.Status == Status.Choose;
             playerLabel.Text.color = choosing || left == 1 ? Ui.Gold : Ui.Ink;
 
-            // Stars at the feet (15.6, ui-minimal v3): the walking brother only; screen space, so never behind a tile.
-            if (marks != null)
-                marks.SetFeet(alive && s.Status == Status.Play, player.transform,
-                    -PlayerVisual.offset * grid.CellSize, // the arc centre: the floor under the brother
-                    set.BodyColor(body), s.Used, ReduceMotion, cam != null ? CellPixels() * grid.CellSize : 77f);
+            // Step constellation above the board (user decision 2026-11-12 "C"; replaced the stars at the feet).
+            float px = cam != null ? CellPixels() * grid.CellSize : 77f;
+            marks?.SetLook(ReduceMotion, px);
+            if (sky != null) sky.Show(StepSky.Of(s), playable, ReduceMotion, px);
             DrawChoice();
 
             // Star trail (design/art/star-trail.md): rebuilt from s, lights up new marks only after Present.
@@ -822,6 +840,7 @@ namespace SevenSteps.Game
             player = null;
             ghostBody = ghostStone = null;
             marks?.Clear();
+            sky?.Clear();
             foreach (var l in labels) if (l.Text != null) Destroy(l.Text.gameObject);
             labels.Clear();
             statues.Clear();
@@ -842,6 +861,23 @@ namespace SevenSteps.Game
 
         /// Actor height above the tiles that the framing keeps in view (cells).
         public const float ActorHeight = 1.2f;
+
+        /// World box of the cells a body can stand on or enter (every tile but '#'), floor to ActorHeight.
+        public static Bounds PlayableBox(Level level, BoardGrid grid)
+        {
+            if (level == null) throw new ArgumentNullException(nameof(level));
+            float half = 0.5f * grid.CellSize;
+            var min = Vector3.positiveInfinity; var max = Vector3.negativeInfinity;
+            for (int i = 0; i < level.Count; i++)
+            {
+                if (level.Tile(i) == '#') continue;
+                var c = grid.CellToWorld(i);
+                min = Vector3.Min(min, new Vector3(c.x - half, 0f, c.z - half));
+                max = Vector3.Max(max, new Vector3(c.x + half, ActorHeight * grid.CellSize, c.z + half));
+            }
+            if (min.x > max.x) throw new ArgumentException($"level \"{level.Name}\" has no playable cell", nameof(level));
+            var b = new Bounds(); b.SetMinMax(min, max); return b;
+        }
 
         /// The camera framing for a board (rotation, projection, position) at <paramref name="cam"/>'s aspect: the board
         /// (with the rig's padding and actor height) inside HudView.BoardViewport. Public so UiLayoutCheck (14.6) projects the

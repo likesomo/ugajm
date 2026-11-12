@@ -986,10 +986,18 @@ namespace SevenSteps.Game.UI {
 - **임시 렌더**: 셰이더 마스크(아트)가 오기 전, gameplay-ui의 결합 quad 메시 1개(+1 드로우, 코드 생성 아틀라스)는 개발용으로 허용한다. 최종은 15.2 전역 텍스처(추가 드로우 0)다. 아트 v2 시안에서 배치(비트)를 바꿔야 하면 아키텍트가 15.2와 `StarTrailMap`을 함께 고친다.
 
 ### 15.6 형제 발치의 별 일곱 고리 (2026-11-10, 리드 지시 ui-minimal 예고, feat/view 535e775)
+> **2026-11-12 대체**: 사용자 결정 C(별 위치 = 보드 위 하늘의 별자리)로 발치의 화면 별(`BoardMarksView.SetFeet`)은 없앴다. 아래 15.7. 이 절의 `StarTrailMap` 플레이어 비트·`_StarTrailState.w`·`_StarTrailPulse.z`는 아직 채워지지만 화면에 그리는 것은 없다(정리 여부는 아키텍트 검토).
 - 걷는 중(`Status.Play`)인 형제 발치에 별 일곱 개가 고리로 놓인다. k걸음을 쓰면 k번째 별이 채워진다(2026-11-11 승인 시안: 채운 별 = 걸은 수, 빈 별 = 남은 수, 숫자 없음). 6걸음 뒤에는 마지막 빈 별이 맥동한다(움직임 줄이기면 이중 테두리, 11.3.2).
 - **데이터**: 위치는 층 0 A 비트 1(`StarTrailMap.SetPlayer(State.Pos)`), 쓴 걸음은 `_StarTrailState.w`(`StateVector(..., used)`), 맥동은 `_StarTrailPulse.z`다. 선택·승리·패배 단계에서는 비트를 쓰지 않는다(고리 없음).
 - 같은 State에서 다시 계산하므로 Undo·Restart가 저절로 맞는다. 이동 중에는 고리가 도착 칸에 있다(Present 뒤 갱신).
 - 임시 quad가 그리는 동안(`StarTrailView.UseQuad`)은 뷰가 같은 값으로 그린다. 셰이더가 그리게 되면 셰이더가 이 세 값만 읽는다.
+
+### 15.7 걸음 별자리 (2026-11-12 사용자 결정 C, production/plan-2026-11-12.md 3, feat/core)
+- **모델** `SevenSteps.Core.StepSky.Of(State)`: `Shown` = Play 또는 Choose(Win·Lose에서는 숨김), `Lit` = `State.Used`(0..7, Choose에서 7), `Calling` = Play이고 6걸음(7번째 별이 부름), `Links` = 이웃한 켜진 별 사이 선 수. 잘못된 조합은 생성자에서 예외.
+- **뷰** `Game.StepSkyView`: HUD 월드 라벨 층의 화면 공간(`BoardMarksView`와 같은 층이라 `HudView.Conceal`이 함께 숨김). 별 일곱 개를 낮은 아치로 놓고 켜진 별끼리 금색 선으로 잇는다. 6걸음 뒤 7번째 별이 금색으로 맥동(동작 줄이기: 고정 이중 외곽선).
+- **배치** `StepSkyView.Layout(playableTop, centreX, ceiling, cellPx)`(순수): 바닥 = 플레이 칸(벽 `#`이 아닌 모든 칸, 배우 높이 `ActorHeight` 포함, `BoardView.PlayableBox`)의 화면 위쪽 끝 + 여백, 천장 = U5 HUD 위 띠 아래(위에서 80, `HudTopBand`). 띠가 좁으면 아치를 펴고 별을 줄인다(26 → 14). **플레이 칸 위에는 그리지 않는다**(띠가 모자라면 HUD 띠 쪽을 침범). 여유가 있으면 띠 안으로 올린다(최대 0.6칸).
+- **훅** (gameplay-ui 합의 2026-11-12): `BoardView.Draw`가 `sky.Show(StepSky.Of(s), playable, ReduceMotion, cellPx)`와 `marks.SetLook(ReduceMotion, cellPx)`를 부른다. `BoardView.StepSkyBand`(HUD 캔버스 단위, 왼쪽 위 원점, 하늘이 없으면 폭 0): 선택 UI(KEEP/SWITCH 카드, U5 글리프)는 이 상자를 피한다(gameplay-ui). `BoardView.ToCanvas`는 Overlay가 아닌 캔버스에서 그 카메라를 쓴다(헤드리스 캡처).
+- **검사**: EditMode `StepSkyTests`(모델, 배치, 출시 50스테이지 × 피치 50/58 × 여백 0.6/0.7에서 플레이 칸 위·HUD 띠 아래·별 18 이상), PlayMode 캡처 `PlayCaptureTests.StepSky`(`unity.sh playcapture` → `reports/playcapture/step-sky-*.png`).
 
 ## 16. 이야기 계약 (2026-11-11 S2, 사용자 승인 구조 `design/story/story-integration.md`, 사전 검토 A1~A13)
 
