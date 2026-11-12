@@ -10,21 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e917cde0dad68a8c87af943fc5b16109, type: 3}
+  m_Name: CutsceneImages
+  m_EditorClassIdentifier: SevenSteps.Contracts::SevenSteps.Contracts.StoryImageSet
   entries:
   - key: cutscene.prologue.1
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: cede335c00a887248b4100d8d9e86507, type: 3}
   - key: cutscene.prologue.2
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: b620b2c4568762b4fa00eb7c12b27449, type: 3}
   - key: cutscene.prologue.3
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: bda047498786eb3439fe62eb5fd5611c, type: 3}
   - key: cutscene.prologue.4
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 6881c8dade1521248a74c92a19214ed3, type: 3}
   - key: cutscene.prologue.5
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 197abb01eebe03d41bf720d84e28b7ba, type: 3}
   - key: cutscene.prologue.6
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 46718571540efc14db86becd70a78982, type: 3}
   - key: cutscene.prologue.7
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 8fbbfec6a3f589b4abb410170ab79524, type: 3}
   - key: cutscene.epilogue.1
-    sprite: {fileID: 0}
-  required: 0
+    sprite: {fileID: 21300000, guid: 2f6eff2049bdf8e43bba808060f5dd51, type: 3}
+  required: 1

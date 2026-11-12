@@ -600,9 +600,9 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
-        /// Storybook viewer (design/story/cutscenes.md 2; gameplay-ui): a fresh save's play stone opens the prologue. Page 1
-        /// on its first line, and page 4 with all three lines (the fullest plate) in KO and EN, on the plain card (no Codex
-        /// art yet). `unity.sh playcapture U5Cutscene` -> u5-cutscene-*.png.
+        /// Storybook viewer (design/story/cutscenes.md 2; gameplay-ui): a fresh save's play stone opens the prologue, with the
+        /// Codex pictures (style A, watercolour; shared-assets). Pages 1, 4 and 6 with every line out, in KO and EN, then the
+        /// epilogue played on the same viewer. `unity.sh playcapture U5Cutscene` -> u5-cutscene-*.png.
         [UnityTest]
         public IEnumerator U5Cutscene()
         {
@@ -611,21 +611,28 @@ namespace SevenSteps.Tests.PlayMode
                 PlayEnv.Reset();
                 yield return Start(AppState.Title, AppScenes.Title, "-ui5", "-lang", lang);
                 var title = Object.FindAnyObjectByType<SevenSteps.Game.UI.TitleScreen>();
-                title.U5Title.Play.Press();
                 var c = title.Cutscene;
                 var v = title.CutsceneView;
-                Assert.IsTrue(c.IsOpen && v.Visible, lang + ": the prologue on a new game");
-                Assert.IsFalse(v.HasPicture, lang + ": plain card until the art lands");
                 var px = new Pixels();
-                if (lang == "ko")
+                // The epilogue (played after the ending cards in the Game scene) on this viewer first: same view, its own picture.
+                var epilogue = SevenSteps.Game.CutsceneLoad.Catalog(title.assets).SceneFor(CutsceneCatalog.WhenAfterEnding);
+                c.Begin(epilogue, _ => { });
+                while (c.Shown < c.Frame.Lines.Count) v.Next.Press();
+                Assert.IsTrue(v.HasPicture, lang + " epilogue: its picture");
+                yield return Capture($"u5-cutscene-epilogue-{lang}", px, 0.5f);
+                AssertVaried($"u5-cutscene-epilogue-{lang}", px.Value);
+                c.Skip();
+                yield return null;
+                title.U5Title.Play.Press();
+                Assert.IsTrue(c.IsOpen && v.Visible, lang + ": the prologue on a new game");
+                foreach (int page in new[] { 1, 4, 6 })
                 {
-                    yield return Capture("u5-cutscene-p1-ko", px, 0.5f);
-                    AssertVaried("u5-cutscene-p1-ko", px.Value);
+                    while (c.Page < page - 1 || c.Shown < c.Frame.Lines.Count) v.Next.Press();
+                    Assert.IsTrue(v.HasPicture, $"{lang} p{page}: its picture");
+                    string name = $"u5-cutscene-p{page}-{lang}";
+                    yield return Capture(name, px, 0.5f);
+                    AssertVaried(name, px.Value);
                 }
-                while (c.Page < 3 || c.Shown < 3) v.Next.Press();
-                Assert.AreEqual(3, c.Frame.Lines.Count, "page 4 has three lines");
-                yield return Capture($"u5-cutscene-p4-{lang}", px, 0.5f);
-                AssertVaried($"u5-cutscene-p4-{lang}", px.Value);
                 v.Skip.Press();
                 yield return PlayEnv.WaitForState(AppState.Game, AppScenes.Game, 20f);
             }

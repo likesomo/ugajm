@@ -63,7 +63,21 @@ namespace SevenSteps.Tests
                         Assert.That(CutsceneCatalog.Lines(p, l), Has.All.Not.Empty, $"{p.image} {l}");
             var set = AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset").cutsceneImages;
             Assert.IsNotNull(set, "GameAssets.cutsceneImages");
-            Assert.That(set.entries.Select(e => e.key), Is.EquivalentTo(c.ImageKeys), "one entry per page for art to fill");
+            Assert.That(set.entries.Select(e => e.key), Is.EquivalentTo(c.ImageKeys), "one entry per page");
+            // Codex pictures (shared-assets) wired by unity.sh cutscene-art, imported by the CutsceneArtImport rule.
+            Assert.IsTrue(set.required, "every page has its picture: a missing one is a scene-validate error");
+            foreach (var e in set.entries)
+            {
+                Assert.IsNotNull(e.sprite, e.key);
+                var path = AssetDatabase.GetAssetPath(e.sprite);
+                Assert.AreEqual($"Assets/Shared/Art/Story/Cutscenes/{e.key}.png", path, e.key);
+                var ti = (TextureImporter)AssetImporter.GetAtPath(path);
+                Assert.AreEqual(TextureImporterType.Sprite, ti.textureType, e.key);
+                Assert.IsFalse(ti.mipmapEnabled, e.key);
+                var web = ti.GetPlatformTextureSettings("WebGL");
+                Assert.IsTrue(web.overridden && web.crunchedCompression, e.key + ": WebGL crunched");
+                Assert.AreEqual(1024, web.maxTextureSize, e.key);
+            }
         }
 
         [Test]
