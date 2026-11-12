@@ -806,6 +806,7 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 ### 14.4 판 (텍스트 뒤 배경)
 - 3D 장면 위에 보이는 모든 글자는 판 위에 있다. 판의 알파는 **0.75 이상**. 글자를 감싸는 화면 전체 배경 `Image`(Title·Loading처럼 불투명 배경)도 판으로 친다.
 - **안쪽 여백(padding) 8**: 판의 안쪽 영역이 글자 사각형을 사방 8 이상 여유를 두고 감싼다. 판이 9-slice(`Image.type == Sliced`)면 안쪽 영역은 스프라이트 `border`(× `pixelsPerUnitMultiplier` 반영 크기)를 뺀 가운데 칸이다 — 테두리·이중선 장식은 border 안에 있어야 하고, border가 0인 테두리 스프라이트는 판으로 쓸 수 없다(늘어난 장식선이 글자를 지나는 지금 문제의 원인).
+- 예외(2026-11-12): U5 설명 판(`FocusPlate` 컴포넌트가 붙은 판)의 스프라이트는 테두리 선 없는 채운 판이라, 9-slice 테두리를 여백으로 친다(각 변 `max(8, border)`). `docs/ui-u5-kit.md` 1.1.
 - 한 판에 여러 글자(이름·번호·별 개수 = 한 카드)가 있어도 된다. 카드끼리는 겹치지 않는다(14.5).
 
 ### 14.5 겹침
@@ -1176,3 +1177,8 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | feat/scene-flow f40d292+975d2ce+ac632a9 승인(P2 PlayCapture 에디터 전용·1280×720·Board/Empty 대조, P3 Contracts `AppScenes.BuildOrder` 추가(빌드 목록 순서의 한 곳, 검증기 `ValidateBuildOrder`)·Boot 배경 카메라(씬 오브젝트, DDOL 아님, cullingMask 0)·주석, P4 JourneyFlowTests·PlayEnv, playtest 직접 실행 8/8). 메모 P2-N1~N3, P3-N1. `docs/reviews/2026-11-11-scene-flow-unity-structure.md` |
 | 2026-11-12 | 아키텍트 | feat/view 2821647 승인: 4.1 입력 락에 "형제가 끝나는 명령(Bodies 변화)은 남은 큐와 그 연출 중 큐를 버림" 추가(Contracts `GameSession`, Core·골든·리플레이 영향 없음). H 첫 누름 경고(Game 층). 헤드리스 EditMode 774/774. `docs/reviews/2026-11-12-feat-view-2821647.md` |
 | 2026-11-12 | 아키텍트 | U5 UI 키트 계약 `docs/ui-u5-kit.md`(IconButton 48, GlyphButton 56, FocusPlate 하나(보조 18, 높이 글자+16, 너비 250~320: 시안 250×30은 14.4로 불가), IconRow, UiIcon/UiIconSet, Codex manifest, 터치·MVC·단정). Contracts `LaunchOptions.Ui5`(`-ui5`/`-ui4`, `?ui5=1|0`) + `UiStyleToggle`(DefaultOn false). 14.2 보조 글자에 U5 포커스 설명 추가 |
+| 2026-11-12 | 아키텍트 | feat/view b506260 승인(U5 키트: UiIcon 19·UiIconSet·절차적 대체 그림, IconButton 48·GlyphButton 56, FocusPlate 캔버스당 하나·FocusTip, IconRow·IconNav, ui5.* KO/EN, scene-validate 경고 1줄; 헤드리스 EditMode 799/799, scene-validate OK). 메모 N1 FocusPlate 배치(보드·버튼 회피는 UiLayoutCheck 등록으로 확인), N2 uiIcons 단정, N3 텍스처 CPU 사본, N4 문구. `docs/reviews/2026-11-12-feat-view-b506260-u5-kit.md` |
+| 2026-11-12 | 아키텍트 | feat/core bf5dfac 조건부 승인(걸음 별자리 C: Core StepSky, Game StepSkyView, BoardView 훅·StepSkyBand, 발치 별 제거, 15.7). R1 매 프레임 할당·HUD 캔버스 재빌드(병합 전), R2 지금 UI 선택 카드가 별자리를 가림(gameplay-ui, 플레이테스트 전). StarTrailMap 플레이어 비트는 별도 커밋으로 지우되 비트·성분은 예약 0. 헤드리스 EditMode 798/798. `docs/reviews/2026-11-12-feat-core-bf5dfac-step-sky.md` |
+| 2026-11-12 | 아키텍트 | feat/view 40a0561 승인(토글 뒤: U5GameHud, GlyphButton 56 + FocusPlate, ChoiceController → IChoiceView, 같은 컨트롤러 호출, uiIcons 단정). R2 필수(U5 기본 켜기 전): 선택 글리프·판을 형제 가까이, StepSkyBand 밖, 플레이 칸·보드 영역 밖, 38·14 캡처. 헤드리스 EditMode 814/814. `docs/reviews/2026-11-12-feat-view-40a0561-u5-hud.md` |
+| 2026-11-12 | 아키텍트 | feat/core a1d119a+60651bf 승인(bf5dfac R1: 점 배열 재사용, 입력이 바뀔 때만 재배치, 맥동은 7번째 별 크기만; StarTrailMap 플레이어 비트·성분 예약 0). 헤드리스 EditMode 817/817. `docs/reviews/2026-11-12-feat-core-bf5dfac-step-sky.md` |
+| 2026-11-12 | 아키텍트 | ui-u5-kit.md 1.1을 실제 Codex manifest(a3470bb)에 맞춤(id 25개 같음, 4x 대표 소스·sources·states·worldStar·importPolicy). 14.4 예외: U5 설명 판은 채운 9-slice라 테두리를 여백으로 침(높이 글자+16). 영향: gameplay-ui `FocusPlate.PaddingOf`, scene-flow `UiLayoutCheck` |

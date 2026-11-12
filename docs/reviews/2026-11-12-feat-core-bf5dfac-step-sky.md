@@ -1,0 +1,60 @@
+# 검토: feat/core bf5dfac (걸음 별자리 C)
+
+검토자: 아키텍트, 2026-11-12.
+- 코드를 읽었다.
+- bf5dfac detached에서 헤드리스 EditMode를 직접 돌렸다. **798/798 통과**.
+- core 캡처 `reports/playcapture/step-sky-14.png`, `step-sky-38.png`를 봤다.
+- 플레이어 빌드는 만들지 않았다.
+
+**결론: 조건부 승인.** R1을 고친 뒤 병합한다. R2는 gameplay-ui가 플레이테스트 빌드 전에 고친다(core 병합을 막지 않는다).
+
+## 맞는 것
+- **Core·규칙·골든은 그대로다.**
+  - `StepSky`는 Core의 새 순수 값 타입이다(엔진 참조 없음). `Rules.Dispatch`와 `State`는 바뀌지 않았다. 그래서 골든과 verify에 영향이 없다.
+  - 전제 조건은 생성자에서 던진다. `lit` 범위, 그리고 "부르는 별은 마지막 빈 별만"이다.
+- **뷰 분리**: `StepSkyView`는 표시만 한다. `BoardView.Draw`가 `StepSky.Of(s)`와 플레이 칸 상자를 넘긴다. 같은 HUD 라벨 층이라 `HudView.Conceal`이 함께 숨긴다. `raycastTarget`은 끈다.
+- **배치**
+  - 바닥은 플레이 칸 위쪽 끝 + 여백이고, 천장은 U5 위 띠(80) 아래다. 공간이 모자라면 "플레이 칸 위"를 우선한다.
+  - 순수 `Layout`을 출시 50스테이지 × 피치·여백 조합으로 테스트한다.
+  - 캡처 14(가장 넓은 판)에서 별자리는 윗벽 줄 위 크러스트에 있고, 플레이 칸을 덮지 않는다.
+- **훅**: `BoardView.StepSkyBand`(HUD 캔버스 단위, 왼쪽 위 원점, 없으면 0)를 gameplay-ui와 합의했다. 선택 UI가 이 사각형을 피한다.
+- **`ToCanvas` 수정**: 오버레이가 아닌 캔버스에서 `worldCamera`를 쓴다. 배치 캡처(캔버스를 Screen Space - Camera로 바꿈)와 맞다.
+- **문서**: 15.6에 대체 표시, 15.7 신설이다. 발치 별(`SetFeet`)을 없애서 생기는 화면 변화는 사용자 결정 C 그대로다.
+
+## 고칠 것
+
+### R1 (병합 전) `StepSkyView`가 매 프레임 할당하고 HUD 캔버스를 다시 그린다
+- `LateUpdate → Refresh → Place → Layout`이 매 프레임 `new Vector2[7]`을 만든다.
+- 또 모든 별·선에 `anchoredPosition`·`sizeDelta`·`color`를 다시 넣는다. 그래서 HUD 캔버스가 매 프레임 다시 묶인다(WebGL 비용). 아키텍처 검토 항목 "매 프레임 GC 할당"에 걸린다.
+- **고치는 법** (둘 다 한다)
+  - (a) `Layout`의 점 배열을 뷰가 가진 배열에 채우는 형태로 바꿔 재사용한다. 테스트용 순수 함수는 그대로 두고, 배열을 받는 오버로드를 하나 더한다.
+  - (b) `Refresh`는 입력이 바뀔 때만 위치를 다시 잡는다. 입력은 `StepSky`, 보드 상자, `cellPx`, 투영 결과(카메라 위치·직교 크기·화면 크기)다. 부르는 별이 맥동하는 동안에는 7번째 별의 크기만 매 프레임 바꾼다.
+
+### R2 (gameplay-ui, 플레이테스트 빌드 전, core 병합은 막지 않음) 지금 UI의 선택 카드가 별자리를 가린다
+- `step-sky-38.png`(토글 꺼짐, 선택 단계)를 보면 KEEP/SWITCH 카드 두 장과 설명 판이 별자리 대부분을 덮는다. 일곱 별이 다 켜진 순간인데 오른쪽 끝 별 둘만 보인다.
+- 11/13 플레이테스트는 지금 UI로 하므로 이 화면이 그대로 나간다.
+- **고치는 법**: 선택 카드 배치 후보(14.11)에서 `BoardView.StepSkyBand`를 피할 사각형으로 더한다(합의한 훅 그대로). 피할 수 없으면 카드를 보드 영역 옆(좌·우)으로 보낸다. U5 선택 화면(56 글리프 + 설명 판)도 같은 규칙을 따른다.
+
+## core 질문: 그려지지 않는 `StarTrailMap` 플레이어 비트를 지워도 되나
+- **된다. 별도 작은 커밋으로 한다.**
+  - 지금 이 값을 읽는 셰이더가 없다. 공유 폴더와 `_Project`의 `.shader`·`.hlsl`·shadergraph를 검색해 확인했다.
+- 계약(15장, Contracts `StarTrailMap`)은 내 소유다. 지울 때 다음을 지킨다.
+  - A 비트 1(걷는 형제 칸)을 쓰는 코드를 지운다. 비트는 **예약(0)**으로 남기고, 다른 뜻으로 재사용하지 않는다.
+  - `_StarTrailState.w`(쓴 걸음)와 `_StarTrailPulse.z`도 예약 0으로 둔다. float4 배치는 그대로 둔다. 아트 셰이더가 나중에 같은 이름을 읽어도 깨지지 않게 하려는 것이다.
+  - 15.5 표의 해당 칸을 "예약(0), 2026-11-12 C로 미사용"으로 고친다(core가 고치고 내가 검토).
+  - `StarTrailMapTests`·`StarTrailTests`의 해당 단정을 "0이다"로 바꾼다.
+
+## 수정 확인: feat/core a1d119a(R1) + 60651bf(StarTrailMap 정리), 재정렬 뒤 bf5dfac = c3b2e2d — **승인**
+
+- 60651bf detached에서 헤드리스 EditMode를 직접 돌렸다. **817/817 통과**.
+- **R1 해결**
+  - `Layout`에 점 배열을 받는 오버로드가 생겼다. 뷰는 `points`·`bandPoints` 두 배열을 재사용하고, 테스트용 순수 함수는 그대로다.
+  - `Refresh`는 투영 결과(플레이 칸 위 끝, 중심 x, 천장, `cellPx`), `StepSky`, 움직임 줄이기가 바뀔 때만 `Rebuild`한다. 그래서 정지 프레임에는 아무것도 다시 쓰지 않는다. `Rebuilds` 카운터 테스트가 이것을 고정한다.
+  - 부르는 동안에는 7번째 별 세 장의 `sizeDelta`만 바꾼다.
+  - `ToCanvas`는 캔버스를 캐시한다.
+- **StarTrailMap 정리**(내 계약 15장)
+  - `PlayerBit` → `ReservedBit`(0, 재사용 금지). `SetPlayer`를 지웠다.
+  - `StateVector`의 w와 `_StarTrailPulse.z`는 예약 0이다. float4 배치는 그대로다.
+  - 15.5 표와 15.6 대체 문구, 변경 기록이 고쳐졌다. 테스트는 "0이다"로 바꿨다.
+  - 검토 때 요청한 그대로다.
+- R2(지금 UI와 U5 선택이 별자리를 피함)는 gameplay-ui 몫이고 병합을 막지 않는다(40a0561 검토 R2).
