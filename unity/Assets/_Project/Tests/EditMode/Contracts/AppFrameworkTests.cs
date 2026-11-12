@@ -73,6 +73,16 @@ namespace SevenSteps.Tests
             Assert.AreEqual("DUR", u.Replay);
             Assert.IsTrue(u.TelemetryOff);
             Assert.IsFalse(LaunchOptions.Parse(null, null).DirectToGame);
+            // -tutorial N / ?tutorial=N (docs/tutorial.md 2.4): one tutorial board at once; with -replay for QA.
+            var t = LaunchOptions.Parse(new[] { "game.exe", "-tutorial", "2", "-replay", "RRR" }, "");
+            Assert.AreEqual(2, t.Tutorial);
+            Assert.AreEqual(0, t.Level);
+            Assert.IsEmpty(t.Warnings);
+            Assert.AreEqual(3, LaunchOptions.Parse(new string[0], "https://x.itch.io/g/index.html?tutorial=3").Tutorial);
+            var bad = LaunchOptions.Parse(new[] { "game.exe", "-tutorial", "0" }, "https://x/?tutorial=x");
+            Assert.AreEqual(0, bad.Tutorial);
+            Assert.AreEqual(2, bad.Warnings.Count, "both ignored with a warning");
+            Assert.AreEqual(0, LaunchOptions.Parse(null, null).Tutorial);
         }
 
         [Test]
