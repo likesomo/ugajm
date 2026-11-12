@@ -8,7 +8,7 @@ namespace SevenSteps.Game
     /// <summary>
     /// The KEEP / SWITCH choice of the minimal UI v3 (docs/architecture.md 4.4, design/art/ui-minimal.md): reads the session
     /// only (SessionUpdate / Presented State), works out what each choice would leave with <see cref="ChoicePreview"/> (pure,
-    /// nothing sent), and drives the HUD cards (HudView.ShowChoice / PlaceChoice) and the board's ring, ghost, dotted line
+    /// nothing sent), and drives the choice view (IChoiceView: the HUD cards or the U5 glyphs) and the board's ring, ghost, dotted line
     /// and knot (BoardView.ShowChoice).
     /// - When: a Present that ends in Choose shows it after Presented (the 7th step plays first); Snap / Rebuild into Choose
     ///   (Undo back, replays) show it at once; any update that is not Choose hides it at once; Feedback leaves it as it is.
@@ -20,7 +20,7 @@ namespace SevenSteps.Game
     public sealed class ChoiceController : IDisposable
     {
         readonly GameSession session;
-        readonly HudView hud;
+        readonly IChoiceView hud;
         readonly BoardView board;
         readonly Action<Command> send;
 
@@ -36,10 +36,10 @@ namespace SevenSteps.Game
         public bool FocusKeep => focusKeep;
         public ChoicePreview Preview => preview;
 
-        public ChoiceController(GameSession session, HudView hud, BoardView board, Action<Command> send)
+        public ChoiceController(GameSession session, IChoiceView hud, BoardView board, Action<Command> send)
         {
             this.session = session ?? throw new ArgumentNullException(nameof(session));
-            this.hud = hud != null ? hud : throw new ArgumentNullException(nameof(hud));
+            this.hud = hud == null || (hud is UnityEngine.Object o && o == null) ? throw new ArgumentNullException(nameof(hud)) : hud;
             this.board = board != null ? board : throw new ArgumentNullException(nameof(board));
             this.send = send ?? throw new ArgumentNullException(nameof(send));
             session.Updated += OnUpdated;

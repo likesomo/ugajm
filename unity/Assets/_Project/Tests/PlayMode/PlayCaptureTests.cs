@@ -111,6 +111,38 @@ namespace SevenSteps.Tests.PlayMode
             runner.enabled = true;
         }
 
+        /// U5 in-game before / after (docs/ui-u5-kit.md 3; gameplay-ui merge requests): stage 4 after one step (HUD) and
+        /// after its 7th step (KEEP / SWITCH), the current UI ("u4-") and -ui5 ("u5-"), KO and EN; the choice also as a first
+        /// visit (explanations on) and with SWITCH focused. `unity.sh playcapture U5InGame`.
+        [UnityTest]
+        public IEnumerator U5InGame()
+        {
+            foreach (var (name, args, explain, focusSwitch) in new (string, string[], bool, bool)[]
+            {
+                ("u4-hud", new[] { "-level", "4", "-replay", "D" }, false, false),
+                ("u5-hud", new[] { "-ui5", "-level", "4", "-replay", "D" }, false, false),
+                ("u4-choice", new[] { "-level", "4", "-replay", "DURRRRR" }, false, false),
+                ("u5-choice", new[] { "-ui5", "-level", "4", "-replay", "DURRRRR" }, false, false),
+                ("u5-choice-first", new[] { "-ui5", "-level", "4", "-replay", "DURRRRR" }, true, false),
+                ("u5-choice-switch", new[] { "-ui5", "-level", "4", "-replay", "DURRRRR" }, false, true),
+                ("u4-choice-en", new[] { "-lang", "en", "-level", "4", "-replay", "DURRRRR" }, true, false),
+                ("u5-choice-en", new[] { "-ui5", "-lang", "en", "-level", "4", "-replay", "DURRRRR" }, true, false),
+                ("u5-hud-en", new[] { "-ui5", "-lang", "en", "-level", "4", "-replay", "D" }, false, false),
+            })
+            {
+                PlayEnv.Reset();
+                yield return Start(AppState.Game, AppScenes.Game, args);
+                var game = Object.FindAnyObjectByType<GameController>();
+                float t0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - t0 < 1f) yield return null; // the replay snap and the HUD refresh
+                if (explain) { game.Board.Choice.ExplainChoices = () => true; game.Board.Choice.Refresh(); }
+                if (focusSwitch) game.Board.Choice.Focus(false);
+                var px = new Pixels();
+                yield return Capture(name, px);
+                AssertVaried(name, px.Value);
+            }
+        }
+
         // ---------- ----------
 
         static IEnumerator Start(AppState state, string scene, params string[] args)

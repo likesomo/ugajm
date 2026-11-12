@@ -117,7 +117,7 @@ namespace SevenSteps.Game.UI.U5
             var canvas = ((RectTransform)r.parent).rect.size;
             RectTransform owner = anchors.TryGetValue(tip.Owner, out var a) && a != null ? a
                 : tip.Owner is Component c ? (RectTransform)c.transform : null;
-            var spot = owner != null ? Place(OwnerRect(owner, (RectTransform)r.parent), size, canvas) : new Rect((canvas.x - size.x) / 2, Safe, size.x, size.y);
+            var spot = owner != null ? Place(OwnerRect(owner, (RectTransform)r.parent), size, canvas, Avoid?.Invoke()) : new Rect((canvas.x - size.x) / 2, Safe, size.x, size.y);
             r.anchoredPosition = new Vector2(spot.x, -spot.y);
             gameObject.SetActive(true);
             transform.SetAsLastSibling();
@@ -157,13 +157,57 @@ namespace SevenSteps.Game.UI.U5
 
         /// Where the plate goes for an owner at <paramref name="owner"/> (canvas, top-left origin): centred under it in the
         /// upper half, over it in the lower half, <see cref="Gap"/> away, inside the safe area (pure; tests).
-        public static Rect Place(Rect owner, Vector2 size, Vector2 canvas)
+        public static Rect Place(Rect owner, Vector2 size, Vector2 canvas) => Place(owner, size, canvas, null);
+
+        /// <see cref="Place(Rect, Vector2, Vector2)"/> clear of <paramref name="avoid"/> (the board area, other visible
+        /// buttons; review N1): centred on the preferred side, centred on the other side, then slid just left / right of
+        /// what it crosses while it still touches the owner's column (it must read as that button's words). Nothing clear:
+        /// the plain preferred spot (a passing tip may then cover the board edge).
+        public static Rect Place(Rect owner, Vector2 size, Vector2 canvas, IReadOnlyList<Rect> avoid)
         {
+            float maxX = Mathf.Max(Safe, canvas.x - Safe - size.x), maxY = Mathf.Max(Safe, canvas.y - Safe - size.y);
             bool under = owner.center.y < canvas.y / 2;
-            float y = under ? owner.yMax + Gap : owner.yMin - Gap - size.y;
-            float x = Mathf.Clamp(owner.center.x - size.x / 2, Safe, Mathf.Max(Safe, canvas.x - Safe - size.x));
-            y = Mathf.Clamp(y, Safe, Mathf.Max(Safe, canvas.y - Safe - size.y));
-            return new Rect(x, y, size.x, size.y);
+            float centred = Mathf.Clamp(owner.center.x - size.x / 2, Safe, maxX);
+            var ys = new List<float>();
+            foreach (bool below in new[] { under, !under })
+            {
+                float y = below ? owner.yMax + Gap : owner.yMin - Gap - size.y;
+                if (y >= Safe - 0.01f && y <= maxY + 0.01f) ys.Add(y);
+            }
+            var first = new Rect(centred, ys.Count > 0 ? ys[0] : Mathf.Clamp(under ? owner.yMax + Gap : owner.yMin - Gap - size.y, Safe, maxY), size.x, size.y);
+            foreach (float y in ys)
+            {
+                var r = new Rect(centred, y, size.x, size.y);
+                if (Clear(r, avoid)) return r;
+            }
+            if (avoid == null) return first;
+            foreach (float y in ys)
+            {
+                Rect? best = null;
+                float bestD = float.MaxValue;
+                foreach (var a in avoid)
+                    foreach (float x in new[] { a.xMin - Gap - size.x, a.xMax + Gap, Safe, maxX })
+                    {
+                        if (x < Safe - 0.01f || x > maxX + 0.01f) continue;
+                        var r = new Rect(x, y, size.x, size.y);
+                        if (r.xMax < owner.xMin || r.xMin > owner.xMax || !Clear(r, avoid)) continue; // still under / over the owner
+                        float d = Mathf.Abs(r.center.x - owner.center.x);
+                        if (d < bestD) { bestD = d; best = r; }
+                    }
+                if (best.HasValue) return best.Value;
+            }
+            return first;
         }
+
+        static bool Clear(Rect r, IReadOnlyList<Rect> avoid)
+        {
+            if (avoid == null) return true;
+            foreach (var a in avoid) if (a.width > 0 && a.height > 0 && a.Overlaps(r)) return false;
+            return true;
+        }
+
+        /// Areas the plate keeps clear of (canvas units, top-left origin), asked each time it moves: the board area and
+        /// the buttons shown around it. Set by the screen that owns the plate.
+        public Func<IReadOnlyList<Rect>> Avoid;
     }
 }

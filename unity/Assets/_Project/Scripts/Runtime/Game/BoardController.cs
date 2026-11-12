@@ -101,6 +101,7 @@ namespace SevenSteps.Game
             session.Updated += OnSessionUpdated;
             session.Presented += OnPresented;
             if (telemetry is HttpTelemetry http) recorder = new TelemetryRecorder(this, session, http);
+            choiceView = hud;
             choice = new ChoiceController(session, hud, board, Send);
             // Accessibility (docs 11.3.2): step numbers and reduce motion follow the settings, also when changed while playing.
             board.StepNumbers = hud.StepNumbers = save.Settings.showStepNumbers;
@@ -136,6 +137,22 @@ namespace SevenSteps.Game
         ChoiceController choice;
         /// The KEEP / SWITCH cards, ghosts and focus (docs 4.4). The scene root sets its tutorial funcs.
         public ChoiceController Choice => choice;
+        IChoiceView choiceView;
+
+        /// U5 (docs/ui-u5-kit.md 3): the 7th-step choice on <paramref name="view"/> instead of the HUD cards. Call once after
+        /// Init, before the scene root sets Choice.ExplainChoices / ShowGuide (a new ChoiceController is made).
+        public void UseChoiceView(IChoiceView view)
+        {
+            if (view == null || (view is UnityEngine.Object o && o == null)) throw new ArgumentNullException(nameof(view));
+            if (choice == null) throw new InvalidOperationException("UseChoiceView before Init");
+            if (ReferenceEquals(view, choiceView)) return;
+            choice.Dispose();
+            choiceView = view;
+            choice = new ChoiceController(session, view, board, Send);
+        }
+
+        /// After the HUD redrew from the state (stage, its text in the UI language): a second HUD (U5) follows it.
+        public event Action<State, int, LevelTextDto> HudRefreshed;
 
         /// The board view, for the journey transitions' hooks (BoardView.CameraHeld, DetachSnapshot, BoardRoot; scene-flow).
         public BoardView View => board;
@@ -404,7 +421,7 @@ namespace SevenSteps.Game
                     audio.Bump();
                     board.Bump(FirstAt(u.Result, GameEventType.Bump));
                 }
-                else if (MessagePresenter.NeedsChoice(u)) hud.NudgeChoice();
+                else if (MessagePresenter.NeedsChoice(u)) choiceView.NudgeChoice();
             }
             else if (u.Kind != SessionUpdateKind.Rebuild && u.Result != null) audio.Play(u.Result);
 
@@ -438,6 +455,7 @@ namespace SevenSteps.Game
         {
             var text = LevelCatalog.TextOf(loadedStage, loc.Current); // stage name and hint in the UI language (13.5)
             hud.Refresh(session.State, loadedStage, text, messages.Current);
+            HudRefreshed?.Invoke(session.State, loadedStage, text);
         }
     }
 }
