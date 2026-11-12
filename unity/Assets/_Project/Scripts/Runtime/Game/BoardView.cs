@@ -43,6 +43,7 @@ namespace SevenSteps.Game
         ChapterPreset chapter; // material overrides for the stage being drawn; null = none (12.8)
         CameraRig? rigOverride;
         RectTransform labelLayer;
+        Canvas labelCanvas;
         Camera cam;
         float fittedAspect;
 
@@ -113,6 +114,7 @@ namespace SevenSteps.Game
         {
             set = tileSet;
             this.labelLayer = labelLayer;
+            labelCanvas = null;
             this.cam = cam;
             rigOverride = cameraOverride;
             if (marks == null && labelLayer != null)
@@ -134,7 +136,8 @@ namespace SevenSteps.Game
         {
             if (cam == null) return Vector2.zero;
             // Overlay canvas: no UI camera. Screen Space - Camera (the headless capture switches overlays to it): its camera.
-            var canvas = labelLayer.GetComponentInParent<Canvas>();
+            if (labelCanvas == null) labelCanvas = labelLayer.GetComponentInParent<Canvas>(); // the layer never changes canvas
+            var canvas = labelCanvas;
             var uiCam = canvas != null && canvas.rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.rootCanvas.worldCamera : null;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(labelLayer, cam.WorldToScreenPoint(world), uiCam, out var local);
             return local;

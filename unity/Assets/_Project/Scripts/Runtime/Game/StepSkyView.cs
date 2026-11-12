@@ -44,10 +44,17 @@ namespace SevenSteps.Game
         /// under (the HUD top band); <paramref name="cellPx"/>: a cell's size on the canvas.
         /// Above the playable cells always wins: if the band is too thin even for flat MinStar stars, they sit just above
         /// the playable cells and may reach into the HUD band (never over the board).
-        public static Placement Layout(float playableTop, float centreX, float ceiling, float cellPx)
+        public static Placement Layout(float playableTop, float centreX, float ceiling, float cellPx) =>
+            Layout(playableTop, centreX, ceiling, cellPx, new Vector2[Rules.Steps]);
+
+        /// Same layout written into <paramref name="points"/> (length Rules.Steps), which the placement then holds: the
+        /// view reuses one array, no allocation per layout (architect R1, 2026-11-12).
+        public static Placement Layout(float playableTop, float centreX, float ceiling, float cellPx, Vector2[] points)
         {
             if (float.IsNaN(playableTop) || float.IsNaN(centreX) || float.IsNaN(ceiling)) throw new ArgumentException("NaN layout input");
             if (!(cellPx > 0)) throw new ArgumentOutOfRangeException(nameof(cellPx), cellPx, "positive");
+            if (points == null) throw new ArgumentNullException(nameof(points));
+            if (points.Length != Rules.Steps) throw new ArgumentException($"{Rules.Steps} points", nameof(points));
             float margin = Mathf.Max(6f, 0.08f * cellPx);
             float size = Mathf.Clamp(0.34f * cellPx, Readable, Star);
             float rise = Rise;
@@ -60,19 +67,19 @@ namespace SevenSteps.Game
             float spare = room - (size * (0.5f + 0.5f * PulseGrow) + rise);
             float baseY = floor + size * 0.5f + Mathf.Clamp(spare * 0.5f, 0f, Lift * cellPx);
             float step = size + Gap;
-            var pts = new Vector2[Rules.Steps];
             for (int k = 0; k < Rules.Steps; k++)
             {
                 float t = k / (Rules.Steps - 1f);
-                pts[k] = new Vector2(centreX + (t - 0.5f) * step * (Rules.Steps - 1), baseY + rise * Mathf.Sin(Mathf.PI * t));
+                points[k] = new Vector2(centreX + (t - 0.5f) * step * (Rules.Steps - 1), baseY + rise * Mathf.Sin(Mathf.PI * t));
             }
-            return new Placement(pts, size);
+            return new Placement(points, size);
         }
 
         RectTransform layer;
         Func<Vector3, Vector2> toCanvas;
         readonly Image[] shadow = new Image[Rules.Steps], outer = new Image[Rules.Steps], inner = new Image[Rules.Steps];
         readonly Image[] links = new Image[Rules.Steps - 1];
+        readonly Vector2[] points = new Vector2[Rules.Steps], bandPoints = new Vector2[Rules.Steps];
         Image calm;
         StepSky sky;
         bool reduceMotion;
@@ -80,12 +87,20 @@ namespace SevenSteps.Game
         float cellPx = 77f;
         Placement placed;
 
+        // What the drawn marks were built from: the marks are rewritten only when one of these changes (architect R1).
+        bool drawnOn, dirty = true;
+        StepSky drawnSky;
+        bool drawnReduce;
+        float drawnTop, drawnCx, drawnCeiling, drawnCell;
+
         /// The current sky and where its stars are (tests, captures).
         public StepSky Sky => sky;
         public bool Shown => outer[0] != null && outer[0].enabled;
         public Placement Placed => placed;
         public bool StarLit(int k) => inner[k].color == Ui.Gold;
         public bool LinkShown(int k) => links[k].enabled;
+        /// Times the marks were rewritten (tests: a still frame rewrites nothing).
+        public int Rebuilds { get; private set; }
 
         /// <param name="toCanvas">World point → anchored position on <paramref name="layer"/> (canvas units).</param>
         public void Init(RectTransform layer, Func<Vector3, Vector2> toCanvas)
@@ -100,6 +115,8 @@ namespace SevenSteps.Game
                 inner[k] = Make($"Sky Star {k + 1} Fill", Ui.StarShape);
             }
             calm = Make("Sky Star 7 Calm", Ui.StarShape);
+            calm.transform.SetSiblingIndex(shadow[Rules.Steps - 1].transform.GetSiblingIndex());
+            dirty = true;
             Refresh();
         }
 
@@ -131,18 +148,20 @@ namespace SevenSteps.Game
 
         void LateUpdate() => Refresh();
 
-        /// Layout for the current board and camera (projects the playable box now).
-        Placement Place()
+        /// The playable box projected now: its top (canvas y) and the board centre's x. Covers camera moves and screen size.
+        void Project(out float top, out float cx)
         {
-            float top = float.MinValue;
+            top = float.MinValue;
             for (int c = 0; c < 8; c++)
             {
                 var p = toCanvas(board.center + Vector3.Scale(board.extents,
                     new Vector3((c & 1) == 0 ? -1 : 1, (c & 2) == 0 ? -1 : 1, (c & 4) == 0 ? -1 : 1)));
                 top = Mathf.Max(top, p.y);
             }
-            return Layout(top, toCanvas(board.center).x, layer.rect.height * 0.5f - HudTopBand, cellPx);
+            cx = toCanvas(board.center).x;
         }
+
+        float Ceiling => layer.rect.height * 0.5f - HudTopBand;
 
         /// The box the constellation takes on the HUD canvas (canvas units, top-left origin, the calling pulse and the star
         /// outlines included, grown by 8), or a zero rect when no sky is shown. UI that must not cover it avoids it
@@ -150,52 +169,75 @@ namespace SevenSteps.Game
         public Rect Band()
         {
             if (layer == null || !sky.Shown || board.size == Vector3.zero) return default;
-            var p = Place();
+            Project(out float top, out float cx);
+            var p = Layout(top, cx, Ceiling, cellPx, bandPoints);
             float half = 0.5f * p.Size * Mathf.Max(PulseGrow, Shadow) + 8f;
             float x0 = p.Points[0].x - half, x1 = p.Points[Rules.Steps - 1].x + half;
             float w = layer.rect.width, h = layer.rect.height;
             return Rect.MinMaxRect(x0 + w * 0.5f, h * 0.5f - (p.Top + 8f), x1 + w * 0.5f, h * 0.5f - (p.Bottom - 8f));
         }
 
+        static bool Same(float a, float b) => Mathf.Abs(a - b) < 0.01f;
+
         void Refresh()
         {
             if (layer == null) return;
             bool on = sky.Shown && board.size != Vector3.zero;
+            float top = 0f, cx = 0f, ceiling = 0f;
+            if (on) { Project(out top, out cx); ceiling = Ceiling; }
+            bool changed = dirty || on != drawnOn || (on && (!sky.Equals(drawnSky) || reduceMotion != drawnReduce
+                || !Same(top, drawnTop) || !Same(cx, drawnCx) || !Same(ceiling, drawnCeiling) || !Same(cellPx, drawnCell)));
+            if (changed)
+            {
+                dirty = false;
+                drawnOn = on; drawnSky = sky; drawnReduce = reduceMotion;
+                drawnTop = top; drawnCx = cx; drawnCeiling = ceiling; drawnCell = cellPx;
+                Rebuild(on, top, cx, ceiling);
+            }
+            // While the 7th star calls, only its size changes per frame.
+            if (on && sky.Calling && !reduceMotion)
+            {
+                float size = placed.Size * Mathf.Lerp(1f, PulseGrow, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 2f * Mathf.PI / PulsePeriod));
+                int k = Rules.Steps - 1;
+                shadow[k].rectTransform.sizeDelta = Vector2.one * (size * Shadow);
+                outer[k].rectTransform.sizeDelta = Vector2.one * size;
+                inner[k].rectTransform.sizeDelta = Vector2.one * (size * Inner);
+            }
+        }
+
+        void Rebuild(bool on, float top, float cx, float ceiling)
+        {
+            Rebuilds++;
             for (int k = 0; k < Rules.Steps; k++) shadow[k].enabled = outer[k].enabled = inner[k].enabled = on;
             for (int k = 0; k < links.Length; k++) links[k].enabled = on && k < sky.Links;
             calm.enabled = on && sky.Calling && reduceMotion;
             if (!on) return;
 
-            placed = Place();
-
+            placed = Layout(top, cx, ceiling, cellPx, points);
             for (int k = 0; k < links.Length; k++)
             {
                 if (!links[k].enabled) continue;
-                Vector2 a = placed.Points[k], b = placed.Points[k + 1], d = b - a;
-                Put(links[k], (a + b) * 0.5f, 0, LineColor, new Vector2(d.magnitude, Line), Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
+                Vector2 a = points[k], b = points[k + 1], d = b - a;
+                Put(links[k], (a + b) * 0.5f, new Vector2(d.magnitude, Line), LineColor, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
             }
             for (int k = 0; k < Rules.Steps; k++)
             {
-                var p = placed.Points[k];
+                var p = points[k];
                 float size = placed.Size;
                 bool calling = sky.Calling && k == Rules.Steps - 1;
-                if (calling && !reduceMotion)
-                    size *= Mathf.Lerp(1f, PulseGrow, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 2f * Mathf.PI / PulsePeriod));
                 bool lit = k < sky.Lit;
-                Put(shadow[k], p, size * Shadow, ShadowColor);
-                Put(outer[k], p, size, lit || calling ? Ui.Gold : EmptyRim);
-                Put(inner[k], p, size * Inner, lit ? Ui.Gold : EmptyFill);
-                if (calling && calm.enabled) Put(calm, p, placed.Size * 1.6f, new Color(Ui.Gold.r, Ui.Gold.g, Ui.Gold.b, 0.7f));
+                Put(shadow[k], p, Vector2.one * (size * Shadow), ShadowColor);
+                Put(outer[k], p, Vector2.one * size, lit || calling ? Ui.Gold : EmptyRim);
+                Put(inner[k], p, Vector2.one * (size * Inner), lit ? Ui.Gold : EmptyFill);
+                if (calling && calm.enabled) Put(calm, p, Vector2.one * (size * 1.6f), new Color(Ui.Gold.r, Ui.Gold.g, Ui.Gold.b, 0.7f));
             }
-            calm.transform.SetSiblingIndex(shadow[Rules.Steps - 1].transform.GetSiblingIndex());
         }
 
-        static void Put(Image img, Vector2 p, float size, Color c, Vector2? rect = null, float angle = 0f)
+        static void Put(Image img, Vector2 p, Vector2 rect, Color c, float angle = 0f)
         {
-            img.enabled = true;
             var r = img.rectTransform;
             r.anchoredPosition = p;
-            r.sizeDelta = rect ?? new Vector2(size, size);
+            r.sizeDelta = rect;
             r.localRotation = Quaternion.Euler(0, 0, angle);
             img.color = c;
         }

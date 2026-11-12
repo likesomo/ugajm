@@ -77,6 +77,53 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void LayoutCanFillACallersArray()
+        {
+            var into = new Vector2[Rules.Steps];
+            var p = StepSkyView.Layout(100f, 0f, 280f, 77f, into);
+            Assert.AreSame(into, p.Points, "no new array (architect R1)");
+            Assert.AreEqual(StepSkyView.Layout(100f, 0f, 280f, 77f).Points, into, "same points as the allocating form");
+            Assert.Throws<ArgumentException>(() => StepSkyView.Layout(100f, 0f, 280f, 77f, new Vector2[6]));
+            Assert.Throws<ArgumentNullException>(() => StepSkyView.Layout(100f, 0f, 280f, 77f, null));
+        }
+
+        /// Architect R1: the marks are rewritten only when the sky, the board box, cellPx, motion or the projection change.
+        [Test]
+        public void RewritesTheMarksOnlyWhenAnInputChanges()
+        {
+            var go = new GameObject("StepSkyTests Layer", typeof(RectTransform));
+            try
+            {
+                var layer = (RectTransform)go.transform;
+                layer.sizeDelta = new Vector2(1280f, 720f);
+                var view = go.AddComponent<StepSkyView>();
+                Vector2 shift = Vector2.zero;
+                view.Init(layer, w => new Vector2(w.x * 77f, w.z * 77f) + shift);
+                var box = new Bounds(Vector3.zero, new Vector3(6f, 1.2f, 4f));
+                int n = view.Rebuilds;
+                view.Show(new StepSky(true, 2, false), box, false, 77f);
+                Assert.AreEqual(n + 1, view.Rebuilds, "shown");
+                Assert.IsTrue(view.Shown);
+                view.Show(new StepSky(true, 2, false), box, false, 77f);
+                Assert.AreEqual(n + 1, view.Rebuilds, "same inputs: nothing rewritten");
+                view.Show(new StepSky(true, 3, false), box, false, 77f);
+                Assert.AreEqual(n + 2, view.Rebuilds, "a step");
+                Assert.IsTrue(view.StarLit(2));
+                Assert.IsTrue(view.LinkShown(1));
+                shift = new Vector2(0f, 5f);
+                view.Show(new StepSky(true, 3, false), box, false, 77f);
+                Assert.AreEqual(n + 3, view.Rebuilds, "the camera moved");
+                view.Show(new StepSky(true, 6, true), box, false, 77f);
+                int calling = view.Rebuilds;
+                view.Show(new StepSky(true, 6, true), box, false, 77f);
+                Assert.AreEqual(calling, view.Rebuilds, "the pulse alone rewrites nothing");
+                view.Clear();
+                Assert.IsFalse(view.Shown);
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
+
+        [Test]
         public void ThinBandFlattensThenShrinksButNeverDropsOntoTheBoard()
         {
             var flat = StepSkyView.Layout(240f, 0f, 280f, 77f);
