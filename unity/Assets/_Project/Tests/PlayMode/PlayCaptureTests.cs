@@ -565,6 +565,41 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
+        /// U5 chapter card (lead 2026-11-12): entering a planet from the board shows the planet name and its line only.
+        /// Opening a stage directly enters its chapter, so the card is up right after the load. KO moss, KO + EN frost, and
+        /// the -ui4 card for comparison. `unity.sh playcapture U5ChapterCard` -> u5-chapter-*.png, u4-chapter-frost.png.
+        [UnityTest]
+        public IEnumerator U5ChapterCard()
+        {
+            foreach (var (name, args, u5) in new (string, string[], bool)[]
+            {
+                ("u5-chapter-moss", new[] { "-ui5", "-level", "1" }, true),
+                ("u5-chapter-frost", new[] { "-ui5", "-level", "22" }, true),
+                ("u5-chapter-frost-en", new[] { "-ui5", "-lang", "en", "-level", "22" }, true),
+                ("u4-chapter-frost", new[] { "-ui4", "-level", "22" }, false),
+            })
+            {
+                PlayEnv.Reset();
+                yield return Start(AppState.Game, AppScenes.Game, args);
+                var card = Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ChapterCardView>(FindObjectsInactive.Include);
+                if (u5)
+                {
+                    Assert.IsNotNull(card, name + ": U5 builds the U5 card");
+                    float t0 = Time.realtimeSinceStartup;
+                    while (!card.Visible)
+                    {
+                        Assert.Less(Time.realtimeSinceStartup - t0, 10f, name + ": the card on chapter entry");
+                        yield return null;
+                    }
+                    card.Show(); // restart its 2.5 s so the capture sees it
+                }
+                else Assert.IsNull(card, name + ": -ui4 keeps the old card");
+                var px = new Pixels();
+                yield return Capture(name, px, 0.5f);
+                AssertVaried(name, px.Value);
+            }
+        }
+
         // ---------- ----------
 
         static IEnumerator Start(AppState state, string scene, params string[] args)
