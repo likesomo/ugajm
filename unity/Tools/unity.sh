@@ -170,8 +170,8 @@ case "$cmd" in
     (cd "$REPO" && "$U" -batchmode -projectPath unity -runTests -testPlatform PlayMode       -testFilter "SevenSteps.Tests.PlayMode.PlayCaptureTests${2:+.$2}"       -testResults "$(cygpath -w "$REPO/reports/playcapture-results.xml")" -logFile unity/Logs/batch-playcapture.log) || code=$?
     restore_urp_settings || true
     restore_whitespace_only
-    grep -h "[SevenSteps] Play capture" "$PROJ/Logs/batch-playcapture.log" | sed 's/^.*[SevenSteps]/[SevenSteps]/'
-    summary="$(grep -o '<test-run [^>]*' "$REPO/reports/playcapture-results.xml" 2>/dev/null | grep -o '(total|passed|failed)="[0-9]*"' | tr '
+    grep -hF "[SevenSteps] Play capture" "$PROJ/Logs/batch-playcapture.log" | sed 's/^.*\[SevenSteps\]/[SevenSteps]/' || true
+    summary="$(grep -o '<test-run [^>]*' "$REPO/reports/playcapture-results.xml" 2>/dev/null | grep -oE '(total|passed|failed)="[0-9]*"' | tr '
 ' ' ')"
     echo "[unity.sh] playcapture: ${summary:-no results}"
     grep -o '<test-case [^>]*result="Failed"[^>]*' "$REPO/reports/playcapture-results.xml" 2>/dev/null | grep -o 'fullname="[^"]*"' || true
