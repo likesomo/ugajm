@@ -5,8 +5,8 @@ namespace SevenSteps.Contracts
 {
     /// <summary>
     /// Start options from the command line (desktop) or the page URL (WebGL). Same format as the web prototype:
-    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-settings] [-lang en] [-smoke board|empty] [-newplayer] [-loadDelay 1.5] [-flowcheck] [-titlecheck begin|continue|map] [-newmap|-oldmap] [-journey on|off] [-ui5|-ui4]
-    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1&amp;loadDelay=1.5&amp;settings=1&amp;flowcheck=1&amp;titlecheck=map&amp;newmap=1&amp;journey=0&amp;ui5=1   (docs/telemetry.md section 4)
+    /// desktop  "Seven Steps.exe" -level 8 [-tutorial 2] -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-settings] [-lang en] [-smoke board|empty] [-newplayer] [-loadDelay 1.5] [-flowcheck] [-titlecheck begin|continue|map] [-newmap|-oldmap] [-journey on|off] [-ui5|-ui4]
+    /// WebGL    ?level=8&amp;tutorial=2&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1&amp;loadDelay=1.5&amp;settings=1&amp;flowcheck=1&amp;titlecheck=map&amp;newmap=1&amp;journey=0&amp;ui5=1   (docs/telemetry.md section 4)
     /// Pure parsing: the caller passes Environment.GetCommandLineArgs() and Application.absoluteURL.
     /// Bad values are not exceptions (external input): they are skipped and described in <see cref="Warnings"/>,
     /// which the bootstrap logs (Contracts does not log). Read-only after parsing, except the two editor/once-only changes below.
@@ -15,6 +15,9 @@ namespace SevenSteps.Contracts
     {
         /// 1-based stage, 0 = not given (go to Title).
         public int Level { get; private set; }
+        /// 1-based tutorial board (-tutorial N / ?tutorial=N, docs/tutorial.md 2.4), 0 = not given. Opens that board at once;
+        /// a number past the boards in levels.json is ignored where the boards are loaded (logged there).
+        public int Tutorial { get; private set; }
         /// Move string (U D L R K X) to play once on the start stage. Read it with <see cref="TakeReplay"/>.
         public string Replay { get; private set; } = "";
         public string Screenshot { get; private set; } = "";
@@ -101,6 +104,12 @@ namespace SevenSteps.Contracts
             else warnings.Add($"{source}: level \"{v}\" is not a stage number (1 or more); ignored");
         }
 
+        void SetTutorial(string source, string v)
+        {
+            if (int.TryParse(v, out int n) && n >= 1) Tutorial = n;
+            else warnings.Add($"{source}: tutorial \"{v}\" is not a tutorial board number (1 or more); ignored");
+        }
+
         void SetLanguage(string source, string v)
         {
             if (Languages.TryParse(v, out var lang)) Language = lang;
@@ -184,7 +193,7 @@ namespace SevenSteps.Contracts
                         case "-oldmap": o.NewMap = false; continue;
                         case "-ui5": o.Ui5 = true; continue;
                         case "-ui4": o.Ui5 = false; continue;
-                        case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": case "-loadDelay": case "-titlecheck": case "-savekey": case "-journey": case "-journeycheck": break;
+                        case "-level": case "-tutorial": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": case "-loadDelay": case "-titlecheck": case "-savekey": case "-journey": case "-journeycheck": break;
                         default: continue;
                     }
                     if (k + 1 >= args.Length || args[k + 1].StartsWith("-", StringComparison.Ordinal))
@@ -196,6 +205,7 @@ namespace SevenSteps.Contracts
                     switch (args[k - 1])
                     {
                         case "-level": o.SetLevel("command line", v); break;
+                        case "-tutorial": o.SetTutorial("command line", v); break;
                         case "-replay": o.Replay = v; break;
                         case "-screenshot": o.Screenshot = v; break;
                         case "-telemetry": o.SetTelemetry("command line", v); break;
@@ -219,6 +229,7 @@ namespace SevenSteps.Contracts
                 switch (kv.Substring(0, eq))
                 {
                     case "level": o.SetLevel("url", v); break;
+                    case "tutorial": o.SetTutorial("url", v); break;
                     case "replay": o.Replay = v; break;
                     case "telemetry": o.SetTelemetry("url", v); break;
                     case "lang": o.SetLanguage("url", v); break;
