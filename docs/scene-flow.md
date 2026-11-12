@@ -271,20 +271,27 @@ PlayMode 테스트 항목:
   - 대상: PlayMode 테스트 클래스 `PlayCaptureTests`. `[Explicit]`이라서 보통 `playtest`에서는 돌지 않는다.
   - `-nographics`는 빼야 한다. 카메라 렌더에 그래픽 장치가 필요하기 때문이다.
   - `-executeMethod` 대신 테스트 러너를 쓰는 이유: Play Mode 진입·종료와 시간 제한을 러너가 맡는다. 실행 환경(9.1의 `PlayEnv`: 실행 옵션 주입, 저장 키, 테스트 사이 초기화)도 PlayMode 테스트와 같다.
-- **찍는 법**:
-  1. 활성 카메라를 모두 1280×720 `RenderTexture` 하나에 연결한다.
-  2. Screen Space - Overlay 캔버스를 캡처하는 동안에만 Screen Space - Camera(메인 카메라)로 바꾼다. 이렇게 해야 HUD·타이틀·결과 UI가 RenderTexture에 찍힌다. 끝나면 원래대로 돌린다.
-  3. 1.5초 기다린다(보드 다시 맞추기와 UI 배치가 16:9로 끝나게).
-  4. `Camera.Render()`를 depth 순서로 부르고 `ReadPixels` → PNG로 저장한다.
+- **찍는 법** (캡처 규칙 2026-11-12, 아키텍트 `docs/reviews/2026-11-12-feat-view-40a0561-u5-hud.md` 끝: 캔버스 모드·크기를 먼저 바꾸고 그 뒤에 화면 상태를 만든다):
+  1. 테스트가 씬을 불러오기 **전에** 캡처 장치(`PlayCaptureTests.Rig`)를 설치한다. 씬이 로드될 때(Awake 뒤, Start 앞)와 그 뒤 매 프레임 다음을 한다.
+     - 모든 카메라를 1280×720 `RenderTexture` 하나에 연결한다.
+     - Screen Space - Overlay 루트 캔버스를 Screen Space - Camera로 바꾼다. 이 캔버스들은 씬 밖(y 10000)에 고정된 UI 전용 카메라가 따로 그린다.
+     - 그래서 뷰가 처음 배치될 때부터 캔버스가 1280×720이다.
+     - 움직이는 씬 카메라에 캔버스를 붙이지 않는 이유: 캔버스가 카메라를 한 프레임 늦게 따라가서, 월드 점을 투영해 배치하는 뷰(별지도)가 옛 자세 기준으로 놓인다. 실제 게임의 오버레이 캔버스는 움직이지 않는다.
+  2. 1.5초 기다린다(보드 다시 맞추기와 UI 배치).
+  3. 화면 캔버스마다 크기를 로그에 남긴다. 1280×720이 아니면 실패다.
+  4. 씬 카메라를 depth 순서로 `Camera.Render()`하고, UI 카메라는 자기 투명 RenderTexture에 그린다. 둘을 읽어 UI를 씬 위에 합성하고 PNG로 저장한다.
+     - URP 베이스 카메라 둘이 같은 RenderTexture에 그리면 뒤 카메라가 앞 것을 지운다. 그래서 따로 그려 합성한다.
   - 배치 모드에는 Game 뷰가 없어서 `WaitForEndOfFrame`이 오지 않는다. `ScreenCapture`도 쓰지 않는다. 테스트마다 시간 제한은 120초다.
-- **해상도**: 1280×720 고정이다(RenderTexture 크기).
-- **찍는 화면**: `title`, `game`(1번 스테이지), `game-board`, `game-empty`.
+- **해상도**: 1280×720 고정이다(RenderTexture 크기). 로그 `[SevenSteps] Play capture NAME: canvases ... 1280x720`.
+- **찍는 화면**: `title`, `game`(1번 스테이지), `game-board`, `game-empty`, `map`(-newmap, 첫 행성을 깬 저장), `advance-30`·`advance-60`(전진 연출을 30·60%에서 멈춤). `unity.sh playcapture NAME`으로 하나만 돌릴 수 있다(예: `playcapture Map`).
 - **대조**:
-  - 보통 화면(`title`, `game`)은 한 가지 색이 아니어야 한다. 왼쪽 위 모서리 색과 다른 픽셀이 500 이상이어야 한다.
+  - 보통 화면은 한 가지 색이 아니어야 한다. 왼쪽 위 모서리 색과 다른 픽셀이 500 이상이어야 한다.
   - `game-board`(`SmokeView.Board`: 하늘·행성 끔, 마젠타 배경, UI 숨김)는 보드 영역(가로 30~70%, 세로 33~66%)에서 마젠타와 다른 픽셀이 500 이상이어야 한다.
   - 대조 `game-empty`(`SmokeView.Empty`: 보드까지 숨김)는 같은 영역이 500 미만이어야 한다. 500 이상이면 측정이 망가진 것으로 보고 실패다.
+  - `map`은 지도 행성 일곱이 모두 V7 스프라이트로 그려졌는지도 본다(`GameAssets.planetMapSprites`가 있을 때).
 - **결과**: `reports/playcapture/<이름>.png`, `reports/playcapture-results.xml`, 로그 줄 `[SevenSteps] Play capture ...`.
-- **2026-11-11 첫 결과**: 3/3 통과(테스트 7.5초). `title` 538392, `game` 430625(모서리와 다른 픽셀), `game-board` 70637, `game-empty` 0. 오버레이 UI(타이틀 버튼, 챕터 카드)가 찍힌 것을 확인했다.
+- **2026-11-11 첫 결과**: 3/3 통과(테스트 7.5초). `title` 538392, `game` 430625(모서리와 다른 픽셀), `game-board` 70637, `game-empty` 0.
+- **2026-11-12 규칙 뒤 결과**: 5/5 통과. `game-board` 60158, `game-empty` 0, `map` 7/7 스프라이트. 규칙 전 `map` 캡처(별·길 위치가 어긋남)는 캡처 결함이었다.
 
 기존 `smoke`(플레이어 빌드 리플레이·flowcheck·titlecheck·journey)는 리드의 빌드 확인용으로 남긴다. scene-flow는 같은 확인을 PlayMode 테스트로 옮긴다.
 

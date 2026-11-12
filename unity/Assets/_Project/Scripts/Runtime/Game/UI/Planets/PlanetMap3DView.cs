@@ -75,7 +75,9 @@ namespace SevenSteps.Game.UI.Planets
         /// The planet whose label shows, -1 none (UiLayoutCheck, tests).
         public int LabelShown => label.gameObject.activeSelf ? LabelPlanet() : -1;
 
-        public PlanetMap3DView(Transform uiRoot, PlanetSpace space, PlanetBodySet set, IReadOnlyList<PlanetEntry> planets)
+        /// <param name="sprites">Map planet sprites (V7, GameAssets.PlanetMapSprites): a planet with one is drawn as that sprite, the
+        /// others (and every planet when null) with their <paramref name="set"/> body.</param>
+        public PlanetMap3DView(Transform uiRoot, PlanetSpace space, PlanetBodySet set, IReadOnlyList<PlanetEntry> planets, IPlanetMapSprites sprites = null)
         {
             if (uiRoot == null) throw new ArgumentNullException(nameof(uiRoot));
             this.space = space ?? throw new ArgumentNullException(nameof(space));
@@ -90,6 +92,7 @@ namespace SevenSteps.Game.UI.Planets
                 bodies[i] = PlanetBody.Create(set, planets[i].Key, i, space.World, seated: false);
                 bodies[i].transform.position = PlanetMapLayout.World(PlanetMapLayout.Reference(i, n));
                 bodies[i].transform.localScale = Vector3.one * PlanetMapLayout.BodyScale;
+                if (sprites != null && sprites.TryGetSprite(planets[i].Key, out var sprite)) bodies[i].UseSprite(sprite, space.Camera);
             }
 
             panel = Ui.Rect("PlanetMap3D", uiRoot).Stretch().gameObject;

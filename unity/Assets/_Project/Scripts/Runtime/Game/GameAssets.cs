@@ -26,6 +26,11 @@ namespace SevenSteps.Game
         public UI.UiTheme uiTheme;
         [Tooltip("Stage select v4 planet bodies (meshes, materials; docs/stage-select-transitions.md). Data/PlanetBodies.asset")]
         public UI.Planets.PlanetBodySet planetBodies;
+        [Tooltip("Map planet sprites (V7 cutouts): Data/PlanetMapSpriteSet.asset, an IPlanetMapSprites (Art type). Empty = the planetBodies meshes on the map")]
+        public ScriptableObject planetMapSprites;
+        /// <see cref="planetMapSprites"/> as the map reads it; null when unset. Set but not an IPlanetMapSprites: an error.
+        public UI.Planets.IPlanetMapSprites PlanetMapSprites =>
+            planetMapSprites == null ? null : planetMapSprites as UI.Planets.IPlanetMapSprites ?? throw new System.InvalidOperationException($"[SevenSteps] GameAssets.planetMapSprites ({planetMapSprites.name}) is not an IPlanetMapSprites");
         [Tooltip("U5 icons and sprites (docs/ui-u5-kit.md 1, 1.1): Data/UiIconSet.asset, filled from the Codex manifest; empty entries draw line placeholders")]
         public UI.U5.UiIconSet uiIcons;
 

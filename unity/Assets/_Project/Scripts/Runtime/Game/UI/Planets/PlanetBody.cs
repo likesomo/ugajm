@@ -82,6 +82,44 @@ namespace SevenSteps.Game.UI.Planets
             Renderer.GetPropertyBlock(block);
             block.SetColor("_BaseColor", tint);
             Renderer.SetPropertyBlock(block);
+            if (Impostor != null) Impostor.color = tint;
+        }
+
+        /// The flat sprite drawn instead of the mesh (map V7 cutouts, <see cref="UseSprite"/>); null when the mesh draws.
+        public SpriteRenderer Impostor { get; private set; }
+
+        /// Fraction of the sprite square the V7 planet fills edge to edge (512 px cutouts, a few px of margin).
+        public const float SpriteFill = 0.94f;
+
+        /// Draws the body as <paramref name="sprite"/> facing <paramref name="facing"/> (the map's V7 cutouts) instead of its
+        /// mesh: the same position, scale and <see cref="Radius"/>, so the map layout, its targets and the journey dive are
+        /// unchanged; the planet's width matches the body's diameter. Once per body.
+        public void UseSprite(Sprite sprite, Camera facing)
+        {
+            if (sprite == null) throw new ArgumentNullException(nameof(sprite));
+            if (facing == null) throw new ArgumentNullException(nameof(facing));
+            if (Impostor != null) throw new InvalidOperationException($"PlanetBody {Key}: already drawn with a sprite");
+            var go = new GameObject("Sprite " + Key);
+            go.transform.SetParent(transform, false);
+            Impostor = go.AddComponent<SpriteRenderer>();
+            Impostor.sprite = sprite;
+            Impostor.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            Impostor.receiveShadows = false;
+            float width = sprite.bounds.size.x * SpriteFill;
+            go.transform.localScale = Vector3.one * (2f * radius / Mathf.Max(width, 1e-4f));
+            go.AddComponent<FaceCamera>().Target = facing;
+            Renderer.enabled = false;
+        }
+    }
+
+    /// <summary>Keeps a flat sprite turned to the camera (its rotation, so an orthographic map shows it face on).</summary>
+    public sealed class FaceCamera : MonoBehaviour
+    {
+        public Camera Target;
+
+        void LateUpdate()
+        {
+            if (Target != null) transform.rotation = Target.transform.rotation;
         }
     }
 }
