@@ -91,7 +91,7 @@ namespace SevenSteps.Game.UI
                 if (assets.planetBodies == null) throw new MissingReferenceException($"[SevenSteps] {name}: GameAssets.planetBodies is not set (Data/PlanetBodies.asset) and the new map is on");
                 if (cam == null) throw new MissingReferenceException($"[SevenSteps] {name}: the Title scene has no Main Camera (the new map draws planet bodies)");
                 planetSpace = new PlanetSpace(cam, assets.background);
-                var map3d = new PlanetMap3DView(root, planetSpace, assets.planetBodies, planets);
+                var map3d = new PlanetMap3DView(root, planetSpace, assets.planetBodies, planets, assets.PlanetMapSprites);
                 var surface = new PlanetSurfaceView(root, planetSpace, assets.planetBodies, planets, map3d.SetBodiesVisible);
                 stageViews = new StageSelectViews(map3d, surface, overlays = new OverlayStack());
             }

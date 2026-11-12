@@ -14,7 +14,7 @@ using Object = UnityEngine.Object;
 namespace SevenSteps.Tests.PlayMode
 {
     /// <summary>
-    /// Play Mode capture, headless (docs/scene-flow.md 9.2; user rule 2026-11-11: batch mode only, no Editor GUI, no player
+    /// Play Mode capture, headless (docs/scene-flow.md 9.2, capture rule 2026-11-12: the Rig switches canvases before the scene builds; user rule 2026-11-11: batch mode only, no Editor GUI, no player
     /// build). Runs inside `unity.sh playcapture` = -batchmode -runTests -testPlatform PlayMode with a filter on this class
     /// ([Explicit]: the normal `playtest` run skips it). Batch mode has a graphics device but no Game view, so every active
     /// camera renders (Camera.Render, depth order) into one 1280x720 RenderTexture, and Screen Space - Overlay canvases are switched to Screen Space -
@@ -91,6 +91,30 @@ namespace SevenSteps.Tests.PlayMode
             Debug.Log($"[SevenSteps] Play capture board: {b} board pixels, empty control {e} (min {BoardMin})");
             Assert.Less(e, BoardMin, "the empty control must measure below the threshold, or the measurement is broken");
             Assert.GreaterOrEqual(b, BoardMin, "the board is drawn");
+        }
+
+        /// The v4 star map (-newmap) with a save where the first planet is cleared (lit trail, stars, the brothers' dots).
+        [UnityTest]
+        public IEnumerator Map()
+        {
+            yield return Start(AppState.Title, AppScenes.Title, "-newmap");
+            var flow = Services.Get<AppFlow>();
+            var save = Services.Get<SaveSystem>();
+            var levels = LevelCatalog.Load(Object.FindAnyObjectByType<SevenSteps.Game.UI.TitleScreen>().assets);
+            for (int s = 0; s < levels.Length && LevelCatalog.ChapterKeyOf(s) == LevelCatalog.ChapterKeyOf(0); s++)
+                save.Progress.MarkCleared(levels[s], levels[s].Bodies, 3);
+            flow.Go(AppState.StageSelect);
+            yield return PlayEnv.WaitForState(AppState.StageSelect, AppScenes.Title);
+            var assets = Object.FindAnyObjectByType<SevenSteps.Game.UI.TitleScreen>().assets;
+            Debug.Log($"[SevenSteps] Play capture map: planetMapSprites = {(assets.planetMapSprites != null ? assets.planetMapSprites.name : "none")}");
+            var px = new Pixels();
+            yield return Capture("map", px);
+            AssertVaried("map", px.Value);
+            // V7 (user choice 2026-11-12): every map planet with a sprite in the set is drawn as that sprite, not its mesh.
+            var bodies = Object.FindObjectsByType<SevenSteps.Game.UI.Planets.PlanetBody>(FindObjectsInactive.Exclude);
+            int sprites = bodies.Count(b => b.Impostor != null && b.Impostor.enabled && !b.Renderer.enabled);
+            Debug.Log($"[SevenSteps] Play capture map: {sprites} of {bodies.Length} planets drawn as sprites");
+            if (assets.PlanetMapSprites != null) Assert.AreEqual(bodies.Length, sprites, "every map planet is a V7 sprite");
         }
 
         /// The journey advance (stage 1 cleared, -newmap) frozen part-way: the JourneyRunner is disabled after about 0.45 s and
@@ -206,6 +230,7 @@ namespace SevenSteps.Tests.PlayMode
 
         static IEnumerator Start(AppState state, string scene, params string[] args)
         {
+            Rig.Ensure(); // before the scene loads: views lay out at 1280x720 from the start (capture rule 2026-11-12)
             Bootstrap.UseLaunchOptionsForNextRun(PlayEnv.Launch(args));
             SceneManager.LoadScene(AppScenes.Boot, LoadSceneMode.Single);
             yield return PlayEnv.WaitForState(state, scene);
@@ -213,66 +238,143 @@ namespace SevenSteps.Tests.PlayMode
 
         sealed class Pixels { public Color32[] Value; }
 
-        /// Renders every active camera (depth order) into a 1280x720 texture with the overlay UI on the main camera, settles,
-        /// reads it back and saves NAME.png.
-        static IEnumerator Capture(string name, Pixels result, float settle = SettleSeconds, Action afterSettle = null)
+        /// <summary>
+        /// The capture setup, in place before a scene loads and kept while it plays (architect capture rule 2026-11-12,
+        /// docs/reviews/2026-11-12-feat-view-40a0561-u5-hud.md: switch the canvas mode and size first, then build the screen
+        /// state). Each scene load (after Awake, before Start) and every frame after: every camera renders into one 1280x720
+        /// texture, and every Screen Space - Overlay root canvas becomes Screen Space - Camera on the main camera, so canvases
+        /// are 1280x720 when the views place themselves. A DontDestroyOnLoad object; PlayEnv.Reset removes it with the rest.
+        /// </summary>
+        sealed class Rig : MonoBehaviour
         {
-            var rt = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32);
-            var cams = Object.FindObjectsByType<Camera>(FindObjectsInactive.Exclude).Where(c => c.enabled).OrderBy(c => c.depth).ToList();
-            var main = Camera.main != null ? Camera.main : cams.LastOrDefault();
-            Assert.IsNotNull(main, "a camera to capture");
-            var canvases = new List<(Canvas canvas, RenderMode mode, Camera cam, float plane)>();
-            try
+            public const string ObjectName = "PlayCapture rig";
+            public static RenderTexture Target { get; private set; }
+            /// Draws the converted canvases: still, far from the scene (y 10000), UI layer only, last. A canvas on a moving
+            /// scene camera would lag a frame behind it, and views that project world points (the star map) would place
+            /// against the old pose; an overlay canvas never moves, and neither does this one.
+            static Camera ui;
+            /// The UI camera's own texture, cleared to transparent: composited over the scene on read (a second URP base camera
+            /// on the scene texture does not keep what the first drew).
+            public static RenderTexture UiTarget { get; private set; }
+            public static Camera UiCamera => ui;
+
+            public static void Ensure()
             {
-                foreach (var c in cams) c.targetTexture = rt;
-                foreach (var cv in Object.FindObjectsByType<Canvas>(FindObjectsInactive.Exclude))
+                if (FindAnyObjectByType<Rig>() != null) return;
+                Target = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32) { name = "PlayCapture" };
+                UiTarget = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32) { name = "PlayCapture UI" };
+                var go = new GameObject(ObjectName);
+                DontDestroyOnLoad(go);
+                go.AddComponent<Rig>();
+                var camGo = new GameObject("PlayCapture UI camera");
+                camGo.transform.SetParent(go.transform, false);
+                camGo.transform.position = new Vector3(0, 10000, 0);
+                ui = camGo.AddComponent<Camera>();
+                ui.orthographic = true;
+                ui.cullingMask = 1 << 5; // UI
+                ui.clearFlags = CameraClearFlags.SolidColor;
+                ui.backgroundColor = new Color(0, 0, 0, 0);
+                ui.depth = 1000;
+                ui.nearClipPlane = 0.1f;
+                ui.farClipPlane = 50f;
+                ui.targetTexture = UiTarget;
+                SceneManager.sceneLoaded += OnLoaded;
+            }
+
+            static void OnLoaded(Scene s, LoadSceneMode m) => Apply();
+            void LateUpdate() => Apply();
+
+            void OnDestroy()
+            {
+                SceneManager.sceneLoaded -= OnLoaded;
+                foreach (var c in FindObjectsByType<Camera>(FindObjectsInactive.Include))
+                    if (c.targetTexture != null && (c.targetTexture == Target || c.targetTexture == UiTarget)) c.targetTexture = null;
+                if (Target != null) { Target.Release(); Destroy(Target); }
+                if (UiTarget != null) { UiTarget.Release(); Destroy(UiTarget); }
+                UiTarget = null;
+                Target = null;
+                ui = null;
+            }
+
+            public static void Apply()
+            {
+                if (Target == null || ui == null) return;
+                foreach (var c in FindObjectsByType<Camera>(FindObjectsInactive.Include))
+                    if (c.targetTexture == null) c.targetTexture = Target;
+                foreach (var cv in FindObjectsByType<Canvas>(FindObjectsInactive.Include))
                     if (cv.isRootCanvas && cv.renderMode == RenderMode.ScreenSpaceOverlay)
                     {
-                        canvases.Add((cv, cv.renderMode, cv.worldCamera, cv.planeDistance));
                         cv.renderMode = RenderMode.ScreenSpaceCamera;
-                        cv.worldCamera = main;
-                        cv.planeDistance = main.nearClipPlane + 0.05f + 0.001f * (1000 - Mathf.Clamp(cv.sortingOrder, -999, 999)); // higher order nearer
+                        cv.worldCamera = ui;
+                        cv.planeDistance = ui.nearClipPlane + 0.05f + 0.001f * (1000 - Mathf.Clamp(cv.sortingOrder, -999, 999)); // higher order nearer
                     }
-                float t0 = Time.realtimeSinceStartup;
-                while (Time.realtimeSinceStartup - t0 < settle) yield return null; // board refit and UI layout at 16:9
-                // Capture rule (architect, 2026-11-12): the canvases must be the 1280x720 reference now, and what was placed
-                // on the smaller batch-mode canvas before the switch (the KEEP / SWITCH choice, afterSettle) is placed again.
-                foreach (var (cv, _, _, _) in canvases)
-                {
-                    var size = ((RectTransform)cv.transform).rect.size;
-                    Assert.That(Mathf.Abs(size.x - Width) < 1f && Mathf.Abs(size.y - Height) < 1f, $"canvas {cv.name} is {size}, not {Width}x{Height}");
-                }
-                Debug.Log($"[SevenSteps] Play capture {name}: canvases {Width}x{Height}");
-                var gc = Object.FindAnyObjectByType<GameController>();
-                if (gc != null && gc.Board != null && gc.Board.Choice != null) gc.Board.Choice.Refresh();
-                afterSettle?.Invoke();
-                yield return null;
-                yield return null;
-                // Batch mode has no Game view: WaitForEndOfFrame never comes. Render each camera into the texture now, in
-                // depth order, with its own clear flags (as the screen would composite them).
-                Canvas.ForceUpdateCanvases();
-                foreach (var c in cams) if (c != null && c.isActiveAndEnabled) c.Render();
+                    else if (cv.isRootCanvas && cv.renderMode == RenderMode.ScreenSpaceCamera && cv.worldCamera == null) cv.worldCamera = ui;
+            }
+        }
 
-                var prev = RenderTexture.active;
-                RenderTexture.active = rt;
-                var tex = new Texture2D(Width, Height, TextureFormat.RGBA32, false);
-                tex.ReadPixels(new Rect(0, 0, Width, Height), 0, 0);
-                tex.Apply();
-                RenderTexture.active = prev;
-                Directory.CreateDirectory(OutDir);
-                File.WriteAllBytes(Path.Combine(OutDir, name + ".png"), tex.EncodeToPNG());
-                result.Value = tex.GetPixels32();
-                Object.Destroy(tex);
-                Debug.Log($"[SevenSteps] Play capture {name}: {Path.Combine(OutDir, name + ".png")}");
-            }
-            finally
+        /// Waits <paramref name="settle"/>, checks that every screen canvas is 1280x720 (logged; another size fails), renders
+        /// every active camera into the rig's texture in depth order, reads it back and saves NAME.png. Views that place
+        /// themselves when shown are placed again before the shot (the KEEP / SWITCH choice; <paramref name="afterSettle"/>
+        /// for a test's own measurements on the capture canvas).
+        static IEnumerator Capture(string name, Pixels result, float settle = SettleSeconds, Action afterSettle = null)
+        {
+            Assert.IsNotNull(Rig.Target, "the capture rig is installed (Start)");
+            float t0 = Time.realtimeSinceStartup;
+            while (Time.realtimeSinceStartup - t0 < settle) yield return null; // board refit and UI layout settle
+            Rig.Apply();
+            Canvas.ForceUpdateCanvases();
+            var sizes = new List<string>();
+            foreach (var cv in Object.FindObjectsByType<Canvas>(FindObjectsInactive.Exclude))
             {
-                foreach (var c in cams) if (c != null) c.targetTexture = null;
-                foreach (var (cv, mode, cam, plane) in canvases)
-                    if (cv != null) { cv.renderMode = mode; cv.worldCamera = cam; cv.planeDistance = plane; }
-                rt.Release();
-                Object.Destroy(rt);
+                if (!cv.isRootCanvas || cv.renderMode == RenderMode.WorldSpace || !cv.enabled) continue;
+                var px = cv.pixelRect.size;
+                sizes.Add($"{cv.name} {px.x:0}x{px.y:0}");
+                Assert.IsTrue(Mathf.Abs(px.x - Width) < 0.5f && Mathf.Abs(px.y - Height) < 0.5f,
+                    $"capture {name}: canvas {cv.name} is {px.x:0}x{px.y:0}, not {Width}x{Height} (capture rule 2026-11-12)");
             }
+            Debug.Log($"[SevenSteps] Play capture {name}: canvases {string.Join(", ", sizes)}");
+            var gc = Object.FindAnyObjectByType<GameController>();
+            if (gc != null && gc.Board != null && gc.Board.Choice != null) gc.Board.Choice.Refresh();
+            afterSettle?.Invoke();
+            yield return null;
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            // Batch mode has no Game view: WaitForEndOfFrame never comes. Render each camera into the texture now, in depth
+            // order, with its own clear flags (as the screen would composite them).
+            foreach (var c in Object.FindObjectsByType<Camera>(FindObjectsInactive.Exclude).Where(c => c.isActiveAndEnabled && c != Rig.UiCamera).OrderBy(c => c.depth))
+                c.Render();
+            Rig.UiCamera.Render();
+            var tex = Read(Rig.Target);
+            var ui = Read(Rig.UiTarget);
+            // UI over the scene. UI shaders blend alpha too (SrcAlpha, OneMinusSrcAlpha) onto a clear target: rgb holds
+            // rgb x a and alpha holds a x a, so the coverage is sqrt(alpha).
+            var scene = tex.GetPixels32();
+            var over = ui.GetPixels32();
+            for (int i = 0; i < scene.Length; i++)
+            {
+                float a = Mathf.Sqrt(over[i].a / 255f);
+                scene[i] = new Color32((byte)Mathf.Min(255, over[i].r + scene[i].r * (1 - a)), (byte)Mathf.Min(255, over[i].g + scene[i].g * (1 - a)),
+                    (byte)Mathf.Min(255, over[i].b + scene[i].b * (1 - a)), 255);
+            }
+            tex.SetPixels32(scene);
+            tex.Apply();
+            Object.Destroy(ui);
+            Directory.CreateDirectory(OutDir);
+            File.WriteAllBytes(Path.Combine(OutDir, name + ".png"), tex.EncodeToPNG());
+            result.Value = tex.GetPixels32();
+            Object.Destroy(tex);
+            Debug.Log($"[SevenSteps] Play capture {name}: {Path.Combine(OutDir, name + ".png")}");
+        }
+
+        static Texture2D Read(RenderTexture rt)
+        {
+            var prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(Width, Height, TextureFormat.RGBA32, false);
+            tex.ReadPixels(new Rect(0, 0, Width, Height), 0, 0);
+            tex.Apply();
+            RenderTexture.active = prev;
+            return tex;
         }
 
         static void AssertVaried(string name, Color32[] px)
