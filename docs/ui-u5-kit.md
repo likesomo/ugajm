@@ -32,13 +32,23 @@
 - **들어오는 것**: PNG + `.meta`, 그리고 manifest `Art/UI/U5/u5-icons.json`(id → 경로·GUID).
   - 내용: 48 아이콘, KEEP·SWITCH 56 글리프, 시작 삼각형, 별자리 지도 글리프(scene-flow), 움직임 줄이기 토글, 걸음 별 C 스프라이트(별·연결선), 설명 판, 목도리 점, 별돌(켜짐·꺼짐).
   - PNG는 바이너리 규칙대로 공유 폴더 쪽이다(`Assets/Shared/...`). git에는 텍스트(manifest, 필요하면 `.meta`)만 들어간다. 어디에 무엇이 있는지는 그 브랜치가 정하고, 병합 때 아키텍트가 검토한다.
-- **manifest 형식 (예상, 그 브랜치가 오면 실제 파일이 기준이다. 다르면 이 절을 그 파일에 맞춰 고친다)**:
-  ```json
-  { "version": 1,
-    "icons": [ { "id": "undo", "path": "Assets/Shared/Art/UI/U5/undo.png", "guid": "<32 hex>", "size": 96 } ] }
-  ```
-  - `id`는 소문자 kebab이다. `UiIcon` 이름과 1:1로 대응한다: `undo restart hint pause play settings map retry next back language credits info sound-on sound-off motion close keep switch`.
-  - 아이콘이 아닌 것은 같은 파일의 다른 id다. 예: `caption-plate`, `scarf-dot`, `star-stone-lit`, `star-stone-unlit`, `step-star`, `step-star-link`.
+- **manifest 형식 (실제 파일 확인, a3470bb, `unity/Assets/_Project/Art/UI/U5/u5-icons.json`)**: 예상과 같고 필드가 더 있다.
+  - 맨 위 키: `version`(1), `contract`, `icons`(25), `worldStar`, `importPolicy`, `committedImportSettings`, `artRevision`.
+  - `icons[]`의 필드
+    - `id`, `path`, `guid`: 대표 소스이고 4x다. 예: `Assets/Shared/Art/UI/U5/4x/undo.png`.
+    - `size`(px), `logicalSize`(48·56·250), `sourceScale`, `pixelsPerUnit`(100 × 배율)
+    - `sources[]`: 2x·4x 각각의 `path`·`guid`·`fileId`·`sha256`
+    - `states`: normal·pressed·disabled의 색조. pressed는 0.94배이고 그림만 줄인다. 누르는 영역 48·56은 그대로다.
+    - 설명 판에만 `border`/`logicalBorder`/`renderMode`가 있다.
+  - id 25개는 1.1 예상과 같다. `UiIcon` 19개와 아이콘이 아닌 6개(`caption-plate scarf-dot star-stone-lit star-stone-unlit step-star step-star-link`)다.
+  - `worldStar`: 클리어 별돌 모델 `Assets/Shared/Art/UI/U5/world-star-stone.fbx`(노드 `Stone`·`StarInlay`)과 머티리얼 `Art/UI/U5/U5StarLit|U5StarUnlit|U5StoneShell.mat`(git에 있음). 클리어 단계(gameplay-ui)가 쓴다. 스프라이트 `star-stone-lit/unlit`는 2D 대체용이다.
+  - 가져오기 설정(`importPolicy`): Sprite Single, FullRect, Bilinear, Clamp, mipmap 없음, WebGL RGBA32(압축 없음), 4x 소스를 쓴다. 바꾸면 Codex 아트 몫이다.
+- **설명 판 스프라이트의 테두리 (아키텍트 결정 2026-11-12)**
+  - `caption-plate`는 250×30 논리 크기, 9-slice 테두리 8의 **채운 둥근 사각형**이다. 테두리 선이 없다.
+  - 그래서 테두리는 판 안쪽 여백으로 친다. 여백은 각 변 `max(8, border)`이므로 판 높이는 **글자 + 16**(약 40)이다. `border + 8`로 계산하지 않는다. 그렇게 하면 높이가 약 56이 된다.
+  - `FocusPlate.PaddingOf`를 이렇게 바꾼다(gameplay-ui).
+  - `UiLayoutCheck`(14.4)는 `FocusPlate` 컴포넌트가 붙은 판에 같은 계산을 쓴다(scene-flow). 이름 목록이 아니라 컴포넌트로 판정한다(14.8 원칙).
+  - 테두리 선이 있는 다른 9-slice 판은 지금 규칙(테두리를 뺀 안쪽 + 8)이다.
 - **소유와 읽는 길**
   - gameplay-ui: `UiIconSet` 타입·에셋, manifest를 읽어 `UiIconSet`을 채우는 에디터 도구. GUID로 찾고, 경로는 보조다.
     - 모르는 id는 경고한다.

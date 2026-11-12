@@ -806,6 +806,7 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 ### 14.4 판 (텍스트 뒤 배경)
 - 3D 장면 위에 보이는 모든 글자는 판 위에 있다. 판의 알파는 **0.75 이상**. 글자를 감싸는 화면 전체 배경 `Image`(Title·Loading처럼 불투명 배경)도 판으로 친다.
 - **안쪽 여백(padding) 8**: 판의 안쪽 영역이 글자 사각형을 사방 8 이상 여유를 두고 감싼다. 판이 9-slice(`Image.type == Sliced`)면 안쪽 영역은 스프라이트 `border`(× `pixelsPerUnitMultiplier` 반영 크기)를 뺀 가운데 칸이다 — 테두리·이중선 장식은 border 안에 있어야 하고, border가 0인 테두리 스프라이트는 판으로 쓸 수 없다(늘어난 장식선이 글자를 지나는 지금 문제의 원인).
+- 예외(2026-11-12): U5 설명 판(`FocusPlate` 컴포넌트가 붙은 판)의 스프라이트는 테두리 선 없는 채운 판이라, 9-slice 테두리를 여백으로 친다(각 변 `max(8, border)`). `docs/ui-u5-kit.md` 1.1.
 - 한 판에 여러 글자(이름·번호·별 개수 = 한 카드)가 있어도 된다. 카드끼리는 겹치지 않는다(14.5).
 
 ### 14.5 겹침
@@ -1180,3 +1181,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-12 | 아키텍트 | feat/core bf5dfac 조건부 승인(걸음 별자리 C: Core StepSky, Game StepSkyView, BoardView 훅·StepSkyBand, 발치 별 제거, 15.7). R1 매 프레임 할당·HUD 캔버스 재빌드(병합 전), R2 지금 UI 선택 카드가 별자리를 가림(gameplay-ui, 플레이테스트 전). StarTrailMap 플레이어 비트는 별도 커밋으로 지우되 비트·성분은 예약 0. 헤드리스 EditMode 798/798. `docs/reviews/2026-11-12-feat-core-bf5dfac-step-sky.md` |
 | 2026-11-12 | 아키텍트 | feat/view 40a0561 승인(토글 뒤: U5GameHud, GlyphButton 56 + FocusPlate, ChoiceController → IChoiceView, 같은 컨트롤러 호출, uiIcons 단정). R2 필수(U5 기본 켜기 전): 선택 글리프·판을 형제 가까이, StepSkyBand 밖, 플레이 칸·보드 영역 밖, 38·14 캡처. 헤드리스 EditMode 814/814. `docs/reviews/2026-11-12-feat-view-40a0561-u5-hud.md` |
 | 2026-11-12 | 아키텍트 | feat/core a1d119a+60651bf 승인(bf5dfac R1: 점 배열 재사용, 입력이 바뀔 때만 재배치, 맥동은 7번째 별 크기만; StarTrailMap 플레이어 비트·성분 예약 0). 헤드리스 EditMode 817/817. `docs/reviews/2026-11-12-feat-core-bf5dfac-step-sky.md` |
+| 2026-11-12 | 아키텍트 | ui-u5-kit.md 1.1을 실제 Codex manifest(a3470bb)에 맞춤(id 25개 같음, 4x 대표 소스·sources·states·worldStar·importPolicy). 14.4 예외: U5 설명 판은 채운 9-slice라 테두리를 여백으로 침(높이 글자+16). 영향: gameplay-ui `FocusPlate.PaddingOf`, scene-flow `UiLayoutCheck` |
