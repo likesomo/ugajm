@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SevenSteps.Game
@@ -15,8 +16,9 @@ namespace SevenSteps.Game
         /// Show (c.On) or hide the choice with the controller's focus and explanation state.
         void ShowChoice(UI.HudView.ChoiceCards c);
         /// Put the choice beside <paramref name="board"/> (projected board area) near <paramref name="brother"/> (his head),
-        /// both canvas units with a top-left origin. False when no candidate fits.
-        bool PlaceChoice(Rect board, Vector2 brother);
+        /// both canvas units with a top-left origin, clear of <paramref name="avoid"/> (the step-star sky band, R2 on
+        /// 40a0561; null = none). False when no candidate fits.
+        bool PlaceChoice(Rect board, Vector2 brother, IList<Rect> avoid);
         /// A move was pressed while the choice is pending: shake it.
         void NudgeChoice();
     }

@@ -2,6 +2,7 @@ using System;
 using SevenSteps.Contracts;
 using SevenSteps.Core;
 using SevenSteps.Game.UI;
+using UnityEngine;
 
 namespace SevenSteps.Game
 {
@@ -30,6 +31,7 @@ namespace SevenSteps.Game
         public Func<bool> ShowGuide = () => false;
 
         bool waiting, shown, focusKeep = true;
+        readonly System.Collections.Generic.List<Rect> avoid = new System.Collections.Generic.List<Rect>();
         ChoicePreview preview;
 
         public bool Shown => shown;
@@ -95,7 +97,10 @@ namespace SevenSteps.Game
             {
                 On = true, NextBody = preview.NextBody, Explain = ExplainChoices(), Guide = ShowGuide(), FocusKeep = focusKeep,
             });
-            hud.PlaceChoice(board.ProjectedArea(), board.BrotherOnCanvas());
+            avoid.Clear();
+            var sky = board.StepSkyBand; // the step stars above the board stay in view while choosing (R2 on 40a0561)
+            if (sky.width > 0 && sky.height > 0) avoid.Add(sky);
+            hud.PlaceChoice(board.ProjectedArea(), board.BrotherOnCanvas(), avoid);
             board.ShowChoice(true, preview, focusKeep ? BoardMarksView.ChoiceFocus.Keep : BoardMarksView.ChoiceFocus.Switch);
         }
 
