@@ -16,14 +16,16 @@
                                           "guid":  "e25b6d8922b2c144abba6887cfea312b",
                                           "fileId":  21300000,
                                           "scale":  2,
-                                          "pixelsPerUnit":  200
+                                          "pixelsPerUnit":  200,
+                                          "sha256":  "45b2b1aa0d2b6e8e09829c63e71836c0c933cab81fb99f347bc019a2568967e0"
                                       },
                                       {
                                           "path":  "Assets/Shared/Art/UI/U5/4x/undo.png",
                                           "guid":  "4e1bcb22531ff924cbdfaecc18d85c32",
                                           "fileId":  21300000,
                                           "scale":  4,
-                                          "pixelsPerUnit":  400
+                                          "pixelsPerUnit":  400,
+                                          "sha256":  "3bcc1330c75a331e3750f41f3d964409e8945b63f985f626bc482de837efd85a"
                                       }
                                   ],
                       "states":  {
@@ -39,7 +41,8 @@
                                                       "alpha":  0.32,
                                                       "tint":  "#EEE7D0FF"
                                                   }
-                                 }
+                                 },
+                      "glyphDescription":  "Short open curved back arrow: undo one move"
                   },
                   {
                       "id":  "restart",
@@ -55,14 +58,16 @@
                                           "guid":  "a4778bb1cdf2018468c4b5a673be6104",
                                           "fileId":  21300000,
                                           "scale":  2,
-                                          "pixelsPerUnit":  200
+                                          "pixelsPerUnit":  200,
+                                          "sha256":  "408dc047f9dcf48bc0d308d63b570794a6c4a40df06a89d46fd4c97d2e6f8c00"
                                       },
                                       {
                                           "path":  "Assets/Shared/Art/UI/U5/4x/restart.png",
                                           "guid":  "0ce6dbc9fe69e224882bc3cebb47bc6e",
                                           "fileId":  21300000,
                                           "scale":  4,
-                                          "pixelsPerUnit":  400
+                                          "pixelsPerUnit":  400,
+                                          "sha256":  "5db11e8efc92f14fa2b20579ffd141700e6c461b6c3ea8c954926e92b5f5ec68"
                                       }
                                   ],
                       "states":  {
@@ -78,7 +83,8 @@
                                                       "alpha":  0.32,
                                                       "tint":  "#EEE7D0FF"
                                                   }
-                                 }
+                                 },
+                      "glyphDescription":  "Existing clockwise restart arrow, empty centre"
                   },
                   {
                       "id":  "hint",
@@ -289,14 +295,16 @@
                                           "guid":  "bb2c245fe2f57a346b74cf107cd8e975",
                                           "fileId":  21300000,
                                           "scale":  2,
-                                          "pixelsPerUnit":  200
+                                          "pixelsPerUnit":  200,
+                                          "sha256":  "979b1ba7ba47066b0124bb1a0b0735b11c9bedfe9448db8021b511b77e10a75d"
                                       },
                                       {
                                           "path":  "Assets/Shared/Art/UI/U5/4x/retry.png",
                                           "guid":  "4baa4c12af5fbe147acf96728471dbf1",
                                           "fileId":  21300000,
                                           "scale":  4,
-                                          "pixelsPerUnit":  400
+                                          "pixelsPerUnit":  400,
+                                          "sha256":  "e89ec89d14bd9a3e27983c2518af6ebc8407714b5c8967e57f35cd79e7027be8"
                                       }
                                   ],
                       "states":  {
@@ -312,7 +320,8 @@
                                                       "alpha":  0.32,
                                                       "tint":  "#EEE7D0FF"
                                                   }
-                                 }
+                                 },
+                      "glyphDescription":  "Full circular replay arrow enclosing a chamfered stage stone"
                   },
                   {
                       "id":  "next",
@@ -445,14 +454,16 @@
                                           "guid":  "be7574f82db0d704b8c8e426896efe1e",
                                           "fileId":  21300000,
                                           "scale":  2,
-                                          "pixelsPerUnit":  200
+                                          "pixelsPerUnit":  200,
+                                          "sha256":  "bd8a1bb8d50c8b9dc70fc8b2d932b07abcc3fb320a5d9550d3fb58d224484fea"
                                       },
                                       {
                                           "path":  "Assets/Shared/Art/UI/U5/4x/credits.png",
                                           "guid":  "cf9e11503f9b1f945b825b9807ee9c13",
                                           "fileId":  21300000,
                                           "scale":  4,
-                                          "pixelsPerUnit":  400
+                                          "pixelsPerUnit":  400,
+                                          "sha256":  "eda72c29ab29a354b4661b8f796789cafee788f1902eb01944837bd03d6ed029"
                                       }
                                   ],
                       "states":  {
@@ -468,7 +479,8 @@
                                                       "alpha":  0.32,
                                                       "tint":  "#EEE7D0FF"
                                                   }
-                                 }
+                                 },
+                      "glyphDescription":  "Curled scroll with three text strokes"
                   },
                   {
                       "id":  "info",
@@ -484,14 +496,16 @@
                                           "guid":  "e78176342fdd8ed4eacb0caf7a7b387d",
                                           "fileId":  21300000,
                                           "scale":  2,
-                                          "pixelsPerUnit":  200
+                                          "pixelsPerUnit":  200,
+                                          "sha256":  "bbf5296760514aa5d02fdbb1ee7e3cab214d49b708125d0ae4afe438c2382be1"
                                       },
                                       {
                                           "path":  "Assets/Shared/Art/UI/U5/4x/info.png",
                                           "guid":  "cc8a6fa727bd89e42909df35b033ddb6",
                                           "fileId":  21300000,
                                           "scale":  4,
-                                          "pixelsPerUnit":  400
+                                          "pixelsPerUnit":  400,
+                                          "sha256":  "ff08d3dedf6fcd6ea15b115b61971d2a242112014f64214639ddda68c769190d"
                                       }
                                   ],
                       "states":  {
@@ -507,7 +521,8 @@
                                                       "alpha":  0.32,
                                                       "tint":  "#EEE7D0FF"
                                                   }
-                                 }
+                                 },
+                      "glyphDescription":  "Circled information i, unchanged"
                   },
                   {
                       "id":  "sound-on",
@@ -1070,5 +1085,6 @@
                          "textureType":  "Sprite (2D and UI)",
                          "spriteMode":  "Single"
                      },
-    "committedImportSettings":  "design/art/ui-u5-import-settings/U5"
+    "committedImportSettings":  "design/art/ui-u5-import-settings/U5",
+    "artRevision":  2
 }
