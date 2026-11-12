@@ -73,6 +73,8 @@
 - [x] 7행성 `ChapterPreset`(moss/hollow/carved/frost/joinery/crumble/altar) — Codex 034c910·93477aa, 게임플레이/UI 적용 5e0a1cb·cfde7f2, `AppConfig.chapters` 7개 등록. tileset-validate·smoke-webgl 통과(e6dda07)
 - [x] 도리이 닮은 붉은 문 교체 → 선돌 + 곧은 결구 들보 `MenhirJoineryBackground` (2af01c4)
 - [x] `agents/README.md`·`agents/art.md`를 50스테이지·7행성·3별·ko/en·확정 아트 기준으로 갱신 (2026-11-10)
+- [x] V7 행성 7개 Blender 렌더 교체(2026-11-13, 지도 1024·표면 2048, guid 유지). 리드 배치 검사: U5Map·Map·SurfaceS2·U5Surface 캡처 통과, 투영·회전 맞음, halo 없음. WebGL 시험 빌드 48MB(7aa74e4 39MB, 표면 장당 5.3MB) → 코디네이터 승인으로 리드가 `PlanetsV7Surface/*.png.meta` 7개의 WebGL 블록만 `maxTextureSize: 1024`(Standalone 2048 유지, Shared라 커밋 안 함). 다음 빌드부터 반영
+- [ ] (후속) 표면 화면 구도: 서리 위쪽 얼음 결정과 새김돌 가운데 기둥이 행성 위로 솟아 스테이지 호의 가운데 별 노드 뒤에 걸친다. 플레이를 막지 않음
 - [ ] 성능 세 가지(`_UNLIT` 키워드, 장식 그림자 끄기, HDR 끄기) — 코디네이터가 Codex에 전달. **테스트를 막지 않는다**. 바뀌면 `tileset-validate`·`smoke-webgl` 필수
 
 ## G. 1차 테스트에서 답을 얻을 질문
