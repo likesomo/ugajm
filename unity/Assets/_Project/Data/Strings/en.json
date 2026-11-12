@@ -144,6 +144,27 @@
 
     { "key": "credits.title", "text": "Credits" },
     { "key": "credits.game", "text": "Seven Steps" },
-    { "key": "credits.close", "text": "Close (Esc)" }
+    { "key": "credits.close", "text": "Close (Esc)" },
+    { "key": "ui5.icon.undo", "text": "Undo" },
+    { "key": "ui5.icon.restart", "text": "Restart" },
+    { "key": "ui5.icon.hint", "text": "Hint" },
+    { "key": "ui5.icon.pause", "text": "Pause" },
+    { "key": "ui5.icon.play", "text": "Play" },
+    { "key": "ui5.icon.settings", "text": "Settings" },
+    { "key": "ui5.icon.map", "text": "Star map" },
+    { "key": "ui5.icon.retry", "text": "Try again" },
+    { "key": "ui5.icon.next", "text": "Next stage" },
+    { "key": "ui5.icon.back", "text": "Back" },
+    { "key": "ui5.icon.language", "text": "Language" },
+    { "key": "ui5.icon.credits", "text": "Credits" },
+    { "key": "ui5.icon.info", "text": "About" },
+    { "key": "ui5.icon.soundon", "text": "Sound on" },
+    { "key": "ui5.icon.soundoff", "text": "Sound off" },
+    { "key": "ui5.icon.motion", "text": "Reduce motion" },
+    { "key": "ui5.icon.close", "text": "Close" },
+    { "key": "ui5.icon.keep", "text": "Keep" },
+    { "key": "ui5.icon.switch", "text": "Switch" },
+    { "key": "ui5.choice.keep", "text": "Leave a stone, start over" },
+    { "key": "ui5.choice.switch", "text": "Next brother goes on from here" }
   ]
 }
