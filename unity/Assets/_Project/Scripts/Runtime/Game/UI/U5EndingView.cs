@@ -74,7 +74,11 @@ namespace SevenSteps.Game.UI
             skip = IconButton.Build(panel.transform, UiIcon.Close, icons, null, () => SkipRequested?.Invoke(), "ending.skip", "Skip");
             skip.Rect.Place(new Vector2(1, 1), new Vector2(1, 1), new Vector2(-Safe, -Safe), new Vector2(IconButton.Size, IconButton.Size));
             tips = FocusPlate.Build(panel.transform, loc, icons);
-            foreach (var b in new[] { next, map, skip }) tips.Track(b);
+            foreach (var b in new[] { next, map, skip })
+            {
+                b.Backing(); // the round backing the U5 clear's Next has: 3:1 over a light picture (14.3)
+                tips.Track(b);
+            }
             panel.SetActive(false);
         }
 

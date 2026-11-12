@@ -250,6 +250,7 @@ namespace SevenSteps.Tests.Game
             v.Map.Press();
             Assert.AreEqual(2, next, "the map is the last card's next (to the map)");
             Assert.AreEqual("ending.to_map", v.Map.TipKey);
+            foreach (var b in new[] { v.Next, v.Map, v.Skip }) Assert.IsNotNull(b.transform.Find("Backing"), $"{b.name}: the round backing (3:1 over the picture)");
             Assert.AreEqual(0, canvas.GetComponentsInChildren<Button>(true).Length - 1, "no text buttons: only the card's own click (scrim)");
             Assert.Throws<ArgumentOutOfRangeException>(() => v.ShowPage(4, 4, new EndingPage("x", "", "x")));
             Assert.Throws<ArgumentNullException>(() => new U5EndingView(null, null, loc, null));
