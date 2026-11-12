@@ -41,6 +41,26 @@ namespace SevenSteps.Tests
                 report.entries.Select(e => e.unity.outcome).ToArray());
         }
 
+        /// QA-3 tutorial board lines (docs/qa-attempts.md 10) written by qa-play.mjs: T1 lost then (after the automatic
+        /// restart) cleared, T3 cleared with all three. "level": "T1" reads as -1 and replays on levels.json "tutorials".
+        [Test]
+        public void TutorialFixtureMatches()
+        {
+            var records = QaReplay.ParseJsonl(File.ReadAllText(Path.Combine(Application.dataPath, "_Project", "Tests", "EditMode", "Flow", "QaAttempts.tutorial.fixture.jsonl")));
+            CollectionAssert.AreEqual(new[] { -1, -1, -3 }, records.Select(r => r.level).ToArray());
+            var file = JsonUtility.FromJson<LevelFileDto>(File.ReadAllText(Path.Combine(Application.dataPath, "_Project", "Data", "levels.json")));
+            var dto = file.levels;
+            var report = QaReplay.Check(dto.Select(d => d.ToLevel()).ToArray(), records, i => dto[i].map,
+                file.tutorials.Select(t => t.level.ToLevel()).ToArray(), i => file.tutorials[i].level.map);
+            Assert.IsTrue(report.Ok, string.Join("\n", report.mismatchList));
+            CollectionAssert.AreEqual(new[] { "out_of_bodies", "clear", "clear" }, report.entries.Select(e => e.unity.outcome).ToArray());
+            // Without the boards a tutorial line is a mismatch, named T1.
+            var bare = QaReplay.Check(dto.Select(d => d.ToLevel()).ToArray(), records, i => dto[i].map);
+            StringAssert.Contains("stage T1", bare.mismatchList[0]);
+            Assert.AreEqual("T3", QaReplay.LevelLabel(-3));
+            Assert.AreEqual("12", QaReplay.LevelLabel(12));
+        }
+
         /// docs/qa-attempts.md 6 golden (core ca616f5, pinned in the node test too): restart, hint, undo then KEEP again.
         [Test]
         public void Stage29KeyGolden()

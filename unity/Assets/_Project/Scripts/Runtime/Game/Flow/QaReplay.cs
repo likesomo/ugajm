@@ -16,8 +16,8 @@ namespace SevenSteps.Game.Flow
     {
         public int v = -1;
         public string tester = "";
-        /// Stage number, 1-based (levels.json order).
-        public int level = -1;
+        /// Stage number, 1-based (levels.json order); a tutorial board line ("level": "T2", docs/qa-attempts.md 10) reads as -2.
+        public int level;
         public string stageName = "";
         public string mapHash = "";
         public int attempt = -1;
@@ -189,6 +189,10 @@ namespace SevenSteps.Game.Flow
 
         static readonly Regex NullField = new Regex("\"[A-Za-z0-9_]+\"\\s*:\\s*null\\s*,?");
         static readonly Regex TrailingComma = new Regex(",\\s*}");
+        static readonly Regex TutorialLevel = new Regex("\"level\"\\s*:\\s*\"T([1-9])\"");
+
+        /// "T2" for a tutorial board record (level -2), else the stage number.
+        public static string LevelLabel(int level) => level < 0 ? "T" + (-level) : level.ToString();
 
         /// Parses attempts.jsonl. Blank lines are skipped; a line that is not a JSON object throws FormatException with its number.
         public static List<QaAttemptRecord> ParseJsonl(string text)
@@ -202,6 +206,8 @@ namespace SevenSteps.Game.Flow
                 if (line[0] != '{') throw new FormatException($"attempts.jsonl line {n + 1}: not a JSON object");
                 // JsonUtility has no null for int / string: drop "x": null so the field keeps its default (-1 / "").
                 line = TrailingComma.Replace(NullField.Replace(line, ""), "}");
+                // A tutorial board's "level": "T2" reads as -2 (JsonUtility has no int-or-string field; docs/qa-attempts.md 10).
+                line = TutorialLevel.Replace(line, m => "\"level\":-" + m.Groups[1].Value);
                 QaAttemptRecord rec;
                 try { rec = JsonUtility.FromJson<QaAttemptRecord>(line); }
                 catch (Exception e) { throw new FormatException($"attempts.jsonl line {n + 1}: {e.Message}", e); }
@@ -212,8 +218,10 @@ namespace SevenSteps.Game.Flow
 
         /// Replays every record and lists the differences (docs 7). <paramref name="mapRows"/>
         /// takes a 0-based stage; mapRows null = mapHash not compared. A bad line becomes a mismatch, not an exception.
+        /// Tutorial board records (level -1..-3) replay on <paramref name="tutorials"/> (levels.json "tutorials" order;
+        /// <paramref name="tutorialMapRows"/> 0-based); without them such a record is a mismatch.
         public static QaReplayReport Check(IReadOnlyList<Level> levels, IReadOnlyList<QaAttemptRecord> records,
-            Func<int, string[]> mapRows = null)
+            Func<int, string[]> mapRows = null, IReadOnlyList<Level> tutorials = null, Func<int, string[]> tutorialMapRows = null)
         {
             if (levels == null) throw new ArgumentNullException(nameof(levels));
             if (records == null) throw new ArgumentNullException(nameof(records));
@@ -227,20 +235,24 @@ namespace SevenSteps.Game.Flow
                     line = n + 1, tester = rec.tester, level = rec.level, stageName = rec.stageName, attempt = rec.attempt, outcome = rec.outcome,
                 };
                 var diffs = new List<string>();
-                int stage = rec.level - 1;
+                bool board = rec.level < 0;
+                var list = board ? tutorials ?? Array.Empty<Level>() : levels;
+                var rows = board ? tutorialMapRows : mapRows;
+                int stage = board ? -rec.level - 1 : rec.level - 1;
                 if (rec.v != FormatVersion) diffs.Add($"v {rec.v}, this replay reads v{FormatVersion}");
-                else if (stage < 0 || stage >= levels.Count) diffs.Add($"level {rec.level} is not 1..{levels.Count}");
-                else if (rec.stageName != levels[stage].Name) diffs.Add($"stageName js={rec.stageName} unity={levels[stage].Name}");
-                else if (mapRows != null && rec.mapHash != MapHash(mapRows(stage))) diffs.Add("skipped: map changed");
+                else if (stage < 0 || stage >= list.Count)
+                    diffs.Add(board ? $"level {LevelLabel(rec.level)} is not T1..T{list.Count}" : $"level {rec.level} is not 1..{levels.Count}");
+                else if (rec.stageName != list[stage].Name) diffs.Add($"stageName js={rec.stageName} unity={list[stage].Name}");
+                else if (rows != null && rec.mapHash != MapHash(rows(stage))) diffs.Add("skipped: map changed");
                 else if (rec.from < 0 || rec.from > rec.inputs.Length) diffs.Add($"from {rec.from} is not 0..{rec.inputs.Length}");
                 else
                 {
-                    e.unity = Run(levels[stage], rec.inputs, rec.from);
+                    e.unity = Run(list[stage], rec.inputs, rec.from);
                     if (e.unity.error.Length > 0) diffs.Add(e.unity.error);
                     else Compare(rec, e.unity, diffs);
                 }
                 e.diffs = diffs.ToArray();
-                foreach (var d in diffs) all.Add($"line {n + 1} ({rec.tester} stage {rec.level} #{rec.attempt}): {d}");
+                foreach (var d in diffs) all.Add($"line {n + 1} ({rec.tester} stage {LevelLabel(rec.level)} #{rec.attempt}): {d}");
                 entries.Add(e);
             }
             return new QaReplayReport
