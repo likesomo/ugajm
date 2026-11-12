@@ -99,6 +99,7 @@
 - 오랫동안 아무도 걷지 않자 선은 흐려졌고, 별도 하나씩 희미해졌다.
 - 형제의 경로가 남기는 별 흔적은 그 선을 다시 긋는 일이다.
   - 한 스테이지를 클리어하면 셋의 경로가 그 자리의 작은 별자리가 된다.
+  - **선은 셋이 모두 걸어야 가장 밝다**(2026-11-12, `cutscenes.md` 프롤로그 6). 지도가 셋에게 함께 건네졌기 때문이다. 결과의 별 셋이 이 밝기다: 닿으면 하나, 스스로 세면(풀이 보기 없이) 둘, 셋이 모두 걸으면 셋.
   - 한 행성의 일곱 자리를 모두 밝히면 그 행성의 별이 다시 켜진다.
 
 **구멍과 행성.** 행성들은 작고 속이 비어 있다. 구멍 아래로는 그 아래 하늘의 별이 보인다. 형제가 떨어지면 별 사이로 흘러가 정렬 때 돌아온다.
@@ -434,6 +435,7 @@ There is no death in this world. Staying is frightening for one reason only: **y
 - When no one walked for a long time, the lines faded and the stars dimmed one by one.
 - The brothers' starprints draw those lines again.
   - When a stage is cleared, the three paths become a small constellation of that place.
+  - **A line shines brightest only when all three walk it** (2026-11-12, `cutscenes.md` prologue 6), because the map was handed to all three together. The result stars are that brightness: arrive for one, count it yourselves (no solution shown) for two, all three walk for three.
   - When all seven places of a planet are lit, that planet's star shines again.
 
 **Holes and planets.** The planets are small and hollow. Through a hole you see the stars of the sky below. A brother who falls drifts between the stars and returns at the alignment.
