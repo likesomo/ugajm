@@ -41,7 +41,8 @@ namespace SevenSteps.EditorTools
             var file = JsonUtility.FromJson<LevelFileDto>(File.ReadAllText(Path.Combine(root, "unity", LevelsPath)));
             var levels = file.levels.Select(d => d.ToLevel()).ToArray();
             var records = QaReplay.ParseJsonl(File.ReadAllText(input));
-            var report = QaReplay.Check(levels, records, i => file.levels[i].map);
+            var tutorials = (file.tutorials ?? new TutorialDto[0]).Select(t => t.level.ToLevel()).ToArray();
+            var report = QaReplay.Check(levels, records, i => file.levels[i].map, tutorials, i => file.tutorials[i].level.map);
 
             Directory.CreateDirectory(Path.GetDirectoryName(output) ?? ".");
             File.WriteAllText(output, JsonUtility.ToJson(report, true));

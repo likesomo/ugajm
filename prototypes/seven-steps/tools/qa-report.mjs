@@ -42,17 +42,21 @@ const planetOf = Object.fromEntries((chapters.chapters ?? chapters).map((c) => [
 
 // ---- Read attempts (strict: a bad line stops the report) ----
 const attempts = [];
+let tutorialLines = 0;
 readFileSync(ATTEMPTS, 'utf8').split(/\r?\n/).forEach((line, i) => {
   if (!line.trim()) return;
   let a;
   try { a = JSON.parse(line); } catch (e) { fail(`${basename(ATTEMPTS)}:${i + 1} is not JSON (${e.message})`); }
   for (const k of ['tester', 'level', 'outcome']) if (a[k] === undefined) fail(`${basename(ATTEMPTS)}:${i + 1} has no "${k}"`);
   if (!Q.outcomes.includes(a.outcome)) fail(`${basename(ATTEMPTS)}:${i + 1} unknown outcome "${a.outcome}"`);
+  // Tutorial boards (level "T1".."T3", docs/qa-attempts.md 10) are not stages: counted apart, not in this report.
+  if (typeof a.level === 'string' && /^T\d+$/.test(a.level)) { tutorialLines++; return; }
   if (!stageRows[a.level - 1]) fail(`${basename(ATTEMPTS)}:${i + 1} level ${a.level} out of range`);
   const want = stageRows[a.level - 1].name;
   if (a.stageName && a.stageName !== want) fail(`${basename(ATTEMPTS)}:${i + 1} level ${a.level} is "${a.stageName}", this build has "${want}" (wrong levels.js?)`);
   attempts.push({ ...a, line: i + 1 });
 });
+if (tutorialLines) console.log(`[qa-report] ${tutorialLines} tutorial board line(s) skipped (not stages)`);
 if (!attempts.length) fail('attempts file is empty');
 const testers = [...new Set(attempts.map((a) => a.tester))].sort();
 

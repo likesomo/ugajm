@@ -7,9 +7,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { run, replayLine, stage, stateKey, keyHash, runTokens, QaError } from './qa-play.mjs';
-import { newState, step, choose, actions, minBodies, keyOf, DIRS } from '../../prototypes/seven-steps/src/core.js';
-import { LEVELS } from '../../prototypes/seven-steps/src/levels.js';
+import { run, replayLine, stage, stateKey, keyHash, runTokens, QaError, matchCue, cueStart, storyPages, gameText } from './qa-play.mjs';
+import { newState, step, choose, actions, minBodies, keyOf, DIRS, dispatch } from '../../prototypes/seven-steps/src/core.js';
+import { LEVELS, TUTORIALS } from '../../prototypes/seven-steps/src/levels.js';
 import { solveAllBodies } from './all-brothers-check.mjs';
 
 const LETTER = { up: 'U', down: 'D', left: 'L', right: 'R', keep: 'K', switch: 'X' };
@@ -53,6 +53,8 @@ beforeEach(() => { process.env.QA_DIR = mkdtempSync(join(tmpdir(), 'qa-play-'));
 test('commands before start, bad commands and level range fail at once', () => {
   errors(['show', ...T], /no session/);
   errors(['start', ...T, '--level', '0'], /level must be 1-50/);
+  errors(['start', ...T, '--level', 'T4'], /T1-T3/);
+  errors(['start', ...T, '--level', 'T0'], /T1-T3/);
   errors(['start', ...T, '--level', '51'], /level must be 1-50/);
   errors(['start', ...T, '--level', 'x'], /level must be/);
   errors(['start', '--level', '1'], /--tester/);
@@ -61,7 +63,7 @@ test('commands before start, bad commands and level range fail at once', () => {
   errors(['start', ...T, '--level', '2'], /still in progress/);
   errors(['fly', ...T], /unknown command/);
   errors(['move', ...T, 'RQ'], /move needs directions/);
-  errors(['keep', ...T], /only after a 7th step/);
+  errors(['keep', ...T], /지금은 고를 수 없다/);
   errors(['undo', ...T], /nothing to undo/);
   assert.equal(lines().length, 0);
 });
@@ -107,7 +109,7 @@ test('fell and out_of_bodies end an attempt; undo continues the run with from > 
   run(['start', ...T, '--level', String(pitStage)]); play(word(fellPath));
   const f = last();
   assert.equal(f.outcome, 'fell'); assert.equal(f.failReason, 'fall'); assert.equal(f.bodiesUsed, stage(pitStage).level.bodies);
-  errors(['move', ...T, 'R'], /cannot move: status lose/);
+  errors(['move', ...T, 'R'], /cannot move/);
   run(['undo', ...T]); run(['giveup', ...T]);
   const g = last();
   assert.equal(g.outcome, 'gave_up'); assert.equal(g.from, f.inputs.length); assert.equal(g.inputs, f.inputs + 'Z');
@@ -159,4 +161,94 @@ test('golden: stage 29 "R!HDURRRRRKZKDDR" -> stateKey and stateHash', () => {
   assert.equal(r.error, null);
   assert.equal(stateKey(r.state), '10|29|3|2|15|||0|1');
   assert.equal(keyHash(stateKey(r.state)), 'e57f027f');
+});
+
+// ---------- QA-3 (docs/qa-attempts.md 10) ----------
+
+const exported = () => JSON.parse(readFileSync(new URL('../Assets/_Project/Data/levels.json', import.meta.url), 'utf8'));
+const onOf = (t, i) => (i < 0 ? '-' : t.cues[i].on + (t.cues[i].body ? '/' + t.cues[i].body : ''));
+const CMD = { U: { type: 'move', dir: 'up' }, D: { type: 'move', dir: 'down' }, L: { type: 'move', dir: 'left' }, R: { type: 'move', dir: 'right' },
+  K: { type: 'keep' }, X: { type: 'switch' }, Z: { type: 'undo' }, '!': { type: 'restart' } };
+// Same sequences as the C# TutorialTests (Core TutorialCues): the JS matcher must agree with the game's.
+function cues(k, letters) {
+  const t = exported().tutorials[k - 1];
+  let s = newState(stage('T' + k).level);
+  const shown = [];
+  for (const c of letters) { const r = dispatch(s, CMD[c]); shown.push(onOf(t, matchCue(t, c, s, r.state, r.events))); s = r.state; }
+  return shown;
+}
+
+test('tutorial cues match the C# TutorialCues sequences', () => {
+  const t1 = exported().tutorials[0];
+  assert.equal(onOf(t1, cueStart(t1)), 'start');
+  assert.deepEqual(cues(1, 'RRRDDLL'), ['step', '-', '-', '-', '-', 'step', 'win']);
+  assert.deepEqual(cues(1, 'RRRDDLR!'), ['step', '-', '-', '-', '-', 'step', 'lose', 'restart']);
+  const t2 = cues(2, 'DUDRRRRKDDRRRDD');
+  assert.equal(t2[4], 'step/1'); assert.equal(t2[6], 'choose'); assert.equal(t2[7], 'doorOpen'); assert.equal(t2[12], '-'); assert.equal(t2[14], 'win');
+  assert.equal(cues(2, 'DUDRRRRX')[7], 'switch');
+  const t3 = cues(3, exported().tutorials[2].level.expected.path);
+  assert.deepEqual(t3.filter((x) => x.startsWith('respawn')), ['respawn/2', 'respawn/3']);
+});
+
+test('T1-T3: start, cue plate, lose -> lose cue + automatic restart, clear; lines replay with level "T1"..', () => {
+  const out = run(['start', ...T, '--level', 't1']);
+  assert.match(out, /튜토리얼 T1/); assert.ok(out.includes('안내: ' + TUTORIALS[0].cues[0].line));
+  const lost = run(['move', ...T, 'RRRDDLR']);
+  assert.match(lost, /out_of_bodies/); assert.match(lost, /일곱 걸음이 출구에서 끝나야 한다/); assert.match(lost, /자동 재시작/);
+  assert.ok(run(['show', ...T]).includes('안내: 다시. 출구까지 딱 일곱 걸음.'));
+  assert.equal(last().level, 'T1'); assert.equal(last().attempt, 1);
+  errors(['hint', ...T], /no hint/);
+  const won = run(['move', ...T, 'RRRDDLL']);
+  assert.match(won, /튜토리얼 T1 클리어/); assert.match(won, /일곱째 걸음에 닿아서 문이 열렸다/);
+  assert.ok(!won.includes('★'), 'a tutorial board has no clear screen');
+  assert.equal(last().outcome, 'clear'); assert.equal(last().attempt, 2); assert.equal(last().inputs, 'RRRDDLR!RRRDDLL'); assert.equal(last().from, 7);
+  for (const k of [2, 3]) {
+    const en = run(['start', ...T, '--level', 'T' + k, '--lang', 'en']);
+    assert.ok(en.includes(exported().tutorials[k - 1].cues[0].text[0].line), 'en cue');
+    play(exported().tutorials[k - 1].level.expected.path);
+    assert.equal(last().outcome, 'clear'); assert.equal(last().level, 'T' + k); assert.equal(last().bodiesUsed, k);
+  }
+  for (const l of lines()) assert.deepEqual(replayLine(l), [], JSON.stringify(l));
+  assert.match(run(['verify']), /verify OK: 4 lines/);
+});
+
+test('story prints the cutscene pages in order, ko and en', () => {
+  const ko = run(['story', 'prologue']);
+  const en = run(['story', 'prologue', '--lang', 'en']);
+  const file = JSON.parse(readFileSync(new URL('../Assets/_Project/Data/cutscenes.json', import.meta.url), 'utf8'));
+  const pro = file.scenes.find((x) => x.id === 'prologue');
+  assert.ok(ko.startsWith(`[1/${pro.pages.length}]`));
+  assert.ok(ko.includes(pro.pages[0].lines[0].line)); assert.ok(en.includes(pro.pages[0].lines[0].text[0].line));
+  assert.ok(ko.indexOf(pro.pages[0].lines[0].line) < ko.indexOf(pro.pages.at(-1).lines[0].line));
+  assert.equal(storyPages('epilogue', 'ko').length, file.scenes.find((x) => x.id === 'epilogue').pages.length);
+  errors(['story', 'middle'], /story must be one of/);
+});
+
+// Naive (docs 10.3): the harness's own words explain no rule. Only the game's texts may (start line, message line,
+// button tips, clear screen, hint line), and those come from levels.js / Data/Strings unchanged: they are cut out first.
+const RULE_WORDS = [/7번째 걸음으로/, /7th step/i, /그 번째 걸음으로만/, /선돌이 서면/, /정확히/, /모두 써/, /all (three|brothers)/i, /★1까지/, /다리가 됨/, /선돌 수 문/];
+const GAME_KEYS = ['msg.win', 'msg.fall', 'msg.bridge', 'msg.seal', 'msg.vanish', 'msg.stone', 'msg.switch', 'msg.choose', 'msg.choose_nudge', 'msg.lucky_next', 'msg.lose',
+  'result.star1', 'result.star2', 'result.star3_many', 'hint.confirm', 'ui5.choice.keep', 'ui5.choice.switch', 'tutorial.slide'];
+function harnessOnly(text, n) {
+  let t = text;
+  const def = LEVELS[n - 1];
+  const game = [...GAME_KEYS.flatMap((k) => [gameText('ko', k, 3), gameText('en', k, 3)]), def.story, def.hint, ...(def.text ?? []).flatMap((x) => [x.story, x.hint])];
+  for (const g of game.filter(Boolean).sort((a, b) => b.length - a.length)) t = t.split(g).join('');
+  return t;
+}
+test('naive: show, status, help and errors say no rule beyond the game texts', () => {
+  const said = [run(['help'])];
+  for (const n of [1, 2, 4, 12, 22, 29]) {
+    said.push(harnessOnly(run(['start', ...T, '--level', String(n)]), n));
+    for (const c of word(minBodies(stage(n).level).path)) {
+      // Wrong commands first: keep while walking, a move on the choice (both refused, nothing changes).
+      try { run(['UDLR'.includes(c) ? 'keep' : 'move', ...T, 'U']); assert.fail('should be refused'); } catch (e) { said.push(harnessOnly(e.message, n)); }
+      said.push(harnessOnly('UDLR'.includes(c) ? run(['move', ...T, c]) : run([{ K: 'keep', X: 'switch' }[c], ...T]), n));
+      if (last()?.outcome === 'clear' && last().level === n) break;
+      said.push(harnessOnly(run(['status', ...T]), n));
+    }
+    if (!(last()?.outcome === 'clear' && last().level === n)) run(['giveup', ...T]);
+  }
+  const text = said.join('\n');
+  for (const re of RULE_WORDS) assert.ok(!re.test(text), `harness text matches ${re}`);
 });
