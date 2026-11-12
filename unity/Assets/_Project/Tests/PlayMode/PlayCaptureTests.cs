@@ -81,6 +81,12 @@ namespace SevenSteps.Tests.PlayMode
             yield return Start(AppState.Game, AppScenes.Game, "-newmap", "-level", "1");
             var game = Object.FindAnyObjectByType<GameController>();
             Assert.IsNotNull(game.Journey, "-newmap turns the journey on");
+            float c0 = Time.realtimeSinceStartup; // the -level start shows the chapter card (2.5 s): play after it
+            while (Object.FindAnyObjectByType<SevenSteps.Game.UI.ChapterCardView>() != null)
+            {
+                Assert.Less(Time.realtimeSinceStartup - c0, 10f, "the chapter card to close");
+                yield return null;
+            }
             string path = LevelCatalog.PathOf(0);
             if (path.Length > 1) game.Board.Replay(path.Substring(0, path.Length - 1));
             Assert.IsTrue(SevenSteps.Core.Rules.TryParseLetter(path[path.Length - 1], out var act));

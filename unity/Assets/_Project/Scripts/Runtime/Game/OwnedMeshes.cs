@@ -7,6 +7,7 @@ namespace SevenSteps.Game
     /// <summary>
     /// Meshes made at runtime for one object (ChapterStage.CopyGround): destroyed with it, so a copy does not leak them.
     /// </summary>
+    [ExecuteAlways] // OnDestroy also outside Play (edit-mode tests)
     public sealed class OwnedMeshes : MonoBehaviour
     {
         readonly List<Mesh> meshes = new List<Mesh>();
