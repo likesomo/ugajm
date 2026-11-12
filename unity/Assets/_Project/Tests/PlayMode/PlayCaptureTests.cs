@@ -123,6 +123,45 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
+        /// U5 ending (-ui5): the last stage won, the U5 clear's Next, the first and the last ending card.
+        /// `unity.sh playcapture U5Ending`.
+        [UnityTest]
+        public IEnumerator U5Ending()
+        {
+            yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-level", "1");
+            var game = Object.FindAnyObjectByType<GameController>();
+            var flow = Services.Get<AppFlow>();
+            int last = flow.StageCount - 1;
+            flow.GoToGame(last);
+            float t0 = Time.realtimeSinceStartup;
+            while (game.LevelIndex != last || flow.State != AppState.Game)
+            {
+                Assert.Less(Time.realtimeSinceStartup - t0, 20f, "the last stage");
+                yield return null;
+            }
+            string path = LevelCatalog.PathOf(last);
+            if (path.Length > 1) game.Board.Replay(path.Substring(0, path.Length - 1));
+            Assert.IsTrue(SevenSteps.Core.Rules.TryParseLetter(path[path.Length - 1], out var act));
+            game.Board.Send(SevenSteps.Core.Command.FromAct(act));
+            var clear = Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ClearView>(FindObjectsInactive.Include);
+            t0 = Time.realtimeSinceStartup;
+            while (flow.State != AppState.Result || !clear.IsShown)
+            {
+                Assert.Less(Time.realtimeSinceStartup - t0, 20f, "the last clear");
+                yield return null;
+            }
+            clear.Next.Press();
+            yield return null;
+            Assert.IsTrue(game.Ending.IsOpen, "story on: the ending cards");
+            var px = new Pixels();
+            yield return Capture("u5-ending-first", px, 0.5f);
+            AssertVaried("u5-ending-first", px.Value);
+            for (int guard = 0; !game.U5Ending.Map.Shown && guard < 10; guard++) { game.U5Ending.Next.Press(); yield return null; }
+            px = new Pixels();
+            yield return Capture("u5-ending-last", px, 0.5f);
+            AssertVaried("u5-ending-last", px.Value);
+        }
+
         /// U5 boot treatment (-ui5 -loadDelay 3): the Boot -> Title load behind the fader with the three scarf sparks.
         /// `unity.sh playcapture U5Boot`.
         [UnityTest]
