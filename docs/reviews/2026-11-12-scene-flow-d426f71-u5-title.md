@@ -56,3 +56,29 @@
 7. **테스트**
    - EditMode: `GameFlowController`(가짜 `IResultPanel`·가짜 journey 핸들러)로 Win → Result → Next → Advancing → ContinueTo(Result), PlanetComplete, 지도 → Back, 마지막 → 엔딩, 잠금 중 두 번 누르기.
    - PlayMode: `JourneyFlowTests` 둘을 "결과를 거친다"로 고친다. 결과 상태를 확인하고 Next를 누르게 한다.
+
+## 구현 확인: feat/scene-flow d23c100 (클리어 뒤 여정) — **승인**
+
+- d23c100 detached에서 헤드리스로 직접 돌렸다.
+  - EditMode: OK(scene-flow 보고 845/845)
+  - playtest: **12 통과**, 13 건너뜀. 건너뛴 것은 `Explicit` 캡처 테스트다.
+- **설계대로 구현됐다**
+  - `OnWinPresented`는 항상 `flow.Go(Result)`다. 결과를 건너뛰는 분기는 **전역으로 지웠다**(권장안). 이야기 저장점 `ClearShown`은 `ShowClear`에서 한 번 나간다.
+  - `Next()`는 `JourneyRoute.After`로 나눈다.
+    - Advance: `Leave` = `Leaving = true`, `result.Hide()`, `Advancing`.
+    - PlanetComplete: `PlanetCompleting`.
+    - 그 밖: 지금처럼 다시 로드하고, 마지막은 엔딩이다.
+  - `ContinueTo`의 전제 조건은 `State == Result && Leaving`이다. 텔레메트리 `via: next`는 여기서 한 번만 나간다.
+  - 지도·Esc(여정 켜짐, Result): `Returning` → `JourneyReturn.Begin(..., ReturnKind.Back)` → `FinishReturn`(전제 조건 `returning && Result`) → StageSelect.
+  - `StageSelectController.OnSettled`는 `Back`이면 길 불 없이 그 행성 지도를 보인다. gameplay-ui 파일의 두 줄 분기다. 소유자 확인은 리드가 한다.
+  - **잠금**: `Next`·`Again`·`OpenStageSelect`가 `Leaving` 동안 아무것도 하지 않는다. 두 번 눌러도 두 번 전진하지 않는다. `Enter`가 새 스테이지에서 `Leaving`을 푼다.
+  - `ReturnKind`는 append-only enum이다. 정의되지 않은 값은 `ArgumentOutOfRangeException`이다.
+  - `JourneyCheck`(smoke)와 `JourneyFlowTests`가 결과 → Next 경로를 탄다.
+- `IResultPanel`과 `AppFlow`는 바뀌지 않았다. 지금 UI 결과 패널과 U5 클리어가 같은 경로를 쓴다.
+- 메모: `docs/stage-select-transitions.md`도 함께 고쳤다(scene-flow 문서).
+
+## 훑어보기: feat/scene-flow 12088de (행성 끝 클리어의 지도·Esc, 리드 결정) — 문제없음
+
+- `OpenStageSelect`에서 Result이고 여정이 켜져 있을 때, 행성 끝(`JourneyRoute.After == PlanetComplete`)이면 `PlanetCompleting`, 그 밖이면 `Returning`(Back)이다. 그래서 행성 끝의 길 불은 Next로 가든 지도로 가든 한 번 켜진다.
+- `Leaving` 잠금은 그대로다. EditMode 테스트가 더해졌다.
+- 계약(`IResultPanel`·`AppFlow`)은 바뀌지 않는다.

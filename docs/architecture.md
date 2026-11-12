@@ -840,7 +840,7 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
     - **R**: 그 스테이지를 다시 한다. ★ 다시 도전 경로다.
     - **Esc**: 메뉴(14.11 5번)가 결과 위에 열리고, 스테이지 선택으로 갈 수 있다.
     - 포인터만 쓰는 플레이어는 [다음] 뒤 HUD 메뉴로 간다. 플레이테스트 관찰 항목이다.
-  - **패배 결과**는 지금처럼 알파 0.6 이상 막의 모달이다. 50 결과의 [다음]은 [끝까지 보기]다(16.8).
+  - **패배 결과**는 지금처럼 알파 0.6 이상 막의 모달이다. 단 U5(`-ui5`, docs/ui-u5-kit.md)에서는 패배도 보드 위 결과다(막 0.25 + HUD 숨김 + 보드 영역 비겹침, 2026-11-12). 50 결과의 [다음]은 [끝까지 보기]다(16.8).
   - **UiLayoutCheck(scene-flow)**: 'Result clear' 화면은 막 알파 검사 대신 셋을 확인한다.
     - 막이 화면 전체이고 `raycastTarget`이 켜져 있다.
     - HUD의 `CanvasGroup` 알파가 0이다.
@@ -1185,3 +1185,5 @@ namespace SevenSteps.Game.UI {
 | 2026-11-12 | 아키텍트 | feat/view 1a6bb08+456de23 승인(U5 아이콘 가져오기, PaddingOf max(8,border); R2: 선택이 StepSkyBand·보드 영역(벽 포함)을 피함, 자리 없으면 exempt Board, UseChoiceView 설정 이전, 캡처 1280×720 단정·다시 배치). 헤드리스 EditMode 826/826, scene-validate OK. `docs/reviews/2026-11-12-feat-view-40a0561-u5-hud.md` |
 | 2026-11-12 | 아키텍트 | feat/view 1f90617 승인(토글 뒤: U5ClearView = IResultPanel, 지도·다시 하기 모서리, 다음 56, -ui5 선돌 수 판 숨김, 캡처 규칙 켜진 캔버스만). U5 기본 켜기 전 필수: R1 별돌이 UI로 플레이 칸 위(월드 별돌 worldStar 권장), R2 다음 설명 판 위치·다음 글리프 대비. 헤드리스 EditMode 833/833. `docs/reviews/2026-11-12-feat-view-1f90617-u5-clear.md` |
 | 2026-11-12 | 아키텍트 | feat/scene-flow d426f71 승인(토글 뒤 U5 Title·언어·크레딧, UiLayoutCheck U5·14.4 예외, U5만으로는 여정 안 켬). K1(gameplay-ui): FocusPlate 높이가 검사기 글자 사각형과 다름(여백 6.5), U5 HUD 제목 판 안전 영역 → 고친 뒤 U5KitAreErrors=true. 리드 질문 답: 승리 → 항상 Result(U5 클리어) → Next에서 JourneyRoute 분기(Advance: Hide → Advancing → ContinueTo, 전제 State==Result; PlanetComplete), 지도 = JourneyReturn Back 종류, IResultPanel·AppFlow 불변, 전역 규칙 권장. `docs/reviews/2026-11-12-scene-flow-d426f71-u5-title.md` |
+| 2026-11-12 | 아키텍트 | feat/scene-flow d23c100 승인(클리어 뒤 여정: 항상 Result, Next에서 Advance/PlanetComplete/엔딩, 지도·Esc = JourneyReturn Back, Leaving 잠금, ContinueTo 전제 Result+Leaving, 결과 건너뛰기 전역 삭제). 헤드리스 EditMode OK, playtest 12 통과. `docs/reviews/2026-11-12-scene-flow-d426f71-u5-title.md` |
+| 2026-11-12 | 아키텍트 | feat/view 6a792b6 승인(토글 뒤: U5 일시정지 IMenuPanel·설정 줄+더 보기(동의·볼륨 유지)·실패, 클리어 R1 2D 줄 보드 위(3D 별돌은 아트 확인 대기)·R2·K1, U5 경고 0). U5 기본 켜기 전 R3: 클리어·실패에 0.25 막. 14.7: U5 패배도 보드 위 결과. 헤드리스 EditMode·scene-validate OK. `docs/reviews/2026-11-12-feat-view-1f90617-u5-clear.md` |
