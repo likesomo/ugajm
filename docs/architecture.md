@@ -291,7 +291,7 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
 - Unity 검사(켜짐, 2026-11-09): `TileSetValidator`가 `GameAssets.chaptersJson`의 `artPreset`이 모두 `AppConfig.chapters`에 있는지 본다(없으면 오류). `AppConfig.chapters`가 비어 있으면 경고만(모든 스테이지가 `AppConfig.tileSet`/`GameAssets.tileSet`).
 - 담당: 레벨 디자인(`chapters.json`, `chapter`/`story` 채우기, export 검증), 코어(`LevelDto` 필드), 아키텍트(`ChapterInfo`, 이 절, 검사기), 게임플레이/UI(`LevelCatalog`·진입 문구 표시), 씬 플로우(챕터가 바뀔 때의 흐름·`ResultModel.nextChapterChanges`), 백엔드/분석(이벤트에 챕터 id를 실을지).
 
-### 6.5 3별 (2026-11-11 "형제 모두" 규칙, 가정·사용자 확인 필요, design/levels/stars.md 0. B안 대체)
+### 6.5 3별 (2026-11-11 "형제 모두" 규칙, 2026-11-12 사용자 확정, design/levels/stars.md 0. B안 대체)
 
 - 규칙: ★1 = 클리어. ★2 = ★1 + 이번 시도에서 풀이 보기(H)를 쓰지 않음. ★3 = ★2 + 형제를 모두 씀(`bodiesUsed == Level.Bodies`). 최소 몸 수·되돌리기·재시작은 별과 상관없다. 잠금 없음(별은 진행을 막지 않는다).
 - **시도(attempt)** = 스테이지에 들어온 때(`LoadStage`: 선택·다음·다시 하기·`[` `]`)부터 클리어까지. 결과 화면의 "다시 하기"는 새 시도다. 시도 안의 재시작(R)은 시도를 끝내지 않는다(별과 상관없음).

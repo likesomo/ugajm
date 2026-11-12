@@ -3,7 +3,7 @@ using System;
 namespace SevenSteps.Core
 {
     /// <summary>
-    /// Stars for one cleared attempt (design/levels/stars.md 0; ASSUMPTION 2026-11-11, user to confirm). Port of core.js stars().
+    /// Stars for one cleared attempt (design/levels/stars.md 0; user-confirmed 2026-11-12). Port of core.js stars().
     /// An attempt runs from level_start to the clear; restarts inside it belong to the same attempt.
     /// Only the best stars per stage name are kept (progress v2); stars lock nothing.
     /// </summary>
