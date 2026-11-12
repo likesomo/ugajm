@@ -47,7 +47,7 @@ namespace SevenSteps.EditorTools
         public static bool HudResultAreErrors = true;
         /// U5 screens whose findings are the kit's (gameplay-ui: FocusPlate size, U5GameHud): warnings until the kit passes
         /// (lead flips this, as HudResultAreErrors). The U5 title, language and credits without a tip are errors already.
-        public static bool U5KitAreErrors = false;
+        public static bool U5KitAreErrors = true; // gameplay-ui K1 fixed (feat/view 6a792b6, 0 U5 warnings; lead 2026-11-12)
         /// Glyph quads carry the font's side bearing (hand fonts: up to ~2 units past the pen position).
         const float GlyphSlack = 2f;
 
@@ -307,6 +307,20 @@ namespace SevenSteps.EditorTools
                     if (!tips.Showing) throw new InvalidOperationException("the focus plate did not show");
                     return null;
                 } }, "tip " + which);
+            }
+            // U5 map / surface controls (back, settings; the v4 map's own overlay is not on this canvas). With a tip each.
+            foreach (string which in new[] { "", "back", "settings" })
+            {
+                string w = which;
+                yield return (new Screen { Name = "U5 Map controls", U5Kit = w != "", Build = (c, root) =>
+                {
+                    var tips = FocusPlate.Build(root, c.Loc, c.Assets.uiIcons);
+                    var v = new U5MapControls(root, c.Assets.uiIcons, tips);
+                    v.SetShown(true);
+                    var b = w == "back" ? v.Back : w == "settings" ? v.Settings : null;
+                    if (b != null) tips.Model.Enter(TipSource.Hover, b, b.TipKey, b.Shortcut);
+                    return null;
+                } }, w == "" ? "" : "tip " + w);
             }
             // Language and credits, each also with the kit's explanation plate showing (U5Kit, as the title tips).
             foreach (bool tip in new[] { false, true })

@@ -48,6 +48,9 @@ namespace SevenSteps.Game.UI.Planets
         public event Action CloseRequested;
 
         public bool Visible => panel.activeSelf;
+        /// The surface's own back chevron (scene-flow's U5 map controls hide it and press it, so its guard stays one place).
+        public Button Back => back;
+        readonly Button back;
         public int Planet => planet;
         /// The seated body on show (null while closed).
         public PlanetBody Body => body;
@@ -92,7 +95,7 @@ namespace SevenSteps.Game.UI.Planets
             step = Ui.Label(rect, "", 23, Gold, TextAnchor.MiddleCenter, "Step");
             step.rectTransform.Place(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 40), new Vector2(400, 40));
             step.raycastTarget = false;
-            PlanetMap3DView.BackChevron(rect, Gold, () => { if (!pending) CloseRequested?.Invoke(); });
+            back = PlanetMap3DView.BackChevron(rect, Gold, () => { if (!pending) CloseRequested?.Invoke(); });
 
             panel.AddComponent<ViewTicker>().Tick = Tick;
             panel.SetActive(false);
