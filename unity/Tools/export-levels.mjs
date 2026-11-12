@@ -147,3 +147,22 @@ if (!existsSync(storySrc)) {
   copyFileSync(storySrc, storyOut);
   console.log(`[export-levels] story.json -> ${storyOut}`);
 }
+
+// ---- cutscenes.json (design/story/cutscenes.md): the storybook pages, copied only when check-cutscenes.mjs passes ----
+const cutscenesSrc = join(root, 'design', 'story', 'cutscenes.json');
+const cutscenesCheck = join(root, 'design', 'story', 'tools', 'check-cutscenes.mjs');
+const cutscenesOut = join(data, 'cutscenes.json');
+if (!existsSync(cutscenesSrc)) {
+  console.warn('[export-levels] WARN design/story/cutscenes.json not found; Data/cutscenes.json not written');
+} else if (!existsSync(cutscenesCheck)) {
+  console.error('[export-levels] FAIL design/story/tools/check-cutscenes.mjs not found; cutscenes.json was not copied (it must pass the check first)');
+  process.exit(1);
+} else {
+  const r = spawnSync(process.execPath, [cutscenesCheck], { cwd: root, stdio: 'inherit' });
+  if (r.status !== 0) {
+    console.error(`[export-levels] FAIL check-cutscenes exit ${r.status ?? r.error}; Data/cutscenes.json was not written`);
+    process.exit(1);
+  }
+  copyFileSync(cutscenesSrc, cutscenesOut);
+  console.log(`[export-levels] cutscenes.json -> ${cutscenesOut}`);
+}

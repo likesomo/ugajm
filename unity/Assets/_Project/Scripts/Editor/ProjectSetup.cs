@@ -298,6 +298,9 @@ namespace SevenSteps.EditorTools
             // required stays false until every picture is in, 16.2). Made empty with the story.json keys when missing.
             ga.storyJson = AssetDatabase.LoadAssetAtPath<TextAsset>(DataDir + "/story.json");
             ga.storyImages = StoryImagesAsset(ga.storyJson);
+            // Storybook cutscenes (design/story/cutscenes.md): cutscenes.json from unity.sh levels, and their picture set.
+            ga.cutscenesJson = AssetDatabase.LoadAssetAtPath<TextAsset>(DataDir + "/cutscenes.json");
+            ga.cutsceneImages = CutsceneImagesAsset(ga.cutscenesJson);
             ga.font = Load<Font>(FontPath);
             ga.floorA = pFloorA; ga.floorB = pFloorB; ga.wall = pWall; ga.pit = pPit; ga.ice = pIce;
             ga.cracked = pCracked; ga.bridge = pBridge; ga.exit = pExit; ga.gate = pGate;
@@ -328,6 +331,21 @@ namespace SevenSteps.EditorTools
             set.entries = keys == null ? new StoryImageSet.Entry[0]
                 : System.Array.ConvertAll(keys, k => new StoryImageSet.Entry { key = k });
             AssetDatabase.CreateAsset(set, StoryImagesPath);
+            return set;
+        }
+
+        const string CutsceneImagesPath = DataDir + "/CutsceneImages.asset";
+
+        /// Data/CutsceneImages.asset, created with one empty entry per cutscene page when it does not exist yet (art's after).
+        static StoryImageSet CutsceneImagesAsset(TextAsset cutscenesJson)
+        {
+            var set = AssetDatabase.LoadAssetAtPath<StoryImageSet>(CutsceneImagesPath);
+            if (set != null) return set;
+            set = ScriptableObject.CreateInstance<StoryImageSet>();
+            var keys = cutscenesJson != null ? CutsceneCatalog.FromJson(cutscenesJson.text).ImageKeys : null;
+            set.entries = keys == null ? new StoryImageSet.Entry[0]
+                : System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Select(keys, k => new StoryImageSet.Entry { key = k }));
+            AssetDatabase.CreateAsset(set, CutsceneImagesPath);
             return set;
         }
 

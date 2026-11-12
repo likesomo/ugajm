@@ -1,0 +1,98 @@
+{
+  "about": "Storybook cutscenes for Seven Steps (design/story/cutscenes.md; user request 2026-11-12 evening, overrides the old no-cutscene rule). ko base + text[] per language like story.json. Each page = one picture (image key -> StoryImageSet, art in Assets/Shared/Art/Story/Cutscenes/<key>.png) + 1-3 lines. 'art' is the Codex prompt for that page, not shown in game.",
+  "version": 1,
+  "languages": ["ko", "en"],
+  "artStyle": "Picture-book illustration, gouache and watercolour on textured paper, soft warm light, muted palette (moss greens, warm sandstone, deep indigo night sky). Three identical small faceless hooded wanderers of the same height, told apart only by scarf colour: teal #568C88 (eldest), ochre #B99A57 (middle), terracotta #B96C59 (youngest). Standing stones are plain neutral grey granite. Seven stars in a dipper shape may appear in the sky. No text, letters, numbers, star ratings or UI in the picture; no real-world ruins, religions or symbols. 16:9, 1920x1080; keep the bottom quarter calm and low-detail (the text box sits there).",
+  "scenes": [
+    {
+      "id": "prologue",
+      "when": "newGame",
+      "replay": "title",
+      "pages": [
+        {
+          "id": "1",
+          "image": "cutscene.prologue.1",
+          "lines": [
+            { "line": "고향 하늘의 일곱 별이 해마다 흐려진다.", "text": [{ "lang": "en", "line": "Every year the seven stars over home grow fainter." }] },
+            { "line": "별이 다 꺼지면 땅은 걸음을 잊고, 길은 모두 닫힌다.", "text": [{ "lang": "en", "line": "If they all go out, the ground forgets our steps and every path closes." }] }
+          ],
+          "art": "Night over a small mossy home planet. Wide shot: the three hooded brothers stand small on a mossy hill beside broken observatory pillars, looking up at a faint, half-faded seven-star dipper. A shut stone gate in the moss below them."
+        },
+        {
+          "id": "2",
+          "image": "cutscene.prologue.2",
+          "lines": [
+            { "line": "관측소 마지막 문 너머에서 별지도를 찾았다.", "text": [{ "lang": "en", "line": "Beyond the observatory's last door we found the star map." }] },
+            { "line": "지도는 같은 밤에 태어난 우리 셋의 손에서만 빛났다.", "text": [{ "lang": "en", "line": "It shines only in our hands, the three born on the same night." }] }
+          ],
+          "art": "Inside a ruined mossy observatory, lit by the map itself. Close-medium shot: the three brothers kneel around an unrolled scroll that glows softly. On it: seven star points and a small ring of stones at one edge, with no lines between the stars yet. Their three scarves hang into the glow."
+        },
+        {
+          "id": "3",
+          "image": "cutscene.prologue.3",
+          "lines": [
+            { "line": "한 걸음마다 하늘에 별이 하나씩 켜진다.", "text": [{ "lang": "en", "line": "Each step lights one star in the sky." }] },
+            { "line": "일곱째 별이 켜질 때에만 땅이 귀를 기울인다.", "text": [{ "lang": "en", "line": "Only when the seventh lights does the ground listen." }] }
+          ],
+          "art": "Side view: the middle brother (ochre scarf) walks across square mossy stone tiles carrying the scroll. Behind him, small glowing star-shaped footprints on the tiles he has stepped on. Above him the dipper is half lit: the first stars bright, the rest still dim."
+        },
+        {
+          "id": "4",
+          "image": "cutscene.prologue.4",
+          "lines": [
+            { "line": "그래서 일곱 번째 걸음이 닿는 곳만 바뀐다.", "text": [{ "lang": "en", "line": "So only the place the seventh step lands on changes." }] },
+            { "line": "여섯째 걸음에 문 앞에 서도 문은 열리지 않는다.", "text": [{ "lang": "en", "line": "Stand at the door on the sixth step and it stays shut." }] },
+            { "line": "일곱 걸음을 꼭 맞게 세어야 한다.", "text": [{ "lang": "en", "line": "All seven steps have to count, no more and no less." }] }
+          ],
+          "art": "The youngest brother (terracotta scarf) sets his foot on a glowing star mark in front of a mossy stone gate, and the gate swings open with warm light. Above, the whole dipper is lit and a thin beam of starlight runs straight down to his step (the alignment)."
+        },
+        {
+          "id": "5",
+          "image": "cutscene.prologue.5",
+          "lines": [
+            { "line": "일곱 걸음을 다 쓰면 지도를 다음 형제에게 넘긴다.", "text": [{ "lang": "en", "line": "When the seven steps are spent, the map goes to the next brother." }] },
+            { "line": "그 자리에 남으면 선돌이 되어 길을 붙든다.", "text": [{ "lang": "en", "line": "Whoever stays turns into a standing stone and holds the way." }] },
+            { "line": "하늘이 맞춰지면 돌에서 다시 걸어 나온다.", "text": [{ "lang": "en", "line": "When the sky lines up, he walks out of the stone again." }] }
+          ],
+          "art": "Split composition in one scene: on the right, the eldest (teal scarf) stands still on a stone plate beside an open gate, his lower half already turning into a plain grey granite standing stone. A ribbon of starlight carries the scroll from him to the left, where the middle brother wakes up curled in a soft pool of starlight at the starting point."
+        },
+        {
+          "id": "6",
+          "image": "cutscene.prologue.6",
+          "lines": [
+            { "line": "지도는 우리 셋에게 함께 건네졌다.", "text": [{ "lang": "en", "line": "The map was handed to all three of us together." }] },
+            { "line": "별 사이의 선은 셋이 모두 걸어야 가장 밝게 이어진다.", "text": [{ "lang": "en", "line": "The line between the stars shines brightest only when all three walk it." }] },
+            { "line": "닿으면 별 하나, 스스로 세면 둘, 셋이 모두 걸으면 셋.", "text": [{ "lang": "en", "line": "Arrive: one star. Count it yourselves: two. All three walk: three." }] }
+          ],
+          "art": "Top-down-ish view of a small board of stone tiles: three trails of glowing footprints, one teal, one ochre, one terracotta, each starting from the same start and meeting at the exit, where the three brothers stand together. In the sky above, a bright line between two stars, woven from three coloured strands (teal, ochre, terracotta)."
+        },
+        {
+          "id": "7",
+          "image": "cutscene.prologue.7",
+          "lines": [
+            { "line": "지도 끝 선돌의 원까지, 일곱 별을 다시 잇는다.", "text": [{ "lang": "en", "line": "All the way to the ring of stones at the map's end, we join the seven stars again." }] },
+            { "line": "별이 다 꺼지기 전에.", "text": [{ "lang": "en", "line": "Before they all go out." }] }
+          ],
+          "art": "Back view, wide: the three brothers walk away along a mossy path toward the horizon of their small planet, the scroll on the youngest's back. In the deep indigo sky the faint dipper, and far away a tiny planet crowned by a ring of standing stones."
+        }
+      ]
+    },
+    {
+      "id": "epilogue",
+      "when": "afterEnding",
+      "replay": "title",
+      "optional": true,
+      "pages": [
+        {
+          "id": "1",
+          "image": "cutscene.epilogue.1",
+          "lines": [
+            { "line": "셋이 함께 걸은 길마다 별이 밝게 남았다.", "text": [{ "lang": "en", "line": "Every path the three of us walked together stayed bright." }] },
+            { "line": "다음 바퀴에도, 일곱 걸음씩.", "text": [{ "lang": "en", "line": "Next turn too, seven steps at a time." }] }
+          ],
+          "art": "Night above the ring of standing stones, seen from behind three small figures sitting together on the grass. The whole dipper is bright, and lines of three woven colours (teal, ochre, terracotta) run between its stars across the sky."
+        }
+      ]
+    }
+  ]
+}

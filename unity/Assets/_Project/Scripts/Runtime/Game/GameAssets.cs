@@ -21,6 +21,10 @@ namespace SevenSteps.Game
         public TextAsset storyJson;
         [Tooltip("Story pictures by key (StoryImageSet, art). Empty = text without pictures.")]
         public StoryImageSet storyImages;
+        [Tooltip("Data/cutscenes.json (design/story/cutscenes.md, CutsceneCatalog): the storybook prologue / epilogue. Empty = no cutscenes.")]
+        public TextAsset cutscenesJson;
+        [Tooltip("Cutscene pictures by key cutscene.<scene>.<page> (Data/CutsceneImages.asset, art). Empty sprite = the plain card.")]
+        public StoryImageSet cutsceneImages;
         public Font font;
         [Tooltip("UI look: font, colors, panel prefabs (docs/scene-flow.md S6). Default Data/UiTheme_Default.asset")]
         public UI.UiTheme uiTheme;

@@ -600,6 +600,37 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
+        /// Storybook viewer (design/story/cutscenes.md 2; gameplay-ui): a fresh save's play stone opens the prologue. Page 1
+        /// on its first line, and page 4 with all three lines (the fullest plate) in KO and EN, on the plain card (no Codex
+        /// art yet). `unity.sh playcapture U5Cutscene` -> u5-cutscene-*.png.
+        [UnityTest]
+        public IEnumerator U5Cutscene()
+        {
+            foreach (var lang in new[] { "ko", "en" })
+            {
+                PlayEnv.Reset();
+                yield return Start(AppState.Title, AppScenes.Title, "-ui5", "-lang", lang);
+                var title = Object.FindAnyObjectByType<SevenSteps.Game.UI.TitleScreen>();
+                title.U5Title.Play.Press();
+                var c = title.Cutscene;
+                var v = title.CutsceneView;
+                Assert.IsTrue(c.IsOpen && v.Visible, lang + ": the prologue on a new game");
+                Assert.IsFalse(v.HasPicture, lang + ": plain card until the art lands");
+                var px = new Pixels();
+                if (lang == "ko")
+                {
+                    yield return Capture("u5-cutscene-p1-ko", px, 0.5f);
+                    AssertVaried("u5-cutscene-p1-ko", px.Value);
+                }
+                while (c.Page < 3 || c.Shown < 3) v.Next.Press();
+                Assert.AreEqual(3, c.Frame.Lines.Count, "page 4 has three lines");
+                yield return Capture($"u5-cutscene-p4-{lang}", px, 0.5f);
+                AssertVaried($"u5-cutscene-p4-{lang}", px.Value);
+                v.Skip.Press();
+                yield return PlayEnv.WaitForState(AppState.Game, AppScenes.Game, 20f);
+            }
+        }
+
         // ---------- ----------
 
         static IEnumerator Start(AppState state, string scene, params string[] args)

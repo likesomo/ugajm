@@ -68,6 +68,14 @@ namespace SevenSteps.Game.UI
         U5CreditsView u5Credits;
         TitleWorld titleWorld;
         U5MapControls u5Map;
+        // Storybook cutscenes (design/story/cutscenes.md): null when cutscenes.json is missing or broken (CutsceneLoad logs).
+        CutsceneCatalog cutscenes;
+        U5CutsceneView cutsceneView;
+        CutsceneController cutscene;
+
+        /// The cutscene controller and viewer (tests, captures); null without cutscenes.
+        public CutsceneController Cutscene => cutscene;
+        public U5CutsceneView CutsceneView => cutsceneView;
 
         /// The U5 title view (tests, captures); null when the U5 UI is off.
         public U5TitleView U5Title => u5Title;
@@ -138,6 +146,13 @@ namespace SevenSteps.Game.UI
                 BuildLanguageBadge(root);
             }
             if (overlays == null) overlays = new OverlayStack();
+            // Storybook viewer over everything on its own canvas; Esc skips through the BackNavigator (overlay pop).
+            cutscenes = CutsceneLoad.Catalog(assets);
+            if (cutscenes != null)
+            {
+                cutsceneView = U5CutsceneView.Build(assets.cutsceneImages, assets.uiIcons, localizer);
+                cutscene = new CutsceneController(overlays, cutsceneView, () => localizer.Current);
+            }
             // Text in the current language; redraw when the language changes (docs/architecture.md 13.3).
             ApplyText();
             localizer.Changed += OnLanguageChanged;
@@ -147,7 +162,9 @@ namespace SevenSteps.Game.UI
             if (u5)
             {
                 // One play stone: the last played stage when there is one, else stage 1 (the caption says which).
-                u5Title.PlayRequested += () => { if (flowController.CanContinue) flowController.ContinueJourney(); else flowController.BeginJourney(); };
+                u5Title.PlayRequested += () => { if (flowController.CanContinue) flowController.ContinueJourney(); else BeginNewGame(); };
+                u5Title.StoryRequested += ReplayStory;
+                u5Title.SetStoryShown(cutscenes != null && cutscenes.TitleReplay() != null);
                 u5Title.MapRequested += flowController.OpenStageSelect;
                 u5Title.SettingsRequested += () => Open(settings);
                 u5Title.CreditsRequested += () => Open(u5Credits);
@@ -155,7 +172,7 @@ namespace SevenSteps.Game.UI
             }
             else
             {
-                titleView.BeginRequested += flowController.BeginJourney;
+                titleView.BeginRequested += BeginNewGame;
                 titleView.ContinueRequested += flowController.ContinueJourney;
                 titleView.StagesRequested += flowController.OpenStageSelect;
                 titleView.SettingsRequested += () => Open(settings);
@@ -271,6 +288,34 @@ namespace SevenSteps.Game.UI
             Open(planetStages);
         }
 
+
+        /// A new game (nothing played yet): the prologue first when it is due (CutsceneController.PlaysOnNewGame), then
+        /// stage 1. Seen once it ends, read or skipped. The tutorial boards will come between them (core's contract).
+        void BeginNewGame()
+        {
+            var launch = Services.Get<LaunchOptions>();
+            bool devRun = launch.TitleCheck != "" || launch.FlowCheck || launch.SmokeView != SmokeView.None || !string.IsNullOrEmpty(launch.Screenshot);
+            var prologue = cutscenes?.SceneFor(CutsceneCatalog.WhenNewGame);
+            if (!CutsceneController.PlaysOnNewGame(prologue, flowController.CanContinue, save.TutorialSeen(TutorialIds.Prologue), devRun))
+            {
+                flowController.BeginJourney();
+                return;
+            }
+            cutscene.Begin(prologue, skipped =>
+            {
+                save.MarkTutorialSeen(TutorialIds.Prologue);
+                flowController.BeginJourney();
+            });
+        }
+
+        /// The title's story entry: the replayable cutscene, then back to the title (OnOverlaysChanged shows it again).
+        void ReplayStory()
+        {
+            var scene = cutscenes?.TitleReplay();
+            if (scene == null) throw new InvalidOperationException("[SevenSteps] the story entry is shown without a cutscene to replay");
+            if (overlays.Count > 0 || cutscene.IsOpen) return;
+            cutscene.Begin(scene, skipped => { });
+        }
         void OpenLanguage() => language.Open();
 
         /// An overlay opened or closed: when none is left, give the keyboard focus back to the screen under it.
@@ -321,7 +366,11 @@ namespace SevenSteps.Game.UI
                 planetStages.Bind(planets[openPlanet], save.Progress, levels, localizer, TruthOf(openPlanet));
         }
 
-        void OnLanguageChanged(Language lang) => ApplyText();
+        void OnLanguageChanged(Language lang)
+        {
+            ApplyText();
+            cutscene?.Redraw();
+        }
 
         /// A planet's truth for its stage list once its finale is cleared (story 0.5 #3), else null (the tagline).
         string TruthOf(int planet) =>
@@ -330,6 +379,7 @@ namespace SevenSteps.Game.UI
         void OnDestroy()
         {
             flowController?.Dispose();
+            cutscene?.Dispose();
             StageSelect?.Dispose();
             journey?.Dispose();
             titleWorld?.Dispose();

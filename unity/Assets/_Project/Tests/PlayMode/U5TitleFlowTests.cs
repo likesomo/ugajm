@@ -170,8 +170,44 @@ namespace SevenSteps.Tests.PlayMode
             var title = Object.FindAnyObjectByType<TitleScreen>();
             Assert.AreEqual(Services.Get<Localizer>().Get("ui5.title.begin"), title.U5Title.Caption, "nothing played yet: first step");
             title.U5Title.Play.Press();
+            // New game: the storybook prologue first (design/story/cutscenes.md 2); skipping it starts the journey.
+            Assert.IsTrue(title.Cutscene.IsOpen && title.CutsceneView.Visible, "the prologue on a fresh save");
+            Assert.AreEqual(SevenSteps.Contracts.CutsceneCatalog.Prologue, title.Cutscene.Scene.id);
+            Assert.IsFalse(title.U5Title.Visible, "the title's controls make way");
+            Assert.AreEqual(AppState.Title, Services.Get<AppFlow>().State, "no stage until the prologue ends");
+            title.CutsceneView.Next.Press();
+            Assert.AreEqual(2, title.Cutscene.Shown, "next: the page's second line");
+            title.CutsceneView.Skip.Press();
+            Assert.IsTrue(Services.Get<SaveSystem>().TutorialSeen(TutorialIds.Prologue), "seen once skipped");
             yield return PlayEnv.WaitForState(AppState.Game, AppScenes.Game, 20f);
-            Assert.AreEqual(0, Services.Get<AppFlow>().Stage, "stage 1");
+            Assert.AreEqual(0, Services.Get<AppFlow>().Stage, "stage 1 (the tutorial boards will come first once core's data is in)");
+        }
+
+        [UnityTest]
+        public IEnumerator StoryIconReplaysThePrologueAndComesBack()
+        {
+            yield return Boot("-ui5");
+            var title = Object.FindAnyObjectByType<TitleScreen>();
+            Assert.IsTrue(title.U5Title.Story.gameObject.activeSelf, "the story entry is on the title");
+            title.U5Title.Story.Press();
+            Assert.IsTrue(title.Cutscene.IsOpen, "the prologue replays");
+            Assert.IsFalse(Services.Get<SaveSystem>().TutorialSeen(TutorialIds.Prologue), "a replay does not count as the new-game one");
+            title.Cutscene.Skip(); // Esc does the same through the BackNavigator
+            yield return null;
+            Assert.IsFalse(title.CutsceneView.Visible);
+            Assert.IsTrue(title.U5Title.Visible, "back on the title");
+            Assert.AreEqual(AppState.Title, Services.Get<AppFlow>().State);
+        }
+
+        [UnityTest]
+        public IEnumerator ASeenPrologueDoesNotPlayAgain()
+        {
+            yield return Boot("-ui5");
+            Services.Get<SaveSystem>().MarkTutorialSeen(TutorialIds.Prologue);
+            var title = Object.FindAnyObjectByType<TitleScreen>();
+            title.U5Title.Play.Press();
+            Assert.IsFalse(title.Cutscene.IsOpen);
+            yield return PlayEnv.WaitForState(AppState.Game, AppScenes.Game, 20f);
         }
 
         [UnityTest]

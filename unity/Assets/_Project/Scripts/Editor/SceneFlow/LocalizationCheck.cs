@@ -124,6 +124,18 @@ namespace SevenSteps.EditorTools
                     for (int i = 0; i < e.lines.Length; i++)
                         texts.Add((story.Line(e, i, lang).Replace(StoryCatalog.BrotherToken, ""), $"story.json {e.id}/{e.lines[i].id} ({code})"));
             }
+            // cutscenes.json (design/story/cutscenes.md): every line of every page. A file that fails its load check is
+            // reported by SceneFlowValidator.ValidateCutscenes.
+            if (assets.cutscenesJson != null)
+            {
+                CutsceneCatalog cutscenes = null;
+                try { cutscenes = CutsceneCatalog.FromJson(assets.cutscenesJson.text); } catch (FormatException) { }
+                if (cutscenes != null)
+                    foreach (var s in cutscenes.Scenes)
+                        foreach (var p in s.pages)
+                            for (int i = 0; i < p.lines.Length; i++)
+                                texts.Add((CutsceneCatalog.Line(p, i, lang), $"cutscenes.json {s.id}.{p.id} line {i + 1} ({code})"));
+            }
             return texts;
         }
 

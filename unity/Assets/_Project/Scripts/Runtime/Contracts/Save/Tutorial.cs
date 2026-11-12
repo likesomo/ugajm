@@ -55,6 +55,8 @@ namespace SevenSteps.Contracts
         public const string Choose = "choose@1";
         /// First ice slide (where a slide stops: the first floor cell past the ice, or before a wall or statue), shown once.
         public const string Slide = "slide@1";
+        /// The storybook prologue (design/story/cutscenes.md): played once on a new game, replayable from the title.
+        public const string Prologue = "prologue@1";
 
         public static bool IsValid(string id)
         {

@@ -139,6 +139,18 @@ namespace SevenSteps.Tests.PlayMode
                 }
                 Assert.IsFalse(game.U5Ending.Skip.Shown, "the last card has no skip");
                 game.U5Ending.Map.Press();
+                // Read through: the storybook epilogue (design/story/cutscenes.md 2), its lines one by one, then the map.
+                Assert.IsNotNull(game.Cutscene, "cutscenes.json has an epilogue");
+                Assert.IsTrue(game.Cutscene.IsOpen && game.CutsceneView.Visible, "the epilogue after the cards");
+                Assert.AreEqual(SevenSteps.Contracts.CutsceneCatalog.Epilogue, game.Cutscene.Scene.id);
+                guard = 0;
+                while (game.Cutscene.IsOpen)
+                {
+                    Assert.AreEqual(AppState.Result, flow.State, "the map waits for the epilogue");
+                    game.CutsceneView.Next.Press();
+                    yield return null;
+                    Assert.Less(++guard, 10, "the epilogue ends");
+                }
             }
             yield return PlayEnv.WaitForState(AppState.StageSelect, AppScenes.Title, Timeout);
             Assert.AreEqual(AppState.StageSelect, flow.State);
