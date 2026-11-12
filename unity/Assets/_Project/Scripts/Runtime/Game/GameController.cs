@@ -136,7 +136,7 @@ namespace SevenSteps.Game
             // Story ending (docs/architecture.md 16.8): four cards after the last stage's [끝까지 보기].
             story = Services.TryGet<StoryBook>(out var book) ? book : StoryBook.Off();
             var endingView = this.endingView = new EndingView(overlayCanvas, assets.storyImages, localizer);
-            applyResultLanguage = _ => { result.Apply(localizer); languagePanel.Apply(localizer); menuPanel.Apply(localizer); endingView.Apply(localizer); if (u5Hud != null) u5Hud.Apply(localizer); }; // the HUD and board redraw in BoardController
+            applyResultLanguage = _ => { result.Apply(localizer); languagePanel.Apply(localizer); menuPanel.Apply(localizer); endingView.Apply(localizer); if (u5Hud != null) u5Hud.Apply(localizer); if (u5Clear != null) u5Clear.Apply(localizer); }; // the HUD and board redraw in BoardController
             localizer.Changed += applyResultLanguage;
             // The theme's card prefab, else the code-built chapter entry screen (art concept chapter-entry). None in smoke /
             // replay runs: the screenshot must show the board.
@@ -166,7 +166,16 @@ namespace SevenSteps.Game
                 foreach (var c in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
                     if (c.isRootCanvas && c.gameObject != hud.gameObject) c.enabled = false;
             }
-            flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, result, LevelCatalog.ChapterKeyOf, LevelCatalog.ChapterOf);
+            // U5: clears on the U5 clear (star stones, Next by the exit); losses still on the current panel until the failure step.
+            Flow.IResultPanel resultPanel = result;
+            if (u5Hud != null)
+            {
+                u5Clear = UI.U5.U5ClearView.Build(assets.uiIcons, localizer, result);
+                u5Clear.ExitPoint = () => board.View.BrotherOnCanvas();
+                u5Clear.BoardArea = () => board.View.ProjectedArea();
+                resultPanel = u5Clear;
+            }
+            flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, resultPanel, LevelCatalog.ChapterKeyOf, LevelCatalog.ChapterOf);
             back = new BackNavigator(overlays, flowController.Back);
             chapterIntro = new ChapterIntroController(flowController, overlays, chapterCard, key => LevelCatalog.ChapterCard(key, localizer.Current));
             this.result = result;
@@ -229,6 +238,11 @@ namespace SevenSteps.Game
             if (u5Hud != null)
             {
                 result.HudHidden += u5Hud.Conceal;
+                u5Clear.NextRequested += flowController.Next;
+                u5Clear.RetryRequested += flowController.Again;
+                u5Clear.StageSelectRequested += flowController.OpenStageSelect;
+                u5Clear.HudHidden += hud.Conceal;
+                u5Clear.HudHidden += u5Hud.Conceal;
                 u5Hud.PauseRequested += menu.Toggle; // the U5 pause row comes with the pause / failure step; the menu until then
             }
 
@@ -384,6 +398,7 @@ namespace SevenSteps.Game
 
         /// Canvas for overlays above the HUD (0) and the result panel (5).
         UI.U5.U5GameHud u5Hud;
+        UI.U5.U5ClearView u5Clear;
 
         /// U5 HUD -> the same controller calls as the current HUD (docs/ui-u5-kit.md 7).
         void WireU5(UI.U5.U5GameHud u5)
