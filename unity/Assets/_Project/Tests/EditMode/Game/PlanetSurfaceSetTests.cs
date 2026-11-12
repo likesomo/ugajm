@@ -39,8 +39,10 @@ namespace SevenSteps.Tests.EditMode.Game
                 Assert.AreSame(AssetDatabase.LoadAssetAtPath<Texture2D>(TextureRoot + id + ".png"), texture);
                 var projection = texture as Texture2D;
                 Assert.IsNotNull(projection);
-                Assert.AreEqual(1024, projection.width);
-                Assert.AreEqual(1024, projection.height);
+                // Blender V7 surfaces (2026-11-13): source 2048; the imported size follows the active build target
+                // (Standalone 2048, WebGL capped at 1024 below), so either is right here.
+                Assert.AreEqual(projection.width, projection.height);
+                Assert.That(projection.width, Is.EqualTo(1024).Or.EqualTo(2048));
                 Assert.IsNotNull(material);
                 Assert.AreEqual("SevenSteps/PlanetSurfaceProjection", material.shader.name);
                 Assert.AreSame(texture, material.GetTexture("_BaseMap"));
@@ -60,6 +62,7 @@ namespace SevenSteps.Tests.EditMode.Game
                 var webgl = importer.GetPlatformTextureSettings("WebGL");
                 Assert.IsTrue(webgl.overridden);
                 Assert.AreEqual(1024, webgl.maxTextureSize);
+                Assert.AreEqual(2048, importer.GetPlatformTextureSettings("Standalone").maxTextureSize, "Windows keeps the full 2048 surface");
                 Assert.AreEqual(TextureImporterCompression.CompressedHQ, webgl.textureCompression);
                 var meta = System.IO.File.ReadAllBytes(TextureRoot + id + ".png.meta");
                 Assert.Greater(meta.Length, 0);
