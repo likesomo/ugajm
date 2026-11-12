@@ -32,7 +32,7 @@
 | 다음, 같은 행성 | `Advancing` → 아래 이어 가기 → `ContinueTo`(Result → Game, via next 한 번) | 다시 로드 |
 | 다음, 행성의 마지막 | `PlanetCompleting` → 3장 복귀(길 불 켬) → `FinishReturn` | 다시 로드(다음 행성) |
 | 다음, 전체 마지막 | 엔딩(`[끝까지 보기]`) | 같음 |
-| 지도·Esc | `Returning` → 3장 복귀(`ReturnKind.Back`, 길 불 없음) → `FinishReturn` | Title 씬 |
+| 지도·Esc | `Returning` → 3장 복귀(`ReturnKind.Back`, 길 불 없음) → `FinishReturn`. 행성의 마지막 스테이지면 다음과 같은 `PlanetCompleting`(길 불이 한 번 켜짐, 리드 2026-11-12) | Title 씬 |
 | 다시 하기·R | 같은 스테이지 다시 로드 | 같음 |
 
 - 버튼 하나가 전환을 시작하면 `Leaving`이 참이 되고, 다음 스테이지에 들어갈 때까지 다음·다시 하기·지도는 아무것도 하지 않는다(두 번 누르기). 키 입력은 `GameJourney.Blocks`가 막는다.
