@@ -100,6 +100,7 @@ namespace SevenSteps.EditorTools
                 ValidateThemes(gameAssets, issues);
                 ValidateStory(gameAssets, issues); // 16.2 / 16.3: story.json load check, picture keys
                 LocalizationCheck.Check(gameAssets, issues); // 13.6: tables, keys in code, glyphs per language
+                UiIconSetTools.Check(gameAssets, issues); // U5 icon set (docs/ui-u5-kit.md 1.1): placeholders warn
                 UiLayoutCheck.Check(gameAssets, sharedConfig, issues); // 14: text size, plates, overlaps on screens built in Edit Mode
             }
 

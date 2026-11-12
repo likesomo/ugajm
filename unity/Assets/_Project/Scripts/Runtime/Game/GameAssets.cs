@@ -26,6 +26,8 @@ namespace SevenSteps.Game
         public UI.UiTheme uiTheme;
         [Tooltip("Stage select v4 planet bodies (meshes, materials; docs/stage-select-transitions.md). Data/PlanetBodies.asset")]
         public UI.Planets.PlanetBodySet planetBodies;
+        [Tooltip("U5 icons and sprites (docs/ui-u5-kit.md 1, 1.1): Data/UiIconSet.asset, filled from the Codex manifest; empty entries draw line placeholders")]
+        public UI.U5.UiIconSet uiIcons;
 
         [Header("Board art")]
         [Tooltip("Tile/actor prefab mapping used by the board (docs/architecture.md 7). AppConfig.tileSet overrides this when set.")]
