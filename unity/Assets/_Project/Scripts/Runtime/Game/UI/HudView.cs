@@ -362,14 +362,23 @@ namespace SevenSteps.Game.UI
         /// candidate fits (then the cards sit in the right margin; UiLayoutCheck reports the overlap).
         public bool PlaceChoice(Rect board, Vector2 brother) => PlaceChoice(board, brother, ((RectTransform)transform).rect.size);
 
+        /// <see cref="PlaceChoice(Rect, Vector2)"/> also clear of <paramref name="avoid"/> (the step-star sky band; R2 on 40a0561):
+        /// a candidate crossing it is left out, so the cards go beside the board instead of over the stars.
+        public bool PlaceChoice(Rect board, Vector2 brother, IList<Rect> avoid) =>
+            PlaceChoice(board, brother, ((RectTransform)transform).rect.size, avoid);
+
         /// <see cref="PlaceChoice(Rect, Vector2)"/> on a canvas of <paramref name="canvas"/> units (Edit Mode checks).
-        public bool PlaceChoice(Rect board, Vector2 brother, Vector2 canvas)
+        public bool PlaceChoice(Rect board, Vector2 brother, Vector2 canvas) => PlaceChoice(board, brother, canvas, null);
+
+        /// <see cref="PlaceChoice(Rect, Vector2, IList{Rect})"/> on a canvas of <paramref name="canvas"/> units (Edit Mode checks).
+        public bool PlaceChoice(Rect board, Vector2 brother, Vector2 canvas, IList<Rect> extraAvoid)
         {
 
             // docs 14.11 (29ae00f): clear of the HUD plates shown right now (story / move guide, statues, message); the
             // always-on buttons and dots are outside every candidate already. Cards first: if only the message plate is in
             // the way, the message hides while the cards show and comes back with them gone.
             var avoid = new List<Rect>();
+            if (extraAvoid != null) avoid.AddRange(extraAvoid);
             foreach (var go in new[] { guidePanel, statues.transform.parent.gameObject })
                 if (go.activeSelf) avoid.Add(CanvasRect((RectTransform)go.transform, canvas));
             var msgPlate = (RectTransform)message.transform.parent;

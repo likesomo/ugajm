@@ -277,15 +277,33 @@ namespace SevenSteps.Game.UI.U5
             else plate.Model.Exit(TipSource.Focus, focused);
         }
 
-        /// Places the glyph pair beside the board near the brother (14.11 candidates, HudView.LayoutChoice), stacked on the
-        /// left / right of the board, side by side above / below it, clear of <see cref="ChoiceAvoid"/>.
-        public bool PlaceChoice(Rect board, Vector2 brother) => PlaceChoice(board, brother, ((RectTransform)transform).rect.size);
+        /// Places the glyph pair beside the board near the brother (R2 on 40a0561): of the 14.11 candidates
+        /// (HudView.LayoutChoice: stacked left / right of the board area, side by side above / below it; the board area
+        /// is the whole grid with its walls up to actor height) the one nearest to the brother's projected head that is
+        /// clear of <paramref name="avoid"/> (the step-star sky band) and <see cref="ChoiceAvoid"/>. None fits: right over
+        /// the brother on the wall / cells, marked UiLayout exempt Board with that reason.
+        public bool PlaceChoice(Rect board, Vector2 brother, IList<Rect> avoid) =>
+            PlaceChoice(board, brother, ((RectTransform)transform).rect.size, avoid);
 
-        public bool PlaceChoice(Rect board, Vector2 brother, Vector2 canvas)
+        public bool PlaceChoice(Rect board, Vector2 brother, Vector2 canvas, IList<Rect> avoid = null)
         {
             float g = GlyphButton.Size, pair = 2 * g + GlyphGap;
-            var r = HudView.LayoutChoice(board, brother, canvas, new Vector2(g, pair), new Vector2(pair, g), ChoiceAvoid?.Invoke(),
+            var all = new List<Rect>();
+            if (avoid != null) all.AddRange(avoid);
+            var extra = ChoiceAvoid?.Invoke();
+            if (extra != null) all.AddRange(extra);
+            var r = HudView.LayoutChoice(board, brother, canvas, new Vector2(g, pair), new Vector2(pair, g), all,
                 out bool vertical, out bool fits);
+            var mark = glyphs.GetComponent<UiLayout>();
+            if (!fits)
+            {
+                vertical = false;
+                r = new Rect(Mathf.Clamp(brother.x - pair / 2, Safe, canvas.x - Safe - pair),
+                    Mathf.Clamp(brother.y - g - 24, Safe + IconButton.Size + 8, canvas.y - Safe - g), pair, g);
+                if (mark == null || (mark.exempt & UiLayoutRule.Board) == 0)
+                    Ui.Exempt(glyphs.gameObject, UiLayoutRule.Board, "U5 choice: no room beside the board, the glyphs stand over the brother (R2 on 40a0561)");
+            }
+            else if (mark != null) mark.exempt &= ~UiLayoutRule.Board;
             glyphs.anchoredPosition = new Vector2(r.x, -r.y);
             glyphs.sizeDelta = r.size;
             Put(keep.Rect, keepRing.rectTransform, 0, 0);
