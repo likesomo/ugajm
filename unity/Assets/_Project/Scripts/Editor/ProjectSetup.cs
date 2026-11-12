@@ -336,16 +336,18 @@ namespace SevenSteps.EditorTools
 
         const string CutsceneImagesPath = DataDir + "/CutsceneImages.asset";
 
-        /// Data/CutsceneImages.asset, created with one empty entry per cutscene page when it does not exist yet (art's after).
+        /// Data/CutsceneImages.asset, created with one entry per cutscene page when it does not exist yet; empty entries take
+        /// the picture of their key from shared-assets (CutsceneArtImport.Fill), set ones stay.
         static StoryImageSet CutsceneImagesAsset(TextAsset cutscenesJson)
         {
             var set = AssetDatabase.LoadAssetAtPath<StoryImageSet>(CutsceneImagesPath);
-            if (set != null) return set;
+            if (set != null) { CutsceneArtImport.Fill(set); return set; } // Codex pictures in shared-assets fill empty keys
             set = ScriptableObject.CreateInstance<StoryImageSet>();
             var keys = cutscenesJson != null ? CutsceneCatalog.FromJson(cutscenesJson.text).ImageKeys : null;
             set.entries = keys == null ? new StoryImageSet.Entry[0]
                 : System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Select(keys, k => new StoryImageSet.Entry { key = k }));
             AssetDatabase.CreateAsset(set, CutsceneImagesPath);
+            CutsceneArtImport.Fill(set);
             return set;
         }
 

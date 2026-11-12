@@ -38,7 +38,7 @@ namespace SevenSteps.Tests.Game
         CutsceneCatalog Data() => CutsceneCatalog.FromJson(assets.cutscenesJson.text);
 
         [Test]
-        public void APageWithoutArtShowsThePlainCardAndItsLinesOneByOne()
+        public void ThePrologueShowsItsPictureAndItsLinesOneByOne()
         {
             var stack = new OverlayStack();
             var c = new CutsceneController(stack, view, () => loc.Current);
@@ -46,8 +46,9 @@ namespace SevenSteps.Tests.Game
             bool? skipped = null;
             c.Begin(Data().Scene(CutsceneCatalog.Prologue), s => skipped = s);
             Assert.IsTrue(view.Visible);
-            Assert.IsFalse(view.HasPicture, "no Codex art yet");
-            Assert.IsTrue(view.Card.gameObject.activeSelf, "the plain card instead");
+            Assert.IsTrue(view.HasPicture, "the Codex picture of page 1");
+            Assert.AreSame(assets.cutsceneImages.Get("cutscene.prologue.1"), view.Picture.sprite);
+            Assert.IsFalse(view.Card.gameObject.activeSelf, "no plain card under a picture");
             Assert.AreEqual("고향 하늘의 일곱 별이 해마다 흐려진다.", view.ShownText);
             StringAssert.Contains("\n<color=#00000000>별이 다 꺼지면", view.Text.text, "laid out whole: the next line is there, clear");
             view.Next.Press();
