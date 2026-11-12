@@ -82,3 +82,17 @@
 - `OpenStageSelect`에서 Result이고 여정이 켜져 있을 때, 행성 끝(`JourneyRoute.After == PlanetComplete`)이면 `PlanetCompleting`, 그 밖이면 `Returning`(Back)이다. 그래서 행성 끝의 길 불은 Next로 가든 지도로 가든 한 번 켜진다.
 - `Leaving` 잠금은 그대로다. EditMode 테스트가 더해졌다.
 - 계약(`IResultPanel`·`AppFlow`)은 바뀌지 않는다.
+
+## 검토: feat/scene-flow 477d540 (U5 지도·표면 조작, U5KitAreErrors = true) — **승인**
+
+- 477d540 detached에서 헤드리스로 직접 돌렸다. EditMode OK(scene-flow 보고 852/852). scene-validate OK는 **U5 키트 위반이 오류인 상태에서** 나온 결과다.
+- 캡처 `after-u5-surface.png`를 봤다.
+- **`U5MapControls`**: 뒤로 48(왼쪽 위, Esc)과 설정 48(오른쪽 위)이다. 계약 3장 지도·표면 행과 같다.
+  - `FocusPlate` 추적과 명시적 좌우 이동이 있다. 보이지 않을 때는 패널을 끈다.
+- **뒤로의 동작**: 숨긴 v4 갈매기표 버튼의 `onClick`을 부른다(표면이 보이면 표면 것, 아니면 지도 것). 그래서 다이브·복귀 중 막는 조건이 지금처럼 그 뷰 한 곳에 남는다. 좋다.
+  - gameplay-ui 파일에는 읽기 전용 `Back` 접근자 한 줄씩만 더했다.
+- **보이는 조건**(`MapControlsShown`, `Update`): StageSelect이고, 로딩·다이브(`Pending`)·`JourneyReturn.Pending`이 아니고, 오버레이가 없거나 맨 위가 표면일 때다.
+  - 매 프레임 사전 조회뿐이고 할당은 없다. `SetShown`은 값이 바뀔 때만 일한다.
+- **`U5KitAreErrors = true`**: K1이 해결된 뒤라 맞다. 이제 U5 키트 위반은 빌드 전 오류다.
+- **메모 N1 (gameplay-ui, 막지 않음)**: 표면 화면의 행성 이름 "이끼의 궤도"(위 가운데 금색 글자)는 판 없이 별하늘 위에 있다. 이 커밋의 변경은 아니다.
+  - 14.4(3D 장면 위 글자는 판 위)에 걸리는지 `UiLayoutCheck` 등록을 확인한다. 등록돼 있는데 통과한다면 허용 목록 이유를 본다.
