@@ -248,7 +248,7 @@ export function minBodies(level) {
 // Bodies spent so far in this run, counting the current one (1 = first body). On a win: the bodies it took.
 export const bodiesUsed = (s) => s.level.bodies - s.bodies + 1;
 
-// Stars for one cleared attempt (design/levels/stars.md 0; ASSUMPTION 2026-11-11, user to confirm). An attempt runs from
+// Stars for one cleared attempt (design/levels/stars.md 0; user-confirmed 2026-11-12). An attempt runs from
 // level_start to the clear; restarts inside it belong to the same attempt. bodies is the level's body count (level.bodies).
 // 1 = cleared; 2 = also no hint (H) in the attempt; 3 = also every brother used: bodiesUsed == bodies.
 // Undo and restart do not matter. null when bodies is unknown (0, null or undefined: server rows without level_start.bodies).

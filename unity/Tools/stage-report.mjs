@@ -96,7 +96,7 @@ const md = [
   `생성: \`node unity/Tools/stage-report.mjs\` (${gen}, 코어). 입력: \`prototypes/seven-steps/src/levels.js\` + \`core.js\` 솔버, \`levels.json\` expected 대조.`,
   '스테이지를 바꾸면 다시 실행한다. 리플레이 형식: U D L R 이동, K KEEP, X SWITCH (`-replay` / `?replay=`).',
   '',
-  '## 별 기준 (design/levels/stars.md 0, 가정 2026-11-11 — `core.js` `stars()` / C# `Stars.Of`)',
+  '## 별 기준 (design/levels/stars.md 0, 2026-11-12 사용자 확정 — `core.js` `stars()` / C# `Stars.Of`)',
   '',
   '| 별 | 조건 (한 시도 안에서) |',
   '|---|---|',
