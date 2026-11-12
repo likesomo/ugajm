@@ -422,10 +422,13 @@ namespace SevenSteps.Game.UI
         Rect choiceRect;
 
         /// The message plate shows its line unless the choice cards are up and sit where it is (docs 14.11).
+        /// The message line stays hidden (a tutorial board: its cue plate takes that place, docs/tutorial.md 2.3).
+        public bool MessageMuted { get; set; }
+
         void RefreshMessage()
         {
             var plate = (RectTransform)message.transform.parent;
-            bool on = shownMessage.Length > 0;
+            bool on = shownMessage.Length > 0 && !MessageMuted;
             if (on && shownCards.On && CanvasRect(plate, placedCanvas).Overlaps(choiceRect)) on = false;
             plate.gameObject.SetActive(on);
         }

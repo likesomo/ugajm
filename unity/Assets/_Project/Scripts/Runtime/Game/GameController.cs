@@ -70,12 +70,17 @@ namespace SevenSteps.Game
         CutsceneSceneDto epilogue;
         UI.U5.U5CutsceneView cutsceneView;
         CutsceneController cutscene;
+        // Tutorial boards T1..T3 (docs/tutorial.md): null when levels.json has none.
+        TutorialRunController tutorialRun;
+        UI.U5.U5TutorialCueView tutorialCue;
         GameJourney journey; // stage select v4 transitions; null when JourneyToggle is off
 
         bool OnlyChapterCard() => chapterCard != null && overlays.Count == 1 && overlays.Top == chapterCard;
 
         /// The board controller (tests, tools).
         public BoardController Board => board;
+        /// The U5 HUD (tests); null with -ui4.
+        public UI.U5.U5GameHud U5Hud => u5Hud;
         /// Stage on the board and the stage list (art preview scripts read these).
         public int LevelIndex => board.LevelIndex;
         public SevenSteps.Core.Level[] Levels => board.Levels;
@@ -92,6 +97,9 @@ namespace SevenSteps.Game
         /// The epilogue player and viewer (tests); null without an epilogue.
         public CutsceneController Cutscene => cutscene;
         public UI.U5.U5CutsceneView CutsceneView => cutsceneView;
+        /// The tutorial run and its cue view (tests, captures); null without tutorial boards.
+        public TutorialRunController TutorialRun => tutorialRun;
+        public UI.U5.U5TutorialCueView TutorialCue => tutorialCue;
         /// The in-game menu (settings, stages, solution, controls). The HUD menu button calls Menu.Toggle.
         public MenuController Menu => menu;
 
@@ -304,7 +312,7 @@ namespace SevenSteps.Game
             // line on the HUD's passing line. Quiet in dev runs and art perf, like the guides.
             var chapterKeys = new string[levels.Length];
             for (int i = 0; i < chapterKeys.Length; i++) chapterKeys[i] = LevelCatalog.ChapterKeyOf(i);
-            bool FinaleHere() => story.On && StoryTruths.IsFinaleStage(chapterKeys, board.LevelIndex);
+            bool FinaleHere() => story.On && !board.InTutorial && StoryTruths.IsFinaleStage(chapterKeys, board.LevelIndex);
             storyLines = new Story.StoryDirector(board.Session, hud, devRun || launch.ArtPerf,
                 startLine: StartLineHere,
                 finaleLine: () => FinaleHere() ? story.FinaleLine(chapterKeys[board.LevelIndex], localizer.Current) : null,
@@ -312,10 +320,63 @@ namespace SevenSteps.Game
                 covered: () => overlays.Count > 0);
             board.FinaleStarting = storyLines.FinaleStarting;
             overlays.Changed += storyLines.CoverChanged;
+
+            // Tutorial boards (docs/tutorial.md 2.4): AppFlow.Tutorial puts one on the board; the run shows its cues, restarts a
+            // loss by itself, saves a cleared board (not in dev runs: the profile stays as it was) and leads to the next one,
+            // then to stage 1 on a new game or back to the map.
+            var boards = LevelCatalog.Tutorials;
+            if (boards.Count > 0)
+            {
+                tutorialCue = UI.U5.U5TutorialCueView.Build(assets.uiIcons, localizer);
+                tutorialRun = new TutorialRunController(boards, board, tutorialCue, () => localizer.Current,
+                    markDone: id => { if (!devRun) save.MarkTutorialSeen(id); },
+                    after: (seconds, act) => StartCoroutine(After(seconds, act)),
+                    enterBoard: i => flow.GoToTutorial(i, boards.Count),
+                    finished: _ => FinishTutorial(save));
+                localizer.Changed += RedrawTutorial;
+                flow.Changed += OnFlowChangedForTutorial;
+            }
+        }
+
+        static System.Collections.IEnumerator After(float seconds, Action act)
+        {
+            yield return new WaitForSecondsRealtime(seconds);
+            act();
+        }
+
+        void RedrawTutorial(Language _) => tutorialRun.Redraw();
+
+        /// The next tutorial board in this scene (TutorialRunController.enterBoard moved the flow there).
+        void OnFlowChangedForTutorial(AppState from, AppState to)
+        {
+            if (!flow.IsLoading && to == AppState.Game && flow.InTutorial) tutorialRun.Begin(flow.Tutorial);
+        }
+
+        /// The run is over (read through or skipped): stage 1 on a new game (no stage cleared yet), else the map.
+        void FinishTutorial(SaveSystem save)
+        {
+            if (flow.IsLoading) return;
+            if (TutorialRunController.ToFirstStage(save.Progress.ClearedCount))
+            {
+                Services.Get<EntryTracker>().Announce(SevenSteps.Contracts.TelemetryNames.Via.Select);
+                flow.GoToGame(0);
+            }
+            else flowController.OpenStageSelect();
         }
 
         void Start()
         {
+            if (flow.InTutorial)
+            {
+                // A tutorial board (new game, the map's replay, -tutorial N): the run has the board, not the stage flow.
+                if (tutorialRun == null) throw new InvalidOperationException("[SevenSteps] AppFlow is on a tutorial board and levels.json has no tutorials");
+                tutorialRun.Begin(flow.Tutorial);
+                if (launch.NewGameCheck) { StartCoroutine(NewGameCheck.RunGame(flow, board, tutorialRun)); return; }
+                if (!string.IsNullOrEmpty(launch.Replay) && launch.Tutorial == flow.Tutorial + 1) board.Replay(launch.TakeReplay()); // QA
+                if (!string.IsNullOrEmpty(launch.Screenshot))
+                    StartCoroutine(ScreenshotOnce.Run(launch.Screenshot, () => $"tutorial {flow.Tutorial + 1}, status {board.State.Status}, used {board.State.Used}"));
+                return;
+            }
             flowController.Start(launch.DirectToGame ? Bootstrap.FirstStage(launch, flow.StageCount) : 0);
             journey?.ArriveIfDiving(flow.Stage); // the second half of the map → board dive
             if (launch.OpenSettings && !overlays.Contains(settingsPanel)) overlays.Push(settingsPanel); // -settings / ?settings=1
@@ -338,7 +399,7 @@ namespace SevenSteps.Game
             if (launch.FlowCheck && !string.IsNullOrEmpty(launch.Replay) && launch.DirectToGame)
             {
                 // -flowcheck: the replay wins for real, then Result -> Next -> chapter entry are checked (S8).
-                var check = new FlowCheck(flow, board, flowController, overlays, result, chapterStage, chapterIntro, localizer, presetFor, ending, endingView);
+                var check = new FlowCheck(flow, board, flowController, overlays, result, chapterStage, chapterIntro, localizer, presetFor, ending, endingView, u5Clear, u5Ending);
                 StartCoroutine(check.Run(launch.TakeReplay(), launch.Screenshot));
                 return;
             }
@@ -354,7 +415,7 @@ namespace SevenSteps.Game
         }
 
         /// The current stage's start line in the current language ("" = none).
-        string StartLineHere() => Story.StoryDirector.StartText(LevelCatalog.TextOf(board.LevelIndex, localizer.Current), LevelCatalog.StartLineOf(board.LevelIndex));
+        string StartLineHere() => board.InTutorial ? "" : Story.StoryDirector.StartText(LevelCatalog.TextOf(board.LevelIndex, localizer.Current), LevelCatalog.StartLineOf(board.LevelIndex));
 
         /// Menu "다시 보기" (story-integration.md 0.2): the stage's start line again once the menu closes. False when the
         /// stage has none (the menu item can say so or stay quiet), and over a result (its HUD is hidden, review N1 on
@@ -372,6 +433,12 @@ namespace SevenSteps.Game
             menu?.Dispose();
             ending?.Dispose();
             cutscene?.Dispose();
+            if (tutorialRun != null)
+            {
+                tutorialRun.Dispose();
+                if (localizer != null) localizer.Changed -= RedrawTutorial;
+                if (flow != null) flow.Changed -= OnFlowChangedForTutorial;
+            }
             if (cutscene != null && localizer != null) localizer.Changed -= RedrawCutscene;
             journey?.Dispose();
             if (board != null && tutorial != null)
@@ -414,7 +481,8 @@ namespace SevenSteps.Game
             // has no stage select button); otherwise AppFlow's back target (BackNavigator).
             if (kb.escapeKey.wasPressedThisFrame)
             {
-                if (overlays.Count == 0 && flow.State == AppState.Result) menu.Open();
+                if (overlays.Count == 0 && flow.InTutorial && tutorialRun != null) tutorialRun.Skip(); // Esc skips the tutorial (2.4)
+                else if (overlays.Count == 0 && flow.State == AppState.Result) menu.Open();
                 else back.Back();
                 return;
             }
@@ -425,7 +493,7 @@ namespace SevenSteps.Game
             }
             // Chapter card: a board key dismisses it and still counts as a move (rehearsal 2026-11-10: the first arrow was lost).
             if (OnlyChapterCard() && BoardController.AnyBoardKeyPressed(kb)) back.Back();
-            if (overlays.Count > 0) return;
+            if (overlays.Count > 0 || flow.InTutorial) return; // a tutorial board has no [ ] or result keys
             if (kb.leftBracketKey.wasPressedThisFrame) flowController.SelectStage(flow.Stage - 1);
             else if (kb.rightBracketKey.wasPressedThisFrame) flowController.SelectStage(flow.Stage + 1);
             else if ((kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) && flow.State == AppState.Result) flowController.Next();
@@ -476,6 +544,7 @@ namespace SevenSteps.Game
             board.UseChoiceView(u5);
             board.HudRefreshed += u5.Refresh;
             board.HudRefreshed += (s, stage, text) => u5.SetStarCap(board.Attempt.Hinted); // the hinted attempt's ★1 mark
+            board.HudRefreshed += (s, stage, text) => u5.Hint.gameObject.SetActive(!board.InTutorial); // no H on a tutorial board
             u5.BoardArea = () => board.View.ProjectedArea();
             u5.UndoRequested += () => board.Send(SevenSteps.Core.Command.Undo);
             u5.RestartRequested += board.Restart;

@@ -68,6 +68,8 @@ namespace SevenSteps.Game.UI.U5
         /// The 3D stones (null until a clear shows them).
         public IReadOnlyList<GameObject> WorldStoneObjects => worldStones;
         public bool IsShown => gameObject.activeSelf && shown != null;
+        /// The result on screen (null when hidden; -flowcheck reads its planet and last-stage flags).
+        public ResultModel Model => IsShown ? shown : null;
         /// A loss is shown (the failure line and its two buttons).
         public bool FailureShown => IsShown && !shown.Cleared;
         public FocusPlate Plate => plate;

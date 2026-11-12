@@ -638,6 +638,39 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
+        /// Tutorial cues (docs/tutorial.md 2.3; gameplay-ui): T1's start line, T1 at its 6th step (the line and the exit's
+        /// ring) and T2's start (its ring on the plate), KO and EN. `unity.sh playcapture U5Tutorial` -> u5-tutorial-*.png.
+        [UnityTest]
+        public IEnumerator U5Tutorial()
+        {
+            foreach (var lang in new[] { "ko", "en" })
+            {
+                PlayEnv.Reset();
+                yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", lang, "-tutorial", "1");
+                var game = Object.FindAnyObjectByType<GameController>();
+                var px = new Pixels();
+                Assert.IsTrue(game.TutorialCue.Visible && game.TutorialCue.Line.Length > 0, lang + ": T1's start cue");
+                yield return Capture($"u5-tutorial-t1-start-{lang}", px, 0.8f);
+                AssertVaried($"u5-tutorial-t1-start-{lang}", px.Value);
+                foreach (char c in "RRRDDL") // six steps: the 7th-step cue and the exit's ring
+                {
+                    while (game.Board.Session.IsLocked) yield return null;
+                    Assert.IsTrue(SevenSteps.Core.Rules.TryParseLetter(c, out var act));
+                    game.Board.Send(SevenSteps.Core.Command.FromAct(act));
+                    yield return null;
+                }
+                while (game.Board.Session.IsLocked) yield return null;
+                Assert.AreEqual(6, game.Board.State.Used, "six steps");
+                yield return Capture($"u5-tutorial-t1-step6-{lang}", px, 0.5f);
+                AssertVaried($"u5-tutorial-t1-step6-{lang}", px.Value);
+                PlayEnv.Reset();
+                yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", lang, "-tutorial", "2");
+                game = Object.FindAnyObjectByType<GameController>();
+                yield return Capture($"u5-tutorial-t2-start-{lang}", px, 0.8f);
+                AssertVaried($"u5-tutorial-t2-start-{lang}", px.Value);
+            }
+        }
+
         // ---------- ----------
 
         static IEnumerator Start(AppState state, string scene, params string[] args)

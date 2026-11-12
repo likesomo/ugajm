@@ -20,7 +20,7 @@ namespace SevenSteps.Game
     /// and listens to Won / WinPresented / Lost / Recovered. Added at runtime by the scene root <see cref="GameController"/>.
     /// Messages, hint text and sound live in MessagePresenter, HintProvider and GameAudio; this class wires them to the session.
     /// </summary>
-    public sealed class BoardController : MonoBehaviour, IStageBoard
+    public sealed class BoardController : MonoBehaviour, IStageBoard, ITutorialBoard
     {
         Level[] levels;
         GameSession session;
@@ -52,8 +52,14 @@ namespace SevenSteps.Game
             messages.ShowKey(key);
             Refresh();
         }
-        /// 0-based stage on the board (-1 before the first LoadStage).
+        /// 0-based stage on the board (-1 before the first LoadStage, and while a tutorial board is on it).
         public int LevelIndex => loadedStage;
+        /// A tutorial board is on the board (LoadTutorial): not a stage, so no hint, no level_* telemetry, and the stage flow
+        /// (GameFlowController) leaves its win and loss alone.
+        public bool InTutorial => tutorialBoard >= 0;
+        /// 0-based tutorial board on the board, -1 for a stage.
+        public int TutorialBoard => tutorialBoard;
+        int tutorialBoard = -1;
         public int LevelCount => levels.Length;
         public Level[] Levels => levels;
 
@@ -69,6 +75,8 @@ namespace SevenSteps.Game
         public event Action<State> WinPresented;
         public event Action<State> Lost;
         public event Action Recovered;
+        /// Every session update, after the board handled it (TutorialRunController matches its cues on it).
+        public event Action<SessionUpdate> Updated;
 
         /// Set by the scene root: true while board input must be ignored (an overlay is open, a scene is loading).
         public Func<bool> InputBlocked = () => false;
@@ -225,6 +233,7 @@ namespace SevenSteps.Game
             if (string.IsNullOrEmpty(via)) throw new ArgumentException("telemetry via is required", nameof(via));
             StageLeaving?.Invoke(stage);
             loadedStage = stage;
+            tutorialBoard = -1;
             lost = false;
             attempt = default; // a new attempt: select, next, again, [ ]
             hintSteps = null; // the staged hint starts again (contract review (3))
@@ -243,6 +252,43 @@ namespace SevenSteps.Game
                       $"memory {UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() >> 20} MB reserved, {System.GC.GetTotalMemory(false) >> 20} MB managed");
             if (isActiveAndEnabled) StartCoroutine(LogFirstFrames(stage));
             StageEntered?.Invoke(stage, via);
+        }
+
+        /// Loads tutorial board <paramref name="index"/> of LevelCatalog.Tutorials (docs/tutorial.md): the stage's chapter look
+        /// for its "chapter", a new attempt, no StageLeaving / StageEntered (no level_* telemetry, no stage flow).
+        public void LoadTutorial(int index)
+        {
+            if (session == null) throw new InvalidOperationException("BoardController.LoadTutorial before Init");
+            var boards = LevelCatalog.Tutorials;
+            if (index < 0 || index >= boards.Count) throw new ArgumentOutOfRangeException(nameof(index), index, $"tutorial board must be 0..{boards.Count - 1}");
+            var t = boards[index];
+            tutorialBoard = index;
+            loadedStage = -1;
+            lost = false;
+            attempt = default;
+            hintSteps = null;
+            hintWarned = false;
+            LastHint = null;
+            board.ShowHintGoal(-1);
+            EnterChapter(StageOfChapter(t.level.chapter ?? ""));
+            session.Load(t.level.ToLevel());
+            chapters?.Fit(board.Grid);
+            Debug.Log($"[SevenSteps] Tutorial board {t.id} loaded");
+        }
+
+        /// The first stage of a levels.json chapter id (its look), stage 1 when none has it.
+        int StageOfChapter(string chapterId)
+        {
+            for (int k = 0; k < levels.Length; k++) if (LevelCatalog.ChapterIdOf(k) == chapterId) return k;
+            return 0;
+        }
+
+        /// A tutorial cue's cell (docs/tutorial.md 2.3), the gold ring the staged hint uses; -1 = none.
+        public void Highlight(int cell)
+        {
+            if (cell >= 0 && (session.State == null || cell >= session.State.Level.Count))
+                throw new ArgumentOutOfRangeException(nameof(cell), cell, "outside the board");
+            board.ShowHintGoal(cell);
         }
 
         /// The slowest of the first frames after a stage load (first draws of a planet's shaders and textures happen here).
@@ -327,7 +373,7 @@ namespace SevenSteps.Game
         /// hint for the stars (6.5). A stage without a stored route gets the route at once, as before.
         public void ShowHint()
         {
-            if (session.Level == null) return;
+            if (session.Level == null || InTutorial) return; // no H on a tutorial board (docs/tutorial.md 2.2)
             int stage = loadedStage;
             if (hintSteps == null || hintStage != stage)
             {
@@ -443,6 +489,7 @@ namespace SevenSteps.Game
             Refresh();
             if (s.Status == Status.Lose && !lost) { lost = true; Lost?.Invoke(s); }
             else if (s.Status != Status.Lose && lost) { lost = false; Recovered?.Invoke(); }
+            Updated?.Invoke(u);
         }
 
         /// docs 6.5 counting rule: AttemptCounts.After (shared with the QA replay).
@@ -462,7 +509,9 @@ namespace SevenSteps.Game
 
         void Refresh()
         {
-            var text = LevelCatalog.TextOf(loadedStage, loc.Current); // stage name and hint in the UI language (13.5)
+            // stage (or tutorial board) name and hint in the UI language (13.5)
+            var text = InTutorial ? LevelCatalog.TutorialTextOf(tutorialBoard, loc.Current) : LevelCatalog.TextOf(loadedStage, loc.Current);
+            hud.MessageMuted = InTutorial; // the tutorial cue plate is the line there
             hud.SetStarCap(attempt.Hinted);
             hud.Refresh(session.State, loadedStage, text, messages.Current);
             HudRefreshed?.Invoke(session.State, loadedStage, text);

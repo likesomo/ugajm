@@ -108,7 +108,20 @@ namespace SevenSteps.Game
 
             if (!enterFirstScreen) return;
             if (launch.DirectToGame) flow.GoToGame(FirstStage(launch, stageCount));
+            else if (FirstTutorialBoard(launch) is int board && board >= 0) flow.GoToTutorial(board, LevelCatalog.Tutorials.Count);
             else flow.Go(AppState.Title);
+        }
+
+        /// 0-based tutorial board for a -tutorial N / ?tutorial=N launch (docs/tutorial.md 2.4), -1 for none. A number past
+        /// the boards in levels.json is external input: warned and ignored (the title opens). -level wins over it.
+        public static int FirstTutorialBoard(LaunchOptions launch)
+        {
+            if (launch == null) throw new ArgumentNullException(nameof(launch));
+            if (launch.Tutorial <= 0 || launch.DirectToGame) return -1;
+            int count = LevelCatalog.Tutorials.Count;
+            if (launch.Tutorial <= count) return launch.Tutorial - 1;
+            Debug.LogWarning($"[SevenSteps] Launch option tutorial {launch.Tutorial} is past the tutorial boards ({count}); ignored");
+            return -1;
         }
 
         /// 0-based start stage for a -level / ?level= launch. A level past the last stage is external input: warn and use the last.

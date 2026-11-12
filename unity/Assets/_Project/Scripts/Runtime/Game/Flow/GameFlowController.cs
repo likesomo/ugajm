@@ -95,7 +95,7 @@ namespace SevenSteps.Game.Flow
         public void Start(int firstStage)
         {
             if (flow.State == AppState.Boot) flow.GoToGame(firstStage);
-            else if (flow.State == AppState.Game) Enter(flow.Stage);
+            else if (flow.State == AppState.Game && !flow.InTutorial) Enter(flow.Stage); // a tutorial board: TutorialRunController
             else throw new InvalidOperationException($"[SevenSteps] Game scene started in state {flow.State}");
         }
 
@@ -198,6 +198,7 @@ namespace SevenSteps.Game.Flow
         {
             // A transition that loads another scene belongs to that scene: its root enters the stage in Start.
             if (flow.IsLoading) return;
+            if (flow.InTutorial) return; // a tutorial board: the scene root's TutorialRunController has it (docs/tutorial.md)
             if (to == AppState.Game) Enter(flow.Stage);
             else if (to == AppState.Result) ShowClear();
         }
@@ -239,7 +240,7 @@ namespace SevenSteps.Game.Flow
 
         void OnWon(State s)
         {
-            if (flow.State != AppState.Game) return;
+            if (flow.State != AppState.Game || flow.InTutorial) return; // a tutorial board: no progress, no stars (docs/tutorial.md 2.5)
             // 3 stars (docs/architecture.md 6.5, design/levels/stars.md 0): judged by Core from the board's attempt hints and
             // the bodies used against the level's bodies.
             clearStars = Stars.Of(BodiesUsed(s), s.Level.Bodies, board.Attempt.Hints);
@@ -252,15 +253,19 @@ namespace SevenSteps.Game.Flow
 
         void OnWinPresented(State s)
         {
-            if (s.Status != Status.Win || flow.State != AppState.Game || flow.IsLoading) return;
+            if (s.Status != Status.Win || flow.State != AppState.Game || flow.IsLoading || flow.InTutorial) return;
             flow.Go(AppState.Result); // always the result first, journey or not (lead 2026-11-12)
         }
 
-        void OnLost(State s) => result.Show(ResultModel.Loss(flow.Stage, s.Level.Bodies, IsLast));
+        void OnLost(State s)
+        {
+            if (flow.InTutorial) return; // the tutorial shows its lose cue and restarts by itself (docs/tutorial.md 2.4)
+            result.Show(ResultModel.Loss(flow.Stage, s.Level.Bodies, IsLast));
+        }
 
         void OnRecovered()
         {
-            if (flow.State == AppState.Game) result.Hide();
+            if (flow.State == AppState.Game && !flow.InTutorial) result.Hide();
         }
 
         void ShowClear()

@@ -12,6 +12,7 @@ namespace SevenSteps.Game.UI.U5
         Undo, Restart, Hint, Pause, Play, Settings, Map, Retry, Next, Back, Language, Credits, Info, SoundOn, SoundOff, Motion,
         Close, Keep, Switch,
         Story, Skip, // storybook cutscenes: the title's story entry, skip (appended: the set stores ids by value)
+        Tutorial, // the map's tutorial entry (docs/tutorial.md 2.4)
     }
 
     /// <summary>
@@ -109,6 +110,9 @@ namespace SevenSteps.Game.UI.U5
                 case UiIcon.Skip: // two chevrons and a bar
                     L(-0.26f, -0.2f, -0.06f, 0); L(-0.06f, 0, -0.26f, 0.2f); L(-0.04f, -0.2f, 0.16f, 0); L(0.16f, 0, -0.04f, 0.2f);
                     L(0.24f, -0.2f, 0.24f, 0.2f); break;
+                case UiIcon.Tutorial: // three footsteps up to a small flag
+                    Arc(-0.22f, -0.22f, 0.06f, 0, 360); Arc(-0.04f, -0.08f, 0.06f, 0, 360); Arc(0.14f, 0.06f, 0.06f, 0, 360);
+                    L(0.22f, 0.1f, 0.22f, 0.32f); L(0.22f, 0.32f, 0.34f, 0.26f); L(0.34f, 0.26f, 0.22f, 0.2f); break;
                 default: throw new ArgumentOutOfRangeException(nameof(id), id, "no placeholder drawing");
             }
             return s;

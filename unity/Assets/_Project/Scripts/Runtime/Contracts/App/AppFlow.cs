@@ -108,10 +108,32 @@ namespace SevenSteps.Contracts
             if (stage < 0 || stage >= StageCount)
                 throw new ArgumentOutOfRangeException(nameof(stage), stage, $"AppFlow: stage must be 0..{StageCount - 1}");
             ThrowIfCannotGo(AppState.Game);
-            int previous = Stage;
+            int previous = Stage, previousTutorial = Tutorial;
             Stage = stage;
+            Tutorial = -1;
             try { Go(AppState.Game); }
-            catch { Stage = previous; throw; }
+            catch { Stage = previous; Tutorial = previousTutorial; throw; }
+        }
+
+        /// 0-based tutorial board the Game state plays (docs/tutorial.md: T1..T3, levels.json "tutorials"), -1 = a stage.
+        /// Set by <see cref="GoToTutorial"/>, cleared by <see cref="GoToGame"/>. A tutorial board is not a stage: Stage keeps
+        /// its last value and nothing stage-bound (progress, stars, level_* telemetry, the result) follows it.
+        public int Tutorial { get; private set; } = -1;
+        public bool InTutorial => Tutorial >= 0;
+
+        /// GoToTutorial(board) would succeed now (the board count is the caller's: LevelCatalog.Tutorials).
+        public bool CanGoToTutorial(int board, int boardCount) => !IsLoading && board >= 0 && board < boardCount && CanGo(State, AppState.Game);
+
+        /// The Game state on tutorial board <paramref name="board"/> of <paramref name="boardCount"/>.
+        public void GoToTutorial(int board, int boardCount)
+        {
+            if (board < 0 || board >= boardCount)
+                throw new ArgumentOutOfRangeException(nameof(board), board, $"AppFlow: tutorial board must be 0..{boardCount - 1}");
+            ThrowIfCannotGo(AppState.Game);
+            int previous = Tutorial;
+            Tutorial = board;
+            try { Go(AppState.Game); }
+            catch { Tutorial = previous; throw; }
         }
 
         public void Go(AppState to)

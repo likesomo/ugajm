@@ -159,6 +159,8 @@
     { "key": "ui5.icon.story", "text": "이야기" },
     { "key": "ui5.icon.skip", "text": "건너뛰기" },
     { "key": "cutscene.next", "text": "다음" },
+    { "key": "ui5.icon.tutorial", "text": "튜토리얼 다시 하기" },
+    { "key": "tutorial.skip", "text": "튜토리얼 건너뛰기" },
     { "key": "ui5.choice.keep", "text": "선돌을 남기고 처음부터" },
     { "key": "ui5.choice.switch", "text": "여기서 다음 형제가 이어 감" },
     { "key": "ui5.title.continue", "text": "계속 걷기" },

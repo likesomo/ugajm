@@ -41,7 +41,8 @@ namespace SevenSteps.Game.Telemetry
 
         void OnStageLeaving(int toStage)
         {
-            var from = session.State ?? telemetry.PendingLeaveState;
+            // A tutorial board is not an attempt (docs/tutorial.md 2.6): only a stage left earlier (another scene) closes here.
+            var from = game.InTutorial ? telemetry.PendingLeaveState : session.State ?? telemetry.PendingLeaveState;
             if (from != null) Tracker.Leave(from, toStage + 1);
             telemetry.PendingLeaveState = null;
         }
@@ -63,6 +64,7 @@ namespace SevenSteps.Game.Telemetry
         void OnUpdated(SessionUpdate u)
         {
             if (u.Result == null) return; // Rebuild, replay Snap
+            if (game.InTutorial) return; // tutorial boards send nothing (docs/tutorial.md 2.6)
             if (u.Kind == SessionUpdateKind.Rebuild) return;
             Tracker.Command(u.Prev, u.Command, u.Result);
             var st = u.State.Status;

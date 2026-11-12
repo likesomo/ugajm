@@ -180,7 +180,7 @@ namespace SevenSteps.Tests.PlayMode
             title.CutsceneView.Skip.Press();
             Assert.IsTrue(Services.Get<SaveSystem>().TutorialSeen(TutorialIds.Prologue), "seen once skipped");
             yield return PlayEnv.WaitForState(AppState.Game, AppScenes.Game, 20f);
-            Assert.AreEqual(0, Services.Get<AppFlow>().Stage, "stage 1 (the tutorial boards will come first once core's data is in)");
+            Assert.IsTrue(Services.Get<AppFlow>().InTutorial, "then the tutorial (T1), before stage 1 (TutorialFlowTests)");
         }
 
         [UnityTest]

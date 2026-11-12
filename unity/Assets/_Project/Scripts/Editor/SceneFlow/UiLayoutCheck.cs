@@ -281,6 +281,20 @@ namespace SevenSteps.EditorTools
                     return v.gameObject;
                 } }, key);
             }
+            // Tutorial cues (gameplay-ui, docs/tutorial.md 2.3): every cue line on its plate, the skip icon focused.
+            foreach (var t in LevelCatalog.Tutorials)
+                foreach (var cue in t.cues)
+                {
+                    var (tb, c0) = (t, cue);
+                    yield return (new Screen { Name = "U5 TutorialCue", GameplayUi = true, U5Kit = true, Build = (c, root) =>
+                    {
+                        var v = SevenSteps.Game.UI.U5.U5TutorialCueView.Build(c.Assets.uiIcons, c.Loc);
+                        v.ShowCue(c0.Line(Languages.Code(c.Lang)), 0, 3);
+                        v.Show();
+                        v.Skip.OnSelect(null);
+                        return null; // over the playing board: not a modal (no scrim)
+                    } }, $"{tb.id} {c0.on}{(c0.n > 0 ? c0.n.ToString() : "")}");
+                }
             // Storybook viewer (gameplay-ui, design/story/cutscenes.md 2): every page with all its lines out, on the plain card
             // (art may be missing), the skip icon focused (its plate up). Own canvas, like the chapter card.
             var cutscenes = CutsceneCatalogOrNull();
