@@ -53,6 +53,9 @@ namespace SevenSteps.Tests.Game
             Assert.That(view.Stones[2].TipKey, Is.EqualTo("result.star3_many"));
             Assert.That(view.Stones[2].TipArgs, Is.EqualTo(new object[] { 3 }));
             Assert.That(view.Undo.gameObject.activeInHierarchy, Is.False, "no failure buttons on a clear");
+            Assert.That(view.Scrim.raycastTarget, Is.True, "the board takes no presses under the result (R3)");
+            Assert.That(view.Scrim.color.a, Is.EqualTo(0.25f).Within(0.001f));
+            Assert.That(view.Scrim.transform.GetSiblingIndex(), Is.EqualTo(0), "behind the buttons");
             view.Hide();
             Assert.That(view.IsShown, Is.False);
             Assert.That(hud, Is.EqualTo(new[] { true, false }));

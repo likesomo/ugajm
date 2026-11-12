@@ -103,9 +103,16 @@ namespace SevenSteps.Game.UI.U5
             return v;
         }
 
+        /// Full-screen catch behind the result (R3 on 6a792b6, 14.7: 0.25 with the HUDs hidden): presses on the board do nothing.
+        public Image Scrim { get; private set; }
+
         void Assemble()
         {
             var root = transform;
+            Scrim = Ui.MakeImage(root, new Color(0.02f, 0.04f, 0.08f, U5RowOverlay.ScrimAlpha), null, "Scrim");
+            Scrim.rectTransform.Stretch();
+            Scrim.raycastTarget = true;
+            Ui.Exempt(Scrim.gameObject, UiLayoutRule.Board | UiLayoutRule.Overlap, "U5 result modal scrim (14.7: 0.25 with the HUD hidden)");
             map = IconButton.Build(root, UiIcon.Map, icons, "Esc", () => StageSelectRequested?.Invoke(), name: "Map");
             map.Rect.TopLeft(Safe, Safe, IconButton.Size, IconButton.Size);
             retry = IconButton.Build(root, UiIcon.Retry, icons, "R", () => RetryRequested?.Invoke(), name: "Retry");
