@@ -207,7 +207,8 @@ namespace SevenSteps.Tests.Game
             Assert.IsTrue(StageSelectToggle.On(L("-ui5")), "U5: the v4 map is its stage select");
             Assert.IsFalse(StageSelectToggle.On(L("-ui5", "-oldmap")), "an explicit -oldmap wins");
             Assert.AreEqual(StageSelectToggle.DefaultOn || UiStyleToggle.DefaultOn, StageSelectToggle.On(L()));
-            Assert.AreEqual(StageSelectToggle.On(L("-ui5")) && true, JourneyToggle.On(L("-ui5")), "the journey follows the map");
+            Assert.AreEqual(StageSelectToggle.DefaultOn, JourneyToggle.On(L("-ui5")), "the U5 map alone does not bring the journey (its clear is the result)");
+            Assert.IsTrue(JourneyToggle.On(L("-ui5", "-newmap")), "-newmap still does");
         }
     }
 }
