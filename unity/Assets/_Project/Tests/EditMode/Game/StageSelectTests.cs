@@ -166,7 +166,8 @@ namespace SevenSteps.Tests
             public void ShowMap(StageSelectModel model, int focus, int held) => calls.Add($"map {focus} {held}");
             public void LightTrail(StageSelectModel model, int planet, int focus) => calls.Add($"light {planet} {focus}");
             public readonly List<ClearNote> news = new List<ClearNote>();
-            public void OpenSurface(StageSelectModel model, int planet, IReadOnlyList<ClearNote> taken) { calls.Add($"surface {planet}"); news.Clear(); news.AddRange(taken); }
+            public bool opens = true;
+            public bool OpenSurface(StageSelectModel model, int planet, IReadOnlyList<ClearNote> taken) { calls.Add($"surface {planet}"); news.Clear(); news.AddRange(taken); return opens; }
             public void SetPending(bool pending) => calls.Add($"pending {pending}");
             public PlanetBody Body(int planet, StageChoiceSource source) => body;
             public Camera MapCamera => camera;
@@ -217,6 +218,25 @@ namespace SevenSteps.Tests
             Assert.AreEqual(1, news.Count, "planet 3's note stays");
             view.Choose(1);
             Assert.AreEqual(0, view.news.Count, "taken once");
+        }
+
+        /// Review M1: a surface that does not open (another overlay up) puts its news back for the next open.
+        [Test]
+        public void ASurfaceThatDoesNotOpenKeepsItsNews()
+        {
+            var news = new ClearNews();
+            news.Record(4, true, 0, 2);
+            var c = Controller(Model(Rows(new[] { true, false, false }, new[] { false, true, false }, new bool[2])), news: news);
+            c.SurfaceFirst = true;
+            c.Show();
+            view.opens = false;
+            view.Choose(1);
+            Assert.AreEqual(1, news.Count, "put back");
+            view.opens = true;
+            view.Choose(1);
+            Assert.AreEqual(1, view.news.Count, "replayed on the next open");
+            Assert.IsTrue(view.news[0].FirstClear);
+            Assert.AreEqual(0, news.Count);
         }
 
         [Test]

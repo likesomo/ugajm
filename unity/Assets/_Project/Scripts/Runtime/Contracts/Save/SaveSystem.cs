@@ -151,6 +151,8 @@ namespace SevenSteps.Contracts
         /// one), no finished guides (TutorialData: the next tester sees them again) and no story memory (StoryProgress: the
         /// next tester does not start on the after-ending branch); volumes, consent, language and the accessibility options
         /// stay. Overrides a newer build's read-only progress / tutorial / story data: this is deliberate.
+        /// Any progress reset must also clear the Game's ClearNews (Services; review M2 2026-11-12): its notes would no longer
+        /// match the save and the surface constellation asserts on that. This one runs at boot before ClearNews exists.
         public void StartNewPlayer()
         {
             Progress = new ProgressData();

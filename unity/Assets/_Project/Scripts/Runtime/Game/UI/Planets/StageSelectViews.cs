@@ -36,12 +36,13 @@ namespace SevenSteps.Game.UI.Planets
         public void ShowMap(StageSelectModel model, int focus, int held) => map.Show(model, focus, held);
         public void LightTrail(StageSelectModel model, int planet, int focus) => map.LightTrail(model, planet, focus);
 
-        public void OpenSurface(StageSelectModel model, int planet, IReadOnlyList<ClearNote> news)
+        public bool OpenSurface(StageSelectModel model, int planet, IReadOnlyList<ClearNote> news)
         {
-            if (overlays.Count > 0) return;
+            if (overlays.Count > 0) return false;
             surface.Bind(model, planet, news);
             LastSurfacePlanet = planet;
             overlays.Push(surface);
+            return true;
         }
 
         public void SetPending(bool pending)

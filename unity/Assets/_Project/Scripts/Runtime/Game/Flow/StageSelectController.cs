@@ -84,7 +84,8 @@ namespace SevenSteps.Game.Flow
         void LightTrail(StageSelectModel model, int planet, int focus);
         /// Opens a planet's surface path over the map. <paramref name="news">: that planet's clears not shown yet (empty = none),
         /// replayed from their before state (the U5 first-clear trace); the list is the controller's, read it during the call.
-        void OpenSurface(StageSelectModel model, int planet, IReadOnlyList<ClearNote> news);
+        /// False when it did not open (another overlay is up): the controller puts the news back.
+        bool OpenSurface(StageSelectModel model, int planet, IReadOnlyList<ClearNote> news);
         /// A choice is pending (dive running): input off, labels / back / star rows / marker hidden, camera and bodies still.
         void SetPending(bool pending);
         /// The body a choice dives into.
@@ -189,7 +190,8 @@ namespace SevenSteps.Game.Flow
         {
             taken.Clear();
             news?.TryTake(stages[planet], taken);
-            view.OpenSurface(model, planet, taken);
+            if (view.OpenSurface(model, planet, taken)) return;
+            foreach (var n in taken) news.Record(n.Stage, n.FirstClear, n.BestBefore, n.BestAfter); // not shown: back for the next open (review M1)
         }
 
         void OnPlaceChosen(int planet, int slot)
