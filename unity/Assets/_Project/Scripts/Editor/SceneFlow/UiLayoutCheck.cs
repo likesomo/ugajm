@@ -7,6 +7,7 @@ using SevenSteps.Core;
 using SevenSteps.Game;
 using SevenSteps.Game.Flow;
 using SevenSteps.Game.UI;
+using SevenSteps.Game.UI.U5;
 using SevenSteps.Game.Story;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -44,6 +45,9 @@ namespace SevenSteps.EditorTools
         public const float PlateAlpha = 0.75f, ScrimAlpha = 0.6f, TextContrast = 4.5f, LineContrast = 3f, LineMin = 2;
         /// HUD / Result findings: warnings first (shared with gameplay-ui), errors once both are fixed (lead).
         public static bool HudResultAreErrors = true;
+        /// U5 screens whose findings are the kit's (gameplay-ui: FocusPlate size, U5GameHud): warnings until the kit passes
+        /// (lead flips this, as HudResultAreErrors). The U5 title, language and credits without a tip are errors already.
+        public static bool U5KitAreErrors = false;
         /// Glyph quads carry the font's side bearing (hand fonts: up to ~2 units past the pen position).
         const float GlyphSlack = 2f;
 
@@ -66,6 +70,8 @@ namespace SevenSteps.EditorTools
         {
             public string Name;
             public bool GameplayUi;
+            /// Findings are the U5 kit's (U5KitAreErrors).
+            public bool U5Kit;
             /// Builds under the canvas; returns the modal root (or null).
             public Func<Ctx, RectTransform, GameObject> Build;
             /// Optional checks of this screen after the common ones (laid out, still built). Adds problems to the list.
@@ -113,7 +119,7 @@ namespace SevenSteps.EditorTools
                     {
                         var ctx = new Ctx { Assets = assets, Loc = loc, Lang = t.Language, Levels = levels, Variant = variant, Config = config, RigOverride = rigOverride, Units = res.Units };
                         string label = $"{screen.Name}{(variant == "" ? "" : " " + variant)}/{Languages.Code(t.Language)}/{res.Name}";
-                        bool errors = res.Errors && (!screen.GameplayUi || HudResultAreErrors);
+                        bool errors = res.Errors && (screen.U5Kit ? U5KitAreErrors : !screen.GameplayUi || HudResultAreErrors);
                         var found = new List<string>();
                         RectTransform canvas = null;
                         try
@@ -265,6 +271,99 @@ namespace SevenSteps.EditorTools
                     v.Show();
                     return v.gameObject;
                 } }, key);
+            }
+            // ---- U5 (UiStyleToggle on; docs/ui-u5-kit.md 3, 6): the title, language and credits (scene-flow), the HUD and
+            // the 7th-step choice (gameplay-ui, warnings until HudResultAreErrors). The toggle-off screens above and below
+            // stay as they are.
+            foreach (bool cont in new[] { true, false })
+            {
+                bool k = cont;
+                yield return (new Screen { Name = "U5 Title", Build = (c, root) => { BuildU5Title(c, root, null).view.Show(k); return null; } },
+                    k ? "continue" : "first step");
+            }
+            foreach (string after in new[] { "", StoryOns.AfterEnding })
+            {
+                string a = after;
+                yield return (new Screen { Name = "U5 Title", Build = (c, root) =>
+                {
+                    var story = StoryOf(c);
+                    if (story == null) throw new Skipped("story.json does not load (SceneFlowValidator reports it)");
+                    BuildU5Title(c, root, LongestLine(story, c.Lang, e => e.on == "title" && e.after == a)).view.Show(true);
+                    return null;
+                } }, a == "" ? "story" : "story after ending");
+            }
+            // Each title icon with its explanation showing (hover): the plate stays in the safe area and off the others.
+            // U5Kit: the plate itself is the kit's FocusPlate (its size is gameplay-ui's); the placement around the title's
+            // icons is checked the same way.
+            foreach (string icon in new[] { "play", "map", "settings", "language", "credits" })
+            {
+                string which = icon;
+                yield return (new Screen { Name = "U5 Title", U5Kit = true, Build = (c, root) =>
+                {
+                    var (v, tips) = BuildU5Title(c, root, null);
+                    v.Show(true);
+                    var b = which == "play" ? v.Play : which == "map" ? v.Map : which == "settings" ? v.Settings : which == "language" ? v.Language : v.Credits;
+                    tips.Model.Enter(TipSource.Hover, b, b.TipKey, b.Shortcut);
+                    if (!tips.Showing) throw new InvalidOperationException("the focus plate did not show");
+                    return null;
+                } }, "tip " + which);
+            }
+            // Language and credits, each also with the kit's explanation plate showing (U5Kit, as the title tips).
+            foreach (bool tip in new[] { false, true })
+            {
+                bool withTip = tip;
+                yield return (new Screen { Name = "U5 Language", U5Kit = withTip, Build = (c, root) =>
+                {
+                    var tips = FocusPlate.Build(root, c.Loc, c.Assets.uiIcons);
+                    var v = new U5LanguageView(root, c.Assets.uiIcons, tips);
+                    v.Apply(c.Loc);
+                    v.Show();
+                    if (withTip) tips.Model.Enter(TipSource.Hover, v.Next, v.Next.TipKey, v.Next.Shortcut);
+                    else tips.Model.Clear();
+                    return null; // not modal: the title planet stays, the title's own controls hide (TitleScreen)
+                } }, withTip ? "tip" : "");
+                yield return (new Screen { Name = "U5 Credits", U5Kit = withTip, Build = (c, root) =>
+                {
+                    var tips = FocusPlate.Build(root, c.Loc, c.Assets.uiIcons);
+                    var credits = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/UI/Credits.txt");
+                    var v = new U5CreditsView(root, c.Assets.uiIcons, tips, credits, null);
+                    v.Apply(c.Loc);
+                    v.Show();
+                    if (withTip) tips.Model.Enter(TipSource.Hover, v.Back, v.Back.TipKey, v.Back.Shortcut);
+                    else tips.Model.Clear();
+                    return null;
+                } }, withTip ? "tip" : "");
+            }
+            {
+                int nameStage = Longest(levels.Length, i => LevelCatalog.TextOf(i, loc.Current).name);
+                int wide = Longest(levels.Length, i => new string('w', levels[i].W));
+                int tall = Longest(levels.Length, i => new string('h', levels[i].H));
+                foreach (int stage in new[] { nameStage, wide, tall }.Distinct())
+                {
+                    int st = stage;
+                    yield return (new Screen { Name = "U5 HUD", GameplayUi = true, U5Kit = true, Build = (c, root) =>
+                    {
+                        BuildU5Hud(c, st, Walked(c.Levels[st], 1));
+                        c.Board = BoardArea(c, st);
+                        return null;
+                    } }, $"stage {st + 1}");
+                }
+                int? u5Chooser = Enumerable.Range(0, levels.Length).Where(i => levels[i].StatueCount > 0).Concat(Enumerable.Range(0, levels.Length))
+                    .Cast<int?>().FirstOrDefault(i => ChooseState(levels[i.Value]) != null);
+                foreach (bool first in new[] { true, false })
+                {
+                    bool firstVisit = first;
+                    yield return (new Screen { Name = "U5 HUD", GameplayUi = true, U5Kit = true, Build = (c, root) =>
+                    {
+                        if (u5Chooser == null) throw new Skipped("no stage reaches a KEEP / SWITCH choice within 7 moves");
+                        int st = u5Chooser.Value;
+                        var choose = ChooseState(c.Levels[st]);
+                        var hud = BuildU5Hud(c, st, choose);
+                        c.Board = BoardArea(c, st);
+                        ShowU5Choice(c, st, hud, choose, firstVisit);
+                        return null;
+                    } }, $"stage {u5Chooser + 1} choose" + (firstVisit ? " first visit" : " focus"));
+                }
             }
             int longestHint = Longest(levels.Length, i => LevelCatalog.TextOf(i, loc.Current).hint);
             int longestName = Longest(levels.Length, i => LevelCatalog.TextOf(i, loc.Current).name);
@@ -464,6 +563,50 @@ namespace SevenSteps.EditorTools
                     if (best == null || line.Length > best.Length) best = line;
                 }
             return best ?? throw new Skipped("story.json has no matching entry");
+        }
+
+        /// The U5 title as TitleScreen builds it with the toggle on (the title planet is 3D, TitleWorld, not on the canvas).
+        static (U5TitleView view, FocusPlate tips) BuildU5Title(Ctx c, RectTransform root, string storyLine)
+        {
+            var tips = FocusPlate.Build(root, c.Loc, c.Assets.uiIcons);
+            var v = new U5TitleView(root, c.Assets.uiIcons, tips);
+            v.Apply(c.Loc, storyLine);
+            return (v, tips);
+        }
+
+        /// The U5 in-game HUD as GameController builds it with the toggle on: the current HUD with what U5 replaces hidden,
+        /// and U5GameHud on its own canvas.
+        static U5GameHud BuildU5Hud(Ctx c, int stage, State state)
+        {
+            var classic = BuildHud(c, stage, state, "");
+            U5GameHud.HideClassic(classic);
+            var u5 = U5GameHud.Build(c.Assets.uiIcons, HudTileSet(c), c.Loc);
+            u5.Apply(c.Loc);
+            u5.Refresh(state, stage, LevelCatalog.TextOf(stage, c.Lang));
+            return u5;
+        }
+
+        /// The U5 KEEP / SWITCH glyphs placed as ChoiceController does (14.11 candidates by the brother); the first visit
+        /// explains the focused glyph from the start, later visits show the explanation on focus (here: KEEP focused).
+        static void ShowU5Choice(Ctx c, int stage, U5GameHud hud, State s, bool firstVisit)
+        {
+            if (!ChoicePreview.TryOf(s, out var p)) throw new InvalidOperationException($"stage {stage + 1}: not a Choose state");
+            hud.ShowChoice(new HudView.ChoiceCards { On = true, NextBody = p.NextBody, Explain = firstVisit, Guide = false, FocusKeep = true });
+            var info = LevelCatalog.ChapterOf(stage);
+            var preset = info != null && c.Config != null ? c.Config.Chapter(info.ArtPreset) : null;
+            var set = BoardController.TileSetFor(c.Config != null ? c.Config.tileSet : null, preset, c.Assets.tileSet);
+            var grid = set.GridFor(c.Levels[stage]);
+            var go = new GameObject("UiLayoutCheck U5 Choice Camera");
+            try
+            {
+                var cam = go.AddComponent<Camera>();
+                cam.aspect = c.Units.x / c.Units.y;
+                BoardView.Fit(cam, grid, c.RigOverride ?? set.cameraRig);
+                hud.PlaceChoice(BoardArea(c, stage), BoardView.BrotherPoint(cam, grid, s.Pos, c.Units), c.Units);
+            }
+            finally { Object.DestroyImmediate(go); }
+            if (!firstVisit) hud.Plate.Model.Enter(TipSource.Focus, hud.Keep, hud.Keep.TipKey, hud.Keep.Shortcut);
+            if (!hud.Plate.Showing) throw new InvalidOperationException("the choice explanation did not show");
         }
 
         static HudView BuildHud(Ctx c, int stage) => BuildHud(c, stage, Rules.NewState(c.Levels[stage]), "");
@@ -720,11 +863,11 @@ namespace SevenSteps.EditorTools
                 foreach (var img in images)
                 {
                     if (!Intersects(img.Poly, g4)) continue;
-                    var inner = InnerRect(img);
+                    var inner = PlateInner(img);
                     bool before = img.Order < t.I.Order;
                     bool holds = before && Contains(img.Box, t.Glyphs) && IsAxisAligned(img);
                     if (holds) stack.Add(img);
-                    if (holds && inner.HasValue && Contains(inner.Value, Grow(t.Glyphs, PlatePad - 0.5f)) && img.Alpha * CenterAlpha(img) >= PlateAlpha)
+                    if (holds && inner.HasValue && HoldsPadded(img, inner.Value, t.Glyphs) && img.Alpha * CenterAlpha(img) >= PlateAlpha)
                     { plate = img; continue; }
                     if (holds && CenterAlpha(img) >= 0.5f) // an (almost) solid image under the text
                     {
@@ -733,7 +876,7 @@ namespace SevenSteps.EditorTools
                             if (!t.I.Is(UiLayoutRule.Decoration) && !img.Is(UiLayoutRule.Decoration))
                                 found.Add($"decoration: the border of {img.Path} crosses {t.I.Path} \"{Short(t.T.text)}\" glyphs {Fmt(t.Glyphs)} (inner {Fmt(inner.Value)})");
                         }
-                        else if (inner.HasValue && !Contains(inner.Value, Grow(t.Glyphs, PlatePad - 0.5f)) && !t.I.Is(UiLayoutRule.Plate) && !img.Is(UiLayoutRule.Plate))
+                        else if (inner.HasValue && !HoldsPadded(img, inner.Value, t.Glyphs) && !t.I.Is(UiLayoutRule.Plate) && !img.Is(UiLayoutRule.Plate))
                             found.Add($"plate padding: {t.I.Path} \"{Short(t.T.text)}\" glyphs {Fmt(t.Glyphs)} need 8 inside {img.Path} inner {Fmt(inner.Value)}");
                         continue;
                     }
@@ -931,6 +1074,31 @@ namespace SevenSteps.EditorTools
             var c = new Vector3[4];
             r.GetWorldCorners(c);
             return c.Select(p => ToCanvas(canvas, p, units)).ToArray();
+        }
+
+        /// A U5 explanation plate (an Image with a FocusPlate component): its caption-plate sprite is a filled plate with no
+        /// border line, so the 9-slice border counts as padding (architecture.md 14.4 exception 2026-11-12, ui-u5-kit.md 1.1).
+        static bool IsFocusPlate(Item img) => img.G is Image && img.G.GetComponent<SevenSteps.Game.UI.U5.FocusPlate>() != null;
+
+        /// The area a plate offers its text: the whole plate for a FocusPlate (14.4 exception), else <see cref="InnerRect"/>.
+        static Rect? PlateInner(Item img) => IsFocusPlate(img) ? img.Box : InnerRect(img);
+
+        /// The plate holds the glyphs with the 14.4 padding: 8 on every side, or for a FocusPlate max(8, border) per side.
+        static bool HoldsPadded(Item img, Rect inner, Rect glyphs)
+        {
+            if (!IsFocusPlate(img)) return Contains(inner, Grow(glyphs, PlatePad - 0.5f));
+            var im = (Image)img.G;
+            Vector4 b = Vector4.zero; // left, bottom, right, top in canvas units
+            if (im.sprite != null && im.type == Image.Type.Sliced && im.hasBorder)
+            {
+                float ppu = im.pixelsPerUnit * im.pixelsPerUnitMultiplier;
+                var s = img.G.transform.lossyScale;
+                b = Vector4.Scale(im.sprite.border / Mathf.Max(ppu, 0.0001f), new Vector4(s.x, s.y, s.x, s.y));
+            }
+            // Canvas rects here are top-left origin, y down: the sprite's bottom border is the rect's yMax side.
+            var need = Rect.MinMaxRect(glyphs.xMin - Mathf.Max(PlatePad, b.x) + 0.5f, glyphs.yMin - Mathf.Max(PlatePad, b.w) + 0.5f,
+                glyphs.xMax + Mathf.Max(PlatePad, b.z) - 0.5f, glyphs.yMax + Mathf.Max(PlatePad, b.y) - 0.5f);
+            return Contains(inner, need);
         }
 
         /// The area a plate offers its text: the rect, minus the sprite border for a sliced image. Null for RawImage etc.

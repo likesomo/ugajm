@@ -5,6 +5,7 @@ using SevenSteps.Contracts;
 using SevenSteps.Core;
 using SevenSteps.Game.Flow;
 using SevenSteps.Game.UI.Planets;
+using SevenSteps.Game.UI.U5;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -58,6 +59,20 @@ namespace SevenSteps.Game.UI
         public StageSelectController StageSelect { get; private set; }
         // Journey transitions (scene-flow, docs/stage-select-transitions.md): null unless JourneyToggle is on and the new map is up.
         TitleJourney journey;
+        // U5 UI (UiStyleToggle, docs/ui-u5-kit.md): asked once here. On: these views instead of TitleView, LanguagePanel and
+        // CreditsPanel (which stay null), the title planet behind them, no menu background and no language badge.
+        bool u5;
+        FocusPlate tips;
+        U5TitleView u5Title;
+        U5LanguageView u5Language;
+        U5CreditsView u5Credits;
+        TitleWorld titleWorld;
+
+        /// The U5 title view (tests, captures); null when the U5 UI is off.
+        public U5TitleView U5Title => u5Title;
+        /// The U5 language picker and credits (tests, captures); null when the U5 UI is off.
+        public U5LanguageView U5Language => u5Language;
+        public U5CreditsView U5Credits => u5Credits;
 
         void Awake()
         {
@@ -77,14 +92,24 @@ namespace SevenSteps.Game.UI
                 new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
             var root = BuildCanvas();
-            menuBackground = Ui.MenuBackground(root); // null when the theme has none: the camera color shows
-            newMap = StageSelectToggle.On(Services.Get<LaunchOptions>());
-            titleView = new TitleView(root);
+            var launchOptions = Services.Get<LaunchOptions>();
+            u5 = UiStyleToggle.U5(launchOptions);
+            menuBackground = u5 ? null : Ui.MenuBackground(root); // null when the theme has none: the camera color shows
+            newMap = StageSelectToggle.On(launchOptions); // on by default with U5
             planets = PlanetEntry.FromCatalog(levels.Length);
+            if (u5)
+            {
+                if (assets.uiIcons == null) throw new MissingReferenceException($"[SevenSteps] {name}: GameAssets.uiIcons is not set (Data/UiIconSet.asset) and the U5 UI is on");
+                if (cam == null) throw new MissingReferenceException($"[SevenSteps] {name}: the Title scene has no Main Camera (the U5 title draws the title planet)");
+                tips = FocusPlate.Build(root, localizer, assets.uiIcons);
+                u5Title = new U5TitleView(root, assets.uiIcons, tips);
+                titleWorld = new TitleWorld(cam, assets.planetBodies, planets[0].Key, BrothersTileSet());
+            }
+            else titleView = new TitleView(root);
             planetMap = new PlanetMapView(root, planets, levels);
             planetMap.Story = Services.TryGet<StoryBook>(out var story) ? story : null; // carvings, lit dipper lines (story 0.5)
             planetMap.ReduceMotion = save.Settings.reduceMotion;
-            if (story != null && story.On) titleView.ShowSky(story.Catalog.ChapterIds.Select(story.FinaleCleared).ToArray());
+            if (story != null && story.On && titleView != null) titleView.ShowSky(story.Catalog.ChapterIds.Select(story.FinaleCleared).ToArray());
             planetStages = new PlanetStagesPanel(root);
             if (newMap)
             {
@@ -95,12 +120,17 @@ namespace SevenSteps.Game.UI
                 var surface = new PlanetSurfaceView(root, planetSpace, assets.planetBodies, planets, map3d.SetBodiesVisible);
                 stageViews = new StageSelectViews(map3d, surface, overlays = new OverlayStack());
             }
-            languagePanel = new LanguagePanel(root);
+            if (u5) u5Language = new U5LanguageView(root, assets.uiIcons, tips);
+            else languagePanel = new LanguagePanel(root);
             bool telemetryDefault = Services.Get<AppConfig>().telemetryOnByDefault;
             settings = SettingsPanel.Create(root, save, telemetryDefault, localizer);
             settingsController = new SettingsController(save, settings, telemetryDefault, localizer);
-            creditsPanel = new CreditsPanel(root, credits, licenses);
-            BuildLanguageBadge(root);
+            if (u5) u5Credits = new U5CreditsView(root, assets.uiIcons, tips, credits, licenses);
+            else
+            {
+                creditsPanel = new CreditsPanel(root, credits, licenses);
+                BuildLanguageBadge(root);
+            }
             if (overlays == null) overlays = new OverlayStack();
             // Text in the current language; redraw when the language changes (docs/architecture.md 13.3).
             ApplyText();
@@ -108,12 +138,24 @@ namespace SevenSteps.Game.UI
 
             flowController = new TitleFlowController(flow, save, this, levels, Services.Get<EntryTracker>());
             back = new BackNavigator(overlays, flowController.Back);
-            titleView.BeginRequested += flowController.BeginJourney;
-            titleView.ContinueRequested += flowController.ContinueJourney;
-            titleView.StagesRequested += flowController.OpenStageSelect;
-            titleView.SettingsRequested += () => Open(settings);
-            titleView.CreditsRequested += () => Open(creditsPanel);
-            titleView.LanguageRequested += OpenLanguage;
+            if (u5)
+            {
+                // One play stone: the last played stage when there is one, else stage 1 (the caption says which).
+                u5Title.PlayRequested += () => { if (flowController.CanContinue) flowController.ContinueJourney(); else flowController.BeginJourney(); };
+                u5Title.MapRequested += flowController.OpenStageSelect;
+                u5Title.SettingsRequested += () => Open(settings);
+                u5Title.CreditsRequested += () => Open(u5Credits);
+                u5Title.LanguageRequested += OpenLanguage;
+            }
+            else
+            {
+                titleView.BeginRequested += flowController.BeginJourney;
+                titleView.ContinueRequested += flowController.ContinueJourney;
+                titleView.StagesRequested += flowController.OpenStageSelect;
+                titleView.SettingsRequested += () => Open(settings);
+                titleView.CreditsRequested += () => Open(creditsPanel);
+                titleView.LanguageRequested += OpenLanguage;
+            }
             planetMap.PlanetClicked += OpenPlanet;
             planetMap.BackRequested += flowController.Back;
             planetStages.StageClicked += flowController.PlayStage;
@@ -130,7 +172,7 @@ namespace SevenSteps.Game.UI
                 runner.ReduceMotion = save.Settings.reduceMotion;
                 journey = new TitleJourney(StageSelect, runner, Services.Get<JourneyDive>(), Services.Get<JourneyReturn>(), flow.CanGoToGame);
             }
-            language = new LanguageController(languagePanel, overlays, localizer, save, Services.Get<LaunchOptions>().Language);
+            language = new LanguageController(u5 ? (ILanguagePanel)u5Language : languagePanel, overlays, localizer, save, Services.Get<LaunchOptions>().Language);
             settingsController.OpenLanguage = OpenLanguage; // the settings language button opens the picker
             overlays.Changed += OnOverlaysChanged;
         }
@@ -158,7 +200,7 @@ namespace SevenSteps.Game.UI
             if (!string.IsNullOrEmpty(launch.Screenshot))
             {
                 if (launch.OpenStageSelect) flowController.OpenStageSelect();
-                if (launch.OpenCredits) Open(creditsPanel);
+                if (launch.OpenCredits) Open(u5 ? (IOverlay)u5Credits : creditsPanel);
                 StartCoroutine(ScreenshotOnce.Run(launch.Screenshot, () => $"{flow.State}, cleared {save.Progress.ClearedCount}"));
             }
         }
@@ -172,13 +214,16 @@ namespace SevenSteps.Game.UI
             string fail = null;
             switch (path)
             {
-                case "begin": titleView.BeginButton.onClick.Invoke(); break;
+                case "begin":
+                    if (u5) u5Title.Play.Press(); else titleView.BeginButton.onClick.Invoke();
+                    break;
                 case "continue":
-                    if (!titleView.ContinueButton.interactable) fail = "Continue is off (no last played stage)";
+                    if (u5 ? !flowController.CanContinue : !titleView.ContinueButton.interactable) fail = "Continue is off (no last played stage)";
+                    else if (u5) u5Title.Play.Press();
                     else titleView.ContinueButton.onClick.Invoke();
                     break;
                 case "map":
-                    titleView.StagesButton.onClick.Invoke();
+                    if (u5) u5Title.Map.Press(); else titleView.StagesButton.onClick.Invoke();
                     yield return null;
                     int planet = Mathf.Min(1, planets.Count - 1);
                     if (newMap)
@@ -214,7 +259,11 @@ namespace SevenSteps.Game.UI
         /// An overlay opened or closed: when none is left, give the keyboard focus back to the screen under it.
         void OnOverlaysChanged()
         {
-            if (overlays.Count > 0) return;
+            if (overlays.Count > 0)
+            {
+                if (u5 && flow.State == AppState.Title) u5Title.Hide(); // the title planet stays; its controls make way
+                return;
+            }
             if (newMap && flow.State == AppState.StageSelect)
             {
                 stageViews.Map.Frame(); // the surface path had the camera
@@ -239,15 +288,18 @@ namespace SevenSteps.Game.UI
 
         void ApplyText()
         {
-            titleView.Apply(localizer, Services.TryGet<StoryBook>(out var story) ? story.TitleLine(localizer.Current) : null);
+            string storyLine = Services.TryGet<StoryBook>(out var story) ? story.TitleLine(localizer.Current) : null;
+            if (u5) u5Title.Apply(localizer, storyLine); else titleView.Apply(localizer, storyLine);
             planetMap.Apply(localizer);
             if (newMap)
             {
                 stageViews.Map.Apply(localizer);
                 stageViews.Surface.Apply(localizer);
             }
-            languagePanel.Apply(localizer);
-            creditsPanel.Apply(localizer);
+            languagePanel?.Apply(localizer);
+            u5Language?.Apply(localizer);
+            creditsPanel?.Apply(localizer);
+            u5Credits?.Apply(localizer);
             if (overlays.Contains(planetStages) && openPlanet >= 0)
                 planetStages.Bind(planets[openPlanet], save.Progress, levels, localizer, TruthOf(openPlanet));
         }
@@ -263,6 +315,7 @@ namespace SevenSteps.Game.UI
             flowController?.Dispose();
             StageSelect?.Dispose();
             journey?.Dispose();
+            titleWorld?.Dispose();
             settingsController?.Dispose();
             language?.Dispose();
             if (localizer != null) localizer.Changed -= OnLanguageChanged;
@@ -272,8 +325,13 @@ namespace SevenSteps.Game.UI
         /// ITitlePanels: the flow controller shows the panel for the state.
         public void Show(AppState state)
         {
-            if (titleView == null) throw new InvalidOperationException("[SevenSteps] TitleScreen.Show before Awake");
-            if (state == AppState.Title) titleView.Show(flowController.CanContinue); else titleView.Hide();
+            if (titleView == null && u5Title == null) throw new InvalidOperationException("[SevenSteps] TitleScreen.Show before Awake");
+            if (u5)
+            {
+                if (state == AppState.Title) { titleWorld.Show(); u5Title.Show(flowController.CanContinue); }
+                else { u5Title.Hide(); titleWorld.Hide(); }
+            }
+            else if (state == AppState.Title) titleView.Show(flowController.CanContinue); else titleView.Hide();
             bool select = state == AppState.StageSelect;
             if (newMap)
             {
@@ -292,6 +350,22 @@ namespace SevenSteps.Game.UI
             if (kb == null || flow.IsLoading) return;
             if (journey != null && journey.Blocks) return; // a transition plays, or this press skipped / cancelled one
             if (kb.escapeKey.wasPressedThisFrame) back.Back();
+            else if (u5) SelectDefaultOnFirstKey(kb);
+        }
+
+        /// U5 screens open with nothing selected (a focused icon would show its explanation at once): the first arrow, Enter
+        /// or Space selects the screen's default button, then uGUI navigation and submit take over.
+        void SelectDefaultOnFirstKey(Keyboard kb)
+        {
+            var es = EventSystem.current;
+            if (es == null || es.currentSelectedGameObject != null && es.currentSelectedGameObject.activeInHierarchy) return;
+            bool key = kb.leftArrowKey.wasPressedThisFrame || kb.rightArrowKey.wasPressedThisFrame || kb.upArrowKey.wasPressedThisFrame
+                || kb.downArrowKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame;
+            if (!key) return;
+            IconButton target = overlays.Top == u5Language ? u5Language.DefaultButton
+                : overlays.Top == u5Credits ? u5Credits.DefaultButton
+                : overlays.Count == 0 && flow.State == AppState.Title ? u5Title.DefaultButton : null;
+            if (target != null) target.Selectable.Select();
         }
 
         /// The v4 stage select model for the save now: cleared stages, the last played one, and the star-trail edges
@@ -312,6 +386,14 @@ namespace SevenSteps.Game.UI
                 trails = UiTheme.DipperEdges.Where(e => e.a < keys.Count && e.b < keys.Count).Select(e => (e.a, e.b)).ToList();
             int last = string.IsNullOrEmpty(save.Progress.lastStage) ? -1 : save.Progress.LastStageIndex(levels);
             return StageSelectModel.From(keys, planets.Select(p => p.Stages).ToList(), s => save.Progress.IsCleared(levels[s]), last, trails, nodeTrails);
+        }
+
+        /// The brothers on the title planet: the first stage's chapter tile set, as the Game scene picks it.
+        TileSet BrothersTileSet()
+        {
+            var cfg = Services.Get<AppConfig>();
+            var info = LevelCatalog.ChapterOf(0);
+            return BoardController.TileSetFor(cfg.tileSet, cfg.Chapter(info != null ? info.ArtPreset : null), assets.tileSet);
         }
 
         static Transform BuildCanvas()

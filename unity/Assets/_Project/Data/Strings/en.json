@@ -165,6 +165,8 @@
     { "key": "ui5.icon.keep", "text": "Keep" },
     { "key": "ui5.icon.switch", "text": "Switch" },
     { "key": "ui5.choice.keep", "text": "Leave a stone, start over" },
-    { "key": "ui5.choice.switch", "text": "Next brother goes on from here" }
+    { "key": "ui5.choice.switch", "text": "Next brother goes on from here" },
+    { "key": "ui5.title.continue", "text": "Keep walking" },
+    { "key": "ui5.title.begin", "text": "First step" }
   ]
 }

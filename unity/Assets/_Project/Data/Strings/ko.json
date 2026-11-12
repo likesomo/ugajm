@@ -165,6 +165,8 @@
     { "key": "ui5.icon.keep", "text": "남기기" },
     { "key": "ui5.icon.switch", "text": "넘기기" },
     { "key": "ui5.choice.keep", "text": "선돌을 남기고 처음부터" },
-    { "key": "ui5.choice.switch", "text": "여기서 다음 형제가 이어 감" }
+    { "key": "ui5.choice.switch", "text": "여기서 다음 형제가 이어 감" },
+    { "key": "ui5.title.continue", "text": "계속 걷기" },
+    { "key": "ui5.title.begin", "text": "첫 걸음" }
   ]
 }
