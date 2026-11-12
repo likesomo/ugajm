@@ -352,22 +352,20 @@ namespace SevenSteps.Game.UI.U5
             if (hidden) plate.Model.Clear();
         }
 
-        /// Hides what U5 replaces in the current HUD (its menu, undo, restart buttons, title, brother dots; its KEEP /
-        /// SWITCH cards are never shown because the choice is on U5) and moves the statue plate clear of the U5 top-right
-        /// buttons. CanvasGroups, not SetActive, where the current HUD switches the object itself on each refresh.
+        /// Hides what U5 replaces in the current HUD (its menu, undo, restart buttons, title, brother dots, statue-count
+        /// plate; its KEEP / SWITCH cards are never shown because the choice is on U5). CanvasGroups, not SetActive, where the current HUD switches the object itself on each refresh.
         public static void HideClassic(HudView hud)
         {
             if (hud == null) throw new ArgumentNullException(nameof(hud));
             foreach (var b in new Component[] { hud.menu, hud.undo, hud.restart }) b.gameObject.SetActive(false);
-            foreach (var go in new[] { hud.title.transform.parent.gameObject, hud.bodyDots[0].root.parent.gameObject })
+            // The statue-count plate too: U5 keeps board information on the board (the count door's sockets, TilePropView).
+            foreach (var go in new[] { hud.title.transform.parent.gameObject, hud.bodyDots[0].root.parent.gameObject, hud.statues.transform.parent.gameObject })
             {
                 if (!go.TryGetComponent<CanvasGroup>(out var g)) g = go.AddComponent<CanvasGroup>();
                 g.alpha = 0;
                 g.blocksRaycasts = false;
                 g.interactable = false;
             }
-            var statues = (RectTransform)hud.statues.transform.parent;
-            statues.anchoredPosition += new Vector2(0, -12); // under the U5 top band (to 72) with 12 of air
         }
     }
 }

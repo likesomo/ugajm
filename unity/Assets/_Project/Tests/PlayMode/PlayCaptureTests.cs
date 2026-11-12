@@ -194,6 +194,50 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
+        /// U5 clear before / after (docs/ui-u5-kit.md 3, U5-result): a won stage, toggle off ("u4-") and -ui5 ("u5-"), KO and
+        /// EN, a planet's last stage (its farewell line) and the last stage (journey line, the ending). Waits for the result
+        /// and the star reveal. `unity.sh playcapture U5Clear`.
+        [UnityTest]
+        public IEnumerator U5Clear()
+        {
+            foreach (var (name, args) in new (string, string[])[]
+            {
+                ("u4-clear", new[] { "-level", "4", "-replay", "DURRRRRKDDRRRRR" }),
+                ("u5-clear", new[] { "-ui5", "-level", "4", "-replay", "DURRRRRKDDRRRRR" }),
+                ("u5-clear-en", new[] { "-ui5", "-lang", "en", "-level", "4", "-replay", "DURRRRRKDDRRRRR" }),
+                ("u5-clear-planet", new[] { "-ui5", "-level", "7", "-replay", "DUDUDULKDUDURRRKDUDDDDR" }),
+                ("u5-clear-last", new[] { "-ui5", "-level", "50", "-replay", "UUUDURUKDRRRUUKDRRDLUU" }),
+            })
+            {
+                PlayEnv.Reset();
+                // The replay snaps (no presentation, no result): all but the last step, then the winning step is played.
+                int ri = Array.IndexOf(args, "-replay") + 1;
+                string path = args[ri];
+                args[ri] = path.Substring(0, path.Length - 1);
+                yield return Start(AppState.Game, AppScenes.Game, args);
+                var game = Object.FindAnyObjectByType<GameController>();
+                float tw = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - tw < 0.5f) yield return null;
+                Assert.IsTrue(SevenSteps.Core.Rules.TryParseLetter(path[path.Length - 1], out var act));
+                game.Board.Send(SevenSteps.Core.Command.FromAct(act));
+                float t0 = Time.realtimeSinceStartup;
+                while (Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ClearView>() is { IsShown: true } == false
+                       && Object.FindAnyObjectByType<SevenSteps.Game.UI.ResultView>() is { IsShown: true } == false)
+                {
+                    Assert.Less(Time.realtimeSinceStartup - t0, 30f, $"{name}: the clear to show");
+                    yield return null;
+                }
+                float t1 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - t1 < 1.6f) yield return null; // the star reveal
+                var px = new Pixels();
+                yield return Capture(name, px);
+                AssertVaried(name, px.Value);
+                var u5 = Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ClearView>();
+                if (name.StartsWith("u5")) Assert.IsTrue(u5 != null && u5.IsShown, $"{name}: the U5 clear is up");
+                else Assert.IsNull(u5, $"{name}: no U5 clear with the toggle off");
+            }
+        }
+
         /// U5 in-game before / after (docs/ui-u5-kit.md 3; gameplay-ui merge requests): stage 4 after one step (HUD) and
         /// after its 7th step (KEEP / SWITCH), the current UI ("u4-") and -ui5 ("u5-"), KO and EN; the choice also as a first
         /// visit (explanations on) and with SWITCH focused. `unity.sh playcapture U5InGame`.
@@ -335,6 +379,8 @@ namespace SevenSteps.Tests.PlayMode
             Debug.Log($"[SevenSteps] Play capture {name}: canvases {string.Join(", ", sizes)}");
             var gc = Object.FindAnyObjectByType<GameController>();
             if (gc != null && gc.Board != null && gc.Board.Choice != null) gc.Board.Choice.Refresh();
+            var clear = Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ClearView>();
+            if (clear != null && clear.IsShown) clear.Layout();
             afterSettle?.Invoke();
             yield return null;
             yield return null;

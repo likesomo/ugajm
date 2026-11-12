@@ -92,7 +92,7 @@ namespace SevenSteps.Game.UI.U5
 
         void OnFocus(IconButton b, TipSource source, bool on)
         {
-            if (on) model.Enter(source, b, b.TipKey, b.Shortcut);
+            if (on) model.Enter(source, b, b.TipKey, b.Shortcut, b.TipArgs);
             else model.Exit(source, b);
         }
 
@@ -101,7 +101,7 @@ namespace SevenSteps.Game.UI.U5
         {
             if (loc == null) throw new ArgumentNullException(nameof(loc));
             if (tip.IsEmpty) return "";
-            var s = loc.Get(tip.Key);
+            var s = tip.Args != null ? loc.Format(tip.Key, tip.Args) : loc.Get(tip.Key);
             return string.IsNullOrEmpty(tip.Shortcut) ? s : s + " · " + tip.Shortcut;
         }
 
