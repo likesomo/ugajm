@@ -25,7 +25,7 @@ namespace SevenSteps.Game.UI.U5
         /// World stones: behind the exit by this many cells (0: over the exit cell itself), this far apart, about this tall,
         /// and floating this far above the brother's head (cells). Over the exit, not behind it: the cell behind often holds
         /// a wall, a statue or a waiting brother, and the stones would sink into or hide them.
-        public const float WorldBehind = 0f, WorldSpacing = 0.6f, WorldHeight = 0.7f, WorldLift = 0.15f;
+        public const float WorldBehind = 0f, WorldSpacing = 0.6f, WorldHeight = 0.7f, WorldLift = 0.35f;
         public const int SortingOrder = 6;
 
         IconButton map, retry, next, undo, restart;
@@ -373,6 +373,7 @@ namespace SevenSteps.Game.UI.U5
                     foreach (var r in go.GetComponentsInChildren<Renderer>()) b.Encapsulate(r.bounds);
                     if (b.size.y > 0.0001f) go.transform.localScale *= WorldHeight * cell / b.size.y;
                     worldStones[k] = go;
+                    worldBaseScale[k] = go.transform.localScale;
                 }
                 worldStones[k].SetActive(false); // not counted as ground below
             }
@@ -382,9 +383,30 @@ namespace SevenSteps.Game.UI.U5
             // The front (-Z, the star inlay) toward the board camera, leaned back with its pitch so it reads at full size.
             // (+Z of the stone = away from the camera, so its -Z front with the inlay faces it.)
             var facing = Quaternion.LookRotation(cam.transform.forward, Vector3.up);
+            Place(spots, ground, facing, 1f);
+            // Small boards on screen (a wide 17 x 3 stage): grown so each stone is at least MinStonePx tall on the 720-unit
+            // canvas, the row spreading with it from the middle stone; it grows upward from over the brother's head.
+            float px = StonePx(cam, 0);
+            if (px > 0.01f && px < MinStonePx)
+            {
+                float grow = MinStonePx / px;
+                var mid = spots[1];
+                var wide = new Vector3[spots.Length];
+                for (int k = 0; k < spots.Length; k++) wide[k] = mid + (spots[k] - mid) * grow;
+                Place(wide, ground, facing, grow);
+            }
+        }
+
+        /// The smallest on-screen height of a world stone's star face (canvas units of the 720-tall reference): the 48 icon size.
+        public const float MinStonePx = 48f;
+        readonly Vector3[] worldBaseScale = new Vector3[Core.Stars.Max];
+
+        void Place(Vector3[] spots, float ground, Quaternion facing, float grow)
+        {
             for (int k = 0; k < worldStones.Length; k++)
             {
                 var t = worldStones[k].transform;
+                t.localScale = worldBaseScale[k] * grow;
                 t.rotation = facing;
                 t.position = new Vector3(spots[k].x, ground, spots[k].z);
                 worldStones[k].SetActive(true);
@@ -393,6 +415,27 @@ namespace SevenSteps.Game.UI.U5
                 foreach (var r in worldStones[k].GetComponentsInChildren<Renderer>()) low = Mathf.Min(low, r.bounds.min.y);
                 if (low < float.MaxValue) t.position += Vector3.up * (ground - low);
             }
+        }
+
+        /// Stone <paramref name="k"/>'s height on screen, canvas units of the 720-tall reference.
+        float StonePx(Camera cam, int k)
+        {
+            // The star inlay's face (thin) as the visible size; all eight corners, since it leans back to face the camera.
+            Bounds b;
+            if (worldInlays[k] != null) b = worldInlays[k].bounds;
+            else
+            {
+                b = new Bounds(worldStones[k].transform.position, Vector3.zero);
+                foreach (var r in worldStones[k].GetComponentsInChildren<Renderer>()) b.Encapsulate(r.bounds);
+            }
+            float lo = float.MaxValue, hi = float.MinValue;
+            for (int c = 0; c < 8; c++)
+            {
+                var p = new Vector3((c & 1) == 0 ? b.min.x : b.max.x, (c & 2) == 0 ? b.min.y : b.max.y, (c & 4) == 0 ? b.min.z : b.max.z);
+                float y = cam.WorldToViewportPoint(p).y;
+                lo = Mathf.Min(lo, y); hi = Mathf.Max(hi, y);
+            }
+            return (hi - lo) * 720f;
         }
 
         /// The top of the tile-sized geometry under <paramref name="spot"/> (a floor tile: 0; a wall block with its cap: the
