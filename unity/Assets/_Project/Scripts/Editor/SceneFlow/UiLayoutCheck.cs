@@ -271,6 +271,15 @@ namespace SevenSteps.EditorTools
                     v.Show();
                     return v.gameObject;
                 } }, key);
+                // U5 (gameplay-ui): the planet name and its line on its own canvas, the continue icon focused (its plate up).
+                yield return (new Screen { Name = "U5 ChapterCard", GameplayUi = true, U5Kit = true, Build = (c, root) =>
+                {
+                    var v = SevenSteps.Game.UI.U5.U5ChapterCardView.Build(c.Assets.uiIcons, c.Loc);
+                    v.Bind(LevelCatalog.ChapterCard(key, c.Lang));
+                    v.Show();
+                    v.Continue.OnSelect(null);
+                    return v.gameObject;
+                } }, key);
             }
             // ---- U5 (UiStyleToggle on; docs/ui-u5-kit.md 3, 6): the title, language and credits (scene-flow), the HUD and
             // the 7th-step choice (gameplay-ui, warnings until HudResultAreErrors). The toggle-off screens above and below

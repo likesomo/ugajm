@@ -150,7 +150,9 @@ namespace SevenSteps.Game
             localizer.Changed += applyResultLanguage;
             // The theme's card prefab, else the code-built chapter entry screen (art concept chapter-entry). None in smoke /
             // replay runs: the screenshot must show the board.
+            // U5: the planet name and its line only, on its own canvas (U5ChapterCardView); -ui4 keeps the old card.
             IChapterCard chapterCard = launch.SmokeView != SmokeView.None || (!string.IsNullOrEmpty(launch.Replay) && !launch.FlowCheck) ? null
+                : u5Hud != null ? UI.U5.U5ChapterCardView.Build(assets.uiIcons, localizer)
                 : (IChapterCard)ChapterCardView.CreateOptional(overlayCanvas) ?? ChapterEntryView.Create(overlayCanvas, localizer);
             this.chapterCard = chapterCard;
             // Win finale (star trail) at a quarter of its length in dev runs, so replays and smoke reach the result quickly.
