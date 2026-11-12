@@ -87,7 +87,9 @@ namespace SevenSteps.Tests
             var done = Model(Enumerable.Repeat(true, 7).ToArray(), new int[7], markerSlot: 3);
             Assert.IsTrue(ConstellationFigure.Drawn(done, 0, fig.Edges[6]));
             Assert.AreEqual(-1, ConstellationFigure.Current(done, 0), "no current pointer once every stage is cleared");
-            Assert.AreEqual(8, ConstellationFigure.For("altar", 8).Edges.Count, "seven in order + the hoop's 8-1");
+            var altar = ConstellationFigure.For("altar", 8);
+            Assert.AreEqual(7, altar.Edges.Count, "seven in order; the hoop stays open (8-1 would cross the landmark)");
+            Assert.IsFalse(altar.Edges.Any(e => e.closing));
             Assert.AreEqual(6, ConstellationFigure.For("frost", 7).Edges.Count);
         }
 

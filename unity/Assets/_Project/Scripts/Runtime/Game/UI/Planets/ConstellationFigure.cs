@@ -9,7 +9,8 @@ namespace SevenSteps.Game.UI.Planets
     /// A planet's stage constellation on the U5 surface (D2b Orbit sparks, user choice 2026-11-12; concepts/ui/
     /// stage-select-2026-11-11/surface-ui-2026-11-12/d2-refine IMPLEMENT.md): one node per stage at authored anchors in the
     /// 1280x720 reference (top-left origin, sky space around the enlarged body, not on the turning crust), joined in stage
-    /// order, plus each figure's closing edge once the planet is complete (moss 7-4 closes the bowl, altar 8-1 the hoop).
+    /// order, plus moss's closing edge 7-4 once the planet is complete (the bowl). Altar's hoop stays open: its 8-1 edge
+    /// would cross the body's landmark (lead 2026-11-12: no bright lines across the landmark).
     /// Pure data; the view converts anchors to its canvas.
     /// </summary>
     public sealed class ConstellationFigure
@@ -35,7 +36,6 @@ namespace SevenSteps.Game.UI.Planets
             var edges = new List<(int, int, bool)>();
             for (int i = 1; i < count; i++) edges.Add((i - 1, i, false));
             if (key == "moss" && count == 7) edges.Add((6, 3, true));
-            if (key == "altar" && count == 8) edges.Add((7, 0, true));
             return new ConstellationFigure(a, edges);
         }
 
