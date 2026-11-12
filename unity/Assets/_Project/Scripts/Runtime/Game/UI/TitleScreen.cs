@@ -103,7 +103,7 @@ namespace SevenSteps.Game.UI
                 if (cam == null) throw new MissingReferenceException($"[SevenSteps] {name}: the Title scene has no Main Camera (the U5 title draws the title planet)");
                 tips = FocusPlate.Build(root, localizer, assets.uiIcons);
                 u5Title = new U5TitleView(root, assets.uiIcons, tips);
-                titleWorld = new TitleWorld(cam, assets.planetBodies, planets[0].Key, BrothersTileSet());
+                titleWorld = new TitleWorld(cam, assets.planetBodies, planets[0].Key, BrothersTileSet(), assets.PlanetMapSprites);
             }
             else titleView = new TitleView(root);
             planetMap = new PlanetMapView(root, planets, levels);

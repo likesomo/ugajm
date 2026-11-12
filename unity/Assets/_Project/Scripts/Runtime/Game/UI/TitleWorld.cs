@@ -2,6 +2,7 @@ using System;
 using SevenSteps.Contracts;
 using SevenSteps.Game.UI.Planets;
 using UnityEngine;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace SevenSteps.Game.UI
@@ -25,8 +26,15 @@ namespace SevenSteps.Game.UI
         public PlanetBody Planet { get; }
         public bool Visible => root != null && root.activeSelf;
 
+        /// Where the brothers stand on a V7 sprite planet: this share of its radius above the centre (the sprites' flat top).
+        public const float SpriteTop = 0.5f;
+        /// Stars behind the planet (seeded, the same sky every time), as the star map's backdrop.
+        public const int StarCount = 150;
+        const float BackdropDistance = 90f;
+
         /// <param name="brothers">Tile set whose player visuals stand on the planet (the first chapter's); null = no brothers.</param>
-        public TitleWorld(Camera cam, PlanetBodySet bodies, string planetKey, TileSet brothers)
+        /// <param name="sprites">Map planet sprites (V7): the title planet uses its sprite as the map does; null = the body mesh.</param>
+        public TitleWorld(Camera cam, PlanetBodySet bodies, string planetKey, TileSet brothers, IPlanetMapSprites sprites = null)
         {
             this.cam = cam != null ? cam : throw new ArgumentNullException(nameof(cam), "the Title scene has no Main Camera");
             if (bodies == null) throw new ArgumentNullException(nameof(bodies), "GameAssets.planetBodies is not set (Data/PlanetBodies.asset)");
@@ -36,6 +44,14 @@ namespace SevenSteps.Game.UI
             Planet = PlanetBody.Create(bodies, planetKey, 0, root.transform, true);
             Planet.transform.localPosition = new Vector3(0f, PlanetDrop, 0f);
             Planet.transform.localScale = Vector3.one * PlanetScale;
+            Sprite art = null;
+            bool sprite = sprites != null && sprites.TryGetSprite(planetKey, out art);
+            if (sprite) Planet.UseSprite(art, cam);
+            // On the sprite the brothers stand on its flat top, a little toward the camera so they draw in front of it.
+            var toCamera = -(Quaternion.Euler(CameraPitch, 0, 0) * Vector3.forward);
+            Vector3 stand = sprite
+                ? new Vector3(0f, PlanetDrop + Planet.Radius * SpriteTop, 0f) + toCamera * (Planet.Radius * 0.6f)
+                : new Vector3(0f, PlanetDrop + Planet.SeatLocal.y * PlanetScale, -0.15f);
             if (brothers != null)
                 for (int i = 0; i < Brothers; i++)
                 {
@@ -43,7 +59,7 @@ namespace SevenSteps.Game.UI
                     if (visual.prefab == null) continue;
                     var b = Object.Instantiate(visual.prefab, root.transform);
                     b.name = "Brother " + (i + 1);
-                    b.transform.localPosition = new Vector3((i - 1) * 0.72f, PlanetDrop + Planet.SeatLocal.y * PlanetScale, -0.15f);
+                    b.transform.localPosition = stand + new Vector3((i - 1) * 0.72f, 0f, 0f);
                     b.transform.localScale = visual.Scale * 0.9f;
                     b.transform.localRotation = visual.RotationFor(i);
                     foreach (var behaviour in b.GetComponentsInChildren<MonoBehaviour>(true)) behaviour.enabled = false; // scenery: no board logic
@@ -55,6 +71,7 @@ namespace SevenSteps.Game.UI
             light.type = LightType.Directional;
             light.intensity = 1.6f;
             light.shadows = LightShadows.None;
+            Stars(root.transform, cam);
             root.SetActive(false);
         }
 
@@ -68,6 +85,34 @@ namespace SevenSteps.Game.UI
             cam.transform.position = Origin + new Vector3(0, 0.2f, 0) - cam.transform.forward * CameraDistance;
             cam.nearClipPlane = 0.1f;
             cam.farClipPlane = CameraDistance * 2f + 50f;
+        }
+
+        /// A camera-space canvas far behind the planet with small seeded stars (a code backdrop, not the chapter sky files).
+        static void Stars(Transform parent, Camera cam)
+        {
+            var go = new GameObject("TitleStars", typeof(RectTransform));
+            go.layer = 5;
+            go.transform.SetParent(parent, false);
+            var canvas = go.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = cam;
+            canvas.planeDistance = BackdropDistance;
+            canvas.sortingOrder = -100;
+            var scaler = go.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1280, 720);
+            scaler.matchWidthOrHeight = 0.5f;
+            var rng = new System.Random(11);
+            for (int i = 0; i < StarCount; i++)
+            {
+                float size = 1.5f + (float)rng.NextDouble() * (i % 9 == 0 ? 2.5f : 1.2f);
+                var star = Ui.MakeImage(go.transform, new Color(1f, 0.97f, 0.9f, 0.25f + (float)rng.NextDouble() * 0.6f), Ui.Circle, "Star");
+                star.raycastTarget = false;
+                var r = star.rectTransform;
+                r.anchorMin = r.anchorMax = new Vector2((float)rng.NextDouble(), (float)rng.NextDouble());
+                r.sizeDelta = new Vector2(size, size);
+                r.anchoredPosition = Vector2.zero;
+            }
         }
 
         public void Hide()
