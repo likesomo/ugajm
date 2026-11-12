@@ -93,6 +93,36 @@ namespace SevenSteps.Tests.PlayMode
             Assert.GreaterOrEqual(b, BoardMin, "the board is drawn");
         }
 
+        /// U5 title, language and credits (-ui5; docs/ui-u5-kit.md 3), KO and EN title; before = `title` (current UI).
+        /// `unity.sh playcapture U5Title`.
+        [UnityTest]
+        public IEnumerator U5Title()
+        {
+            foreach (string lang in new[] { "ko", "en" })
+            {
+                PlayEnv.Reset();
+                yield return Start(AppState.Title, AppScenes.Title, "-ui5", "-lang", lang);
+                var title = Object.FindAnyObjectByType<SevenSteps.Game.UI.TitleScreen>();
+                Assert.IsNotNull(title.U5Title, "-ui5: the U5 title");
+                var px = new Pixels();
+                yield return Capture($"u5-title-{lang}", px);
+                AssertVaried($"u5-title-{lang}", px.Value);
+                if (lang != "ko") continue;
+                title.U5Title.Language.Press();
+                yield return null;
+                px = new Pixels();
+                yield return Capture("u5-language", px);
+                AssertVaried("u5-language", px.Value);
+                title.U5Language.Next.Press();
+                yield return null;
+                title.U5Title.Credits.Press();
+                yield return null;
+                px = new Pixels();
+                yield return Capture("u5-credits", px);
+                AssertVaried("u5-credits", px.Value);
+            }
+        }
+
         /// The v4 star map (-newmap) with a save where the first planet is cleared (lit trail, stars, the brothers' dots).
         [UnityTest]
         public IEnumerator Map()
