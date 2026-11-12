@@ -76,3 +76,9 @@
   - `JourneyCheck`(smoke)와 `JourneyFlowTests`가 결과 → Next 경로를 탄다.
 - `IResultPanel`과 `AppFlow`는 바뀌지 않았다. 지금 UI 결과 패널과 U5 클리어가 같은 경로를 쓴다.
 - 메모: `docs/stage-select-transitions.md`도 함께 고쳤다(scene-flow 문서).
+
+## 훑어보기: feat/scene-flow 12088de (행성 끝 클리어의 지도·Esc, 리드 결정) — 문제없음
+
+- `OpenStageSelect`에서 Result이고 여정이 켜져 있을 때, 행성 끝(`JourneyRoute.After == PlanetComplete`)이면 `PlanetCompleting`, 그 밖이면 `Returning`(Back)이다. 그래서 행성 끝의 길 불은 Next로 가든 지도로 가든 한 번 켜진다.
+- `Leaving` 잠금은 그대로다. EditMode 테스트가 더해졌다.
+- 계약(`IResultPanel`·`AppFlow`)은 바뀌지 않는다.
