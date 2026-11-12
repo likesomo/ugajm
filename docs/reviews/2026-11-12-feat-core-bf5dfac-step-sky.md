@@ -43,3 +43,18 @@
   - `_StarTrailState.w`(쓴 걸음)와 `_StarTrailPulse.z`도 예약 0으로 둔다. float4 배치는 그대로 둔다. 아트 셰이더가 나중에 같은 이름을 읽어도 깨지지 않게 하려는 것이다.
   - 15.5 표의 해당 칸을 "예약(0), 2026-11-12 C로 미사용"으로 고친다(core가 고치고 내가 검토).
   - `StarTrailMapTests`·`StarTrailTests`의 해당 단정을 "0이다"로 바꾼다.
+
+## 수정 확인: feat/core a1d119a(R1) + 60651bf(StarTrailMap 정리), 재정렬 뒤 bf5dfac = c3b2e2d — **승인**
+
+- 60651bf detached에서 헤드리스 EditMode를 직접 돌렸다. **817/817 통과**.
+- **R1 해결**
+  - `Layout`에 점 배열을 받는 오버로드가 생겼다. 뷰는 `points`·`bandPoints` 두 배열을 재사용하고, 테스트용 순수 함수는 그대로다.
+  - `Refresh`는 투영 결과(플레이 칸 위 끝, 중심 x, 천장, `cellPx`), `StepSky`, 움직임 줄이기가 바뀔 때만 `Rebuild`한다. 그래서 정지 프레임에는 아무것도 다시 쓰지 않는다. `Rebuilds` 카운터 테스트가 이것을 고정한다.
+  - 부르는 동안에는 7번째 별 세 장의 `sizeDelta`만 바꾼다.
+  - `ToCanvas`는 캔버스를 캐시한다.
+- **StarTrailMap 정리**(내 계약 15장)
+  - `PlayerBit` → `ReservedBit`(0, 재사용 금지). `SetPlayer`를 지웠다.
+  - `StateVector`의 w와 `_StarTrailPulse.z`는 예약 0이다. float4 배치는 그대로다.
+  - 15.5 표와 15.6 대체 문구, 변경 기록이 고쳐졌다. 테스트는 "0이다"로 바꿨다.
+  - 검토 때 요청한 그대로다.
+- R2(지금 UI와 U5 선택이 별자리를 피함)는 gameplay-ui 몫이고 병합을 막지 않는다(40a0561 검토 R2).
