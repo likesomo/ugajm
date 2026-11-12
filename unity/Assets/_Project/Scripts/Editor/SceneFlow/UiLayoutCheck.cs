@@ -47,7 +47,7 @@ namespace SevenSteps.EditorTools
         public static bool HudResultAreErrors = true;
         /// U5 screens whose findings are the kit's (gameplay-ui: FocusPlate size, U5GameHud): warnings until the kit passes
         /// (lead flips this, as HudResultAreErrors). The U5 title, language and credits without a tip are errors already.
-        public static bool U5KitAreErrors = false;
+        public static bool U5KitAreErrors = true; // gameplay-ui K1 fixed (feat/view 6a792b6, 0 U5 warnings; lead 2026-11-12)
         /// Glyph quads carry the font's side bearing (hand fonts: up to ~2 units past the pen position).
         const float GlyphSlack = 2f;
 
