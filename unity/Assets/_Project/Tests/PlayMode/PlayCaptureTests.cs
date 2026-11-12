@@ -73,6 +73,38 @@ namespace SevenSteps.Tests.PlayMode
             Assert.GreaterOrEqual(b, BoardMin, "the board is drawn");
         }
 
+        /// The journey advance (stage 1 cleared, -newmap) frozen part-way: the JourneyRunner is disabled after about 0.45 s and
+        /// 0.9 s of its 1.5 s, so the camera, the risen board and the cleared board stay where they are for the capture.
+        [UnityTest]
+        public IEnumerator AdvanceMidway()
+        {
+            yield return Start(AppState.Game, AppScenes.Game, "-newmap", "-level", "1");
+            var game = Object.FindAnyObjectByType<GameController>();
+            Assert.IsNotNull(game.Journey, "-newmap turns the journey on");
+            string path = LevelCatalog.PathOf(0);
+            if (path.Length > 1) game.Board.Replay(path.Substring(0, path.Length - 1));
+            Assert.IsTrue(SevenSteps.Core.Rules.TryParseLetter(path[path.Length - 1], out var act));
+            game.Board.Send(SevenSteps.Core.Command.FromAct(act));
+            float t0 = Time.realtimeSinceStartup;
+            while (!game.Journey.Blocks || Object.FindAnyObjectByType<SevenSteps.Game.Flow.JourneyRunner>() is not { Busy: true })
+            {
+                Assert.Less(Time.realtimeSinceStartup - t0, 20f, "the advance to start");
+                yield return null;
+            }
+            var runner = Object.FindAnyObjectByType<SevenSteps.Game.Flow.JourneyRunner>();
+            foreach (var (label, at) in new[] { ("advance-30", 0.45f), ("advance-60", 0.9f) })
+            {
+                runner.enabled = true;
+                float s = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - s < at - (label == "advance-60" ? 0.45f : 0f)) yield return null;
+                runner.enabled = false;
+                var px = new Pixels();
+                yield return Capture(label, px, 0.1f);
+                AssertVaried(label, px.Value);
+            }
+            runner.enabled = true;
+        }
+
         // ---------- ----------
 
         static IEnumerator Start(AppState state, string scene, params string[] args)
@@ -86,7 +118,7 @@ namespace SevenSteps.Tests.PlayMode
 
         /// Renders every active camera (depth order) into a 1280x720 texture with the overlay UI on the main camera, settles,
         /// reads it back and saves NAME.png.
-        static IEnumerator Capture(string name, Pixels result)
+        static IEnumerator Capture(string name, Pixels result, float settle = SettleSeconds)
         {
             var rt = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32);
             var cams = Object.FindObjectsByType<Camera>(FindObjectsInactive.Exclude).Where(c => c.enabled).OrderBy(c => c.depth).ToList();
@@ -105,7 +137,7 @@ namespace SevenSteps.Tests.PlayMode
                         cv.planeDistance = main.nearClipPlane + 0.05f + 0.001f * (1000 - Mathf.Clamp(cv.sortingOrder, -999, 999)); // higher order nearer
                     }
                 float t0 = Time.realtimeSinceStartup;
-                while (Time.realtimeSinceStartup - t0 < SettleSeconds) yield return null; // board refit and UI layout at 16:9
+                while (Time.realtimeSinceStartup - t0 < settle) yield return null; // board refit and UI layout at 16:9
                 // Batch mode has no Game view: WaitForEndOfFrame never comes. Render each camera into the texture now, in
                 // depth order, with its own clear flags (as the screen would composite them).
                 Canvas.ForceUpdateCanvases();

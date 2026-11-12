@@ -77,6 +77,72 @@ namespace SevenSteps.Game
             ChapterMaterials.Apply(planet, Current); // Fit rebuilds the summit meshes: same overrides on the new renderers
         }
 
+        /// Cells around the board within which planet renderers count as its ground (the summit and its crust, not moons).
+        public const float GroundMarginCells = 4f;
+
+        /// A still copy of the ground the board stands on now, for the journey advance (the cleared board keeps its island
+        /// while the planet refits to the next board): the planet's mesh renderers whose bounds come within
+        /// <see cref="GroundMarginCells"/> of <paramref name="grid"/>, with their own copies of the meshes (the refit disposes
+        /// the planet's) and no scripts. Null when there is no planet (no chapter, smoke runs). The copy owns its meshes and
+        /// frees them when destroyed.
+        public GameObject CopyGround(BoardGrid grid)
+        {
+            if (planet == null) return null;
+            var copy = new GameObject("Ground (snapshot)");
+            var owned = copy.AddComponent<OwnedMeshes>();
+            foreach (var r in GroundRenderers(grid))
+            {
+                var f = r.GetComponent<MeshFilter>();
+                var go = new GameObject(r.name);
+                go.transform.SetParent(copy.transform, false);
+                go.transform.SetPositionAndRotation(r.transform.position, r.transform.rotation);
+                go.transform.localScale = r.transform.lossyScale;
+                var mesh = Object.Instantiate(f.sharedMesh);
+                owned.Add(mesh);
+                go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                var cr = go.AddComponent<MeshRenderer>();
+                cr.sharedMaterials = r.sharedMaterials;
+                cr.shadowCastingMode = r.shadowCastingMode;
+                cr.receiveShadows = r.receiveShadows;
+                if (r.HasPropertyBlock())
+                {
+                    var block = new MaterialPropertyBlock();
+                    r.GetPropertyBlock(block);
+                    cr.SetPropertyBlock(block);
+                }
+            }
+            return copy;
+        }
+
+        /// World bounds of the ground under <paramref name="grid"/> (same renderers as <see cref="CopyGround"/>); null when
+        /// there is no planet.
+        public Bounds? GroundBounds(BoardGrid grid)
+        {
+            Bounds? b = null;
+            foreach (var r in GroundRenderers(grid))
+            {
+                if (b is Bounds have) { have.Encapsulate(r.bounds); b = have; }
+                else b = r.bounds;
+            }
+            return b;
+        }
+
+        System.Collections.Generic.List<MeshRenderer> GroundRenderers(BoardGrid grid)
+        {
+            if (grid.W <= 0 || grid.H <= 0 || grid.CellSize <= 0) throw new ArgumentOutOfRangeException(nameof(grid));
+            var list = new System.Collections.Generic.List<MeshRenderer>();
+            if (planet == null) return list;
+            var near = grid.Bounds;
+            near.Expand(new Vector3(2f, 0f, 2f) * GroundMarginCells * grid.CellSize);
+            near.Expand(new Vector3(0f, 2000f, 0f)); // any height: the crust hangs far below
+            foreach (var r in planet.GetComponentsInChildren<MeshRenderer>())
+            {
+                var f = r.GetComponent<MeshFilter>();
+                if (r.enabled && f != null && f.sharedMesh != null && near.Intersects(r.bounds)) list.Add(r);
+            }
+            return list;
+        }
+
         public void Dispose() => DestroyInstances();
 
         void ApplyLighting(LightingPreset p)

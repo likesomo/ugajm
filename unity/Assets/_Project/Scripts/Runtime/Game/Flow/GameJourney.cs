@@ -21,7 +21,7 @@ namespace SevenSteps.Game.Flow
         public const float PullbackSeconds = 0.6f;
         /// How far zoomed out (orthographic size factor) the dive arrival starts and the pullback ends.
         public const float WideZoom = 3.5f;
-        /// Empty cells between the cleared board and the next one.
+        /// Empty cells between the cleared board's island and the next one's (between the boards when there is no planet).
         public const float GapCells = 1f;
         /// Depth (cells) a board rises from / sinks to.
         public const float RiseCells = 2f;
@@ -32,14 +32,16 @@ namespace SevenSteps.Game.Flow
         readonly JourneyRunner runner;
         readonly JourneyReturn journeyReturn;
         readonly JourneyDive dive;
+        readonly ChapterStage ground;
         readonly Func<int, int> planetOf;
         readonly Func<int, string> chapterOf;
         bool deferred; // a transition waits for the next frame (it was asked for inside a presentation callback)
 
+        /// <param name="ground">The chapter stage: the island under the board (copied for the cleared board on the advance).</param>
         /// <param name="planetOf">0-based planet of a stage (the star map's planet order); -1 = none (JourneyReturn is then not begun).</param>
         /// <param name="chapterOf">Chapter key of a stage (LevelCatalog.ChapterKeyOf).</param>
         public GameJourney(GameFlowController flow, BoardController board, Camera cam, JourneyRunner runner, JourneyReturn journeyReturn, JourneyDive dive,
-            Func<int, int> planetOf, Func<int, string> chapterOf)
+            ChapterStage ground, Func<int, int> planetOf, Func<int, string> chapterOf)
         {
             this.flow = flow ?? throw new ArgumentNullException(nameof(flow));
             this.board = board != null ? board : throw new ArgumentNullException(nameof(board));
@@ -47,6 +49,7 @@ namespace SevenSteps.Game.Flow
             this.runner = runner != null ? runner : throw new ArgumentNullException(nameof(runner));
             this.journeyReturn = journeyReturn ?? throw new ArgumentNullException(nameof(journeyReturn));
             this.dive = dive ?? throw new ArgumentNullException(nameof(dive));
+            this.ground = ground ?? throw new ArgumentNullException(nameof(ground));
             this.planetOf = planetOf ?? throw new ArgumentNullException(nameof(planetOf));
             this.chapterOf = chapterOf ?? throw new ArgumentNullException(nameof(chapterOf));
             flow.Journey = true;
@@ -97,14 +100,19 @@ namespace SevenSteps.Game.Flow
             view.CameraHeld = true;
             var from = CameraPose.Capture(cam);
             var snap = view.DetachSnapshot();
+            // The cleared board keeps its island: a still copy, taken before the planet refits to the next board.
+            Bounds oldB = ground.GroundBounds(snap.Grid) ?? snap.Grid.Bounds;
+            var oldGround = ground.CopyGround(snap.Grid);
+            if (oldGround != null) oldGround.transform.SetParent(snap.Root.transform, true);
             flow.ContinueTo(next); // LoadStage: the next board is built at the origin (no refit while held)
 
             var grid = view.Grid;
             var root = view.BoardRoot ?? throw new InvalidOperationException("GameJourney: no board after ContinueTo");
             var to = CameraPose.Fitted(cam, grid, view.Rig);
-            // The cleared board moves to the left of the new one; the camera moves with it, so nothing jumps on screen.
-            Bounds oldB = snap.Grid.Bounds, newB = grid.Bounds;
-            var shift = new Vector3(newB.min.x - GapCells * grid.CellSize - oldB.max.x, 0f, newB.center.z - oldB.center.z);
+            // The cleared board (with its island) moves to the left of the new one (and its island); the camera moves with
+            // it, so nothing jumps on screen.
+            Bounds newB = ground.GroundBounds(grid) ?? grid.Bounds;
+            var shift = new Vector3(newB.min.x - GapCells * grid.CellSize - oldB.max.x, 0f, grid.Bounds.center.z - snap.Grid.Bounds.center.z);
             snap.Root.transform.position += shift;
             from = from.Moved(shift);
             from.Apply(cam);

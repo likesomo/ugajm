@@ -168,7 +168,7 @@ namespace SevenSteps.Game
             {
                 var runner = JourneyRunner.Create(transform);
                 runner.ReduceMotion = save.Settings.reduceMotion;
-                journey = new GameJourney(flowController, board, cam, runner, Services.Get<JourneyReturn>(), Services.Get<JourneyDive>(),
+                journey = new GameJourney(flowController, board, cam, runner, Services.Get<JourneyReturn>(), Services.Get<JourneyDive>(), chapterStage,
                     stage => JourneyRoute.PlanetIndex(ChaptersWithStages(), LevelCatalog.ChapterKeyOf(stage)), LevelCatalog.ChapterKeyOf);
             }
             if (journey != null)

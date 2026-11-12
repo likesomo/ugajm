@@ -130,6 +130,54 @@ namespace SevenSteps.Tests
             stage.Dispose();
         }
 
+        /// Journey advance (GameJourney): the cleared board keeps a still copy of its island. Only renderers near the board,
+        /// own mesh copies (the refit disposes the planet's), no scripts; no planet = null.
+        [Test]
+        public void CopyGroundKeepsTheIslandNearTheBoardWithItsOwnMeshes()
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            var mat = Make(new Material(shader) { name = "Ground" });
+            var preset = Preset("ground", Color.white, Color.black);
+            var mesh = Make(new Mesh { name = "Summit mesh" });
+            mesh.vertices = new[] { new Vector3(-3, -1, -3), new Vector3(3, -1, -3), new Vector3(0, -1, 3) };
+            mesh.triangles = new[] { 0, 1, 2 };
+            GameObject Part(string n, Vector3 at)
+            {
+                var g = new GameObject(n, typeof(MeshFilter), typeof(MeshRenderer));
+                g.transform.SetParent(preset.sky.planetPrefab.transform, false);
+                g.transform.localPosition = at;
+                g.GetComponent<MeshFilter>().sharedMesh = mesh;
+                g.GetComponent<MeshRenderer>().sharedMaterial = mat;
+                return g;
+            }
+            Part("Summit", Vector3.zero);
+            Part("Moon", new Vector3(60, 10, 0));
+
+            var cam = Make(new GameObject("Camera")).AddComponent<Camera>();
+            Light L(string n) => Make(new GameObject(n)).AddComponent<Light>();
+            var root = Make(new GameObject("Root")).transform;
+            var stage = new ChapterStage(cam, L("Key"), L("Fill"), L("Rim"), root);
+            var grid = new BoardGrid(5, 4);
+            Assert.IsNull(stage.CopyGround(grid), "no chapter entered: no planet, no copy");
+            stage.Enter(preset);
+
+            var copy = Make(stage.CopyGround(grid));
+            var parts = copy.GetComponentsInChildren<MeshFilter>();
+            Assert.AreEqual(1, parts.Length, "the summit only, not the far moon");
+            Assert.AreEqual("Summit", parts[0].name);
+            Assert.AreNotSame(mesh, parts[0].sharedMesh, "its own mesh");
+            Assert.AreSame(mat, parts[0].GetComponent<MeshRenderer>().sharedMaterial);
+            Assert.AreEqual(0, copy.GetComponentsInChildren<FitProbe>().Length, "no scripts");
+            Assert.IsTrue(stage.GroundBounds(grid).HasValue);
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => stage.CopyGround(new BoardGrid(0, 4)));
+
+            var own = parts[0].sharedMesh;
+            Object.DestroyImmediate(copy);
+            Assert.IsTrue(own == null, "the copy frees its meshes");
+            Assert.IsTrue(mesh != null, "the planet's mesh is not the copy's to free");
+            stage.Dispose();
+        }
+
         [Test]
         public void SmokeOptionParsesFromCommandLineAndUrl()
         {

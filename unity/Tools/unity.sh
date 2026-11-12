@@ -161,13 +161,13 @@ case "$cmd" in
     echo "[unity.sh] playtest OK" ;;
   playcapture)
     # Headless Play Mode capture (docs/scene-flow.md 9.2; user rule 2026-11-11: batch mode only, no Editor GUI): the
-    # [Explicit] PlayMode test class PlayCaptureTests renders the cameras + UI into 1280x720 PNGs -> reports/playcapture/.
+    # [Explicit] PlayMode test class PlayCaptureTests renders the cameras + UI into 1280x720 PNGs -> reports/playcapture/. Optional test name: playcapture AdvanceMidway.
     # -batchmode without -nographics: cameras need a graphics device.
     out="$REPO/reports/playcapture"; mkdir -p "$out" "$PROJ/Logs"
     echo "[unity.sh] playcapture -> reports/playcapture (log: unity/Logs/batch-playcapture.log)"
     rm -f "$REPO/reports/playcapture-results.xml"
     code=0
-    (cd "$REPO" && "$U" -batchmode -projectPath unity -runTests -testPlatform PlayMode       -testFilter "SevenSteps.Tests.PlayMode.PlayCaptureTests"       -testResults "$(cygpath -w "$REPO/reports/playcapture-results.xml")" -logFile unity/Logs/batch-playcapture.log) || code=$?
+    (cd "$REPO" && "$U" -batchmode -projectPath unity -runTests -testPlatform PlayMode       -testFilter "SevenSteps.Tests.PlayMode.PlayCaptureTests${2:+.$2}"       -testResults "$(cygpath -w "$REPO/reports/playcapture-results.xml")" -logFile unity/Logs/batch-playcapture.log) || code=$?
     restore_urp_settings || true
     restore_whitespace_only
     grep -h "[SevenSteps] Play capture" "$PROJ/Logs/batch-playcapture.log" | sed 's/^.*[SevenSteps]/[SevenSteps]/'
