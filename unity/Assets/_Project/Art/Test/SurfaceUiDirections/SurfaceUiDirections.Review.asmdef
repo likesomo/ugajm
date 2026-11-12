@@ -1,0 +1,6 @@
+{
+  "name": "SevenSteps.SurfaceUiDirections.Review",
+  "references": ["SevenSteps.Core", "SevenSteps.Contracts", "SevenSteps.Game", "UnityEngine.UI"],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": false
+}
