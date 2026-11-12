@@ -15,19 +15,19 @@ MonoBehaviour:
   key:
     enabled: 1
     color: {r: 1, g: 0.9137255, b: 0.827451, a: 1}
-    intensity: 1.35
-    euler: {x: 40, y: 125, z: 0}
+    intensity: 1.25
+    euler: {x: 48, y: -35, z: 0}
     shadows: 0
   fill:
     enabled: 1
-    color: {r: 0.78039217, g: 0.58431375, b: 1, a: 1}
-    intensity: 0.4
-    euler: {x: 32, y: 135, z: 0}
+    color: {r: 0.78, g: 0.82, b: 0.9, a: 1}
+    intensity: 0.6
+    euler: {x: 35, y: 125, z: 0}
     shadows: 0
   rim:
     enabled: 1
-    color: {r: 0.12941177, g: 0.05490196, b: 0.23529412, a: 1}
-    intensity: 0.35
-    euler: {x: 20, y: 175, z: 0}
+    color: {r: 0.85, g: 0.52, b: 0.23, a: 1}
+    intensity: 0.55
+    euler: {x: 25, y: 200, z: 0}
     shadows: 0
-  ambient: {r: 0.20784314, g: 0.26666668, b: 0.35686275, a: 1}
+  ambient: {r: 0.34, g: 0.36, b: 0.39, a: 1}

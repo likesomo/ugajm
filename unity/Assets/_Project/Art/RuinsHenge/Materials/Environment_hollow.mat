@@ -51,7 +51,7 @@ Material:
     m_Floats:
     - _AmbientFloor: 0.3
     - _BoardMoss: 0.25
-    - _BoardNormalStrength: 0.6
+    - _BoardNormalStrength: 0.38
     - _BoardStoneSlot: 8
     - _DstBlend: 0
     - _EnvironmentDetail: 1
