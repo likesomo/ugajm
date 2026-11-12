@@ -191,5 +191,27 @@ namespace SevenSteps.Tests.Game
             Assert.Throws<ArgumentNullException>(() => U5GameHud.Build(a.uiIcons, Tiles(), null));
             Assert.Throws<ArgumentNullException>(() => U5GameHud.HideClassic(null));
         }
+
+        // User decision 2026-11-12-b (2): a hinted attempt shows the ★1 mark on the hint button, whose tip says why.
+        [Test]
+        public void HintedAttemptShowsTheStarCapOnTheHintButtonAndItsTip()
+        {
+            Assert.IsFalse(hud.StarCapShown);
+            hud.SetStarCap(false);
+            Assert.IsNull(hud.Hint.transform.Find(StarCapMark.Name), "built only when first needed");
+            hud.SetStarCap(true);
+            var mark = (RectTransform)hud.Hint.transform.Find(StarCapMark.Name);
+            Assert.IsNotNull(mark);
+            Assert.IsTrue(hud.StarCapShown && mark.gameObject.activeSelf);
+            Assert.IsFalse(mark.GetComponent<UnityEngine.UI.Image>().raycastTarget, "the mark never takes the hint button's press");
+            Assert.That(hud.Hint.TipKey, Is.EqualTo(U5GameHud.HintCappedKey));
+            hud.Hint.OnSelect(null);
+            Assert.IsTrue(hud.Plate.Showing);
+            Assert.That(hud.Plate.Text.text, Does.StartWith("힌트 (이번 판 별 최대 1개)"));
+            hud.SetStarCap(false); // a new attempt (LoadStage)
+            Assert.IsFalse(hud.StarCapShown);
+            Assert.That(hud.Hint.TipKey, Is.EqualTo(IconButton.KeyOf(UiIcon.Hint)));
+            Assert.That(hud.Plate.Text.text, Is.EqualTo("힌트 · H"), "the shown tip follows");
+        }
     }
 }

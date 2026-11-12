@@ -169,6 +169,29 @@ namespace SevenSteps.Game.UI.U5
             RefreshDots(s);
         }
 
+        /// Focus-tip key of the hint button while the attempt is capped at ★1 (the plain one: IconButton.KeyOf(Hint)).
+        public const string HintCappedKey = "ui5.icon.hint_capped";
+
+        RectTransform starCap;
+
+        /// The hinted attempt's ★1 mark is up (on the hint button's top-right corner).
+        public bool StarCapShown => starCap != null && starCap.gameObject.activeSelf;
+
+        /// The attempt opened a costing hint (AttemptCounts.Hinted; the scene root calls this on every HUD refresh): the
+        /// ★1 mark on the hint button, and the button's focus tip says the attempt keeps at most 1 star, restarts included
+        /// (user decision 2026-11-12-b (2)).
+        public void SetStarCap(bool capped)
+        {
+            if (starCap == null)
+            {
+                if (!capped) return;
+                starCap = StarCapMark.Build(hint.transform, new Vector2(1, 1), new Vector2(0.5f, 0.5f), new Vector2(-4, -4));
+            }
+            if (StarCapShown == capped) return;
+            StarCapMark.SetShown(starCap, capped);
+            hint.SetTip(capped ? HintCappedKey : IconButton.KeyOf(UiIcon.Hint));
+        }
+
         void SetTitle(string name)
         {
             title.text = name;

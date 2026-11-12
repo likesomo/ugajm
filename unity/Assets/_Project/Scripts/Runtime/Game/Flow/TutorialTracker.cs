@@ -27,13 +27,17 @@ namespace SevenSteps.Game.Flow
     ///   choices were confirmed. A refused K / X or an undo does not count.
     /// - Menu "controls" (<see cref="PlayControls"/>) shows the move guide again without changing anything saved; the next
     ///   applied move hides it.
+    /// - <see cref="FirstSlide"/>: the first quiet ice slide ever, in any stage (user decision 2026-11-12-b (3),
+    ///   docs/qa-2-ui-proposals.md (4) option 1): the scene root puts one line on the message line (where a slide stops).
     /// Reads only <see cref="GameSession.Updated"/>: applied commands (Present). Rebuild / Snap (load, undo, restart, replay
     /// snaps) only redraw, so replays and the QA hash are untouched. Pure C#.
     /// </summary>
     public sealed class TutorialTracker
     {
         /// Guide ids with the tutorial version (Contracts TutorialIds): a changed guide gets a new id and shows once more.
-        public const string MoveId = TutorialIds.Move, ChoiceId = TutorialIds.Choose;
+        public const string MoveId = TutorialIds.Move, ChoiceId = TutorialIds.Choose, SlideId = TutorialIds.Slide;
+        /// The string the scene root shows on the message line at <see cref="FirstSlide"/> (KO + EN tables).
+        public const string SlideLineKey = "tutorial.slide";
         /// Confirmed choices that still show both result lines (art: "첫 세 번의 확정 선택").
         public const int ChoiceExplanations = TutorialData.ChoiceExplainCount;
 
@@ -55,12 +59,17 @@ namespace SevenSteps.Game.Flow
         /// Raised when any of the values above may have changed.
         public event Action Changed;
 
+        /// The first quiet ice slide ever (once per profile, saved before it is raised): show <see cref="SlideLineKey"/>.
+        /// Raised after <see cref="Changed"/>, from inside <see cref="Apply"/>.
+        public event Action FirstSlide;
+
         /// GameSession.Updated.
         public void Apply(SessionUpdate u)
         {
             bool before = choosing;
             choosing = u.State != null && u.State.Status == Status.Choose;
             bool changed = before != choosing;
+            bool firstSlide = false;
             if (u.Kind == SessionUpdateKind.Present && u.Result != null)
             {
                 switch (u.Command.Type)
@@ -68,6 +77,7 @@ namespace SevenSteps.Game.Flow
                     case CommandType.Move:
                         if (manualControls) { manualControls = false; changed = true; }
                         if (!store.Seen(MoveId)) { store.MarkSeen(MoveId); changed = true; }
+                        if (QuietSlide(u) && !store.Seen(SlideId)) { store.MarkSeen(SlideId); firstSlide = true; }
                         break;
                     case CommandType.Keep:
                     case CommandType.Switch:
@@ -79,6 +89,28 @@ namespace SevenSteps.Game.Flow
                 }
             }
             if (changed) Changed?.Invoke();
+            if (firstSlide) FirstSlide?.Invoke();
+        }
+
+        /// A move that slid on ice and ended in plain play: only step, slide and door events, not the 7th step. A slide
+        /// that falls, wins, loses, seals, makes a bridge or a stone or asks for the choice keeps that line (MessagePresenter)
+        /// and leaves the guide for a later slide.
+        public static bool QuietSlide(SessionUpdate u)
+        {
+            if (u.Result == null || u.State == null || u.State.Status != Status.Play) return false;
+            bool slid = false;
+            foreach (var e in u.Result.Events)
+            {
+                switch (e.Type)
+                {
+                    case GameEventType.Slide: slid = true; break;
+                    case GameEventType.Step: if (e.StepIdx == Rules.Steps - 1) return false; break;
+                    case GameEventType.DoorOpen:
+                    case GameEventType.DoorClose: break;
+                    default: return false;
+                }
+            }
+            return slid;
         }
 
         /// Menu "controls": the move guide once more, saved state unchanged. The next applied move hides it.
@@ -118,6 +150,7 @@ namespace SevenSteps.Game.Flow
             if (!allSeen) return;
             seen.Add(TutorialTracker.MoveId);
             seen.Add(TutorialTracker.ChoiceId);
+            seen.Add(TutorialTracker.SlideId);
             ChoiceConfirms = TutorialTracker.ChoiceExplanations;
         }
 
