@@ -73,6 +73,30 @@ namespace SevenSteps.Tests.PlayMode
             Assert.GreaterOrEqual(b, BoardMin, "the board is drawn");
         }
 
+        /// The v4 star map (-newmap) with a save where the first planet is cleared (lit trail, stars, the brothers' dots).
+        [UnityTest]
+        public IEnumerator Map()
+        {
+            yield return Start(AppState.Title, AppScenes.Title, "-newmap");
+            var flow = Services.Get<AppFlow>();
+            var save = Services.Get<SaveSystem>();
+            var levels = LevelCatalog.Load(Object.FindAnyObjectByType<SevenSteps.Game.UI.TitleScreen>().assets);
+            for (int s = 0; s < levels.Length && LevelCatalog.ChapterKeyOf(s) == LevelCatalog.ChapterKeyOf(0); s++)
+                save.Progress.MarkCleared(levels[s], levels[s].Bodies, 3);
+            flow.Go(AppState.StageSelect);
+            yield return PlayEnv.WaitForState(AppState.StageSelect, AppScenes.Title);
+            var assets = Object.FindAnyObjectByType<SevenSteps.Game.UI.TitleScreen>().assets;
+            Debug.Log($"[SevenSteps] Play capture map: planetMapSprites = {(assets.planetMapSprites != null ? assets.planetMapSprites.name : "none")}");
+            var px = new Pixels();
+            yield return Capture("map", px);
+            AssertVaried("map", px.Value);
+            // V7 (user choice 2026-11-12): every map planet with a sprite in the set is drawn as that sprite, not its mesh.
+            var bodies = Object.FindObjectsByType<SevenSteps.Game.UI.Planets.PlanetBody>(FindObjectsInactive.Exclude);
+            int sprites = bodies.Count(b => b.Impostor != null && b.Impostor.enabled && !b.Renderer.enabled);
+            Debug.Log($"[SevenSteps] Play capture map: {sprites} of {bodies.Length} planets drawn as sprites");
+            if (assets.PlanetMapSprites != null) Assert.AreEqual(bodies.Length, sprites, "every map planet is a V7 sprite");
+        }
+
         /// The journey advance (stage 1 cleared, -newmap) frozen part-way: the JourneyRunner is disabled after about 0.45 s and
         /// 0.9 s of its 1.5 s, so the camera, the risen board and the cleared board stay where they are for the capture.
         [UnityTest]

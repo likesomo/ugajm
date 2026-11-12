@@ -5,7 +5,7 @@ namespace SevenSteps.Art.Map
 {
     /// <summary>Data-only mapping for V7 map planet sprites. Stage-select code may consume this separately.</summary>
     [CreateAssetMenu(menuName = "Seven Steps/Map/Planet Sprite Set", fileName = "PlanetMapSpriteSet")]
-    public sealed class PlanetMapSpriteSet : ScriptableObject
+    public sealed class PlanetMapSpriteSet : ScriptableObject, SevenSteps.Game.UI.Planets.IPlanetMapSprites // read by the star map (scene-flow)
     {
         [Serializable]
         public sealed class Entry

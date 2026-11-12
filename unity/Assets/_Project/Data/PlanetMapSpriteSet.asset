@@ -14,16 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.Map.PlanetMapSpriteSet
   entries:
   - planetId: moss
-    sprite: {fileID: -6263006816017299157, guid: e334f328794046f7bde8fe5427e18997, type: 3}
+    sprite: {fileID: 21300000, guid: e334f328794046f7bde8fe5427e18997, type: 3}
   - planetId: hollow
-    sprite: {fileID: 3789026788329696013, guid: a68ec9ef7d6b4971b73375cc925ed478, type: 3}
+    sprite: {fileID: 21300000, guid: a68ec9ef7d6b4971b73375cc925ed478, type: 3}
   - planetId: carved
-    sprite: {fileID: -5414906254482698665, guid: 810aa6438fad498f89d41d51c4960bf2, type: 3}
+    sprite: {fileID: 21300000, guid: 810aa6438fad498f89d41d51c4960bf2, type: 3}
   - planetId: frost
-    sprite: {fileID: -5843772505882289176, guid: 1d4140718ec14283872e496a40453b3d, type: 3}
+    sprite: {fileID: 21300000, guid: 1d4140718ec14283872e496a40453b3d, type: 3}
   - planetId: joinery
-    sprite: {fileID: -2797144084553931863, guid: a411b0b6b3c84f57b97d89eab04a614e, type: 3}
+    sprite: {fileID: 21300000, guid: a411b0b6b3c84f57b97d89eab04a614e, type: 3}
   - planetId: crumble
-    sprite: {fileID: 7958794019955217870, guid: e5b4fc9e4a514922a6a224b76efc9a40, type: 3}
+    sprite: {fileID: 21300000, guid: e5b4fc9e4a514922a6a224b76efc9a40, type: 3}
   - planetId: altar
-    sprite: {fileID: -7606817706087733107, guid: bf29870131824552b1105bd06c9edb1f, type: 3}
+    sprite: {fileID: 21300000, guid: bf29870131824552b1105bd06c9edb1f, type: 3}
