@@ -51,6 +51,12 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: e1cb111340d323d46b6593fb6a439f38, type: 3}
   - id: 18
     sprite: {fileID: 21300000, guid: f6b0bdc8e80db124ab1758c6f0a8f9b0, type: 3}
+  - id: 19
+    sprite: {fileID: 21300000, guid: cd1ed32bc1e544e3b8b1460056c6be10, type: 3}
+  - id: 20
+    sprite: {fileID: 21300000, guid: f78255d2c6454ab59c700ff2fc6a5a7f, type: 3}
+  - id: 21
+    sprite: {fileID: 21300000, guid: 5c1455961e454c4f9a68d69be5cc2529, type: 3}
   captionPlate: {fileID: 21300000, guid: a1e4d56bd32e3054c9eae0e2d357ce71, type: 3}
   scarfDot: {fileID: 21300000, guid: d893dc20f90ad724bad841aba7fb89d7, type: 3}
   starStoneLit: {fileID: 21300000, guid: 136c32a27b4df0d429d09757fc59ce52, type: 3}

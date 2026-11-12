@@ -133,6 +133,7 @@ case "$cmd" in
   tileset-validate) batch tileset-validate SevenSteps.EditorTools.TileSetValidator.BatchValidate ;;
   stageselect-capture) batch stageselect-capture SevenSteps.EditorTools.StageSelectCapture.Batch ;;   # stage select v4 review PNGs -> reports/stage-select/
   scene-validate) batch scene-validate SevenSteps.EditorTools.SceneFlowValidator.BatchValidate ;;
+  u5-icons)     batch u5-icons SevenSteps.EditorTools.UiIconSetTools.BatchImport ;;   # Art/UI/U5/u5-icons.json -> Data/UiIconSet.asset (Codex U5 icons)
   cutscene-art) batch cutscene-art SevenSteps.EditorTools.CutsceneArtImport.Batch ;;   # import Shared/Art/Story/Cutscenes/*.png (Sprite, no mips, WebGL 1024 crunched) + wire Data/CutsceneImages.asset
   test)
     # EditMode tests (Tests/EditMode). Results: reports/editmode-results.xml

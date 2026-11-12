@@ -811,6 +811,132 @@
                                  }
                   },
                   {
+                      "id":  "story",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/story.png",
+                      "guid":  "cd1ed32bc1e544e3b8b1460056c6be10",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/story.png",
+                                          "guid":  "1c742b1faa934dd88172e77dc7500182",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200,
+                                          "sha256":  "4578eb3649ebb197c38787d1e2f51fa6d7d18fc919c8d4ab102d19d40ad1a79d"
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/story.png",
+                                          "guid":  "cd1ed32bc1e544e3b8b1460056c6be10",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400,
+                                          "sha256":  "0b0ae5e00157e0f5f6a47fc18bd4a3e16d1917210da87ebb934e2a9b6b742daa"
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56",
+                                                     "tint":  "#E9BC65FF"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 },
+                      "glyphDescription":  "Open facing-page storybook with central gutter and page text"
+                  },
+                  {
+                      "id":  "skip",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/skip.png",
+                      "guid":  "f78255d2c6454ab59c700ff2fc6a5a7f",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/skip.png",
+                                          "guid":  "0bb3d78367204c55b3adab3d78b87ca3",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200,
+                                          "sha256":  "2bb6a823ea5287e2322a9833866ea7da49b5c1cb6bd3e71b46a6ae8c0dd92d26"
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/skip.png",
+                                          "guid":  "f78255d2c6454ab59c700ff2fc6a5a7f",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400,
+                                          "sha256":  "d341965ba2ccf5424bf7abc654a11a7d25dee309f2324549c63c8b11df7a9990"
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56",
+                                                     "tint":  "#E9BC65FF"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 },
+                      "glyphDescription":  "Double forward chevrons plus a terminal end bar"
+                  },
+                  {
+                      "id":  "tutorial",
+                      "path":  "Assets/Shared/Art/UI/U5/4x/tutorial.png",
+                      "guid":  "5c1455961e454c4f9a68d69be5cc2529",
+                      "size":  192,
+                      "logicalSize":  48,
+                      "sourceScale":  4,
+                      "pixelsPerUnit":  400,
+                      "sources":  [
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/2x/tutorial.png",
+                                          "guid":  "afd6c4cfa028414fb35784366bea8ad9",
+                                          "fileId":  21300000,
+                                          "scale":  2,
+                                          "pixelsPerUnit":  200,
+                                          "sha256":  "ed223a2616d47f24d9afe79e4a415c52e6be7db3a07ed9eb6a72bbca206d8a41"
+                                      },
+                                      {
+                                          "path":  "Assets/Shared/Art/UI/U5/4x/tutorial.png",
+                                          "guid":  "5c1455961e454c4f9a68d69be5cc2529",
+                                          "fileId":  21300000,
+                                          "scale":  4,
+                                          "pixelsPerUnit":  400,
+                                          "sha256":  "69030dbf782a5630930f99ae9f08a535f33947328090236f98aec31194c83939"
+                                      }
+                                  ],
+                      "states":  {
+                                     "normal":  {
+                                                    "tint":  "#EEE7D0FF"
+                                                },
+                                     "pressed":  {
+                                                     "scale":  0.94,
+                                                     "scaleTarget":  "glyph-only; keep hit rect 48 or 56",
+                                                     "tint":  "#E9BC65FF"
+                                                 },
+                                     "disabled":  {
+                                                      "alpha":  0.32,
+                                                      "tint":  "#EEE7D0FF"
+                                                  }
+                                 },
+                      "glyphDescription":  "Single footprint and toes with a small four-point guide sparkle"
+                  },
+                  {
                       "id":  "caption-plate",
                       "path":  "Assets/Shared/Art/UI/U5/4x/caption-plate.png",
                       "guid":  "a1e4d56bd32e3054c9eae0e2d357ce71",
