@@ -67,12 +67,15 @@ namespace SevenSteps.Game.UI
         U5LanguageView u5Language;
         U5CreditsView u5Credits;
         TitleWorld titleWorld;
+        U5MapControls u5Map;
 
         /// The U5 title view (tests, captures); null when the U5 UI is off.
         public U5TitleView U5Title => u5Title;
         /// The U5 language picker and credits (tests, captures); null when the U5 UI is off.
         public U5LanguageView U5Language => u5Language;
         public U5CreditsView U5Credits => u5Credits;
+        /// The U5 map / surface controls (back, settings); null unless U5 and the v4 map are both on.
+        public U5MapControls U5Map => u5Map;
 
         void Awake()
         {
@@ -165,6 +168,16 @@ namespace SevenSteps.Game.UI
                 StageSelect = new StageSelectController(stageViews, BuildStageSelectModel, stages, flow.CanGoToGame, flowController.PlayStage,
                     Services.TryGet<JourneyReturn>(out var journeyReturn) ? journeyReturn : null);
                 stageViews.Map.BackRequested += flowController.Back;
+                if (u5)
+                {
+                    // U5 map and surface: back 48 and settings 48 only. The views' own chevrons hide; back presses the one
+                    // showing, so the map's and the surface's guards (dive, return) apply as before.
+                    u5Map = new U5MapControls(root, assets.uiIcons, tips);
+                    stageViews.Map.Back.gameObject.SetActive(false);
+                    stageViews.Surface.Back.gameObject.SetActive(false);
+                    u5Map.BackRequested += () => (stageViews.Surface.Visible ? stageViews.Surface.Back : stageViews.Map.Back).onClick.Invoke();
+                    u5Map.SettingsRequested += () => Open(settings);
+                }
             }
             if (StageSelect != null && JourneyToggle.On(Services.Get<LaunchOptions>()))
             {
@@ -346,11 +359,20 @@ namespace SevenSteps.Game.UI
         /// are uGUI navigation / submit on the selected button (every screen selects one when it shows).
         void Update()
         {
+            if (u5Map != null) u5Map.SetShown(MapControlsShown());
             var kb = Keyboard.current;
             if (kb == null || flow.IsLoading) return;
             if (journey != null && journey.Blocks) return; // a transition plays, or this press skipped / cancelled one
             if (kb.escapeKey.wasPressedThisFrame) back.Back();
             else if (u5) SelectDefaultOnFirstKey(kb);
+        }
+
+        /// U5 map controls show over the map and the surface, not while a dive or a return runs or another panel is open.
+        bool MapControlsShown()
+        {
+            if (flow.State != AppState.StageSelect || flow.IsLoading || StageSelect == null || StageSelect.Pending != null) return false;
+            if (Services.TryGet<JourneyReturn>(out var ret) && ret.Pending) return false;
+            return overlays.Count == 0 || overlays.Top == (IOverlay)stageViews.Surface;
         }
 
         /// U5 screens open with nothing selected (a focused icon would show its explanation at once): the first arrow, Enter

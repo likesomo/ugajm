@@ -178,6 +178,30 @@ namespace SevenSteps.Tests.Game
         }
 
         [Test]
+        public void MapControlsAreBackAndSettingsInTheTopCorners()
+        {
+            var canvas = Canvas();
+            var icons = Assets().uiIcons;
+            var v = new U5MapControls(canvas, icons, FocusPlate.Build(canvas, Loc(Language.Ko), icons));
+            Assert.IsFalse(v.Visible);
+            v.SetShown(true);
+            v.SetShown(true);
+            UnityEngine.Canvas.ForceUpdateCanvases();
+            Near(new Rect(24, 24, 48, 48), OnCanvas(canvas, v.Back.Rect), "back");
+            Near(new Rect(1208, 24, 48, 48), OnCanvas(canvas, v.Settings.Rect), "settings");
+            var got = new List<string>();
+            v.BackRequested += () => got.Add("back");
+            v.SettingsRequested += () => got.Add("settings");
+            v.Back.Press();
+            v.Settings.Press();
+            CollectionAssert.AreEqual(new[] { "back", "settings" }, got);
+            Assert.AreEqual("Esc", v.Back.Shortcut);
+            v.SetShown(false);
+            Assert.IsFalse(v.Visible);
+            Assert.Throws<ArgumentNullException>(() => new U5MapControls(canvas, icons, null));
+        }
+
+        [Test]
         public void ViewsAssertTheirArguments()
         {
             var canvas = Canvas();

@@ -123,6 +123,37 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
+        /// U5 map and planet surface (-ui5; back 48 and settings 48 only): the first planet cleared, then its surface path.
+        /// Before = `map` (current controls). `unity.sh playcapture U5Map`.
+        [UnityTest]
+        public IEnumerator U5Map()
+        {
+            yield return Start(AppState.Title, AppScenes.Title, "-ui5");
+            var save = Services.Get<SaveSystem>();
+            var title = Object.FindAnyObjectByType<SevenSteps.Game.UI.TitleScreen>();
+            var levels = LevelCatalog.Load(title.assets);
+            for (int s = 0; s < levels.Length && LevelCatalog.ChapterKeyOf(s) == LevelCatalog.ChapterKeyOf(0); s++)
+                save.Progress.MarkCleared(levels[s], levels[s].Bodies, 3);
+            title.U5Title.Map.Press();
+            yield return PlayEnv.WaitForState(AppState.StageSelect, AppScenes.Title);
+            Assert.IsTrue(title.U5Map.Visible, "the U5 map controls");
+            var px = new Pixels();
+            yield return Capture("u5-map", px);
+            AssertVaried("u5-map", px.Value);
+            // A cleared planet opens its surface path.
+            GameObject.Find("TitleUI/PlanetMap3D/Planet 1").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+            float t0 = Time.realtimeSinceStartup;
+            while (GameObject.Find("TitleUI/PlanetSurface") == null)
+            {
+                Assert.Less(Time.realtimeSinceStartup - t0, 10f, "the surface path");
+                yield return null;
+            }
+            Assert.IsTrue(title.U5Map.Visible, "the same controls over the surface");
+            px = new Pixels();
+            yield return Capture("u5-surface", px);
+            AssertVaried("u5-surface", px.Value);
+        }
+
         /// The v4 star map (-newmap) with a save where the first planet is cleared (lit trail, stars, the brothers' dots).
         [UnityTest]
         public IEnumerator Map()

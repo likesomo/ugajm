@@ -67,6 +67,35 @@ namespace SevenSteps.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator U5MapHasOnlyBackAndSettings()
+        {
+            yield return Boot("-ui5");
+            var title = Object.FindAnyObjectByType<TitleScreen>();
+            var flow = Services.Get<AppFlow>();
+            title.U5Title.Map.Press();
+            yield return PlayEnv.WaitForState(AppState.StageSelect, AppScenes.Title);
+            yield return null;
+            Assert.IsNotNull(title.U5Map, "U5 + v4 map: the map controls");
+            Assert.IsTrue(title.U5Map.Visible);
+            var chevron = GameObject.Find("TitleUI/PlanetMap3D/Back");
+            Assert.IsTrue(chevron != null && !chevron.activeInHierarchy, "the map's own chevron is there but hidden");
+            Assert.IsNull(GameObject.Find("TitleUI/LanguageBadge"), "no language badge under U5");
+
+            title.U5Map.Settings.Press();
+            yield return null;
+            Assert.IsFalse(title.U5Map.Visible, "another panel is open: the controls hide");
+            Object.FindAnyObjectByType<SettingsPanel>().close.onClick.Invoke(); // the overlay stack closes it
+            yield return null;
+            yield return null;
+            Assert.IsTrue(title.U5Map.Visible, "back over the map");
+
+            title.U5Map.Back.Press(); // presses the map's hidden chevron: flow back
+            yield return PlayEnv.WaitForState(AppState.Title, AppScenes.Title);
+            Assert.IsTrue(title.U5Title.Visible);
+            Assert.IsFalse(title.U5Map.Visible);
+        }
+
+        [UnityTest]
         public IEnumerator PlayStoneBeginsStageOneOnAFreshSave()
         {
             yield return Boot("-ui5");

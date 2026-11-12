@@ -72,6 +72,9 @@ namespace SevenSteps.Game.UI.Planets
         public PlanetBody Body(int planet) => bodies[planet];
         /// A planet's target (-titlecheck presses it; read only).
         public Button Target(int planet) => targets[planet];
+        /// The map's own back chevron (scene-flow's U5 map controls hide it and press it, so its guards stay one place).
+        public Button Back => back;
+        readonly Button back;
         /// The planet whose label shows, -1 none (UiLayoutCheck, tests).
         public int LabelShown => label.gameObject.activeSelf ? LabelPlanet() : -1;
 
@@ -150,7 +153,7 @@ namespace SevenSteps.Game.UI.Planets
             taglineText.raycastTarget = false;
             label.gameObject.SetActive(false);
 
-            BackChevron(rect, Ui.Gold, () => { if (!pending && held < 0) BackRequested?.Invoke(); }); // 80 units: IMPLEMENT.md minimum target
+            back = BackChevron(rect, Ui.Gold, () => { if (!pending && held < 0) BackRequested?.Invoke(); }); // 80 units: IMPLEMENT.md minimum target
 
             panel.AddComponent<ResizeHook>().Resized = () => { if (Visible) Layout(); };
             panel.AddComponent<ViewTicker>().Tick = Tick;
