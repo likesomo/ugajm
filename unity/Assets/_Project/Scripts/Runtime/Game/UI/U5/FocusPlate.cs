@@ -123,11 +123,12 @@ namespace SevenSteps.Game.UI.U5
             transform.SetAsLastSibling();
         }
 
-        /// Plate padding: 8, or the 9-slice border of the caption plate sprite + 8 when larger (docs 1.1).
+        /// Plate padding per side: max(8, the caption plate's 9-slice border) - the art plate is a filled rounded plate with no
+        /// frame line, so its border counts as padding (docs/ui-u5-kit.md 1.1, architect 2026-11-12).
         public static Vector4 PaddingOf(Image img)
         {
             var b = img != null ? Ui.FrameBorder(img) : Vector4.zero;
-            return new Vector4(Mathf.Max(Padding, b.x + Padding), Mathf.Max(Padding, b.y + Padding), Mathf.Max(Padding, b.z + Padding), Mathf.Max(Padding, b.w + Padding));
+            return new Vector4(Mathf.Max(Padding, b.x), Mathf.Max(Padding, b.y), Mathf.Max(Padding, b.z), Mathf.Max(Padding, b.w));
         }
 
         /// Plate size for <paramref name="words"/> in <paramref name="t"/>'s font: width 250..320, height line + padding.
