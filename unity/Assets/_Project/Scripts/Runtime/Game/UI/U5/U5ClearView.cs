@@ -22,8 +22,10 @@ namespace SevenSteps.Game.UI.U5
         public const float StoneSize = 40, StoneGap = 8, NextSize = 56, NextGap = 16, Safe = 24;
         /// Failure buttons (touch-targets.csv U5 failure: 52 at y 591, 80 apart).
         public const float FailSize = 52, FailTop = 591, FailPitch = 80;
-        /// World stones: behind the exit by this many cells, this far apart, about this tall (cells).
-        public const float WorldBehind = 1f, WorldSpacing = 0.6f, WorldHeight = 0.7f;
+        /// World stones: behind the exit by this many cells (0: over the exit cell itself), this far apart, about this tall,
+        /// and floating this far above the brother's head (cells). Over the exit, not behind it: the cell behind often holds
+        /// a wall, a statue or a waiting brother, and the stones would sink into or hide them.
+        public const float WorldBehind = 0f, WorldSpacing = 0.6f, WorldHeight = 0.7f, WorldLift = 0.15f;
         public const int SortingOrder = 6;
 
         IconButton map, retry, next, undo, restart;
@@ -72,11 +74,9 @@ namespace SevenSteps.Game.UI.U5
         /// Earned stones drawn lit right now (the reveal fills them in order).
         public int LitStones { get; private set; }
 
-        /// The 3D stones are ready to use. Off (2026-11-12): world-star-stone.fbx draws as a dark slab under the board camera
-        /// in headless captures (the star inlay never shows, whichever way it faces; alone under a plain light its -Z front is
-        /// gold) - the asset / its lighting is with art; meanwhile the 2D row above the board area (architect R1 on 1f90617,
-        /// its alternative). The 3D path below stays for when the asset is fixed.
-        public const bool WorldStonesReady = false;
+        /// The 3D stones are used when the art and hooks are there (on since 7lucky 48e31d4: Codex's world star stone fix -
+        /// outward shell normals, raised inlays, self-lit star materials). Off: the 2D row above the board area.
+        public const bool WorldStonesReady = true;
 
         /// The 3D stones are used (ready, art and the scene root's world hooks are there).
         public bool WorldStones => WorldStonesReady && icons != null && icons.worldStarStone != null && ExitWorld != null && WorldParent != null
@@ -305,9 +305,9 @@ namespace SevenSteps.Game.UI.U5
             return new Rect(x, y, w, StoneSize);
         }
 
-        /// Where the three world stones stand (world): a row behind the exit as the camera sees it (<paramref name="away"/> =
+        /// Where the three world stones stand (world): a row <see cref="WorldBehind"/> behind the exit as the camera sees it (<paramref name="away"/> =
         /// the camera's forward along the ground), centred on it, <see cref="WorldSpacing"/> cells apart across the view, on
-        /// the tile tops (pure; tests).
+        /// the ground (EnsureWorldStones lifts them over the brother's head; pure, tests).
         public static Vector3[] WorldStoneSpots(Vector3 exit, float cell, Vector3 away)
         {
             away = new Vector3(away.x, 0f, away.z);
@@ -377,11 +377,11 @@ namespace SevenSteps.Game.UI.U5
                 worldStones[k].SetActive(false); // not counted as ground below
             }
             // One row on one level: the highest ground under the three (the wall cap behind the exit), so none sinks into a block.
-            float ground = 0f;
+            float ground = (BoardView.ActorHeight + WorldLift) * cell; // over the winning brother's head
             foreach (var p in spots) ground = Mathf.Max(ground, GroundAt(parent, p, cell));
             // The front (-Z, the star inlay) toward the board camera, leaned back with its pitch so it reads at full size.
             // (+Z of the stone = away from the camera, so its -Z front with the inlay faces it.)
-            var facing = Quaternion.LookRotation(-cam.transform.forward, Vector3.up);
+            var facing = Quaternion.LookRotation(cam.transform.forward, Vector3.up);
             for (int k = 0; k < worldStones.Length; k++)
             {
                 var t = worldStones[k].transform;
