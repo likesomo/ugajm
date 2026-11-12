@@ -157,6 +157,8 @@
     { "key": "ui5.choice.switch", "text": "여기서 다음 형제가 이어 감" },
     { "key": "ui5.title.continue", "text": "계속 걷기" },
     { "key": "ui5.title.begin", "text": "첫 걸음" },
+    { "key": "ui5.surface.caption", "text": "{0:00} | {1} | 최고 {2}" },
+    { "key": "ui5.surface.caption_new", "text": "{0:00} | {1} | 도전 전" },
     { "key": "ui5.pause.title", "text": "잠시 쉬어가기" },
     { "key": "ui5.pause.continue", "text": "계속하기" },
     { "key": "ui5.settings.title", "text": "설정" },

@@ -95,6 +95,52 @@ namespace SevenSteps.Tests.PlayMode
             Assert.IsFalse(title.U5Map.Visible);
         }
 
+        /// The U5 surface constellation (D2b): no locks, an untouched stage plays like any other; a press that turns into a
+        /// drag does not play; keyboard focus moves between nodes; the caption follows focus.
+        [UnityTest]
+        public IEnumerator U5ConstellationNodePlaysItsStage()
+        {
+            yield return Boot("-ui5");
+            var title = Object.FindAnyObjectByType<TitleScreen>();
+            var flow = Services.Get<AppFlow>();
+            title.U5Title.Map.Press();
+            yield return PlayEnv.WaitForState(AppState.StageSelect, AppScenes.Title);
+            GameObject.Find("TitleUI/PlanetMap3D/Planet 1").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+            float t0 = Time.realtimeSinceStartup;
+            while (title.SurfaceView == null || !title.SurfaceView.Visible)
+            {
+                Assert.Less(Time.realtimeSinceStartup - t0, 10f, "the surface");
+                yield return null;
+            }
+            int third = SevenSteps.Game.UI.PlanetEntry.FromCatalog(flow.StageCount)[0].Stages[2];
+            var surface = title.SurfaceView;
+            var stars = surface.Constellation;
+            Assert.IsNotNull(stars);
+            Assert.AreEqual("untouched current", stars.State(0));
+            StringAssert.StartsWith("01 ", surface.Step.text, "the caption names the focused (current) stage");
+
+            // Keyboard: right moves focus to another node, the caption follows.
+            var nav = stars.Button(0).navigation;
+            Assert.IsNotNull(nav.selectOnRight ?? nav.selectOnUp ?? nav.selectOnDown, "a neighbour to move to");
+
+            // A press that becomes a drag is cancelled.
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            var data = new UnityEngine.EventSystems.PointerEventData(es);
+            var node = stars.Button(2).gameObject;
+            UnityEngine.EventSystems.ExecuteEvents.Execute(node, data, UnityEngine.EventSystems.ExecuteEvents.pointerDownHandler);
+            UnityEngine.EventSystems.ExecuteEvents.Execute(node, data, UnityEngine.EventSystems.ExecuteEvents.beginDragHandler);
+            stars.Button(2).onClick.Invoke();
+            yield return null;
+            Assert.AreEqual(AppState.StageSelect, flow.State, "a dragged press does not play");
+
+            // An untouched stage (3, nothing cleared) plays on release.
+            UnityEngine.EventSystems.ExecuteEvents.Execute(node, data, UnityEngine.EventSystems.ExecuteEvents.pointerDownHandler);
+            UnityEngine.EventSystems.ExecuteEvents.Execute(node, data, UnityEngine.EventSystems.ExecuteEvents.pointerUpHandler);
+            stars.Button(2).onClick.Invoke();
+            yield return PlayEnv.WaitForState(AppState.Game, AppScenes.Game, 20f);
+            Assert.AreEqual(third, flow.Stage, "stage 3 of the first planet");
+        }
+
         /// A slow load under -ui5 (-loadDelay) shows the scarf sparks on the fader, not the loading screen.
         [UnityTest]
         public IEnumerator SlowLoadShowsTheScarfSparks()

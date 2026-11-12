@@ -157,6 +157,8 @@
     { "key": "ui5.choice.switch", "text": "Next brother goes on from here" },
     { "key": "ui5.title.continue", "text": "Keep walking" },
     { "key": "ui5.title.begin", "text": "First step" },
+    { "key": "ui5.surface.caption", "text": "{0:00} · {1} · Best {2}" },
+    { "key": "ui5.surface.caption_new", "text": "{0:00} · {1} · Not cleared" },
     { "key": "ui5.pause.title", "text": "Paused" },
     { "key": "ui5.pause.continue", "text": "Continue" },
     { "key": "ui5.settings.title", "text": "Settings" },

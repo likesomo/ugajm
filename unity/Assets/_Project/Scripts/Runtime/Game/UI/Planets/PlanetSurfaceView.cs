@@ -19,6 +19,8 @@ namespace SevenSteps.Game.UI.Planets
     /// </summary>
     public sealed class PlanetSurfaceView : IOverlay
     {
+        /// The U5 constellation frames the body larger (d2-refine: orthographic 3.9, centred).
+        public const float ConstellationOrthoSize = 3.9f;
         const float Target = 80f, OrthoSize = 5.5f, IdleAmplitude = 14f, IdleSpeed = 0.43f, BaseYaw = -8f, DragDegreesPerUnit = 0.25f;
         static readonly Color Gold = new Color(0.95f, 0.76f, 0.31f);
 
@@ -34,6 +36,12 @@ namespace SevenSteps.Game.UI.Planets
         readonly List<Button> targets = new List<Button>();
         readonly Transform root;
         readonly IPlanetSurfaceArt art;
+        /// The U5 stage constellation (D2b); null = the v4 crust places and footprints.
+        readonly ConstellationView stars;
+        readonly GameObject titlePlate;
+        int pressed = -1, wired;
+        bool dragCancelled;
+        Vector2 fittedLayer;
 
         Localizer loc;
         StageSelectModel model;
@@ -57,12 +65,18 @@ namespace SevenSteps.Game.UI.Planets
         public PlanetBody Body => body;
         /// A place's target (-titlecheck, tests; read only).
         public Button Place(int slot) => targets[slot];
+        /// The U5 constellation (null without it).
+        public ConstellationView Constellation => stars;
+        /// Steady glows and immediate state changes on the constellation (settings reduce motion).
+        public bool ReduceMotion { set { if (stars != null) stars.ReduceMotion = value; } }
 
         /// <param name="mapBodies">Shows / hides the map's bodies (the surface body takes their space while open).</param>
         /// <param name="art">GameAssets.PlanetSurfaceArt: the V7 paintings projected on the body (S2); null, or a planet
         /// without one, = the current body.</param>
+        /// <param name="constellation">U5 (D2b Orbit sparks, user choice 2026-11-12): the stages as a constellation of star
+        /// nodes around a larger body with one caption line, instead of the crust places, footprints and the planet name plate.</param>
         public PlanetSurfaceView(Transform uiRoot, PlanetSpace space, PlanetBodySet set, IReadOnlyList<PlanetEntry> planets, Action<bool> mapBodies,
-            IPlanetSurfaceArt art = null)
+            IPlanetSurfaceArt art = null, bool constellation = false)
         {
             this.art = art;
             if (uiRoot == null) throw new ArgumentNullException(nameof(uiRoot));
@@ -88,6 +102,8 @@ namespace SevenSteps.Game.UI.Planets
             On(dragTrigger, EventTriggerType.Drag, e => { if (e is PointerEventData p) { dragYaw -= p.delta.x * DragDegreesPerUnit * 1280f / Mathf.Max(1, Screen.width); dragged = true; } });
             On(dragTrigger, EventTriggerType.EndDrag, _ => dragging = false);
 
+            if (constellation) stars = new ConstellationView(rect);
+
             ring = Ui.MakeImage(rect, Gold, Ui.RingShape, "FocusRing");
             ring.raycastTarget = false;
             ring.rectTransform.anchorMin = ring.rectTransform.anchorMax = ring.rectTransform.pivot = new Vector2(0.5f, 0.5f);
@@ -96,17 +112,21 @@ namespace SevenSteps.Game.UI.Planets
 
             // The planet name and the place's stage on plates (14.4: text over the starry sky, architect note 2026-11-12),
             // each sized to its words (PlateFit).
-            var titlePlate = Ui.Plate(rect, "Planet plate");
-            titlePlate.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -30), new Vector2(200, 44));
-            title = Ui.Label(titlePlate.transform, "", 26, Gold, TextAnchor.MiddleCenter, "Planet");
+            var titleImage = Ui.Plate(rect, "Planet plate");
+            titlePlate = titleImage.gameObject;
+            titleImage.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -30), new Vector2(200, 44));
+            title = Ui.Label(titleImage.transform, "", 26, Gold, TextAnchor.MiddleCenter, "Planet");
             title.rectTransform.Stretch();
             title.raycastTarget = false;
             var stepPlate = Ui.Plate(rect, "Step plate");
-            stepPlate.rectTransform.Place(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 40), new Vector2(160, 40));
+            // U5: the one caption line centred at y 670 (d2-refine), the sole stage number and best score.
+            stepPlate.rectTransform.Place(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, constellation ? 29 : 40), new Vector2(160, 40));
             step = Ui.Label(stepPlate.transform, "", 23, Gold, TextAnchor.MiddleCenter, "Step");
             step.rectTransform.Stretch();
             step.raycastTarget = false;
             stepPlate.gameObject.SetActive(false);
+            if (constellation) titlePlate.SetActive(false); // back + settings only over the sky (D2b)
+            if (constellation) step.color = new Color32(238, 231, 208, 255); // the caption in cream (d2-refine)
             back = PlanetMap3DView.BackChevron(rect, Gold, () => { if (!pending) CloseRequested?.Invoke(); });
 
             panel.AddComponent<ViewTicker>().Tick = Tick;
@@ -139,11 +159,22 @@ namespace SevenSteps.Game.UI.Planets
             body = PlanetBody.Create(set, planets[p].Key, p, root, seated: true);
             if (art != null && art.TryGetSurface(planets[p].Key, out var painting, out var material))
                 body.UseProjection(painting, material, PlanetMapLayout.Rotation, Quaternion.Euler(0, BaseYaw, 0));
-            BuildPlaces();
             title.text = planets[p].Name(loc);
             PlateFit(title);
             int count = model.StageCount(p);
-            while (targets.Count < count)
+            if (stars != null)
+            {
+                places = new Vector3[0];
+                stars.Bind(model, p, ConstellationFigure.For(planets[p].Key, count));
+                targets.Clear();
+                for (int s = 0; s < stars.Count; s++)
+                {
+                    targets.Add(stars.Button(s));
+                    if (s >= wired) { Wire(stars.Button(s), s); wired++; }
+                }
+            }
+            else BuildPlaces();
+            while (stars == null && targets.Count < count)
             {
                 int slot = targets.Count;
                 var hit = Ui.MakeImage(rect, new Color(1, 1, 1, 0), Ui.Circle, "Place " + (slot + 1));
@@ -152,16 +183,10 @@ namespace SevenSteps.Game.UI.Planets
                 hit.rectTransform.sizeDelta = new Vector2(Target, Target);
                 var b = hit.gameObject.AddComponent<Button>();
                 b.transition = Selectable.Transition.None;
-                b.onClick.AddListener(() => { if (!pending && planet >= 0) PlaceChosen?.Invoke(planet, slot); });
-                var trigger = hit.gameObject.AddComponent<EventTrigger>();
-                On(trigger, EventTriggerType.Select, _ => { focused = slot; Refresh(); });
-                On(trigger, EventTriggerType.Move, _ => { armed = true; Refresh(); });
-                On(trigger, EventTriggerType.PointerEnter, _ => { hovered = slot; Refresh(); });
-                On(trigger, EventTriggerType.PointerExit, _ => { if (hovered == slot) hovered = -1; Refresh(); });
-                On(trigger, EventTriggerType.PointerDown, _ => { hovered = slot; Refresh(); });
+                Wire(b, slot);
                 targets.Add(b);
             }
-            for (int k = 0; k < targets.Count; k++) targets[k].gameObject.SetActive(k < count);
+            if (stars == null) for (int k = 0; k < targets.Count; k++) targets[k].gameObject.SetActive(k < count);
             int current = model.CurrentSlot(p);
             focused = current >= 0 ? current : 0;
             hovered = -1;
@@ -169,6 +194,28 @@ namespace SevenSteps.Game.UI.Planets
             idleT = 0;
             dragYaw = 0;
             dragged = false;
+            pressed = -1;
+            fittedLayer = new Vector2(-1, -1);
+        }
+
+        /// A place's input: click / Enter plays (on release; a drag off the press cancels it, D2b), select / hover / press
+        /// feed focus and the constellation's states.
+        void Wire(Button b, int slot)
+        {
+            b.onClick.AddListener(() =>
+            {
+                bool cancelled = dragCancelled;
+                dragCancelled = false;
+                if (!pending && planet >= 0 && !cancelled) PlaceChosen?.Invoke(planet, slot);
+            });
+            var trigger = b.gameObject.AddComponent<EventTrigger>();
+            On(trigger, EventTriggerType.Select, _ => { focused = slot; Refresh(); });
+            On(trigger, EventTriggerType.Move, _ => { armed = true; Refresh(); });
+            On(trigger, EventTriggerType.PointerEnter, _ => { hovered = slot; Refresh(); });
+            On(trigger, EventTriggerType.PointerExit, _ => { if (hovered == slot) hovered = -1; if (pressed == slot) pressed = -1; Refresh(); });
+            On(trigger, EventTriggerType.PointerDown, _ => { hovered = slot; pressed = slot; dragCancelled = false; Refresh(); });
+            On(trigger, EventTriggerType.PointerUp, _ => { if (pressed == slot) pressed = -1; Refresh(); });
+            if (stars != null) On(trigger, EventTriggerType.BeginDrag, _ => { dragCancelled = true; pressed = -1; Refresh(); });
         }
 
         public void Show()
@@ -226,7 +273,8 @@ namespace SevenSteps.Game.UI.Planets
         {
             fittedAspect = space.Camera.aspect;
             float wide = PlanetMapLayout.RefW / PlanetMapLayout.RefH;
-            space.Pose(root.position + new Vector3(0, 0.5f, 0), fittedAspect >= wide ? OrthoSize : OrthoSize * wide / fittedAspect);
+            float size = stars != null ? ConstellationOrthoSize : OrthoSize;
+            space.Pose(root.position + (stars != null ? Vector3.zero : new Vector3(0, 0.5f, 0)), fittedAspect >= wide ? size : size * wide / fittedAspect);
         }
 
         /// v3 place positions on the front of the body (StageSelectJourneyV3.Place), on the crust and lifted a little.
@@ -292,11 +340,36 @@ namespace SevenSteps.Game.UI.Planets
         void Refresh()
         {
             if (model == null || planet < 0 || loc == null) return;
+            if (stars != null) { RefreshConstellation(); return; }
             int slot = hovered >= 0 ? hovered : armed ? focused : -1;
             bool show = slot >= 0 && !pending;
             step.transform.parent.gameObject.SetActive(show);
             ring.gameObject.SetActive(show);
             if (show) { step.text = $"{loc.Get("planets.stage")} {(planets[planet].Stages[slot] + 1):00}"; PlateFit(step); }
+        }
+
+        /// U5: the focused (or hovered) stage's one caption line, always shown; the nodes' focus and press states.
+        void RefreshConstellation()
+        {
+            int slot = hovered >= 0 ? hovered : focused;
+            bool show = slot >= 0 && slot < stars.Count && !pending;
+            step.transform.parent.gameObject.SetActive(show);
+            ring.gameObject.SetActive(false);
+            stars.SetInput(focused, hovered, pressed);
+            if (show) { step.text = Caption(slot); PlateFit(step); }
+        }
+
+        /// "03 · title · 최고 2" (d2-refine caption): the stage's number on this planet, its localized title, its best stars
+        /// ("도전 전" / "Not cleared" when it is not cleared).
+        public string Caption(int slot)
+        {
+            if (model == null || planet < 0) throw new InvalidOperationException("PlanetSurfaceView.Caption before Bind");
+            int stage = planets[planet].Stages[slot];
+            var text = LevelCatalog.TextOf(stage, loc.Current);
+            string name = text != null && !string.IsNullOrEmpty(text.name) ? text.name : $"{loc.Get("planets.stage")} {stage + 1:00}";
+            return model.IsCleared(planet, slot)
+                ? loc.Format("ui5.surface.caption", slot + 1, name, model.Best(planet, slot))
+                : loc.Format("ui5.surface.caption_new", slot + 1, name);
         }
 
         /// The text's plate (its parent) sized to the words: 16 on each side, 8 clear above and below the drawn glyphs (14.4).
@@ -321,6 +394,7 @@ namespace SevenSteps.Game.UI.Planets
                 if (!Mathf.Approximately(space.Camera.aspect, fittedAspect)) Frame();
                 Turn();
             }
+            if (stars != null) { TickConstellation(); return; }
             var toCamera = -space.Camera.transform.forward;
             var points = new Vector2[places.Length];
             for (int s = 0; s < places.Length; s++)
@@ -350,6 +424,23 @@ namespace SevenSteps.Game.UI.Planets
                     mode = Navigation.Mode.Explicit,
                     selectOnLeft = Pick(-1, 0), selectOnRight = Pick(1, 0), selectOnUp = Pick(0, -1), selectOnDown = Pick(0, 1),
                 };
+            }
+        }
+
+        /// U5: the constellation's animation; keyboard navigation from the fixed nodes, rebuilt only when the canvas changes.
+        void TickConstellation()
+        {
+            stars.Tick(Time.unscaledDeltaTime);
+            var size = stars.Layer.rect.size;
+            if (size == fittedLayer) return;
+            fittedLayer = size;
+            var points = new Vector2[stars.Count];
+            for (int s = 0; s < points.Length; s++) { var c = stars.Centre(s); points[s] = new Vector2(c.x, -c.y); }
+            for (int s = 0; s < points.Length; s++)
+            {
+                int i = s;
+                Selectable Pick(int dx, int dy) { int j = StageSelectModel.Neighbor(points, i, dx, dy); return j == i ? null : targets[j]; }
+                targets[s].navigation = new Navigation { mode = Navigation.Mode.Explicit, selectOnLeft = Pick(-1, 0), selectOnRight = Pick(1, 0), selectOnUp = Pick(0, -1), selectOnDown = Pick(0, 1) };
             }
         }
 

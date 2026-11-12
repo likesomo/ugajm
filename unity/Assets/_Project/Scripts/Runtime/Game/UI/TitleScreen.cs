@@ -76,6 +76,8 @@ namespace SevenSteps.Game.UI
         public U5CreditsView U5Credits => u5Credits;
         /// The U5 map / surface controls (back, settings); null unless U5 and the v4 map are both on.
         public U5MapControls U5Map => u5Map;
+        /// The planet surface view (new map; null without it). Tests and captures read its constellation.
+        public Planets.PlanetSurfaceView SurfaceView => stageViews != null ? stageViews.Surface : null;
 
         void Awake()
         {
@@ -120,7 +122,8 @@ namespace SevenSteps.Game.UI
                 if (cam == null) throw new MissingReferenceException($"[SevenSteps] {name}: the Title scene has no Main Camera (the new map draws planet bodies)");
                 planetSpace = new PlanetSpace(cam, assets.background);
                 var map3d = new PlanetMap3DView(root, planetSpace, assets.planetBodies, planets, assets.PlanetMapSprites);
-                var surface = new PlanetSurfaceView(root, planetSpace, assets.planetBodies, planets, map3d.SetBodiesVisible, assets.PlanetSurfaceArt);
+                var surface = new PlanetSurfaceView(root, planetSpace, assets.planetBodies, planets, map3d.SetBodiesVisible, assets.PlanetSurfaceArt, constellation: u5)
+                    { ReduceMotion = save.Settings.reduceMotion };
                 stageViews = new StageSelectViews(map3d, surface, overlays = new OverlayStack());
             }
             if (u5) u5Language = new U5LanguageView(root, assets.uiIcons, tips);
@@ -166,7 +169,7 @@ namespace SevenSteps.Game.UI
             {
                 var stages = planets.Select(p => p.Stages).ToList();
                 StageSelect = new StageSelectController(stageViews, BuildStageSelectModel, stages, flow.CanGoToGame, flowController.PlayStage,
-                    Services.TryGet<JourneyReturn>(out var journeyReturn) ? journeyReturn : null);
+                    Services.TryGet<JourneyReturn>(out var journeyReturn) ? journeyReturn : null) { SurfaceFirst = u5 };
                 stageViews.Map.BackRequested += flowController.Back;
                 if (u5)
                 {
@@ -407,7 +410,8 @@ namespace SevenSteps.Game.UI
             else
                 trails = UiTheme.DipperEdges.Where(e => e.a < keys.Count && e.b < keys.Count).Select(e => (e.a, e.b)).ToList();
             int last = string.IsNullOrEmpty(save.Progress.lastStage) ? -1 : save.Progress.LastStageIndex(levels);
-            return StageSelectModel.From(keys, planets.Select(p => p.Stages).ToList(), s => save.Progress.IsCleared(levels[s]), last, trails, nodeTrails);
+            return StageSelectModel.From(keys, planets.Select(p => p.Stages).ToList(), s => save.Progress.IsCleared(levels[s]), last, trails, nodeTrails,
+                s => save.Progress.BestStars(levels[s]));
         }
 
         /// The brothers on the title planet: the first stage's chapter tile set, as the Game scene picks it.

@@ -127,6 +127,10 @@ namespace SevenSteps.Game.Flow
         /// <param name="canPlay">The flow can enter this stage now (AppFlow.CanGoToGame).</param>
         /// <param name="play">Enter the stage (TitleFlowController.PlayStage: select announcement + GoToGame).</param>
         /// <param name="journey">The run's JourneyReturn (Services), or null.</param>
+        /// U5 (D2b constellation): a map click opens every planet's surface, where each stage (untouched ones too, no locks)
+        /// is a node; off = the v3 input map (an unfinished planet plays its first unfinished stage, a complete one opens).
+        public bool SurfaceFirst { get; set; }
+
         public StageSelectController(IStageSelectView view, Func<StageSelectModel> buildModel, IReadOnlyList<IReadOnlyList<int>> stages,
             Func<int, bool> canPlay, Action<int> play, JourneyReturn journey)
         {
@@ -172,7 +176,7 @@ namespace SevenSteps.Game.Flow
         void OnPlanetChosen(int planet)
         {
             if (model == null || Pending != null || heldPlanet >= 0) return; // a dive or a return pullback is running
-            if (model.ChoosePlays(planet, out int slot)) Choose(planet, slot, StageChoiceSource.Map);
+            if (!SurfaceFirst && model.ChoosePlays(planet, out int slot)) Choose(planet, slot, StageChoiceSource.Map);
             else view.OpenSurface(model, planet);
         }
 

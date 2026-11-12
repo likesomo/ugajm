@@ -258,6 +258,59 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
+        /// The U5 surface constellation (D2b Orbit sparks, user choice 2026-11-12): moss with nothing cleared, frost part way
+        /// (stages 1-4 cleared with 0/1/2/3 stars, a stage other than the current focused), altar every stage at three stars
+        /// (perfect), frost again in English. `surface-d2b-<planet>-<state>-<lang>.png`. `unity.sh playcapture U5Surface`.
+        [UnityTest]
+        public IEnumerator U5Surface([Values("moss:none:ko", "frost:partial:ko", "altar:perfect:ko", "frost:partial:en")] string shot)
+        {
+            var parts = shot.Split(':');
+            string key = parts[0], state = parts[1], lang = parts[2];
+            yield return Start(AppState.Title, AppScenes.Title, "-ui5", "-lang", lang);
+            var save = Services.Get<SaveSystem>();
+            var title = Object.FindAnyObjectByType<SevenSteps.Game.UI.TitleScreen>();
+            var levels = LevelCatalog.Load(title.assets);
+            var planets = SevenSteps.Game.UI.PlanetEntry.FromCatalog(levels.Length);
+            int p = planets.FindIndex(e => e.Key == key);
+            Assert.GreaterOrEqual(p, 0, key);
+            var stages = planets[p].Stages;
+            if (state == "partial") for (int s = 0; s < 4; s++)
+                {
+                    var level = levels[stages[s]];
+                    if (s == 0) save.Progress.MarkCleared(level, level.Bodies); // cleared with no stars
+                    else save.Progress.MarkCleared(level, level.Bodies, s);
+                }
+            if (state == "perfect") foreach (int s in stages) save.Progress.MarkCleared(levels[s], levels[s].Bodies, 3);
+            title.U5Title.Map.Press();
+            yield return PlayEnv.WaitForState(AppState.StageSelect, AppScenes.Title);
+            GameObject.Find($"TitleUI/PlanetMap3D/Planet {p + 1}").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+            float t0 = Time.realtimeSinceStartup;
+            while (GameObject.Find("TitleUI/PlanetSurface") == null)
+            {
+                Assert.Less(Time.realtimeSinceStartup - t0, 10f, "the surface");
+                yield return null;
+            }
+            var stars = title.SurfaceView.Constellation;
+            Assert.IsNotNull(stars, "-ui5: the constellation");
+            Assert.AreEqual(stages.Count, stars.Count);
+            if (state == "partial")
+            {
+                Assert.AreEqual("cleared 0", stars.State(0));
+                Assert.AreEqual("cleared 3", stars.State(3));
+                Assert.AreEqual("untouched current", stars.State(4));
+                title.SurfaceView.Preview(2); // focus a stage other than the current one
+            }
+            if (state == "perfect") Assert.IsTrue(stars.State(0).EndsWith("perfect"), stars.State(0));
+            if (state == "none") Assert.AreEqual("untouched current", stars.State(0));
+            var plate = GameObject.Find("TitleUI/PlanetSurface/Planet plate"); // Find with a path also returns inactive children
+            Assert.IsTrue(plate == null || !plate.activeInHierarchy, "no planet plate: back + settings only");
+            Assert.IsTrue(title.U5Map.Visible);
+            Debug.Log($"[SevenSteps] Play capture surface-d2b-{key}-{state}-{lang}: caption \"{title.SurfaceView.Step.text}\"");
+            var px = new Pixels();
+            yield return Capture($"surface-d2b-{key}-{state}-{lang}", px);
+            AssertVaried($"surface-d2b-{key}-{state}-{lang}", px.Value);
+        }
+
         /// The v4 star map (-newmap) with a save where the first planet is cleared (lit trail, stars, the brothers' dots).
         [UnityTest]
         public IEnumerator Map()

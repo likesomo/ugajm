@@ -209,6 +209,21 @@ namespace SevenSteps.Tests
             CollectionAssert.AreEqual(new[] { 1 }, played);
         }
 
+        /// U5 (D2b constellation): every planet opens its surface, unfinished and untouched ones too; an untouched stage
+        /// beyond the first unfinished one plays (no locks).
+        [Test]
+        public void SurfaceFirstOpensAnUnfinishedPlanetAndAnyStagePlays()
+        {
+            var c = Controller(Model(Rows(new[] { true, false, false }, new bool[3], new bool[2])));
+            c.SurfaceFirst = true;
+            c.Show();
+            view.Choose(1);
+            CollectionAssert.Contains(view.calls, "surface 1", "nothing cleared there: still the surface");
+            CollectionAssert.IsEmpty(played);
+            view.Place(1, 2);
+            CollectionAssert.AreEqual(new[] { 5 }, played);
+        }
+
         [Test]
         public void ACompletePlanetOpensItsSurfaceAndAPlacePlaysThatStage()
         {

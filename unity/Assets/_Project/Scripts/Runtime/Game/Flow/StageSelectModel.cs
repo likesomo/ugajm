@@ -16,6 +16,7 @@ namespace SevenSteps.Game.Flow
     {
         readonly string[] keys;
         readonly bool[][] cleared;
+        readonly int[][] best;
         readonly (int from, int to)[] trails;
         readonly (int from, string node)[] nodeTrails;
 
@@ -37,7 +38,7 @@ namespace SevenSteps.Game.Flow
         /// <param name="trails">Edges as planet indices; each in range and not a loop.</param>
         /// <param name="nodeTrails">Edges from a planet to a non-planet story node (<see cref="NodeTrailsByKey"/>); null = none.</param>
         public StageSelectModel(IReadOnlyList<string> keys, IReadOnlyList<IReadOnlyList<bool>> cleared, int markerPlanet, int markerSlot, IReadOnlyList<(int from, int to)> trails,
-            IReadOnlyList<(int from, string node)> nodeTrails = null)
+            IReadOnlyList<(int from, string node)> nodeTrails = null, IReadOnlyList<IReadOnlyList<int>> best = null)
         {
             if (keys == null) throw new ArgumentNullException(nameof(keys));
             if (cleared == null) throw new ArgumentNullException(nameof(cleared));
@@ -52,6 +53,19 @@ namespace SevenSteps.Game.Flow
                 if (cleared[p] == null || cleared[p].Count == 0) throw new ArgumentException($"planet {p} ({keys[p]}) has no stages", nameof(cleared));
                 this.cleared[p] = new bool[cleared[p].Count];
                 for (int s = 0; s < cleared[p].Count; s++) this.cleared[p][s] = cleared[p][s];
+            }
+            if (best != null && best.Count != keys.Count) throw new ArgumentException($"{best.Count} best rows for {keys.Count} planets", nameof(best));
+            this.best = new int[keys.Count][];
+            for (int p = 0; p < keys.Count; p++)
+            {
+                this.best[p] = new int[this.cleared[p].Length];
+                if (best == null) continue;
+                if (best[p] == null || best[p].Count != this.cleared[p].Length) throw new ArgumentException($"planet {p} ({keys[p]}): best row does not match its {this.cleared[p].Length} stages", nameof(best));
+                for (int s = 0; s < best[p].Count; s++)
+                {
+                    if (best[p][s] < 0 || best[p][s] > MaxStars) throw new ArgumentOutOfRangeException(nameof(best), best[p][s], $"planet {p} slot {s}: best stars 0..{MaxStars}");
+                    this.best[p][s] = best[p][s];
+                }
             }
             if (markerPlanet < -1 || markerPlanet >= keys.Count) throw new ArgumentOutOfRangeException(nameof(markerPlanet), markerPlanet, "marker planet");
             if (markerPlanet >= 0 && (markerSlot < 0 || markerSlot >= this.cleared[markerPlanet].Length))
@@ -78,24 +92,29 @@ namespace SevenSteps.Game.Flow
 
         /// The model for a save: <paramref name="stages"/> are each planet's stage indices (PlanetEntry.Stages);
         /// <paramref name="isCleared"/> and <paramref name="lastStage"/> (-1 = none) read the progress save.
+        /// <paramref name="bestStars"/>: a stage's most stars (0..3, independent of cleared: a cleared stage may have 0); null = 0 everywhere.
         public static StageSelectModel From(IReadOnlyList<string> keys, IReadOnlyList<IReadOnlyList<int>> stages, Func<int, bool> isCleared, int lastStage,
-            IReadOnlyList<(int from, int to)> trails, IReadOnlyList<(int from, string node)> nodeTrails = null)
+            IReadOnlyList<(int from, int to)> trails, IReadOnlyList<(int from, string node)> nodeTrails = null, Func<int, int> bestStars = null)
         {
             if (stages == null) throw new ArgumentNullException(nameof(stages));
             if (isCleared == null) throw new ArgumentNullException(nameof(isCleared));
             var rows = new List<IReadOnlyList<bool>>();
+            var bests = new List<IReadOnlyList<int>>();
             int mp = -1, ms = -1;
             for (int p = 0; p < stages.Count; p++)
             {
                 var row = new bool[stages[p].Count];
+                var bestRow = new int[row.Length];
                 for (int s = 0; s < row.Length; s++)
                 {
                     row[s] = isCleared(stages[p][s]);
+                    if (bestStars != null) bestRow[s] = bestStars(stages[p][s]);
                     if (stages[p][s] == lastStage && mp < 0) { mp = p; ms = s; }
                 }
                 rows.Add(row);
+                bests.Add(bestRow);
             }
-            return new StageSelectModel(keys, rows, mp, ms, trails, nodeTrails);
+            return new StageSelectModel(keys, rows, mp, ms, trails, nodeTrails, bests);
         }
 
         /// Trail edges by key pairs (story.json "dipper"); pairs naming a planet that is not on the map are skipped.
@@ -140,6 +159,20 @@ namespace SevenSteps.Game.Flow
 
         public int StageCount(int planet) => cleared[Check(planet)].Length;
         public bool IsCleared(int planet, int slot) => cleared[Check(planet)][slot];
+
+        /// Most stars a stage has earned (the result's three stars).
+        public const int MaxStars = 3;
+
+        /// A stage's best stars, 0..<see cref="MaxStars"/> (0 also for an uncleared stage; read <see cref="IsCleared"/> for that).
+        public int Best(int planet, int slot) => best[Check(planet)][slot];
+
+        /// Every stage cleared with <see cref="MaxStars"/> (the constellation's finale), not merely all visited.
+        public bool Perfect(int planet)
+        {
+            if (!Complete(planet)) return false;
+            foreach (int b in best[planet]) if (b < MaxStars) return false;
+            return true;
+        }
 
         public int ClearedCount(int planet)
         {

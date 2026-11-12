@@ -376,6 +376,38 @@ namespace SevenSteps.EditorTools
                     return null;
                 } }, s < 0 ? "" : "place");
             }
+            // The U5 planet surface constellation (scene-flow, D2b Orbit sparks): each planet part way (the first four cleared
+            // with 0..3 stars, the fifth current, stage 3 focused so its caption shows); KO and EN by the check's languages.
+            foreach (string planetKey in new[] { "moss", "frost", "altar" })
+            {
+                string key = planetKey;
+                yield return (new Screen { Name = "U5 Planet surface " + key, U5Kit = true, Build = (c, root) =>
+                {
+                    var camGo = new GameObject("UiLayoutCheck Surface Camera");
+                    var cam = camGo.AddComponent<Camera>();
+                    cam.aspect = c.Units.x / c.Units.y;
+                    var space = new SevenSteps.Game.UI.Planets.PlanetSpace(cam, c.Assets.background);
+                    var planets = PlanetEntry.FromCatalog(c.Levels.Length);
+                    int p = planets.FindIndex(e => e.Key == key);
+                    if (p < 0) throw new InvalidOperationException("UiLayoutCheck: no planet " + key);
+                    var keys = planets.Select(e => e.Key).ToList();
+                    var firstFour = new HashSet<int>(planets[p].Stages.Take(4));
+                    var model = StageSelectModel.From(keys, planets.Select(e => e.Stages).ToList(), st => firstFour.Contains(st), -1, new List<(int, int)>(), null,
+                        st => firstFour.Contains(st) ? planets[p].Stages.ToList().IndexOf(st) : 0);
+                    var bodies = AssetDatabase.LoadAssetAtPath<SevenSteps.Game.UI.Planets.PlanetBodySet>("Assets/_Project/Data/PlanetBodies.asset");
+                    var surface = new SevenSteps.Game.UI.Planets.PlanetSurfaceView(root, space, bodies, planets, _ => { }, null, constellation: true) { ReduceMotion = true };
+                    surface.Apply(c.Loc);
+                    surface.Bind(model, p);
+                    surface.Show();
+                    surface.Preview(2);
+                    var sky = GameObject.Find("StageSelectBackdrop");
+                    if (sky != null)
+                        foreach (var g in sky.GetComponentsInChildren<Graphic>(true))
+                            if (g.gameObject != sky) Ui.Exempt(g.gameObject, UiLayoutRule.Decoration | UiLayoutRule.Contrast | UiLayoutRule.Overlap | UiLayoutRule.Board,
+                                "starfield sky of the planet view (scene art, not UI)");
+                    return null;
+                } }, "");
+            }
             // Language and credits, each also with the kit's explanation plate showing (U5Kit, as the title tips).
             foreach (bool tip in new[] { false, true })
             {
