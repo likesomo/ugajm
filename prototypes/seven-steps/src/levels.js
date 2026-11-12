@@ -322,7 +322,7 @@ export const LEVELS = [
     name: '미끄러운 첫걸음',
     chapter: 'frost',
     story: '얼음 위에선 미끄러져도 한 걸음.',
-    hint: '얼음에선 얼음이 끝난 첫 바닥 칸이나 벽·선돌 앞까지 미끄러진다. 몇 칸을 가도 한 걸음.',
+    hint: '얼음에선 얼음이 끝난 첫 바닥 칸, 또는 벽이나 선돌 앞까지 미끄러진다. 몇 칸을 가도 한 걸음.',
     bodies: 3,
     text: [{ lang: 'en', name: 'A Slippery First Step', hint: 'On ice you slide to the first floor cell past the ice, or stop in front of a wall or statue. Any distance is one step.', story: 'On ice, one slide is one step.' }],
     map: [
