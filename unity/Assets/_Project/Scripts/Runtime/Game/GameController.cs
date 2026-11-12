@@ -138,7 +138,7 @@ namespace SevenSteps.Game
             // Story ending (docs/architecture.md 16.8): four cards after the last stage's [끝까지 보기].
             story = Services.TryGet<StoryBook>(out var book) ? book : StoryBook.Off();
             var endingView = this.endingView = new EndingView(overlayCanvas, assets.storyImages, localizer);
-            applyResultLanguage = _ => { result.Apply(localizer); languagePanel.Apply(localizer); menuPanel.Apply(localizer); endingView.Apply(localizer); if (u5Hud != null) u5Hud.Apply(localizer); if (u5Clear != null) u5Clear.Apply(localizer); }; // the HUD and board redraw in BoardController
+            applyResultLanguage = _ => { result.Apply(localizer); languagePanel.Apply(localizer); menuPanel.Apply(localizer); endingView.Apply(localizer); if (u5Hud != null) u5Hud.Apply(localizer); if (u5Clear != null) u5Clear.Apply(localizer); u5Pause?.Apply(localizer); u5Settings?.Apply(localizer); }; // the HUD and board redraw in BoardController
             localizer.Changed += applyResultLanguage;
             // The theme's card prefab, else the code-built chapter entry screen (art concept chapter-entry). None in smoke /
             // replay runs: the screenshot must show the board.
@@ -172,9 +172,14 @@ namespace SevenSteps.Game
             Flow.IResultPanel resultPanel = result;
             if (u5Hud != null)
             {
-                u5Clear = UI.U5.U5ClearView.Build(assets.uiIcons, localizer, result);
+                u5Clear = UI.U5.U5ClearView.Build(assets.uiIcons, localizer);
                 u5Clear.ExitPoint = () => board.View.BrotherOnCanvas();
                 u5Clear.BoardArea = () => board.View.ProjectedArea();
+                // The three world star stones stand behind the brother on the exit (R1 on 1f90617).
+                u5Clear.ExitWorld = () => board.View.Player.transform.position;
+                u5Clear.WorldParent = () => board.View.BoardRoot;
+                u5Clear.WorldCamera = () => cam;
+                u5Clear.CellSize = () => board.View.Grid.CellSize;
                 resultPanel = u5Clear;
             }
             flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, resultPanel, LevelCatalog.ChapterKeyOf, LevelCatalog.ChapterOf);
@@ -210,8 +215,21 @@ namespace SevenSteps.Game
             tutorial = new TutorialTracker(devRun ? new MemoryTutorialStore(allSeen: !freshGuides) : (ITutorialStore)new SaveTutorialStore(save));
             board.Session.Updated += tutorial.Apply;
             board.StageEntered += StopControlsGuide;
-            menu = new MenuController(overlays, menuPanel,
-                openSettings: () => { if (!overlays.Contains(settings)) overlays.Push(settings); },
+            // U5: the pause row is the in-game menu and its settings icon opens the U5 settings row (its "more" opens the
+            // full current panel: volumes, play data, step numbers).
+            Flow.IMenuPanel menuView = menuPanel;
+            Action openSettingsView = () => { if (!overlays.Contains(settings)) overlays.Push(settings); };
+            if (u5Hud != null)
+            {
+                u5Pause = new UI.U5.U5PauseView(assets.uiIcons, localizer);
+                u5Settings = new UI.U5.U5SettingsView(assets.uiIcons, localizer);
+                var full = openSettingsView;
+                u5SettingsController = new UI.U5.U5SettingsController(save, u5Settings, languageController.Open, full);
+                menuView = u5Pause;
+                openSettingsView = () => { if (!overlays.Contains(u5Settings)) overlays.Push(u5Settings); };
+            }
+            menu = new MenuController(overlays, menuView,
+                openSettings: openSettingsView,
                 openStages: flowController.OpenStageSelect,
                 showSolution: board.ShowHint,
                 playControls: tutorial.PlayControls,
@@ -239,13 +257,17 @@ namespace SevenSteps.Game
             result.HudHidden += hud.Conceal;
             if (u5Hud != null)
             {
-                result.HudHidden += u5Hud.Conceal;
                 u5Clear.NextRequested += flowController.Next;
                 u5Clear.RetryRequested += flowController.Again;
                 u5Clear.StageSelectRequested += flowController.OpenStageSelect;
-                u5Clear.HudHidden += hud.Conceal;
-                u5Clear.HudHidden += u5Hud.Conceal;
-                u5Hud.PauseRequested += menu.Toggle; // the U5 pause row comes with the pause / failure step; the menu until then
+                u5Clear.UndoRequested += () => board.Send(SevenSteps.Core.Command.Undo);
+                u5Clear.RestartRequested += board.Restart;
+                u5Hud.PauseRequested += menu.Toggle;
+                u5Pause.RestartRequested += () => { menu.Toggle(); board.Restart(); };
+                // Both HUDs hide while a U5 result or row is up (14.7: a 0.25 scrim needs the HUD hidden), from one place.
+                result.HudHidden += _ => RefreshU5Huds();
+                u5Clear.HudHidden += _ => RefreshU5Huds();
+                overlays.Changed += RefreshU5Huds;
             }
 
             // Story on the board (docs 16.7 / 16.8, story-integration.md 0.2): the stage's start line and a planet's finale
@@ -315,6 +337,7 @@ namespace SevenSteps.Game
             flowController?.Dispose();
             settingsController?.Dispose();
             languageController?.Dispose();
+            u5SettingsController?.Dispose();
             chapterIntro?.Dispose();
             menu?.Dispose();
             ending?.Dispose();
@@ -401,6 +424,16 @@ namespace SevenSteps.Game
         /// Canvas for overlays above the HUD (0) and the result panel (5).
         UI.U5.U5GameHud u5Hud;
         UI.U5.U5ClearView u5Clear;
+        UI.U5.U5PauseView u5Pause;
+        UI.U5.U5SettingsView u5Settings;
+        UI.U5.U5SettingsController u5SettingsController;
+
+        void RefreshU5Huds()
+        {
+            bool hide = u5Clear.IsShown || u5Pause.Visible || u5Settings.Visible;
+            hud.Conceal(hide);
+            u5Hud.Conceal(hide);
+        }
 
         /// U5 HUD -> the same controller calls as the current HUD (docs/ui-u5-kit.md 7).
         void WireU5(UI.U5.U5GameHud u5)
