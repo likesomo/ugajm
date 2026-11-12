@@ -12,10 +12,48 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9d7ab4509c341ecbda2af89c5afdf8e, type: 3}
   m_Name: UiIconSet
   m_EditorClassIdentifier: SevenSteps.Game::SevenSteps.Game.UI.U5.UiIconSet
-  icons: []
-  captionPlate: {fileID: 0}
-  scarfDot: {fileID: 0}
-  starStoneLit: {fileID: 0}
-  starStoneUnlit: {fileID: 0}
-  stepStar: {fileID: 0}
-  stepStarLink: {fileID: 0}
+  icons:
+  - id: 0
+    sprite: {fileID: 21300000, guid: 4e1bcb22531ff924cbdfaecc18d85c32, type: 3}
+  - id: 1
+    sprite: {fileID: 21300000, guid: 0ce6dbc9fe69e224882bc3cebb47bc6e, type: 3}
+  - id: 2
+    sprite: {fileID: 21300000, guid: 3b0e3252c04d40f4b9c763f773a56b10, type: 3}
+  - id: 3
+    sprite: {fileID: 21300000, guid: 3b127bbbcbf104d4ab62a3c35db1bcd5, type: 3}
+  - id: 4
+    sprite: {fileID: 21300000, guid: 29fb4fb4a6ee4944d8774d83de453782, type: 3}
+  - id: 5
+    sprite: {fileID: 21300000, guid: 835f44f14544c9e4592f12757aae1444, type: 3}
+  - id: 6
+    sprite: {fileID: 21300000, guid: 9f688ae5b63b29940b9d5b0f42773045, type: 3}
+  - id: 7
+    sprite: {fileID: 21300000, guid: 4baa4c12af5fbe147acf96728471dbf1, type: 3}
+  - id: 8
+    sprite: {fileID: 21300000, guid: cf2d588e0f667024dac669a6f3452041, type: 3}
+  - id: 9
+    sprite: {fileID: 21300000, guid: 17b614452124f92459a316d9cd2dba9f, type: 3}
+  - id: 10
+    sprite: {fileID: 21300000, guid: a40a27f140535534083ceadd573f02a0, type: 3}
+  - id: 11
+    sprite: {fileID: 21300000, guid: cf9e11503f9b1f945b825b9807ee9c13, type: 3}
+  - id: 12
+    sprite: {fileID: 21300000, guid: cc8a6fa727bd89e42909df35b033ddb6, type: 3}
+  - id: 13
+    sprite: {fileID: 21300000, guid: 0faf8aba060fac346911b98455ff8af2, type: 3}
+  - id: 14
+    sprite: {fileID: 21300000, guid: 36aa1ed50089dbb4e948dd0ae7bed7d4, type: 3}
+  - id: 15
+    sprite: {fileID: 21300000, guid: 520dcb63091004f49984847018bfa6ae, type: 3}
+  - id: 16
+    sprite: {fileID: 21300000, guid: 940bc8c78c5a8b44998452b0305fb8bd, type: 3}
+  - id: 17
+    sprite: {fileID: 21300000, guid: e1cb111340d323d46b6593fb6a439f38, type: 3}
+  - id: 18
+    sprite: {fileID: 21300000, guid: f6b0bdc8e80db124ab1758c6f0a8f9b0, type: 3}
+  captionPlate: {fileID: 21300000, guid: a1e4d56bd32e3054c9eae0e2d357ce71, type: 3}
+  scarfDot: {fileID: 21300000, guid: d893dc20f90ad724bad841aba7fb89d7, type: 3}
+  starStoneLit: {fileID: 21300000, guid: 136c32a27b4df0d429d09757fc59ce52, type: 3}
+  starStoneUnlit: {fileID: 21300000, guid: 777599913cf1255479da3e5da6178eff, type: 3}
+  stepStar: {fileID: 21300000, guid: d0fc11d0455813d458641e2ed7cd52c8, type: 3}
+  stepStarLink: {fileID: 21300000, guid: 3dce7be3120394d45afe4b334e17a5b5, type: 3}

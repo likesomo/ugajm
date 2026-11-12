@@ -140,15 +140,16 @@ namespace SevenSteps.Game
         IChoiceView choiceView;
 
         /// U5 (docs/ui-u5-kit.md 3): the 7th-step choice on <paramref name="view"/> instead of the HUD cards. Call once after
-        /// Init, before the scene root sets Choice.ExplainChoices / ShowGuide (a new ChoiceController is made).
+        /// Init (a new ChoiceController is made; Choice.ExplainChoices / ShowGuide set before are carried over).
         public void UseChoiceView(IChoiceView view)
         {
             if (view == null || (view is UnityEngine.Object o && o == null)) throw new ArgumentNullException(nameof(view));
             if (choice == null) throw new InvalidOperationException("UseChoiceView before Init");
             if (ReferenceEquals(view, choiceView)) return;
+            var explain = choice.ExplainChoices; var guide = choice.ShowGuide; // set already or not: carried over (review note on 40a0561)
             choice.Dispose();
             choiceView = view;
-            choice = new ChoiceController(session, view, board, Send);
+            choice = new ChoiceController(session, view, board, Send) { ExplainChoices = explain, ShowGuide = guide };
         }
 
         /// After the HUD redrew from the state (stage, its text in the UI language): a second HUD (U5) follows it.
