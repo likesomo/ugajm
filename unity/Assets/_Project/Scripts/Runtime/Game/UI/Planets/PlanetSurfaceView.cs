@@ -156,8 +156,13 @@ namespace SevenSteps.Game.UI.Planets
             if (p < 0 || p >= planets.Count || p >= m.PlanetCount) throw new ArgumentOutOfRangeException(nameof(p), p, "planet");
             planet = p;
             if (body != null) UnityEngine.Object.Destroy(body.gameObject);
-            body = PlanetBody.Create(set, planets[p].Key, p, root, seated: true);
-            if (art != null && art.TryGetSurface(planets[p].Key, out var painting, out var material))
+            UnityEngine.Texture painting = null;
+            UnityEngine.Material material = null;
+            var hasProjection = art != null && art.TryGetSurface(planets[p].Key, out painting, out material);
+            // The seated mesh has a flat summit cut for a board. That cap shears the tops of the painted
+            // menhirs/crystals/spires at one horizontal height, so projected artwork needs the full round body.
+            body = PlanetBody.Create(set, planets[p].Key, p, root, seated: !hasProjection);
+            if (hasProjection)
                 body.UseProjection(painting, material, PlanetMapLayout.Rotation, Quaternion.Euler(0, BaseYaw, 0));
             title.text = planets[p].Name(loc);
             PlateFit(title);

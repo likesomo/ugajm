@@ -240,6 +240,7 @@ namespace SevenSteps.Tests.PlayMode
                 }
                 var body = Object.FindObjectsByType<SevenSteps.Game.UI.Planets.PlanetBody>(FindObjectsInactive.Exclude).Single(b => b.transform.parent != null && b.transform.parent.name == "Surface");
                 Assert.IsTrue(body.Projected, $"the surface body {body.Key} carries its painting");
+                Assert.IsFalse(body.Seated, $"the projected {body.Key} surface uses the full round mesh so painted landmarks are not sheared by the board seat cut");
                 Assert.IsTrue(body.Renderer.enabled && body.Impostor == null, "the body itself draws, no sprite");
                 Assert.AreEqual(SevenSteps.Game.UI.Planets.PlanetStoneMesh.CrustTriangles * 3, body.GetComponent<MeshFilter>().sharedMesh.triangles.Length, "crust only: no old outline or details under the painting");
                 int others = Object.FindObjectsByType<SevenSteps.Game.UI.Planets.PlanetBody>(FindObjectsInactive.Exclude).Count(b => b != body && b.Renderer.enabled && b.gameObject.activeInHierarchy && b.Renderer.isVisible);
