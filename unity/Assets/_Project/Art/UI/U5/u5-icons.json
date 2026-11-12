@@ -616,14 +616,16 @@
                                           "guid":  "bcad320aa22944f43bb2e1e02694e4a7",
                                           "fileId":  21300000,
                                           "scale":  2,
-                                          "pixelsPerUnit":  200
+                                          "pixelsPerUnit":  200,
+                                          "sha256":  "a0e83292b762ccd01e2efddf8bdabfee715c0e2af3307b5cebf897f3755a6558"
                                       },
                                       {
                                           "path":  "Assets/Shared/Art/UI/U5/4x/motion.png",
                                           "guid":  "520dcb63091004f49984847018bfa6ae",
                                           "fileId":  21300000,
                                           "scale":  4,
-                                          "pixelsPerUnit":  400
+                                          "pixelsPerUnit":  400,
+                                          "sha256":  "090af5f1137f6a30eeea49fbe6c2b41e392d679703070dbca8bc76c592362b04"
                                       }
                                   ],
                       "states":  {
@@ -646,7 +648,8 @@
                                                  "tint":  "#EEE7D0FF"
                                              }
                                  },
-                      "semantics":  "One reduce-motion icon: on tint #E9BC65FF; off tint #EEE7D0FF. No second sprite."
+                      "semantics":  "One reduce-motion icon: on tint #E9BC65FF; off tint #EEE7D0FF. No second sprite.",
+                      "glyphDescription":  "Three flowing waves with a diagonal reduction slash; visually distinct from pause bars"
                   },
                   {
                       "id":  "close",
@@ -1057,10 +1060,10 @@
                                           "fileId":  2100000
                                       },
                       "path":  "Assets/Shared/Art/UI/U5/world-star-stone.fbx",
-                      "triangles":  96,
+                      "triangles":  160,
                       "stoneNode":  "Stone",
                       "guid":  "e2f37efdf653a9c43a30c9633ceaf192",
-                      "front":  "Unity -Z",
+                      "front":  "Unity -Z front; identical raised inlay on +Z rear tolerates the pending opposite-facing clear pose",
                       "shellMaterial":  {
                                             "path":  "Assets/_Project/Art/UI/U5/U5StoneShell.mat",
                                             "guid":  "53cf0cb644974648bb875769c3bd5bcf",
@@ -1071,7 +1074,15 @@
                                             "path":  "Assets/_Project/Art/UI/U5/U5StarUnlit.mat",
                                             "guid":  "8fd85f5ca8774757ac094fcc1c96ab2b",
                                             "fileId":  2100000
-                                        }
+                                        },
+                      "minimumInlayGap":  0.017,
+                      "pivot":  [
+                                    0,
+                                    0,
+                                    0
+                                ],
+                      "starShader":  "Universal Render Pipeline/Unlit (self-lit, PC and Mobile)",
+                      "meshSha256":  "7bb5a83e536222261757209cb1db1ea6040d1ac73e1b93e3f30fe2cb55e4ed60"
                   },
     "importPolicy":  {
                          "mesh":  "FullRect",
@@ -1086,5 +1097,5 @@
                          "spriteMode":  "Single"
                      },
     "committedImportSettings":  "design/art/ui-u5-import-settings/U5",
-    "artRevision":  2
+    "artRevision":  3
 }

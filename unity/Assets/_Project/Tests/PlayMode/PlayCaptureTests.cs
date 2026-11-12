@@ -402,6 +402,10 @@ namespace SevenSteps.Tests.PlayMode
                 ("u5-clear-en", new[] { "-ui5", "-lang", "en", "-level", "4", "-replay", "DURRRRRKDDRRRRR" }),
                 ("u5-clear-planet", new[] { "-ui5", "-level", "7", "-replay", "DUDUDULKDUDURRRKDUDDDDR" }),
                 ("u5-clear-last", new[] { "-ui5", "-level", "50", "-replay", "UUUDURUKDRRRUUKDRRDLUU" }),
+                // World star stones on a narrow (7, tall) and a wide (14, 17 x 3) board, both UIs.
+                ("u4-clear-narrow", new[] { "-level", "7", "-replay", "DUDUDULKDUDURRRKDUDDDDR" }),
+                ("u4-clear-wide", new[] { "-level", "14", "-replay", "LLLRRRRXRRRRRRRKLLLLLLL" }),
+                ("u5-clear-wide", new[] { "-ui5", "-level", "14", "-replay", "LLLRRRRXRRRRRRRKLLLLLLL" }),
             })
             {
                 PlayEnv.Reset();
