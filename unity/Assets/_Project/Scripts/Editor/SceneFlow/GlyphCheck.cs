@@ -73,6 +73,16 @@ namespace SevenSteps.EditorTools
                     Text(file.levels[k].hint, $"levels.json stage {k + 1} hint");
                     Text(file.levels[k].story, $"levels.json stage {k + 1} story");
                 }
+                // Tutorial boards (docs/tutorial.md 3): name, hint, story and every cue line.
+                foreach (var t in file.tutorials ?? new TutorialDto[0])
+                {
+                    if (t?.level == null) continue;
+                    Text(t.level.name, $"levels.json tutorial {t.id} name");
+                    Text(t.level.hint, $"levels.json tutorial {t.id} hint");
+                    Text(t.level.story, $"levels.json tutorial {t.id} story");
+                    for (int c = 0; c < (t.cues?.Length ?? 0); c++)
+                        if (t.cues[c] != null) Text(t.cues[c].line, $"levels.json tutorial {t.id} cue {c + 1} ({t.cues[c].on})");
+                }
             }
             if (assets != null && assets.chaptersJson != null)
             {

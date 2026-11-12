@@ -98,6 +98,8 @@ const CHECK = process.argv.includes('--check');
 const { source, json } = loadTraces(process.argv.slice(2).find((a) => a !== '--check'));
 const traces = [];
 for (const t of json.traces) {
+  // Tutorial boards send no level_* telemetry (docs/tutorial.md 2.6).
+  if (t.id.startsWith('tutorial:')) continue;
   const key = levelKey(parseLevel(t.level));
   const stage = keyToStage.get(key) ?? (LEVELS.findIndex((d) => d.name === t.level.name) + 1 || 1);
   traces.push(run({ id: t.id, def: t.level, level: stage, commands: t.commands }));

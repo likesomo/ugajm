@@ -69,52 +69,16 @@ namespace SevenSteps.EditorTools
             var log = new StringBuilder("[SevenSteps] Verify levels (C# vs JS)\n");
 
             for (int k = 0; k < file.levels.Length; k++)
-            {
-                var dto = file.levels[k];
-                var row = new Row { idx = k + 1, name = dto.name };
-                var sw = Stopwatch.StartNew();
-                try
-                {
-                    var level = dto.ToLevel();
-                    var best = Solver.MinBodies(level);
-                    row.needsSwitch = Solver.Solve(level, level.Bodies, noSwitch: true) == null;
-                    if (best != null)
-                    {
-                        row.minBodies = best.BodiesUsed;
-                        row.moves = best.Path.Count;
-                        row.path = best.Letters();
-                    }
-                    CheckReplay(level, dto.expected.path, out row.replayWin, out row.undoBack);
-
-                    var exp = dto.expected;
-                    var diffs = new List<string>();
-                    if (best == null) diffs.Add("no solution");
-                    // The triplets: at most 3 bodies (data rule, docs/architecture.md 6.4).
-                    if (dto.bodies > BodyCap) diffs.Add($"bodies {dto.bodies} > {BodyCap}");
-                    if (best != null && row.minBodies > BodyCap) diffs.Add($"needs {row.minBodies} bodies > {BodyCap}");
-                    if (row.minBodies != exp.minBodies) diffs.Add($"minBodies {row.minBodies} != {exp.minBodies}");
-                    if (row.moves != exp.moves) diffs.Add($"moves {row.moves} != {exp.moves}");
-                    if (row.path != exp.path) diffs.Add($"path {row.path} != {exp.path}");
-                    if (row.needsSwitch != exp.needsSwitch) diffs.Add($"needsSwitch {row.needsSwitch} != {exp.needsSwitch}");
-                    if (!row.replayWin) diffs.Add("JS route does not win in C#");
-                    if (!row.undoBack) diffs.Add("undo does not return to start");
-                    row.ok = diffs.Count == 0;
-                    row.error = string.Join("; ", diffs);
-                }
-                catch (Exception e)
-                {
-                    row.ok = false;
-                    row.error = e.Message;
-                }
-                row.ms = sw.ElapsedMilliseconds;
-                report.rows.Add(row);
-                log.AppendLine($"{(row.ok ? "OK  " : "FAIL")} {row.idx,2}. {row.name}  bodies {row.minBodies}/{dto.bodies}  {(row.needsSwitch ? "SWITCH " : "")}{row.path}  ({row.ms} ms){(row.ok ? "" : "  <- " + row.error)}");
-            }
+                Check(file.levels[k], new Row { idx = k + 1, name = file.levels[k].name }, report, log, tutorial: false);
+            // Tutorial boards (docs/tutorial.md 2.1): same checks, plus each needs every body it gives. idx = -board number.
+            var tutorials = file.tutorials ?? new TutorialDto[0];
+            for (int k = 0; k < tutorials.Length; k++)
+                Check(tutorials[k].level, new Row { idx = -(k + 1), name = $"{tutorials[k].id} {tutorials[k].level?.name}" }, report, log, tutorial: true);
 
             report.total = report.rows.Count;
             report.failed = report.rows.FindAll(r => !r.ok).Count;
-            log.AppendLine(report.failed == 0 ? $"[SevenSteps] Verify OK: {report.total}/{report.total} stages match the JS solver."
-                                               : $"[SevenSteps] Verify FAILED: {report.failed}/{report.total} stages differ.");
+            log.AppendLine(report.failed == 0 ? $"[SevenSteps] Verify OK: {report.total}/{report.total} boards ({file.levels.Length} stages + {tutorials.Length} tutorials) match the JS solver."
+                                               : $"[SevenSteps] Verify FAILED: {report.failed}/{report.total} boards differ.");
             if (report.failed == 0) Debug.Log(log.ToString());
             else Debug.LogError(log.ToString());
 
@@ -122,6 +86,49 @@ namespace SevenSteps.EditorTools
             Directory.CreateDirectory(Path.GetDirectoryName(outPath));
             File.WriteAllText(outPath, JsonUtility.ToJson(report, true));
             return report.failed == 0;
+        }
+
+        static void Check(LevelDto dto, Row row, Report report, StringBuilder log, bool tutorial)
+        {
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                var level = dto.ToLevel();
+                var best = Solver.MinBodies(level);
+                row.needsSwitch = Solver.Solve(level, level.Bodies, noSwitch: true) == null;
+                if (best != null)
+                {
+                    row.minBodies = best.BodiesUsed;
+                    row.moves = best.Path.Count;
+                    row.path = best.Letters();
+                }
+                CheckReplay(level, dto.expected.path, out row.replayWin, out row.undoBack);
+
+                var exp = dto.expected;
+                var diffs = new List<string>();
+                if (best == null) diffs.Add("no solution");
+                // The triplets: at most 3 bodies (data rule, docs/architecture.md 6.4).
+                if (dto.bodies > BodyCap) diffs.Add($"bodies {dto.bodies} > {BodyCap}");
+                if (best != null && row.minBodies > BodyCap) diffs.Add($"needs {row.minBodies} bodies > {BodyCap}");
+                if (tutorial && best != null && row.minBodies != dto.bodies) diffs.Add($"tutorial clears with {row.minBodies} of {dto.bodies} bodies");
+                if (row.minBodies != exp.minBodies) diffs.Add($"minBodies {row.minBodies} != {exp.minBodies}");
+                if (row.moves != exp.moves) diffs.Add($"moves {row.moves} != {exp.moves}");
+                if (row.path != exp.path) diffs.Add($"path {row.path} != {exp.path}");
+                if (row.needsSwitch != exp.needsSwitch) diffs.Add($"needsSwitch {row.needsSwitch} != {exp.needsSwitch}");
+                if (!row.replayWin) diffs.Add("JS route does not win in C#");
+                if (!row.undoBack) diffs.Add("undo does not return to start");
+                row.ok = diffs.Count == 0;
+                row.error = string.Join("; ", diffs);
+            }
+            catch (Exception e)
+            {
+                row.ok = false;
+                row.error = e.Message;
+            }
+            row.ms = sw.ElapsedMilliseconds;
+            report.rows.Add(row);
+            string tag = row.idx > 0 ? $"{row.idx,2}." : $"T{-row.idx}";
+            log.AppendLine($"{(row.ok ? "OK  " : "FAIL")} {tag} {row.name}  bodies {row.minBodies}/{dto.bodies}  {(row.needsSwitch ? "SWITCH " : "")}{row.path}  ({row.ms} ms){(row.ok ? "" : "  <- " + row.error)}");
         }
 
         static void CheckReplay(Level level, string letters, out bool win, out bool undoBack)
