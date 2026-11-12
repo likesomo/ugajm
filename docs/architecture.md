@@ -310,6 +310,10 @@ void Present(State prev, StepResult result, Action done); // 경로 → 이벤�
 - **표시(게임플레이/UI·아트)**: 결과 화면 이번 별 + 최고 별, 스테이지 선택의 별. 행성(챕터)마다 7스테이지 = 북두칠성 7별, 별 수 = 밝기, 50번(원형 제단) = 북극성. 아트 `RuinsHengeUiResources.starEmpty/starFilled`.
 - 텔레메트리 `level_clear`에 `stars`를 실을지는 백엔드/분석이 `docs/telemetry.md`에 정한다(규칙 변경이 아니라 필드 추가).
 
+### 6.6 튜토리얼 보드 (2026-11-12, 리드 결정)
+
+- 형식·cue·저장·흐름은 `docs/tutorial.md`. 요약: `levels.json` 최상위 `tutorials`(`TutorialDto`: `id`, `version`, `level`(= `LevelDto`), `cues`), 50스테이지와 별개(번호·별·클리어 수·텔레메트리 밖), cue 판정 Core `TutorialCues`, 저장 `TutorialData.seen`의 `board-<id>@<version>`.
+
 ---
 
 ## 7. 타일 → 프리팹 매핑: `TileSet`
