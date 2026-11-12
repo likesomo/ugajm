@@ -249,6 +249,26 @@ namespace SevenSteps.Tests
         }
 
         [Test]
+        public void MapFromAFinaleClearLightsTheTrailLikeNext()
+        {
+            // Lead 2026-11-12 (gameplay-ui found it): a Back return from a finale showed the trail already lit, no light-up.
+            Make();
+            ctl.Journey = true;
+            var completing = new List<int>();
+            ctl.Advancing += _ => Assert.Fail("map is not Next");
+            ctl.Returning += _ => Assert.Fail("a finale's map takes the planet complete return");
+            ctl.PlanetCompleting += completing.Add;
+            ctl.Start(1); // moss's last stage
+            board.Win();
+            ctl.OpenStageSelect(); // the clear's map button / Esc
+            CollectionAssert.AreEqual(new[] { 1 }, completing);
+            ctl.OpenStageSelect();
+            CollectionAssert.AreEqual(new[] { 1 }, completing, "a second press starts nothing");
+            ctl.FinishReturn();
+            Assert.AreEqual(AppState.StageSelect, flow.State);
+        }
+
+        [Test]
         public void MapFromTheClearReturnsWithoutLightingAndAgainReloads()
         {
             Make();

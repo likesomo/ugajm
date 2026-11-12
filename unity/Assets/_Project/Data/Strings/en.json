@@ -4,9 +4,7 @@
     { "key": "loading.tip.1", "text": "A body left behind can become a bridge." },
     { "key": "loading.tip.2", "text": "Only on the seventh step can you choose KEEP or SWITCH." },
     { "key": "loading.tip.3", "text": "A standing stone can block a path or hold down a plate." },
-
     { "key": "chapter.number", "text": "Chapter {0:00}" },
-
     { "key": "title.name", "text": "Seven Steps" },
     { "key": "title.tagline", "text": "Three wanderers. One sky." },
     { "key": "title.begin", "text": "Begin the Journey" },
@@ -14,7 +12,6 @@
     { "key": "title.stages", "text": "Choose a Stage" },
     { "key": "title.settings", "text": "Settings" },
     { "key": "title.credits", "text": "Credits" },
-
     { "key": "planets.head", "text": "Choose a planet" },
     { "key": "planets.detail", "text": "All seven worlds are open. Stars record your journey." },
     { "key": "planets.total", "text": "All stars:" },
@@ -22,11 +19,9 @@
     { "key": "planets.note", "text": "No locks. Replay any planet." },
     { "key": "planets.stage", "text": "Stage" },
     { "key": "planets.list_back", "text": "Star map" },
-
     { "key": "language.head", "text": "Choose your language" },
     { "key": "language.note", "text": "You can change this later in Settings." },
     { "key": "language.continue", "text": "Continue" },
-
     { "key": "hud.stage", "text": "{0:00}" },
     { "key": "hud.traveller_1", "text": "Teal traveller" },
     { "key": "hud.traveller_2", "text": "Ochre traveller" },
@@ -51,7 +46,6 @@
     { "key": "hud.hint", "text": "Solution H" },
     { "key": "hud.stage_select", "text": "Stages Esc" },
     { "key": "hud.settings", "text": "Settings" },
-
     { "key": "msg.choose", "text": "The lucky 7th step. What will this brother do?" },
     { "key": "msg.stone", "text": "KEEP. The brother became a standing stone. The next one wakes at the start." },
     { "key": "msg.switch", "text": "SWITCH. This spot is the new start." },
@@ -67,7 +61,6 @@
     { "key": "msg.flip", "text": "The 7th step pulled the lever. The walls flipped." },
     { "key": "msg.choose_nudge", "text": "Choose first: K = KEEP (stone), X = SWITCH (new start)." },
     { "key": "msg.lucky_next", "text": "The next step is the lucky 7th." },
-
     { "key": "hint.route", "text": "Shortest solution from the start: {0}" },
     { "key": "hint.not_found", "text": "No solution found." },
     { "key": "hint.up", "text": "Up" },
@@ -92,7 +85,6 @@
     { "key": "hint.with_lever", "text": "{0} (lever)" },
     { "key": "hint.next_costs", "text": "From the next H: 1 star at most" },
     { "key": "hint.confirm", "text": "A hint caps this try at 1 star. Press again to open it." },
-
     { "key": "result.clear", "text": "Clear!" },
     { "key": "result.bodies", "text": "Brothers used: {0}" },
     { "key": "result.detail_min", "text": " (fewest {0})" },
@@ -116,9 +108,7 @@
     { "key": "ending.next", "text": "Next (Enter)" },
     { "key": "ending.skip", "text": "Skip (Esc)" },
     { "key": "ending.to_map", "text": "To the map (Enter)" },
-
     { "key": "board.exit", "text": "EXIT" },
-
     { "key": "settings.title", "text": "Settings" },
     { "key": "settings.master", "text": "Master volume" },
     { "key": "settings.sfx", "text": "Sound effects" },
@@ -141,7 +131,6 @@
     { "key": "menu.controls", "text": "Controls" },
     { "key": "menu.replay_line", "text": "Start line again" },
     { "key": "menu.close", "text": "Close (Esc)" },
-
     { "key": "credits.title", "text": "Credits" },
     { "key": "credits.game", "text": "Seven Steps" },
     { "key": "credits.close", "text": "Close (Esc)" },
@@ -167,6 +156,12 @@
     { "key": "ui5.choice.keep", "text": "Leave a stone, start over" },
     { "key": "ui5.choice.switch", "text": "Next brother goes on from here" },
     { "key": "ui5.title.continue", "text": "Keep walking" },
-    { "key": "ui5.title.begin", "text": "First step" }
+    { "key": "ui5.title.begin", "text": "First step" },
+    { "key": "ui5.pause.title", "text": "Paused" },
+    { "key": "ui5.pause.continue", "text": "Continue" },
+    { "key": "ui5.settings.title", "text": "Settings" },
+    { "key": "ui5.settings.more", "text": "More settings" },
+    { "key": "ui5.settings.motion_on", "text": "Reduce motion: on" },
+    { "key": "ui5.settings.motion_off", "text": "Reduce motion: off" }
   ]
 }

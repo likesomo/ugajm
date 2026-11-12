@@ -52,7 +52,8 @@ namespace SevenSteps.Game.Flow
         /// <see cref="Journey"/> is on.
         public event Action<int> PlanetCompleting;
 
-        /// Journey on, the map (or Esc) from the clear of a stage (argument, 0-based). The handler pulls the camera back, begins
+        /// Journey on, the map (or Esc) from the clear of a stage that is not a planet's finale (argument, 0-based; a finale takes
+        /// <see cref="PlanetCompleting"/> so its trail lights once). The handler pulls the camera back, begins
         /// JourneyReturn (Back) and calls <see cref="FinishReturn"/>. Must have a handler while <see cref="Journey"/> is on.
         public event Action<int> Returning;
 
@@ -153,7 +154,11 @@ namespace SevenSteps.Game.Flow
             if (Journey && flow.State == AppState.Result)
             {
                 // From the clear: the journey return first (FinishReturn when the pullback is over); nothing while leaving.
-                if (!Leaving) Leave(Returning, nameof(Returning), flow.Stage, true);
+                // A planet's finale takes the planet complete return, as Next does, so its trail lights once (lead 2026-11-12).
+                if (Leaving) return;
+                if (JourneyRoute.After(Journey, flow.Stage, flow.StageCount, chapterOf) == ClearExit.PlanetComplete)
+                    Leave(PlanetCompleting, nameof(PlanetCompleting), flow.Stage, true);
+                else Leave(Returning, nameof(Returning), flow.Stage, true);
                 return;
             }
             save.SaveProgress();

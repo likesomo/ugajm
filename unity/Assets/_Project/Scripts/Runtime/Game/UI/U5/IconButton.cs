@@ -110,6 +110,18 @@ namespace SevenSteps.Game.UI.U5
             return b;
         }
 
+        /// A round dark backing behind the icon (U5 buttons over the board: the thin line art keeps 3:1 on moss and crust,
+        /// 14.3; R2 on 1f90617). Idempotent.
+        public Image Backing()
+        {
+            var t = transform.Find("Backing");
+            if (t != null) return t.GetComponent<Image>();
+            var disc = Ui.MakeImage(transform, new Color(0.04f, 0.06f, 0.1f, 0.78f), Ui.Circle, "Backing");
+            disc.rectTransform.Stretch();
+            disc.transform.SetSiblingIndex(0);
+            return disc;
+        }
+
         /// Swaps the icon (sound on / off) and its default explanation.
         public void SetIcon(UiIcon value, UiIconSet set)
         {
