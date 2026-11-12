@@ -792,7 +792,7 @@ public Font FontFor(Language lang, FontRole role);  // 없는 언어면 예외(�
 | 종류 | 최소 | 대상 |
 |---|---|---|
 | 본문 | **22** | 버튼 글자, 힌트·이야기·설명, 행성·스테이지 이름, 별 조건, 결과 문구, 설정 항목 |
-| 보조 | **18** | 별 개수, 진행 숫자 옆 단위, 조작 안내, 크레딧 본문, 상태 라벨("사용 중"·"남음") — `UiLayout.secondary`로 표시한 것만 |
+| 보조 | **18** | 별 개수, 진행 숫자 옆 단위, 조작 안내, 크레딧 본문, 상태 라벨("사용 중"·"남음"), U5 포커스 설명(`FocusPlate`, docs/ui-u5-kit.md 6) — `UiLayout.secondary`로 표시한 것만 |
 | 제목 | 본문 이상 | 화면 제목, 챕터 행성 이름(카드), 스테이지 제목 |
 
 - 실제 크기 = `fontSize` × 그 언어·역할의 `LanguageFonts.titleScale/bodyScale`(13.4, 0이면 1). 숫자 역할은 × 1. `resizeTextForBestFit`이면 `resizeTextMinSize`로 판정한다.
@@ -1166,3 +1166,4 @@ namespace SevenSteps.Game.UI {
 | 2026-11-11 | 아키텍트 | feat/scene-flow 4515ccf+a67fac6 승인(21ea3d8 M1~M3·N1/N3/N4/N5 문서 반영, P1: `SevenSteps.Tests.PlayMode` asmdef 소유자 검토 승인(UNITY_INCLUDE_TESTS, 플레이어 빌드 제외), `Bootstrap.UseLaunchOptionsForNextRun`/`ResetForTest` 런타임 경로 불변, 저장 키 `#playtest` 분리, SceneFlowTests 6개, `unity.sh playtest` 직접 실행 6/6). 메모 P1-N1 ResetForTest 범위, P1-N2 테스트 진입점 공개. `docs/reviews/2026-11-11-scene-flow-unity-structure.md` |
 | 2026-11-11 | 아키텍트 | feat/scene-flow f40d292+975d2ce+ac632a9 승인(P2 PlayCapture 에디터 전용·1280×720·Board/Empty 대조, P3 Contracts `AppScenes.BuildOrder` 추가(빌드 목록 순서의 한 곳, 검증기 `ValidateBuildOrder`)·Boot 배경 카메라(씬 오브젝트, DDOL 아님, cullingMask 0)·주석, P4 JourneyFlowTests·PlayEnv, playtest 직접 실행 8/8). 메모 P2-N1~N3, P3-N1. `docs/reviews/2026-11-11-scene-flow-unity-structure.md` |
 | 2026-11-12 | 아키텍트 | feat/view 2821647 승인: 4.1 입력 락에 "형제가 끝나는 명령(Bodies 변화)은 남은 큐와 그 연출 중 큐를 버림" 추가(Contracts `GameSession`, Core·골든·리플레이 영향 없음). H 첫 누름 경고(Game 층). 헤드리스 EditMode 774/774. `docs/reviews/2026-11-12-feat-view-2821647.md` |
+| 2026-11-12 | 아키텍트 | U5 UI 키트 계약 `docs/ui-u5-kit.md`(IconButton 48, GlyphButton 56, FocusPlate 하나(보조 18, 높이 글자+16, 너비 250~320: 시안 250×30은 14.4로 불가), IconRow, UiIcon/UiIconSet, Codex manifest, 터치·MVC·단정). Contracts `LaunchOptions.Ui5`(`-ui5`/`-ui4`, `?ui5=1|0`) + `UiStyleToggle`(DefaultOn false). 14.2 보조 글자에 U5 포커스 설명 추가 |

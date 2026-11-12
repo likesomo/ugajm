@@ -5,8 +5,8 @@ namespace SevenSteps.Contracts
 {
     /// <summary>
     /// Start options from the command line (desktop) or the page URL (WebGL). Same format as the web prototype:
-    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-settings] [-lang en] [-smoke board|empty] [-newplayer] [-loadDelay 1.5] [-flowcheck] [-titlecheck begin|continue|map] [-newmap|-oldmap] [-journey on|off]
-    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1&amp;loadDelay=1.5&amp;settings=1&amp;flowcheck=1&amp;titlecheck=map&amp;newmap=1&amp;journey=0   (docs/telemetry.md section 4)
+    /// desktop  "Seven Steps.exe" -level 8 -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-settings] [-lang en] [-smoke board|empty] [-newplayer] [-loadDelay 1.5] [-flowcheck] [-titlecheck begin|continue|map] [-newmap|-oldmap] [-journey on|off] [-ui5|-ui4]
+    /// WebGL    ?level=8&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1&amp;loadDelay=1.5&amp;settings=1&amp;flowcheck=1&amp;titlecheck=map&amp;newmap=1&amp;journey=0&amp;ui5=1   (docs/telemetry.md section 4)
     /// Pure parsing: the caller passes Environment.GetCommandLineArgs() and Application.absoluteURL.
     /// Bad values are not exceptions (external input): they are skipped and described in <see cref="Warnings"/>,
     /// which the bootstrap logs (Contracts does not log). Read-only after parsing, except the two editor/once-only changes below.
@@ -62,6 +62,9 @@ namespace SevenSteps.Contracts
         /// Journey transitions of stage select v4 (dive, advance, planet-complete return; docs/stage-select-transitions.md), only
         /// when the new map is on: -journey on|off, ?journey=1|0. null = on with the new map (Game.Flow.JourneyToggle).
         public bool? Journey { get; private set; }
+        /// U5 UI toggle (docs/ui-u5-kit.md 2): -ui5 / -ui4, ?ui5=1|0. true = the U5 screens, false = the current UI, null = the
+        /// build's default (UiStyleToggle.DefaultOn). Playtest builds flip only the default.
+        public bool? Ui5 { get; private set; }
         /// -journeycheck advance|complete, ?journeycheck= (smoke, docs/stage-select-transitions.md): with -newmap -level -replay, the
         /// replay wins and the journey transition is checked in the player (advance: the next stage of the planet; complete: back
         /// on the star map with the trail lit). Logs "[SevenSteps] Journey check <kind>: OK|FAIL ..." and quits. "" = off.
@@ -179,6 +182,8 @@ namespace SevenSteps.Contracts
                         case "-artperf": o.ArtPerf = true; continue;
                         case "-newmap": o.NewMap = true; continue;
                         case "-oldmap": o.NewMap = false; continue;
+                        case "-ui5": o.Ui5 = true; continue;
+                        case "-ui4": o.Ui5 = false; continue;
                         case "-level": case "-replay": case "-screenshot": case "-telemetry": case "-lang": case "-smoke": case "-loadDelay": case "-titlecheck": case "-savekey": case "-journey": case "-journeycheck": break;
                         default: continue;
                     }
@@ -233,6 +238,11 @@ namespace SevenSteps.Contracts
                         if (v == "1" || v == "true") o.NewMap = true;
                         else if (v == "0" || v == "false") o.NewMap = false;
                         else o.warnings.Add($"url: newmap \"{v}\" is not 1/true or 0/false; ignored");
+                        break;
+                    case "ui5":
+                        if (v == "1" || v == "true") o.Ui5 = true;
+                        else if (v == "0" || v == "false") o.Ui5 = false;
+                        else o.warnings.Add($"url: ui5 \"{v}\" is not 1/true or 0/false; ignored");
                         break;
                     case "newplayer":
                         if (v == "1" || v == "true") o.NewPlayer = true;
