@@ -54,6 +54,26 @@ namespace SevenSteps.Tests.PlayMode
             AssertVaried("game", px.Value);
         }
 
+        /// Step constellation (user decision 2026-11-12 "C") on a small board after 6 steps (the 7th star calls), on the wide
+        /// 17 x 3 stage 14 after 3, and while choosing after the 7th step (stage 38): reports/playcapture/step-sky-*.png.
+        [UnityTest]
+        public IEnumerator StepSky([Values("6:DUDUDU:6", "14:RRR:3", "38:DUDUDUR:7")] string shot)
+        {
+            var part = shot.Split(':');
+            yield return Start(AppState.Game, AppScenes.Game, "-level", part[0], "-replay", part[1]);
+            var px = new Pixels();
+            yield return Capture($"step-sky-{part[0]}", px);
+            AssertVaried("step-sky", px.Value);
+            var view = Object.FindAnyObjectByType<BoardView>();
+            Assert.IsNotNull(view?.Sky, "BoardView with a step sky");
+            Assert.IsTrue(view.Sky.Shown, "constellation shown");
+            Assert.AreEqual(int.Parse(part[2]), view.Sky.Sky.Lit, "stars lit = steps walked");
+            var band = view.StepSkyBand;
+            Assert.Greater(band.width, 0f, "StepSkyBand while the sky shows");
+            Assert.GreaterOrEqual(band.yMin, StepSkyView.HudTopBand - 8.01f, "band under the HUD top band (Band grows by 8)");
+            Debug.Log($"[SevenSteps] Play capture step-sky-{part[0]}: lit {view.Sky.Sky.Lit}, star {view.Sky.Placed.Size:0}, bottom {view.Sky.Placed.Bottom:0}, top {view.Sky.Placed.Top:0}, band {band}");
+        }
+
         [UnityTest]
         public IEnumerator GameBoardAgainstEmptyControl()
         {
