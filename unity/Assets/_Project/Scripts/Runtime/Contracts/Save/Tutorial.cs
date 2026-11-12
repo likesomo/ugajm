@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SevenSteps.Core;
 
 namespace SevenSteps.Contracts
 {
@@ -68,6 +69,35 @@ namespace SevenSteps.Contracts
             }
             return int.TryParse(id.Substring(at + 1), System.Globalization.NumberStyles.None, null, out int v) && v >= 1 && v <= 99
                 && id.Substring(at + 1) == v.ToString();
+        }
+    }
+
+    /// <summary>
+    /// Saved state of the tutorial boards T1..T3 (docs/tutorial.md 2.5): a finished board is a TutorialData.seen id
+    /// "board-&lt;id&gt;@&lt;version&gt;". Nothing goes to ProgressData (no stars, no cleared count).
+    /// seen is usually SaveSystem.TutorialSeen.
+    /// </summary>
+    public static class TutorialBoards
+    {
+        public static string SaveId(TutorialDto t)
+        {
+            if (t == null) throw new ArgumentNullException(nameof(t));
+            string id = "board-" + t.id + "@" + t.version;
+            if (!TutorialIds.IsValid(id)) throw new ArgumentException($"tutorial board id \"{t.id}\" version {t.version} does not make a valid save id", nameof(t));
+            return id;
+        }
+
+        /// Every board finished (an empty list is done).
+        public static bool AllDone(IReadOnlyList<TutorialDto> boards, Func<string, bool> seen) => FirstUndone(boards, seen) < 0;
+
+        /// Index of the first board not finished yet, -1 when all are.
+        public static int FirstUndone(IReadOnlyList<TutorialDto> boards, Func<string, bool> seen)
+        {
+            if (boards == null) throw new ArgumentNullException(nameof(boards));
+            if (seen == null) throw new ArgumentNullException(nameof(seen));
+            for (int i = 0; i < boards.Count; i++)
+                if (!seen(SaveId(boards[i]))) return i;
+            return -1;
         }
     }
 }

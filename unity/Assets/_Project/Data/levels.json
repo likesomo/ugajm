@@ -1494,5 +1494,398 @@
         "path": "UUUDURUKDRRRUUKDRRDLUU"
       }
     }
+  ],
+  "tutorials": [
+    {
+      "id": "t1",
+      "version": 1,
+      "level": {
+        "name": "첫 일곱 걸음",
+        "hint": "출구를 딱 7번째 걸음으로 밟는다.",
+        "bodies": 1,
+        "statueCount": 0,
+        "chapter": "moss",
+        "startLine": "",
+        "text": [
+          {
+            "lang": "en",
+            "name": "The First Seven Steps",
+            "hint": "Step on the exit with exactly the 7th step.",
+            "story": ""
+          }
+        ],
+        "map": [
+          "######",
+          "#S...#",
+          "####.#",
+          "##E..#",
+          "######"
+        ],
+        "expected": {
+          "minBodies": 1,
+          "moves": 7,
+          "needsSwitch": false,
+          "path": "RRRDDLL"
+        }
+      },
+      "cues": [
+        {
+          "on": "start",
+          "n": 0,
+          "body": 0,
+          "line": "방향키로 한 칸씩 걷는다. 한 걸음마다 별이 하나 켜진다.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "Arrow keys: one cell per step. Each step lights a star."
+            }
+          ],
+          "cell": []
+        },
+        {
+          "on": "step",
+          "n": 1,
+          "body": 0,
+          "line": "하나. 걸음을 세어 보자.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "One. Count your steps."
+            }
+          ],
+          "cell": []
+        },
+        {
+          "on": "step",
+          "n": 6,
+          "body": 0,
+          "line": "다음이 일곱째 걸음. 출구에 닿아야 한다.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "Next is the seventh step. It has to land on the exit."
+            }
+          ],
+          "cell": [
+            2,
+            3
+          ]
+        },
+        {
+          "on": "win",
+          "n": 0,
+          "body": 0,
+          "line": "일곱째 걸음에 닿아서 문이 열렸다.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "The seventh step reached it, and the door opened."
+            }
+          ],
+          "cell": []
+        },
+        {
+          "on": "lose",
+          "n": 0,
+          "body": 0,
+          "line": "일곱 걸음이 출구에서 끝나야 한다.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "The seven steps have to end on the exit."
+            }
+          ],
+          "cell": []
+        },
+        {
+          "on": "restart",
+          "n": 0,
+          "body": 0,
+          "line": "다시. 출구까지 딱 일곱 걸음.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "Again. Exactly seven steps to the exit."
+            }
+          ],
+          "cell": []
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "version": 1,
+      "level": {
+        "name": "돌이 붙드는 길",
+        "hint": "발판에서 7번째 걸음을 마치고 KEEP. 선돌이 문을 열어 둔다.",
+        "bodies": 2,
+        "statueCount": 0,
+        "chapter": "moss",
+        "startLine": "",
+        "text": [
+          {
+            "lang": "en",
+            "name": "The Stone Holds the Way",
+            "hint": "End the 7th step on the plate and KEEP. The stone holds the door open.",
+            "story": ""
+          }
+        ],
+        "map": [
+          "#######",
+          "#S....#",
+          "#....a#",
+          "#.....#",
+          "####A##",
+          "####E##",
+          "#######"
+        ],
+        "expected": {
+          "minBodies": 2,
+          "moves": 15,
+          "needsSwitch": false,
+          "path": "DUDRRRRKDDRRRDD"
+        }
+      },
+      "cues": [
+        {
+          "on": "start",
+          "n": 0,
+          "body": 0,
+          "line": "문은 발판이 눌려야 열린다. 발판에서 일곱째 걸음을 마치자.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "The door opens while the plate is pressed. End your seventh step on the plate."
+            }
+          ],
+          "cell": [
+            5,
+            2
+          ]
+        },
+        {
+          "on": "step",
+          "n": 5,
+          "body": 1,
+          "line": "일곱째가 아닌 걸음은 발판을 밟아도 아무 일도 없다.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "Steps before the seventh do nothing, even on the plate."
+            }
+          ],
+          "cell": []
+        },
+        {
+          "on": "choose",
+          "n": 0,
+          "body": 0,
+          "line": "KEEP을 고르면 이 자리에 남아 선돌이 된다.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "Choose KEEP to stay here as a standing stone."
+            }
+          ],
+          "cell": [
+            5,
+            2
+          ]
+        },
+        {
+          "on": "switch",
+          "n": 0,
+          "body": 0,
+          "line": "SWITCH는 아무것도 남기지 않는다. 다시 해 보자.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "SWITCH leaves nothing behind. Try again."
+            }
+          ],
+          "cell": []
+        },
+        {
+          "on": "doorOpen",
+          "n": 0,
+          "body": 0,
+          "line": "선돌이 문을 열어 두었다. 다음 형제는 출구까지 딱 일곱 걸음.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "The stone holds the door open. Next brother: exactly seven steps to the exit."
+            }
+          ],
+          "cell": [
+            4,
+            5
+          ]
+        },
+        {
+          "on": "win",
+          "n": 0,
+          "body": 0,
+          "line": "일곱째 걸음만 일을 한다. 기억하자.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "Only the seventh step does anything. Remember that."
+            }
+          ],
+          "cell": []
+        },
+        {
+          "on": "lose",
+          "n": 0,
+          "body": 0,
+          "line": "형제를 다 썼다. 처음부터.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "No brothers left. From the start."
+            }
+          ],
+          "cell": []
+        },
+        {
+          "on": "restart",
+          "n": 0,
+          "body": 0,
+          "line": "발판에서 일곱째 걸음을 마치고 KEEP.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "End the seventh step on the plate, then KEEP."
+            }
+          ],
+          "cell": [
+            5,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "version": 1,
+      "level": {
+        "name": "셋이 함께",
+        "hint": "문이 둘, 발판이 둘. 셋이 모두 걸어야 길이 열린다.",
+        "bodies": 3,
+        "statueCount": 0,
+        "chapter": "moss",
+        "startLine": "",
+        "text": [
+          {
+            "lang": "en",
+            "name": "All Three Together",
+            "hint": "Two doors, two plates. The way opens only when all three walk.",
+            "story": ""
+          }
+        ],
+        "map": [
+          "#######",
+          "#S....#",
+          "#....a#",
+          "#.b...#",
+          "###A###",
+          "###B###",
+          "###E###",
+          "#######"
+        ],
+        "expected": {
+          "minBodies": 3,
+          "moves": 23,
+          "needsSwitch": false,
+          "path": "DUDUDDRKDUDRRRRKDRRDDDD"
+        }
+      },
+      "cues": [
+        {
+          "on": "start",
+          "n": 0,
+          "body": 0,
+          "line": "문이 둘. 형제 하나가 발판 하나를 붙든다.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "Two doors. Each plate needs a brother to hold it."
+            }
+          ],
+          "cell": [
+            5,
+            2
+          ]
+        },
+        {
+          "on": "respawn",
+          "n": 0,
+          "body": 2,
+          "line": "둘째 형제. 남은 발판으로.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "The second brother. To the other plate."
+            }
+          ],
+          "cell": []
+        },
+        {
+          "on": "respawn",
+          "n": 0,
+          "body": 3,
+          "line": "막내 차례. 열린 문을 지나 출구로.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "The youngest now. Through the open doors to the exit."
+            }
+          ],
+          "cell": [
+            3,
+            6
+          ]
+        },
+        {
+          "on": "win",
+          "n": 0,
+          "body": 0,
+          "line": "셋이 모두 걸었다. 별 셋.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "All three walked. Three stars."
+            }
+          ],
+          "cell": []
+        },
+        {
+          "on": "lose",
+          "n": 0,
+          "body": 0,
+          "line": "형제를 다 썼다. 처음부터.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "No brothers left. From the start."
+            }
+          ],
+          "cell": []
+        },
+        {
+          "on": "restart",
+          "n": 0,
+          "body": 0,
+          "line": "발판 둘에 형제 둘, 출구에 막내.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "Two brothers on the plates, the youngest to the exit."
+            }
+          ],
+          "cell": []
+        }
+      ]
+    }
   ]
 }

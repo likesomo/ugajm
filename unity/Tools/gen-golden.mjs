@@ -5,7 +5,7 @@
 // Files (all JsonUtility-friendly: no dictionaries, no nested arrays):
 //   levels.golden.json   every stage of levels.js: parsed grid, plates, solver answers per body count
 //   traces.golden.json   command sequences with the full state and events after every command
-//                        (stage solutions, seeded random walks with undo/restart, hand-made edge cases)
+//                        (stage and tutorial board solutions, seeded random walks with undo/restart, hand-made edge cases)
 //
 // Command letters in traces: U D L R move, K keep, X switch, Z undo, * restart.
 // Events: `stepIdx` is set only on 'step' events (core.js puts it nowhere else); other events carry 0.
@@ -14,7 +14,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STEPS, parseLevel, newState, dispatch, solve, minBodies, stars, bodiesUsed } from '../../prototypes/seven-steps/src/core.js';
-import { LEVELS } from '../../prototypes/seven-steps/src/levels.js';
+import { LEVELS, TUTORIALS } from '../../prototypes/seven-steps/src/levels.js';
 import { solveAllBodies } from './all-brothers-check.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -263,6 +263,8 @@ function stageTraces(prefix, def) {
   for (const seed of [1, 2]) traces.push(trace(`${id}:random-${seed}`, 'random', def, randomCommands(fnv1a(id) + seed, 120)));
 }
 LEVELS.forEach((def) => stageTraces('stage', def));
+// Tutorial boards (docs/tutorial.md 2.1): rule traces only; levels.golden.json stays the 50 stages of levels.json "levels".
+TUTORIALS.forEach((t) => stageTraces('tutorial', t.level));
 // Sketches already shipped in levels.js (same map, bodies and N) are covered above.
 for (const def of [...SKETCH, ...LEVER_SKETCH, ...MUD_SKETCH]) if (!LEVELS.some((l) => sameMap(l, def))) stageTraces('sketch', def);
 for (const e of EDGE) {

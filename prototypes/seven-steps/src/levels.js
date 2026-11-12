@@ -803,3 +803,97 @@ export const LEVELS = [
     ],
   },
 ];
+
+// Tutorial boards T1-T3 (docs/tutorial.md), played in order before stage 1. Separate from LEVELS: no stage number,
+// stars, cleared count or telemetry stage index. Each board needs all its bodies (export asserts minBodies == bodies).
+// cues: { on, n?, body?, line (ko), text: [{ lang, line }], cell?: [x, y] }; triggers and the match rule in docs/tutorial.md 2.3.
+// Korean text: Gaegu glyphs only, no U+00B7.
+const cue = (on, line, en, extra = {}) => ({ on, line, text: [{ lang: 'en', line: en }], ...extra });
+export const TUTORIALS = [
+  {
+    id: 't1',
+    level: {
+      name: '첫 일곱 걸음',
+      chapter: 'moss',
+      startLine: '',
+      hint: '출구를 딱 7번째 걸음으로 밟는다.',
+      bodies: 1,
+      text: [{ lang: 'en', name: 'The First Seven Steps', hint: 'Step on the exit with exactly the 7th step.', story: '' }],
+      map: [
+        '######',
+        '#S...#',
+        '####.#',
+        '##E..#',
+        '######',
+      ],
+    },
+    cues: [
+      cue('start', '방향키로 한 칸씩 걷는다. 한 걸음마다 별이 하나 켜진다.', 'Arrow keys: one cell per step. Each step lights a star.'),
+      cue('step', '하나. 걸음을 세어 보자.', 'One. Count your steps.', { n: 1 }),
+      cue('step', '다음이 일곱째 걸음. 출구에 닿아야 한다.', 'Next is the seventh step. It has to land on the exit.', { n: 6, cell: [2, 3] }),
+      cue('win', '일곱째 걸음에 닿아서 문이 열렸다.', 'The seventh step reached it, and the door opened.'),
+      cue('lose', '일곱 걸음이 출구에서 끝나야 한다.', 'The seven steps have to end on the exit.'),
+      cue('restart', '다시. 출구까지 딱 일곱 걸음.', 'Again. Exactly seven steps to the exit.'),
+    ],
+  },
+  {
+    id: 't2',
+    level: {
+      name: '돌이 붙드는 길',
+      chapter: 'moss',
+      startLine: '',
+      hint: '발판에서 7번째 걸음을 마치고 KEEP. 선돌이 문을 열어 둔다.',
+      bodies: 2,
+      text: [{ lang: 'en', name: 'The Stone Holds the Way', hint: 'End the 7th step on the plate and KEEP. The stone holds the door open.', story: '' }],
+      map: [
+        '#######',
+        '#S....#',
+        '#....a#',
+        '#.....#',
+        '####A##',
+        '####E##',
+        '#######',
+      ],
+    },
+    cues: [
+      cue('start', '문은 발판이 눌려야 열린다. 발판에서 일곱째 걸음을 마치자.', 'The door opens while the plate is pressed. End your seventh step on the plate.', { cell: [5, 2] }),
+      cue('step', '일곱째가 아닌 걸음은 발판을 밟아도 아무 일도 없다.', 'Steps before the seventh do nothing, even on the plate.', { n: 5, body: 1 }),
+      cue('choose', 'KEEP을 고르면 이 자리에 남아 선돌이 된다.', 'Choose KEEP to stay here as a standing stone.', { cell: [5, 2] }),
+      cue('switch', 'SWITCH는 아무것도 남기지 않는다. 다시 해 보자.', 'SWITCH leaves nothing behind. Try again.'),
+      // KEEP: Stone, DoorOpen, Respawn -> this line (no respawn cue, so a SWITCH keeps the switch line).
+      cue('doorOpen', '선돌이 문을 열어 두었다. 다음 형제는 출구까지 딱 일곱 걸음.', 'The stone holds the door open. Next brother: exactly seven steps to the exit.', { cell: [4, 5] }),
+      cue('win', '일곱째 걸음만 일을 한다. 기억하자.', 'Only the seventh step does anything. Remember that.'),
+      cue('lose', '형제를 다 썼다. 처음부터.', 'No brothers left. From the start.'),
+      cue('restart', '발판에서 일곱째 걸음을 마치고 KEEP.', 'End the seventh step on the plate, then KEEP.', { cell: [5, 2] }),
+    ],
+  },
+  {
+    id: 't3',
+    level: {
+      name: '셋이 함께',
+      chapter: 'moss',
+      startLine: '',
+      hint: '문이 둘, 발판이 둘. 셋이 모두 걸어야 길이 열린다.',
+      bodies: 3,
+      text: [{ lang: 'en', name: 'All Three Together', hint: 'Two doors, two plates. The way opens only when all three walk.', story: '' }],
+      map: [
+        '#######',
+        '#S....#',
+        '#....a#',
+        '#.b...#',
+        '###A###',
+        '###B###',
+        '###E###',
+        '#######',
+      ],
+    },
+    cues: [
+      cue('start', '문이 둘. 형제 하나가 발판 하나를 붙든다.', 'Two doors. Each plate needs a brother to hold it.', { cell: [5, 2] }),
+      cue('respawn', '둘째 형제. 남은 발판으로.', 'The second brother. To the other plate.', { body: 2 }),
+      cue('respawn', '막내 차례. 열린 문을 지나 출구로.', 'The youngest now. Through the open doors to the exit.', { body: 3, cell: [3, 6] }),
+      cue('win', '셋이 모두 걸었다. 별 셋.', 'All three walked. Three stars.'),
+      cue('lose', '형제를 다 썼다. 처음부터.', 'No brothers left. From the start.'),
+      cue('restart', '발판 둘에 형제 둘, 출구에 막내.', 'Two brothers on the plates, the youngest to the exit.'),
+    ],
+  },
+];

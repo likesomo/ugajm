@@ -14,7 +14,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STEPS, parseLevel, minBodies, solve } from '../../prototypes/seven-steps/src/core.js';
-import { LEVELS } from '../../prototypes/seven-steps/src/levels.js';
+import { LEVELS, TUTORIALS } from '../../prototypes/seven-steps/src/levels.js';
 
 const BODY_CAP = 3; // the triplets (user decision 2026-11-08)
 const LETTER = { up: 'U', down: 'D', left: 'L', right: 'R', keep: 'K', switch: 'X' };
@@ -121,15 +121,82 @@ const levels = LEVELS.map((def, i) => {
   };
 });
 
+// ---- tutorial boards (docs/tutorial.md) ----
+// Separate from the 50: own list, no chapter order check. Names share the save/telemetry name space with the stages.
+const CUE_ONS = ['start', 'restart', 'step', 'seventh', 'choose', 'keep', 'switch', 'doorOpen', 'respawn', 'win', 'lose'];
+const NO_GAEGU = /·/; // not in Gaegu-Regular (scene-validate GlyphCheck)
+const tutorialIds = new Set();
+const tutorials = (TUTORIALS ?? []).map((t, i) => {
+  const def = t.level ?? {};
+  const tag = `tutorial ${i + 1} "${t.id}"`;
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(t.id ?? '') || t.id.length > 16) fail(`${tag}: id must be 1-16 lowercase letters, digits, hyphens`);
+  if (tutorialIds.has(t.id)) fail(`${tag}: id used twice`);
+  tutorialIds.add(t.id);
+  const version = t.version ?? 1;
+  if (!Number.isInteger(version) || version < 1 || version > 99) fail(`${tag}: version ${version} is not 1..99`);
+  if (!def.name) fail(`${tag}: no level.name`);
+  if (names.has(def.name)) fail(`${tag}: name "${def.name}" is already used by a stage or tutorial`);
+  names.add(def.name);
+  if (def.chapter && !order.has(def.chapter)) fail(`${tag}: chapter "${def.chapter}" is not in chapters.json`);
+  if (def.startLine !== undefined && !START_LINES.includes(def.startLine)) fail(`${tag}: startLine "${def.startLine}" is not one of story, hint, ""`);
+  const text = checkText(def.text, ['name', 'hint'], tag).map((e, k) => ({ ...e, story: def.text?.[k]?.story ?? '' }));
+  for (const s of [def.name, def.hint, def.story, ...text.flatMap((e) => [e.name, e.hint, e.story])])
+    if (s && NO_GAEGU.test(s)) fail(`${tag}: U+00B7 in "${s}"`);
+  const level = parseLevel(def);
+  if (level.bodies > BODY_CAP) fail(`${tag}: bodies ${level.bodies} > ${BODY_CAP}`);
+  const cues = (t.cues ?? []).map((c, k) => {
+    const ctag = `${tag} cue ${k + 1}`;
+    if (!CUE_ONS.includes(c.on)) fail(`${ctag}: on "${c.on}" is not one of ${CUE_ONS.join(', ')}`);
+    const n = c.n ?? 0;
+    if (c.on === 'step' ? !(Number.isInteger(n) && n >= 1 && n <= STEPS - 1) : n !== 0) fail(`${ctag}: n ${n} (step: 1..${STEPS - 1}, others: none)`);
+    const body = c.body ?? 0;
+    if (!Number.isInteger(body) || body < 0 || body > level.bodies) fail(`${ctag}: body ${body} is not 0..${level.bodies}`);
+    if (typeof c.line !== 'string' || !c.line.trim()) fail(`${ctag}: line is empty`);
+    const cell = c.cell ?? [];
+    if (cell.length && !(cell.length === 2 && cell.every(Number.isInteger) && cell[0] >= 0 && cell[1] >= 0 && cell[0] < level.w && cell[1] < level.h))
+      fail(`${ctag}: cell ${JSON.stringify(cell)} is not [x, y] on the ${level.w}x${level.h} board`);
+    const lines = checkText(c.text, ['line'], ctag);
+    for (const s of [c.line, ...lines.map((e) => e.line)]) if (s && NO_GAEGU.test(s)) fail(`${ctag}: U+00B7 in "${s}"`);
+    return { on: c.on, n, body, line: c.line ?? '', text: lines, cell };
+  });
+  if (!cues.some((c) => c.on === 'start')) fail(`${tag}: no start cue`);
+  const best = minBodies(level);
+  if (!best) { fail(`${tag}: no solution`); return null; }
+  // Design rule: a tutorial board needs every body it gives (T3 teaches that all three brothers = star 3).
+  if (best.bodies !== level.bodies) fail(`${tag}: clears with ${best.bodies} of ${level.bodies} bodies (a tutorial needs all of them)`);
+  return {
+    id: t.id,
+    version,
+    level: {
+      name: def.name,
+      hint: def.hint ?? '',
+      bodies: level.bodies,
+      statueCount: level.statueCount,
+      ...(def.chapter ? { chapter: def.chapter } : {}),
+      ...(def.story ? { story: def.story } : {}),
+      ...(def.startLine !== undefined ? { startLine: def.startLine } : {}),
+      text,
+      map: def.map,
+      expected: {
+        minBodies: best.bodies,
+        moves: best.moves,
+        needsSwitch: !solve(level, level.bodies, { noSwitch: true }),
+        path: best.path.map((a) => LETTER[a]).join(''),
+      },
+    },
+    cues,
+  };
+});
+
 if (problems.length) {
   for (const p of problems) console.error(`[export-levels] FAIL ${p}`);
   console.error(`[export-levels] ${problems.length} problem(s); levels.json and chapters.json were not written`);
   process.exit(1);
 }
 
-writeFileSync(out, JSON.stringify({ steps: STEPS, levels }, null, 2) + '\n');
+writeFileSync(out, JSON.stringify({ steps: STEPS, levels, tutorials }, null, 2) + '\n');
 writeFileSync(chaptersOut, JSON.stringify({ chapters }, null, 2) + '\n');
-console.log(`[export-levels] ${levels.length} stages -> ${out}`);
+console.log(`[export-levels] ${levels.length} stages + ${tutorials.length} tutorial boards -> ${out}`);
 console.log(`[export-levels] ${chapters.length} chapters -> ${chaptersOut}`);
 
 // ---- story.json (story-integration.md 2.1, 3.4) ----

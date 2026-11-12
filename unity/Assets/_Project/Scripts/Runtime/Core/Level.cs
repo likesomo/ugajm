@@ -77,6 +77,9 @@ namespace SevenSteps.Core
     {
         public int steps;
         public LevelDto[] levels;
+        /// Tutorial boards T1..T3 in play order (docs/tutorial.md). Not stages: no stage number, stars, cleared count
+        /// or telemetry stage index. Empty in older files.
+        public TutorialDto[] tutorials = new TutorialDto[0];
     }
 
     [Serializable]
@@ -136,6 +139,58 @@ namespace SevenSteps.Core
         public string name = "";
         public string hint = "";
         public string story = "";
+    }
+
+    /// One tutorial board (levels.json "tutorials", docs/tutorial.md 2.2).
+    [Serializable]
+    public sealed class TutorialDto
+    {
+        /// "t1".."t3": lowercase letters, digits, hyphens. Never renamed (save id, TutorialBoards.SaveId).
+        public string id = "";
+        /// Raise when the board changes enough to show it again to players who finished it.
+        public int version = 1;
+        /// Same shape as a stage (name unique across stages and tutorials, expected = JS solver answer).
+        public LevelDto level;
+        /// Guide lines; which one shows is decided by TutorialCues only.
+        public TutorialCueDto[] cues = new TutorialCueDto[0];
+    }
+
+    /// One guide line of a tutorial board (docs/tutorial.md 2.3).
+    [Serializable]
+    public sealed class TutorialCueDto
+    {
+        /// Trigger code, one of TutorialCues.Ons.
+        public string on = "";
+        /// on == "step": the step number 1..6. 0 for other triggers.
+        public int n;
+        /// 0 = any brother; 1..bodies = only while that brother walks (1 = first).
+        public int body;
+        /// The ko line (Gaegu glyphs only).
+        public string line = "";
+        /// Translations { lang, line } for every language other than ko.
+        public TutorialLineDto[] text = new TutorialLineDto[0];
+        /// Highlighted cell [x, y] in map coordinates (x right, y down), or empty = none.
+        public int[] cell = new int[0];
+
+        public bool HasCell => cell != null && cell.Length == 2;
+        public int X => HasCell ? cell[0] : -1;
+        public int Y => HasCell ? cell[1] : -1;
+
+        /// The line in a language code; ko, or a language without an entry, reads the ko line.
+        public string Line(string lang)
+        {
+            if (lang != "ko" && text != null)
+                foreach (var t in text)
+                    if (t != null && t.lang == lang) return t.line ?? "";
+            return line ?? "";
+        }
+    }
+
+    [Serializable]
+    public sealed class TutorialLineDto
+    {
+        public string lang = "";
+        public string line = "";
     }
 
     /// What the JS solver found; LevelVerifier checks the C# port gives the same answer.
