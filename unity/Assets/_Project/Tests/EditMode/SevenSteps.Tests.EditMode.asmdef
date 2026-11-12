@@ -5,6 +5,7 @@
         "SevenSteps.Core",
         "SevenSteps.Contracts",
         "SevenSteps.Game",
+        "SevenSteps.Art",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

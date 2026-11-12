@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d095f0484c21bfe40b357dfa437fd2c3, type: 3}
+  m_Name: PlanetSurfaceSet
+  m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.Map.PlanetSurfaceSet
+  entries:
+  - planetId: moss
+    projection: {fileID: 2800000, guid: a11d5758687828d4582c0a0123a99400, type: 3}
+    material: {fileID: 2100000, guid: 8aa8a31eab491e14b89507ebd7008c9d, type: 2}
+  - planetId: hollow
+    projection: {fileID: 2800000, guid: 997af6cdc1fbb7e4eaa9bb7a3f401a98, type: 3}
+    material: {fileID: 2100000, guid: 462a79faa4d2227448d0d7973bd5ed1f, type: 2}
+  - planetId: carved
+    projection: {fileID: 2800000, guid: 1f5a298245458fc48b51c59bf2a1637f, type: 3}
+    material: {fileID: 2100000, guid: 601a0e6227fe152488d180b3a11ae35f, type: 2}
+  - planetId: frost
+    projection: {fileID: 2800000, guid: 7148787aa410acf458e42fe39757bb26, type: 3}
+    material: {fileID: 2100000, guid: b8a7f0fe22f512a4ebb63760cb441c5e, type: 2}
+  - planetId: joinery
+    projection: {fileID: 2800000, guid: 1fd7d871f2d33454f836f658562993fb, type: 3}
+    material: {fileID: 2100000, guid: ce8636df0b3043748a0ac7ea31f53ed4, type: 2}
+  - planetId: crumble
+    projection: {fileID: 2800000, guid: 0e0ec160e52760d4c8c2ed34a6464cfd, type: 3}
+    material: {fileID: 2100000, guid: ce62a709b709865489ac1660e07e20c2, type: 2}
+  - planetId: altar
+    projection: {fileID: 2800000, guid: 3c2d4ea15acb0884caa609d4118d4c59, type: 3}
+    material: {fileID: 2100000, guid: a9093f4b3d3050c49a7063c1e977a831, type: 2}

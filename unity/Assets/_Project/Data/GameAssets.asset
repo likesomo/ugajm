@@ -25,6 +25,7 @@ MonoBehaviour:
   uiTheme: {fileID: 11400000, guid: 5fb5bfb0b12b0b541b9acd8cfff3f58e, type: 2}
   planetBodies: {fileID: 11400000, guid: 81c13fbda8464096a19fff74c390296f, type: 2}
   planetMapSprites: {fileID: 11400000, guid: 08322fe30a8d43e099ffa6bef2bf94bf, type: 2}
+  planetSurfaceArt: {fileID: 11400000, guid: f8fb61b9a68f4554393aabe5d6618b91, type: 2}
   uiIcons: {fileID: 11400000, guid: 0309cb230cbf428daa56a3216fb5dc5e, type: 2}
   tileSet: {fileID: 0}
   floorA: {fileID: 2274785795445805196, guid: df5ad39cdfe78e04fa18683379439cad, type: 3}
