@@ -77,6 +77,8 @@ namespace SevenSteps.Game
         public TutorialTracker Tutorial => tutorial;
         /// Stage select v4 journey transitions (docs/stage-select-transitions.md); null when JourneyToggle is off. PlayMode tests read it.
         public GameJourney Journey => journey;
+        /// The stage flow (Next, map, again from the clear; the journey after the clear). PlayMode tests and captures read it.
+        public GameFlowController Flow => flowController;
         /// The in-game menu (settings, stages, solution, controls). The HUD menu button calls Menu.Toggle.
         public MenuController Menu => menu;
 
@@ -278,7 +280,7 @@ namespace SevenSteps.Game
             if (launch.JourneyCheck != "" && !string.IsNullOrEmpty(launch.Replay) && launch.DirectToGame)
             {
                 // -journeycheck advance|complete (stage select v4 journey, smoke): the replay wins, the transition is checked.
-                StartCoroutine(JourneyCheck.RunGame(launch.JourneyCheck, flow, board, journey, result, overlays, launch.TakeReplay(), launch.Screenshot));
+                StartCoroutine(JourneyCheck.RunGame(launch.JourneyCheck, flow, board, journey, result, overlays, launch.TakeReplay(), launch.Screenshot, flowController.Next));
                 return;
             }
             if (launch.FlowCheck && !string.IsNullOrEmpty(launch.Replay) && launch.DirectToGame)

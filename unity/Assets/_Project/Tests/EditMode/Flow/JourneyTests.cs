@@ -177,7 +177,7 @@ namespace SevenSteps.Tests
         [TearDown] public void TearDown() => ctl?.Dispose();
 
         [Test]
-        public void JourneyAdvancesInsideThePlanetWithoutTheResultPanel()
+        public void ClearShowsTheResultThenNextAdvancesInsideThePlanet()
         {
             Make();
             ctl.Journey = true;
@@ -185,43 +185,95 @@ namespace SevenSteps.Tests
             int clearShown = 0;
             ctl.Advancing += advancing.Add;
             ctl.PlanetCompleting += _ => Assert.Fail("stage 1 of moss is not its last");
+            ctl.Returning += _ => Assert.Fail("Next does not go back to the map");
             ctl.ClearShown += () => clearShown++;
             ctl.Start(0);
             board.Win();
-            CollectionAssert.AreEqual(new[] { 1 }, advancing);
-            Assert.AreEqual(AppState.Game, flow.State, "no Result state");
-            Assert.IsNull(panel.Shown);
-            Assert.AreEqual(1, clearShown, "the story save point still happens");
+            Assert.AreEqual(AppState.Result, flow.State, "the journey never skips the result (lead 2026-11-12)");
+            Assert.IsNotNull(panel.Shown);
+            Assert.AreEqual(1, clearShown, "the story save point: the result opened");
             Assert.IsTrue(save.Progress.IsCleared(Seven), "the clear is saved as before");
+            Assert.IsEmpty(advancing, "nothing moves before Next");
+            Assert.Throws<InvalidOperationException>(() => ctl.ContinueTo(1), "ContinueTo only after Next asked for the advance");
 
-            ctl.ContinueTo(1);
-            Assert.AreEqual((1, TelemetryNames.Via.Next), board.Loads[board.Loads.Count - 1]);
-            Assert.AreEqual(1, flow.Stage);
+            int loads = board.Loads.Count;
+            ctl.Next();
+            CollectionAssert.AreEqual(new[] { 1 }, advancing);
+            Assert.IsNull(panel.Shown, "the clear hides before the advance");
+            Assert.IsTrue(ctl.Leaving);
+            Assert.AreEqual(loads, board.Loads.Count, "no reload: the transition builds the next board");
+            ctl.Next();
+            ctl.Again();
+            ctl.OpenStageSelect();
+            CollectionAssert.AreEqual(new[] { 1 }, advancing, "a second press starts nothing (Leaving)");
+            Assert.AreEqual(AppState.Result, flow.State, "the map press during the advance does nothing");
+            Assert.Throws<InvalidOperationException>(() => ctl.FinishReturn(), "an advance is not a return");
+
             Assert.Throws<ArgumentOutOfRangeException>(() => ctl.ContinueTo(3), "only the next stage");
+            ctl.ContinueTo(1);
+            Assert.AreEqual((1, TelemetryNames.Via.Next), board.Loads[board.Loads.Count - 1], "via next, once (in ContinueTo)");
+            Assert.AreEqual(1, flow.Stage);
+            Assert.AreEqual(AppState.Game, flow.State);
+            Assert.IsFalse(ctl.Leaving, "entering the next stage ends it");
         }
 
         [Test]
-        public void JourneyReturnsToTheMapAtThePlanetsEndAndKeepsTheResultForTheLastStage()
+        public void NextOnAPlanetsLastStageReturnsWithTheTrailAndTheLastStageKeepsTheEnding()
         {
             Make();
             ctl.Journey = true;
             var completing = new List<int>();
-            ctl.Advancing += _ => { };
+            ctl.Advancing += _ => Assert.Fail("the planet's last stage");
+            ctl.Returning += _ => Assert.Fail("Next on the last stage is the planet complete return");
             ctl.PlanetCompleting += completing.Add;
             ctl.Start(1);
             board.Win();
+            Assert.AreEqual(AppState.Result, flow.State);
+            ctl.Next();
             CollectionAssert.AreEqual(new[] { 1 }, completing);
-            Assert.AreEqual(AppState.Game, flow.State);
-            ctl.OpenStageSelect();
+            Assert.IsNull(panel.Shown);
+            ctl.FinishReturn(); // the pullback's end (GameJourney)
             Assert.AreEqual(AppState.StageSelect, flow.State);
 
             Make();
             ctl.Journey = true;
+            int ending = 0;
             ctl.Advancing += _ => Assert.Fail("last stage");
             ctl.PlanetCompleting += _ => Assert.Fail("last stage");
+            ctl.EndingRequested += () => ending++;
             ctl.Start(4);
             board.Win();
-            Assert.AreEqual(AppState.Result, flow.State, "the last stage of all: the result panel and its ending button");
+            Assert.AreEqual(AppState.Result, flow.State);
+            ctl.Next();
+            Assert.AreEqual(1, ending, "the last stage of all: [끝까지 보기]");
+        }
+
+        [Test]
+        public void MapFromTheClearReturnsWithoutLightingAndAgainReloads()
+        {
+            Make();
+            ctl.Journey = true;
+            var returning = new List<int>();
+            ctl.Advancing += _ => Assert.Fail("map is not Next");
+            ctl.PlanetCompleting += _ => Assert.Fail("map is the back return");
+            ctl.Returning += returning.Add;
+            ctl.Start(0);
+            board.Win();
+            ctl.OpenStageSelect(); // the clear's map button / Esc
+            CollectionAssert.AreEqual(new[] { 0 }, returning);
+            Assert.AreEqual(AppState.Result, flow.State, "the pullback plays first");
+            ctl.OpenStageSelect();
+            CollectionAssert.AreEqual(new[] { 0 }, returning, "a second press starts nothing");
+            ctl.FinishReturn(); // the pullback's end
+            Assert.AreEqual(AppState.StageSelect, flow.State);
+
+            Make();
+            ctl.Journey = true;
+            ctl.Start(0);
+            board.Win();
+            int loads = board.Loads.Count;
+            ctl.Again();
+            Assert.AreEqual((0, TelemetryNames.Via.Again), board.Loads[loads], "again: the same stage, reloaded, as before");
         }
 
         [Test]
@@ -230,14 +282,32 @@ namespace SevenSteps.Tests
             Make();
             ctl.Journey = true;
             ctl.Start(0);
-            Assert.Throws<InvalidOperationException>(() => board.Win(), "journey on needs GameJourney");
+            board.Win();
+            Assert.Throws<InvalidOperationException>(() => ctl.Next(), "journey on needs GameJourney");
 
             Make();
             ctl.Start(0);
             board.Win();
             Assert.AreEqual(AppState.Result, flow.State);
             Assert.IsNotNull(panel.Shown);
-            Assert.Throws<InvalidOperationException>(() => ctl.ContinueTo(1), "ContinueTo is the advance transition's, from Game only");
+            ctl.Next();
+            Assert.AreEqual((1, TelemetryNames.Via.Next), board.Loads[board.Loads.Count - 1], "journey off: Next reloads");
+            Assert.Throws<InvalidOperationException>(() => ctl.ContinueTo(2), "ContinueTo is the advance transition's");
+        }
+
+        [Test]
+        public void ReturnKindIsKeptForTheMap()
+        {
+            var r = new JourneyReturn();
+            ReturnKind seen = ReturnKind.PlanetComplete;
+            r.Settled += () => seen = r.LastKind;
+            r.Begin(1, "hollow", ReturnKind.Back);
+            Assert.AreEqual(ReturnKind.Back, r.LastKind);
+            r.Settle();
+            Assert.AreEqual(ReturnKind.Back, seen, "a Settled handler reads the kind");
+            r.Begin(1, "hollow");
+            Assert.AreEqual(ReturnKind.PlanetComplete, r.LastKind, "the default kind");
+            Assert.Throws<ArgumentOutOfRangeException>(() => new JourneyReturn().Begin(0, "moss", (ReturnKind)7));
         }
 
         // ---------- Toggle ----------
