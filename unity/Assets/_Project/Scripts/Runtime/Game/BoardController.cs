@@ -44,6 +44,14 @@ namespace SevenSteps.Game
         public State State => session?.State;
         /// IStageBoard: hints / real undos / restarts after moving, since the last LoadStage (docs/architecture.md 6.5).
         public AttemptCounts Attempt => attempt;
+
+        /// A one-time guide line (TutorialTracker, e.g. the first slide) on the message line, worded on each read; the next
+        /// line from the session replaces it.
+        public void ShowGuideLine(string key)
+        {
+            messages.ShowKey(key);
+            Refresh();
+        }
         /// 0-based stage on the board (-1 before the first LoadStage).
         public int LevelIndex => loadedStage;
         public int LevelCount => levels.Length;
@@ -413,7 +421,7 @@ namespace SevenSteps.Game
 
         void OnSessionUpdated(SessionUpdate u)
         {
-            messages.Apply(u);
+            messages.Apply(u, attempt.Hinted); // a restart stays in the attempt, so its hints still cap the stars (6.5)
             CountAttempt(u);
             if (u.Kind == SessionUpdateKind.Feedback)
             {
@@ -455,6 +463,7 @@ namespace SevenSteps.Game
         void Refresh()
         {
             var text = LevelCatalog.TextOf(loadedStage, loc.Current); // stage name and hint in the UI language (13.5)
+            hud.SetStarCap(attempt.Hinted);
             hud.Refresh(session.State, loadedStage, text, messages.Current);
             HudRefreshed?.Invoke(session.State, loadedStage, text);
         }

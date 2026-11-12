@@ -253,6 +253,8 @@ namespace SevenSteps.Game
             board.Choice.ExplainChoices = () => tutorial.ExplainChoices;
             board.Choice.ShowGuide = () => tutorial.ShowChoiceGuide;
             tutorial.Changed += () => { hud.Guide = tutorial.ShowMoveGuide; board.Choice.Refresh(); };
+            // First ice slide ever: where a slide stops, once (user decision 2026-11-12-b (3)).
+            tutorial.FirstSlide += () => board.ShowGuideLine(TutorialTracker.SlideLineKey);
             ending = new EndingController(overlays, endingPanel);
             ending.Finished += OnEndingFinished;
             flowController.EndingRequested += BeginEnding;
@@ -449,6 +451,7 @@ namespace SevenSteps.Game
         {
             board.UseChoiceView(u5);
             board.HudRefreshed += u5.Refresh;
+            board.HudRefreshed += (s, stage, text) => u5.SetStarCap(board.Attempt.Hinted); // the hinted attempt's ★1 mark
             u5.BoardArea = () => board.View.ProjectedArea();
             u5.UndoRequested += () => board.Send(SevenSteps.Core.Command.Undo);
             u5.RestartRequested += board.Restart;

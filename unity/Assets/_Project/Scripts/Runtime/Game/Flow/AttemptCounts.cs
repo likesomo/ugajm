@@ -28,6 +28,9 @@ namespace SevenSteps.Game.Flow
         }
 
         public AttemptCounts WithHint() => new AttemptCounts(Hints + 1, Undos, Restarts);
+        /// A costing hint was opened in this attempt, so a clear earns at most 1 star (Stars.Of), restarts included
+        /// (user decision 2026-11-12-b (2), option A). The HUD shows the star-cap mark while this holds.
+        public bool Hinted => Hints > 0;
         public AttemptCounts WithUndo() => new AttemptCounts(Hints, Undos + 1, Restarts);
         public AttemptCounts WithRestart() => new AttemptCounts(Hints, Undos, Restarts + 1);
 

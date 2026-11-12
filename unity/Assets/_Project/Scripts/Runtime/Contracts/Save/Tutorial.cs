@@ -53,6 +53,8 @@ namespace SevenSteps.Contracts
         public const string Move = "move@1";
         /// First KEEP / SWITCH choice screen guide ("walking is locked, pick one"), until the first confirmed choice.
         public const string Choose = "choose@1";
+        /// First ice slide (where a slide stops: the first floor cell past the ice, or before a wall or statue), shown once.
+        public const string Slide = "slide@1";
 
         public static bool IsValid(string id)
         {

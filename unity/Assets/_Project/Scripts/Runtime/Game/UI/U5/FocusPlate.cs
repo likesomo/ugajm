@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace SevenSteps.Game.UI.U5
 {
     /// <summary>
-    /// The one explanation plate of a canvas (docs/ui-u5-kit.md 1, 6): one line of secondary text (18) on a plate of
+    /// The one explanation plate of a canvas (docs/ui-u5-kit.md 1, 6): one line (two at most, MaxLines) of secondary text (18) on a plate of
     /// text height + 16, 250 wide, growing to 320 for a longer line (longer: shorten the words, the text is never
     /// shrunk). It shows <see cref="FocusTip.Current"/> next to its owner: under a button in the upper half of the
     /// canvas, over one in the lower half, kept inside the safe area. Buttons join with <see cref="Track"/>.
@@ -114,7 +114,13 @@ namespace SevenSteps.Game.UI.U5
             if (tip.IsEmpty) { gameObject.SetActive(false); return; }
             text.font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
             text.text = Words(loc, tip);
-            var size = SizeFor(text, text.text, PaddingOf(plate));
+            var pad = PaddingOf(plate);
+            var size = SizeFor(text, text.text, pad);
+            // A tip longer than one 320 line wraps inside the padding (2 lines at most); a shorter one keeps its one line.
+            bool wrap = size.x >= MaxWidth && LineCount(text, text.text, MaxWidth - pad.x - pad.z) > 1;
+            text.horizontalOverflow = wrap ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
+            text.rectTransform.offsetMin = new Vector2(wrap ? pad.x : 0, 0);
+            text.rectTransform.offsetMax = new Vector2(wrap ? -pad.z : 0, 0);
             var r = (RectTransform)transform;
             r.sizeDelta = size;
             var canvas = ((RectTransform)r.parent).rect.size;
@@ -134,26 +140,55 @@ namespace SevenSteps.Game.UI.U5
             return new Vector4(Mathf.Max(Padding, b.x), Mathf.Max(Padding, b.y), Mathf.Max(Padding, b.z), Mathf.Max(Padding, b.w));
         }
 
-        /// Plate size for <paramref name="words"/> in <paramref name="t"/>'s font: width 250..320, height line + padding.
-        /// A line wider than 320 logs an error (shorten the string; LocalizationCheck / tests catch it first).
+        /// Lines a tip may wrap to at <see cref="MaxWidth"/> (lead 2026-11-12: long words such as the hinted-attempt tip
+        /// wrap to 2 lines instead of shrinking).
+        public const int MaxLines = 2;
+
+        /// Plate size for <paramref name="words"/> in <paramref name="t"/>'s font: width 250..320, height lines + padding.
+        /// Words wider than one 320 line wrap at 320; more than <see cref="MaxLines"/> lines logs an error (shorten the
+        /// string; LocalizationCheck / tests catch it first).
         public static Vector2 SizeFor(Text t, string words, Vector4 pad)
         {
             if (t == null) throw new ArgumentNullException(nameof(t));
             var gen = t.cachedTextGeneratorForLayout;
             var settings = t.GetGenerationSettings(Vector2.zero);
+            settings.horizontalOverflow = HorizontalWrapMode.Overflow; // one line's width, whatever the text's mode now
             float ppu = t.pixelsPerUnit > 0 ? t.pixelsPerUnit : 1f;
-            float w = gen.GetPreferredWidth(words, settings) / ppu, h = gen.GetPreferredHeight(words, settings) / ppu;
+            float w = gen.GetPreferredWidth(words, settings) / ppu;
             float need = Mathf.Ceil(w) + pad.x + pad.z;
-            if (need > MaxWidth) Debug.LogError($"[SevenSteps] FocusPlate: \"{words}\" needs {need:0} > {MaxWidth} (shorten the string)");
-            float width = Mathf.Clamp(need, BaseWidth, MaxWidth);
-            return new Vector2(width, PlateHeight(t, words, width, Mathf.Max(pad.y, pad.w)));
+            float padY = Mathf.Max(pad.y, pad.w);
+            if (need <= MaxWidth)
+            {
+                float width = Mathf.Max(need, BaseWidth);
+                return new Vector2(width, PlateHeight(t, words, width, padY));
+            }
+            float inner = MaxWidth - pad.x - pad.z;
+            int lines = LineCount(t, words, inner);
+            if (lines > MaxLines) Debug.LogError($"[SevenSteps] FocusPlate: \"{words}\" needs {lines} lines > {MaxLines} at {MaxWidth} (shorten the string)");
+            return new Vector2(MaxWidth, PlateHeight(t, words, inner, padY, wrap: true));
+        }
+
+        /// Lines <paramref name="words"/> take in <paramref name="t"/>'s font wrapped at <paramref name="width"/>.
+        public static int LineCount(Text t, string words, float width)
+        {
+            if (t == null) throw new ArgumentNullException(nameof(t));
+            if (!(width > 0)) throw new ArgumentOutOfRangeException(nameof(width), width, "> 0");
+            if (string.IsNullOrEmpty(words)) return 0;
+            var gen = new TextGenerator();
+            var settings = t.GetGenerationSettings(new Vector2(width, 1000f));
+            settings.horizontalOverflow = HorizontalWrapMode.Wrap;
+            settings.verticalOverflow = VerticalWrapMode.Overflow;
+            gen.Populate(words, settings);
+            return gen.lineCount;
         }
 
         /// Height of a plate whose (vertically centred) text keeps <paramref name="pad"/> clear above and below its drawn
         /// glyphs: twice the glyphs' larger reach from the centre, plus the padding. The Jua glyph quads are taller than the
         /// font size and sit low (14.4 "glyphs + 8 inside", scene-flow UiLayoutCheck finding on 1f90617), so the line
         /// height alone is not enough. Empty text: the font size.
-        public static float PlateHeight(Text t, string words, float width, float pad)
+        /// <paramref name="wrap"/>: the words wrap at <paramref name="width"/> (the text area); else <paramref name="t"/>'s own
+        /// wrap mode applies.
+        public static float PlateHeight(Text t, string words, float width, float pad, bool wrap = false)
         {
             if (t == null) throw new ArgumentNullException(nameof(t));
             float reach = t.fontSize / 2f;
@@ -162,6 +197,7 @@ namespace SevenSteps.Game.UI.U5
                 var gen = new TextGenerator();
                 var settings = t.GetGenerationSettings(new Vector2(Mathf.Max(width, 1f), 1000f));
                 settings.textAnchor = TextAnchor.MiddleCenter;
+                if (wrap) { settings.horizontalOverflow = HorizontalWrapMode.Wrap; settings.verticalOverflow = VerticalWrapMode.Overflow; }
                 gen.Populate(words, settings);
                 float ppu = t.pixelsPerUnit > 0 ? t.pixelsPerUnit : 1f;
                 foreach (var v in gen.verts) reach = Mathf.Max(reach, Mathf.Abs(v.position.y / ppu));

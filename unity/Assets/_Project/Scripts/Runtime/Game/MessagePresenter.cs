@@ -32,6 +32,9 @@ namespace SevenSteps.Game
 
         public const string ChooseNudge = "msg.choose_nudge";
         public const string LuckyNext = "msg.lucky_next";
+        /// A restart inside an attempt that opened a costing hint: the attempt still caps at 1 star (user decision
+        /// 2026-11-12-b (2), option A), said right after the restart instead of "msg.restart".
+        public const string RestartHinted = "msg.restart_hinted";
 
         readonly Localizer loc;
         Func<string> line = () => "";
@@ -49,7 +52,8 @@ namespace SevenSteps.Game
             u.Kind == SessionUpdateKind.Feedback && !(u.Result != null && u.Result.Has(GameEventType.Bump))
             && u.State.Status == Status.Choose && u.Command.Type == CommandType.Move;
 
-        public void Apply(SessionUpdate u)
+        /// <paramref name="hintedAttempt"/>: the attempt this update belongs to opened a costing hint (AttemptCounts.Hinted).
+        public void Apply(SessionUpdate u, bool hintedAttempt)
         {
             switch (u.Kind)
             {
@@ -63,7 +67,7 @@ namespace SevenSteps.Game
                     if (u.Result == null) break;
                     foreach (var e in u.Result.Events)
                     {
-                        if (ByEvent.TryGetValue(e.Type, out var key)) Key(key);
+                        if (ByEvent.TryGetValue(e.Type, out var key)) Key(e.Type == GameEventType.Restart && hintedAttempt ? RestartHinted : key);
                         if (e.Type == GameEventType.Step)
                         {
                             if (e.StepIdx == Rules.Steps - 1) Key(LuckyNext);
@@ -76,6 +80,14 @@ namespace SevenSteps.Game
 
         /// Replaces the line with other text, worded again on each read (the H solution in the current language).
         public void Show(Func<string> text) => line = text ?? throw new ArgumentNullException(nameof(text));
+
+        /// Replaces the line with a string-table line (a one-time guide), worded on each read. Throws for a missing key.
+        public void ShowKey(string key)
+        {
+            if (string.IsNullOrEmpty(key)) throw new ArgumentException("no string key", nameof(key));
+            if (!loc.Table.Has(key)) throw new ArgumentException($"string key {key} missing", nameof(key));
+            Key(key);
+        }
 
         void Key(string key) => line = () => loc.Get(key);
         void Clear() => line = () => "";

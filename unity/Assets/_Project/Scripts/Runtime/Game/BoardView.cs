@@ -282,8 +282,8 @@ namespace SevenSteps.Game
             ghostBody = ghostStone = null;
             ghostBodyIndex = -1;
             choiceShown = false;
-            marks?.Clear();
-            sky?.Clear();
+            if (marks != null) marks.Clear();
+            if (sky != null) sky.Clear();
             foreach (var l in labels) if (l.Text != null) Destroy(l.Text.gameObject);
             labels.Clear();
             statues.Clear();
@@ -352,7 +352,7 @@ namespace SevenSteps.Game
             if (shake != null) { StopCoroutine(shake); shake = null; }
             foreach (var t in transients) if (t != null) Destroy(t);
             transients.Clear();
-            marks?.StopBursts();
+            if (marks != null) marks.StopBursts();
             // Settle every scale tween so the picture is exactly the snapshot (Snap = State).
             foreach (var tw in tweens)
             {
@@ -490,9 +490,9 @@ namespace SevenSteps.Game
                     if (pop && c.Go != null && (id.Kind == TileKind.Bridge || id.Kind == TileKind.FlipWall)) Tween(c.Go.transform, v.Scale * grid.CellSize);
                 }
 
-                c.Prop?.SetData(id.Variant, level.StatueCount, s.Statues.Length);
+                if (c.Prop != null) c.Prop.SetData(id.Variant, level.StatueCount, s.Statues.Length);
                 bool active = IsActive(s, id, i);
-                if (!pop) c.Prop?.SetActiveVisual(active, false); // Snap settles an in-flight slab even when its state is unchanged.
+                if (!pop && c.Prop != null) c.Prop.SetActiveVisual(active, false); // Snap settles an in-flight slab even when its state is unchanged.
                 if (!c.ActiveKnown || c.Active != active)
                 {
                     bool changed = c.ActiveKnown;
@@ -587,7 +587,7 @@ namespace SevenSteps.Game
 
             // Step constellation above the board (user decision 2026-11-12 "C"; replaced the stars at the feet).
             float px = cam != null ? CellPixels() * grid.CellSize : 77f;
-            marks?.SetLook(ReduceMotion, px);
+            if (marks != null) marks.SetLook(ReduceMotion, px);
             if (sky != null) sky.Show(StepSky.Of(s), playable, ReduceMotion, px);
             DrawChoice();
 
@@ -641,7 +641,8 @@ namespace SevenSteps.Game
         void ApplyActive(GameObject go, TileVisual v, bool active, bool animate)
         {
             if (go == null) return;
-            go.GetComponent<TilePropView>()?.SetActiveVisual(active, animate);
+            var prop = go.GetComponent<TilePropView>(); // explicit != null: ?. would skip Unity's destroyed-object check
+            if (prop != null) prop.SetActiveVisual(active, animate);
             if (!string.IsNullOrEmpty(v.activeChild)) { var t = go.transform.Find(v.activeChild); if (t != null) t.gameObject.SetActive(active); }
             if (!string.IsNullOrEmpty(v.inactiveChild)) { var t = go.transform.Find(v.inactiveChild); if (t != null) t.gameObject.SetActive(!active); }
             var mat = Chapter(active ? v.activeMaterial : v.inactiveMaterial);
@@ -697,7 +698,8 @@ namespace SevenSteps.Game
             var go = Instantiate(v.prefab, root);
             go.name = name;
             ChapterMaterials.Apply(go, chapter); // 12.8, once per spawned prefab
-            go.GetComponent<TilePropView>()?.UsePlanet(chapter != null ? chapter.id : null);
+            var prop = go.GetComponent<TilePropView>();
+            if (prop != null) prop.UsePlanet(chapter != null ? chapter.id : null);
             Place(go, v, cell);
             go.transform.localScale = v.Scale * grid.CellSize;
             return go;
@@ -842,8 +844,8 @@ namespace SevenSteps.Game
             root = null;
             player = null;
             ghostBody = ghostStone = null;
-            marks?.Clear();
-            sky?.Clear();
+            if (marks != null) marks.Clear();
+            if (sky != null) sky.Clear();
             foreach (var l in labels) if (l.Text != null) Destroy(l.Text.gameObject);
             labels.Clear();
             statues.Clear();

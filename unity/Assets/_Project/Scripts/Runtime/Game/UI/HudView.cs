@@ -284,6 +284,23 @@ namespace SevenSteps.Game.UI
             RefreshStatues(s);
         }
 
+        RectTransform starCap;
+
+        /// The hinted attempt's ★1 mark right of the stage title (StarCapMark; BoardController sets it from
+        /// AttemptCounts.Hinted on every refresh). Built on first use, so the HUD prefab needs no new reference.
+        public bool StarCapShown => starCap != null && starCap.gameObject.activeSelf;
+
+        public void SetStarCap(bool capped)
+        {
+            if (title == null) throw new InvalidOperationException("HudView.SetStarCap before the title exists");
+            if (starCap == null)
+            {
+                if (!capped) return;
+                starCap = StarCapMark.Build(title.transform.parent, new Vector2(1, 0.5f), new Vector2(0, 0.5f), new Vector2(6, 0));
+            }
+            StarCapMark.SetShown(starCap, capped);
+        }
+
         /// The passing line (story-integration.md 0.2, the story plate in the left margin): the stage's start line or a
         /// planet's finale line for <paramref name="seconds"/> (unscaled), replacing one already up.
         public void ShowLine(string text, float seconds)

@@ -129,5 +129,66 @@ namespace SevenSteps.Tests
             Assert.IsFalse(store.Seen(TutorialTracker.MoveId) || store.Seen(TutorialTracker.ChoiceId));
             Assert.AreEqual(0, store.ChoiceConfirms);
         }
+
+        // ---------- first slide (user decision 2026-11-12-b (3)) ----------
+
+        // S, two ice cells, floor: R from S slides to the floor cell past the ice (one step).
+        static Level Ice() => Level.Parse("ice", "", 3, new[] { "#########", "#S~~...E#", "#########" });
+        // Six floor steps, then ice: the 7th move slides and asks for the choice, so its line stays and the guide waits.
+        static Level IceOnSeventh() => Level.Parse("ice-7th", "", 3, new[] { "##############", "#S......~~..E#", "##############" });
+
+        static (GameSession, TutorialTracker, MemoryTutorialStore, int[]) MakeOn(Level level, MemoryTutorialStore store = null)
+        {
+            store ??= new MemoryTutorialStore();
+            var t = new TutorialTracker(store);
+            var s = new GameSession();
+            s.Updated += t.Apply;
+            var raised = new int[1];
+            t.FirstSlide += () => raised[0]++;
+            s.Load(level);
+            return (s, t, store, raised);
+        }
+
+        [Test]
+        public void FirstSlideIsRaisedOnceEverAndSaved()
+        {
+            var (s, _, store, raised) = MakeOn(Ice());
+            Send(s, "R");
+            Assert.AreEqual(4, s.State.Pos % 9, "slid past both ice cells in one move");
+            Assert.AreEqual(1, raised[0]);
+            Assert.IsTrue(store.Seen(TutorialTracker.SlideId), "saved before it is raised");
+            Send(s, "L"); // slides back over the ice
+            Send(s, "!R");
+            Assert.AreEqual(1, raised[0], "once ever: later slides, restarts and undos do not raise it again");
+            var (s2, _, _, raised2) = MakeOn(Ice(), store); // next scene, same profile
+            Send(s2, "R");
+            Assert.AreEqual(0, raised2[0]);
+        }
+
+        [Test]
+        public void ASlideOnTheSeventhStepKeepsItsLineAndTheGuideWaits()
+        {
+            var (s, _, store, raised) = MakeOn(IceOnSeventh());
+            Send(s, "RRRRRR");
+            Assert.AreEqual(0, raised[0]);
+            Send(s, "R");
+            Assert.AreEqual(10, s.State.Pos % 14, "slid over the ice");
+            Assert.AreEqual(Status.Choose, s.State.Status);
+            Assert.AreEqual(0, raised[0]);
+            Assert.IsFalse(store.Seen(TutorialTracker.SlideId));
+        }
+
+        [Test]
+        public void AMoveWithoutIceIsNotASlideAndReplaysDoNotCount()
+        {
+            var (s, _, store, raised) = MakeOn(Long());
+            Send(s, "RR");
+            Assert.AreEqual(0, raised[0]);
+            var (s2, _, store2, raised2) = MakeOn(Ice());
+            s2.Replay("R");
+            Assert.AreEqual(0, raised2[0]);
+            Assert.IsFalse(store.Seen(TutorialTracker.SlideId) || store2.Seen(TutorialTracker.SlideId));
+            Assert.IsTrue(new MemoryTutorialStore(allSeen: true).Seen(TutorialTracker.SlideId), "dev runs start with it seen");
+        }
     }
 }

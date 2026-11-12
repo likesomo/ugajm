@@ -128,6 +128,7 @@ namespace SevenSteps.Tests.Game
                 foreach (var id in AllIcons) keys.Add(IconButton.KeyOf(id));
                 keys.Add("ui5.choice.keep");
                 keys.Add("ui5.choice.switch");
+                keys.Add(U5GameHud.HintCappedKey); // the hint button's tip in a hinted attempt
                 var t = Ui.Label(parent, "", FocusPlate.FontSize, Color.white);
                 t.font = Ui.Theme.FontFor(lang, FontRole.Body);
                 foreach (var k in keys)
@@ -139,6 +140,26 @@ namespace SevenSteps.Tests.Game
                     Assert.That(words, Does.Not.Contain("\n"), k);
                 }
             }
+        }
+
+        // Lead 2026-11-12: a tip longer than one 320 line wraps to 2 lines instead of shrinking or running off the plate.
+        [Test]
+        public void ALongTipWrapsToTwoLinesAtTheMaxWidth()
+        {
+            var parent = Canvas();
+            var t = Ui.Label(parent, "", FocusPlate.FontSize, Color.white);
+            t.font = Ui.Theme.FontFor(Language.En, FontRole.Body);
+            var pad = new Vector4(8, 8, 8, 8);
+            const string shortWords = "Undo · Z";
+            const string longWords = "On ice you slide to the first floor cell past the ice, or stop in front of a wall.";
+            var one = FocusPlate.SizeFor(t, shortWords, pad);
+            var two = FocusPlate.SizeFor(t, longWords, pad);
+            Assert.That(two.x, Is.EqualTo(FocusPlate.MaxWidth));
+            Assert.That(FocusPlate.LineCount(t, longWords, FocusPlate.MaxWidth - 16), Is.EqualTo(2));
+            Assert.That(two.y, Is.GreaterThan(one.y + FocusPlate.FontSize * 0.8f), "two lines are taller than one");
+            Assert.That(FocusPlate.LineCount(t, shortWords, FocusPlate.MaxWidth - 16), Is.EqualTo(1));
+            UnityEngine.TestTools.LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("FocusPlate: .* lines > 2"));
+            FocusPlate.SizeFor(t, longWords + " " + longWords + " " + longWords, pad);
         }
 
         // ---------- focus tip model ----------
