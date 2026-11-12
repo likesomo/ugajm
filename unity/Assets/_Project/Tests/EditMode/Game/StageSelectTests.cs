@@ -165,7 +165,8 @@ namespace SevenSteps.Tests
             public void Place(int p, int s) => PlaceChosen?.Invoke(p, s);
             public void ShowMap(StageSelectModel model, int focus, int held) => calls.Add($"map {focus} {held}");
             public void LightTrail(StageSelectModel model, int planet, int focus) => calls.Add($"light {planet} {focus}");
-            public void OpenSurface(StageSelectModel model, int planet) => calls.Add($"surface {planet}");
+            public readonly List<ClearNote> news = new List<ClearNote>();
+            public void OpenSurface(StageSelectModel model, int planet, IReadOnlyList<ClearNote> taken) { calls.Add($"surface {planet}"); news.Clear(); news.AddRange(taken); }
             public void SetPending(bool pending) => calls.Add($"pending {pending}");
             public PlanetBody Body(int planet, StageChoiceSource source) => body;
             public Camera MapCamera => camera;
@@ -194,10 +195,28 @@ namespace SevenSteps.Tests
             UnityEngine.Object.DestroyImmediate(camGo);
         }
 
-        StageSelectController Controller(StageSelectModel m, JourneyReturn journey = null)
+        StageSelectController Controller(StageSelectModel m, JourneyReturn journey = null, ClearNews news = null)
         {
             var stages = new List<IReadOnlyList<int>> { new[] { 0, 1, 2 }, new[] { 3, 4, 5 }, new[] { 6, 7 } };
-            return new StageSelectController(view, () => m, stages, _ => canPlay, s => played.Add(s), journey);
+            return new StageSelectController(view, () => m, stages, _ => canPlay, s => played.Add(s), journey, news);
+        }
+
+        /// The controller, not the view, takes the planet's ClearNews when it opens the surface, once (architect 2026-11-12).
+        [Test]
+        public void OpeningASurfaceTakesThatPlanetsClearNewsOnce()
+        {
+            var news = new ClearNews();
+            news.Record(4, true, 0, 2);
+            news.Record(6, true, 0, 1);
+            var c = Controller(Model(Rows(new[] { true, false, false }, new[] { false, true, false }, new bool[2])), news: news);
+            c.SurfaceFirst = true;
+            c.Show();
+            view.Choose(1);
+            Assert.AreEqual(1, view.news.Count);
+            Assert.AreEqual(4, view.news[0].Stage);
+            Assert.AreEqual(1, news.Count, "planet 3's note stays");
+            view.Choose(1);
+            Assert.AreEqual(0, view.news.Count, "taken once");
         }
 
         [Test]

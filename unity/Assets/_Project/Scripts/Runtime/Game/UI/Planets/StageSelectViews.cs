@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using SevenSteps.Game.Flow;
 using UnityEngine;
 
@@ -35,10 +36,10 @@ namespace SevenSteps.Game.UI.Planets
         public void ShowMap(StageSelectModel model, int focus, int held) => map.Show(model, focus, held);
         public void LightTrail(StageSelectModel model, int planet, int focus) => map.LightTrail(model, planet, focus);
 
-        public void OpenSurface(StageSelectModel model, int planet)
+        public void OpenSurface(StageSelectModel model, int planet, IReadOnlyList<ClearNote> news)
         {
             if (overlays.Count > 0) return;
-            surface.Bind(model, planet);
+            surface.Bind(model, planet, news);
             LastSurfacePlanet = planet;
             overlays.Push(surface);
         }

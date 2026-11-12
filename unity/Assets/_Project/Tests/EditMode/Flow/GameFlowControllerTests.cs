@@ -116,6 +116,28 @@ namespace SevenSteps.Tests
             Assert.IsFalse(ctl.TakesCommand(Command.Undo), "in Game the board takes commands");
         }
 
+        /// ClearNews (U5 first-clear trace): each win records the stage, first clear and best before/after; a repeat with
+        /// nothing new adds nothing.
+        [Test]
+        public void AWinRecordsItsClearNews()
+        {
+            Make(3, false);
+            var news = new ClearNews();
+            ctl.News = news;
+            ctl.Start(0);
+            board.Win();
+            var taken = new List<ClearNote>();
+            Assert.IsTrue(news.TryTake(new[] { 0 }, taken));
+            Assert.AreEqual(1, taken.Count);
+            Assert.AreEqual(0, taken[0].Stage);
+            Assert.IsTrue(taken[0].FirstClear);
+            Assert.AreEqual(0, taken[0].BestBefore);
+            Assert.AreEqual(save.Progress.BestStars(Seven), taken[0].BestAfter);
+            ctl.Again();
+            board.Win();
+            Assert.IsFalse(news.TryTake(new[] { 0 }, taken), "the same clear again: nothing new");
+        }
+
         [Test]
         public void ClearingThePlanetsLastStageNamesThePlanet()
         {

@@ -231,6 +231,9 @@ namespace SevenSteps.Game.Flow
         /// level_start.via of the last stage entry (-titlecheck logs it).
         public string LastVia { get; private set; } = "";
 
+        /// Where each win's change goes for the U5 surface's first-clear trace (Services ClearNews); null = not recorded.
+        public ClearNews News { get; set; }
+
         /// Stars of the clear being shown (1..3), set on Won for the result panel.
         int clearStars;
 
@@ -240,8 +243,11 @@ namespace SevenSteps.Game.Flow
             // 3 stars (docs/architecture.md 6.5, design/levels/stars.md 0): judged by Core from the board's attempt hints and
             // the bodies used against the level's bodies.
             clearStars = Stars.Of(BodiesUsed(s), s.Level.Bodies, board.Attempt.Hints);
+            bool firstClear = !save.Progress.IsCleared(s.Level);
+            int bestBefore = save.Progress.BestStars(s.Level);
             save.Progress.MarkCleared(s.Level, BodiesUsed(s), clearStars);
             save.SaveProgress();
+            News?.Record(flow.Stage, firstClear, bestBefore, save.Progress.BestStars(s.Level));
         }
 
         void OnWinPresented(State s)

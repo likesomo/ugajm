@@ -169,7 +169,8 @@ namespace SevenSteps.Game.UI
             {
                 var stages = planets.Select(p => p.Stages).ToList();
                 StageSelect = new StageSelectController(stageViews, BuildStageSelectModel, stages, flow.CanGoToGame, flowController.PlayStage,
-                    Services.TryGet<JourneyReturn>(out var journeyReturn) ? journeyReturn : null) { SurfaceFirst = u5 };
+                    Services.TryGet<JourneyReturn>(out var journeyReturn) ? journeyReturn : null,
+                    Services.TryGet<ClearNews>(out var clearNews) ? clearNews : null) { SurfaceFirst = u5 };
                 stageViews.Map.BackRequested += flowController.Back;
                 if (u5)
                 {

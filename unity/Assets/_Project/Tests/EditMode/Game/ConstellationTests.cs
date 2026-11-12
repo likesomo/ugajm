@@ -165,6 +165,48 @@ namespace SevenSteps.Tests
             Assert.AreEqual("cleared 2", v.State(3));
         }
 
+        /// The first-clear trace (ClearNews): opens on the before state, then the star turns gold, the link to the next
+        /// stage traces and the sparks fade in; a press or reduce motion ends it at once; a note that does not match throws.
+        [Test]
+        public void ANewClearReplaysFromItsBeforeState()
+        {
+            var v = View(out _);
+            var stages = new[] { 10, 11, 12, 13, 14, 15, 16 };
+            var m = Model(new[] { true, true, false, false, false, false, false }, new[] { 1, 2, 0, 0, 0, 0, 0 });
+            var news = new List<ClearNote> { new ClearNote(11, true, 0, 2) };
+            v.Bind(m, 0, ConstellationFigure.For("moss", 7), stages, news);
+            Assert.IsTrue(v.Replaying);
+            Assert.AreEqual("untouched", v.State(1), "before: stage 2 not cleared yet");
+            Assert.IsTrue(v.LinkDrawn(0) && !v.LinkDrawn(1), "before: the route from stage 2 is still faint");
+            v.Tick(ConstellationView.ReplayDelay + ConstellationView.TraceSeconds / 2);
+            Assert.AreEqual("cleared 2", v.State(1), "the star turns gold");
+            Assert.IsTrue(v.LinkDrawn(1));
+            Assert.That(v.LinkFraction(1), Is.InRange(0.3f, 0.7f), "the link traces");
+            v.Tick(1);
+            Assert.IsFalse(v.Replaying);
+            Assert.AreEqual(1f, v.LinkFraction(1));
+
+            v.Bind(m, 0, ConstellationFigure.For("moss", 7), stages, news);
+            v.SetInput(-1, -1, 3);
+            Assert.IsFalse(v.Replaying, "a press ends it");
+            Assert.AreEqual("cleared 2", v.State(1));
+
+            v.ReduceMotion = true;
+            v.Bind(m, 0, ConstellationFigure.For("moss", 7), stages, news);
+            Assert.IsFalse(v.Replaying, "reduce motion: the final state at once");
+            Assert.AreEqual("cleared 2", v.State(1));
+            v.ReduceMotion = false;
+
+            v.Bind(m, 0, ConstellationFigure.For("moss", 7), stages, new List<ClearNote> { new ClearNote(11, false, 1, 2) });
+            Assert.AreEqual("cleared 1", v.State(1), "a better best: before shows the old best");
+            Assert.IsTrue(v.LinkDrawn(1), "no link to trace");
+            v.Tick(1);
+            Assert.AreEqual("cleared 2", v.State(1));
+
+            Assert.Throws<InvalidOperationException>(() => v.Bind(m, 0, ConstellationFigure.For("moss", 7), stages, new List<ClearNote> { new ClearNote(12, true, 0, 1) }), "stage 3 is not cleared in the save");
+            Assert.Throws<ArgumentException>(() => v.Bind(m, 0, ConstellationFigure.For("moss", 7), stages, new List<ClearNote> { new ClearNote(99, true, 0, 1) }));
+        }
+
         [Test]
         public void AnchorsReflowWithTheCanvas()
         {

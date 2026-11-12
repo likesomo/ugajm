@@ -149,7 +149,9 @@ namespace SevenSteps.Game.UI.Planets
         }
 
         /// Fills the view for a planet (call before Show; the root pushes it on the OverlayStack).
-        public void Bind(StageSelectModel m, int p)
+        /// <param name="news">The planet's clears not shown yet (ClearNews, taken by the controller): the constellation replays
+        /// them from their before state (first-clear trace). Null = none (UiLayoutCheck, tests).</param>
+        public void Bind(StageSelectModel m, int p, IReadOnlyList<ClearNote> news = null)
         {
             model = m ?? throw new ArgumentNullException(nameof(m));
             if (loc == null) throw new InvalidOperationException("PlanetSurfaceView.Bind before Apply");
@@ -165,7 +167,7 @@ namespace SevenSteps.Game.UI.Planets
             if (stars != null)
             {
                 places = new Vector3[0];
-                stars.Bind(model, p, ConstellationFigure.For(planets[p].Key, count));
+                stars.Bind(model, p, ConstellationFigure.For(planets[p].Key, count), planets[p].Stages, news);
                 targets.Clear();
                 for (int s = 0; s < stars.Count; s++)
                 {

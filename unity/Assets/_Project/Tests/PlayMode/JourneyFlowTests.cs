@@ -167,6 +167,32 @@ namespace SevenSteps.Tests.PlayMode
             Assert.IsFalse(lit, "one stage of the planet: nothing lit");
         }
 
+        /// The U5 first-clear trace (ClearNews, architect 2026-11-12; journey off): stage 1 cleared, the clear's map, then the
+        /// first planet's surface opens on the before state, replays, and ends with stage 1 cleared and its link drawn.
+        [UnityTest]
+        public IEnumerator U5FirstClearTracesOnTheSurface()
+        {
+            yield return Boot("-ui5", "-level", "1");
+            var game = Object.FindAnyObjectByType<GameController>();
+            Assert.IsNull(game.Journey, "journey off: ClearNews does not depend on it");
+            var clear = Object.FindAnyObjectByType<U5ClearView>(FindObjectsInactive.Include);
+            Win(game, 0);
+            yield return WaitFor(() => Services.Get<AppFlow>().State == AppState.Result && clear.IsShown, "the clear");
+            Assert.AreEqual(1, Services.Get<ClearNews>().Count, "the win is recorded");
+            clear.Map.Press();
+            yield return PlayEnv.WaitForState(AppState.StageSelect, AppScenes.Title, Timeout);
+            var title = Object.FindAnyObjectByType<TitleScreen>();
+            GameObject.Find("TitleUI/PlanetMap3D/Planet 1").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+            yield return WaitFor(() => title.SurfaceView != null && title.SurfaceView.Visible, "the surface");
+            var stars = title.SurfaceView.Constellation;
+            Assert.IsTrue(stars.Replaying, "the trace starts on the before state");
+            Assert.AreEqual(0, Services.Get<ClearNews>().Count, "taken by the controller");
+            yield return WaitFor(() => !stars.Replaying, "the trace to end");
+            StringAssert.StartsWith("cleared ", stars.State(0));
+            Assert.IsTrue(stars.LinkDrawn(0), "the route from stage 1 to 2 is drawn");
+            Assert.AreEqual(1f, stars.LinkFraction(0));
+        }
+
         /// Plays the stored solution: all moves but the last snapped, the last one presented (like a player's winning step).
         static void Win(GameController game, int stage)
         {

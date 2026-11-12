@@ -191,6 +191,7 @@ namespace SevenSteps.Game
                 resultPanel = u5Clear;
             }
             flowController = new GameFlowController(flow, Services.Get<EntryTracker>(), save, board, resultPanel, LevelCatalog.ChapterKeyOf, LevelCatalog.ChapterOf);
+            flowController.News = Services.TryGet<ClearNews>(out var clearNews) ? clearNews : null;
             back = new BackNavigator(overlays, flowController.Back);
             chapterIntro = new ChapterIntroController(flowController, overlays, chapterCard, key => LevelCatalog.ChapterCard(key, localizer.Current));
             this.result = result;
