@@ -131,6 +131,45 @@ namespace SevenSteps.Tests.PlayMode
             runner.enabled = true;
         }
 
+        /// R2 on 40a0561: at the 7th step of stage 38 (KEEP) and the wide stage 14 (SWITCH), the choice (current cards,
+        /// -ui5 glyphs) beside the board, clear of the step-star sky band, both UIs, stars visible. `playcapture ChoiceClearOfSky`.
+        [UnityTest]
+        public IEnumerator ChoiceClearOfSky()
+        {
+            foreach (var (stage, replay) in new[] { ("38", "DUDUDUR"), ("14", "LLLRRRR") })
+            foreach (bool u5 in new[] { false, true })
+            {
+                PlayEnv.Reset();
+                var args = u5 ? new[] { "-ui5", "-level", stage, "-replay", replay } : new[] { "-level", stage, "-replay", replay };
+                yield return Start(AppState.Game, AppScenes.Game, args);
+                var game = Object.FindAnyObjectByType<GameController>();
+                float t0 = Time.realtimeSinceStartup;
+                while (!game.Board.Choice.Shown)
+                {
+                    Assert.Less(Time.realtimeSinceStartup - t0, 10f, "the 7th step's choice");
+                    yield return null;
+                }
+                string name = $"r2-{stage}-{(u5 ? "u5" : "u4")}";
+                var px = new Pixels();
+                Rect r = default, band = default, area = default;
+                var view = game.Board.View;
+                yield return Capture(name, px, SettleSeconds, () =>
+                {
+                    // Measured on the 1280x720 capture canvas, after the choice was placed again on it.
+                    band = view.StepSkyBand;
+                    area = view.ProjectedArea();
+                    RectTransform group = u5 ? Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5GameHud>().Glyphs
+                        : Object.FindAnyObjectByType<SevenSteps.Game.UI.HudView>().choice;
+                    r = new Rect(group.anchoredPosition.x, -group.anchoredPosition.y, group.sizeDelta.x, group.sizeDelta.y);
+                    Debug.Log($"[SevenSteps] Play capture {name}: choice {r}, sky {band}, board {area}, brother {view.BrotherOnCanvas()}");
+                });
+                AssertVaried(name, px.Value);
+                Assert.IsTrue(view.Sky != null && view.Sky.Shown, "the step stars show while choosing");
+                Assert.IsFalse(r.Overlaps(band), $"{name}: the choice covers the step stars");
+                Assert.IsFalse(r.Overlaps(area), $"{name}: the choice is on the board area");
+            }
+        }
+
         /// U5 in-game before / after (docs/ui-u5-kit.md 3; gameplay-ui merge requests): stage 4 after one step (HUD) and
         /// after its 7th step (KEEP / SWITCH), the current UI ("u4-") and -ui5 ("u5-"), KO and EN; the choice also as a first
         /// visit (explanations on) and with SWITCH focused. `unity.sh playcapture U5InGame`.
@@ -176,7 +215,7 @@ namespace SevenSteps.Tests.PlayMode
 
         /// Renders every active camera (depth order) into a 1280x720 texture with the overlay UI on the main camera, settles,
         /// reads it back and saves NAME.png.
-        static IEnumerator Capture(string name, Pixels result, float settle = SettleSeconds)
+        static IEnumerator Capture(string name, Pixels result, float settle = SettleSeconds, Action afterSettle = null)
         {
             var rt = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32);
             var cams = Object.FindObjectsByType<Camera>(FindObjectsInactive.Exclude).Where(c => c.enabled).OrderBy(c => c.depth).ToList();
@@ -196,6 +235,19 @@ namespace SevenSteps.Tests.PlayMode
                     }
                 float t0 = Time.realtimeSinceStartup;
                 while (Time.realtimeSinceStartup - t0 < settle) yield return null; // board refit and UI layout at 16:9
+                // Capture rule (architect, 2026-11-12): the canvases must be the 1280x720 reference now, and what was placed
+                // on the smaller batch-mode canvas before the switch (the KEEP / SWITCH choice, afterSettle) is placed again.
+                foreach (var (cv, _, _, _) in canvases)
+                {
+                    var size = ((RectTransform)cv.transform).rect.size;
+                    Assert.That(Mathf.Abs(size.x - Width) < 1f && Mathf.Abs(size.y - Height) < 1f, $"canvas {cv.name} is {size}, not {Width}x{Height}");
+                }
+                Debug.Log($"[SevenSteps] Play capture {name}: canvases {Width}x{Height}");
+                var gc = Object.FindAnyObjectByType<GameController>();
+                if (gc != null && gc.Board != null && gc.Board.Choice != null) gc.Board.Choice.Refresh();
+                afterSettle?.Invoke();
+                yield return null;
+                yield return null;
                 // Batch mode has no Game view: WaitForEndOfFrame never comes. Render each camera into the texture now, in
                 // depth order, with its own clear flags (as the screen would composite them).
                 Canvas.ForceUpdateCanvases();

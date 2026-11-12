@@ -130,6 +130,29 @@ namespace SevenSteps.Tests.Game
         }
 
         [Test]
+        public void TheSkyBandPassedByTheControllerIsAvoidedAndNoRoomMarksTheExemption()
+        {
+            hud.ShowChoice(new HudView.ChoiceCards { On = true, FocusKeep = true });
+            var canvas = new Vector2(1280, 720);
+            var board = new Rect(300, 200, 680, 300);
+            var sky = new Rect(400, 100, 480, 90);
+            Assert.That(hud.PlaceChoice(board, new Vector2(640, 220), canvas, new List<Rect> { sky }), Is.True);
+            var g = new Rect(hud.Glyphs.anchoredPosition.x, -hud.Glyphs.anchoredPosition.y, hud.Glyphs.sizeDelta.x, hud.Glyphs.sizeDelta.y);
+            Assert.That(g.Overlaps(sky), Is.False, "the top candidate under the stars is left out");
+            Assert.That(g.Overlaps(board), Is.False);
+            var mark = hud.Glyphs.GetComponent<UiLayout>();
+            Assert.That(mark == null || (mark.exempt & UiLayoutRule.Board) == 0, "placed beside the board: no exemption");
+
+            // A board filling the canvas: no candidate, the glyphs stand over the brother with the Board exemption and its reason.
+            Assert.That(hud.PlaceChoice(new Rect(0, 0, 1280, 720), new Vector2(640, 360), canvas, null), Is.False);
+            mark = hud.Glyphs.GetComponent<UiLayout>();
+            Assert.That(mark != null && (mark.exempt & UiLayoutRule.Board) != 0, "wall-top fallback is exempt Board");
+            Assert.That(mark.reason, Does.Contain("no room beside the board"));
+            Assert.That(hud.PlaceChoice(board, new Vector2(640, 220), canvas, null), Is.True);
+            Assert.That((mark.exempt & UiLayoutRule.Board) == 0, "the exemption goes with the fallback");
+        }
+
+        [Test]
         public void PlateKeepsClearOfTheBoardWhereItCan()
         {
             var canvas = new Vector2(1280, 720);
