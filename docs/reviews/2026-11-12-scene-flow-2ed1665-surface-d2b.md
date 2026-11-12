@@ -23,3 +23,12 @@
 - N2: 할로 숨쉬기·현재 맥동이 매 프레임 `Graphic.color`를 바꿔 표면 캔버스를 다시 만든다. 메뉴 화면이라 허용하지만, WebGL에서 무거우면 별자리 층을 하위 Canvas로 분리.
 - N3: 후속 수정(제단 8-1 닫는 선이 몸체를 가로지름)은 캡처로 확인, 리드 승인대로 진행. 빼면 `EdgesDrawAsStagesClear…`의 altar 기대값도 함께.
 - N4: 뒤로 버튼은 기존 `BackChevron`(얇은 선). U5 키트 IconButton 48로 바꾸는 건 표면·지도 공통 작업으로 따로.
+
+## 추가: daff0d6 — D2b 첫 클리어 흔적(ClearNews) 승인
+
+- 검증: 헤드리스 EditMode 868/868 (분리 체크아웃)
+- 결정한 모양 그대로: `Game/Flow/ClearNews`(Services, 저장 안 함), `ClearNote{Stage, FirstClear, BestBefore, BestAfter}`, Record의 assert(0..3, 내려가지 않음, 첫 클리어면 before 0)·새것 없음 무시·스테이지별 합침, `TryTake(stages, into)` 할당 없음. 기록은 `GameFlowController.OnWon`의 MarkCleared 앞뒤, Take는 `StageSelectController.OpenSurface` 한 곳, 뷰는 받은 목록만 재생(UiLayoutCheck·테스트 Bind는 null). MVC 맞음.
+- 재생: before 상태로 열고 0.25 s 뒤 별 금색 + 새 링크 0.35 s 그리기(앞 스테이지 쪽에서) + 새 불꽃 0.18 s, 오라는 끝에. 노드 누름·움직임 줄이기는 즉시 끝 상태.
+- 메모(막지 않음):
+  - M1: `StageSelectViews.OpenSurface`가 오버레이가 열려 있으면 그냥 돌아가는데 소식은 컨트롤러가 이미 꺼냈다 → 그 경우 재생이 사라짐(지도 입력이 오버레이 아래에서 막혀 있으면 실제로는 안 생김). 순서를 바꾸려면 뷰가 열 수 있는지 먼저 묻거나, 못 열면 되돌려 넣기.
+  - M2: `ConstellationView.Bind`가 소식과 저장이 다르면 예외(InvalidOperationException). 지금 경로(같은 Progress에서 모델·소식)에서는 일관되고, 실행 중 진행 초기화는 부팅 때(-newplayer)뿐이라 `Clear()` 호출 지점이 없어도 안전. 나중에 실행 중 "진행 지우기"가 생기면 그곳에서 `ClearNews.Clear()` 필수.
