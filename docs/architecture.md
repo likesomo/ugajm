@@ -920,15 +920,15 @@ namespace SevenSteps.Game.UI {
 | `_StarTrailMap` | Texture2D | 15.2 배치. RGBA32, **linear**(sRGB 아님), Point, Clamp, 밉 없음, 크기 (2W)×H |
 | `_StarTrailWorldToCell` | float4x4 | 월드 위치 → (cx, cy). 칸 (x, y) 중심이 정수 (x, y)이고 cy는 맵 아래로 커진다(levels.json 행). `StarTrailMap.WorldToCell(BoardGrid)` |
 | `_StarTrailParams` | float4 | (W, H, 켜짐 0/1, 페이드 0..1). 설정 안 된 전역은 0이라, 뷰가 없으면(타이틀, 아트 리뷰 씬) 셰이더가 아무것도 그리지 않는다 |
-| `_StarTrailPulse` | float4 | (최신 칸 맥동 0..1, 일곱째 각성 0..1, 마지막 한 걸음 고리 맥동 0..1, 0). 뷰가 프레임마다 애니메이션 |
-| `_StarTrailState` | float4 | (현재 형제 0..2, 단계 0 진행 / 1 선택 / 2 승리 / 3 패배, 피날레 0..1, 쓴 걸음 0..7), 15.5·15.6 |
+| `_StarTrailPulse` | float4 | (최신 칸 맥동 0..1, 일곱째 각성 0..1, **예약(0)**, 0). z는 2026-11-12 C로 미사용(마지막 걸음 고리 맥동이었음). 뷰가 프레임마다 애니메이션 |
+| `_StarTrailState` | float4 | (현재 형제 0..2, 단계 0 진행 / 1 선택 / 2 승리 / 3 패배, 피날레 0..1, **예약(0)**), 15.5. w는 2026-11-12 C로 미사용(쓴 걸음이었음) |
 | `_StarTrailColors` | float4[3] | 형제 0·1·2의 linear 색. HUD 형제 색과 같은 출처(gameplay-ui) |
 
 ### 15.2 텍스처 배치 (칸마다 텍셀 2개, 행 y = 맵 행 y)
 - **층 0** `(2x, y)`
   - R·G·B = 형제 0·1·2(`BodyIndex`). 비트 k−1(k = 1..7) = 그 형제의 k번째 걸음이 이 칸에 닿음. 진흙처럼 한 칸에 두 걸음이면 두 비트가 다 켜진다.
   - 비트 7 = 그 형제의 KEEP 선돌이 이 칸에 서 있음(`BodyIndex.OfStatue`).
-  - A 비트 0 = 가장 최근 걸음 칸(맥동), 비트 1 = 걷는 형제가 선 칸(별 일곱 고리의 중심, 15.6). 나머지 비트는 0(예약).
+  - A 비트 0 = 가장 최근 걸음 칸(맥동), 비트 1 = **예약(0)**, 2026-11-12 C로 미사용(걷는 형제가 선 칸이었음, `ReservedBit`, 다른 뜻으로 재사용하지 않음). 나머지 비트도 0(예약).
 - **층 1** `(2x+1, y)`
   - R·G·B = 형제 0·1·2의 경로 변. 비트 0은 x+1, 비트 1은 x−1, 비트 2는 y+1(맵 아래), 비트 3은 y−1 쪽 변이다.
   - 연속한 두 발자국 사이의 경로는 양 끝 칸의 마주 보는 변을 켜고, 사이 칸(얼음 미끄러짐)은 양쪽 변을 다 켠다(`AddPath`).
@@ -986,7 +986,7 @@ namespace SevenSteps.Game.UI {
 - **임시 렌더**: 셰이더 마스크(아트)가 오기 전, gameplay-ui의 결합 quad 메시 1개(+1 드로우, 코드 생성 아틀라스)는 개발용으로 허용한다. 최종은 15.2 전역 텍스처(추가 드로우 0)다. 아트 v2 시안에서 배치(비트)를 바꿔야 하면 아키텍트가 15.2와 `StarTrailMap`을 함께 고친다.
 
 ### 15.6 형제 발치의 별 일곱 고리 (2026-11-10, 리드 지시 ui-minimal 예고, feat/view 535e775)
-> **2026-11-12 대체**: 사용자 결정 C(별 위치 = 보드 위 하늘의 별자리)로 발치의 화면 별(`BoardMarksView.SetFeet`)은 없앴다. 아래 15.7. 이 절의 `StarTrailMap` 플레이어 비트·`_StarTrailState.w`·`_StarTrailPulse.z`는 아직 채워지지만 화면에 그리는 것은 없다(정리 여부는 아키텍트 검토).
+> **2026-11-12 대체**: 사용자 결정 C(별 위치 = 보드 위 하늘의 별자리)로 발치의 화면 별(`BoardMarksView.SetFeet`)은 없앴다. 아래 15.7. 이 절의 `StarTrailMap` 플레이어 비트·`_StarTrailState.w`·`_StarTrailPulse.z`는 2026-11-12 예약(0)으로 바꿨다(아키텍트 검토 bf5dfac). 데이터 줄은 기록으로 남긴다.
 - 걷는 중(`Status.Play`)인 형제 발치에 별 일곱 개가 고리로 놓인다. k걸음을 쓰면 k번째 별이 채워진다(2026-11-11 승인 시안: 채운 별 = 걸은 수, 빈 별 = 남은 수, 숫자 없음). 6걸음 뒤에는 마지막 빈 별이 맥동한다(움직임 줄이기면 이중 테두리, 11.3.2).
 - **데이터**: 위치는 층 0 A 비트 1(`StarTrailMap.SetPlayer(State.Pos)`), 쓴 걸음은 `_StarTrailState.w`(`StateVector(..., used)`), 맥동은 `_StarTrailPulse.z`다. 선택·승리·패배 단계에서는 비트를 쓰지 않는다(고리 없음).
 - 같은 State에서 다시 계산하므로 Undo·Restart가 저절로 맞는다. 이동 중에는 고리가 도착 칸에 있다(Present 뒤 갱신).
@@ -1139,6 +1139,7 @@ namespace SevenSteps.Game.UI {
 | 2026-11-10 | 아키텍트 | 15장 별 흔적 셰이더 입력: 전역 `_StarTrailMap`((2W)×H RGBA32, 층 0 걸음·선돌·최신, 층 1 경로 변)·`_StarTrailWorldToCell`·`_StarTrailParams`·`_StarTrailPulse`·`_StarTrailColors`, Contracts `StarTrailMap`(배치·쓰기 도우미·`WorldToCell`). 추가 드로우 0, State에서 매번 다시 채움 |
 | 2026-11-10 | 아키텍트·게임플레이/UI | 15.5 별 흔적 상태 머신(층 1 A 끝난 방식 비트, 전역 `_StarTrailState`)과 행성별 값 `StarTrailPreset`(Contracts SO, `ChapterPreset.starTrail`, 비면 Default, `SetGlobals` → `_StarTrailStyleA/B/C`·`_StarTrailTint`, `tileset-validate` 범위 검사) |
 | 2026-11-10 | 아키텍트·게임플레이/UI | 15.6 별 일곱 고리: 층 0 A 비트 1(`SetPlayer`), `_StarTrailState.w` = 쓴 걸음, `_StarTrailPulse.z` = 마지막 걸음 고리 맥동. feat/view 535e775 검토 |
+| 2026-11-12 | 코어 (아키텍트 검토) | 15.6 대체 → 15.7 걸음 별자리(`StepSky`, `StepSkyView`, `BoardView.StepSkyBand`). 층 0 A 비트 1·`_StarTrailState.w`·`_StarTrailPulse.z`는 예약(0), `SetPlayer` 삭제, `StateVector`의 `used` 인자 삭제 |
 | 2026-11-11 | 아키텍트·씬 플로우 | 최소 UI v3 계약: 4.4 선택 화면(`ChoicePreview.TryOf` = `Rules.Dispatch` 순수 호출 미리보기, 확정 연출 0.5초 이하는 기존 Present 잠금, Z는 선택 전, 확정 횟수는 Present Keep/Switch만). 11.3.2 키 `seven-steps.tutorial`(`TutorialData` seen `이름@버전`·choiceConfirms 상한 3, `StartNewPlayer`가 지움, 리플레이·smoke 실행 제외), 접근성 `SettingsData.showStepNumbers`·`reduceMotion`(기본 끔). 14.11 BoardFrame 제안 (276,80,728,496)·상시 HUD·선택 화면 배치·등록 화면 6종. 15.6 채운 별 = 걸은 수로 문구 정정. 테스트 `MinimalUiContractTests` 7개 |
 | 2026-11-11 | 아키텍트 | scene-flow c513108 검토 승인(메뉴 오버레이·`TutorialTracker`·접근성 설정 연결, 검사 실행은 모두 seen인 메모리 저장소). 메모 C1 선택 카드·안내는 `Presented` 뒤 표시(gameplay-ui), C2 메모리 저장소 상한, C3 임시 설정 버튼 연결 정리. `docs/reviews/2026-11-11-scene-flow-c513108.md` |
 | 2026-11-11 | 아키텍트 | feat/view cce7783·740a516·fdd9651(최소 HUD, 선택 UI v3, 발치 별) 조건부 승인: 계약 4.4·14.11 대조 맞음(BoardFrame 8×6 ortho 4.67 셀 77px). R1 카드 Button 선택이 남아 Enter가 Submit과 `choice.Confirm` 두 경로로 갈 수 있음, R2 확정 Present 문 여러 개면 0.5초 초과·움직임 줄이기에서도 문 대기. `docs/reviews/2026-11-11-feat-view-fdd9651.md` |

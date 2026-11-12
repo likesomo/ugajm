@@ -180,17 +180,17 @@ namespace SevenSteps.Tests
             Assert.AreEqual(StarTrailMap.EndSwitch, Byte(map, 14, 1, 3), "SWITCH seam on the new start");
             Assert.AreEqual(1 << 5, Byte(map, 13, 0, 1));
             Assert.AreEqual(1 << 0, Byte(map, 13, 0, 2), "body 2's first step");
-            Assert.AreEqual(StarTrailMap.NewestBit | StarTrailMap.PlayerBit, Byte(map, 13, 0, 3), "newest step cell, the walking body stands there");
+            Assert.AreEqual(StarTrailMap.NewestBit, Byte(map, 13, 0, 3), "newest step cell; ReservedBit 0 (no ring at the feet since 2026-11-12 C)");
             Assert.AreEqual(StarTrailMap.EdgeLeft, Byte(map, 14, 1, 2));
             Assert.AreEqual(StarTrailMap.EdgeRight, Byte(map, 13, 1, 2));
 
             var snap = new StarTrailMap(level.W, level.H);
             StarTrail.Of(s).Write(snap, false);
-            Assert.AreEqual(StarTrailMap.PlayerBit, Byte(snap, 13, 0, 3), "no newest cell on Snap / Rebuild, the ring stays");
+            Assert.AreEqual(0, Byte(snap, 13, 0, 3), "no newest cell on Snap / Rebuild");
             StarTrail.Of(Run(s, "N")).Write(snap, false);
-            Assert.IsTrue(snap.Bytes.Select((b, i) => i == snap.Index(level.Start, 0, 3) ? b == StarTrailMap.PlayerBit : b == 0).All(ok => ok), "Restart: only the ring at the start");
+            Assert.IsTrue(snap.Bytes.All(b => b == 0), "Restart: an empty map");
             StarTrail.Of(Run(Rules.NewState(level), "RRRRRRR")).Write(snap, false);
-            Assert.IsFalse(Enumerable.Range(0, level.Count).Any(c => (Byte(snap, c, 0, 3) & StarTrailMap.PlayerBit) != 0), "choosing KEEP / SWITCH: no ring");
+            Assert.IsFalse(Enumerable.Range(0, level.Count).Any(c => (Byte(snap, c, 0, 3) & StarTrailMap.ReservedBit) != 0), "ReservedBit never set");
         }
 
         [Test]

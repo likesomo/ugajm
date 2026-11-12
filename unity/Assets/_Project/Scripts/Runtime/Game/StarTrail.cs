@@ -242,8 +242,6 @@ namespace SevenSteps.Game
             }
             var cur = Current;
             if (newest && cur != null && cur.Steps.Length > 1) map.SetNewest(cur.Steps[cur.Steps.Length - 1].Cell);
-            // The ring of seven stars stands where the walking body is (15.6); its lit stars come from _StarTrailState.w.
-            if (Ring && cur != null) map.SetPlayer(Pos);
         }
     }
 }
