@@ -8,7 +8,7 @@ namespace SevenSteps.Game.Flow
     /// <summary>
     /// The Game scene half of the stage select v4 journey (docs/stage-select-transitions.md): the dive's arrival (camera
     /// settles from the planet onto the board, the board rises from the surface), the advance (the brothers walk out to the
-    /// right, the next board rises there, the camera follows; no result panel) and the planet-complete pullback (camera
+    /// right, the next board rises there, the camera follows; from the clear's Next) and the pullback to the map (camera
     /// pulls back, then JourneyReturn and the star map). Controller only: it moves the camera and the board root through the
     /// BoardView hooks, and the flow through GameFlowController. Created by the scene root only when the journey is on.
     /// </summary>
@@ -55,6 +55,7 @@ namespace SevenSteps.Game.Flow
             flow.Journey = true;
             flow.Advancing += OnAdvancing;
             flow.PlanetCompleting += OnPlanetCompleting;
+            flow.Returning += OnReturning;
         }
 
         public void Dispose()
@@ -62,6 +63,7 @@ namespace SevenSteps.Game.Flow
             flow.Journey = false;
             flow.Advancing -= OnAdvancing;
             flow.PlanetCompleting -= OnPlanetCompleting;
+            flow.Returning -= OnReturning;
         }
 
         /// Board input waits: a transition is playing or about to start, or this frame's press skipped one.
@@ -151,9 +153,12 @@ namespace SevenSteps.Game.Flow
 
         // ---------- Planet complete ----------
 
-        void OnPlanetCompleting(int stage) => Defer(() => Pullback(stage));
+        void OnPlanetCompleting(int stage) => Defer(() => Pullback(stage, ReturnKind.PlanetComplete));
 
-        void Pullback(int stage)
+        /// The map or Esc from the clear: the same pullback, nothing lights on the map.
+        void OnReturning(int stage) => Defer(() => Pullback(stage, ReturnKind.Back));
+
+        void Pullback(int stage, ReturnKind kind)
         {
             board.View.CameraHeld = true;
             var from = CameraPose.Capture(cam);
@@ -161,8 +166,8 @@ namespace SevenSteps.Game.Flow
             runner.Play(PullbackSeconds, t => CameraPose.Lerp(from, to, t).Apply(cam), () =>
             {
                 int planet = planetOf(stage);
-                if (planet >= 0) journeyReturn.Begin(planet, chapterOf(stage) ?? "");
-                flow.OpenStageSelect(); // the scene changes; the held camera goes with it
+                if (planet >= 0) journeyReturn.Begin(planet, chapterOf(stage) ?? "", kind);
+                flow.FinishReturn(); // the scene changes; the held camera goes with it
             });
         }
 
