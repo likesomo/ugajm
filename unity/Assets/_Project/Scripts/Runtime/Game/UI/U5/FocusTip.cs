@@ -20,7 +20,9 @@ namespace SevenSteps.Game.UI.U5
             public readonly string Key;
             /// Keyboard shortcut shown after the words ("Z"), or null.
             public readonly string Shortcut;
-            public Tip(object owner, string key, string shortcut) { Owner = owner; Key = key; Shortcut = shortcut; }
+            /// Format arguments of <see cref="Key"/> (Localizer.Format), or null.
+            public readonly object[] Args;
+            public Tip(object owner, string key, string shortcut, object[] args = null) { Owner = owner; Key = key; Shortcut = shortcut; Args = args; }
             public bool IsEmpty => Owner == null;
         }
 
@@ -39,13 +41,13 @@ namespace SevenSteps.Game.UI.U5
             }
         }
 
-        public void Enter(TipSource source, object owner, string key, string shortcut = null)
+        public void Enter(TipSource source, object owner, string key, string shortcut = null, object[] args = null)
         {
             if (owner == null) throw new ArgumentNullException(nameof(owner));
             if (string.IsNullOrEmpty(key)) throw new ArgumentException("no string key", nameof(key));
             int i = Index(source);
             var before = Current;
-            bySource[i] = new Tip(owner, key, shortcut);
+            bySource[i] = new Tip(owner, key, shortcut, args);
             Notify(before);
         }
 
@@ -85,7 +87,7 @@ namespace SevenSteps.Game.UI.U5
         void Notify(Tip before)
         {
             var now = Current;
-            if (ReferenceEquals(before.Owner, now.Owner) && before.Key == now.Key && before.Shortcut == now.Shortcut) return;
+            if (ReferenceEquals(before.Owner, now.Owner) && before.Key == now.Key && before.Shortcut == now.Shortcut && ReferenceEquals(before.Args, now.Args)) return;
             Changed?.Invoke();
         }
     }

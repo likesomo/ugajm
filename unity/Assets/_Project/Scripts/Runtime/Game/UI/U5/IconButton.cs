@@ -36,6 +36,17 @@ namespace SevenSteps.Game.UI.U5
         public string TipKey => tipKey;
         /// Keyboard shortcut added after the explanation ("Z"), or null.
         public string Shortcut => string.IsNullOrEmpty(shortcut) ? null : shortcut;
+        /// Format arguments of the explanation, or null.
+        public object[] TipArgs { get; private set; }
+
+        /// Changes the explanation (key, its format arguments); a shown tip redraws.
+        public void SetTip(string key, object[] args = null)
+        {
+            if (string.IsNullOrEmpty(key)) throw new ArgumentException("no string key", nameof(key));
+            tipKey = key;
+            TipArgs = args;
+            if (tipShown != 0) foreach (TipSource s in Enum.GetValues(typeof(TipSource))) if (Has(s)) Raise(s, true);
+        }
         public RectTransform Rect => (RectTransform)transform;
 
         /// Default explanation key of an icon: ui5.icon.&lt;lower-case name&gt; (docs 5).
@@ -48,8 +59,11 @@ namespace SevenSteps.Game.UI.U5
         /// Builds an icon button under <paramref name="parent"/> (Edit Mode too). Place it with Ui.Place / TopLeft.
         /// <paramref name="onClick"/> may be null when the caller subscribes to <see cref="Clicked"/> itself.
         public static IconButton Build(Transform parent, UiIcon icon, UiIconSet set, string shortcut = null, Action onClick = null,
-            string tipKey = null, string name = null) =>
-            Build<IconButton>(parent, icon, set, Size, shortcut, onClick, tipKey, name);
+            string tipKey = null, string name = null, float size = Size)
+        {
+            if (!(size >= Size)) throw new ArgumentOutOfRangeException(nameof(size), size, "at least 48 (docs/ui-u5-kit.md 3)");
+            return Build<IconButton>(parent, icon, set, size, shortcut, onClick, tipKey, name);
+        }
 
         protected static T Build<T>(Transform parent, UiIcon icon, UiIconSet set, float size, string shortcut, Action onClick,
             string tipKey, string name) where T : IconButton
