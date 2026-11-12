@@ -1,0 +1,6 @@
+{
+  "name": "SevenSteps.WorldStarFix.Review",
+  "references": ["SevenSteps.Core", "SevenSteps.Contracts", "SevenSteps.Game", "UnityEngine.UI", "Unity.Collections"],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": false
+}
