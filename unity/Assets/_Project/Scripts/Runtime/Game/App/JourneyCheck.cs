@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using SevenSteps.Contracts;
@@ -26,10 +27,13 @@ namespace SevenSteps.Game
         static string ShotBase(string screenshot) =>
             string.IsNullOrEmpty(screenshot) ? null : screenshot.Substring(0, screenshot.Length - (screenshot.EndsWith(".png") ? 4 : 0));
 
-        /// Game scene: plays the replay. For advance it then checks the arrival; for complete it only fails if the scene stays.
+        /// Game scene: plays the replay, waits for the clear (the journey never skips the result, lead 2026-11-12) and presses
+        /// Next (<paramref name="next"/>, GameFlowController.Next). For advance it then checks the arrival; for complete it only
+        /// fails if the scene stays.
         public static IEnumerator RunGame(string kind, AppFlow flow, BoardController board, GameJourney journey, ResultView result, OverlayStack overlays,
-            string moves, string screenshot)
+            string moves, string screenshot, Action next)
         {
+            if (next == null) throw new ArgumentNullException(nameof(next));
             var fails = new List<string>();
             string shot = ShotBase(screenshot);
             int stage = flow.Stage;
@@ -42,8 +46,13 @@ namespace SevenSteps.Game
             board.Send(Command.FromAct(act));
 
             float t0 = Time.unscaledTime;
+            while (flow.State != AppState.Result && Time.unscaledTime - t0 < Timeout) yield return null;
+            if (flow.State != AppState.Result) { Finish(kind, new List<string> { $"no clear after the replay (state {flow.State}, status {board.State?.Status})" }); yield break; }
+            yield return new WaitForSecondsRealtime(0.3f);
+            next();
+            t0 = Time.unscaledTime;
             while (!journey.Blocks && Time.unscaledTime - t0 < Timeout) yield return null;
-            if (!journey.Blocks) { Finish(kind, new List<string> { $"no transition after the replay (state {flow.State}, status {board.State?.Status})" }); yield break; }
+            if (!journey.Blocks) { Finish(kind, new List<string> { $"no transition after Next (state {flow.State}, status {board.State?.Status})" }); yield break; }
             yield return null;
             if (kind == "complete")
             {

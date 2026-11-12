@@ -147,12 +147,13 @@ namespace SevenSteps.Tests.PlayMode
             if (assets.PlanetMapSprites != null) Assert.AreEqual(bodies.Length, sprites, "every map planet is a V7 sprite");
         }
 
-        /// The journey advance (stage 1 cleared, -newmap) frozen part-way: the JourneyRunner is disabled after about 0.45 s and
+        /// The journey after the clear (-ui5 -newmap, stage 1): the U5 clear first ("journey-clear"; the journey never skips
+        /// the result), then its Next runs the advance, frozen part-way: the JourneyRunner is disabled after about 0.45 s and
         /// 0.9 s of its 1.5 s, so the camera, the risen board and the cleared board stay where they are for the capture.
         [UnityTest]
         public IEnumerator AdvanceMidway()
         {
-            yield return Start(AppState.Game, AppScenes.Game, "-newmap", "-level", "1");
+            yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-newmap", "-level", "1");
             var game = Object.FindAnyObjectByType<GameController>();
             Assert.IsNotNull(game.Journey, "-newmap turns the journey on");
             float c0 = Time.realtimeSinceStartup; // the -level start shows the chapter card (2.5 s): play after it
@@ -165,6 +166,19 @@ namespace SevenSteps.Tests.PlayMode
             if (path.Length > 1) game.Board.Replay(path.Substring(0, path.Length - 1));
             Assert.IsTrue(SevenSteps.Core.Rules.TryParseLetter(path[path.Length - 1], out var act));
             game.Board.Send(SevenSteps.Core.Command.FromAct(act));
+            var flow = Services.Get<AppFlow>();
+            float r0 = Time.realtimeSinceStartup;
+            while (flow.State != AppState.Result)
+            {
+                Assert.Less(Time.realtimeSinceStartup - r0, 20f, "the clear");
+                yield return null;
+            }
+            var shot = new Pixels();
+            yield return Capture("journey-clear", shot);
+            AssertVaried("journey-clear", shot.Value);
+            var clear = Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ClearView>(FindObjectsInactive.Include);
+            Assert.IsTrue(clear != null && clear.IsShown, "the U5 clear is up before the advance");
+            clear.Next.Press(); // the journey from the clear's Next
             float t0 = Time.realtimeSinceStartup;
             while (!game.Journey.Blocks || Object.FindAnyObjectByType<SevenSteps.Game.Flow.JourneyRunner>() is not { Busy: true })
             {

@@ -164,7 +164,9 @@ namespace SevenSteps.Game.Flow
             if (model == null || heldPlanet < 0) return; // the map was not shown with a pending return
             int planet = heldPlanet;
             heldPlanet = -1;
-            view.LightTrail(model, planet, model.NextAlong(planet));
+            // Back from a clear (scene-flow, ReturnKind.Back): nothing lights, the map shows again on that planet.
+            if (journey.LastKind == ReturnKind.Back) view.ShowMap(model, planet, -1);
+            else view.LightTrail(model, planet, model.NextAlong(planet));
         }
 
         void OnPlanetChosen(int planet)
