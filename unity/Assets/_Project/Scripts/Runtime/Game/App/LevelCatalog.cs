@@ -14,6 +14,7 @@ namespace SevenSteps.Game
         static string[] chapterIds;
         static LevelDto[] dtos; // stage texts per language (LevelDto.TextFor, 13.5)
         static ChapterFileDto chapters; // null = no chapters.json yet
+        static TutorialDto[] tutorials; // levels.json "tutorials" (docs/tutorial.md), play order
 
         /// Domain reload is disabled in the editor: parse levels.json again on every Play so edits to it show up.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -24,6 +25,7 @@ namespace SevenSteps.Game
             chapterIds = null;
             dtos = null;
             chapters = null;
+            tutorials = null;
         }
 
         public static Level[] Load(GameAssets assets)
@@ -39,6 +41,9 @@ namespace SevenSteps.Game
                 if (!names.Add(l.Name)) throw new InvalidOperationException($"[SevenSteps] levels.json: stage name \"{l.Name}\" is used twice (it is the save key)");
             cached = parsed;
             dtos = file.levels;
+            tutorials = file.tutorials ?? new TutorialDto[0];
+            foreach (var t in tutorials)
+                if (t == null || t.level == null || string.IsNullOrEmpty(t.id)) throw new InvalidOperationException("[SevenSteps] levels.json: a tutorial board without id or level");
             chapterIds = file.levels.Select(d => d.chapter ?? "").ToArray(); // LevelDto.chapter (6.4), not part of Core Level
             chapters = assets.chaptersJson != null ? JsonUtility.FromJson<ChapterFileDto>(assets.chaptersJson.text) : null;
             if (chapters != null && (chapters.chapters == null || chapters.chapters.Length == 0)) chapters = null;
@@ -101,6 +106,25 @@ namespace SevenSteps.Game
         /// Chapter key for comparisons: the chapters.json id ("" and the first chapter's id are the same chapter), or the raw
         /// levels.json value when there is no chapters.json. Used by GameFlowController.ChapterEntering.
         public static string ChapterKeyOf(int stage) => ChapterOf(stage)?.id ?? ChapterIdOf(stage);
+
+        /// The tutorial boards T1..T3 in play order (levels.json "tutorials", docs/tutorial.md 2.4); empty in older files.
+        /// Not stages: no stage number, progress, stars or level_* telemetry. Call after Load.
+        public static System.Collections.Generic.IReadOnlyList<TutorialDto> Tutorials
+        {
+            get
+            {
+                if (tutorials == null) throw new InvalidOperationException("LevelCatalog.Tutorials before Load");
+                return tutorials;
+            }
+        }
+
+        /// A tutorial board's name, hint and story in a language (its LevelDto text, like TextOf). Call after Load.
+        public static LevelTextDto TutorialTextOf(int board, Language lang)
+        {
+            var list = Tutorials;
+            if (board < 0 || board >= list.Count) throw new ArgumentOutOfRangeException(nameof(board), board, $"tutorial board must be 0..{list.Count - 1}");
+            return list[board].level.TextFor(Languages.Code(lang));
+        }
 
         /// chapters.json chapters in order (planet select). Empty when there is no chapters.json. Call after Load.
         public static System.Collections.Generic.IReadOnlyList<ChapterInfo> Chapters

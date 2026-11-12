@@ -198,6 +198,8 @@ namespace SevenSteps.Game.UI
                     stageViews.Surface.Back.gameObject.SetActive(false);
                     u5Map.BackRequested += () => (stageViews.Surface.Visible ? stageViews.Surface.Back : stageViews.Map.Back).onClick.Invoke();
                     u5Map.SettingsRequested += () => Open(settings);
+                    u5Map.TutorialRequested += () => PlayTutorial(0); // T1..T3 again (docs/tutorial.md 2.4)
+                    u5Map.SetTutorialShown(LevelCatalog.Tutorials.Count > 0);
                 }
             }
             if (StageSelect != null && JourneyToggle.On(Services.Get<LaunchOptions>()))
@@ -224,6 +226,9 @@ namespace SevenSteps.Game.UI
             if (!save.LanguageChosen && launch.Language == null && flow.State == AppState.Title) OpenLanguage();
             if (launch.OpenSettings) Open(settings); // -settings / ?settings=1 (development, screenshots)
             if (launch.TitleCheck != "" && !launch.DirectToGame) StartCoroutine(TitleCheck(launch.TitleCheck));
+            // -newgamecheck (smoke): play on the fresh save, the prologue read through; the Game scene checks the tutorial.
+            if (launch.NewGameCheck && !launch.DirectToGame && flow.State == AppState.Title)
+                StartCoroutine(NewGameCheck.RunTitle(overlays, () => { if (u5) u5Title.Play.Press(); else titleView.BeginButton.onClick.Invoke(); }, () => cutscene));
             if (launch.JourneyCheck == "complete" && StageSelect != null)
             {
                 // -journeycheck complete (scene-flow): the planet-complete return arrived here; its own screenshots and quit.
@@ -288,9 +293,9 @@ namespace SevenSteps.Game.UI
             Open(planetStages);
         }
 
-
-        /// A new game (nothing played yet): the prologue first when it is due (CutsceneController.PlaysOnNewGame), then
-        /// stage 1. Seen once it ends, read or skipped. The tutorial boards will come between them (core's contract).
+        /// A new game (nothing played yet): the prologue first when it is due (CutsceneController.PlaysOnNewGame), then the
+        /// tutorial boards not done yet (TutorialRunController.OnNewGame, docs/tutorial.md 2.4), then stage 1. The prologue
+        /// is seen once it ends, read or skipped. Title / flow checks and screenshots go straight to stage 1 as before.
         void BeginNewGame()
         {
             var launch = Services.Get<LaunchOptions>();
@@ -298,14 +303,28 @@ namespace SevenSteps.Game.UI
             var prologue = cutscenes?.SceneFor(CutsceneCatalog.WhenNewGame);
             if (!CutsceneController.PlaysOnNewGame(prologue, flowController.CanContinue, save.TutorialSeen(TutorialIds.Prologue), devRun))
             {
-                flowController.BeginJourney();
+                AfterPrologue(devRun);
                 return;
             }
             cutscene.Begin(prologue, skipped =>
             {
                 save.MarkTutorialSeen(TutorialIds.Prologue);
-                flowController.BeginJourney();
+                AfterPrologue(devRun);
             });
+        }
+
+        void AfterPrologue(bool devRun)
+        {
+            var boards = LevelCatalog.Tutorials;
+            if (!devRun && TutorialRunController.OnNewGame(boards, save.TutorialSeen, save.Progress.ClearedCount))
+                PlayTutorial(TutorialBoards.FirstUndone(boards, save.TutorialSeen));
+            else flowController.BeginJourney();
+        }
+
+        /// Tutorial board <paramref name="board"/> in the Game scene (the new game, or the map's tutorial entry from T1).
+        void PlayTutorial(int board)
+        {
+            if (flow.CanGoToTutorial(board, LevelCatalog.Tutorials.Count)) flow.GoToTutorial(board, LevelCatalog.Tutorials.Count);
         }
 
         /// The title's story entry: the replayable cutscene, then back to the title (OnOverlaysChanged shows it again).

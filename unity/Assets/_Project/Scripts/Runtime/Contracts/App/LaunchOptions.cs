@@ -5,7 +5,7 @@ namespace SevenSteps.Contracts
 {
     /// <summary>
     /// Start options from the command line (desktop) or the page URL (WebGL). Same format as the web prototype:
-    /// desktop  "Seven Steps.exe" -level 8 [-tutorial 2] -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-settings] [-lang en] [-smoke board|empty] [-newplayer] [-loadDelay 1.5] [-flowcheck] [-titlecheck begin|continue|map] [-newmap|-oldmap] [-journey on|off] [-ui5|-ui4]
+    /// desktop  "Seven Steps.exe" -level 8 [-tutorial 2] -replay LRRRRDDK [-screenshot out.png] [-telemetry <url>|off] [-stageselect] [-credits] [-settings] [-lang en] [-smoke board|empty] [-newplayer] [-loadDelay 1.5] [-flowcheck] [-newgamecheck] [-titlecheck begin|continue|map] [-newmap|-oldmap] [-journey on|off] [-ui5|-ui4]
     /// WebGL    ?level=8&amp;tutorial=2&amp;replay=LRRRRDDK&amp;telemetry=<url>|off&amp;lang=en&amp;smoke=board&amp;newplayer=1&amp;loadDelay=1.5&amp;settings=1&amp;flowcheck=1&amp;titlecheck=map&amp;newmap=1&amp;journey=0&amp;ui5=1   (docs/telemetry.md section 4)
     /// Pure parsing: the caller passes Environment.GetCommandLineArgs() and Application.absoluteURL.
     /// Bad values are not exceptions (external input): they are skipped and described in <see cref="Warnings"/>,
@@ -48,6 +48,10 @@ namespace SevenSteps.Contracts
         /// wins, check the result text, press Next, check the chapter entry and the chapter look, log OK / FAIL and quit
         /// (unity.sh smoke flow step; docs/scene-flow.md S8).
         public bool FlowCheck { get; private set; }
+        /// Development / smoke only (-newgamecheck, with -newplayer): the Title presses play on the fresh save, reads the
+        /// prologue through, the Game scene solves the tutorial boards with their solver paths and logs
+        /// "[SevenSteps] New game check: arrived stage 1 via tutorial" or "New game check: FAIL ..." and quits (unity.sh smoke).
+        public bool NewGameCheck { get; private set; }
         /// Development / smoke only (-titlecheck begin|continue|map, no -level): the Title presses that path's real buttons
         /// (title Begin; title Continue; Stages -> planet 2 -> its first stage), the Game scene logs the stage and via it
         /// arrived at and quits (unity.sh smoke title step; docs/scene-flow.md S8). "" = off.
@@ -188,6 +192,7 @@ namespace SevenSteps.Contracts
                         case "-settings": o.OpenSettings = true; continue;
                         case "-newplayer": o.NewPlayer = true; continue;
                         case "-flowcheck": o.FlowCheck = true; continue;
+                        case "-newgamecheck": o.NewGameCheck = true; continue;
                         case "-artperf": o.ArtPerf = true; continue;
                         case "-newmap": o.NewMap = true; continue;
                         case "-oldmap": o.NewMap = false; continue;
@@ -236,6 +241,7 @@ namespace SevenSteps.Contracts
                     case "smoke": o.SetSmoke("url", v); break;
                     case "loadDelay": o.SetLoadDelay("url", v); break;
                     case "flowcheck": o.SetFlowCheck("url", v); break;
+                    case "newgamecheck": o.NewGameCheck = v == "1" || v == "true"; break;
                     case "titlecheck": o.SetTitleCheck("url", v); break;
                     case "artperf": o.SetArtPerf("url", v); break;
                     case "savekey": o.SetSaveKey("url", v); break;

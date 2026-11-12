@@ -159,6 +159,8 @@
     { "key": "ui5.icon.story", "text": "Story" },
     { "key": "ui5.icon.skip", "text": "Skip" },
     { "key": "cutscene.next", "text": "Next" },
+    { "key": "ui5.icon.tutorial", "text": "Tutorial again" },
+    { "key": "tutorial.skip", "text": "Skip the tutorial" },
     { "key": "ui5.choice.keep", "text": "Leave a stone, start over" },
     { "key": "ui5.choice.switch", "text": "Next brother goes on from here" },
     { "key": "ui5.title.continue", "text": "Keep walking" },

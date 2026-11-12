@@ -35,13 +35,20 @@ namespace SevenSteps.Game
         readonly Func<int, ChapterPreset> presetFor;
         readonly EndingController ending;
         readonly EndingView endingView;
+        // U5 (UiStyleToggle, default on): the clear is U5ClearView (no result text: its model says planet / journey end) and
+        // the ending cards are U5EndingView. Null with -ui4.
+        readonly UI.U5.U5ClearView u5Clear;
+        readonly U5EndingView u5Ending;
         ChapterCardModel cardShown;
         int stars = -1;
 
         public FlowCheck(AppFlow flow, BoardController board, GameFlowController flowController, OverlayStack overlays, ResultView result,
             ChapterStage chapterStage, ChapterIntroController chapterIntro, Localizer loc, Func<int, ChapterPreset> presetFor,
-            EndingController ending, EndingView endingView)
+            EndingController ending, EndingView endingView, UI.U5.U5ClearView u5Clear = null, U5EndingView u5Ending = null)
         {
+            if ((u5Clear == null) != (u5Ending == null)) throw new ArgumentException("FlowCheck: the U5 clear and ending come together");
+            this.u5Clear = u5Clear;
+            this.u5Ending = u5Ending;
             this.ending = ending ?? throw new ArgumentNullException(nameof(ending));
             this.endingView = endingView ?? throw new ArgumentNullException(nameof(endingView));
             this.flow = flow ?? throw new ArgumentNullException(nameof(flow));
@@ -104,7 +111,7 @@ namespace SevenSteps.Game
                         for (int i = 0; i < cards; i++)
                         {
                             if (ending.Page != i) { fails.Add($"ending shows card {ending.Page + 1}, expected {i + 1}"); break; }
-                            if (string.IsNullOrEmpty(endingView.Text)) fails.Add($"ending card {i + 1} has no line");
+                            if (string.IsNullOrEmpty(u5Ending != null ? u5Ending.Text : endingView.Text)) fails.Add($"ending card {i + 1} has no line");
                             if (shotBase != null) { ScreenCapture.CaptureScreenshot($"{shotBase}-ending{i + 1}.png"); yield return new WaitForSeconds(0.5f); }
                             ending.Next();
                             yield return null;
@@ -124,6 +131,7 @@ namespace SevenSteps.Game
 
         void CheckResultText(int stage, List<string> fails)
         {
+            if (u5Clear != null) { CheckU5Clear(stage, fails); return; }
             string body = result.body != null ? result.body.text : "";
             bool last = stage == flow.StageCount - 1;
             bool boundary = last || LevelCatalog.ChapterKeyOf(stage) != LevelCatalog.ChapterKeyOf(stage + 1);
@@ -135,6 +143,25 @@ namespace SevenSteps.Game
             if (!last && boundary && planetDone != null && !body.Contains(planetDone)) fails.Add($"planet end: result has no chapter_done for {planet.Planet(loc.Current)} ({Flat(body)})");
             if (!boundary && (body.Contains(journey) || (planetDone != null && body.Contains(planetDone)))) fails.Add($"mid-planet stage: result says the planet or journey ended ({Flat(body)})");
             if (result.next != null && !result.next.gameObject.activeSelf) fails.Add(last ? "last stage has no [see it through]" : "Next button hidden");
+        }
+
+        /// The U5 clear has no result text (docs/ui-u5-kit.md: star stones and Next by the exit): its model must say the same
+        /// as the old text checks (last stage, the planet a boundary stage finishes, none mid-planet), and Next must show.
+        void CheckU5Clear(int stage, List<string> fails)
+        {
+            var m = u5Clear.Model;
+            if (m == null) { fails.Add("U5 clear not shown"); return; }
+            bool last = stage == flow.StageCount - 1;
+            bool boundary = last || LevelCatalog.ChapterKeyOf(stage) != LevelCatalog.ChapterKeyOf(stage + 1);
+            var planet = LevelCatalog.ChapterOf(stage);
+            if (!m.Cleared) fails.Add("U5 clear shows a loss");
+            if (m.Stage != stage) fails.Add($"U5 clear is for stage {m.Stage + 1}");
+            if (m.IsLast != last) fails.Add(last ? "last stage: U5 clear does not know it is the last" : "U5 clear says last stage");
+            if (boundary && planet != null && (m.FinishedChapter == null || m.FinishedChapter.id != planet.id))
+                fails.Add($"planet end: U5 clear has no finished planet {planet.id} ({m.FinishedChapter?.id ?? "none"})");
+            if (!boundary && m.FinishedChapter != null) fails.Add($"mid-planet stage: U5 clear says planet {m.FinishedChapter.id} ended");
+            if (m.Stars < 1) fails.Add($"U5 clear has {m.Stars} stars");
+            if (!u5Clear.Next.gameObject.activeInHierarchy) fails.Add(last ? "last stage has no [see it through] on the U5 clear" : "U5 clear Next hidden");
         }
 
         void CheckChapterEntry(int stage, bool boundary, List<string> fails)

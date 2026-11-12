@@ -229,6 +229,15 @@ case "$cmd" in
       grep -qF "$want" "$out/title-$path.log" || { echo "[unity.sh] smoke title $path: expected \"$want\""; fail=1; }
       if grep -qE "^[A-Za-z.]*Exception" "$out/title-$path.log"; then grep -E "^[A-Za-z.]*Exception" "$out/title-$path.log"; fail=1; fi
     done
+    # New game step (docs/tutorial.md 2.4, lead 2026-11-13): a fresh player (-newplayer) presses play: the prologue is read
+    # through, T1..T3 are solved with their solver paths through the real board input, and stage 1 must follow (-newgamecheck).
+    # After the title step: -newplayer clears this save key's progress.
+    winout="$(cygpath -w "$out")"
+    "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -savekey "$SAVEKEY" -lang ko \
+      -newplayer -newgamecheck -logFile "$winout\\newgame.log" > /dev/null || true
+    grep -h "\[SevenSteps\] New game check" "$out/newgame.log" || echo "[unity.sh] smoke new game: no result line"
+    grep -qF "[SevenSteps] New game check: arrived stage 1 via tutorial" "$out/newgame.log" || { echo "[unity.sh] smoke new game: no arrival at stage 1 via the tutorial"; fail=1; }
+    if grep -qE "^[A-Za-z.]*Exception" "$out/newgame.log"; then grep -E "^[A-Za-z.]*Exception" "$out/newgame.log"; fail=1; fi
     # Journey step (docs/stage-select-transitions.md, stage select v4 behind -newmap): stage 1's win advances to stage 2 with
     # no result panel; the first planet's last stage pulls back to the star map and lights the trail. Screenshots
     # journey-KIND-mid.png / -end.png (complete also -pullback.png from the Game scene).
