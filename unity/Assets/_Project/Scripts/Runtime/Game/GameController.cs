@@ -116,6 +116,14 @@ namespace SevenSteps.Game
             board = gameObject.AddComponent<BoardController>();
             var localizer = Services.Get<Localizer>();
             hud = HudView.Create(tiles, localizer); // theme prefab with its own canvas; LabelLayer is valid for board.Init below
+            // U5 (docs/ui-u5-kit.md 2): asked once here. The current HUD stays for the board labels, message, statues, guide
+            // and story; U5 hides its own buttons, title, dots and cards and draws the top band and the choice glyphs.
+            if (UiStyleToggle.U5(launch))
+            {
+                if (assets.uiIcons == null) throw new MissingReferenceException("[SevenSteps] GameAssets.uiIcons is not set (Data/UiIconSet.asset) and U5 is on");
+                u5Hud = UI.U5.U5GameHud.Build(assets.uiIcons, tiles, localizer);
+                UI.U5.U5GameHud.HideClassic(hud);
+            }
             var result = ResultView.Create();
             result.Apply(localizer);
             this.localizer = localizer;
@@ -128,7 +136,7 @@ namespace SevenSteps.Game
             // Story ending (docs/architecture.md 16.8): four cards after the last stage's [끝까지 보기].
             story = Services.TryGet<StoryBook>(out var book) ? book : StoryBook.Off();
             var endingView = this.endingView = new EndingView(overlayCanvas, assets.storyImages, localizer);
-            applyResultLanguage = _ => { result.Apply(localizer); languagePanel.Apply(localizer); menuPanel.Apply(localizer); endingView.Apply(localizer); }; // the HUD and board redraw in BoardController
+            applyResultLanguage = _ => { result.Apply(localizer); languagePanel.Apply(localizer); menuPanel.Apply(localizer); endingView.Apply(localizer); if (u5Hud != null) u5Hud.Apply(localizer); }; // the HUD and board redraw in BoardController
             localizer.Changed += applyResultLanguage;
             // The theme's card prefab, else the code-built chapter entry screen (art concept chapter-entry). None in smoke /
             // replay runs: the screenshot must show the board.
@@ -144,6 +152,7 @@ namespace SevenSteps.Game
 
             // Board controller, then the flow controller on top of it
             board.Init(assets, levels, save, hud, cam, tiles, overrideCamera ? cameraRig : (CameraRig?)null, Services.Get<ITelemetry>(), localizer);
+            if (u5Hud != null) WireU5(u5Hud);
             // Chapter look (12.8): stage -> chapters.json artPreset -> AppConfig.Chapter; null (no chapter assets yet) = as now.
             // -smoke board|empty (smoke-webgl): no sky/planet and a magenta clear; empty also hides the board (negative control).
             chapterStage = new ChapterStage(cam, keyLight, fillLight, rimLight, transform, launch.SmokeView);
@@ -217,6 +226,11 @@ namespace SevenSteps.Game
             result.RestartRequested += board.Restart;
             // Clear over the board (docs 14.7): the HUD hides while the result shows.
             result.HudHidden += hud.Conceal;
+            if (u5Hud != null)
+            {
+                result.HudHidden += u5Hud.Conceal;
+                u5Hud.PauseRequested += menu.Toggle; // the U5 pause row comes with the pause / failure step; the menu until then
+            }
 
             // Story on the board (docs 16.7 / 16.8, story-integration.md 0.2): the stage's start line and a planet's finale
             // line on the HUD's passing line. Quiet in dev runs and art perf, like the guides.
@@ -369,6 +383,21 @@ namespace SevenSteps.Game
         };
 
         /// Canvas for overlays above the HUD (0) and the result panel (5).
+        UI.U5.U5GameHud u5Hud;
+
+        /// U5 HUD -> the same controller calls as the current HUD (docs/ui-u5-kit.md 7).
+        void WireU5(UI.U5.U5GameHud u5)
+        {
+            board.UseChoiceView(u5);
+            board.HudRefreshed += u5.Refresh;
+            u5.BoardArea = () => board.View.ProjectedArea();
+            u5.UndoRequested += () => board.Send(SevenSteps.Core.Command.Undo);
+            u5.RestartRequested += board.Restart;
+            u5.HintRequested += board.ShowHint;
+            u5.KeepRequested += () => board.Send(SevenSteps.Core.Command.Keep);
+            u5.SwitchRequested += () => board.Send(SevenSteps.Core.Command.Switch);
+        }
+
         static Transform OverlayCanvas()
         {
             var canvasGo = new GameObject("Overlays", typeof(RectTransform));

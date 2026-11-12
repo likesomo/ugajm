@@ -153,7 +153,7 @@
     { "key": "ui5.icon.settings", "text": "설정" },
     { "key": "ui5.icon.map", "text": "별지도" },
     { "key": "ui5.icon.retry", "text": "다시 하기" },
-    { "key": "ui5.icon.next", "text": "다음 걸음" },
+    { "key": "ui5.icon.next", "text": "다음 스테이지" },
     { "key": "ui5.icon.back", "text": "뒤로" },
     { "key": "ui5.icon.language", "text": "언어" },
     { "key": "ui5.icon.credits", "text": "만든 사람들" },

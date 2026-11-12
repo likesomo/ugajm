@@ -98,9 +98,8 @@ namespace SevenSteps.Game
         // Shader globals animated by the view (15.1): newest-cell pulse, seventh awaken, Restart fade, finale.
         float newestStart = -1f, awakenStart = -1f, fadeStart = -1f, finale;
         StarTrail pendingRefill; // Restart: the old map fades out first, then this is written
-        int currentBody, phase, used;
+        int currentBody, phase;
         int startCell = -1; // the walking brother's start: its start marker already rings it, so no knot ring on top
-        bool lastStepPulse; // one step left: _StarTrailPulse.z
 
         /// Interim quad renderer on. Turn off when the art tile shader draws _StarTrailMap, or the trail is drawn twice
         /// (architect N2 on 26f01e0); the map and globals are written either way.
@@ -167,7 +166,7 @@ namespace SevenSteps.Game
 
         void SetParams(float fade) => Shader.SetGlobalVector(StarTrailMap.ParamsId, new Vector4(map.W, map.H, 1f, Mathf.Clamp01(fade)));
 
-        void SetState() => Shader.SetGlobalVector(StarTrailMap.StateId, StarTrailMap.StateVector(currentBody, phase, finale, used));
+        void SetState() => Shader.SetGlobalVector(StarTrailMap.StateId, StarTrailMap.StateVector(currentBody, phase, finale));
 
         void Upload(StarTrail trail, bool newest)
         {
@@ -196,7 +195,7 @@ namespace SevenSteps.Game
         public void Show(State s, bool animate)
         {
             var trail = StarTrail.Of(s, Known);
-            // The ring at the feet is drawn in screen space by BoardMarksView (never behind a tile); the map still has the cell.
+            // No ring at the feet: the step stars are the sky constellation (StepSkyView, 2026-11-12 C).
             var marks = trail.Marks().FindAll(m => m.Kind != TrailMarkKind.Ring);
             float now = Time.time;
             bool restart = s.Prev == null && items.Count > 0;
@@ -204,8 +203,6 @@ namespace SevenSteps.Game
 
             currentBody = Mathf.Clamp(BodyIndex.Current(s), 0, StarTrailMap.MaxBodies - 1);
             phase = (int)s.Status;
-            used = s.Used;
-            lastStepPulse = trail.Ring && trail.Used == Rules.Steps - 1;
             finale = 0f;
             SetState();
             if (restart && !animate)
@@ -292,7 +289,7 @@ namespace SevenSteps.Game
             foreach (var m in dots) dotSlot[m] = (bodiesAt[m.Cell].IndexOf(m.Body), bodiesAt[m.Cell].Count);
 
             breathing = !ReduceMotion && marks.Exists(m => m.End == TrailEnd.Walking && (m.Kind == TrailMarkKind.Line || m.Kind == TrailMarkKind.Star));
-            if (newestStart >= 0 || awakenStart >= 0 || lastStepPulse || breathing) animating = true;
+            if (newestStart >= 0 || awakenStart >= 0 || breathing) animating = true;
             Rebuild();
         }
 
@@ -364,8 +361,6 @@ namespace SevenSteps.Game
         }
 
         /// 0..1, about one beat a second: the last step's pulse (_StarTrailPulse.z).
-        static float RingPulse(float now) => 0.5f + 0.5f * Mathf.Sin(now * 2f * Mathf.PI / RingBeat);
-        const float RingBeat = 0.9f;
 
         static float PulseNow(Item it)
         {
@@ -400,9 +395,7 @@ namespace SevenSteps.Game
                 float k = (now - awakenStart) / Mathf.Max(preset.awakenSeconds, 0.001f);
                 if (k < 1) { awaken = Mathf.Sin(k * Mathf.PI); still = true; } else awakenStart = -1;
             }
-            float ring = lastStepPulse && !ReduceMotion ? RingPulse(now) : 0f;
-            if (lastStepPulse) still = true;
-            Shader.SetGlobalVector(StarTrailMap.PulseId, new Vector4(newest, awaken, ring, 0));
+            Shader.SetGlobalVector(StarTrailMap.PulseId, new Vector4(newest, awaken, 0, 0)); // z reserved 0
             if (fadeStart >= 0)
             {
                 float k = (now - fadeStart) / Mathf.Max(preset.restartSeconds, 0.001f);

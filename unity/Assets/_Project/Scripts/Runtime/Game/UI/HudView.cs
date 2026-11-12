@@ -20,7 +20,7 @@ namespace SevenSteps.Game.UI
     /// (HudBuilder). Reads State only and raises button events; controllers decide. Every word comes from the string table
     /// (hud.*, docs/architecture.md 13.2) in the role fonts of the current language; <see cref="Apply"/> redraws on a switch.
     /// </summary>
-    public sealed class HudView : MonoBehaviour, Story.ITransientLine
+    public sealed class HudView : MonoBehaviour, Story.ITransientLine, IChoiceView
     {
         [Header("Board labels (step numbers, gate digits) are placed here by BoardView")]
         public RectTransform labelLayer;

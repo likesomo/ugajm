@@ -54,6 +54,26 @@ namespace SevenSteps.Tests.PlayMode
             AssertVaried("game", px.Value);
         }
 
+        /// Step constellation (user decision 2026-11-12 "C") on a small board after 6 steps (the 7th star calls), on the wide
+        /// 17 x 3 stage 14 after 3, and while choosing after the 7th step (stage 38): reports/playcapture/step-sky-*.png.
+        [UnityTest]
+        public IEnumerator StepSky([Values("6:DUDUDU:6", "14:RRR:3", "38:DUDUDUR:7")] string shot)
+        {
+            var part = shot.Split(':');
+            yield return Start(AppState.Game, AppScenes.Game, "-level", part[0], "-replay", part[1]);
+            var px = new Pixels();
+            yield return Capture($"step-sky-{part[0]}", px);
+            AssertVaried("step-sky", px.Value);
+            var view = Object.FindAnyObjectByType<BoardView>();
+            Assert.IsNotNull(view?.Sky, "BoardView with a step sky");
+            Assert.IsTrue(view.Sky.Shown, "constellation shown");
+            Assert.AreEqual(int.Parse(part[2]), view.Sky.Sky.Lit, "stars lit = steps walked");
+            var band = view.StepSkyBand;
+            Assert.Greater(band.width, 0f, "StepSkyBand while the sky shows");
+            Assert.GreaterOrEqual(band.yMin, StepSkyView.HudTopBand - 8.01f, "band under the HUD top band (Band grows by 8)");
+            Debug.Log($"[SevenSteps] Play capture step-sky-{part[0]}: lit {view.Sky.Sky.Lit}, star {view.Sky.Placed.Size:0}, bottom {view.Sky.Placed.Bottom:0}, top {view.Sky.Placed.Top:0}, band {band}");
+        }
+
         [UnityTest]
         public IEnumerator GameBoardAgainstEmptyControl()
         {
@@ -109,6 +129,38 @@ namespace SevenSteps.Tests.PlayMode
                 AssertVaried(label, px.Value);
             }
             runner.enabled = true;
+        }
+
+        /// U5 in-game before / after (docs/ui-u5-kit.md 3; gameplay-ui merge requests): stage 4 after one step (HUD) and
+        /// after its 7th step (KEEP / SWITCH), the current UI ("u4-") and -ui5 ("u5-"), KO and EN; the choice also as a first
+        /// visit (explanations on) and with SWITCH focused. `unity.sh playcapture U5InGame`.
+        [UnityTest]
+        public IEnumerator U5InGame()
+        {
+            foreach (var (name, args, explain, focusSwitch) in new (string, string[], bool, bool)[]
+            {
+                ("u4-hud", new[] { "-level", "4", "-replay", "D" }, false, false),
+                ("u5-hud", new[] { "-ui5", "-level", "4", "-replay", "D" }, false, false),
+                ("u4-choice", new[] { "-level", "4", "-replay", "DURRRRR" }, false, false),
+                ("u5-choice", new[] { "-ui5", "-level", "4", "-replay", "DURRRRR" }, false, false),
+                ("u5-choice-first", new[] { "-ui5", "-level", "4", "-replay", "DURRRRR" }, true, false),
+                ("u5-choice-switch", new[] { "-ui5", "-level", "4", "-replay", "DURRRRR" }, false, true),
+                ("u4-choice-en", new[] { "-lang", "en", "-level", "4", "-replay", "DURRRRR" }, true, false),
+                ("u5-choice-en", new[] { "-ui5", "-lang", "en", "-level", "4", "-replay", "DURRRRR" }, true, false),
+                ("u5-hud-en", new[] { "-ui5", "-lang", "en", "-level", "4", "-replay", "D" }, false, false),
+            })
+            {
+                PlayEnv.Reset();
+                yield return Start(AppState.Game, AppScenes.Game, args);
+                var game = Object.FindAnyObjectByType<GameController>();
+                float t0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - t0 < 1f) yield return null; // the replay snap and the HUD refresh
+                if (explain) { game.Board.Choice.ExplainChoices = () => true; game.Board.Choice.Refresh(); }
+                if (focusSwitch) game.Board.Choice.Focus(false);
+                var px = new Pixels();
+                yield return Capture(name, px);
+                AssertVaried(name, px.Value);
+            }
         }
 
         // ---------- ----------
