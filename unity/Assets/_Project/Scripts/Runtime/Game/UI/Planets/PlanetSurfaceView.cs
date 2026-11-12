@@ -89,12 +89,19 @@ namespace SevenSteps.Game.UI.Planets
             ring.rectTransform.sizeDelta = new Vector2(72, 72);
             ring.gameObject.SetActive(false);
 
-            title = Ui.Label(rect, "", 26, Gold, TextAnchor.MiddleCenter, "Planet");
-            title.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -30), new Vector2(700, 44));
+            // The planet name and the place's stage on plates (14.4: text over the starry sky, architect note 2026-11-12),
+            // each sized to its words (PlateFit).
+            var titlePlate = Ui.Plate(rect, "Planet plate");
+            titlePlate.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -30), new Vector2(200, 44));
+            title = Ui.Label(titlePlate.transform, "", 26, Gold, TextAnchor.MiddleCenter, "Planet");
+            title.rectTransform.Stretch();
             title.raycastTarget = false;
-            step = Ui.Label(rect, "", 23, Gold, TextAnchor.MiddleCenter, "Step");
-            step.rectTransform.Place(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 40), new Vector2(400, 40));
+            var stepPlate = Ui.Plate(rect, "Step plate");
+            stepPlate.rectTransform.Place(new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 40), new Vector2(160, 40));
+            step = Ui.Label(stepPlate.transform, "", 23, Gold, TextAnchor.MiddleCenter, "Step");
+            step.rectTransform.Stretch();
             step.raycastTarget = false;
+            stepPlate.gameObject.SetActive(false);
             back = PlanetMap3DView.BackChevron(rect, Gold, () => { if (!pending) CloseRequested?.Invoke(); });
 
             panel.AddComponent<ViewTicker>().Tick = Tick;
@@ -113,7 +120,7 @@ namespace SevenSteps.Game.UI.Planets
             loc = localizer ?? throw new ArgumentNullException(nameof(localizer));
             title.font = Ui.Theme.FontFor(loc.Current, FontRole.Title);
             step.font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
-            if (model != null && planet >= 0) { title.text = planets[planet].Name(loc); Refresh(); }
+            if (model != null && planet >= 0) { title.text = planets[planet].Name(loc); PlateFit(title); Refresh(); }
         }
 
         /// Fills the view for a planet (call before Show; the root pushes it on the OverlayStack).
@@ -127,6 +134,7 @@ namespace SevenSteps.Game.UI.Planets
             body = PlanetBody.Create(set, planets[p].Key, p, root, seated: true);
             BuildPlaces();
             title.text = planets[p].Name(loc);
+            PlateFit(title);
             int count = model.StageCount(p);
             while (targets.Count < count)
             {
@@ -279,10 +287,22 @@ namespace SevenSteps.Game.UI.Planets
             if (model == null || planet < 0 || loc == null) return;
             int slot = hovered >= 0 ? hovered : armed ? focused : -1;
             bool show = slot >= 0 && !pending;
-            step.gameObject.SetActive(show);
+            step.transform.parent.gameObject.SetActive(show);
             ring.gameObject.SetActive(show);
-            if (show) step.text = $"{loc.Get("planets.stage")} {(planets[planet].Stages[slot] + 1):00}";
+            if (show) { step.text = $"{loc.Get("planets.stage")} {(planets[planet].Stages[slot] + 1):00}"; PlateFit(step); }
         }
+
+        /// The text's plate (its parent) sized to the words: 16 on each side, 8 clear above and below the drawn glyphs (14.4).
+        static void PlateFit(Text t)
+        {
+            var plate = (RectTransform)t.transform.parent;
+            float w = t.cachedTextGeneratorForLayout.GetPreferredWidth(t.text, t.GetGenerationSettings(Vector2.zero)) / Mathf.Max(0.01f, t.pixelsPerUnit);
+            plate.sizeDelta = new Vector2(Mathf.Ceil(w) + 32, U5.FocusPlate.PlateHeight(t, t.text, w, 8));
+        }
+
+        /// The planet name and the place's stage line (UiLayoutCheck, tests).
+        public Text Title => title;
+        public Text Step => step;
 
         void Tick()
         {

@@ -329,6 +329,37 @@ namespace SevenSteps.EditorTools
                     return null;
                 } }, w == "" ? "" : "tip " + w);
             }
+            // The planet surface (gameplay-ui, the v4 map's planet up close; U5 and -newmap): the planet name at the top and,
+            // with a place focused, its stage line at the bottom, each on its plate (14.4: text over the starry sky).
+            foreach (int slot in new[] { -1, 2 })
+            {
+                int s = slot;
+                yield return (new Screen { Name = "Planet surface", GameplayUi = true, Build = (c, root) =>
+                {
+                    var camGo = new GameObject("UiLayoutCheck Surface Camera");
+                    var cam = camGo.AddComponent<Camera>();
+                    cam.aspect = c.Units.x / c.Units.y;
+                    var space = new SevenSteps.Game.UI.Planets.PlanetSpace(cam, c.Assets.background);
+                    var planets = PlanetEntry.FromCatalog(c.Levels.Length);
+                    var keys = planets.Select(p => p.Key).ToList();
+                    var model = StageSelectModel.From(keys, planets.Select(p => p.Stages).ToList(), st => false, -1, new List<(int, int)>());
+                    // Loaded here: a scene switch drops GameAssets.planetBodies in Edit Mode (StageSelectCapture does the same).
+                    var bodies = AssetDatabase.LoadAssetAtPath<SevenSteps.Game.UI.Planets.PlanetBodySet>("Assets/_Project/Data/PlanetBodies.asset");
+                    var surface = new SevenSteps.Game.UI.Planets.PlanetSurfaceView(root, space, bodies, planets, _ => { });
+                    surface.Apply(c.Loc);
+                    surface.Bind(model, 0);
+                    surface.Show();
+                    surface.Preview(s);
+                    // The starfield backdrop is the scene's sky (art), not UI: its stars are exempt, the sky colour stays the
+                    // background the text and the back chevron are measured against.
+                    var sky = GameObject.Find("StageSelectBackdrop");
+                    if (sky != null)
+                        foreach (var g in sky.GetComponentsInChildren<Graphic>(true))
+                            if (g.gameObject != sky) Ui.Exempt(g.gameObject, UiLayoutRule.Decoration | UiLayoutRule.Contrast | UiLayoutRule.Overlap | UiLayoutRule.Board,
+                                "starfield sky of the planet view (scene art, not UI)");
+                    return null;
+                } }, s < 0 ? "" : "place");
+            }
             // Language and credits, each also with the kit's explanation plate showing (U5Kit, as the title tips).
             foreach (bool tip in new[] { false, true })
             {
