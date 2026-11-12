@@ -353,7 +353,7 @@ namespace SevenSteps.Tests
         [Test]
         public void ToggleDefaultsOffAndFlagsTurnItOn()
         {
-            Assert.AreEqual(StageSelectToggle.DefaultOn, StageSelectToggle.On(LaunchOptions.Parse(new string[0], "")));
+            Assert.AreEqual(StageSelectToggle.DefaultOn || UiStyleToggle.DefaultOn, StageSelectToggle.On(LaunchOptions.Parse(new string[0], "")), "no flag: the new map follows U5");
             Assert.IsTrue(StageSelectToggle.On(LaunchOptions.Parse(new[] { "x.exe", "-newmap" }, "")));
             Assert.IsFalse(StageSelectToggle.On(LaunchOptions.Parse(new[] { "x.exe", "-oldmap" }, "")));
             Assert.IsTrue(StageSelectToggle.On(LaunchOptions.Parse(null, "http://h/?newmap=1")));

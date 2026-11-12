@@ -81,7 +81,7 @@ namespace SevenSteps.Tests.PlayMode
         [UnityTest]
         public IEnumerator NextOnThePlanetsLastStageReturnsToTheMapAndLightsTheTrail()
         {
-            yield return Boot("-newmap", "-level", "1");
+            yield return Boot("-ui4", "-newmap", "-level", "1"); // the current result panel (U5 has its own clear tests)
             var game = Object.FindAnyObjectByType<GameController>();
             var flow = Services.Get<AppFlow>();
 

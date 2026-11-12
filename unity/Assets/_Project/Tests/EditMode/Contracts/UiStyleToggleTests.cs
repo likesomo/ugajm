@@ -12,7 +12,7 @@ namespace SevenSteps.Tests
             var o = LaunchOptions.Parse(new[] { "x.exe" }, "");
             Assert.IsNull(o.Ui5);
             Assert.AreEqual(UiStyleToggle.DefaultOn, UiStyleToggle.U5(o));
-            Assert.IsFalse(UiStyleToggle.DefaultOn, "off until the U5 screens are stable (lead plan 2026-11-12)");
+            Assert.IsTrue(UiStyleToggle.DefaultOn, "U5 on for the 11/13 playtest build (user decision 2026-11-12-b); -ui4 / ?ui5=0 keep the old UI");
         }
 
         [Test]
