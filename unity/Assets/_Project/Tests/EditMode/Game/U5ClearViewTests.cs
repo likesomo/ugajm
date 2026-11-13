@@ -66,7 +66,7 @@ namespace SevenSteps.Tests.Game
         {
             // No hint, 2 of 3 brothers: two stars and the nudge (user request 2026-11-13), at the top centre.
             view.Show(ResultModel.Clear(3, 3, 2, 2, false, stars: 2, bestStars: 2));
-            Assert.That(view.NudgeLine, Is.EqualTo("형제 3명이 모두 걸으면 별 셋."));
+            Assert.That(view.NudgeLine, Is.EqualTo("형제가 모두 걸었다면 선이 더 밝았을 텐데."));
             Assert.That(view.NudgePlate.anchoredPosition.y, Is.EqualTo(-U5ClearView.Safe));
             Assert.That(view.NudgePlate.sizeDelta.x, Is.LessThan(600f), "a short plate, not a band");
             view.Hide();
@@ -91,7 +91,7 @@ namespace SevenSteps.Tests.Game
             try
             {
                 v.Show(ResultModel.Clear(49, 2, 1, 1, true, stars: 2, bestStars: 2));
-                Assert.That(v.NudgeLine, Is.EqualTo("All 2 brothers walk: three stars."));
+                Assert.That(v.NudgeLine, Is.EqualTo("If all of us had walked, the line would have shone brighter."));
                 Assert.That(v.NudgePlate.anchoredPosition.y, Is.LessThan(-U5ClearView.Safe - 40), "under the journey line");
             }
             finally { Object.DestroyImmediate(v.gameObject); }

@@ -30,7 +30,7 @@ namespace SevenSteps.Tests
             CutsceneCatalog.FromJson(AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset").cutscenesJson.text);
 
         // Two pages: two lines, then one with a rule caption.
-        const string Small = @"{ ""version"": 2, ""languages"": [""ko"", ""en""], ""scenes"": [
+        const string Small = @"{ ""version"": 3, ""languages"": [""ko"", ""en""], ""scenes"": [
             { ""id"": ""prologue"", ""when"": ""newGame"", ""replay"": ""title"", ""pages"": [
               { ""id"": ""1"", ""image"": ""cutscene.prologue.1"", ""lines"": [
                 { ""line"": ""가"", ""text"": [{ ""lang"": ""en"", ""line"": ""A"" }] },
@@ -65,8 +65,8 @@ namespace SevenSteps.Tests
                         Assert.That(CutsceneCatalog.Lines(p, l), Has.All.Not.Empty, $"{p.image} {l}");
             // Rule captions (user request 2026-11-13) on prologue 3, 4, 5, 5b and 6; KEEP and SWITCH say where the next one wakes.
             Assert.That(prologue.pages.Where(CutsceneCatalog.HasRule).Select(p => p.id), Is.EqualTo(new[] { "3", "4", "5", "5b", "6" }));
-            Assert.That(CutsceneCatalog.Rule(prologue.pages[4], Language.En), Does.StartWith("KEEP:"));
-            Assert.That(CutsceneCatalog.Rule(prologue.pages[5], Language.En), Does.StartWith("SWITCH:"));
+            Assert.That(CutsceneCatalog.Rule(prologue.pages[4], Language.En), Does.Contain("KEEP"));
+            Assert.That(CutsceneCatalog.Rule(prologue.pages[5], Language.En), Does.Contain("SWITCH"));
             Assert.AreEqual("", CutsceneCatalog.Rule(prologue.pages[0], Language.Ko), "no caption");
             var set = AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset").cutsceneImages;
             Assert.IsNotNull(set, "GameAssets.cutsceneImages");
@@ -93,7 +93,7 @@ namespace SevenSteps.Tests
             void Bad(string json, string part) =>
                 Assert.That(Assert.Throws<FormatException>(() => CutsceneCatalog.FromJson(json)).Message, Does.Contain(part));
             Bad("", "empty");
-            Bad(Small.Replace(@"""version"": 2", @"""version"": 1"), "version 1");
+            Bad(Small.Replace(@"""version"": 3", @"""version"": 2"), "version 2");
             Bad(Small.Replace(@"{ ""lang"": ""en"", ""line"": ""Rule"" }", ""), "rule: no \"en\"");
             Bad(Small.Replace(@"[""ko"", ""en""]", @"[""ko""]"), "\"en\"");
             Bad(Small.Replace("newGame", "later"), "when \"later\"");
