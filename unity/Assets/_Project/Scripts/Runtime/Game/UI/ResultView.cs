@@ -29,6 +29,8 @@ namespace SevenSteps.Game.UI
         public int BestStars { get; }
         /// The planet this clear finishes (its last stage, not the final stage), null otherwise: the panel says goodbye to it.
         public ChapterInfo FinishedChapter { get; }
+        /// Two stars (no hint) but not every brother walked: the result nudges toward the third (user request 2026-11-13).
+        public bool Star3Nudge => Cleared && Stars == 2 && BodiesUsed < LevelBodies;
 
         public ResultModel(int stage, bool cleared, int levelBodies, int bodiesUsed, int bestBodies, bool isLast,
             int stars = 0, int bestStars = 0, ChapterInfo finishedChapter = null)

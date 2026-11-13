@@ -84,6 +84,45 @@ namespace SevenSteps.Tests.Game
         }
 
         [Test]
+        public void TheRuleCaptionComesOutWithTheLastLineUnderTheLines()
+        {
+            var page = Data().Scene(CutsceneCatalog.Prologue).pages[5]; // 5b: SWITCH, two lines and a caption
+            var lines = CutsceneCatalog.Lines(page, Language.Ko);
+            string rule = CutsceneCatalog.Rule(page, Language.Ko);
+            view.ShowFrame(new CutsceneFrame("prologue", 5, 8, page.image, lines, 1, rule));
+            Assert.IsFalse(view.RuleVisible, "not before the last line");
+            float tall = view.Box.rectTransform.offsetMax.y;
+            Assert.AreEqual(U5CutsceneView.Inset + U5CutsceneView.BoxHeight + U5CutsceneView.RuleRoom, tall, 0.01f, "the room is there from line 1");
+            view.ShowFrame(new CutsceneFrame("prologue", 5, 8, page.image, lines, lines.Length, rule));
+            Assert.IsTrue(view.RuleVisible);
+            Assert.AreEqual(rule, view.Rule.text);
+            Assert.AreEqual(Ui.Gold, view.Rule.color, "the rule voice: gold");
+            Assert.AreSame(Ui.Theme.FontFor(Language.Ko, FontRole.Title), view.Rule.font);
+            Assert.Less(view.Rule.fontSize, U5CutsceneView.LineSize, "smaller than the story lines");
+            Assert.LessOrEqual(view.Rule.rectTransform.offsetMax.y, view.Text.rectTransform.offsetMin.y, "under the lines, not over them");
+            var first = Data().Scene(CutsceneCatalog.Prologue).pages[0];
+            view.ShowFrame(new CutsceneFrame("prologue", 0, 8, first.image, CutsceneCatalog.Lines(first, Language.Ko), 2));
+            Assert.IsFalse(view.RuleVisible);
+            Assert.AreEqual(U5CutsceneView.Inset + U5CutsceneView.BoxHeight, view.Box.rectTransform.offsetMax.y, 0.01f, "no caption: the usual plate");
+        }
+
+        [Test]
+        public void EveryRuleCaptionFitsItsRowsInBothLanguages()
+        {
+            foreach (var lang in Languages.All)
+            {
+                view.Rule.font = Ui.Theme.FontFor(lang, FontRole.Title);
+                foreach (var s in Data().Scenes)
+                    foreach (var p in s.pages)
+                    {
+                        if (!CutsceneCatalog.HasRule(p)) continue;
+                        int rows = FocusPlate.LineCount(view.Rule, CutsceneCatalog.Rule(p, lang), U5CutsceneView.TextWidth);
+                        Assert.LessOrEqual(rows, U5CutsceneView.RuleRows, $"{p.image} rule ({lang}): {rows} rows");
+                    }
+            }
+        }
+
+        [Test]
         public void EveryPageFitsTheTextPlateInBothLanguages()
         {
             foreach (var lang in Languages.All)

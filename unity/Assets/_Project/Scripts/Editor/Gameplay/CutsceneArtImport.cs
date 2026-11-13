@@ -62,14 +62,25 @@ namespace SevenSteps.EditorTools
             if (ga == null) throw new InvalidOperationException("[SevenSteps] Assets/_Project/Data/GameAssets.asset is missing (unity.sh setup)");
             var set = ga.cutsceneImages;
             if (set == null) throw new InvalidOperationException("[SevenSteps] GameAssets.cutsceneImages is not set (unity.sh setup)");
-            return Fill(set);
+            return Fill(set, ga.cutscenesJson != null ? CutsceneCatalog.FromJson(ga.cutscenesJson.text).ImageKeys : null);
         }
 
         /// Fills empty entries of <paramref name="set"/> from the folder (key = file name) and saves it when it changed.
-        public static int Fill(StoryImageSet set)
+        /// With <paramref name="keys"/> (the catalog's picture keys): a key the set lacks gets an entry first (a new page,
+        /// e.g. prologue 5b on 2026-11-13), and <see cref="StoryImageSet.required"/> follows the set: on once every
+        /// entry has its picture, off while one is still out (a plain card, a scene-validate warning).
+        public static int Fill(StoryImageSet set, System.Collections.Generic.IReadOnlyList<string> keys = null)
         {
             if (set == null) throw new ArgumentNullException(nameof(set));
             int n = 0;
+            bool changed = false;
+            if (keys != null)
+            {
+                var entries = new System.Collections.Generic.List<StoryImageSet.Entry>(set.entries ?? new StoryImageSet.Entry[0]);
+                foreach (var k in keys)
+                    if (!entries.Exists(e => e != null && e.key == k)) { entries.Add(new StoryImageSet.Entry { key = k }); changed = true; }
+                set.entries = entries.ToArray();
+            }
             foreach (var e in set.entries)
             {
                 if (e == null || e.sprite != null) continue;
@@ -78,7 +89,12 @@ namespace SevenSteps.EditorTools
                 e.sprite = sprite;
                 n++;
             }
-            if (n > 0)
+            if (keys != null)
+            {
+                bool all = Array.TrueForAll(set.entries, e => e != null && e.sprite != null);
+                if (set.required != all) { set.required = all; changed = true; }
+            }
+            if (n > 0 || changed)
             {
                 EditorUtility.SetDirty(set);
                 AssetDatabase.SaveAssets();

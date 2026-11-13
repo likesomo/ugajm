@@ -73,6 +73,12 @@ namespace SevenSteps.Game.UI.U5
         /// A loss is shown (the failure line and its two buttons).
         public bool FailureShown => IsShown && !shown.Cleared;
         public FocusPlate Plate => plate;
+        /// The third-star nudge line ("" = not shown).
+        public string NudgeLine => nudgePlate.gameObject.activeSelf ? nudgeText.text : "";
+        public RectTransform NudgePlate => nudgePlate.rectTransform;
+        public const int NudgeSize = 22;
+        Image nudgePlate;
+        Text nudgeText;
         /// Earned stones drawn lit right now (the reveal fills them in order).
         public int LitStones { get; private set; }
 
@@ -151,6 +157,12 @@ namespace SevenSteps.Game.UI.U5
             finalePlate.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -Safe), new Vector2(560, 48));
             finaleText = Ui.Label(finalePlate.transform, "", 22, Ui.Ink, TextAnchor.MiddleCenter, "Finale");
             finaleText.rectTransform.Stretch();
+            // The third-star nudge (ResultModel.Star3Nudge): under the finale line, or in its place.
+            nudgePlate = Ui.Plate(root, "Nudge plate");
+            nudgePlate.rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -Safe), new Vector2(480, 44));
+            nudgeText = Ui.Label(nudgePlate.transform, "", NudgeSize, Ui.Gold, TextAnchor.MiddleCenter, "Nudge");
+            nudgeText.rectTransform.Stretch();
+            nudgePlate.gameObject.SetActive(false);
 
             // Failure: the line and undo / restart at the bottom centre.
             failGroup = Ui.Rect("Failure", root);
@@ -177,6 +189,7 @@ namespace SevenSteps.Game.UI.U5
                 if (BoardArea != null) avoid.Add(BoardArea());
                 foreach (var s in stones) if (s.gameObject.activeInHierarchy) avoid.Add(StoneRect(s));
                 if (finalePlate.gameObject.activeSelf) avoid.Add(CanvasRect(finalePlate.rectTransform));
+                if (nudgePlate.gameObject.activeSelf) avoid.Add(CanvasRect(nudgePlate.rectTransform));
                 if (failGroup.gameObject.activeSelf) avoid.Add(CanvasRect((RectTransform)failText.transform.parent));
                 return avoid;
             };
@@ -237,6 +250,7 @@ namespace SevenSteps.Game.UI.U5
                 var fp = (RectTransform)failText.transform.parent;
                 fp.sizeDelta = new Vector2(fp.sizeDelta.x, FocusPlate.PlateHeight(failText, failText.text, fp.sizeDelta.x, 8));
                 finalePlate.gameObject.SetActive(false);
+                nudgePlate.gameObject.SetActive(false);
                 return;
             }
             next.SetTip(m.IsLast ? "result.ending" : "ui5.icon.next");
@@ -253,6 +267,17 @@ namespace SevenSteps.Game.UI.U5
                 float w = finaleText.cachedTextGeneratorForLayout.GetPreferredWidth(finaleText.text, finaleText.GetGenerationSettings(Vector2.zero))
                           / Mathf.Max(0.01f, finaleText.pixelsPerUnit);
                 finalePlate.rectTransform.sizeDelta = new Vector2(Mathf.Ceil(w) + 32, FocusPlate.PlateHeight(finaleText, finaleText.text, w, 8));
+            }
+            nudgePlate.gameObject.SetActive(m.Star3Nudge);
+            if (m.Star3Nudge)
+            {
+                nudgeText.font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
+                nudgeText.text = loc.Format("result.star3_nudge", m.LevelBodies);
+                float w = nudgeText.cachedTextGeneratorForLayout.GetPreferredWidth(nudgeText.text, nudgeText.GetGenerationSettings(Vector2.zero))
+                          / Mathf.Max(0.01f, nudgeText.pixelsPerUnit);
+                float top = Safe + (line.Length > 0 ? finalePlate.rectTransform.sizeDelta.y + 8 : 0);
+                nudgePlate.rectTransform.anchoredPosition = new Vector2(0, -top);
+                nudgePlate.rectTransform.sizeDelta = new Vector2(Mathf.Ceil(w) + 32, FocusPlate.PlateHeight(nudgeText, nudgeText.text, w, 8));
             }
         }
 

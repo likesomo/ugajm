@@ -23,6 +23,8 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 6881c8dade1521248a74c92a19214ed3, type: 3}
   - key: cutscene.prologue.5
     sprite: {fileID: 21300000, guid: 197abb01eebe03d41bf720d84e28b7ba, type: 3}
+  - key: cutscene.prologue.5b
+    sprite: {fileID: 21300000, guid: 5356b04df8534929901f9500c3abdf04, type: 3}
   - key: cutscene.prologue.6
     sprite: {fileID: 21300000, guid: 46718571540efc14db86becd70a78982, type: 3}
   - key: cutscene.prologue.7

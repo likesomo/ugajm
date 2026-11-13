@@ -17,8 +17,13 @@ namespace SevenSteps.Game.Flow
         public IReadOnlyList<string> Lines { get; }
         /// Lines shown, 1..Lines.Count.
         public int Shown { get; }
+        /// The page's plain-language rule caption in the current language, "" = none (cutscenes v2). Shown under the lines
+        /// once the last line is out (<see cref="RuleShown"/>).
+        public string Rule { get; }
+        /// Every line is out and the page has a rule caption: it shows.
+        public bool RuleShown => Rule.Length > 0 && Shown == Lines.Count;
 
-        public CutsceneFrame(string sceneId, int page, int pageCount, string imageKey, IReadOnlyList<string> lines, int shown)
+        public CutsceneFrame(string sceneId, int page, int pageCount, string imageKey, IReadOnlyList<string> lines, int shown, string rule = "")
         {
             SceneId = !string.IsNullOrEmpty(sceneId) ? sceneId : throw new ArgumentException("scene id is empty", nameof(sceneId));
             if (pageCount < 1) throw new ArgumentOutOfRangeException(nameof(pageCount), pageCount, ">= 1");
@@ -30,6 +35,7 @@ namespace SevenSteps.Game.Flow
             PageCount = pageCount;
             ImageKey = imageKey ?? "";
             Shown = shown;
+            Rule = rule ?? "";
         }
     }
 
@@ -44,8 +50,8 @@ namespace SevenSteps.Game.Flow
     }
 
     /// <summary>
-    /// Plays one storybook cutscene (design/story/cutscenes.md 2): the page's lines come out one by one, next shows the
-    /// next line, then the next page; after the last line of the last page, or on a skip (icon or Esc), the overlay closes
+    /// Plays one storybook cutscene (design/story/cutscenes.md 2): the page's lines come out one by one (the rule caption,
+    /// if the page has one, with the last), next shows the next line, then the next page; after the last line of the last page, or on a skip (icon or Esc), the overlay closes
     /// and the callback given to <see cref="Begin"/> runs once with whether it was skipped. Pure C#: the scene roots
     /// (TitleScreen, GameController) decide when and what comes after.
     /// </summary>
@@ -123,7 +129,8 @@ namespace SevenSteps.Game.Flow
             Page = page;
             Shown = shown;
             var p = scene.pages[page];
-            Frame = new CutsceneFrame(scene.id, page, scene.pages.Length, p.image, CutsceneCatalog.Lines(p, language()), shown);
+            Frame = new CutsceneFrame(scene.id, page, scene.pages.Length, p.image, CutsceneCatalog.Lines(p, language()), shown,
+                CutsceneCatalog.Rule(p, language()));
             view.ShowFrame(Frame);
         }
 

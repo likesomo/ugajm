@@ -92,6 +92,8 @@ namespace SevenSteps.Game
         /// Confirm presentation of a KEEP / SWITCH, seconds (inside that command's Present, docs 4.4): 0 with reduce motion.
         /// With a door the statue opens (0.12 s) the Present stays within ChoicePreview.ConfirmSecondsMax.
         public static float ConfirmSeconds(bool reduceMotion) => reduceMotion ? 0f : 0.3f;
+        /// The wake highlight after a KEEP / SWITCH (BoardMarksView.Wake); steady under reduce motion, same length.
+        public const float WakeSeconds = 1.4f;
         /// One wait for every door a KEEP / SWITCH opens or closes (0 with reduce motion).
         public const float ConfirmDoorSeconds = 0.12f;
         /// The longest a KEEP / SWITCH Present can take at normal speed (tests: <= ChoicePreview.ConfirmSecondsMax).
@@ -440,6 +442,11 @@ namespace SevenSteps.Game
             trail.Remember(r);
             Draw(r.State, true, prev);
             if (r.Has(GameEventType.Respawn)) Tween(player.transform, PlayerScale);
+            // After KEEP / SWITCH (user request 2026-11-13): where the next brother woke pulses, a KEEP's stone gets a ring.
+            // Not awaited: the session goes on at once; the next Present / Undo drops it.
+            if (confirm && marks != null && marks.isActiveAndEnabled && r.Has(GameEventType.Respawn) && r.State.Status == Status.Play)
+                marks.StartCoroutine(marks.Wake(grid.CellToWorld(r.State.Pos), set.BodyColor(BodyIndex.Current(r.State)),
+                    r.Has(GameEventType.Stone) ? grid.CellToWorld(prev.Pos) : (Vector3?)null, WakeSeconds));
             if (r.State.Status == Status.Win)
             {
                 float t0 = Time.time, hold = FinaleStarting();

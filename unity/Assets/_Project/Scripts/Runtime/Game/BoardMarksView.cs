@@ -12,7 +12,9 @@ namespace SevenSteps.Game
     /// BoardView from the State it draws (design/art/ui-minimal.md v3, docs/architecture.md 4.4 / 15.6):
     /// - while choosing (cards shown): the ring around the brother, and for the focused choice the KEEP dotted line to the
     ///   next start or the SWITCH knot on this cell (the 3D ghosts are BoardView's);
-    /// - the short confirm burst of a KEEP / SWITCH Present.
+    ///   and, for both choices at once, where the next brother wakes (KEEP: a ring on the start; SWITCH: here) with a tag
+    ///   under each cell (user request 2026-11-13);
+    /// - the short confirm burst of a KEEP / SWITCH Present, then the wake cell's pulse and the new stone's ring.
     /// - the staged hint's goal ring.
     /// Screen space so the marks keep their pixel size and are never hidden by the raised front tiles. The step stars
     /// moved from the feet to the sky above the board (StepSkyView, user decision 2026-11-12 "C").
@@ -30,6 +32,22 @@ namespace SevenSteps.Game
         Vector3 goalAt;
         Image knotA, knotB;
         readonly List<Image> dots = new List<Image>();
+        // Wake points (user request 2026-11-13): where the next brother wakes for each choice, both at once while choosing.
+        Image keepWake; // ring on the current start (KEEP); SWITCH wakes on the brother's own cell, inside his ring
+        WakeTag keepTag, switchTag;
+
+        sealed class WakeTag
+        {
+            public Image Plate;
+            public Text Text;
+            public CanvasGroup Group;
+        }
+
+        /// The wake tags' words and font (true = KEEP), set by the scene root from the localizer; null = no tags.
+        public Func<bool, (string text, Font font)> WakeWords;
+        public const int WakeTagSize = 18;
+        /// Tag centre under its cell (cells), and the second tag's extra drop when both choices wake on one cell.
+        public const float WakeTagDrop = 0.62f, WakeTagStack = 0.42f, WakeOtherAlpha = 0.6f;
 
         bool reduceMotion;
         float cellPx = 77f;
@@ -45,6 +63,14 @@ namespace SevenSteps.Game
         public bool RingShown => ring.enabled;
         public bool GoalShown => goal.enabled;
         public bool KnotShown => knotA.enabled;
+        /// The KEEP wake ring on the start and the two wake tags (tests, captures).
+        public bool KeepWakeShown => keepWake.enabled;
+        public bool WakeTagsShown => keepTag.Plate.gameObject.activeSelf && switchTag.Plate.gameObject.activeSelf;
+        public Text KeepTagText => keepTag.Text;
+        public Text SwitchTagText => switchTag.Text;
+        /// Canvas positions of the tags (tests).
+        public Vector2 KeepTagAt => keepTag.Plate.rectTransform.anchoredPosition;
+        public Vector2 SwitchTagAt => switchTag.Plate.rectTransform.anchoredPosition;
         public int DotsShown { get { int n = 0; foreach (var d in dots) if (d.enabled) n++; return n; } }
 
         /// <param name="toCanvas">World point → anchored position on <paramref name="layer"/> (canvas units).</param>
@@ -58,7 +84,24 @@ namespace SevenSteps.Game
             dots.Capacity = 64;
             knotA = Make("Knot A", null);
             knotB = Make("Knot B", null);
+            keepWake = Make("Keep Wake", Ui.RingShape);
+            keepTag = Tag("Keep Wake Tag");
+            switchTag = Tag("Switch Wake Tag");
             Refresh();
+        }
+
+        WakeTag Tag(string name)
+        {
+            var plate = Ui.Plate(layer, name);
+            var r = plate.rectTransform;
+            r.anchorMin = r.anchorMax = r.pivot = new Vector2(0.5f, 0.5f);
+            var t = Ui.Label(r, "", WakeTagSize, Ui.Ink, TextAnchor.MiddleCenter, "Text");
+            t.rectTransform.Stretch();
+            t.raycastTarget = false;
+            var g = plate.gameObject.AddComponent<CanvasGroup>();
+            g.blocksRaycasts = g.interactable = false;
+            plate.gameObject.SetActive(false);
+            return new WakeTag { Plate = plate, Text = t, Group = g };
         }
 
         Image Make(string name, Sprite sprite)
@@ -149,7 +192,68 @@ namespace SevenSteps.Game
                 Put(knotA, p, 0, current, new Vector2(0.5f * cellPx, 6f * scale), 35f);
                 Put(knotB, p, 0, next, new Vector2(0.5f * cellPx, 6f * scale), -35f);
             }
+
+            // Wake points: KEEP wakes on the start (a ring there), SWITCH right here (the brother's ring); a tag under each
+            // cell names the choice. The focused one is full, the other dimmed.
+            Vector2 here = ringOn ? toCanvas(brother) : default, start = ringOn ? toCanvas(keepStart) : default;
+            bool same = ringOn && Vector2.Distance(here, start) < 0.5f * cellPx;
+            keepWake.enabled = ringOn && !same;
+            if (keepWake.enabled)
+                Put(keepWake, start, 0.85f * cellPx, new Color(next.r, next.g, next.b, focus == ChoiceFocus.Switch ? 0.45f : 0.9f));
+            bool tags = ringOn && WakeWords != null;
+            float drop = WakeTagDrop * cellPx;
+            PutTag(keepTag, tags, true, start + new Vector2(0, -drop), focus != ChoiceFocus.Switch);
+            PutTag(switchTag, tags, false, here + new Vector2(0, -drop - (same ? WakeTagStack * cellPx : 0)), focus == ChoiceFocus.Switch);
         }
+
+        void PutTag(WakeTag tag, bool on, bool keep, Vector2 at, bool focused)
+        {
+            tag.Plate.gameObject.SetActive(on);
+            if (!on) return;
+            var (words, font) = WakeWords(keep);
+            if (font != null) tag.Text.font = font;
+            if (tag.Text.text != words) tag.Text.text = words;
+            float w = tag.Text.cachedTextGeneratorForLayout.GetPreferredWidth(words, tag.Text.GetGenerationSettings(Vector2.zero))
+                      / Mathf.Max(0.01f, tag.Text.pixelsPerUnit);
+            var r = tag.Plate.rectTransform;
+            r.sizeDelta = new Vector2(Mathf.Ceil(w) + 16, WakeTagSize + 10);
+            r.anchoredPosition = at;
+            tag.Group.alpha = focused ? 1f : WakeOtherAlpha;
+        }
+
+        /// After a KEEP / SWITCH (user request 2026-11-13): the cell the next brother woke on pulses in his colour, and a
+        /// KEEP's new stone gets a steady light ring, for <paramref name="seconds"/>. Does not hold the session (started,
+        /// not awaited); a later Present / Undo / Snap drops it (StopBursts). Reduce motion: steady rings.
+        public IEnumerator Wake(Vector3 wake, Color c, Vector3? stone, float seconds)
+        {
+            if (seconds <= 0f) yield break;
+            var ringImg = Make("Wake Ring", Ui.RingShape);
+            bursts.Add(ringImg);
+            Image stoneImg = null;
+            if (stone.HasValue)
+            {
+                stoneImg = Make("Stone Ring", Ui.RingShape);
+                bursts.Add(stoneImg);
+            }
+            for (float t = 0; t < seconds; t += Time.deltaTime)
+            {
+                if (ringImg == null) yield break;
+                float k = t / seconds, fade = k > 0.75f ? 1f - (k - 0.75f) / 0.25f : 1f;
+                float pulse = reduceMotion ? 1f : 1f + 0.35f * Mathf.Abs(Mathf.Cos(k * 2f * Mathf.PI));
+                Put(ringImg, toCanvas(wake), 0.95f * cellPx * pulse, new Color(c.r, c.g, c.b, fade));
+                if (stoneImg != null) Put(stoneImg, toCanvas(stone.Value), 1.05f * cellPx, new Color(1f, 1f, 1f, 0.85f * fade));
+                yield return null;
+            }
+            foreach (var img in new[] { ringImg, stoneImg })
+            {
+                if (img == null) continue;
+                bursts.Remove(img);
+                Destroy(img.gameObject);
+            }
+        }
+
+        /// Wake marks of the last confirm still on screen (tests).
+        public int WakeRingsShown { get { int n = 0; foreach (var b in bursts) if (b != null && (b.name == "Wake Ring" || b.name == "Stone Ring")) n++; return n; } }
 
         static void Put(Image img, Vector2 p, float size, Color c, Vector2? rect = null, float angle = 0f)
         {

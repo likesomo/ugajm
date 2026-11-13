@@ -41,6 +41,9 @@ namespace SevenSteps.Contracts
         public string image = "";
         /// 1..<see cref="CutsceneCatalog.MaxLines"/>, shown one by one.
         public StoryLineDto[] lines = new StoryLineDto[0];
+        /// The plain-language rule caption under the lines (cutscenes v2, user request 2026-11-13), ko base + text[];
+        /// none = no caption (no ko line).
+        public StoryLineDto rule;
         /// The Codex prompt for the picture. Not read at run time.
         public string art = "";
     }
@@ -54,7 +57,8 @@ namespace SevenSteps.Contracts
     /// </summary>
     public sealed class CutsceneCatalog
     {
-        public const int Version = 1;
+        /// 2: pages may have a rule caption (2026-11-13).
+        public const int Version = 2;
         public const int MaxLines = 3;
         public const string WhenNewGame = "newGame", WhenAfterEnding = "afterEnding";
         public const string ReplayTitle = "title";
@@ -104,6 +108,9 @@ namespace SevenSteps.Contracts
                     for (int i = 0; i < n; i++)
                         foreach (var lang in Languages.All)
                             if (string.IsNullOrEmpty(LineOrNull(p, i, lang))) throw new FormatException($"{at} line {i + 1}: no \"{Languages.Code(lang)}\" text");
+                    if (HasRule(p))
+                        foreach (var lang in Languages.All)
+                            if (string.IsNullOrEmpty(TextOf(p.rule, lang))) throw new FormatException($"{at} rule: no \"{Languages.Code(lang)}\" text");
                 }
             }
             return catalog;
@@ -147,9 +154,22 @@ namespace SevenSteps.Contracts
             return lines;
         }
 
-        static string LineOrNull(CutscenePageDto page, int index, Language lang)
+        /// The page has a rule caption (its ko line is set).
+        public static bool HasRule(CutscenePageDto page) =>
+            page != null && page.rule != null && !string.IsNullOrEmpty(page.rule.line);
+
+        /// The page's rule caption in a language, "" when the page has none (checked on load: never empty otherwise).
+        public static string Rule(CutscenePageDto page, Language lang)
         {
-            var l = page.lines[index];
+            if (page == null) throw new ArgumentNullException(nameof(page));
+            if (!HasRule(page)) return "";
+            return TextOf(page.rule, lang) ?? throw new KeyNotFoundException($"cutscenes.json page {page.id} rule: no \"{Languages.Code(lang)}\" text");
+        }
+
+        static string LineOrNull(CutscenePageDto page, int index, Language lang) => TextOf(page.lines[index], lang);
+
+        static string TextOf(StoryLineDto l, Language lang)
+        {
             if (l == null) return null;
             if (lang == Languages.Base) return l.line;
             string code = Languages.Code(lang);

@@ -180,6 +180,10 @@ namespace SevenSteps.Game
             // Board controller, then the flow controller on top of it
             board.Init(assets, levels, save, hud, cam, tiles, overrideCamera ? cameraRig : (CameraRig?)null, Services.Get<ITelemetry>(), localizer);
             if (u5Hud != null) WireU5(u5Hud);
+            // U5 choose screen: tags under the wake points of KEEP (the start) and SWITCH (here) (user request 2026-11-13).
+            if (u5Hud != null && board.View != null && board.View.Marks != null)
+                board.View.Marks.WakeWords = keep => (localizer.Get(keep ? "ui5.choice.wake_keep" : "ui5.choice.wake_switch"),
+                    Ui.Theme.FontFor(localizer.Current, FontRole.Title));
             // Chapter look (12.8): stage -> chapters.json artPreset -> AppConfig.Chapter; null (no chapter assets yet) = as now.
             // -smoke board|empty (smoke-webgl): no sky/planet and a magenta clear; empty also hides the board (negative control).
             chapterStage = new ChapterStage(cam, keyLight, fillLight, rimLight, transform, launch.SmokeView);
