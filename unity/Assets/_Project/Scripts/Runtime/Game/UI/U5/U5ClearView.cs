@@ -236,6 +236,7 @@ namespace SevenSteps.Game.UI.U5
             if (redraw) return;
             HudHidden?.Invoke(true);
             plate.Model.Clear();
+            if (clear) GameSound.Sfx(SoundIds.ClearJingle);
             if (clear) ShowStones(m.Stars);
             var es = UnityEngine.EventSystems.EventSystem.current;
             if (es != null) es.SetSelectedGameObject(clear ? next.gameObject : restart.gameObject); // Enter: Next / restart
@@ -515,6 +516,7 @@ namespace SevenSteps.Game.UI.U5
             {
                 for (float t = 0; t < 0.25f; t += Time.unscaledDeltaTime) yield return null;
                 DrawStone(k, true);
+                GameSound.Sfx(SoundIds.StarChime(k + 1));
                 var r = worldStones[k] != null && worldStones[k].activeSelf ? worldStones[k].transform : stones[k].transform;
                 var home = r.localScale;
                 for (float t = 0; t < 0.22f; t += Time.unscaledDeltaTime)

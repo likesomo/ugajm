@@ -64,4 +64,5 @@ MonoBehaviour:
   sfxUndo: {fileID: 8300000, guid: ee4df510a0713f74b91b43b5df132ed8, type: 3}
   sfxWin: {fileID: 8300000, guid: e2b6942a8a39a654a868087e241da974, type: 3}
   sfxLose: {fileID: 8300000, guid: e5c62d9eb3c45a849b659491440fc020, type: 3}
+  sounds: {fileID: 11400000, guid: f2921a3eb05e6ad489efc186dfcf5802, type: 2}
   background: {r: 0.08235294, g: 0.07450981, b: 0.10980392, a: 1}

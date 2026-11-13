@@ -460,7 +460,7 @@ namespace SevenSteps.Game
         {
             var cards = board.State != null ? story.Ending(board.State, localizer.Current) : null;
             if (cards == null) flowController.OpenStageSelect();
-            else ending.Begin(cards);
+            else { GameSound.Music(SoundIds.BgmEnding); ending.Begin(cards); }
         }
 
         void OnEndingFinished(EndingModel cards, int seen, bool skipped)

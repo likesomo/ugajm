@@ -16,6 +16,7 @@
 #   scene-validate (batch) check build list = AppScenes, scene roots and their references (errors -> exit 1)
 #   cutscene-art (batch) import the storybook pictures (Shared/Art/Story/Cutscenes, CutsceneArtImport rule) and wire
 #                Data/CutsceneImages.asset (empty keys only). Run after art drops new pictures
+#   sound-wire   (batch) wire Data/Sounds.asset from Assets/Shared/Audio/<id>.ogg|.wav (SoundIds). Run after audio drops
 #   build-win    (batch) Windows build -> Builds/Windows/Seven Steps.exe
 #   build-webgl  (batch) WebGL build -> Builds/WebGL/
 #   qa-replay    (batch) replay reports/qa/attempts.jsonl in C# (BuildTools.QaReplay, docs/qa-attempts.md) -> reports/qa/unity-replay.json
@@ -134,6 +135,7 @@ case "$cmd" in
   stageselect-capture) batch stageselect-capture SevenSteps.EditorTools.StageSelectCapture.Batch ;;   # stage select v4 review PNGs -> reports/stage-select/
   scene-validate) batch scene-validate SevenSteps.EditorTools.SceneFlowValidator.BatchValidate ;;
   u5-icons)     batch u5-icons SevenSteps.EditorTools.UiIconSetTools.BatchImport ;;   # Art/UI/U5/u5-icons.json -> Data/UiIconSet.asset (Codex U5 icons)
+  sound-wire)  batch sound-wire SevenSteps.EditorTools.SoundWire.Batch ;;   # Shared/Audio/<id>.ogg|.wav -> Data/Sounds.asset (music + new SFX by id; missing = warning)
   cutscene-art) batch cutscene-art SevenSteps.EditorTools.CutsceneArtImport.Batch ;;   # import Shared/Art/Story/Cutscenes/*.png (Sprite, no mips, WebGL 1024 crunched) + wire Data/CutsceneImages.asset
   test)
     # EditMode tests (Tests/EditMode). Results: reports/editmode-results.xml
