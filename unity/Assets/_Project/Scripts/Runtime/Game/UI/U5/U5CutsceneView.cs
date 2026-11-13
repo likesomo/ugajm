@@ -31,6 +31,8 @@ namespace SevenSteps.Game.UI.U5
         /// plate from its first line (<see cref="RuleRoom"/>) so nothing moves when the caption comes out with the last line.
         public const int RuleSize = 22, RuleRows = 2;
         public const float RuleRowHeight = 28, RuleGap = 10, RuleRoom = RuleGap + RuleRows * RuleRowHeight;
+        /// The plain card's height under a plate without a rule caption (a rule takes RuleRoom off it).
+        public const float CardHeight = 470;
         public const string NextKey = "cutscene.next";
         public static readonly Color NightColor = new Color(0.09f, 0.1f, 0.17f, 1f);
         public static readonly Color CardColor = new Color(0.16f, 0.18f, 0.27f, 1f);
@@ -101,7 +103,7 @@ namespace SevenSteps.Game.UI.U5
 
             card = Ui.MakeImage(root, CardColor, null, "Plain card");
             card.raycastTarget = false;
-            card.rectTransform.TopLeft(120, 40, 1040, 470); // where the picture's busy part goes, above the text plate
+            card.rectTransform.TopLeft(120, 40, 1040, CardHeight); // where the picture's busy part goes, above the text plate
 
             picture = Ui.MakeImage(root, Color.white, null, "Picture");
             picture.raycastTarget = false;
@@ -123,7 +125,7 @@ namespace SevenSteps.Game.UI.U5
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Overflow;
 
-            ruleLine = Ui.MakeImage(box.transform, new Color(Ui.Gold.r, Ui.Gold.g, Ui.Gold.b, 0.5f), null, "Rule line");
+            ruleLine = Ui.MakeImage(box.transform, Ui.Gold, null, "Rule line"); // full gold: 3:1 on the plate (UiLayout line contrast)
             ruleLine.raycastTarget = false;
             rule = Ui.Label(box.transform, "", RuleSize, Ui.Gold, TextAnchor.MiddleCenter, "Rule");
             foreach (var r in new[] { ruleLine.rectTransform, rule.rectTransform })
@@ -189,6 +191,7 @@ namespace SevenSteps.Game.UI.U5
             bool hasRule = f.Rule.Length > 0;
             float room = hasRule ? RuleRoom : 0;
             box.rectTransform.offsetMax = new Vector2(-Inset, Inset + BoxHeight + room);
+            card.rectTransform.TopLeft(120, 40, 1040, CardHeight - room); // the plain card stays clear of the taller plate
             text.rectTransform.offsetMin = new Vector2(PadX + NextRoom, PadY + room);
             rule.font = Ui.Theme.FontFor(loc.Current, FontRole.Title);
             rule.text = f.Rule;

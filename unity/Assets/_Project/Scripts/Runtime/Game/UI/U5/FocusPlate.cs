@@ -122,11 +122,32 @@ namespace SevenSteps.Game.UI.U5
             text.rectTransform.offsetMin = new Vector2(wrap ? pad.x : 0, 0);
             text.rectTransform.offsetMax = new Vector2(wrap ? -pad.z : 0, 0);
             var r = (RectTransform)transform;
-            r.sizeDelta = size;
             var canvas = ((RectTransform)r.parent).rect.size;
             RectTransform owner = anchors.TryGetValue(tip.Owner, out var a) && a != null ? a
                 : tip.Owner is Component c ? (RectTransform)c.transform : null;
-            var spot = owner != null ? Place(OwnerRect(owner, (RectTransform)r.parent), size, canvas, Avoid?.Invoke()) : new Rect((canvas.x - size.x) / 2, Safe, size.x, size.y);
+            Rect spot;
+            if (owner == null) spot = new Rect((canvas.x - size.x) / 2, Safe, size.x, size.y);
+            else
+            {
+                var at = OwnerRect(owner, (RectTransform)r.parent);
+                var avoid = Avoid?.Invoke();
+                spot = Place(at, size, canvas, avoid);
+                // A wrapped tip with no clear spot at 320 (the choice glyphs stacked in a narrow column beside the board,
+                // switch-three KEEP / SWITCH words): narrower, down to 250, while it still takes MaxLines lines.
+                if (wrap && !Clear(spot, avoid))
+                    for (float w = MaxWidth - 10; w >= BaseWidth; w -= 10)
+                    {
+                        float inner = w - pad.x - pad.z;
+                        if (LineCount(text, text.text, inner) > MaxLines) break;
+                        var narrow = new Vector2(w, PlateHeight(text, text.text, inner, Mathf.Max(pad.y, pad.w), wrap: true));
+                        var s = Place(at, narrow, canvas, avoid);
+                        if (!Clear(s, avoid)) continue;
+                        size = narrow;
+                        spot = s;
+                        break;
+                    }
+            }
+            r.sizeDelta = size;
             r.anchoredPosition = new Vector2(spot.x, -spot.y);
             gameObject.SetActive(true);
             transform.SetAsLastSibling();
