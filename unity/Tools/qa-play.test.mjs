@@ -25,7 +25,9 @@ const play = (word) => {
   }
 };
 const count = (str) => [...str].filter((c) => 'UDLR'.includes(c)).length;
-const errors = (argv, re) => assert.throws(() => run(argv), (e) => e instanceof QaError && re.test(e.message));
+const errors = (argv, re) => assert.throws(() => run(argv), (e) => e instanceof QaError && (typeof re === 'function' ? re(e.message) : re.test(e.message)));
+// A board's ko cue line by on (levels.js TUTORIALS), so the tests follow wording changes.
+const cueOf = (k, on) => TUTORIALS[k].cues.find((c) => c.on === on).line;
 
 // BFS from the start for a command list that ends in a lose whose last command does (or does not) contain a fall.
 function findLoss(level, wantFall) {
@@ -199,12 +201,12 @@ test('T1-T3: start, cue plate, lose -> lose cue + automatic restart, clear; line
   const out = run(['start', ...T, '--level', 't1']);
   assert.match(out, /튜토리얼 T1/); assert.ok(out.includes('안내: ' + TUTORIALS[0].cues[0].line));
   const lost = run(['move', ...T, 'RRRDDLR']);
-  assert.match(lost, /out_of_bodies/); assert.match(lost, /일곱 걸음이 출구에서 끝나야 한다/); assert.match(lost, /자동 재시작/);
-  assert.ok(run(['show', ...T]).includes('안내: 다시. 출구까지 딱 일곱 걸음.'));
+  assert.match(lost, /out_of_bodies/); assert.ok(lost.includes(cueOf(0, 'lose'))); assert.match(lost, /자동 재시작/);
+  assert.ok(run(['show', ...T]).includes('안내: ' + cueOf(0, 'restart')));
   assert.equal(last().level, 'T1'); assert.equal(last().attempt, 1);
   errors(['hint', ...T], /no hint/);
   const won = run(['move', ...T, 'RRRDDLL']);
-  assert.match(won, /튜토리얼 T1 클리어/); assert.match(won, /일곱째 걸음에 닿아서 문이 열렸다/);
+  assert.match(won, /튜토리얼 T1 클리어/); assert.ok(won.includes(cueOf(0, 'win')));
   assert.ok(!won.includes('★'), 'a tutorial board has no clear screen');
   assert.equal(last().outcome, 'clear'); assert.equal(last().attempt, 2); assert.equal(last().inputs, 'RRRDDLR!RRRDDLL'); assert.equal(last().from, 7);
   for (const k of [2, 3]) {
@@ -242,7 +244,7 @@ test('T3 doorShut: a move into the closed door shows the cue, even when nothing 
   const out = run(['move', ...T, 'LLLDDR']);
   const shutLine = TUTORIALS[2].cues.find((c) => c.on === 'doorShut').line;
   assert.ok(out.indexOf('막힘: R') >= 0 && out.indexOf('막힘: R') < out.indexOf('안내: ' + shutLine), out);
-  errors(['move', ...T, 'R'], /안내: 닫힌 문/);
+  errors(['move', ...T, 'R'], (m) => m.includes('안내: ' + shutLine));
 });
 
 // Naive (docs 10.3): the harness's own words explain no rule. Only the game's texts may (start line, message line,

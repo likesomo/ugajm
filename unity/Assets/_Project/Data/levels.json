@@ -1533,11 +1533,11 @@
           "on": "start",
           "n": 0,
           "body": 0,
-          "line": "방향키로 한 칸씩 걷는다. 한 걸음마다 별이 하나 켜진다.",
+          "line": "방향키로 걸음을 떼자. 디딜 때마다 별이 하나 켜진다.",
           "text": [
             {
               "lang": "en",
-              "line": "Arrow keys: one cell per step. Each step lights a star."
+              "line": "Take the first step with the arrow keys. Each step lights a star above."
             }
           ],
           "cell": []
@@ -1546,11 +1546,11 @@
           "on": "step",
           "n": 1,
           "body": 0,
-          "line": "하나. 걸음을 세어 보자.",
+          "line": "하나. 별 하나가 켜졌다. 일곱까지 세어 보자.",
           "text": [
             {
               "lang": "en",
-              "line": "One. Count your steps."
+              "line": "One. A star is lit. Let's count to seven."
             }
           ],
           "cell": []
@@ -1559,11 +1559,11 @@
           "on": "step",
           "n": 6,
           "body": 0,
-          "line": "다음이 일곱째 걸음. 출구에 닿아야 한다.",
+          "line": "이제 일곱째 별. 그 걸음이 문 앞에 닿아야 한다.",
           "text": [
             {
               "lang": "en",
-              "line": "Next is the seventh step. It has to land on the exit."
+              "line": "Next comes the seventh star. That step has to land at the door."
             }
           ],
           "cell": [
@@ -1575,11 +1575,11 @@
           "on": "win",
           "n": 0,
           "body": 0,
-          "line": "일곱째 걸음에 닿아서 문이 열렸다.",
+          "line": "일곱째 별이 켜지자 땅이 듣고 문이 열렸다.",
           "text": [
             {
               "lang": "en",
-              "line": "The seventh step reached it, and the door opened."
+              "line": "The seventh star lit, the ground listened, and the door opened."
             }
           ],
           "cell": []
@@ -1588,11 +1588,11 @@
           "on": "lose",
           "n": 0,
           "body": 0,
-          "line": "일곱 걸음이 출구에서 끝나야 한다.",
+          "line": "일곱째 걸음이 문에 닿지 않아 땅이 듣지 못했다.",
           "text": [
             {
               "lang": "en",
-              "line": "The seven steps have to end on the exit."
+              "line": "The seventh step missed the door, so the ground did not listen."
             }
           ],
           "cell": []
@@ -1601,11 +1601,11 @@
           "on": "restart",
           "n": 0,
           "body": 0,
-          "line": "다시. 출구까지 딱 일곱 걸음.",
+          "line": "다시 처음부터. 문까지 꼭 일곱 걸음이다.",
           "text": [
             {
               "lang": "en",
-              "line": "Again. Exactly seven steps to the exit."
+              "line": "From the start again. Exactly seven steps to the door."
             }
           ],
           "cell": []
@@ -1651,11 +1651,11 @@
           "on": "start",
           "n": 0,
           "body": 0,
-          "line": "문은 발판이 눌려야 열린다. 발판에서 일곱째 걸음을 마치자.",
+          "line": "발판이 눌려야 문이 열린다. 큰형, 일곱째는 발판 위에서.",
           "text": [
             {
               "lang": "en",
-              "line": "The door opens while the plate is pressed. End your seventh step on the plate."
+              "line": "The door opens only while the plate is pressed. Eldest, end your seventh step on it."
             }
           ],
           "cell": [
@@ -1667,11 +1667,11 @@
           "on": "step",
           "n": 5,
           "body": 1,
-          "line": "일곱째가 아닌 걸음은 발판을 밟아도 아무 일도 없다.",
+          "line": "일곱째가 아니면 발판도 땅도 꿈쩍하지 않는다.",
           "text": [
             {
               "lang": "en",
-              "line": "Steps before the seventh do nothing, even on the plate."
+              "line": "Unless it is the seventh step, neither plate nor ground stirs."
             }
           ],
           "cell": []
@@ -1680,11 +1680,11 @@
           "on": "choose",
           "n": 0,
           "body": 0,
-          "line": "KEEP은 돌로 남고, SWITCH는 여기서 다음 형제가 깬다.",
+          "line": "KEEP으로 남아 돌이 될까, SWITCH로 지도만 넘길까?",
           "text": [
             {
               "lang": "en",
-              "line": "KEEP stays as a stone. SWITCH wakes the next brother right here."
+              "line": "Stay here as stone with KEEP, or only pass the map on with SWITCH?"
             }
           ],
           "cell": [
@@ -1696,11 +1696,11 @@
           "on": "switch",
           "n": 0,
           "body": 0,
-          "line": "여기서 깼지만 돌이 없어 문은 닫혀 있다.",
+          "line": "형이 섰던 자리에서 깼지만, 붙들 돌이 없어 문은 닫혀 있다.",
           "text": [
             {
               "lang": "en",
-              "line": "You woke right here, but with no stone the door stays shut."
+              "line": "I woke where he stood, but with no stone to hold it the door stays shut."
             }
           ],
           "cell": [
@@ -1712,11 +1712,11 @@
           "on": "doorShut",
           "n": 0,
           "body": 0,
-          "line": "닫힌 문. 발판 위에 선돌이 있어야 열린다.",
+          "line": "문이 꿈쩍하지 않는다. 누군가 발판 위에 돌로 남아야 한다.",
           "text": [
             {
               "lang": "en",
-              "line": "A closed door. It opens only while a stone stands on the plate."
+              "line": "The door won't move. Someone has to stay on the plate as stone."
             }
           ],
           "cell": [
@@ -1728,11 +1728,11 @@
           "on": "doorOpen",
           "n": 0,
           "body": 0,
-          "line": "선돌이 문을 열어 두었다. 다음 형제는 출구까지 딱 일곱 걸음.",
+          "line": "형이 돌이 되어 문을 붙들었다. 이제 일곱 걸음으로 출구까지.",
           "text": [
             {
               "lang": "en",
-              "line": "The stone holds the door open. Next brother: exactly seven steps to the exit."
+              "line": "My brother turned to stone and holds the door. Now seven steps to the exit."
             }
           ],
           "cell": [
@@ -1744,11 +1744,11 @@
           "on": "win",
           "n": 0,
           "body": 0,
-          "line": "일곱째 걸음만 일을 한다. 기억하자.",
+          "line": "땅은 일곱째 걸음만 듣는다. 잊지 말자.",
           "text": [
             {
               "lang": "en",
-              "line": "Only the seventh step does anything. Remember that."
+              "line": "The ground hears only the seventh step. Let's not forget."
             }
           ],
           "cell": []
@@ -1757,11 +1757,11 @@
           "on": "lose",
           "n": 0,
           "body": 0,
-          "line": "형제를 다 썼다. 처음부터.",
+          "line": "지도를 받을 형제가 남지 않았다. 처음부터 다시.",
           "text": [
             {
               "lang": "en",
-              "line": "No brothers left. From the start."
+              "line": "No brother is left to take the map. From the start again."
             }
           ],
           "cell": []
@@ -1770,11 +1770,11 @@
           "on": "restart",
           "n": 0,
           "body": 0,
-          "line": "발판에서 일곱째 걸음을 마치고 KEEP.",
+          "line": "큰형은 발판에서 일곱째 걸음을 마치고, KEEP으로 남는다.",
           "text": [
             {
               "lang": "en",
-              "line": "End the seventh step on the plate, then KEEP."
+              "line": "Eldest: end the seventh step on the plate, then KEEP and stay."
             }
           ],
           "cell": [
@@ -1823,11 +1823,11 @@
           "on": "start",
           "n": 0,
           "body": 0,
-          "line": "목표: 세 형제 모두 걸어서 별 셋. 첫째는 발판으로.",
+          "line": "셋이 모두 걸어야 별 셋이 켜진다. 큰형은 먼저 발판으로.",
           "text": [
             {
               "lang": "en",
-              "line": "Goal: all three brothers walk, three stars. First, to the plate."
+              "line": "Three stars light only if all three of us walk. Eldest, to the plate first."
             }
           ],
           "cell": [
@@ -1839,11 +1839,11 @@
           "on": "choose",
           "n": 0,
           "body": 1,
-          "line": "KEEP: 여기서 돌로 남고, 다음 형제는 출발점에서 깬다.",
+          "line": "큰형이 KEEP으로 남아 돌이 되면, 둘째는 출발점에서 깬다.",
           "text": [
             {
               "lang": "en",
-              "line": "KEEP: stay here as a stone; the next brother wakes at the start."
+              "line": "If the eldest KEEPs, he turns to stone and the middle one wakes at the start."
             }
           ],
           "cell": [
@@ -1855,11 +1855,11 @@
           "on": "doorOpen",
           "n": 0,
           "body": 0,
-          "line": "문이 열렸다. 하지만 출구는 한 형제가 가기엔 너무 멀다.",
+          "line": "문이 열렸다. 하지만 출구는 한 사람의 일곱 걸음으론 멀다.",
           "text": [
             {
               "lang": "en",
-              "line": "The door is open. But the exit is too far for one brother."
+              "line": "The door is open. But the exit is too far for one walker's seven steps."
             }
           ],
           "cell": [
@@ -1871,11 +1871,11 @@
           "on": "choose",
           "n": 0,
           "body": 2,
-          "line": "SWITCH: 돌 없이, 다음 형제가 바로 이 자리에서 깬다.",
+          "line": "둘째가 SWITCH하면 돌은 없고, 나는 이 자리에서 깬다.",
           "text": [
             {
               "lang": "en",
-              "line": "SWITCH: no stone. The next brother wakes right here."
+              "line": "If the middle one SWITCHes, no stone stays, and I wake on this spot."
             }
           ],
           "cell": []
@@ -1884,11 +1884,11 @@
           "on": "switch",
           "n": 0,
           "body": 0,
-          "line": "여기서 깼다. 이제 여기가 출발점이다.",
+          "line": "형이 섰던 자리에서 눈을 떴다. 여기서부터 내 일곱 걸음.",
           "text": [
             {
               "lang": "en",
-              "line": "Woke up right here. This is the start now."
+              "line": "I opened my eyes where he stood. My seven steps start here."
             }
           ],
           "cell": [
@@ -1900,11 +1900,11 @@
           "on": "keep",
           "n": 0,
           "body": 2,
-          "line": "KEEP이면 다음 형제는 다시 출발점에서 깬다.",
+          "line": "KEEP이면 나는 처음 자리에서 깬다. 출구는 너무 멀다.",
           "text": [
             {
               "lang": "en",
-              "line": "With KEEP the next brother wakes back at the start."
+              "line": "With KEEP I wake back at the start, and the exit is too far."
             }
           ],
           "cell": []
@@ -1913,11 +1913,11 @@
           "on": "doorShut",
           "n": 0,
           "body": 0,
-          "line": "닫힌 문. 셋 중 하나는 발판을 붙들어야 한다.",
+          "line": "문이 닫혀 있다. 우리 중 누군가는 발판을 붙들어야 한다.",
           "text": [
             {
               "lang": "en",
-              "line": "A closed door. One of the three has to hold the plate."
+              "line": "The door is shut. One of us has to hold the plate."
             }
           ],
           "cell": [
@@ -1929,11 +1929,11 @@
           "on": "win",
           "n": 0,
           "body": 0,
-          "line": "셋이 모두 걸었다. 별 셋.",
+          "line": "셋이 모두 걸었다. 별 셋이 한꺼번에 켜졌다.",
           "text": [
             {
               "lang": "en",
-              "line": "All three walked. Three stars."
+              "line": "All three of us walked. Three stars lit at once."
             }
           ],
           "cell": []
@@ -1942,11 +1942,11 @@
           "on": "lose",
           "n": 0,
           "body": 0,
-          "line": "형제를 다 썼다. 처음부터.",
+          "line": "지도를 받을 형제가 남지 않았다. 처음부터 다시.",
           "text": [
             {
               "lang": "en",
-              "line": "No brothers left. From the start."
+              "line": "No brother is left to take the map. From the start again."
             }
           ],
           "cell": []
@@ -1955,11 +1955,11 @@
           "on": "restart",
           "n": 0,
           "body": 0,
-          "line": "첫째는 발판에 KEEP, 둘째는 중간에서 SWITCH.",
+          "line": "큰형은 발판에서 KEEP, 둘째는 길 중간에서 SWITCH.",
           "text": [
             {
               "lang": "en",
-              "line": "First: KEEP on the plate. Second: SWITCH halfway."
+              "line": "Eldest: KEEP on the plate. Middle one: SWITCH halfway."
             }
           ],
           "cell": [

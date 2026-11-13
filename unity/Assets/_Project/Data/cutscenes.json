@@ -1,6 +1,6 @@
 {
   "about": "Storybook cutscenes for Seven Steps (design/story/cutscenes.md; user request 2026-11-12 evening, overrides the old no-cutscene rule). ko base + text[] per language like story.json. Each page = one picture (image key -> StoryImageSet, art in Assets/Shared/Art/Story/Cutscenes/<key>.png) + 1-3 lines. 'rule' (optional) is the plain-language rule caption shown under the story lines (2026-11-13 user request). 'art' is the Codex prompt for that page, not shown in game.",
-  "version": 3,
+  "version": 2,
   "languages": [
     "ko",
     "en"
