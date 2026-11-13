@@ -307,7 +307,8 @@ namespace SevenSteps.EditorTools
                         {
                             var v = SevenSteps.Game.UI.U5.U5CutsceneView.Build(null, c.Assets.uiIcons, c.Loc);
                             var lines = CutsceneCatalog.Lines(p, c.Lang);
-                            v.ShowFrame(new SevenSteps.Game.Flow.CutsceneFrame(s.id, Array.IndexOf(s.pages, p), s.pages.Length, p.image, lines, lines.Length));
+                            v.ShowFrame(new SevenSteps.Game.Flow.CutsceneFrame(s.id, Array.IndexOf(s.pages, p), s.pages.Length, p.image, lines, lines.Length,
+                                CutsceneCatalog.Rule(p, c.Lang)));
                             v.Show();
                             v.Skip.OnSelect(null);
                             return v.gameObject;

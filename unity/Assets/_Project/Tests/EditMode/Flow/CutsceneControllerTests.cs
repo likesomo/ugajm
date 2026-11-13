@@ -29,14 +29,15 @@ namespace SevenSteps.Tests
         static CutsceneCatalog Data() =>
             CutsceneCatalog.FromJson(AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset").cutscenesJson.text);
 
-        // Two pages: two lines, then one.
-        const string Small = @"{ ""version"": 1, ""languages"": [""ko"", ""en""], ""scenes"": [
+        // Two pages: two lines, then one with a rule caption.
+        const string Small = @"{ ""version"": 2, ""languages"": [""ko"", ""en""], ""scenes"": [
             { ""id"": ""prologue"", ""when"": ""newGame"", ""replay"": ""title"", ""pages"": [
               { ""id"": ""1"", ""image"": ""cutscene.prologue.1"", ""lines"": [
                 { ""line"": ""가"", ""text"": [{ ""lang"": ""en"", ""line"": ""A"" }] },
                 { ""line"": ""나"", ""text"": [{ ""lang"": ""en"", ""line"": ""B"" }] } ] },
               { ""id"": ""2"", ""image"": ""cutscene.prologue.2"", ""lines"": [
-                { ""line"": ""다"", ""text"": [{ ""lang"": ""en"", ""line"": ""C"" }] } ] } ] } ] }";
+                { ""line"": ""다"", ""text"": [{ ""lang"": ""en"", ""line"": ""C"" }] } ],
+                ""rule"": { ""line"": ""규칙"", ""text"": [{ ""lang"": ""en"", ""line"": ""Rule"" }] } } ] } ] }";
 
         Language lang = Language.Ko;
         (CutsceneController, View, OverlayStack, CutsceneSceneDto) Make()
@@ -52,20 +53,26 @@ namespace SevenSteps.Tests
             var c = Data();
             var prologue = c.SceneFor(CutsceneCatalog.WhenNewGame);
             Assert.AreEqual(CutsceneCatalog.Prologue, prologue.id);
-            Assert.AreEqual(7, prologue.pages.Length);
+            Assert.AreEqual(8, prologue.pages.Length, "v2: 5 = KEEP, 5b = SWITCH, 6 = why all three");
+            Assert.AreEqual("5b", prologue.pages[5].id);
             Assert.AreSame(prologue, c.TitleReplay(), "the title's story entry replays the prologue");
             Assert.AreEqual(CutsceneCatalog.Epilogue, c.SceneFor(CutsceneCatalog.WhenAfterEnding).id);
-            Assert.AreEqual(8, c.ImageKeys.Count);
+            Assert.AreEqual(9, c.ImageKeys.Count);
             Assert.AreEqual("cutscene.prologue.1", c.ImageKeys[0]);
             foreach (var s in c.Scenes)
                 foreach (var p in s.pages)
                     foreach (var l in Languages.All)
                         Assert.That(CutsceneCatalog.Lines(p, l), Has.All.Not.Empty, $"{p.image} {l}");
+            // Rule captions (user request 2026-11-13) on prologue 3, 4, 5, 5b and 6; KEEP and SWITCH say where the next one wakes.
+            Assert.That(prologue.pages.Where(CutsceneCatalog.HasRule).Select(p => p.id), Is.EqualTo(new[] { "3", "4", "5", "5b", "6" }));
+            Assert.That(CutsceneCatalog.Rule(prologue.pages[4], Language.En), Does.StartWith("KEEP:"));
+            Assert.That(CutsceneCatalog.Rule(prologue.pages[5], Language.En), Does.StartWith("SWITCH:"));
+            Assert.AreEqual("", CutsceneCatalog.Rule(prologue.pages[0], Language.Ko), "no caption");
             var set = AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset").cutsceneImages;
             Assert.IsNotNull(set, "GameAssets.cutsceneImages");
             Assert.That(set.entries.Select(e => e.key), Is.EquivalentTo(c.ImageKeys), "one entry per page");
             // Codex pictures (shared-assets) wired by unity.sh cutscene-art, imported by the CutsceneArtImport rule.
-            Assert.IsTrue(set.required, "every page has its picture: a missing one is a scene-validate error");
+            Assert.IsTrue(set.required, "every page has its picture (5b since 2026-11-13): a missing one is a scene-validate error");
             foreach (var e in set.entries)
             {
                 Assert.IsNotNull(e.sprite, e.key);
@@ -86,7 +93,8 @@ namespace SevenSteps.Tests
             void Bad(string json, string part) =>
                 Assert.That(Assert.Throws<FormatException>(() => CutsceneCatalog.FromJson(json)).Message, Does.Contain(part));
             Bad("", "empty");
-            Bad(Small.Replace(@"""version"": 1", @"""version"": 2"), "version 2");
+            Bad(Small.Replace(@"""version"": 2", @"""version"": 1"), "version 1");
+            Bad(Small.Replace(@"{ ""lang"": ""en"", ""line"": ""Rule"" }", ""), "rule: no \"en\"");
             Bad(Small.Replace(@"[""ko"", ""en""]", @"[""ko""]"), "\"en\"");
             Bad(Small.Replace("newGame", "later"), "when \"later\"");
             Bad(Small.Replace("cutscene.prologue.2", "cutscene.prologue.9"), "expected \"cutscene.prologue.2\"");
@@ -111,6 +119,9 @@ namespace SevenSteps.Tests
             view.Next();
             Assert.AreEqual((1, 1), (c.Page, c.Shown));
             Assert.AreEqual(2, view.Frames.Last().PageCount);
+            Assert.AreEqual("규칙", view.Frames.Last().Rule);
+            Assert.IsTrue(view.Frames.Last().RuleShown, "the caption comes out with the page's last line");
+            Assert.IsFalse(view.Frames[0].RuleShown, "page 1 has no caption");
             Assert.IsEmpty(ends);
             view.Next();
             Assert.AreEqual(new[] { false }, ends, "read through: once, not skipped");
@@ -145,6 +156,8 @@ namespace SevenSteps.Tests
             var f = view.Frames.Last();
             Assert.AreEqual((0, 2), (f.Page, f.Shown));
             Assert.AreEqual(new[] { "A", "B" }, f.Lines);
+            view.Next();
+            Assert.AreEqual("Rule", view.Frames.Last().Rule);
         }
 
         [Test]

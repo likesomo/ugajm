@@ -62,6 +62,42 @@ namespace SevenSteps.Tests.Game
         }
 
         [Test]
+        public void TwoStarsWithABrotherLeftNudgeTowardTheThird()
+        {
+            // No hint, 2 of 3 brothers: two stars and the nudge (user request 2026-11-13), at the top centre.
+            view.Show(ResultModel.Clear(3, 3, 2, 2, false, stars: 2, bestStars: 2));
+            Assert.That(view.NudgeLine, Is.EqualTo("형제 3명이 모두 걸으면 별 셋."));
+            Assert.That(view.NudgePlate.anchoredPosition.y, Is.EqualTo(-U5ClearView.Safe));
+            Assert.That(view.NudgePlate.sizeDelta.x, Is.LessThan(600f), "a short plate, not a band");
+            view.Hide();
+            // Everyone walked (3 stars), or a hint was seen (1 star: the hint, not the brothers, cost the second): no nudge.
+            view.Show(ResultModel.Clear(3, 3, 3, 3, false, stars: 3, bestStars: 3));
+            Assert.That(view.NudgeLine, Is.Empty);
+            view.Hide();
+            view.Show(ResultModel.Clear(3, 3, 2, 2, false, stars: 1, bestStars: 1));
+            Assert.That(view.NudgeLine, Is.Empty);
+            view.Hide();
+            view.Show(ResultModel.Loss(3, 3, false));
+            Assert.That(view.NudgeLine, Is.Empty);
+        }
+
+        [Test]
+        public void TheNudgeGoesUnderAFinaleLineAndSpeaksEnglish()
+        {
+            var a = AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset");
+            var loc = Loc();
+            loc.Set(Language.En);
+            var v = U5ClearView.Build(a.uiIcons, loc);
+            try
+            {
+                v.Show(ResultModel.Clear(49, 2, 1, 1, true, stars: 2, bestStars: 2));
+                Assert.That(v.NudgeLine, Is.EqualTo("All 2 brothers walk: three stars."));
+                Assert.That(v.NudgePlate.anchoredPosition.y, Is.LessThan(-U5ClearView.Safe - 40), "under the journey line");
+            }
+            finally { Object.DestroyImmediate(v.gameObject); }
+        }
+
+        [Test]
         public void TheLastStageAsksForTheEnding()
         {
             view.Show(ResultModel.Clear(49, 3, 2, 2, true, stars: 1, bestStars: 1));

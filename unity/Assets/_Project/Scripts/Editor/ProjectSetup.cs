@@ -341,13 +341,13 @@ namespace SevenSteps.EditorTools
         static StoryImageSet CutsceneImagesAsset(TextAsset cutscenesJson)
         {
             var set = AssetDatabase.LoadAssetAtPath<StoryImageSet>(CutsceneImagesPath);
-            if (set != null) { CutsceneArtImport.Fill(set); return set; } // Codex pictures in shared-assets fill empty keys
+            var catalogKeys = cutscenesJson != null ? CutsceneCatalog.FromJson(cutscenesJson.text).ImageKeys : null;
+            if (set != null) { CutsceneArtImport.Fill(set, catalogKeys); return set; } // new pages get an entry; Codex pictures fill empty keys
             set = ScriptableObject.CreateInstance<StoryImageSet>();
-            var keys = cutscenesJson != null ? CutsceneCatalog.FromJson(cutscenesJson.text).ImageKeys : null;
-            set.entries = keys == null ? new StoryImageSet.Entry[0]
-                : System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Select(keys, k => new StoryImageSet.Entry { key = k }));
+            set.entries = catalogKeys == null ? new StoryImageSet.Entry[0]
+                : System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Select(catalogKeys, k => new StoryImageSet.Entry { key = k }));
             AssetDatabase.CreateAsset(set, CutsceneImagesPath);
-            CutsceneArtImport.Fill(set);
+            CutsceneArtImport.Fill(set, catalogKeys);
             return set;
         }
 

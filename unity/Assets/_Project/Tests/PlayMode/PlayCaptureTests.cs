@@ -601,8 +601,8 @@ namespace SevenSteps.Tests.PlayMode
         }
 
         /// Storybook viewer (design/story/cutscenes.md 2; gameplay-ui): a fresh save's play stone opens the prologue, with the
-        /// Codex pictures (style A, watercolour; shared-assets). Pages 1, 4 and 6 with every line out, in KO and EN, then the
-        /// epilogue played on the same viewer. `unity.sh playcapture U5Cutscene` -> u5-cutscene-*.png.
+        /// Codex pictures (style A, watercolour; shared-assets). Pages 1, 4, 5 (KEEP), 5b (SWITCH) and 6 with every line out
+        /// and their rule caption (v2, 2026-11-13), in KO and EN, after the epilogue played on the same viewer. `unity.sh playcapture U5Cutscene` -> u5-cutscene-*.png.
         [UnityTest]
         public IEnumerator U5Cutscene()
         {
@@ -625,11 +625,15 @@ namespace SevenSteps.Tests.PlayMode
                 yield return null;
                 title.U5Title.Play.Press();
                 Assert.IsTrue(c.IsOpen && v.Visible, lang + ": the prologue on a new game");
-                foreach (int page in new[] { 1, 4, 6 })
+                var pages = c.Scene.pages;
+                foreach (string id in new[] { "1", "4", "5", "5b", "6" })
                 {
-                    while (c.Page < page - 1 || c.Shown < c.Frame.Lines.Count) v.Next.Press();
-                    Assert.IsTrue(v.HasPicture, $"{lang} p{page}: its picture");
-                    string name = $"u5-cutscene-p{page}-{lang}";
+                    int at = System.Array.FindIndex(pages, p => p.id == id);
+                    Assert.GreaterOrEqual(at, 0, "prologue page " + id);
+                    while (c.Page < at || c.Shown < c.Frame.Lines.Count) v.Next.Press();
+                    Assert.IsTrue(v.HasPicture, $"{lang} p{id}: its picture, not the plain card");
+                    Assert.AreEqual(CutsceneCatalog.HasRule(pages[at]), v.RuleVisible, $"{lang} p{id}: the rule caption with the last line");
+                    string name = $"u5-cutscene-p{id}-{lang}";
                     yield return Capture(name, px, 0.5f);
                     AssertVaried(name, px.Value);
                 }
