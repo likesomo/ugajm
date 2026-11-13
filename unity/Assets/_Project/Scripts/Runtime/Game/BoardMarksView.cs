@@ -204,6 +204,22 @@ namespace SevenSteps.Game
             float drop = WakeTagDrop * cellPx;
             PutTag(keepTag, tags, true, start + new Vector2(0, -drop), focus != ChoiceFocus.Switch);
             PutTag(switchTag, tags, false, here + new Vector2(0, -drop - (same ? WakeTagStack * cellPx : 0)), focus == ChoiceFocus.Switch);
+            if (tags) Unstack(keepTag.Plate.rectTransform, switchTag.Plate.rectTransform);
+        }
+
+        /// Tags of nearby wake cells (adjacent, or a cell apart) would cross (playcapture r2-38, "KEEP: 여SWITCH하 여기서 깬다"):
+        /// the lower one (SWITCH on a tie) moves down until it sits <see cref="WakeTagGap"/> under the other.
+        public const float WakeTagGap = 4f;
+
+        static void Unstack(RectTransform a, RectTransform b)
+        {
+            Vector2 pa = a.anchoredPosition, pb = b.anchoredPosition, sa = a.sizeDelta, sb = b.sizeDelta;
+            bool crossX = Mathf.Abs(pa.x - pb.x) < (sa.x + sb.x) / 2 + WakeTagGap;
+            bool crossY = Mathf.Abs(pa.y - pb.y) < (sa.y + sb.y) / 2 + WakeTagGap;
+            if (!crossX || !crossY) return;
+            var (upper, lower) = pa.y < pb.y ? (b, a) : (a, b); // canvas y up: the larger y is higher; a tie moves b (SWITCH)
+            float top = upper.anchoredPosition.y - upper.sizeDelta.y / 2 - WakeTagGap;
+            lower.anchoredPosition = new Vector2(lower.anchoredPosition.x, top - lower.sizeDelta.y / 2);
         }
 
         void PutTag(WakeTag tag, bool on, bool keep, Vector2 at, bool focused)
