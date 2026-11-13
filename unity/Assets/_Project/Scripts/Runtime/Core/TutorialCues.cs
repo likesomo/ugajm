@@ -13,10 +13,10 @@ namespace SevenSteps.Core
     {
         public const string OnStart = "start", OnRestart = "restart", OnStep = "step", OnSeventh = "seventh",
             OnChoose = "choose", OnKeep = "keep", OnSwitch = "switch", OnDoorOpen = "doorOpen",
-            OnRespawn = "respawn", OnWin = "win", OnLose = "lose";
+            OnRespawn = "respawn", OnWin = "win", OnLose = "lose", OnDoorShut = "doorShut";
 
         public static readonly string[] Ons =
-            { OnStart, OnRestart, OnStep, OnSeventh, OnChoose, OnKeep, OnSwitch, OnDoorOpen, OnRespawn, OnWin, OnLose };
+            { OnStart, OnRestart, OnStep, OnSeventh, OnChoose, OnKeep, OnSwitch, OnDoorOpen, OnRespawn, OnWin, OnLose, OnDoorShut };
 
         public static bool IsValidOn(string on) => Array.IndexOf(Ons, on) >= 0;
 
@@ -31,7 +31,8 @@ namespace SevenSteps.Core
         }
 
         /// The cue for one dispatched command: before = the state it was applied to, after = the resulting state,
-        /// events = what Rules.Dispatch returned. Undo, Bump and a command that changed nothing return -1.
+        /// events = what Rules.Dispatch returned. Undo, a command that changed nothing and a Bump return -1, except a Bump
+        /// into a closed door (doorShut).
         public static int Match(TutorialDto t, Command cmd, State before, State after, IReadOnlyList<GameEvent> events)
         {
             if (t == null) throw new ArgumentNullException(nameof(t));
@@ -52,13 +53,13 @@ namespace SevenSteps.Core
                     if (c == null) continue;
                     int who = e.Type == GameEventType.Respawn ? woke : body;
                     if (c.body != 0 && c.body != who) continue;
-                    if (Fires(c, e, cmd, move)) found = i;
+                    if (Fires(c, e, cmd, move, before)) found = i;
                 }
             }
             return found;
         }
 
-        static bool Fires(TutorialCueDto c, GameEvent e, Command cmd, bool move)
+        static bool Fires(TutorialCueDto c, GameEvent e, Command cmd, bool move, State before)
         {
             switch (c.on)
             {
@@ -74,8 +75,17 @@ namespace SevenSteps.Core
                 case OnRespawn: return e.Type == GameEventType.Respawn;
                 case OnWin: return e.Type == GameEventType.Win;
                 case OnLose: return e.Type == GameEventType.Lose;
+                // A move refused by a door that is shut now (the plate is not held). Other bumps keep the line.
+                case OnDoorShut: return move && e.Type == GameEventType.Bump && ClosedDoor(before, e.At);
                 default: return false; // start / restart are not event triggers
             }
+        }
+
+        static bool ClosedDoor(State s, int i)
+        {
+            if (i < 0 || i >= s.Level.Count) return false;
+            char t = Rules.TileAt(s, i);
+            return Rules.IsDoor(t) && !Rules.DoorOpen(s, t);
         }
 
         static int Last(TutorialDto t, string on)

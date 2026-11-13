@@ -51,7 +51,9 @@ export function storyPages(scene, lang) {
   const file = JSON.parse(readFileSync(join(data, 'cutscenes.json'), 'utf8'));
   const s = file.scenes.find((x) => x.id === scene);
   if (!s) fail(`story must be one of ${file.scenes.map((x) => x.id).join(', ')}`);
-  return s.pages.map((p) => p.lines.map((l) => (lang === 'ko' ? l.line : (l.text ?? []).find((t) => t.lang === lang)?.line ?? l.line)));
+  const pick = (l) => (lang === 'ko' ? l.line : (l.text ?? []).find((t) => t.lang === lang)?.line ?? l.line);
+  // A page's rule caption (cutscenes v2) shows under its story lines, in the game's smaller plain voice.
+  return s.pages.map((p) => [...p.lines.map(pick), ...(p.rule ? ['  [' + pick(p.rule) + ']'] : [])]);
 }
 
 // ---------- levels and tutorial boards ----------
@@ -130,12 +132,15 @@ export function matchCue(t, token, before, after, events) {
         respawn: e.type === 'respawn',
         win: e.type === 'win',
         lose: e.type === 'lose',
+        // A move refused by a door that is shut now; other bumps keep the line.
+        doorShut: move && e.type === 'bump' && closedDoor(before, e.at),
       }[c.on];
       if (fires) found = i;
     });
   }
   return found;
 }
+const closedDoor = (s, i) => i >= 0 && i < s.level.tiles.length && isDoor(tileAt(s, i)) && !doorOpen(s, tileAt(s, i));
 const cueLine = (c, lang) => (lang === 'ko' ? c.line : c.text.find((x) => x.lang === lang)?.line ?? c.line);
 
 // ---------- HUD message line (Game MessagePresenter: the stage's line; a tutorial board mutes it) ----------
@@ -496,7 +501,14 @@ function applyTokens(ss, s0, tokens) {
   for (const c of tokens) {
     if (s.status !== 'play' && 'UDLR'.includes(c)) { out.push(`(남은 입력 ${tokens.slice(applied)}는 무시: ${STATUS_TEXT[s.status]})`); break; }
     const r = dispatch(s, TOKEN_CMD[c]);
-    if (r.state === s) { out.push(`막힘: ${c} (${applied}개 적용, 남은 입력 ${tokens.slice(applied)}는 무시)`); break; }
+    if (r.state === s) {
+      // A board's doorShut cue shows on the refused move (the game matches Bump updates too).
+      const cue = st.tutorial ? matchCue(st.tutorial, c, s, s, r.events) : -1;
+      if (cue >= 0) ss.cue = cue;
+      out.push(`막힘: ${c} (${applied}개 적용, 남은 입력 ${tokens.slice(applied)}는 무시)`);
+      if (cue >= 0) out.push(`안내: ${cueLine(st.tutorial.cues[ss.cue], ss.lang)}`);
+      break;
+    }
     if (c === 'Z') ss.levelUndos++;
     ss.inputs += c; applied++;
     noteEvents(ss, st, c, s, r.state, r.events);

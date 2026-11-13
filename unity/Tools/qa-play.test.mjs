@@ -187,7 +187,12 @@ test('tutorial cues match the C# TutorialCues sequences', () => {
   assert.equal(t2[4], 'step/1'); assert.equal(t2[6], 'choose'); assert.equal(t2[7], 'doorOpen'); assert.equal(t2[12], '-'); assert.equal(t2[14], 'win');
   assert.equal(cues(2, 'DUDRRRRX')[7], 'switch');
   const t3 = cues(3, exported().tutorials[2].level.expected.path);
-  assert.deepEqual(t3.filter((x) => x.startsWith('respawn')), ['respawn/2', 'respawn/3']);
+  assert.deepEqual([t3[6], t3[7], t3[14], t3[15], t3.at(-1)], ['choose/1', 'doorOpen', 'choose/2', 'switch', 'win']);
+  assert.equal(cues(3, 'RRRRDDRKRRRRDDLK')[15], 'keep/2');
+  // doorShut: only a move refused by a closed door (C# DoorShutShowsOnlyOnAClosedDoor).
+  const shut = cues(3, 'URRRRDDLXLLLDDR');
+  assert.equal(shut[0], '-'); assert.equal(shut[14], 'doorShut');
+  assert.equal(cues(2, 'DDRRRD')[5], 'doorShut');
 });
 
 test('T1-T3: start, cue plate, lose -> lose cue + automatic restart, clear; lines replay with level "T1"..', () => {
@@ -221,7 +226,23 @@ test('story prints the cutscene pages in order, ko and en', () => {
   assert.ok(ko.includes(pro.pages[0].lines[0].line)); assert.ok(en.includes(pro.pages[0].lines[0].text[0].line));
   assert.ok(ko.indexOf(pro.pages[0].lines[0].line) < ko.indexOf(pro.pages.at(-1).lines[0].line));
   assert.equal(storyPages('epilogue', 'ko').length, file.scenes.find((x) => x.id === 'epilogue').pages.length);
+  // Rule captions (cutscenes v2) sit under their page's lines; the SWITCH page says where the next brother wakes.
+  const ruled = pro.pages.filter((p) => p.rule);
+  assert.ok(ruled.length >= 2);
+  for (const p of ruled) {
+    assert.ok(ko.includes('[' + p.rule.line + ']')); assert.ok(en.includes('[' + p.rule.text[0].line + ']'));
+    assert.ok(ko.indexOf(p.lines.at(-1).line) < ko.indexOf(p.rule.line));
+  }
   errors(['story', 'middle'], /story must be one of/);
+});
+
+test('T3 doorShut: a move into the closed door shows the cue, even when nothing else applied', () => {
+  run(['start', ...T, '--level', 'T3']);
+  play('RRRRDDLX');
+  const out = run(['move', ...T, 'LLLDDR']);
+  const shutLine = TUTORIALS[2].cues.find((c) => c.on === 'doorShut').line;
+  assert.ok(out.indexOf('막힘: R') >= 0 && out.indexOf('막힘: R') < out.indexOf('안내: ' + shutLine), out);
+  errors(['move', ...T, 'R'], /안내: 닫힌 문/);
 });
 
 // Naive (docs 10.3): the harness's own words explain no rule. Only the game's texts may (start line, message line,
