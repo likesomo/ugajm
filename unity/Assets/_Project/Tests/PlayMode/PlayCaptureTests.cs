@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
+using Core = SevenSteps.Core;
 
 namespace SevenSteps.Tests.PlayMode
 {
@@ -393,12 +394,16 @@ namespace SevenSteps.Tests.PlayMode
         [UnityTest]
         public IEnumerator ChoiceClearOfSky()
         {
-            foreach (var (stage, replay) in new[] { ("38", "DUDUDUR"), ("14", "LLLRRRR") })
-            foreach (bool u5 in new[] { false, true })
+            // r2-38-u5-en: the wake tags in English too (their KO overlap on 38, lead 2026-11-13).
+            foreach (var (stage, replay, u5, en) in new[] { ("38", "DUDUDUR", false, false), ("38", "DUDUDUR", true, false), ("38", "DUDUDUR", true, true),
+                         ("14", "LLLRRRR", false, false), ("14", "LLLRRRR", true, false) })
             {
                 PlayEnv.Reset();
-                var args = u5 ? new[] { "-ui5", "-level", stage, "-replay", replay } : new[] { "-level", stage, "-replay", replay };
-                yield return Start(AppState.Game, AppScenes.Game, args);
+                var args = new List<string>();
+                if (u5) args.Add("-ui5");
+                if (en) args.AddRange(new[] { "-lang", "en" });
+                args.AddRange(new[] { "-level", stage, "-replay", replay });
+                yield return Start(AppState.Game, AppScenes.Game, args.ToArray());
                 var game = Object.FindAnyObjectByType<GameController>();
                 float t0 = Time.realtimeSinceStartup;
                 while (!game.Board.Choice.Shown)
@@ -406,7 +411,7 @@ namespace SevenSteps.Tests.PlayMode
                     Assert.Less(Time.realtimeSinceStartup - t0, 10f, "the 7th step's choice");
                     yield return null;
                 }
-                string name = $"r2-{stage}-{(u5 ? "u5" : "u4")}";
+                string name = $"r2-{stage}-{(u5 ? "u5" : "u4")}{(en ? "-en" : "")}";
                 var px = new Pixels();
                 Rect r = default, band = default, area = default;
                 var view = game.Board.View;
@@ -712,6 +717,112 @@ namespace SevenSteps.Tests.PlayMode
                 Assert.AreEqual(1, marks.WakeRingsShown, lang + ": SWITCH: the wake cell only");
                 yield return Capture($"u5-tutorial-t3-wake-switch-{lang}", px, 0.25f);
             }
+        }
+
+        /// itch.io page screenshots (lead 2026-11-13), EN, U5, 1280x720, from the current levels.json (stages picked by
+        /// replaying each stage's solver path, so new content keeps working): shot-3-seventh-step (an early stage the moment
+        /// the 7th step lands: lucky ring, 7 stars lit, the choice), shot-5-three-brothers (a later 3-brother stage, the first
+        /// brother a stone on a plate, the second walking), shot-6-result-3stars (a 3-star clear). `unity.sh playcapture ItchShots`.
+        [UnityTest]
+        public IEnumerator ItchShots()
+        {
+            // 1) The 7th step: the first early stage whose first brother walks 7 plain steps into the choice.
+            yield return Start(AppState.Title, AppScenes.Title, "-ui5", "-lang", "en");
+            int count = LevelCatalog.Load(FindAssets()).Length;
+            int seventh = -1;
+            for (int i = 3; i < Math.Min(count, 12) && seventh < 0; i++)
+            {
+                var rs = Walk(i);
+                if (rs.Count >= 7 && rs[6].State.Status == Core.Status.Choose && LevelCatalog.PathOf(i).Substring(0, 7).All(c => "UDLR".IndexOf(c) >= 0)) seventh = i;
+            }
+            Assert.GreaterOrEqual(seventh, 0, "an early stage with a 7-step first walk");
+            yield return ShotAfterLive("shot-3-seventh-step", seventh, LevelCatalog.PathOf(seventh).Substring(0, 7), 0.55f);
+
+            // 2) Three brothers: a later stage (from 20) with 3+ brothers whose first KEEP puts a stone on a plate, then 3 steps.
+            int three = -1, cut = 0;
+            for (int i = 19; i < count && three < 0; i++)
+            {
+                if (LevelCatalog.At(i).Bodies < 3) continue;
+                var path = LevelCatalog.PathOf(i);
+                var rs = Walk(i);
+                for (int k = 0; k + 3 < rs.Count; k++)
+                {
+                    if (path[k] != 'K') continue;
+                    bool plate = rs[k].Events.Any(e => e.Type == Core.GameEventType.Stone && e.At >= 0 && Plate(Core.Rules.TileAt(rs[k].State, e.At)));
+                    bool walks = path.Substring(k + 1, 3).All(c => "UDLR".IndexOf(c) >= 0) && rs[k + 3].State.Status == Core.Status.Play;
+                    if (plate && walks) { three = i; cut = k + 4; }
+                    break; // only the first KEEP
+                }
+            }
+            Assert.GreaterOrEqual(three, 0, "a later 3-brother stage whose first KEEP stands on a plate");
+            yield return ShotAfterLive("shot-5-three-brothers", three, LevelCatalog.PathOf(three).Substring(0, cut), 0.12f);
+
+            // 3) Three stars: the first stage from 4 whose solver path uses every brother.
+            int full = -1;
+            for (int i = 3; i < count && full < 0; i++)
+            {
+                var rs = Walk(i);
+                var last = rs.Count > 0 ? rs[rs.Count - 1].State : null;
+                if (last != null && last.Status == Core.Status.Win && Core.Stars.BodiesUsed(last) == last.Level.Bodies && last.Level.Bodies >= 2) full = i;
+            }
+            Assert.GreaterOrEqual(full, 0, "a stage whose path uses every brother");
+            string fp = LevelCatalog.PathOf(full);
+            PlayEnv.Reset();
+            yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", "en", "-level", (full + 1).ToString(), "-replay", fp.Substring(0, fp.Length - 1));
+            var game = Object.FindAnyObjectByType<GameController>();
+            float tw = Time.realtimeSinceStartup;
+            while (Time.realtimeSinceStartup - tw < 0.5f) yield return null;
+            yield return SendLetters(game, fp.Substring(fp.Length - 1));
+            float t0 = Time.realtimeSinceStartup;
+            while (Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ClearView>() is { IsShown: true } == false)
+            {
+                Assert.Less(Time.realtimeSinceStartup - t0, 30f, "the clear to show");
+                yield return null;
+            }
+            float t1 = Time.realtimeSinceStartup;
+            while (Time.realtimeSinceStartup - t1 < 2.4f) yield return null; // three stars revealed
+            var px = new Pixels();
+            yield return Capture("shot-6-result-3stars", px);
+            AssertVaried("shot-6-result-3stars", px.Value);
+            Debug.Log($"[SevenSteps] Play capture itch: shot-3 stage {seventh + 1}, shot-5 stage {three + 1} ({cut} moves), shot-6 stage {full + 1} ({fp})");
+        }
+
+        static GameAssets FindAssets() => Resources.FindObjectsOfTypeAll<GameAssets>().FirstOrDefault();
+
+        static bool Plate(char t) => t >= 'a' && t <= 'c';
+
+        /// Each move's result along stage <paramref name="stage"/>'s solver path (pure Core, no scene).
+        static List<Core.StepResult> Walk(int stage)
+        {
+            var list = new List<Core.StepResult>();
+            var s = Core.Rules.NewState(LevelCatalog.At(stage));
+            foreach (char c in LevelCatalog.PathOf(stage))
+            {
+                if (!Core.Rules.TryParseLetter(c, out var act)) break;
+                var r = Core.Rules.Dispatch(s, Core.Command.FromAct(act));
+                list.Add(r);
+                s = r.State;
+            }
+            return list;
+        }
+
+        /// Stage <paramref name="stage"/> (0-based) replayed to all but the last of <paramref name="moves"/>, the last played
+        /// live (its presentation runs), then a capture <paramref name="settle"/> s later.
+        IEnumerator ShotAfterLive(string name, int stage, string moves, float settle)
+        {
+            PlayEnv.Reset();
+            var args = new List<string> { "-ui5", "-lang", "en", "-level", (stage + 1).ToString() };
+            if (moves.Length > 1) args.AddRange(new[] { "-replay", moves.Substring(0, moves.Length - 1) });
+            yield return Start(AppState.Game, AppScenes.Game, args.ToArray());
+            var game = Object.FindAnyObjectByType<GameController>();
+            float tw = Time.realtimeSinceStartup;
+            while (Time.realtimeSinceStartup - tw < 0.8f) yield return null;
+            while (game.Board.Session.IsLocked) yield return null;
+            Assert.IsTrue(Core.Rules.TryParseLetter(moves[moves.Length - 1], out var act));
+            game.Board.Send(Core.Command.FromAct(act));
+            var px = new Pixels();
+            yield return Capture(name, px, settle);
+            AssertVaried(name, px.Value);
         }
 
         // ---------- ----------

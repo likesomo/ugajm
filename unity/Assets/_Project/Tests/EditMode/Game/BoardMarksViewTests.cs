@@ -66,6 +66,22 @@ namespace SevenSteps.Tests.Game
         }
 
         [Test]
+        public void AdjacentWakeCellsDoNotCrossTheirTags()
+        {
+            // playcapture r2-38 (KO): KEEP's start right beside the brother read "KEEP: 여SWITCH하 여기서 깬다".
+            var start = new Vector3(1, 0, 2);
+            foreach (var brother in new[] { new Vector3(2, 0, 2), new Vector3(0, 0, 2), new Vector3(3, 0, 2), new Vector3(1, 0, 3), new Vector3(2, 0, 1) })
+            {
+                marks.SetChoice(true, brother, start, Color.cyan, Color.yellow, BoardMarksView.ChoiceFocus.Switch);
+                var k = marks.KeepTagText.transform.parent as RectTransform;
+                var s = marks.SwitchTagText.transform.parent as RectTransform;
+                var rk = new Rect(k.anchoredPosition - k.sizeDelta / 2, k.sizeDelta);
+                var rs = new Rect(s.anchoredPosition - s.sizeDelta / 2, s.sizeDelta);
+                Assert.IsFalse(rk.Overlaps(rs), $"brother {brother}: KEEP {rk} and SWITCH {rs} cross");
+            }
+        }
+
+        [Test]
         public void NoWordsNoTags()
         {
             marks.WakeWords = null; // the current (-ui4) HUD has its own cards
