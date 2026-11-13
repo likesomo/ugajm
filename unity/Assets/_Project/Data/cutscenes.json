@@ -1,6 +1,6 @@
 {
   "about": "Storybook cutscenes for Seven Steps (design/story/cutscenes.md; user request 2026-11-12 evening, overrides the old no-cutscene rule). ko base + text[] per language like story.json. Each page = one picture (image key -> StoryImageSet, art in Assets/Shared/Art/Story/Cutscenes/<key>.png) + 1-3 lines. 'rule' (optional) is the plain-language rule caption shown under the story lines (2026-11-13 user request). 'art' is the Codex prompt for that page, not shown in game.",
-  "version": 2,
+  "version": 3,
   "languages": [
     "ko",
     "en"
@@ -87,11 +87,11 @@
           ],
           "art": "Side view: the middle brother (ochre scarf) walks across square mossy stone tiles carrying the scroll. Behind him, small glowing star-shaped footprints on the tiles he has stepped on. Above him the dipper is half lit: the first stars bright, the rest still dim.",
           "rule": {
-            "line": "형제 한 명은 일곱 걸음씩 걷는다.",
+            "line": "그래서 우리는 저마다 꼭 일곱 걸음씩 걷는다.",
             "text": [
               {
                 "lang": "en",
-                "line": "Each brother walks seven steps."
+                "line": "So each of us walks exactly seven steps."
               }
             ]
           }
@@ -130,11 +130,11 @@
           ],
           "art": "The youngest brother (terracotta scarf) sets his foot on a glowing star mark in front of a mossy stone gate, and the gate swings open with warm light. Above, the whole dipper is lit and a thin beam of starlight runs straight down to his step (the alignment).",
           "rule": {
-            "line": "7번째 걸음이 닿은 칸만 작동한다. 앞의 여섯 걸음은 그냥 지나간다.",
+            "line": "앞의 여섯 걸음은 땅이 듣지 못하고, 일곱째가 닿은 곳만 깨어난다.",
             "text": [
               {
                 "lang": "en",
-                "line": "Only the cell your 7th step lands on works. Steps 1 to 6 just pass over."
+                "line": "The ground cannot hear the first six; only where the seventh lands wakes up."
               }
             ]
           }
@@ -173,11 +173,11 @@
           ],
           "art": "Split composition in one scene: on the right, the eldest (teal scarf) stands still on a stone plate beside an open gate, his lower half already turning into a plain grey granite standing stone. A ribbon of starlight carries the scroll from him to the left, where the middle brother wakes up curled in a soft pool of starlight at the starting point.",
           "rule": {
-            "line": "KEEP: 지금 형제는 돌로 남고, 다음 형제는 출발점에서 깬다.",
+            "line": "형이 KEEP으로 남아 돌이 되면, 나는 처음 그 자리에서 눈을 뜬다.",
             "text": [
               {
                 "lang": "en",
-                "line": "KEEP: this brother stays as a stone. The next one wakes at the start."
+                "line": "When my brother KEEPs his place as stone, I open my eyes back where we set out."
               }
             ]
           }
@@ -206,11 +206,11 @@
             }
           ],
           "rule": {
-            "line": "SWITCH: 돌을 남기지 않는다. 다음 형제는 지금 선 자리에서 깬다.",
+            "line": "SWITCH로 지도만 건네면 돌은 없고, 나는 형이 섰던 자리에서 깬다.",
             "text": [
               {
                 "lang": "en",
-                "line": "SWITCH: no stone. The next brother wakes where this one stands."
+                "line": "If he SWITCHes and only hands on the map, no stone stays, and I wake where he stood."
               }
             ]
           },
@@ -250,11 +250,11 @@
           ],
           "art": "Top-down-ish view of a small board of stone tiles: three trails of glowing footprints, one teal, one ochre, one terracotta, each starting from the same start and meeting at the exit, where the three brothers stand together. In the sky above, a bright line between two stars, woven from three coloured strands (teal, ochre, terracotta).",
           "rule": {
-            "line": "클리어 별 1개, 풀이 안 보면 별 2개, 셋 모두 걸으면 별 3개.",
+            "line": "그러니 하나도 빠지지 말자. 셋이 함께 걸어야 별 셋이 켜진다.",
             "text": [
               {
                 "lang": "en",
-                "line": "Clear: 1 star. Without the solution view: 2 stars. All three brothers walk: 3 stars."
+                "line": "So none of us stays behind: three stars light only when all three walk."
               }
             ]
           }
