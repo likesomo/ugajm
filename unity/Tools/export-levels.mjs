@@ -123,7 +123,7 @@ const levels = LEVELS.map((def, i) => {
 
 // ---- tutorial boards (docs/tutorial.md) ----
 // Separate from the 50: own list, no chapter order check. Names share the save/telemetry name space with the stages.
-const CUE_ONS = ['start', 'restart', 'step', 'seventh', 'choose', 'keep', 'switch', 'doorOpen', 'respawn', 'win', 'lose'];
+const CUE_ONS = ['start', 'restart', 'step', 'seventh', 'choose', 'keep', 'switch', 'doorOpen', 'respawn', 'win', 'lose', 'doorShut'];
 const NO_GAEGU = /·/; // not in Gaegu-Regular (scene-validate GlyphCheck)
 const tutorialIds = new Set();
 const tutorials = (TUTORIALS ?? []).map((t, i) => {
@@ -187,6 +187,9 @@ const tutorials = (TUTORIALS ?? []).map((t, i) => {
     cues,
   };
 });
+
+// docs/tutorial.md 1: the player does a SWITCH on some board (one that cannot be solved without it).
+if (TUTORIALS.length && !tutorials.some((t) => t.level.expected.needsSwitch)) problems.push('tutorials: no board needs a SWITCH');
 
 if (problems.length) {
   for (const p of problems) console.error(`[export-levels] FAIL ${p}`);

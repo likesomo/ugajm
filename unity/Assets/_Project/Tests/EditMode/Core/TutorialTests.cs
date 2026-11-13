@@ -118,13 +118,35 @@ namespace SevenSteps.Tests
         }
 
         [Test]
-        public void T3RespawnCuesPerBrother()
+        public void T3KeepThenSwitchThenTheYoungest()
         {
             var t = Board("t3");
+            Assert.IsTrue(t.level.expected.needsSwitch, "T3 must need a SWITCH");
+            Assert.AreEqual("RRRRDDRKRRRRDDLXLLLDDRR", t.level.expected.path, "route changed: update this test");
             var shown = Play(t, t.level.expected.path, out var end);
-            CollectionAssert.AreEqual(new[] { "respawn/2", "respawn/3" }, shown.FindAll(x => x.StartsWith("respawn")));
+            Assert.AreEqual("choose/1", shown[6], "the first brother on the plate: the KEEP line");
+            Assert.AreEqual("doorOpen", shown[7], "KEEP: Stone, DoorOpen, Respawn");
+            Assert.AreEqual("choose/2", shown[14], "the second brother halfway: the SWITCH line");
+            Assert.AreEqual("switch", shown[15], "SWITCH: Switch, Respawn; no respawn cue, the woke-here line stays");
             Assert.AreEqual("win", shown[shown.Count - 1]);
             Assert.AreEqual(3, Stars.BodiesUsed(end), "all three brothers walked");
+            Assert.AreEqual("keep/2", Play(t, "RRRRDDRKRRRRDDLK", out _)[15], "a second KEEP: the next wakes back at the start");
+        }
+
+        [Test]
+        public void DoorShutShowsOnlyOnAClosedDoor()
+        {
+            // T3: SWITCH first, then the second brother walks into the closed door A before anyone holds the plate.
+            var t = Board("t3");
+            var shown = Play(t, "U" + "RRRRDDLX" + "LLLDDR", out var s);
+            Assert.AreEqual("-", shown[0], "a wall bump keeps the line");
+            Assert.AreEqual("doorShut", shown[14]);
+            Assert.AreEqual(5, s.Used, "the bump spent no step");
+            // T2: the first brother walks into the door on his 6th step.
+            Assert.AreEqual("doorShut", Play(Board("t2"), "DDRRRD", out _)[5]);
+            // After the KEEP the door is open: no doorShut (the stone holds it).
+            var t2 = Play(Board("t2"), "DUDRRRRKDDRRRD", out _);
+            Assert.AreNotEqual("doorShut", t2[13]);
         }
 
         static TutorialDto Synthetic(params TutorialCueDto[] cues) => new TutorialDto
