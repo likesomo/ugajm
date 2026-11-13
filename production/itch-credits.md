@@ -1,7 +1,7 @@
 # itch.io credits + Generative AI disclosure (draft, lead, 2026-11-13)
 
 Text to paste on the itch.io page. The license facts come from `design/art/CREDITS.md` and the shared `Assets/Audio/AUDIO-CREDITS.md`.
-**To confirm before publishing (coordinator/user):** the AI image list below. The record for the cutscenes and the U5 icons is clear; confirm whether other shipped 2D images (chapter/ending cards, UI frames, backgrounds, textures) are AI-generated, self-made or procedural.
+Confirmed by the coordinator from the shared-folder notes (2026-11-13): only the 9 cutscene pages are AI images; the U5 icons are procedural (GenerateKit.cs).
 
 ---
 
@@ -31,7 +31,8 @@ Engine: Unity 6 (URP).
 This game was made with generative AI tools under human direction. A human chose the concept, picked between alternatives and approved every change. What was AI-generated:
 
 - **Code, level tools, game text and story:** written with AI coding agents (Anthropic Claude via Claude Code, OpenAI Codex), reviewed and tested by automated checks and play sessions. Every one of the 50 stages is checked by a solver.
-- **Images:** the storybook cutscene illustrations and the menu icons were generated with OpenAI image generation (through Codex) from our own prompts, with no third-party images as input, and selected by the user. The 3D planets, ruins and board pieces are procedural Blender models and renders, built by scripts the AI agents wrote.
+- **Images:** the 9 storybook cutscene illustrations were generated with OpenAI image generation (through Codex) from our own prompts, with no third-party images as input, and selected by the user. Everything else you see is procedural: the menu icons are drawn by code, and the 3D planets, ruins, board pieces and textures are Blender/Python models and renders, built by scripts the AI agents wrote.
+- **Concept art:** early concept mock-ups were AI-generated (GPT image) and used only as reference; none of them ship in the game.
 - **Not AI:** all music and the new sound effects are human-made CC0 recordings (listed above). The fonts are the open-source fonts listed above.
 
 ## Short version (for the game's credits screen)
@@ -40,5 +41,5 @@ This game was made with generative AI tools under human direction. A human chose
 Music: Aureolus_Omicron, Adiutorium, Earl Beat (OpenGameArt, CC0)
 Sound effects: Kenney (kenney.nl, CC0)
 Fonts: Gaegu, Patrick Hand, Kaushan Script, Jua (SIL OFL 1.1)
-Made with generative AI: code and text (Claude, Codex), illustrations and icons (OpenAI image generation). Music and sounds are not AI.
+Made with generative AI: code and text (Claude, Codex), storybook illustrations (OpenAI image generation). Music and sounds are not AI.
 ```
