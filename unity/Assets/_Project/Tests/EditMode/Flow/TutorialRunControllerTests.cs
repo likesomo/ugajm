@@ -113,6 +113,45 @@ namespace SevenSteps.Tests
             Assert.AreEqual(CueLine(1, TutorialCues.OnStart), view.Line);
         }
 
+        /// The shortest moves from the board's start that end in a Bump into a door shut now, or null.
+        static string WalkIntoShutDoor(State start)
+        {
+            var seen = new HashSet<string> { "" };
+            var queue = new Queue<(State s, string path)>();
+            queue.Enqueue((start, ""));
+            while (queue.Count > 0)
+            {
+                var (st, path) = queue.Dequeue();
+                if (path.Length >= 7) continue;
+                foreach (char c in "UDLR")
+                {
+                    Rules.TryParseLetter(c, out var act);
+                    var r = Rules.Dispatch(st, Command.FromAct(act));
+                    foreach (var e in r.Events)
+                        if (e.Type == GameEventType.Bump && e.At >= 0 && Rules.IsDoor(Rules.TileAt(st, e.At)) && !Rules.DoorOpen(st, Rules.TileAt(st, e.At)))
+                            return path + c;
+                    if (!ReferenceEquals(r.State, st) && r.State.Status == Status.Play) queue.Enqueue((r.State, path + c));
+                }
+            }
+            return null;
+        }
+
+        [Test]
+        public void ABumpIntoTheShutDoorReachesTheDoorShutCue()
+        {
+            // core f5bb105: doorShut fires on a refused move (SessionUpdate Feedback); the run passes Feedback on to Match.
+            for (int b = 0; b < boards.Count; b++)
+            {
+                if (!boards[b].cues.Any(c => c.on == TutorialCues.OnDoorShut)) continue;
+                run.Begin(b);
+                var path = WalkIntoShutDoor(board.State);
+                Assert.IsNotNull(path, boards[b].id + ": a door to bump into");
+                board.Play(path);
+                Assert.AreEqual(CueLine(b, TutorialCues.OnDoorShut), view.Line, $"{boards[b].id} after {path}");
+                run.Skip();
+            }
+        }
+
         [Test]
         public void EveryBoardsSolverPathWinsAndTheLastEndsTheRun()
         {

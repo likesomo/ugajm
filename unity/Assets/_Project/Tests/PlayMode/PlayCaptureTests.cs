@@ -642,8 +642,21 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
+        /// Sends move / KEEP / SWITCH letters through the board as a player would, each after the last one is presented.
+        static IEnumerator SendLetters(GameController game, string letters)
+        {
+            foreach (char c in letters)
+            {
+                while (game.Board.Session.IsLocked) yield return null;
+                Assert.IsTrue(SevenSteps.Core.Rules.TryParseLetter(c, out var act), c.ToString());
+                game.Board.Send(SevenSteps.Core.Command.FromAct(act));
+                yield return null;
+            }
+            while (game.Board.Session.IsLocked) yield return null;
+        }
+
         /// Tutorial cues (docs/tutorial.md 2.3; gameplay-ui): T1's start line, T1 at its 6th step (the line and the exit's
-        /// ring) and T2's start (its ring on the plate), KO and EN. `unity.sh playcapture U5Tutorial` -> u5-tutorial-*.png.
+        /// ring) and T2's start (its ring on the plate), T3's choose screens (wake points) and wake highlights, KO and EN. `unity.sh playcapture U5Tutorial` -> u5-tutorial-*.png.
         [UnityTest]
         public IEnumerator U5Tutorial()
         {
@@ -672,6 +685,32 @@ namespace SevenSteps.Tests.PlayMode
                 game = Object.FindAnyObjectByType<GameController>();
                 yield return Capture($"u5-tutorial-t2-start-{lang}", px, 0.8f);
                 AssertVaried($"u5-tutorial-t2-start-{lang}", px.Value);
+                // T3 (KEEP then SWITCH, core f5bb105): the choose screen's wake points for each choice, and the wake
+                // highlight after it (user request 2026-11-13).
+                PlayEnv.Reset();
+                yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", lang, "-tutorial", "3");
+                game = Object.FindAnyObjectByType<GameController>();
+                var marks = game.Board.View.Marks;
+                string path = SevenSteps.Game.LevelCatalog.Tutorials[2].level.expected.path;
+                int k = path.IndexOf('K'), x = path.IndexOf('X');
+                Assert.IsTrue(k > 0 && x > k, "T3 needs KEEP then SWITCH: " + path);
+                yield return SendLetters(game, path.Substring(0, k));
+                while (!game.Board.Choice.Shown) yield return null;
+                Assert.IsTrue(marks.WakeTagsShown && marks.KeepWakeShown, lang + ": both wake points tagged");
+                yield return Capture($"u5-tutorial-t3-choose-keep-{lang}", px, 0.6f);
+                AssertVaried($"u5-tutorial-t3-choose-keep-{lang}", px.Value);
+                yield return SendLetters(game, "K");
+                Assert.AreEqual(2, marks.WakeRingsShown, lang + ": the wake cell and the new stone");
+                yield return Capture($"u5-tutorial-t3-wake-keep-{lang}", px, 0.25f);
+                yield return SendLetters(game, path.Substring(k + 1, x - k - 1));
+                while (!game.Board.Choice.Shown) yield return null;
+                game.Board.Choice.Focus(false);
+                Assert.IsTrue(marks.WakeTagsShown, lang + ": SWITCH focused, both still tagged");
+                yield return Capture($"u5-tutorial-t3-choose-switch-{lang}", px, 0.6f);
+                AssertVaried($"u5-tutorial-t3-choose-switch-{lang}", px.Value);
+                yield return SendLetters(game, "X");
+                Assert.AreEqual(1, marks.WakeRingsShown, lang + ": SWITCH: the wake cell only");
+                yield return Capture($"u5-tutorial-t3-wake-switch-{lang}", px, 0.25f);
             }
         }
 
