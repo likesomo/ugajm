@@ -312,6 +312,7 @@ namespace SevenSteps.EditorTools
             ga.sfxStep = Clip("step"); ga.sfxLucky = Clip("lucky"); ga.sfxStone = Clip("stone"); ga.sfxSwitch = Clip("switch");
             ga.sfxFall = Clip("fall"); ga.sfxBump = Clip("bump"); ga.sfxBridge = Clip("bridge"); ga.sfxCrumble = Clip("crumble");
             ga.sfxUndo = Clip("undo"); ga.sfxWin = Clip("win"); ga.sfxLose = Clip("lose");
+            ga.sounds = SoundWire.Asset(out _); // music + newer effects by id; missing files only warn
             ga.background = Hex("#15131c");
             EditorUtility.SetDirty(ga);
             AssetDatabase.SaveAssets();

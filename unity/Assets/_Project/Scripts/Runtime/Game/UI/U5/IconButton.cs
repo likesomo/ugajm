@@ -203,6 +203,7 @@ namespace SevenSteps.Game.UI.U5
         public void Press()
         {
             if (!selectable.IsInteractable()) return;
+            GameSound.Sfx(SoundIds.UiClick);
             Clicked?.Invoke();
         }
 

@@ -87,6 +87,8 @@ namespace SevenSteps.Game
         public AudioClip sfxUndo;
         public AudioClip sfxWin;
         public AudioClip sfxLose;
+        [Tooltip("Data/Sounds.asset: music and the newer effects by id (SoundIds; Assets/Shared/Audio/<id>.ogg|.wav, wired by setup)")]
+        public SoundCatalog sounds;
 
         [Header("Palette")]
         public Color background = new Color32(0x15, 0x13, 0x1c, 0xff);

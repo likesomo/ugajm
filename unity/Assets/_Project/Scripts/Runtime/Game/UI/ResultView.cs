@@ -284,6 +284,7 @@ namespace SevenSteps.Game.UI
             ShowTip(-1);
             overlay.SetActive(true);
             HudHidden?.Invoke(m.Cleared);
+            if (m.Cleared) GameSound.Sfx(SoundIds.ClearJingle);
             ShowStars(m.Cleared ? m.Stars : 0);
         }
 
@@ -359,6 +360,7 @@ namespace SevenSteps.Game.UI
             {
                 for (float t = 0; t < 0.25f; t += Time.unscaledDeltaTime) yield return null; // pause before each star
                 stars[k].sprite = starFilled;
+                GameSound.Sfx(SoundIds.StarChime(k + 1));
                 var r = stars[k].rectTransform;
                 for (float t = 0; t < 0.22f; t += Time.unscaledDeltaTime)
                 {

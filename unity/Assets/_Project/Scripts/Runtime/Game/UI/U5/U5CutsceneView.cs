@@ -166,7 +166,9 @@ namespace SevenSteps.Game.UI.U5
 
         public void ShowFrame(CutsceneFrame f)
         {
-            frame = f ?? throw new ArgumentNullException(nameof(f));
+            if (f == null) throw new ArgumentNullException(nameof(f));
+            if (frame != null && frame.SceneId == f.SceneId && frame.Page != f.Page) GameSound.Sfx(SoundIds.PageTurn);
+            frame = f;
             Draw(f);
         }
 

@@ -46,7 +46,12 @@ namespace SevenSteps.Game
                     case GameEventType.Step: Play(assets.sfxStep, 0.9f + 0.06f * e.StepIdx); break;
                     case GameEventType.Bump: Play(assets.sfxBump); break;
                     case GameEventType.Crumble: Play(assets.sfxCrumble); break;
-                    case GameEventType.Stone: Play(assets.sfxStone); break;
+                    case GameEventType.Stone:
+                        Play(assets.sfxStone);
+                        if (e.At >= 0 && e.At < r.State.Level.Count && IsPlate(Rules.TileAt(r.State, e.At))) GameSound.Sfx(SoundIds.PlatePress);
+                        break;
+                    case GameEventType.DoorOpen: GameSound.Sfx(SoundIds.DoorOpen); break;
+                    case GameEventType.Respawn: GameSound.Sfx(SoundIds.Wake); break;
                     case GameEventType.Switch:
                     case GameEventType.Flip: Play(assets.sfxSwitch); break; // lever: switch sound until art makes one
                     case GameEventType.Bridge:
@@ -59,6 +64,8 @@ namespace SevenSteps.Game
                 }
             }
         }
+
+        static bool IsPlate(char t) => t >= 'a' && t <= 'c';
 
         void Play(AudioClip clip, float pitch = 1f)
         {
