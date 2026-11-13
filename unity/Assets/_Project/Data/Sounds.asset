@@ -14,26 +14,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: SevenSteps.Game::SevenSteps.Game.SoundCatalog
   entries:
   - id: bgm.title
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: c94e5063bd704708acaf848f8167ef60, type: 3}
   - id: bgm.stage
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: eccc413babad4b2cb0cd3bcacf257ea5, type: 3}
   - id: bgm.ending
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: f7a16147131f435fb47ce0dc7fdcd715, type: 3}
   - id: ui.click
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: ed82e7c82ec3411e8992b4bb327fe1c2, type: 3}
   - id: page.turn
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: c3628a33121c407abca2514b3c08e525, type: 3}
   - id: door.open
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: e8f4350a02c04c3aa66a1089b3c502bb, type: 3}
   - id: plate.press
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 7c254b90488f4655b118857dfee8a556, type: 3}
   - id: star.chime.1
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 182c1832e4fc4a9f84676f9fcd6ab35f, type: 3}
   - id: star.chime.2
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 8189ebcac11147c68c4a5de152501c39, type: 3}
   - id: star.chime.3
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 1ce0fb80bfea4b6faf045f066e397ce3, type: 3}
   - id: clear.jingle
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 68118d7cca8d4784bc22e272f1877607, type: 3}
   - id: wake
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 97455224cdab41c68aba86f8abbbec4d, type: 3}

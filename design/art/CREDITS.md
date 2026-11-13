@@ -56,11 +56,14 @@ CC0 크레딧은 자발적으로 표시한다. OFL 폰트를 실제로 배포할
 > 게임에 쓰는 모든 외부·생성 에셋을 여기에 적는다. 파일 자체는 git 밖 공유 폴더(`C:/unityjam/shared-assets/seven-steps/Assets/`, 작업 공간에서는 `unity/Assets/Shared/`)에 있다.
 > 규칙: 무료 에셋만. CC BY-NC 등 비상업 라이선스 금지. CC-BY·OFL은 itch.io 페이지와 게임 크레딧 화면에 표기한다. 자세한 규칙은 `agents/README.md` "에셋 규칙".
 > 관리: 아트. 에셋을 추가·교체·삭제할 때 이 표도 함께 고친다.
+> 오디오 원본·편집 내용·해시: 공유 `Assets/Audio/AUDIO-CREDITS.md`, `concepts/audio-2026-11-13/` (NOTES.md, audio-manifest.json).
 
 | 에셋 | 작가 / 출처 | 라이선스 | 표기 의무 | 공유 폴더 경로 | 쓰는 곳 | 추가일 |
 |---|---|---|---|---|---|---|
 | Jua (주아체) | The Jua Project Authors / https://github.com/google/fonts/tree/main/ofl/jua | SIL OFL 1.1 (`Fonts/Jua-OFL.txt`) | 있음 (폰트 이름 + OFL 고지) | `Fonts/Jua-Regular.ttf` | 모든 UI 텍스트 (`GameAssets.font`) | 2026-11-07 |
 | 임시 효과음 11개 (step, lucky, stone, switch, fall, bump, bridge, crumble, undo, win, lose) | 팀 자체 제작: `unity/Tools/gen-sfx.mjs`로 합성 | 자체 제작 | 없음 | `Audio/*.wav` | `GameAssets.sfx*` | 2026-11-07 |
+| 배경음 3곡: bgm.title (musicbox2_cute_tune, 4 Music Box Tracks) · bgm.stage (Somnium, 20~143초 발췌 루프) · bgm.ending (Lullaby Stories) | Aureolus_Omicron / Adiutorium / Earl Beat (earlbeat), OpenGameArt: https://opengameart.org/content/4-music-box-tracks , https://opengameart.org/content/somnium , https://opengameart.org/content/lullaby-stories | CC0 1.0 | 없음 (자발적 표기) | `Audio/bgm.*.ogg` | `Data/Sounds.asset` (`GameSound`) | 2026-11-13 |
+| 효과음 9개: ui.click, page.turn, door.open, plate.press, star.chime.1~3, clear.jingle, wake (Kenney Interface Sounds, RPG Audio, Music Jingles에서 자르고 편집) | Kenney Vleugels (Kenney.nl): https://kenney.nl/assets/interface-sounds , https://kenney.nl/assets/rpg-audio , https://kenney.nl/assets/music-jingles | CC0 1.0 | 없음 (자발적 표기) | `Audio/*.ogg` | `Data/Sounds.asset` | 2026-11-13 |
 
 ## 게임 크레딧 화면·itch.io용 문구 (현재)
 
@@ -69,7 +72,11 @@ Font: Gaegu by The Gaegu Project Authors (SIL Open Font License 1.1)
 Font: Patrick Hand by Patrick Wagesreiter (SIL Open Font License 1.1)
 Font: Kaushan Script by Pablo Impallari and Igino Marini (SIL Open Font License 1.1)
 Font: Jua by The Jua Project Authors (SIL Open Font License 1.1)
+Music: "musicbox2_cute_tune" by Aureolus_Omicron, "Somnium" by Adiutorium, "Lullaby Stories" by Earl Beat (OpenGameArt, CC0)
+Sound effects: Kenney (www.kenney.nl, CC0)
 ```
+
+itch.io 페이지 전체 문구(크레딧 + 생성형 AI 고지): `production/itch-credits.md`.
 # 유적×선돌×오리엔탈 — 2026-11-08
 
 손글씨 EN/KO(2026-11-09): `Shared/Fonts/KaushanScript-Regular.ttf` — Copyright2011 Pablo Impallari 및 Igino Marini, [OFL1.1](https://github.com/google/fonts/blob/main/ofl/kaushanscript/OFL.txt); `PatrickHand-Regular.ttf` — Copyright2010–2012 Patrick Wagesreiter, [OFL1.1](https://github.com/google/fonts/blob/main/ofl/patrickhand/OFL.txt); `Gaegu-Regular.ttf` — Copyright2018 The Gaegu Project Authors, [OFL1.1](https://github.com/google/fonts/blob/main/ofl/gaegu/OFL.txt). 원본 TTF를 수정하지 않았고 각 `<Family>-OFL.txt`를 같은 공유 폴더에 둔다. 기존 Jua는 숫자용으로 재사용한다. 비교 후보 `GamjaFlower-Regular.ttf` 및 `HiMelody-Regular.ttf`는 YoonDesign Inc., 각 [Gamja Flower OFL](https://github.com/google/fonts/blob/main/ofl/gamjaflower/OFL.txt)·[Hi Melody OFL](https://github.com/google/fonts/blob/main/ofl/himelody/OFL.txt)를 보존하며 빌드에서는 참조하지 않는다. `Handwritten_Background.png`는 GPT 생성 배경이고 UI 글자는 Unity가 실제 TTF로 렌더한다.
