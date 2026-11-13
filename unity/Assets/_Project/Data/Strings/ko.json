@@ -165,7 +165,7 @@
     { "key": "ui5.choice.switch", "text": "SWITCH: 돌 없이, 다음 형제가 바로 이 자리에서 깬다." },
     { "key": "ui5.choice.wake_keep", "text": "KEEP: 여기서 깬다" },
     { "key": "ui5.choice.wake_switch", "text": "SWITCH: 여기서 깬다" },
-    { "key": "result.star3_nudge", "text": "형제 {0}명이 모두 걸으면 별 셋." },
+    { "key": "result.star3_nudge", "text": "형제가 모두 걸었다면 선이 더 밝았을 텐데." },
     { "key": "ui5.title.continue", "text": "계속 걷기" },
     { "key": "ui5.title.begin", "text": "첫 걸음" },
     { "key": "ui5.surface.caption", "text": "{0:00} | {1} | 최고 {2}" },

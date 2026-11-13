@@ -57,8 +57,8 @@ namespace SevenSteps.Contracts
     /// </summary>
     public sealed class CutsceneCatalog
     {
-        /// 2: pages may have a rule caption (2026-11-13).
-        public const int Version = 2;
+        /// 2: pages may have a rule caption (2026-11-13). 3: the same fields, rule captions in the story voice (8aaf58f).
+        public const int Version = 3;
         public const int MaxLines = 3;
         public const string WhenNewGame = "newGame", WhenAfterEnding = "afterEnding";
         public const string ReplayTitle = "title";

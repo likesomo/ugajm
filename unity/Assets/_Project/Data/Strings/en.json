@@ -165,7 +165,7 @@
     { "key": "ui5.choice.switch", "text": "SWITCH: no stone; the next brother wakes right here." },
     { "key": "ui5.choice.wake_keep", "text": "KEEP: wakes here" },
     { "key": "ui5.choice.wake_switch", "text": "SWITCH: wakes here" },
-    { "key": "result.star3_nudge", "text": "All {0} brothers walk: three stars." },
+    { "key": "result.star3_nudge", "text": "If all of us had walked, the line would have shone brighter." },
     { "key": "ui5.title.continue", "text": "Keep walking" },
     { "key": "ui5.title.begin", "text": "First step" },
     { "key": "ui5.surface.caption", "text": "{0:00} · {1} · Best {2}" },
