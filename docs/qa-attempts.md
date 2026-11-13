@@ -161,7 +161,7 @@ node unity/Tools/qa-play.mjs verify                      # attempts.jsonl 전체
 ### 10.1 명령
 
 ```bash
-node unity/Tools/qa-play.mjs story prologue [--lang ko|en]        # 프롤로그 7장 (튜토리얼군만)
+node unity/Tools/qa-play.mjs story prologue [--lang ko|en]        # 프롤로그 8장 (튜토리얼군만)
 node unity/Tools/qa-play.mjs story epilogue [--lang ko|en]        # 에필로그 (선택)
 node unity/Tools/qa-play.mjs start --tester A1 --level T1 [--lang ko|en]   # T1, T2, T3 (t1도 됨)
 node unity/Tools/qa-play.mjs start --tester A0 --level 1  [--lang ko|en]   # 스테이지 1~50
@@ -171,11 +171,12 @@ node unity/Tools/qa-play.mjs keep|switch|undo|restart|hint|giveup --tester A1
 node unity/Tools/qa-play.mjs verify
 ```
 
-- `story`는 `--tester`가 필요 없고 기록을 남기지 않는다. 출력은 `Data/cutscenes.json`의 페이지 순서 그대로 `[k/n]` 다음에 그 페이지의 줄들(게임 `U5CutsceneView`가 한 페이지에 보여 주는 줄).
+- `story`는 `--tester`가 필요 없고 기록을 남기지 않는다. 출력은 `Data/cutscenes.json`의 페이지 순서 그대로 `[k/n]` 다음에 그 페이지의 줄들(게임 `U5CutsceneView`가 한 페이지에 보여 주는 줄). 페이지에 규칙 캡션(`rule`, cutscenes v2)이 있으면 줄들 아래에 `  [캡션]`으로 한 줄 더(게임은 이야기 줄 아래 작은 글씨).
 - 튜토리얼 보드 줄: `level`이 `"T1"`..`"T3"`, `stageName`은 보드 이름(`첫 일곱 걸음` 등), `chapter` `moss`. 나머지 필드·경계·재생은 1~9절과 같다. `attempt`는 테스터·보드별로 센다.
 - 튜토리얼 보드에서 `lose`가 나면 게임처럼 **자동 재시작**한다: 패배 줄(`fell`/`out_of_bodies`)을 쓰고, `!`를 기록(levelRestarts +1)하고, 다음 시도가 바로 시작된다(lose cue를 보여 준 뒤 restart cue). 테스터가 `restart`를 칠 필요가 없다.
 - 튜토리얼 보드에는 `hint`가 없다(게임도 H 없음): `error: no hint on a tutorial board`. 클리어 화면·별도 없다(줄의 `stars`는 형식대로 기록하지만 출력하지 않는다).
 - 집계 `qa-report.mjs`는 `"T…"` 줄을 건너뛴다(스테이지 보고서에 넣지 않음, 건너뛴 수만 출력). 튜토리얼 줄은 코디네이터가 따로 센다.
+- 보드에서 이동이 **닫힌 문**에 막히면(`막힘: R …`) 그 보드의 `doorShut` cue를 `안내:`로 바로 보여 준다(게임도 Bump를 cue 판정에 넘긴다). 벽 등 다른 막힘은 안내를 바꾸지 않는다.
 - 판정: cue 고르기는 `qa-play.mjs`의 `matchCue`(C# Core `TutorialCues`와 같은 규칙, docs/tutorial.md 2.3, 같은 시퀀스를 node·EditMode 테스트가 고정). cue 데이터는 `Data/levels.json` `tutorials`(게임이 읽는 것).
 
 ### 10.2 naive (기본이자 유일한 모드)
@@ -186,7 +187,7 @@ node unity/Tools/qa-play.mjs verify
 
 | 언제 | 대조군 (스테이지만) | 튜토리얼군 | 출처 |
 |---|---|---|---|
-| 시작 전 | 없음 | `story prologue` 7장 (아래 10.4) | `Data/cutscenes.json` prologue |
+| 시작 전 | 없음 | `story prologue` 8장 (아래 10.4) | `Data/cutscenes.json` prologue |
 | `help` | 명령 목록만 | 같음 | 하네스 |
 | 스테이지 `start`/`show` 머리 | `[n/50] 이름 (챕터)` + `시작 문구:` 스테이지 시작 줄 (`startLine`: 기본 story, 4·8은 hint) | 같음 | levels.js `story`/`hint`, 게임 `StoryDirector.StartText` |
 | 스테이지 `화면 문구:` | HUD 메시지 줄: 마지막 사건의 `msg.*` (아래), 6번째 걸음 뒤 `msg.lucky_next`, 다른 걸음은 빈 줄, 처음 얼음에서 미끄러질 때 한 번 `tutorial.slide` | 같음 | `Data/Strings` (게임 `MessagePresenter`) |
@@ -213,14 +214,14 @@ HUD 메시지 줄 `msg.*` (ko, 게임 그대로. 규칙에 닿는 글은 이것�
 
 ### 10.4 프롤로그 (`story prologue`, ko)
 
-`Data/cutscenes.json` 그대로(`design/story/cutscenes.md` 4절의 표와 같다). 3~6장이 규칙을 말한다: 3 "한 걸음마다 하늘에 별이 하나씩 켜진다. / 일곱째 별이 켜질 때에만 땅이 귀를 기울인다." 4 "그래서 일곱 번째 걸음이 닿는 곳만 바뀐다. …" 5 KEEP/선돌, 6 "닿으면 별 하나, 스스로 세면 둘, 셋이 모두 걸으면 셋."
+`Data/cutscenes.json` 그대로(`design/story/cutscenes.md` 4절의 표와 같다). 8장(2026-11-13 v2: 5b SWITCH 장 추가). 3~6장이 규칙을 말하고, 그 장들 아래 규칙 캡션 `[…]`이 붙는다: 3 걸음과 일곱째 별 [형제 한 명은 일곱 걸음씩 걷는다.], 4 7번째 걸음만 [7번째 걸음이 닿은 칸만 작동한다. …], 5 KEEP [KEEP: 지금 형제는 돌로 남고, 다음 형제는 출발점에서 깬다.], 5b SWITCH [SWITCH: 돌을 남기지 않는다. 다음 형제는 지금 선 자리에서 깬다.], 6 셋이 모두 걷는 이유. 정확한 줄은 `story prologue` 출력.
 
 ### 10.5 보드 cue (ko / en, `on`, 빛나는 칸)
 
 T1 첫 일곱 걸음 (형제 1): start 방향키로 한 칸씩 걷는다. 한 걸음마다 별이 하나 켜진다. · step 1 하나. 걸음을 세어 보자. · step 6 다음이 일곱째 걸음. 출구에 닿아야 한다. [(2,3) 출구] · win 일곱째 걸음에 닿아서 문이 열렸다. · lose 일곱 걸음이 출구에서 끝나야 한다. · restart 다시. 출구까지 딱 일곱 걸음.
 
-T2 돌이 붙드는 길 (형제 2): start 문은 발판이 눌려야 열린다. 발판에서 일곱째 걸음을 마치자. [(5,2) 발판] · step 5 (첫째) 일곱째가 아닌 걸음은 발판을 밟아도 아무 일도 없다. · choose KEEP을 고르면 이 자리에 남아 선돌이 된다. [(5,2)] · switch SWITCH는 아무것도 남기지 않는다. 다시 해 보자. · doorOpen 선돌이 문을 열어 두었다. 다음 형제는 출구까지 딱 일곱 걸음. [(4,5) 출구] · win 일곱째 걸음만 일을 한다. 기억하자. · lose 형제를 다 썼다. 처음부터. · restart 발판에서 일곱째 걸음을 마치고 KEEP. [(5,2)]
+T2 돌이 붙드는 길 (형제 2): start 문은 발판이 눌려야 열린다. 발판에서 일곱째 걸음을 마치자. [(5,2) 발판] · step 5 (첫째) 일곱째가 아닌 걸음은 발판을 밟아도 아무 일도 없다. · choose KEEP은 돌로 남고, SWITCH는 여기서 다음 형제가 깬다. [(5,2)] · switch 여기서 깼지만 돌이 없어 문은 닫혀 있다. [(4,4) 문] · doorShut 닫힌 문. 발판 위에 선돌이 있어야 열린다. [(5,2)] · doorOpen 선돌이 문을 열어 두었다. 다음 형제는 출구까지 딱 일곱 걸음. [(4,5) 출구] · win 일곱째 걸음만 일을 한다. 기억하자. · lose 형제를 다 썼다. 처음부터. · restart 발판에서 일곱째 걸음을 마치고 KEEP. [(5,2)]
 
-T3 셋이 함께 (형제 3): start 문이 둘. 형제 하나가 발판 하나를 붙든다. [(5,2)] · respawn (둘째) 둘째 형제. 남은 발판으로. · respawn (셋째) 막내 차례. 열린 문을 지나 출구로. [(3,6) 출구] · win 셋이 모두 걸었다. 별 셋. · lose 형제를 다 썼다. 처음부터. · restart 발판 둘에 형제 둘, 출구에 막내.
+T3 셋이 함께 (형제 3, 2026-11-13 새 보드: 출구가 14걸음 → 첫째 발판 KEEP, 둘째 중간 SWITCH, 막내 출구): start 목표: 세 형제 모두 걸어서 별 셋. 첫째는 발판으로. [(6,3) 발판] · choose (첫째) KEEP: 여기서 돌로 남고, 다음 형제는 출발점에서 깬다. [(6,3)] · doorOpen 문이 열렸다. 하지만 출구는 한 형제가 가기엔 너무 멀다. [(3,5) 출구] · choose (둘째) SWITCH: 돌 없이, 다음 형제가 바로 이 자리에서 깬다. · switch 여기서 깼다. 이제 여기가 출발점이다. [(3,5)] · keep (둘째) KEEP이면 다음 형제는 다시 출발점에서 깬다. · doorShut 닫힌 문. 셋 중 하나는 발판을 붙들어야 한다. [(6,3)] · win 셋이 모두 걸었다. 별 셋. · lose 형제를 다 썼다. 처음부터. · restart 첫째는 발판에 KEEP, 둘째는 중간에서 SWITCH. [(6,3)]
 
 en 줄은 `Data/levels.json` `tutorials[].cues[].text`. 보드 데이터를 바꾸면 이 절을 같이 고친다.

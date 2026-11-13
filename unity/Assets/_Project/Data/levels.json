@@ -1680,11 +1680,11 @@
           "on": "choose",
           "n": 0,
           "body": 0,
-          "line": "KEEP을 고르면 이 자리에 남아 선돌이 된다.",
+          "line": "KEEP은 돌로 남고, SWITCH는 여기서 다음 형제가 깬다.",
           "text": [
             {
               "lang": "en",
-              "line": "Choose KEEP to stay here as a standing stone."
+              "line": "KEEP stays as a stone. SWITCH wakes the next brother right here."
             }
           ],
           "cell": [
@@ -1696,14 +1696,33 @@
           "on": "switch",
           "n": 0,
           "body": 0,
-          "line": "SWITCH는 아무것도 남기지 않는다. 다시 해 보자.",
+          "line": "여기서 깼지만 돌이 없어 문은 닫혀 있다.",
           "text": [
             {
               "lang": "en",
-              "line": "SWITCH leaves nothing behind. Try again."
+              "line": "You woke right here, but with no stone the door stays shut."
             }
           ],
-          "cell": []
+          "cell": [
+            4,
+            4
+          ]
+        },
+        {
+          "on": "doorShut",
+          "n": 0,
+          "body": 0,
+          "line": "닫힌 문. 발판 위에 선돌이 있어야 열린다.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "A closed door. It opens only while a stone stands on the plate."
+            }
+          ],
+          "cell": [
+            5,
+            2
+          ]
         },
         {
           "on": "doorOpen",
@@ -1770,7 +1789,7 @@
       "version": 1,
       "level": {
         "name": "셋이 함께",
-        "hint": "문이 둘, 발판이 둘. 셋이 모두 걸어야 길이 열린다.",
+        "hint": "첫째는 발판에 KEEP, 둘째는 일곱째 걸음에서 SWITCH, 막내가 출구로.",
         "bodies": 3,
         "statueCount": 0,
         "chapter": "moss",
@@ -1779,25 +1798,24 @@
           {
             "lang": "en",
             "name": "All Three Together",
-            "hint": "Two doors, two plates. The way opens only when all three walk.",
+            "hint": "The first KEEPs on the plate, the second SWITCHes on the seventh step, the youngest walks to the exit.",
             "story": ""
           }
         ],
         "map": [
-          "#######",
-          "#S....#",
-          "#....a#",
-          "#.b...#",
-          "###A###",
-          "###B###",
-          "###E###",
-          "#######"
+          "########",
+          "#S....##",
+          "#####..#",
+          "#.....a#",
+          "#.######",
+          "#.AE####",
+          "########"
         ],
         "expected": {
           "minBodies": 3,
           "moves": 23,
-          "needsSwitch": false,
-          "path": "DUDUDDRKDUDRRRRKDRRDDDD"
+          "needsSwitch": true,
+          "path": "RRRRDDRKRRRRDDLXLLLDDRR"
         }
       },
       "cues": [
@@ -1805,45 +1823,106 @@
           "on": "start",
           "n": 0,
           "body": 0,
-          "line": "문이 둘. 형제 하나가 발판 하나를 붙든다.",
+          "line": "목표: 세 형제 모두 걸어서 별 셋. 첫째는 발판으로.",
           "text": [
             {
               "lang": "en",
-              "line": "Two doors. Each plate needs a brother to hold it."
+              "line": "Goal: all three brothers walk, three stars. First, to the plate."
             }
           ],
           "cell": [
-            5,
-            2
+            6,
+            3
           ]
         },
         {
-          "on": "respawn",
+          "on": "choose",
           "n": 0,
-          "body": 2,
-          "line": "둘째 형제. 남은 발판으로.",
+          "body": 1,
+          "line": "KEEP: 여기서 돌로 남고, 다음 형제는 출발점에서 깬다.",
           "text": [
             {
               "lang": "en",
-              "line": "The second brother. To the other plate."
+              "line": "KEEP: stay here as a stone; the next brother wakes at the start."
+            }
+          ],
+          "cell": [
+            6,
+            3
+          ]
+        },
+        {
+          "on": "doorOpen",
+          "n": 0,
+          "body": 0,
+          "line": "문이 열렸다. 하지만 출구는 한 형제가 가기엔 너무 멀다.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "The door is open. But the exit is too far for one brother."
+            }
+          ],
+          "cell": [
+            3,
+            5
+          ]
+        },
+        {
+          "on": "choose",
+          "n": 0,
+          "body": 2,
+          "line": "SWITCH: 돌 없이, 다음 형제가 바로 이 자리에서 깬다.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "SWITCH: no stone. The next brother wakes right here."
             }
           ],
           "cell": []
         },
         {
-          "on": "respawn",
+          "on": "switch",
           "n": 0,
-          "body": 3,
-          "line": "막내 차례. 열린 문을 지나 출구로.",
+          "body": 0,
+          "line": "여기서 깼다. 이제 여기가 출발점이다.",
           "text": [
             {
               "lang": "en",
-              "line": "The youngest now. Through the open doors to the exit."
+              "line": "Woke up right here. This is the start now."
             }
           ],
           "cell": [
             3,
-            6
+            5
+          ]
+        },
+        {
+          "on": "keep",
+          "n": 0,
+          "body": 2,
+          "line": "KEEP이면 다음 형제는 다시 출발점에서 깬다.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "With KEEP the next brother wakes back at the start."
+            }
+          ],
+          "cell": []
+        },
+        {
+          "on": "doorShut",
+          "n": 0,
+          "body": 0,
+          "line": "닫힌 문. 셋 중 하나는 발판을 붙들어야 한다.",
+          "text": [
+            {
+              "lang": "en",
+              "line": "A closed door. One of the three has to hold the plate."
+            }
+          ],
+          "cell": [
+            6,
+            3
           ]
         },
         {
@@ -1876,14 +1955,17 @@
           "on": "restart",
           "n": 0,
           "body": 0,
-          "line": "발판 둘에 형제 둘, 출구에 막내.",
+          "line": "첫째는 발판에 KEEP, 둘째는 중간에서 SWITCH.",
           "text": [
             {
               "lang": "en",
-              "line": "Two brothers on the plates, the youngest to the exit."
+              "line": "First: KEEP on the plate. Second: SWITCH halfway."
             }
           ],
-          "cell": []
+          "cell": [
+            6,
+            3
+          ]
         }
       ]
     }

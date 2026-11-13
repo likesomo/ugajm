@@ -8,7 +8,8 @@
 - 스테이지 1 앞의 작은 보드 3개(약 5×5). 차례대로 한다.
   - **T1** (몸 1): 이동과 걸음 수. 출구를 **정확히 7번째 걸음**으로 밟는다.
   - **T2** (몸 2): 7번째 걸음만 일을 한다. 발판 위에서 7번째를 마치고 KEEP → 선돌이 발판을 눌러 문이 열린다. 다음 형제가 출구로.
-  - **T3** (몸 3): 문 둘, 발판 둘. 셋이 모두 걸어야 풀린다(최소 몸 수 3) → 결과에 "셋이 모두 걸으면 별 셋".
+  - **T3** (몸 3): **SWITCH를 직접 한다**(2026-11-13). 출구가 출발점에서 14걸음이라 한 형제로는 못 닿는다. 첫째가 발판에서 KEEP(문이 열림), 둘째가 중간에서 일곱째 걸음을 마치고 SWITCH(돌 없이, 막내가 바로 그 자리에서 깸), 막내가 거기서 출구까지 7걸음. KEEP 하나와 SWITCH 하나가 모두 있어야 풀린다(`expected.needsSwitch`, 최소 몸 수 3). 시작 cue가 목표를 말한다: "목표: 세 형제 모두 걸어서 별 셋."
+  - 규칙 문구(리드 정정 2026-11-13): **KEEP** = 이 형제는 여기 선돌로 남고, 다음 형제는 지금 출발점에서 깬다. **SWITCH** = 돌을 남기지 않고, 다음 형제가 **바로 이 자리**에서 깨며 이 칸이 새 출발점이 된다.
 - **50스테이지와 별개**: 스테이지 번호, 별 합계, 클리어 수, `ProgressData.stages`, 텔레메트리 스테이지 번호 어디에도 들어가지 않는다.
 - **실패해도 괜찮다**: `Lose`가 나면 화면이 `lose` cue를 잠깐 보여 준 뒤 자동으로 Restart 한다(2.4). 건너뛰기 가능.
 
@@ -18,7 +19,7 @@
 
 - 원본: `prototypes/seven-steps/src/levels.js`의 `export const TUTORIALS = [...]` (`LEVELS`와 따로, 플레이 순서).
 - `unity.sh levels`(`export-levels.mjs`)가 `levels.json`의 최상위 `tutorials` 배열로 내보낸다(`levels` 50개 옆). JS 솔버 답(`expected`)도 스테이지와 같은 모양으로 싣는다.
-- 검사(export, 실패하면 파일을 쓰지 않음): 모두 솔버로 풀린다, `bodies <= 3`, `level.name`이 스테이지와 튜토리얼 전체에서 겹치지 않는다, `id` 형식·중복, cue 형식(2.3), 번역(`text`) 빠짐 없음, `·`(U+00B7) 금지(Gaegu 글꼴에 없음). 그리고 보드마다 **설계 단정**: `expected.minBodies == bodies`(T3은 셋이 모두 걸어야만 풀림, T1·T2도 몸을 남기지 않음).
+- 검사(export, 실패하면 파일을 쓰지 않음): 모두 솔버로 풀린다, `bodies <= 3`, `level.name`이 스테이지와 튜토리얼 전체에서 겹치지 않는다, `id` 형식·중복, cue 형식(2.3), 번역(`text`) 빠짐 없음, `·`(U+00B7) 금지(Gaegu 글꼴에 없음). 그리고 보드마다 **설계 단정**: `expected.minBodies == bodies`(T3은 셋이 모두 걸어야만 풀림, T1·T2도 몸을 남기지 않음). 또 보드 중 하나 이상이 `expected.needsSwitch`(SWITCH 없이는 못 푸는 보드, 지금 T3).
 - `unity.sh verify`(`LevelVerifier`)가 튜토리얼도 C#↔JS 비교한다. 골든(`gen-golden.mjs`)도 튜토리얼 보드를 `tutorial:<id>` 트레이스로 싣는다.
 
 ### 2.2 `levels.json` 모양
@@ -86,14 +87,16 @@ public sealed class LevelFileDto { public int steps; public LevelDto[] levels; p
 | `respawn` | 다음 형제가 깨어남(`Respawn`) |
 | `win` | `Win` |
 | `lose` | `Lose` |
+| `doorShut` | 이동이 **지금 닫힌 문**에 막힘(`Bump` 이벤트의 칸이 문이고 그 문이 닫혀 있음, 명령 전 상태 기준). 벽 등 다른 Bump는 여전히 줄을 바꾸지 않는다. 2026-11-13 추가: 발판을 붙들 형제 없이 출구로 가려 할 때(형제를 덜 쓰려 할 때) 왜 셋이 필요한지 말한다 |
 
 - `body`: cue를 그 형제일 때만 쓴다. 형제 번호는 **명령 전 상태** 기준 `Stars.BodiesUsed(before)`(1 = 첫 형제). `respawn` cue는 깨어난 형제 번호(명령 후 상태)로 본다.
 - **한 명령에서 여러 cue가 맞으면**: 이벤트 순서대로 보고, 같은 이벤트에서는 cue 목록 순서대로 본다. **마지막으로 맞은 cue 하나**를 보여 준다. 하나도 안 맞으면 지금 줄을 그대로 둔다. 같은 cue는 다시 맞으면 다시 보인다(형제마다 같은 안내 가능).
-- Undo는 cue를 바꾸지 않는다. Bump(못 가는 칸)도 바꾸지 않는다.
+- Undo는 cue를 바꾸지 않는다. Bump(못 가는 칸)도 바꾸지 않는다. 단 닫힌 문에 막힌 Bump는 `doorShut`. 게임은 Bump도 `SessionUpdate`(Feedback)로 `Match`에 넘긴다.
+- **SWITCH 뒤 "여기서 깼다"**: SWITCH 명령의 이벤트는 `Switch`, `Respawn` 순서다. 마지막 맞은 cue가 이기므로, SWITCH 뒤 깨어난 형제에게 보일 줄은 `switch` cue에 쓰고 그 형제 번호의 `respawn` cue는 두지 않는다(두면 `switch` 줄을 덮는다). KEEP 뒤 줄도 같은 이유로 `keep`/`doorOpen` cue에 쓴다(T2, T3). 고르기 **전**에 둘의 차이를 말하는 줄은 `choose` cue(형제별 `body`).
 
 ```csharp
 public static class TutorialCues {
-    public static readonly string[] Ons = { "start", "restart", "step", "seventh", "choose", "keep", "switch", "doorOpen", "respawn", "win", "lose" };
+    public static readonly string[] Ons = { "start", "restart", "step", "seventh", "choose", "keep", "switch", "doorOpen", "respawn", "win", "lose", "doorShut" };
     public static bool IsValidOn(string on);
     public static int Start(TutorialDto t);      // "start" cue 번호(마지막 것), 없으면 -1
     public static int Restart(TutorialDto t);    // "restart", 없으면 Start(t)
@@ -104,7 +107,7 @@ public static class TutorialCues {
 
 ### 2.4 흐름 (씬 플로우·게임플레이/UI)
 
-- 새 게임: 타이틀 → 프롤로그 7장 → T1 → T2 → T3 → 스테이지 1. 건너뛰기를 누르면 스테이지 1로(건너뛴 보드는 끝낸 것으로 저장하지 않는다).
+- 새 게임: 타이틀 → 프롤로그 8장 → T1 → T2 → T3 → 스테이지 1. 건너뛰기를 누르면 스테이지 1로(건너뛴 보드는 끝낸 것으로 저장하지 않는다).
 - 맵/타이틀: "튜토리얼"을 선택 항목으로 두고 언제든 다시 할 수 있다(별·클리어 표시 없음, 끝냈는지만).
 - 결과: 튜토리얼 클리어는 짧은 결과(별 셋 연출은 T3만, `Stars.Of(bodiesUsed, bodies, 0)`로 계산만 하고 **저장하지 않음**) → 다음 보드 또는 스테이지 1.
 - 자동 재시작: `Lose` → `lose` cue 표시 → 약 1초 뒤 `Command.Restart` → `restart` cue.
@@ -140,3 +143,4 @@ public static class TutorialBoards {
 | 날짜 | 누가 | 내용 |
 |---|---|---|
 | 2026-11-12 | 코어 | 최초 작성: `tutorials` 형식, cue trigger·판정 규칙, 저장 id, 흐름·실행 옵션·텔레메트리 범위 |
+| 2026-11-13 | 코어 | SWITCH를 직접 하는 T3(KEEP 1 + SWITCH 1, 같은 id·version 1), `doorShut` trigger, SWITCH/KEEP 뒤 줄은 `switch`/`keep` cue에(2.3), T2 choose·switch 줄, export에 needsSwitch 보드 단정, 프롤로그 8장 |
