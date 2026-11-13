@@ -1,0 +1,39 @@
+{
+  "about": "Lead text for user request 2026-11-13 captions-story-voice. Tutorial cue lines by tutorial id + cue index (order as in levels.js tutorials); ko line + en text. Apply to prototypes/seven-steps/src/levels.js tutorials (core), nudge to Strings result.star3_nudge (gameplay-ui).",
+  "tutorials": {
+    "t1": [
+      ["방향키로 걸음을 떼자. 디딜 때마다 별이 하나 켜진다.", "Take the first step with the arrow keys. Each step lights a star above."],
+      ["하나. 별 하나가 켜졌다. 일곱까지 세어 보자.", "One. A star is lit. Let's count to seven."],
+      ["이제 일곱째 별. 그 걸음이 문 앞에 닿아야 한다.", "Next comes the seventh star. That step has to land at the door."],
+      ["일곱째 별이 켜지자 땅이 듣고 문이 열렸다.", "The seventh star lit, the ground listened, and the door opened."],
+      ["일곱째 걸음이 문에 닿지 않아 땅이 듣지 못했다.", "The seventh step missed the door, so the ground did not listen."],
+      ["다시 처음부터. 문까지 꼭 일곱 걸음이다.", "From the start again. Exactly seven steps to the door."]
+    ],
+    "t2": [
+      ["발판이 눌려야 문이 열린다. 큰형, 일곱째는 발판 위에서.", "The door opens only while the plate is pressed. Eldest, end your seventh step on it."],
+      ["일곱째가 아니면 발판도 땅도 꿈쩍하지 않는다.", "Unless it is the seventh step, neither plate nor ground stirs."],
+      ["KEEP으로 남아 돌이 될까, SWITCH로 지도만 넘길까?", "Stay here as stone with KEEP, or only pass the map on with SWITCH?"],
+      ["형이 섰던 자리에서 깼지만, 붙들 돌이 없어 문은 닫혀 있다.", "I woke where he stood, but with no stone to hold it the door stays shut."],
+      ["문이 꿈쩍하지 않는다. 누군가 발판 위에 돌로 남아야 한다.", "The door won't move. Someone has to stay on the plate as stone."],
+      ["형이 돌이 되어 문을 붙들었다. 이제 일곱 걸음으로 출구까지.", "My brother turned to stone and holds the door. Now seven steps to the exit."],
+      ["땅은 일곱째 걸음만 듣는다. 잊지 말자.", "The ground hears only the seventh step. Let's not forget."],
+      ["지도를 받을 형제가 남지 않았다. 처음부터 다시.", "No brother is left to take the map. From the start again."],
+      ["큰형은 발판에서 일곱째 걸음을 마치고, KEEP으로 남는다.", "Eldest: end the seventh step on the plate, then KEEP and stay."]
+    ],
+    "t3": [
+      ["셋이 모두 걸어야 별 셋이 켜진다. 큰형은 먼저 발판으로.", "Three stars light only if all three of us walk. Eldest, to the plate first."],
+      ["큰형이 KEEP으로 남아 돌이 되면, 둘째는 출발점에서 깬다.", "If the eldest KEEPs, he turns to stone and the middle one wakes at the start."],
+      ["문이 열렸다. 하지만 출구는 한 사람의 일곱 걸음으론 멀다.", "The door is open. But the exit is too far for one walker's seven steps."],
+      ["둘째가 SWITCH하면 돌은 없고, 나는 이 자리에서 깬다.", "If the middle one SWITCHes, no stone stays, and I wake on this spot."],
+      ["형이 섰던 자리에서 눈을 떴다. 여기서부터 내 일곱 걸음.", "I opened my eyes where he stood. My seven steps start here."],
+      ["KEEP이면 나는 처음 자리에서 깬다. 출구는 너무 멀다.", "With KEEP I wake back at the start, and the exit is too far."],
+      ["문이 닫혀 있다. 우리 중 누군가는 발판을 붙들어야 한다.", "The door is shut. One of us has to hold the plate."],
+      ["셋이 모두 걸었다. 별 셋이 한꺼번에 켜졌다.", "All three of us walked. Three stars lit at once."],
+      ["지도를 받을 형제가 남지 않았다. 처음부터 다시.", "No brother is left to take the map. From the start again."],
+      ["큰형은 발판에서 KEEP, 둘째는 길 중간에서 SWITCH.", "Eldest: KEEP on the plate. Middle one: SWITCH halfway."]
+    ]
+  },
+  "strings": {
+    "result.star3_nudge": ["형제가 모두 걸었다면 선이 더 밝았을 텐데.", "If all of us had walked, the line would have shone brighter."]
+  }
+}
