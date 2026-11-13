@@ -248,7 +248,7 @@ namespace SevenSteps.Game
             {
                 if (img == null) continue;
                 bursts.Remove(img);
-                Destroy(img.gameObject);
+                Drop(img.gameObject);
             }
         }
 
@@ -280,7 +280,7 @@ namespace SevenSteps.Game
                 yield return null;
             }
             bursts.Remove(star);
-            if (star != null) Destroy(star.gameObject);
+            if (star != null) Drop(star.gameObject);
         }
 
         readonly List<Image> bursts = new List<Image>();
@@ -288,8 +288,15 @@ namespace SevenSteps.Game
         /// The presenter stopped (Undo, Restart, Snap): a stopped coroutine does not clean up, so drop its bursts here.
         public void StopBursts()
         {
-            foreach (var b in bursts) if (b != null) Destroy(b.gameObject);
+            foreach (var b in bursts) if (b != null) Drop(b.gameObject);
             bursts.Clear();
+        }
+
+        /// Destroy in Play Mode, DestroyImmediate in edit mode (EditMode tests): Destroy may not be called from edit mode.
+        static void Drop(GameObject go)
+        {
+            if (Application.isPlaying) Destroy(go);
+            else DestroyImmediate(go);
         }
     }
 }

@@ -113,24 +113,26 @@ namespace SevenSteps.Tests
             Assert.AreEqual(CueLine(1, TutorialCues.OnStart), view.Line);
         }
 
-        /// The shortest moves from the board's start that end in a Bump into a door shut now, or null.
+        /// The shortest moves (KEEP / SWITCH too: on T3 the door is past the first brother's seven steps) from the
+        /// board's start that end in a Bump into a door shut now, or null.
         static string WalkIntoShutDoor(State start)
         {
-            var seen = new HashSet<string> { "" };
+            var seen = new HashSet<string> { Rules.Key(start) };
             var queue = new Queue<(State s, string path)>();
             queue.Enqueue((start, ""));
             while (queue.Count > 0)
             {
                 var (st, path) = queue.Dequeue();
-                if (path.Length >= 7) continue;
-                foreach (char c in "UDLR")
+                foreach (char c in "UDLRKX")
                 {
                     Rules.TryParseLetter(c, out var act);
                     var r = Rules.Dispatch(st, Command.FromAct(act));
-                    foreach (var e in r.Events)
-                        if (e.Type == GameEventType.Bump && e.At >= 0 && Rules.IsDoor(Rules.TileAt(st, e.At)) && !Rules.DoorOpen(st, Rules.TileAt(st, e.At)))
-                            return path + c;
-                    if (!ReferenceEquals(r.State, st) && r.State.Status == Status.Play) queue.Enqueue((r.State, path + c));
+                    if (st.Status == Status.Play)
+                        foreach (var e in r.Events)
+                            if (e.Type == GameEventType.Bump && e.At >= 0 && Rules.IsDoor(Rules.TileAt(st, e.At)) && !Rules.DoorOpen(st, Rules.TileAt(st, e.At)))
+                                return path + c;
+                    if (ReferenceEquals(r.State, st) || (r.State.Status != Status.Play && r.State.Status != Status.Choose)) continue;
+                    if (seen.Add(Rules.Key(r.State))) queue.Enqueue((r.State, path + c));
                 }
             }
             return null;
