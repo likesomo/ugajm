@@ -1459,6 +1459,22 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
+        /// itch shot-11 (2026-11-14): stage 43 with the new altar look, EN, its start line on screen. `unity.sh playcapture ItchAltar`.
+        [UnityTest]
+        public IEnumerator ItchAltar()
+        {
+            yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", "en", "-level", "43");
+            var game = Object.FindAnyObjectByType<GameController>();
+            float t0 = Time.realtimeSinceStartup;
+            while (Time.realtimeSinceStartup - t0 < 1f) yield return null;
+            while (game.Overlays.Count > 0) game.Overlays.Pop();
+            t0 = Time.realtimeSinceStartup;
+            while (!game.U5StoryLine.LineShown && Time.realtimeSinceStartup - t0 < 3f) yield return null;
+            var px = new Pixels();
+            yield return Capture("shot-11-altar", px, 0.6f);
+            AssertVaried("shot-11-altar", px.Value);
+        }
+
         /// Stage background check (user report 2026-11-14 "stage 2 background is a mess"): stages 1-3 on load, KO, the chapter
         /// card closed. `unity.sh playcapture StageCheck` -> stage2-check-{1,2,3}.png.
         [UnityTest]
