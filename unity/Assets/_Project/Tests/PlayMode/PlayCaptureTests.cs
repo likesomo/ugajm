@@ -1409,6 +1409,56 @@ namespace SevenSteps.Tests.PlayMode
                 }
         }
 
+        /// The ending on its storybook pictures (2026-11-14), KO / EN: stage 50 won by its route, every ending card, then
+        /// both epilogue pages. `unity.sh playcapture EndingPages` -> ending-{lang}-cardN.png, ending-{lang}-epilogue-pN.png.
+        [UnityTest]
+        public IEnumerator EndingPages()
+        {
+            foreach (string lang in new[] { "ko", "en" })
+            {
+                PlayEnv.Reset();
+                yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", lang, "-level", "50");
+                var game = Object.FindAnyObjectByType<GameController>();
+                var flow = Services.Get<AppFlow>();
+                while (game.Overlays.Count > 0) game.Overlays.Pop();
+                while (game.Board.Session.IsLocked) yield return null;
+                int last = flow.StageCount - 1;
+                string path = LevelCatalog.PathOf(last);
+                if (path.Length > 1) game.Board.Replay(path.Substring(0, path.Length - 1));
+                yield return SendLetters(game, path.Substring(path.Length - 1));
+                var clear = Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ClearView>(FindObjectsInactive.Include);
+                float t0 = Time.realtimeSinceStartup;
+                while (flow.State != AppState.Result || !clear.IsShown) { Assert.Less(Time.realtimeSinceStartup - t0, 30f, "the last clear"); yield return null; }
+                clear.Next.Press();
+                yield return null;
+                Assert.IsTrue(game.Ending.IsOpen, "the ending cards");
+                var px = new Pixels();
+                for (int card = 1; card <= 4 && game.Ending.IsOpen; card++)
+                {
+                    yield return Capture($"ending-{lang}-card{card}", px, 0.5f);
+                    AssertVaried($"ending-{lang}-card{card}", px.Value);
+                    if (!game.U5Ending.Map.Shown) { game.U5Ending.Next.Press(); yield return null; }
+                }
+                // The last card's Map ends the ending (read through): the game plays the epilogue itself.
+                game.U5Ending.Map.Press();
+                t0 = Time.realtimeSinceStartup;
+                while (!(game.Cutscene.IsOpen && game.Cutscene.Scene.id == "epilogue")) { Assert.Less(Time.realtimeSinceStartup - t0, 10f, "the epilogue after the ending"); yield return null; }
+                var epi = game.Cutscene.Scene;
+                for (int i = 0; i < epi.pages.Length; i++)
+                {
+                    for (int guard = 0; guard < 20 && game.Cutscene.IsOpen && (game.Cutscene.Page < i || game.Cutscene.Shown < game.Cutscene.Frame.Lines.Count); guard++)
+                    {
+                        game.CutsceneView.Next.Press();
+                        yield return null;
+                    }
+                    Assert.IsTrue(game.Cutscene.IsOpen && game.Cutscene.Page == i, "epilogue page " + (i + 1));
+                    Assert.IsTrue(game.CutsceneView.HasPicture, "epilogue page " + (i + 1));
+                    yield return Capture($"ending-{lang}-epilogue-p{i + 1}", px, 0.5f);
+                    AssertVaried($"ending-{lang}-epilogue-p{i + 1}", px.Value);
+                }
+            }
+        }
+
         /// Stage background check (user report 2026-11-14 "stage 2 background is a mess"): stages 1-3 on load, KO, the chapter
         /// card closed. `unity.sh playcapture StageCheck` -> stage2-check-{1,2,3}.png.
         [UnityTest]

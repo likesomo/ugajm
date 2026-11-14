@@ -42,13 +42,13 @@ MonoBehaviour:
   - key: carving.altar
     sprite: {fileID: 0}
   - key: ending.1
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 835ad96a94544ede8dd1157644102c6f, type: 3}
   - key: ending.2
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 48fcfa41b89c4cd39a39eb75c0966b2b, type: 3}
   - key: ending.3
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 82eac685d0544771969f927df8849d66, type: 3}
   - key: ending.4
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 5c813e87f8c84a78b31ac3cd6b8214c9, type: 3}
   - key: title.key
     sprite: {fileID: 0}
   required: 0
