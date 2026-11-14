@@ -163,6 +163,7 @@ namespace SevenSteps.Game.UI.U5
             nudgeText = Ui.Label(nudgePlate.transform, "", NudgeSize, Ui.Gold, TextAnchor.MiddleCenter, "Nudge");
             nudgeText.rectTransform.Stretch();
             nudgePlate.gameObject.SetActive(false);
+            BuildStrands(root);
 
             // Failure: the line and undo / restart at the bottom centre.
             failGroup = Ui.Rect("Failure", root);
@@ -252,6 +253,7 @@ namespace SevenSteps.Game.UI.U5
                 fp.sizeDelta = new Vector2(fp.sizeDelta.x, FocusPlate.PlateHeight(failText, failText.text, fp.sizeDelta.x, 8));
                 finalePlate.gameObject.SetActive(false);
                 nudgePlate.gameObject.SetActive(false);
+                strands.gameObject.SetActive(false);
                 return;
             }
             next.SetTip(m.IsLast ? "result.ending" : "ui5.icon.next");
@@ -281,6 +283,7 @@ namespace SevenSteps.Game.UI.U5
                 nudgePlate.rectTransform.anchoredPosition = new Vector2(0, -top);
                 nudgePlate.rectTransform.sizeDelta = new Vector2(Mathf.Ceil(w) + 32, FocusPlate.PlateHeight(nudgeText, nudgeText.text, w, 8));
             }
+            ShowStrands(m, Safe + (line.Length > 0 ? finalePlate.rectTransform.sizeDelta.y + 8 : 0) + (nudge ? nudgePlate.rectTransform.sizeDelta.y + 8 : 0));
         }
 
         /// World stones (or the 2D row) and their hits; Next beside the board at the exit's height (or width), nearest
@@ -511,6 +514,96 @@ namespace SevenSteps.Game.UI.U5
             stones[k].Glyph.color = lit ? Ui.Gold : Ui.Dim;
         }
 
+        // ---------- The three strands (user request 2026-11-14): who walked, braided into one line on a 3-star clear ----------
+
+        /// Scarf colours: eldest teal, middle ochre, youngest terracotta (cutscene art, world-bible 4).
+        static readonly Color[] StrandColors = { new Color32(0x56, 0x8C, 0x88, 0xFF), new Color32(0xB9, 0x9A, 0x57, 0xFF), new Color32(0xB9, 0x6C, 0x59, 0xFF) };
+        static readonly Color StrandMissing = new Color(0.42f, 0.43f, 0.47f, 0.45f);
+        public const float StrandW = 300, StrandH = 5, StrandGap = 7;
+        RectTransform strands;
+        readonly Image[] strandBars = new Image[3];
+        Image braidGlow;
+        Coroutine strandRun;
+
+        /// Strands drawn in colour (the brothers who walked) on the shown clear.
+        public int StrandsLit { get; private set; }
+        /// The strands braided into one bright line (a 3-star clear, after the third star).
+        public bool Braided { get; private set; }
+        public RectTransform Strands => strands;
+
+        void BuildStrands(Transform root)
+        {
+            strands = Ui.Rect("Strands", root);
+            strands.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -Safe), new Vector2(StrandW, StrandGap * 2 + StrandH));
+            braidGlow = Ui.MakeImage(strands, new Color(1f, 0.93f, 0.6f, 0f), null, "Braid glow");
+            braidGlow.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(StrandW + 16, 14));
+            for (int k = 0; k < 3; k++)
+            {
+                strandBars[k] = Ui.MakeImage(strands, StrandColors[k], null, $"Strand {k + 1}");
+                strandBars[k].rectTransform.Place(new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -k * StrandGap), new Vector2(StrandW, StrandH));
+            }
+            strands.gameObject.SetActive(false);
+        }
+
+        void ShowStrands(ResultModel m, float top)
+        {
+            if (strandRun != null) { StopCoroutine(strandRun); strandRun = null; }
+            strands.anchoredPosition = new Vector2(0, -top);
+            strands.gameObject.SetActive(true);
+            int walked = Mathf.Clamp(m.BodiesUsed, 0, 3);
+            int bodies = Mathf.Clamp(m.LevelBodies, 1, 3);
+            StrandsLit = walked;
+            Braided = false;
+            braidGlow.color = new Color(1f, 0.93f, 0.6f, 0f);
+            bool still = !Application.isPlaying || !isActiveAndEnabled
+                         || (Services.TryGet<SaveSystem>(out var save) && save.Settings.reduceMotion);
+            for (int k = 0; k < 3; k++)
+            {
+                var r = strandBars[k].rectTransform;
+                strandBars[k].gameObject.SetActive(k < bodies);
+                strandBars[k].color = k < walked ? StrandColors[k] : StrandMissing;
+                r.anchoredPosition = new Vector2(0, -k * StrandGap);
+                r.sizeDelta = new Vector2(still || k >= walked ? StrandW : 0, StrandH);
+            }
+            bool braid = m.Stars == ResultModel3Stars && walked == bodies;
+            if (still) { if (braid) SetBraid(1f); return; }
+            strandRun = StartCoroutine(RunStrands(walked, braid));
+        }
+
+        const int ResultModel3Stars = 3;
+
+        /// Each walked strand draws across, one after another; a 3-star clear then braids them into one bright line once the
+        /// third star is lit (about 1.3 s in all; the clear's own input works throughout).
+        IEnumerator RunStrands(int walked, bool braid)
+        {
+            for (int k = 0; k < walked; k++)
+            {
+                var r = strandBars[k].rectTransform;
+                for (float t = 0; t < 0.25f; t += Time.unscaledDeltaTime) { r.sizeDelta = new Vector2(StrandW * Mathf.SmoothStep(0, 1, t / 0.25f), StrandH); yield return null; }
+                r.sizeDelta = new Vector2(StrandW, StrandH);
+            }
+            if (!braid) { strandRun = null; yield break; }
+            for (float t = 0; t < 2f && LitStones < 3; t += Time.unscaledDeltaTime) yield return null;
+            for (float t = 0; t < 0.45f; t += Time.unscaledDeltaTime) { SetBraid(Mathf.SmoothStep(0, 1, t / 0.45f)); yield return null; }
+            SetBraid(1f);
+            strandRun = null;
+        }
+
+        /// 0 = three separate strands, 1 = woven into one bright line with a soft gold glow.
+        void SetBraid(float k)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                var r = strandBars[i].rectTransform;
+                r.anchoredPosition = new Vector2(0, Mathf.Lerp(-i * StrandGap, -StrandGap + (1 - i) * 3f, k)); // a tight woven band
+                r.sizeDelta = new Vector2(StrandW, Mathf.Lerp(StrandH, StrandH + 1, k));
+                strandBars[i].color = Color.Lerp(StrandColors[i], Color.Lerp(StrandColors[i], Color.white, 0.25f), k);
+            }
+            braidGlow.rectTransform.anchoredPosition = new Vector2(0, -StrandGap + (StrandGap + StrandH / 2f) - (StrandGap * 2 + StrandH) / 2f);
+            braidGlow.color = new Color(1f, 0.93f, 0.6f, 0.22f * k);
+            Braided = k >= 1f;
+        }
+
         IEnumerator Reveal(int earned)
         {
             for (int k = 0; k < earned; k++)
@@ -522,7 +615,8 @@ namespace SevenSteps.Game.UI.U5
                 var home = r.localScale;
                 for (float t = 0; t < 0.22f; t += Time.unscaledDeltaTime)
                 {
-                    r.localScale = home * (1f + 0.35f * Mathf.Sin(t / 0.22f * Mathf.PI));
+                    // The third star of a 3-star clear lands harder: the woven line's star (2026-11-14).
+                    r.localScale = home * (1f + (k == 2 ? 0.6f : 0.35f) * Mathf.Sin(t / 0.22f * Mathf.PI));
                     yield return null;
                 }
                 r.localScale = home;

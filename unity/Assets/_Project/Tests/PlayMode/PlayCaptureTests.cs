@@ -1213,6 +1213,202 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
+        /// Every story screen in play order (user request 2026-11-14), KO or EN per run: title line, prologue, T1-T3 start
+        /// cues, then per planet its arrival, each stage's start line, the finale line and the interlude pages, and at the end
+        /// the ending cards and the epilogue. Files story-{lang}-NNN-<id>.png; one "[SevenSteps] STORYIDX" log line each.
+        /// `unity.sh playcapture StoryScreens` (both languages; ~10 min).
+        [UnityTest]
+        [Timeout(1800000)]
+        public IEnumerator StoryScreens()
+        {
+            foreach (string lang in new[] { "ko", "en" })
+            {
+                int n = 0;
+                var px = new Pixels();
+                IEnumerator Shot(string id, string text)
+                {
+                    string name = $"story-{lang}-{++n:000}-{id}";
+                    yield return Capture(name, px, 0.4f);
+                    Debug.Log($"[SevenSteps] STORYIDX|{lang}|{name}.png|{id}|{(text ?? "").Replace("\n", " / ").Replace("|", "/")}");
+                }
+                var language = lang == "ko" ? Language.Ko : Language.En;
+                PlayEnv.Reset();
+                yield return Start(AppState.Title, AppScenes.Title, "-ui5", "-lang", lang);
+                var title = Object.FindAnyObjectByType<SevenSteps.Game.UI.TitleScreen>();
+                var catalog = SevenSteps.Game.CutsceneLoad.Catalog(title.assets);
+                yield return Shot("title", Services.TryGet<SevenSteps.Game.Flow.StoryBook>(out var book) ? book.TitleLine(language) : "");
+                IEnumerator Pages(SevenSteps.Game.Flow.CutsceneController c, SevenSteps.Game.UI.U5.U5CutsceneView v, CutsceneSceneDto scene)
+                {
+                    if (!c.IsOpen) c.Begin(scene, _ => { });
+                    for (int i = 0; i < scene.pages.Length; i++)
+                    {
+                        while (c.Page < i || c.Shown < c.Frame.Lines.Count) v.Next.Press();
+                        var p = scene.pages[i];
+                        string rule = CutsceneCatalog.Rule(p, language);
+                        yield return Shot($"{scene.id}-p{i + 1}", string.Join(" / ", CutsceneCatalog.Lines(p, language)) + (rule.Length > 0 ? " [caption] " + rule : ""));
+                    }
+                    try { if (c.IsOpen) c.Skip(); } catch (System.Exception) { } // the last scene may already be leaving
+                    yield return null;
+                }
+                yield return Pages(title.Cutscene, title.CutsceneView, catalog.Scene("prologue"));
+                // Tutorial boards: their start cues.
+                var flow = Services.Get<AppFlow>();
+                int boards = LevelCatalog.Tutorials.Count;
+                flow.GoToTutorial(0, boards);
+                yield return PlayEnv.WaitForState(AppState.Game, AppScenes.Game);
+                var game = Object.FindAnyObjectByType<GameController>();
+                for (int t = 0; t < boards; t++)
+                {
+                    if (t > 0) flow.GoToTutorial(t, boards);
+                    float tw = Time.realtimeSinceStartup;
+                    while (flow.IsLoading || !game.TutorialCue.Visible) { if (Time.realtimeSinceStartup - tw > 6f) break; yield return null; }
+                    yield return Shot($"tutorial-t{t + 1}", game.TutorialCue.Visible ? game.TutorialCue.Line : "(no cue)");
+                }
+                // Stages, planet by planet: each planet starts fresh (a direct launch on its first stage; its arrival opened
+                // here), the stages inside it advance in place, the finale is won for its line, its interlude follows.
+                int count = flow.StageCount;
+                var keys = Enumerable.Range(0, count).Select(LevelCatalog.ChapterKeyOf).ToArray();
+                for (int s = 0; s < count; s++)
+                {
+                    string chapter = keys[s];
+                    bool first = s == 0 || keys[s - 1] != chapter || s == count - 1;
+                    if (first)
+                    {
+                        PlayEnv.Reset();
+                        yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", lang, "-level", (s + 1).ToString());
+                        game = Object.FindAnyObjectByType<GameController>();
+                        flow = Services.Get<AppFlow>();
+                        float tw = Time.realtimeSinceStartup;
+                        while (Time.realtimeSinceStartup - tw < 0.5f) yield return null;
+                        while (game.Overlays.Count > 0) game.Overlays.Pop(); // the chapter card
+                        var arrival = s == count - 1 ? null : catalog.Arrival(chapter);
+                        if (arrival != null && (s == 0 || keys[s - 1] != chapter))
+                        {
+                            game.Cutscene.Begin(arrival, _ => { });
+                            yield return Pages(game.Cutscene, game.CutsceneView, arrival);
+                            // Covered and uncovered again: the start line shows anew.
+                        }
+                    }
+                    else
+                    {
+                        while (flow.IsLoading) yield return null;
+                        flow.GoToGame(s);
+                        float t0b = Time.realtimeSinceStartup;
+                        while (flow.IsLoading || game.LevelIndex != s || game.Board.Session.IsLocked) { Assert.Less(Time.realtimeSinceStartup - t0b, 20f, $"stage {s + 1}"); yield return null; }
+                        while (game.Overlays.Count > 0) game.Overlays.Pop();
+                    }
+                    float t0 = Time.realtimeSinceStartup;
+                    while (!game.U5StoryLine.LineShown && Time.realtimeSinceStartup - t0 < 3f) yield return null;
+                    yield return Shot($"stage{s + 1:00}", game.U5StoryLine.LineShown ? game.U5StoryLine.Text : "(no start line)");
+                    bool finale = SevenSteps.Contracts.StoryTruths.IsFinaleStage(keys, s);
+                    bool last = s == count - 1;
+                    if (!finale && !last) continue;
+                    string startText = game.U5StoryLine.Text;
+                    string path = LevelCatalog.PathOf(s);
+                    if (path.Length > 1) game.Board.Replay(path.Substring(0, path.Length - 1));
+                    Assert.IsTrue(Core.Rules.TryParseLetter(path[path.Length - 1], out var act));
+                    game.Board.Send(Core.Command.FromAct(act));
+                    if (finale)
+                    {
+                        t0 = Time.realtimeSinceStartup;
+                        while (!(game.U5StoryLine.LineShown && game.U5StoryLine.Text != startText) && Time.realtimeSinceStartup - t0 < 12f) yield return null;
+                        yield return Shot($"finale-{chapter}", game.U5StoryLine.LineShown ? game.U5StoryLine.Text : "(finale line not caught)");
+                    }
+                    var clear = Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ClearView>(FindObjectsInactive.Include);
+                    t0 = Time.realtimeSinceStartup;
+                    while (flow.State != AppState.Result || !clear.IsShown) { Assert.Less(Time.realtimeSinceStartup - t0, 30f, $"clear {s + 1}"); yield return null; }
+                    if (finale)
+                    {
+                        if (game.Cutscene.IsOpen) game.Cutscene.Skip();
+                        yield return null;
+                        var inter = catalog.Interlude(chapter);
+                        game.Cutscene.Begin(inter, _ => { });
+                        yield return Pages(game.Cutscene, game.CutsceneView, inter);
+                        continue;
+                    }
+                    clear.Next.Press();
+                    yield return null;
+                    Assert.IsTrue(game.Ending.IsOpen, "the ending cards");
+                    for (int card = 1; card <= 6 && game.Ending.IsOpen && !game.U5Ending.Map.Shown; card++)
+                    {
+                        yield return Shot($"ending-card{card}", "(see story.json ending.*)");
+                        game.U5Ending.Next.Press();
+                        yield return null;
+                    }
+                    if (game.Ending.IsOpen) yield return Shot("ending-last", "(see story.json ending.4)");
+                    while (game.Overlays.Count > 0) game.Overlays.Pop();
+                    yield return null;
+                    var epi = catalog.Scene("epilogue");
+                    if (game.Cutscene.IsOpen) game.Cutscene.Skip();
+                    game.Cutscene.Begin(epi, _ => { });
+                    yield return Pages(game.Cutscene, game.CutsceneView, epi);
+                }
+            }
+        }
+
+        /// The three strands (2026-11-14), KO / EN: a 3-star clear mid-braid and braided, a 2-star clear with the missing
+        /// strand dim, and the HUD's brother dots mid-stage. `unity.sh playcapture Strands` -> strands-*.png.
+        [UnityTest]
+        public IEnumerator Strands()
+        {
+            yield return Start(AppState.Title, AppScenes.Title, "-ui5"); // GameAssets loaded
+            int count = LevelCatalog.Load(FindAssets()).Length;
+            int full = -1, partial = -1;
+            for (int i = 3; i < count && (full < 0 || partial < 0); i++)
+            {
+                var rs = Walk(i);
+                var last = rs.Count > 0 ? rs[rs.Count - 1].State : null;
+                if (last == null || last.Status != Core.Status.Win || last.Level.Bodies < 2) continue;
+                if (full < 0 && Core.Stars.BodiesUsed(last) == last.Level.Bodies) full = i;
+                if (partial < 0 && Core.Stars.BodiesUsed(last) < last.Level.Bodies) partial = i;
+            }
+            Assert.GreaterOrEqual(full, 0, "a stage whose route uses every brother");
+            Assert.GreaterOrEqual(partial, 0, "a stage whose route leaves a brother");
+            foreach (string lang in new[] { "ko", "en" })
+                foreach (var (stage, tag) in new[] { (full, "3star"), (partial, "2star") })
+                {
+                    PlayEnv.Reset();
+                    yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", lang, "-level", (stage + 1).ToString());
+                    var game = Object.FindAnyObjectByType<GameController>();
+                    while (game.Overlays.Count > 0) game.Overlays.Pop();
+                    while (game.Board.Session.IsLocked) yield return null;
+                    string path = LevelCatalog.PathOf(stage);
+                    var px = new Pixels();
+                    if (tag == "3star" && lang == "ko")
+                    {
+                        // The HUD's three brother dots mid-stage: the first brother done, the second walking.
+                        int k = path.IndexOfAny(new[] { 'K', 'X' });
+                        if (k > 0) { yield return SendLetters(game, path.Substring(0, k + 1)); yield return Capture("strands-hud-mid", px, 0.6f); }
+                        game.Board.Restart();
+                        yield return null;
+                    }
+                    if (path.Length > 1) game.Board.Replay(path.Substring(0, path.Length - 1));
+                    yield return SendLetters(game, path.Substring(path.Length - 1));
+                    var clear = Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ClearView>(FindObjectsInactive.Include);
+                    float t0 = Time.realtimeSinceStartup;
+                    while (clear == null || !clear.IsShown) { Assert.Less(Time.realtimeSinceStartup - t0, 30f, "the clear"); yield return null; clear = Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ClearView>(FindObjectsInactive.Include); }
+                    if (tag == "3star")
+                    {
+                        Assert.AreEqual(3, clear.StrandsLit > 0 ? game.Board.State.Level.Bodies : 0, "all strands");
+                        t0 = Time.realtimeSinceStartup;
+                        while (clear.LitStones < 3 && Time.realtimeSinceStartup - t0 < 5f) yield return null;
+                        yield return Capture($"strands-3star-mid-{lang}", px, 0.15f);
+                        t0 = Time.realtimeSinceStartup;
+                        while (!clear.Braided && Time.realtimeSinceStartup - t0 < 5f) yield return null;
+                        Assert.IsTrue(clear.Braided, "the strands braid on a 3-star clear");
+                        yield return Capture($"strands-3star-{lang}", px, 0.3f);
+                        AssertVaried($"strands-3star-{lang}", px.Value);
+                    }
+                    else
+                    {
+                        Assert.Less(clear.StrandsLit, game.Board.State.Level.Bodies, "a missing strand");
+                        yield return Capture($"strands-2star-{lang}", px, 2f);
+                        Assert.IsFalse(clear.Braided, "no braid below 3 stars");
+                        AssertVaried($"strands-2star-{lang}", px.Value);
+                    }
+                }
+        }
+
         /// Stage background check (user report 2026-11-14 "stage 2 background is a mess"): stages 1-3 on load, KO, the chapter
         /// card closed. `unity.sh playcapture StageCheck` -> stage2-check-{1,2,3}.png.
         [UnityTest]
