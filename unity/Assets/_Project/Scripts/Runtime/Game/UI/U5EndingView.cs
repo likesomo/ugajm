@@ -49,13 +49,18 @@ namespace SevenSteps.Game.UI
             this.loc = loc ?? throw new ArgumentNullException(nameof(loc));
             this.images = images;
             panel = Ui.Rect("Ending U5", root).Stretch().gameObject;
-            if (Ui.MenuBackground(panel.transform) == null) Ui.Wash(panel.transform, 1f, "Background");
+            // A plain card under the picture, never the menu's 3D background (user 2026-11-14: the low-poly placeholder).
+            Ui.Wash(panel.transform, 1f, "Background");
             var scrim = Ui.Wash(panel.transform, 0.6f, "Scrim"); // modal (14.7); the whole card is next
             scrim.raycastTarget = true;
             scrim.gameObject.AddComponent<Button>().onClick.AddListener(() => NextRequested?.Invoke());
             art = Ui.MakeImage(panel.transform, Color.white, null, "Art");
             art.rectTransform.Stretch();
-            art.preserveAspect = true;
+            art.preserveAspect = false;
+            // The storybook framing (U5CutsceneView): a 16:9 picture covering the screen.
+            var fit = art.gameObject.AddComponent<AspectRatioFitter>();
+            fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            fit.aspectRatio = 16f / 9f;
             art.raycastTarget = false;
 
             var plate = Ui.Plate(panel.transform, "LinePlate");

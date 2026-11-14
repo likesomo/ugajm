@@ -57,7 +57,7 @@ namespace SevenSteps.Tests
             Assert.AreEqual("5b", prologue.pages[5].id);
             Assert.AreSame(prologue, c.TitleReplay(), "the title's story entry replays the prologue");
             Assert.AreEqual(CutsceneCatalog.Epilogue, c.SceneFor(CutsceneCatalog.WhenAfterEnding).id);
-            Assert.AreEqual(9 + 21 + 7, c.ImageKeys.Count); // prologue 8 + epilogue 1 + 7 interludes of 3 + 7 one-page arrivals (2026-11-14)
+            Assert.AreEqual(10 + 21 + 7, c.ImageKeys.Count); // prologue 8 + epilogue 2 + 7 interludes of 3 + 7 one-page arrivals (2026-11-14)
             Assert.AreEqual("cutscene.prologue.1", c.ImageKeys[0]);
             foreach (var s in c.Scenes)
                 foreach (var p in s.pages)

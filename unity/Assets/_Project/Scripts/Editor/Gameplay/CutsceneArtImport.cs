@@ -66,9 +66,28 @@ namespace SevenSteps.EditorTools
             var catalog = CutsceneCatalog.FromJson(ga.cutscenesJson.text);
             var reuse = new System.Collections.Generic.Dictionary<string, string>();
             foreach (var s in catalog.Scenes) foreach (var p in s.pages) if (!string.IsNullOrEmpty(p.reuse)) reuse[p.image] = p.reuse;
-            return Fill(set, catalog.ImageKeys, reuse);
+            int n = Fill(set, catalog.ImageKeys, reuse);
+            return n + WireEndingCards(ga.storyImages);
         }
 
+
+        /// The ending cards' pictures (user 2026-11-14): StoryImages ending.N <- cutscene.ending.N.png in the same folder,
+        /// when that file exists (Codex Style A, imported with the cutscene rule). Missing = a plain card in the view.
+        static int WireEndingCards(StoryImageSet story)
+        {
+            if (story == null || story.entries == null) return 0;
+            int n = 0;
+            foreach (var e in story.entries)
+            {
+                if (e == null || !e.key.StartsWith("ending.", StringComparison.Ordinal)) continue;
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{Folder}/cutscene.{e.key}.png");
+                if (sprite == null || e.sprite == sprite) continue;
+                e.sprite = sprite;
+                n++;
+            }
+            if (n > 0) { EditorUtility.SetDirty(story); AssetDatabase.SaveAssets(); }
+            return n;
+        }
         /// Fills empty entries of <paramref name="set"/> from the folder (key = file name) and saves it when it changed.
         /// With <paramref name="keys"/> (the catalog's picture keys): a key the set lacks gets an entry first (a new page,
         /// e.g. prologue 5b on 2026-11-13), and <see cref="StoryImageSet.required"/> follows the set: on once every

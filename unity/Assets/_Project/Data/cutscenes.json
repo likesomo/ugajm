@@ -347,6 +347,31 @@
       "optional": true,
       "pages": [
         {
+          "id": "2",
+          "image": "cutscene.epilogue.2",
+          "lines": [
+            {
+              "line": "이제 우리는 별 곁에서 일곱 행성을 내려다본다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Now we watch the seven planets from beside the stars."
+                }
+              ]
+            },
+            {
+              "line": "이끼엔 발자국이, 구멍엔 다리가, 얼음엔 별빛이 돌아왔다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Footprints on the moss, bridges over the holes, starlight on the ice: all came back."
+                }
+              ]
+            }
+          ],
+          "art": "The three brothers back beside the stars, looking down at the seven healed planets (Codex Style A, 2026-11-14 ending set)."
+        },
+        {
           "id": "1",
           "image": "cutscene.epilogue.1",
           "lines": [
