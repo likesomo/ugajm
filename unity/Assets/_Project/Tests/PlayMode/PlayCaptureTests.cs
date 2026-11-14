@@ -1187,6 +1187,39 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
+        /// Final QA 2026-11-14 (H1): stages 1 and 43 after 9 tries, tiers 1/2/3, KO / EN: three brothers named, never "0",
+        /// no exception (an error log fails the test). `unity.sh playcapture QaHintStages` -> qa-hint-s{1,43}-t{1,2,3}-{ko,en}.png.
+        [UnityTest]
+        public IEnumerator QaHintStages()
+        {
+            foreach (string lang in new[] { "ko", "en" })
+                foreach (int stage in new[] { 1, 43 })
+                {
+                    PlayEnv.Reset();
+                    yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", lang, "-level", stage.ToString());
+                    var game = Object.FindAnyObjectByType<GameController>();
+                    var board = game.Board;
+                    var save = Services.Get<SaveSystem>();
+                    while (game.Overlays.Count > 0) game.Overlays.Pop();
+                    for (int k = 0; k < 9; k++) save.Progress.CountTry(board.State.Level);
+                    board.Restart();
+                    yield return null;
+                    Assert.AreEqual(3, board.HintsUnlocked, $"stage {stage}: every tier after 9 tries");
+                    var px = new Pixels();
+                    for (int tier = 1; tier <= 3; tier++)
+                    {
+                        board.ShowHint();
+                        if (game.HintConfirm.Visible) game.HintConfirm.ShowButton.onClick.Invoke();
+                        string line = board.MessageLine;
+                        StringAssert.Contains(lang == "ko" ? $"힌트 {tier}/3" : $"Hint {tier}/3", line, $"stage {stage} tier {tier}");
+                        Assert.IsFalse(line.Contains("0명") || line.Contains("walk: 0") || line.Contains(". ."), $"stage {stage} tier {tier}: {line}");
+                        if (tier == 1) StringAssert.Contains(lang == "ko" ? "형제 3명" : "walk: 3", line, $"stage {stage}: three brothers");
+                        yield return Capture($"qa-hint-s{stage}-t{tier}-{lang}", px, 0.6f);
+                        AssertVaried($"qa-hint-s{stage}-t{tier}-{lang}", px.Value);
+                    }
+                }
+        }
+
         /// Stage story arc (2026-11-14): stage 2's start line (the steps given away), KO / EN, on the HUD line after the card.
         /// `unity.sh playcapture StoryArc` -> arc-stage2-{ko,en}.png.
         [UnityTest]

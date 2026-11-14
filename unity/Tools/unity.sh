@@ -116,6 +116,8 @@ batch() {
 }
 
 cmd="${1:-help}"
+SMOKE_EXE="${SMOKE_EXE:-$REPO/Builds/Windows/Seven Steps.exe}"
+SMOKE_WEBGL_DIR="${SMOKE_WEBGL_DIR:-$REPO/Builds/WebGL}"
 case "$cmd" in
   levels)      node "$HERE/export-levels.mjs" ;;
   story-check)
@@ -190,6 +192,7 @@ case "$cmd" in
   build-webgl) batch build-webgl BuildTools.BuildWebGL ;;
   qa-replay)   batch qa-replay BuildTools.QaReplay ;;   # replays reports/qa/attempts.jsonl in C# (docs/qa-attempts.md 7) -> reports/qa/unity-replay.json
   play)        "$REPO/Builds/Windows/Seven Steps.exe" & ;;
+  # The shipped artifacts can be smoked too: SMOKE_EXE=<unzipped>/SevenSteps.exe, SMOKE_WEBGL_DIR=<unzipped WebGL folder>.
   smoke)
     # Runs the Windows build on a few replays, saves screenshots + logs to reports/smoke/, fails on exceptions.
     out="$REPO/reports/smoke"; mkdir -p "$out"; fail=0
@@ -201,7 +204,7 @@ case "$cmd" in
     for spec in "1:R" "4:DURRRRRK" "8:RRRRRRDX" "10:RLRLRRR" "22:RDDLLLL" "29:DURRRRRKDDR" "43:RRRRRR"; do
       lv="${spec%%:*}"; rp="${spec#*:}"
       winout="$(cygpath -w "$out")"
-      "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -savekey "$SAVEKEY" \
+      "$SMOKE_EXE" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -savekey "$SAVEKEY" \
         -level "$lv" -replay "$rp" -screenshot "$winout\\level$lv.png" -logFile "$winout\\level$lv.log" > /dev/null || true
       grep -h "\[SevenSteps\] Screenshot" "$out/level$lv.log" || { echo "[unity.sh] smoke level $lv: no screenshot"; fail=1; }
       if grep -qE "^[A-Za-z.]*Exception" "$out/level$lv.log"; then grep -E "^[A-Za-z.]*Exception" "$out/level$lv.log"; fail=1; fi
@@ -212,7 +215,7 @@ case "$cmd" in
     for spec in $(node "$HERE/flow-stages.mjs" "$(cygpath -w "$REPO/unity/Assets/_Project/Data/levels.json")"); do
       lv="${spec%%:*}"; rp="${spec#*:}"
       winout="$(cygpath -w "$out")"
-      "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -savekey "$SAVEKEY" -lang ko \
+      "$SMOKE_EXE" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -savekey "$SAVEKEY" -lang ko \
         -level "$lv" -replay "$rp" -flowcheck -screenshot "$winout\\flow$lv.png" -logFile "$winout\\flow$lv.log" > /dev/null || true
       grep -h "\[SevenSteps\] Flow check" "$out/flow$lv.log" || { echo "[unity.sh] smoke flow $lv: no result line"; fail=1; }
       grep -q "\[SevenSteps\] Flow check stage $lv: OK" "$out/flow$lv.log" || fail=1
@@ -225,7 +228,7 @@ case "$cmd" in
     for spec in "begin:1:select:-newplayer" "map:$p2:select:" "continue:$p2:boot:"; do
       IFS=: read -r path lv via extra <<< "$spec"
       winout="$(cygpath -w "$out")"
-      "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -savekey "$SAVEKEY" -lang ko $extra \
+      "$SMOKE_EXE" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -savekey "$SAVEKEY" -lang ko $extra \
         -titlecheck "$path" -logFile "$winout\\title-$path.log" > /dev/null || true
       want="[SevenSteps] Title check $path: arrived stage $lv via $via"
       grep -h "\[SevenSteps\] Title check" "$out/title-$path.log" || echo "[unity.sh] smoke title $path: no result line"
@@ -236,7 +239,7 @@ case "$cmd" in
     # through, T1..T3 are solved with their solver paths through the real board input, and stage 1 must follow (-newgamecheck).
     # After the title step: -newplayer clears this save key's progress.
     winout="$(cygpath -w "$out")"
-    "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -savekey "$SAVEKEY" -lang ko \
+    "$SMOKE_EXE" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -savekey "$SAVEKEY" -lang ko \
       -newplayer -newgamecheck -logFile "$winout\\newgame.log" > /dev/null || true
     grep -h "\[SevenSteps\] New game check" "$out/newgame.log" || echo "[unity.sh] smoke new game: no result line"
     grep -qF "[SevenSteps] New game check: arrived stage 1 via tutorial" "$out/newgame.log" || { echo "[unity.sh] smoke new game: no arrival at stage 1 via the tutorial"; fail=1; }
@@ -247,7 +250,7 @@ case "$cmd" in
     for spec in $(node "$HERE/flow-stages.mjs" "$(cygpath -w "$REPO/unity/Assets/_Project/Data/levels.json")" --journey); do
       IFS=: read -r kind lv rp <<< "$spec"
       winout="$(cygpath -w "$out")"
-      "$REPO/Builds/Windows/Seven Steps.exe" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -savekey "$SAVEKEY" -lang ko -newmap \
+      "$SMOKE_EXE" -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -savekey "$SAVEKEY" -lang ko -newmap \
         -level "$lv" -replay "$rp" -journeycheck "$kind" -screenshot "$winout\\journey-$kind.png" -logFile "$winout\\journey-$kind.log" > /dev/null || true
       grep -h "\[SevenSteps\] Journey check" "$out/journey-$kind.log" || { echo "[unity.sh] smoke journey $kind: no result line"; fail=1; }
       grep -q "\[SevenSteps\] Journey check $kind: OK" "$out/journey-$kind.log" || fail=1
@@ -263,19 +266,19 @@ case "$cmd" in
     # Fails on a missing board, a failed control, or a console exception. Needs the `orca` CLI.
     command -v orca >/dev/null || { echo "[unity.sh] smoke-webgl needs the orca CLI (Orca built-in browser)"; exit 1; }
     out="$REPO/reports/smoke-webgl"; mkdir -p "$out"; rm -f "$out"/*; fail=0
-    [ -f "$REPO/Builds/WebGL/index.html" ] || { echo "[unity.sh] smoke-webgl: no build at Builds/WebGL (run build-webgl)"; exit 1; }
+    [ -f "$SMOKE_WEBGL_DIR/index.html" ] || { echo "[unity.sh] smoke-webgl: no build at $SMOKE_WEBGL_DIR (run build-webgl)"; exit 1; }
     BOARD_MIN="${SMOKE_BOARD_MIN:-500}"; SMOKE_BG="FF00FF"
     # Every workspace runs this on the same PC: take a free port so we never talk to another workspace's server
     # (a busy fixed port made this check stop silently, or test another workspace's build).
     port=""; for p in $(seq 8091 8190); do netstat -ano | grep -q "[:.]$p .*LISTENING" || { port=$p; break; }; done
     [ -n "$port" ] || { echo "[unity.sh] smoke-webgl: no free port in 8091-8190"; exit 1; }
-    node "$HERE/serve.mjs" "$port" "$REPO/Builds/WebGL" > "$out/serve.log" 2>&1 &
+    node "$HERE/serve.mjs" "$port" "$SMOKE_WEBGL_DIR" > "$out/serve.log" 2>&1 &
     srv=$!; page=""
     # Always stop our server and close our tab, whatever happens below.
     trap 'kill "$srv" 2>/dev/null || true; [ -n "$page" ] && orca tab close --page "$page" --json >/dev/null 2>&1 || true' EXIT
     sleep 2
     kill -0 "$srv" 2>/dev/null || { echo "[unity.sh] smoke-webgl: server did not start on port $port:"; tail -5 "$out/serve.log"; exit 1; }
-    echo "[unity.sh] smoke-webgl: serving Builds/WebGL on port $port (board threshold $BOARD_MIN)"
+    echo "[unity.sh] smoke-webgl: serving $SMOKE_WEBGL_DIR on port $port (board threshold $BOARD_MIN)"
     # shoot <name> <query>: one page load -> $out/<name>.png + .console.txt; sets px (pixels unlike magenta) and errs.
     shoot() {
       local name="$1" query="$2" shot
