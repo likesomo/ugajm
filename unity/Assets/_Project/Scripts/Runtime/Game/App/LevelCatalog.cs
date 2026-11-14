@@ -62,6 +62,14 @@ namespace SevenSteps.Game
             return dtos[stage].expected?.path ?? "";
         }
 
+        /// The route the hints teach (2026-11-14): levels.json expected.allPath, the 3-star way where every brother walks,
+        /// else the stored fewest-bodies route. A one-brother route left the hints nothing to teach about three stars.
+        public static string HintPathOf(int stage)
+        {
+            string all = PathOf(stage).Length >= 0 ? dtos[stage].expected?.allPath : null;
+            return !string.IsNullOrEmpty(all) ? all : PathOf(stage);
+        }
+
         /// Which line a stage starts with (levels.json startLine, docs/architecture.md 16.7): "story", "hint" or "". Call after Load.
         public static string StartLineOf(int stage)
         {

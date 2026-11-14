@@ -15,6 +15,13 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STEPS, parseLevel, minBodies, solve } from '../../prototypes/seven-steps/src/core.js';
 import { LEVELS, TUTORIALS } from '../../prototypes/seven-steps/src/levels.js';
+import { solveAllBodies } from './all-brothers-check.mjs';
+
+function allPathOf(level, tag) {
+  const p = solveAllBodies(level);
+  if (!p) { console.warn(`${tag}: no all-brothers route (the hint uses path)`); return {}; }
+  return { allPath: p.map((a) => LETTER[a]).join('') };
+}
 
 const BODY_CAP = 3; // the triplets (user decision 2026-11-08)
 const LETTER = { up: 'U', down: 'D', left: 'L', right: 'R', keep: 'K', switch: 'X' };
@@ -117,6 +124,9 @@ const levels = LEVELS.map((def, i) => {
       moves: best.moves,
       needsSwitch: !solve(level, level.bodies, { noSwitch: true }),
       path: best.path.map((a) => LETTER[a]).join(''),
+      // The hint's route (2026-11-14): the shortest one where every brother walks (the 3-star way), so the hints teach
+      // three stars even where the fewest-bodies route needs one brother. Omitted when there is none.
+      ...allPathOf(level, tag),
     },
   };
 });

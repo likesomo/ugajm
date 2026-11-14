@@ -25,7 +25,8 @@
         "minBodies": 1,
         "moves": 7,
         "needsSwitch": false,
-        "path": "RRRRRRR"
+        "path": "RRRRRRR",
+        "allPath": "RLRLRLRXLRLRLRLXRRRRRRR"
       }
     },
     {
@@ -54,7 +55,8 @@
         "minBodies": 1,
         "moves": 7,
         "needsSwitch": false,
-        "path": "UDUDRRR"
+        "path": "UDUDRRR",
+        "allPath": "UDUDUDUKDUDUDUDKRUDUDRR"
       }
     },
     {
@@ -84,7 +86,8 @@
         "minBodies": 1,
         "moves": 7,
         "needsSwitch": false,
-        "path": "RRDDRRR"
+        "path": "RRDDRRR",
+        "allPath": "DUDUDUDKRLRRDDDKRRDDRRR"
       }
     },
     {
@@ -114,7 +117,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": false,
-        "path": "DURRRRRKDDRRRRR"
+        "path": "DURRRRRKDDRRRRR",
+        "allPath": "DURRRRRKDUDUDURKDDRRRRR"
       }
     },
     {
@@ -144,7 +148,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": false,
-        "path": "LLRRRRRKLRRDDDL"
+        "path": "LLRRRRRKLRRDDDL",
+        "allPath": "LLRLRLRKRLRLRRRKRDUDDDL"
       }
     },
     {
@@ -173,7 +178,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": false,
-        "path": "DUDUDURKDDRRUUR"
+        "path": "DUDUDURKDDRRUUR",
+        "allPath": "DUDUDURKDUDDRRRKDDRRUUR"
       }
     },
     {
@@ -204,7 +210,8 @@
         "minBodies": 3,
         "moves": 23,
         "needsSwitch": false,
-        "path": "DUDUDULKDUDURRRKDUDDDDR"
+        "path": "DUDUDULKDUDURRRKDUDDDDR",
+        "allPath": "DUDUDULKDUDURRRKDUDDDDR"
       }
     },
     {
@@ -234,7 +241,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": true,
-        "path": "RRRRRRDXDLLLLLL"
+        "path": "RRRRRRDXDLLLLLL",
+        "allPath": "RRRRRRDXUDUDUDUKDLLLLLL"
       }
     },
     {
@@ -263,7 +271,8 @@
         "minBodies": 3,
         "moves": 23,
         "needsSwitch": true,
-        "path": "RLRRRRRXRRRRDDLXLLLLLLL"
+        "path": "RLRRRRRXRRRRDDLXLLLLLLL",
+        "allPath": "RLRRRRRXRRRRDDLXLLLLLLL"
       }
     },
     {
@@ -290,7 +299,8 @@
         "minBodies": 2,
         "moves": 14,
         "needsSwitch": false,
-        "path": "RLRLRRRRLRRRRR"
+        "path": "RLRLRRRRLRRRRR",
+        "allPath": "RRRRLRLRRRRLRRRRR"
       }
     },
     {
@@ -320,7 +330,8 @@
         "minBodies": 3,
         "moves": 22,
         "needsSwitch": false,
-        "path": "RLRLRRRRLRRRRRKRRRRDDD"
+        "path": "RLRLRRRRLRRRRRKRRRRDDD",
+        "allPath": "RLRLRRRRLRRRRRKRRRRDDD"
       }
     },
     {
@@ -349,7 +360,8 @@
         "minBodies": 3,
         "moves": 22,
         "needsSwitch": true,
-        "path": "RLRLRRRRLRLRLRXRRRDDLL"
+        "path": "RLRLRRRRLRLRLRXRRRDDLL",
+        "allPath": "RLRLRRRRLRLRLRXRRRDDLL"
       }
     },
     {
@@ -379,7 +391,8 @@
         "minBodies": 3,
         "moves": 21,
         "needsSwitch": false,
-        "path": "UDUDUDRUDUDRRRUDRRRDD"
+        "path": "UDUDUDRUDUDRRRUDRRRDD",
+        "allPath": "UDUDUDRUDUDRRRUDRRRDD"
       }
     },
     {
@@ -406,7 +419,8 @@
         "minBodies": 3,
         "moves": 23,
         "needsSwitch": true,
-        "path": "LLLRRRRXRRRRRRRKLLLLLLL"
+        "path": "LLLRRRRXRRRRRRRKLLLLLLL",
+        "allPath": "LLLRRRRXRRRRRRRKLLLLLLL"
       }
     },
     {
@@ -434,7 +448,8 @@
         "minBodies": 1,
         "moves": 7,
         "needsSwitch": false,
-        "path": "UDRRRRR"
+        "path": "UDRRRRR",
+        "allPath": "UDUDUDUXDUDUDUDXUDRRRRR"
       }
     },
     {
@@ -463,7 +478,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": false,
-        "path": "RRRRDURKRDUDUDD"
+        "path": "RRRRDURKRDUDUDD",
+        "allPath": "RRRRDUDKRRRRRLRKRDUDUDD"
       }
     },
     {
@@ -493,7 +509,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": true,
-        "path": "LLRLRRRXRUURRDD"
+        "path": "LLRLRRRXRUURRDD",
+        "allPath": "LLRLRLRKRLRUDLRXRUURRDD"
       }
     },
     {
@@ -520,7 +537,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": true,
-        "path": "RLRLRRRXRRRRLRR"
+        "path": "RLRLRRRXRRRRLRR",
+        "allPath": "RLRLRRRXLLLRLRLKRRRRLRR"
       }
     },
     {
@@ -548,7 +566,8 @@
         "minBodies": 2,
         "moves": 14,
         "needsSwitch": false,
-        "path": "UDUDUDRRRRRRLR"
+        "path": "UDUDUDRRRRRRLR",
+        "allPath": "RUDUDUDRRRRRRLR"
       }
     },
     {
@@ -578,7 +597,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": true,
-        "path": "LUUDUURXRRDDDUD"
+        "path": "LUUDUURXRRDDDUD",
+        "allPath": "LUUDUUDKLULUURRXRRDDDUD"
       }
     },
     {
@@ -608,7 +628,8 @@
         "minBodies": 3,
         "moves": 23,
         "needsSwitch": true,
-        "path": "RLRRRRUKUUDUDUDXUDLLLUU"
+        "path": "RLRRRRUKUUDUDUDXUDLLLUU",
+        "allPath": "RLRRRRUKUUDUDUDXUDLLLUU"
       }
     },
     {
@@ -637,7 +658,8 @@
         "minBodies": 1,
         "moves": 7,
         "needsSwitch": false,
-        "path": "RDDLLLL"
+        "path": "RDDLLLL",
+        "allPath": "RDUDUDUXDUDUDUDXUDDLLLL"
       }
     },
     {
@@ -666,7 +688,8 @@
         "minBodies": 1,
         "moves": 7,
         "needsSwitch": false,
-        "path": "DUDURDD"
+        "path": "DUDURDD",
+        "allPath": "DUDRURLDUDRURLDUDURDD"
       }
     },
     {
@@ -696,7 +719,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": true,
-        "path": "DUDUDUDXLULULLU"
+        "path": "DUDUDUDXLULULLU",
+        "allPath": "DUDUDUDXUDLRULDLULULLU"
       }
     },
     {
@@ -727,7 +751,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": false,
-        "path": "LRRRRDDKLLDDRDD"
+        "path": "LRRRRDDKLLDDRDD",
+        "allPath": "LLDUDDRKLRRRRDDKLLDDRDD"
       }
     },
     {
@@ -758,7 +783,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": false,
-        "path": "RUUUDLLKRUULLUU"
+        "path": "RUUUDLLKRUULLUU",
+        "allPath": "RUUUDLLXLDDRRUULDUURRR"
       }
     },
     {
@@ -789,7 +815,8 @@
         "minBodies": 2,
         "moves": 14,
         "needsSwitch": false,
-        "path": "UDDLLULDLLULUU"
+        "path": "UDDLLULDLLULUU",
+        "allPath": "DLLULUDDLLULDLLULUU"
       }
     },
     {
@@ -820,7 +847,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": false,
-        "path": "DUDUDRUKRDLDDRR"
+        "path": "DUDUDRUKRDLDDRR",
+        "allPath": "DUDUDRUKDUDRURLRDLDDRR"
       }
     },
     {
@@ -849,7 +877,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": false,
-        "path": "DURRRRRKDDRRRRR"
+        "path": "DURRRRRKDDRRRRR",
+        "allPath": "DURRRRRKDUDUDURKDDRRRRR"
       }
     },
     {
@@ -878,7 +907,8 @@
         "minBodies": 3,
         "moves": 23,
         "needsSwitch": true,
-        "path": "DUDUDUDXURRRRRRKDRRRRRR"
+        "path": "DUDUDUDXURRRRRRKDRRRRRR",
+        "allPath": "DUDUDUDXURRRRRRKDRRRRRR"
       }
     },
     {
@@ -909,7 +939,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": false,
-        "path": "DURRRRRKDUDDDRD"
+        "path": "DURRRRRKDUDDDRD",
+        "allPath": "DUDDDRRKDURRRRRKDUDDDRD"
       }
     },
     {
@@ -940,7 +971,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": false,
-        "path": "DDDDLLUKDDLLLLD"
+        "path": "DDDDLLUKDDLLLLD",
+        "allPath": "DUDUDUDXUDUDUDDXDDLLLLU"
       }
     },
     {
@@ -971,7 +1003,8 @@
         "minBodies": 3,
         "moves": 23,
         "needsSwitch": true,
-        "path": "UUDUDUDXDDDRRUUKURRRDUD"
+        "path": "UUDUDUDXDDDRRUUKURRRDUD",
+        "allPath": "UUDUDUDXDDDRRUUKURRRDUD"
       }
     },
     {
@@ -1001,7 +1034,8 @@
         "minBodies": 3,
         "moves": 23,
         "needsSwitch": true,
-        "path": "UDUDUDUXDUDUDDRXLULLULL"
+        "path": "UDUDUDUXDUDUDDRXLULLULL",
+        "allPath": "UDUDUDUXDUDUDDRXLULLULL"
       }
     },
     {
@@ -1032,7 +1066,8 @@
         "minBodies": 3,
         "moves": 23,
         "needsSwitch": true,
-        "path": "UDUDULRXUDLDDRRKRRUDDDR"
+        "path": "UDUDULRXUDLDDRRKRRUDDDR",
+        "allPath": "UDUDULRXUDLDDRRKRRUDDDR"
       }
     },
     {
@@ -1061,7 +1096,8 @@
         "minBodies": 3,
         "moves": 22,
         "needsSwitch": false,
-        "path": "RLRLRRRRLRRRRRKRRRRDDR"
+        "path": "RLRLRRRRLRRRRRKRRRRDDR",
+        "allPath": "RLRLRRRRLRRRRRKRRRRDDR"
       }
     },
     {
@@ -1091,7 +1127,8 @@
         "minBodies": 3,
         "moves": 23,
         "needsSwitch": true,
-        "path": "LRRLRLRXRDDLLLDXLLLUULU"
+        "path": "LRRLRLRXRDDLLLDXLLLUULU",
+        "allPath": "LRRLRLRXRDDLLLDXLLLUULU"
       }
     },
     {
@@ -1120,7 +1157,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": false,
-        "path": "DUDUDURKDDRRRRR"
+        "path": "DUDUDURKDDRRRRR",
+        "allPath": "DUDUDURKDUDDRRRDDRRRRR"
       }
     },
     {
@@ -1150,7 +1188,8 @@
         "minBodies": 3,
         "moves": 23,
         "needsSwitch": false,
-        "path": "UDUDUDUKDURRRRRKDDRRRRR"
+        "path": "UDUDUDUKDURRRRRKDDRRRRR",
+        "allPath": "UDUDUDUKDURRRRRKDDRRRRR"
       }
     },
     {
@@ -1179,7 +1218,8 @@
         "minBodies": 3,
         "moves": 23,
         "needsSwitch": true,
-        "path": "RLRRRRRXLLLLLRRKRDUDUDD"
+        "path": "RLRRRRRXLLLLLRRKRDUDUDD",
+        "allPath": "RLRRRRRXLLLLLRRKRDUDUDD"
       }
     },
     {
@@ -1210,7 +1250,8 @@
         "minBodies": 3,
         "moves": 22,
         "needsSwitch": true,
-        "path": "LUURRRDLUURRRDXDRRDDRR"
+        "path": "LUURRRDLUURRRDXDRRDDRR",
+        "allPath": "LUURRRDLUURRRDXDRRDDRR"
       }
     },
     {
@@ -1241,7 +1282,8 @@
         "minBodies": 3,
         "moves": 22,
         "needsSwitch": true,
-        "path": "RUULLLUXULLLDDDDLLLDDR"
+        "path": "RUULLLUXULLLDDDDLLLDDR",
+        "allPath": "RUULLLUXULLLDDDDLLLDDR"
       }
     },
     {
@@ -1268,7 +1310,8 @@
         "minBodies": 1,
         "moves": 6,
         "needsSwitch": false,
-        "path": "RRRRRR"
+        "path": "RRRRRR",
+        "allPath": "RRRLLLRRRLLLRRRRRR"
       }
     },
     {
@@ -1300,7 +1343,8 @@
         "minBodies": 3,
         "moves": 20,
         "needsSwitch": true,
-        "path": "UUDDDDXDUDULXLLUULLD"
+        "path": "UUDDDDXDUDULXLLUULLD",
+        "allPath": "UUDDDDXDUDULXLLUULLD"
       }
     },
     {
@@ -1332,7 +1376,8 @@
         "minBodies": 2,
         "moves": 13,
         "needsSwitch": true,
-        "path": "UDULUXULLDUUL"
+        "path": "UDULUXULLDUUL",
+        "allPath": "UDUDLKUDULUXULLDUUL"
       }
     },
     {
@@ -1363,7 +1408,8 @@
         "minBodies": 3,
         "moves": 22,
         "needsSwitch": true,
-        "path": "UDURRDDUDUDUDUXRRDDDDL"
+        "path": "UDURRDDUDUDUDUXRRDDDDL",
+        "allPath": "UDURRDDUDUDUDUXRRDDDDL"
       }
     },
     {
@@ -1394,7 +1440,8 @@
         "minBodies": 2,
         "moves": 15,
         "needsSwitch": false,
-        "path": "DUDDDDRKRRRDDRR"
+        "path": "DUDDDDRKRRRDDRR",
+        "allPath": "DUDUDUDXUDUDURRXRRRRDDL"
       }
     },
     {
@@ -1425,7 +1472,8 @@
         "minBodies": 3,
         "moves": 21,
         "needsSwitch": false,
-        "path": "LLDURRRLRRDDRRRDDRRDD"
+        "path": "LLDURRRLRRDDRRRDDRRDD",
+        "allPath": "LLDURRRLRRDDRRRDDRRDD"
       }
     },
     {
@@ -1458,7 +1506,8 @@
         "minBodies": 3,
         "moves": 21,
         "needsSwitch": true,
-        "path": "LDUDDDDXRLRRUXURRRRDD"
+        "path": "LDUDDDDXRLRRUXURRRRDD",
+        "allPath": "LDUDDDDXRLRRUXURRRRDD"
       }
     },
     {
@@ -1491,7 +1540,8 @@
         "minBodies": 3,
         "moves": 22,
         "needsSwitch": false,
-        "path": "UUUDURUKDRRRUUKDRRDLUU"
+        "path": "UUUDURUKDRRRUUKDRRDLUU",
+        "allPath": "UUUDURUKDRRRUUKDRRDLUU"
       }
     }
   ],

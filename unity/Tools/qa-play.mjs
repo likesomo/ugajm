@@ -394,7 +394,8 @@ export const hintsUnlocked = (tries) => Math.min(3, Math.floor(Math.max(0, tries
 const triesToNext = (tries) => (hintsUnlocked(tries) >= 3 ? 0 : 3 * (hintsUnlocked(tries) + 1) - Math.max(0, tries));
 /// The game's HintPlan.From: the stored route's goal per brother (where and how his run ends) and the goal index per state.
 function hintPlan(st) {
-  const path = exportedFile().levels[st.n - 1]?.expected?.path ?? '';
+  const ex = exportedFile().levels[st.n - 1]?.expected;
+  const path = ex?.allPath || ex?.path || ''; // the all-brothers route (LevelCatalog.HintPathOf)
   const goals = [];
   const bodyAt = {};
   let s = newState(st.level);
@@ -439,11 +440,11 @@ function tierText(st, tier, s, lang) {
   const bro = (g) => gameText(lang, `hint.brother${(g.body % 3) + 1}`);
   let body;
   let extra = '';
-  if (!plan.path || tier === 3) body = plan.path ? gameText(lang, 'hint.route', routeWords(plan.path, lang)) : gameText(lang, 'hint.not_found');
+  if (!plan.path || tier === 3 || (tier === 2 && plan.goals.length === 0)) body = plan.path ? gameText(lang, 'hint.route', routeWords(plan.path, lang)) : gameText(lang, 'hint.not_found');
   else if (tier === 1) {
-    const nudge = gameText(lang, 'hint.nudge', plan.goals.length, plan.goals.map((g) => gameText(lang, 'hint.nudge_one', bro(g), goalWords(g, lang))).join(', '));
+    const nudge = plan.goals.length ? gameText(lang, 'hint.nudge', plan.goals.length + 1, plan.goals.map((g) => gameText(lang, 'hint.nudge_one', bro(g), goalWords(g, lang))).join(', ')) : '';
     const principle = textOf(st.def, lang).hint;
-    body = principle ? `${principle} ${nudge}` : nudge;
+    body = [principle, nudge].filter(Boolean).join(' ') || gameText(lang, 'hint.route', routeWords(plan.path, lang));
   } else {
     const k = keyOf(s);
     const onRoute = k in plan.bodyAt;

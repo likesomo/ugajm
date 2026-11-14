@@ -102,7 +102,7 @@ namespace SevenSteps.Game
 
             audio = new GameAudio(gameObject, assets, save);
             messages = new MessagePresenter(loc);
-            hints = new HintProvider(levels, loc, LevelCatalog.PathOf); // the stored route: the staged hint's goals agree with it
+            hints = new HintProvider(levels, loc, LevelCatalog.HintPathOf); // the all-brothers route: the staged hint's goals agree with it
 
             hud.UndoRequested += () => Send(Command.Undo);
             hud.RestartRequested += Restart;
@@ -419,11 +419,12 @@ namespace SevenSteps.Game
             bool fromStart = false;
             var shows = tier == 1 ? HintTier.Shows.Principle : tier == 2 ? HintTier.Shows.Goal : HintTier.Shows.Route;
             if (steps == null) shows = HintTier.Shows.Route; // no stored route: the solver's route at once, as before
+            else if (shows == HintTier.Shows.Goal && steps.Plan.Goals.Count == 0) shows = HintTier.Shows.Route; // no goal to show (never Goals[-1])
             if (shows == HintTier.Shows.Goal)
             {
                 int g = steps.Plan.TryOnRoute(state, out int reached) ? reached : 0;
                 fromStart = state != null && state.Prev != null && !steps.Plan.TryOnRoute(state, out _);
-                goal = steps.Plan.Goals[Math.Min(g, steps.Plan.Goals.Count - 1)];
+                goal = steps.Plan.Goals[Math.Max(0, Math.Min(g, steps.Plan.Goals.Count - 1))];
                 cell = goal.Cell;
             }
             LastHint = new HintTier(tier, HintGate.Tiers, shows, goal, fromStart, true);
@@ -442,9 +443,10 @@ namespace SevenSteps.Game
                 // Nudge: how many brothers walk and what each one's run ends with; the stage's own hint text first. No squares.
                 var parts = new System.Collections.Generic.List<string>();
                 foreach (var g in steps.Plan.Goals) parts.Add(loc.Format("hint.nudge_one", loc.Get($"hint.brother{g.Body % 3 + 1}"), GoalWords(g)));
-                string nudge = loc.Format("hint.nudge", steps.Plan.Goals.Count, string.Join(", ", parts));
+                // Never "0 brothers walk. .": no goals (no stored route) leaves only the stage's own hint, or the route.
+                string nudge = parts.Count > 0 ? loc.Format("hint.nudge", steps.Plan.Goals.Count + 1, string.Join(", ", parts)) /* the last brother walks out: no goal of his own */ : "";
                 string principle = LevelCatalog.TextOf(stage, loc.Current).hint;
-                body = principle.Length > 0 ? principle + " " + nudge : nudge;
+                body = principle.Length > 0 && nudge.Length > 0 ? principle + " " + nudge : principle.Length > 0 ? principle : nudge.Length > 0 ? nudge : hints.For(stage);
             }
             else if (shows == HintTier.Shows.Goal)
                 body = loc.Format("hint.goal", loc.Get($"hint.brother{goal.Body % 3 + 1}"), GoalWords(goal));
@@ -492,7 +494,7 @@ namespace SevenSteps.Game
         /// not follow (bad data: logged, the H still helps; review M1 on 4024c25).
         HintSteps StepsFor(int stage)
         {
-            string path = LevelCatalog.PathOf(stage);
+            string path = LevelCatalog.HintPathOf(stage);
             if (path.Length == 0) return null;
             HintPlan plan;
             try { plan = HintPlan.From(levels[stage], path); }

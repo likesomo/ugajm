@@ -201,5 +201,7 @@ namespace SevenSteps.Core
         public int moves;
         public bool needsSwitch;
         public string path;
+        /// The shortest route where every brother walks (the 3-star way, all-brothers-check); "" when none. The hints follow it.
+        public string allPath;
     }
 }

@@ -67,6 +67,45 @@ namespace SevenSteps.Tests
             Assert.Greater(sw, 0);
         }
 
+        /// Bug fix 2026-11-14: the hints follow the all-brothers route (expected.allPath, LevelCatalog.HintPathOf) on all 50
+        /// stages: it wins with every brother, tier 1 names 3 brothers, every tier opens (no Goals[-1]), and the route tier
+        /// walks all three.
+        [Test]
+        public void EveryStageHintsTheAllBrothersRoute()
+        {
+            var file = Shipped();
+            Assert.AreEqual(50, file.levels.Length);
+            foreach (var dto in file.levels)
+            {
+                var level = dto.ToLevel();
+                Assert.AreEqual(3, level.Bodies, dto.name);
+                Assert.IsFalse(string.IsNullOrEmpty(dto.expected.allPath), $"{dto.name}: an all-brothers route");
+                // The route wins, and on the last of all three brothers.
+                var s = Rules.NewState(level);
+                foreach (char c in dto.expected.allPath)
+                {
+                    Assert.IsTrue(Rules.TryParseLetter(c, out var act), dto.name);
+                    s = Rules.Dispatch(s, Command.FromAct(act)).State;
+                }
+                Assert.AreEqual(Status.Win, s.Status, $"{dto.name}: the all-brothers route wins");
+                Assert.AreEqual(3, Stars.BodiesUsed(s), $"{dto.name}: every brother walked");
+                var plan = HintPlan.From(level, dto.expected.allPath);
+                Assert.AreEqual(3, plan.Goals.Count + 1, $"{dto.name}: tier 1 names 3 brothers (the last walks out)");
+                foreach (bool principle in new[] { true, false })
+                {
+                    var steps = new HintSteps(plan, principle);
+                    var seen = new System.Collections.Generic.List<HintTier.Shows>();
+                    for (int k = 0; k < plan.Tiers + 1; k++)
+                    {
+                        var t = steps.Open(Rules.NewState(level)); // no exception on any tier, even past the last
+                        if (t.What == HintTier.Shows.Goal) Assert.That(t.Goal.Body, Is.InRange(0, plan.Goals.Count - 1), dto.name);
+                        seen.Add(t.What);
+                    }
+                    Assert.Contains(HintTier.Shows.Route, seen, dto.name);
+                }
+            }
+        }
+
         static Level Two() => Level.Parse("t", "", 2, new[] { "##########", "#S......E#", "#........#", "##########" });
 
         [Test]
