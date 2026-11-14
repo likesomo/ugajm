@@ -30,6 +30,23 @@ namespace SevenSteps.Game
     }
 
     /// <summary>How a body's run ends in the stored solution.</summary>
+    /// <summary>
+    /// Hints unlock by tries (user request 2026-11-14): the hint stays hidden until the player has failed or restarted
+    /// the stage <see cref="Step"/> times, then each further <see cref="Step"/> tries opens the next of <see cref="Tiers"/>
+    /// tiers: 1 = a direction nudge in words (how many brothers, KEEP / SWITCH, the mechanic; no squares), 2 = where the
+    /// walking brother's 7th step lands (the gold ring), 3 = the full route. Opening any tier caps the try at 1 star.
+    /// </summary>
+    public static class HintGate
+    {
+        public const int Step = 3, Tiers = 3;
+
+        /// Tiers open after <paramref name="tries"/> failed or restarted tries: 0 (hidden) .. 3.
+        public static int Unlocked(int tries) => tries < 0 ? 0 : Math.Min(Tiers, tries / Step);
+
+        /// Tries still needed before the next tier, 0 when every tier is open.
+        public static int TriesToNext(int tries) => Unlocked(tries) >= Tiers ? 0 : Step * (Unlocked(tries) + 1) - Math.Max(0, tries);
+    }
+
     public enum HintGoalKind { Keep, Switch, Bridge, Seal, Stone, Vanish, Fall }
 
     /// <summary>One body's goal in the stored solution: where its run ends and how.</summary>

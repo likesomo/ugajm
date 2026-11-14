@@ -85,6 +85,12 @@ namespace SevenSteps.Contracts
             }
         }
 
+        /// Failed or restarted tries of <paramref name="level"/> so far (HintGate unlocks the hint tiers from it).
+        public int Tries(Level level) => Find(NameOf(level))?.tries ?? 0;
+
+        /// One more failed or restarted try; returns the new count.
+        public int CountTry(Level level) => ++Get(NameOf(level)).tries;
+
         public void SetLastStage(Level level) => lastStage = NameOf(level);
 
         /// Index of the last played stage in <paramref name="levels"/>; 0 when none or no longer in the list.
@@ -130,6 +136,8 @@ namespace SevenSteps.Contracts
         public int starts;
         /// Most stars earned (0..3, docs/architecture.md 6.5). 0 = none. Written by MarkCleared(level, bodies, stars).
         public int bestStars;
+        /// Failed or restarted tries on this stage (2026-11-14 hint tiers, HintGate): a loss, or a restart from a played state.
+        public int tries;
     }
 
     /// <summary>

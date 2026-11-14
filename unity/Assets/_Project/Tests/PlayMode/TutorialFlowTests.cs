@@ -75,7 +75,8 @@ namespace SevenSteps.Tests.PlayMode
             Assert.IsFalse(game.TutorialCue.Visible);
             Assert.IsFalse(Services.Get<SaveSystem>().TutorialSeen(TutorialBoards.SaveId(LevelCatalog.Tutorials[0])), "a skipped board is not done");
             Assert.AreEqual(0, Services.Get<SaveSystem>().Progress.ClearedCount, "the tutorial wrote no progress");
-            yield return WaitFor(() => game.U5Hud.Hint.gameObject.activeSelf, "the hint back on stage 1");
+            for (int f = 0; f < 10; f++) yield return null;
+            Assert.IsFalse(game.U5Hud.Hint.gameObject.activeSelf, "stage 1 on a fresh save: the hint stays hidden until 3 tries (HintGate, 2026-11-14)");
         }
 
         [UnityTest]

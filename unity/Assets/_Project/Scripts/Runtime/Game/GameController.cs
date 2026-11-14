@@ -179,6 +179,9 @@ namespace SevenSteps.Game
             languageController = new LanguageController(languagePanel, overlays, localizer, save, launch.Language);
             settingsController.OpenLanguage = languageController.Open;
             // Settings "처음부터 다시" (2026-11-14): save erased by the controller; close the overlays and go to the title.
+            // Hint popup (2026-11-14): the first hint of a try asks first (1 star at most); later tiers open at once.
+            hintConfirm = new UI.HintConfirmPanel(overlayCanvas, overlays, localizer);
+            board.ConfirmHint = (title, open) => { hintConfirm.Open(title, open); return true; };
             settingsController.AfterReset = () =>
             {
                 while (overlays.Pop()) { }
@@ -616,6 +619,9 @@ namespace SevenSteps.Game
 
         /// Canvas for overlays above the HUD (0) and the result panel (5).
         UI.U5.U5GameHud u5Hud;
+        UI.HintConfirmPanel hintConfirm;
+        /// The hint popup (tests, captures).
+        public UI.HintConfirmPanel HintConfirm => hintConfirm;
         UI.U5.U5ClearView u5Clear;
         UI.U5.U5PauseView u5Pause;
         UI.U5.U5SettingsView u5Settings;
@@ -639,6 +645,9 @@ namespace SevenSteps.Game
             u5.UndoRequested += () => board.Send(SevenSteps.Core.Command.Undo);
             u5.RestartRequested += board.Restart;
             u5.HintRequested += board.ShowHint;
+            // Hints unlock by tries (HintGate): the button shows from tier 1 and pops when a tier unlocks.
+            board.HudRefreshed += (s, stage, text) => u5.Hint.SetShown(board.HintsUnlocked > 0);
+            board.HintUnlocked += _ => { u5.Hint.SetShown(true); UiPop.Play(u5.Hint.Rect, Services.Get<SaveSystem>().Settings.reduceMotion); };
             u5.KeepRequested += () => board.Send(SevenSteps.Core.Command.Keep);
             u5.SwitchRequested += () => board.Send(SevenSteps.Core.Command.Switch);
         }

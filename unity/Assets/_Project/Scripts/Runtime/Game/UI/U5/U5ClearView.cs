@@ -269,11 +269,12 @@ namespace SevenSteps.Game.UI.U5
                           / Mathf.Max(0.01f, finaleText.pixelsPerUnit);
                 finalePlate.rectTransform.sizeDelta = new Vector2(Mathf.Ceil(w) + 32, FocusPlate.PlateHeight(finaleText, finaleText.text, w, 8));
             }
-            nudgePlate.gameObject.SetActive(m.Star3Nudge);
-            if (m.Star3Nudge)
+            bool nudge = m.Star3Nudge || m.HintNudge;
+            nudgePlate.gameObject.SetActive(nudge);
+            if (nudge)
             {
                 nudgeText.font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
-                nudgeText.text = loc.Get("result.star3_nudge");
+                nudgeText.text = loc.Get(m.HintNudge ? "result.hint_again" : "result.star3_nudge");
                 float w = nudgeText.cachedTextGeneratorForLayout.GetPreferredWidth(nudgeText.text, nudgeText.GetGenerationSettings(Vector2.zero))
                           / Mathf.Max(0.01f, nudgeText.pixelsPerUnit);
                 float top = Safe + (line.Length > 0 ? finalePlate.rectTransform.sizeDelta.y + 8 : 0);

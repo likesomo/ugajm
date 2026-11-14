@@ -70,12 +70,12 @@ namespace SevenSteps.Tests.Game
             Assert.That(view.NudgePlate.anchoredPosition.y, Is.EqualTo(-U5ClearView.Safe));
             Assert.That(view.NudgePlate.sizeDelta.x, Is.LessThan(600f), "a short plate, not a band");
             view.Hide();
-            // Everyone walked (3 stars), or a hint was seen (1 star: the hint, not the brothers, cost the second): no nudge.
+            // Everyone walked (3 stars): no nudge. A hinted clear (1 star) says a try without a hint earns up to 3 (2026-11-14).
             view.Show(ResultModel.Clear(3, 3, 3, 3, false, stars: 3, bestStars: 3));
             Assert.That(view.NudgeLine, Is.Empty);
             view.Hide();
             view.Show(ResultModel.Clear(3, 3, 2, 2, false, stars: 1, bestStars: 1));
-            Assert.That(view.NudgeLine, Is.Empty);
+            StringAssert.Contains("힌트 없이", view.NudgeLine, "the hinted clear's line");
             view.Hide();
             view.Show(ResultModel.Loss(3, 3, false));
             Assert.That(view.NudgeLine, Is.Empty);

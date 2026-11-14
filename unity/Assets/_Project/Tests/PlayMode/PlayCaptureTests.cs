@@ -1119,6 +1119,74 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
+        /// Hints by tries (2026-11-14), stage 4, KO / EN: hidden on a fresh try (H says how many more), a restart from a
+        /// played state counts, the popup before the first hint, tier 1 (the nudge), tier 3 (the route) and the hinted
+        /// clear's result line. `unity.sh playcapture Hints` -> hint-{locked,popup,tier1,tier3,result}-{ko,en}.png.
+        [UnityTest]
+        public IEnumerator Hints()
+        {
+            foreach (string lang in new[] { "ko", "en" })
+            {
+                PlayEnv.Reset();
+                yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", lang, "-level", "4");
+                var game = Object.FindAnyObjectByType<GameController>();
+                var board = game.Board;
+                var save = Services.Get<SaveSystem>();
+                var level = board.State.Level;
+                while (game.Overlays.Count > 0) game.Overlays.Pop();
+                Assert.AreEqual(0, board.HintsUnlocked);
+                Assert.IsFalse(game.U5Hud.Hint.gameObject.activeSelf, "hidden before 3 tries");
+                board.ShowHint();
+                StringAssert.Contains(lang == "ko" ? "3번 더" : "3 more", board.MessageLine);
+                var px = new Pixels();
+                yield return Capture($"hint-locked-{lang}", px, 0.6f);
+                // A restart from a played state counts one try.
+                yield return SendLetters(game, "D");
+                board.Restart();
+                yield return null;
+                Assert.AreEqual(1, save.Progress.Tries(level), "a restart counts");
+                save.Progress.CountTry(level); save.Progress.CountTry(level); // to 3
+                yield return SendLetters(game, "D");
+                board.Restart(); // the 4th try: tier 1 is open (and the line says so)
+                yield return null;
+                Assert.AreEqual(1, board.HintsUnlocked);
+                Assert.IsTrue(game.U5Hud.Hint.gameObject.activeSelf, "the hint button shows from tier 1");
+                board.ShowHint();
+                Assert.IsTrue(game.HintConfirm.Visible, "the popup before the first hint of the try");
+                Assert.AreEqual(lang == "ko" ? "힌트 1/3" : "Hint 1/3", game.HintConfirm.TitleText);
+                Assert.AreEqual(0, board.Attempt.Hints, "nothing opened before the confirm");
+                yield return Capture($"hint-popup-{lang}", px, 0.6f);
+                AssertVaried($"hint-popup-{lang}", px.Value);
+                AssertInside(game.HintConfirm.Box, "hint popup " + lang);
+                game.HintConfirm.CancelButton.onClick.Invoke();
+                Assert.IsFalse(game.HintConfirm.Visible);
+                Assert.AreEqual(0, board.Attempt.Hints, "Cancel opens nothing");
+                board.ShowHint();
+                game.HintConfirm.ShowButton.onClick.Invoke();
+                Assert.AreEqual(1, board.Attempt.Hints);
+                StringAssert.Contains(lang == "ko" ? "힌트 1/3" : "Hint 1/3", board.MessageLine);
+                yield return Capture($"hint-tier1-{lang}", px, 0.8f);
+                AssertVaried($"hint-tier1-{lang}", px.Value);
+                for (int k = 0; k < 6; k++) save.Progress.CountTry(level); // 9 tries: every tier
+                board.ShowHint(); // tier 2, no popup on the same try
+                Assert.IsFalse(game.HintConfirm.Visible, "later tiers of the same try open at once");
+                board.ShowHint(); // tier 3
+                StringAssert.Contains(lang == "ko" ? "힌트 3/3" : "Hint 3/3", board.MessageLine);
+                yield return Capture($"hint-tier3-{lang}", px, 0.8f);
+                AssertVaried($"hint-tier3-{lang}", px.Value);
+                // The hinted clear: 1 star and the "without a hint" line.
+                board.Restart();
+                yield return null;
+                yield return SendLetters(game, LevelCatalog.PathOf(3));
+                float t0 = Time.realtimeSinceStartup;
+                var clear = Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ClearView>();
+                while (clear == null || !clear.IsShown) { Assert.Less(Time.realtimeSinceStartup - t0, 30f, "the clear"); yield return null; clear = Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ClearView>(); }
+                StringAssert.Contains(lang == "ko" ? "힌트 없이" : "without a hint", clear.NudgeLine);
+                yield return Capture($"hint-result-{lang}", px, 2.4f);
+                AssertVaried($"hint-result-{lang}", px.Value);
+            }
+        }
+
         /// Stage background check (user report 2026-11-14 "stage 2 background is a mess"): stages 1-3 on load, KO, the chapter
         /// card closed. `unity.sh playcapture StageCheck` -> stage2-check-{1,2,3}.png.
         [UnityTest]

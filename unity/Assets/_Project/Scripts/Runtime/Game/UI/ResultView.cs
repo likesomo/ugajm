@@ -31,6 +31,8 @@ namespace SevenSteps.Game.UI
         public ChapterInfo FinishedChapter { get; }
         /// Two stars (no hint) but not every brother walked: the result nudges toward the third (user request 2026-11-13).
         public bool Star3Nudge => Cleared && Stars == 2 && BodiesUsed < LevelBodies;
+        /// A hinted clear (1 star, Stars.Of): the result says a try without a hint can earn up to 3 (user request 2026-11-14).
+        public bool HintNudge => Cleared && Stars == 1;
 
         public ResultModel(int stage, bool cleared, int levelBodies, int bodiesUsed, int bestBodies, bool isLast,
             int stars = 0, int bestStars = 0, ChapterInfo finishedChapter = null)

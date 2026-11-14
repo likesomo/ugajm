@@ -240,6 +240,7 @@ namespace SevenSteps.Game
             attempt = default; // a new attempt: select, next, again, [ ]
             hintSteps = null; // the staged hint starts again (contract review (3))
             hintWarned = false; // a new attempt asks again before its first costing hint (QA-2)
+            hintOpened = 0;
             LastHint = null;
             board.ShowHintGoal(-1);
             // One line per stage load for performance checks (WebGL console, player log): where a planet change spends time.
@@ -368,48 +369,109 @@ namespace SevenSteps.Game
 
         public void Restart() => Send(Command.Restart);
 
-        /// H (and the menu's solution item): the next tier of the staged hint (QA-1 (A), contract review
-        /// 2026-11-11-staged-hint-contract.md): the principle (the level's hint text, unless the stage started with it),
-        /// then each body's goal (a gold ring on the board, where and how its run ends), then the whole route. Opened
-        /// tiers stay through Undo; a new attempt (LoadStage) starts again. A tier that costs (HintRules.Costs) counts as a
-        /// hint for the stars (6.5). A stage without a stored route gets the route at once, as before.
+        /// H, the hint button and the menu's solution item: hints unlock by tries (HintGate, user request 2026-11-14).
+        /// Locked: a line says how many more tries. Otherwise the next tier this try has not opened, up to the unlocked
+        /// one (then the highest again): 1 = a nudge in words, 2 = the walking brother's goal ring, 3 = the route. The first
+        /// hint of a try asks through <see cref="ConfirmHint"/> (an in-game popup: the try is capped at 1 star); later
+        /// tiers of the same try open at once. Every opened tier counts as a hint for the stars (6.5).
         public void ShowHint()
         {
-            if (session.Level == null || InTutorial) return; // no H on a tutorial board (docs/tutorial.md 2.2)
-            int stage = loadedStage;
-            if (hintSteps == null || hintStage != stage)
+            if (session.Level == null || InTutorial || loadedStage < 0) return; // no H on a tutorial board (docs/tutorial.md 2.2)
+            int unlocked = HintsUnlocked;
+            if (unlocked == 0)
             {
-                hintStage = stage;
-                hintSteps = StepsFor(stage);
-            }
-            bool costs = hintSteps == null || hintSteps.NextCosts(session.State);
-            if (HintRules.AsksFirst(costs, attempt.Hints, hintWarned))
-            {
-                hintWarned = true; // the next H (or the menu's solution again) opens it
-                messages.Show(() => loc.Get("hint.confirm"));
+                int more = HintGate.TriesToNext(Tries);
+                messages.Show(() => loc.Format("msg.hint_locked", more));
+                Refresh();
                 return;
             }
-            if (hintSteps == null)
+            int tier = Math.Min(unlocked, hintOpened + 1);
+            string title = loc.Format("hint.tier", tier, HintGate.Tiers);
+            if (attempt.Hints == 0 && ConfirmHint != null && ConfirmHint(title, () => OpenTier(tier))) return;
+            OpenTier(tier);
+        }
+
+        /// The popup before the first hint of a try: (tier title, open it) -> true when it was shown. Null = no popup.
+        public Func<string, Action, bool> ConfirmHint { get; set; }
+
+        /// Failed or restarted tries of the loaded stage (saved progress), 0 on a tutorial board.
+        public int Tries => InTutorial || loadedStage < 0 ? 0 : save.Progress.Tries(levels[loadedStage]);
+
+        /// Hint tiers open on the loaded stage (HintGate), 0 = the hint is hidden.
+        public int HintsUnlocked => HintGate.Unlocked(Tries);
+
+        /// A tier unlocked (the new count): the HUD shows and pulses its hint button.
+        public event Action<int> HintUnlocked;
+
+        int hintOpened;
+
+        void OpenTier(int tier)
+        {
+            if (session.Level == null || InTutorial || loadedStage < 0) return;
+            int stage = loadedStage;
+            if (hintSteps == null || hintStage != stage) { hintStage = stage; hintSteps = StepsFor(stage); }
+            hintOpened = Math.Max(hintOpened, tier);
+            attempt = attempt.WithHint();
+            var steps = hintSteps;
+            var state = session.State;
+            int cell = -1;
+            HintGoal goal = default;
+            bool fromStart = false;
+            var shows = tier == 1 ? HintTier.Shows.Principle : tier == 2 ? HintTier.Shows.Goal : HintTier.Shows.Route;
+            if (steps == null) shows = HintTier.Shows.Route; // no stored route: the solver's route at once, as before
+            if (shows == HintTier.Shows.Goal)
             {
-                LastHint = null;
-                attempt = attempt.WithHint();
-                messages.Show(() => hints.For(stage));
-                board.ShowHintGoal(-1);
+                int g = steps.Plan.TryOnRoute(state, out int reached) ? reached : 0;
+                fromStart = state != null && state.Prev != null && !steps.Plan.TryOnRoute(state, out _);
+                goal = steps.Plan.Goals[Math.Min(g, steps.Plan.Goals.Count - 1)];
+                cell = goal.Cell;
             }
-            else
-            {
-                var t = hintSteps.Open(session.State);
-                LastHint = t;
-                if (t.Costs) attempt = attempt.WithHint();
-                bool warn = HintRules.FirstTierFree && !t.Costs && attempt.Hints == 0 && t.Tier < t.Tiers && hintSteps.NextCosts(session.State);
-                var steps = hintSteps; // captured: LoadStage clears the field before the Rebuild clears the line (review N1 on c5a3657)
-                messages.Show(() => HintText(stage, steps, t, warn));
-                board.ShowHintGoal(t.What == HintTier.Shows.Goal ? t.Goal.Cell : -1);
-            }
+            LastHint = new HintTier(tier, HintGate.Tiers, shows, goal, fromStart, true);
+            messages.Show(() => TierText(stage, steps, tier, shows, goal, fromStart));
+            board.ShowHintGoal(cell);
             HintShown?.Invoke();
             Refresh();
         }
 
+        /// "Hint n/3  <body>" and, under it, that this try now earns 1 star at most (hint.used_cap).
+        string TierText(int stage, HintSteps steps, int tier, HintTier.Shows shows, HintGoal goal, bool fromStart)
+        {
+            string body;
+            if (shows == HintTier.Shows.Principle)
+            {
+                // Nudge: how many brothers walk and what each one's run ends with; the stage's own hint text first. No squares.
+                var parts = new System.Collections.Generic.List<string>();
+                foreach (var g in steps.Plan.Goals) parts.Add(loc.Format("hint.nudge_one", loc.Get($"hint.brother{g.Body % 3 + 1}"), GoalWords(g)));
+                string nudge = loc.Format("hint.nudge", steps.Plan.Goals.Count, string.Join(", ", parts));
+                string principle = LevelCatalog.TextOf(stage, loc.Current).hint;
+                body = principle.Length > 0 ? principle + " " + nudge : nudge;
+            }
+            else if (shows == HintTier.Shows.Goal)
+                body = loc.Format("hint.goal", loc.Get($"hint.brother{goal.Body % 3 + 1}"), GoalWords(goal));
+            else body = hints.For(stage);
+            string head = loc.Format("hint.tier", tier, HintGate.Tiers);
+            if (fromStart) head += " " + loc.Get("hint.from_start");
+            return loc.Format("hint.line", head, body) + "\n" + loc.Get("hint.used_cap");
+        }
+
+        /// One failed or restarted try of the loaded stage (HintGate): a loss, or a restart from a played state that was
+        /// not already lost (that loss counted). Saved at once; a newly unlocked tier says so on the line.
+        void CountTry(SessionUpdate u)
+        {
+            if (InTutorial || loadedStage < 0 || u.Result == null || u.Kind == SessionUpdateKind.Rebuild || u.Kind == SessionUpdateKind.Feedback) return;
+            bool lose = u.Result.Has(GameEventType.Lose);
+            bool restart = u.Result.Has(GameEventType.Restart) && u.Prev != null && u.Prev.Prev != null && u.Prev.Status != Status.Lose;
+            if (!lose && !restart) return;
+            int before = HintsUnlocked;
+            save.Progress.CountTry(levels[loadedStage]);
+            save.SaveProgress();
+            int now = HintsUnlocked;
+            if (now > before)
+            {
+                messages.ShowKey("msg.hint_ready");
+                HintUnlocked?.Invoke(now);
+            }
+        }
         /// What the last H opened (telemetry tier fields), null for a stage without a stored route.
         public HintTier? LastHint { get; private set; }
 
@@ -471,6 +533,7 @@ namespace SevenSteps.Game
         {
             messages.Apply(u, attempt.Hinted); // a restart stays in the attempt, so its hints still cap the stars (6.5)
             CountAttempt(u);
+            CountTry(u);
             if (u.Kind == SessionUpdateKind.Feedback)
             {
                 if (u.Result != null && u.Result.Has(GameEventType.Bump))
