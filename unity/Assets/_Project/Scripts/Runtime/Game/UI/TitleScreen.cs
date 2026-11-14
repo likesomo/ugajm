@@ -275,6 +275,8 @@ namespace SevenSteps.Game.UI
                     else titleView.ContinueButton.onClick.Invoke();
                     break;
                 case "map":
+                    // Planet 2 is locked until planet 1 is completed (2026-11-14): complete it first, as a player would have.
+                    if (newMap) foreach (int s in planets[0].Stages) if (!save.Progress.IsCleared(levels[s])) save.Progress.MarkCleared(levels[s], levels[s].Bodies);
                     if (u5) u5Title.Map.Press(); else titleView.StagesButton.onClick.Invoke();
                     yield return null;
                     int planet = Mathf.Min(1, planets.Count - 1);
