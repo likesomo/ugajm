@@ -23,6 +23,7 @@ Shader "SevenSteps/RuinsSurface"
   _PlanetDressing("Planet material identity",Range(0,1))=0
   _PigmentSmooth("Pigment smoothing: fades dark pores and speckle toward the average colour",Range(0,1))=0
   _Meadow("Meadow crust (altar A): colour the crust from its BogMask uv3",Range(0,1))=0
+  _StoneGrey("Granite modules (altar A stones): base colour by vertex value, green as moss",Range(0,1))=0
   _MeadowMoss("Meadow moss",Color)=(.30,.40,.22,1)
   _MeadowBog("Meadow bog",Color)=(.14,.29,.29,1)
   _MeadowRock("Meadow granite",Color)=(.47,.49,.45,1)
@@ -60,7 +61,7 @@ Shader "SevenSteps/RuinsSurface"
    float _BoardMoss,_BoardNormalStrength,_SurfaceAlpha,_BoardStoneSlot;
    float _EnvironmentDetail,_EnvironmentWood,_EnvironmentMoss;
    float _UseAtlas,_UseMoss,_UseVertexColor,_Unlit,_AmbientFloor;
-   float _PlanetDressing,_PlanetIce,_PigmentSmooth,_Meadow;float4 _MeadowMoss,_MeadowBog,_MeadowRock;
+   float _PlanetDressing,_PlanetIce,_PigmentSmooth,_Meadow,_StoneGrey;float4 _MeadowMoss,_MeadowBog,_MeadowRock;
    float _SlideIce;
    float4 _PlanetPigment;
    CBUFFER_END
@@ -228,6 +229,8 @@ Shader "SevenSteps/RuinsSurface"
      }
      if(i.style.x>2.5)color=lerp(color,half3(.70,.66,.56),step(.70,i.style.y)*.85);
     }
+    // Altar A standing stones (2026-11-14): granite by the colour's own value (grooves stay dark), green vertex pigment as moss.
+    if(_StoneGrey>.5){half value=saturate(dot(color,half3(.3,.59,.11))*2.2);half3 vc=i.color.rgb;half green=max(saturate((vc.g-max(vc.r,vc.b))*5),smoothstep(.82,.97,saturate(n.y))*.85);color=lerp(_BaseColor.rgb*lerp(1.1,.42,value),_MeadowMoss.rgb*1.1,green);}
     if(_SlideIce>.5)stoneRoughness=.06;
     if(_DressingGlossReview>.5)return half4((1-stoneRoughness).xxx,1);
     Light l=GetMainLight(TransformWorldToShadowCoord(i.positionWS));

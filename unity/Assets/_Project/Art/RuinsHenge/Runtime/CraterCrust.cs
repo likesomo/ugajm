@@ -2,7 +2,7 @@ using UnityEngine;
 namespace SevenSteps.Art {
     // The FBX is authored for a 5x5 board. Preserve its two-metre apron when fitting other boards.
     public static class CraterCrust {
-        static float FitAxis(float value,int cells) => Mathf.Abs(value)<=2.5f?value*cells/5f:Mathf.Sign(value)*(cells*.5f+Mathf.Abs(value)-2.5f);
+        public static float FitAxis(float value,int cells) => Mathf.Abs(value)<=2.5f?value*cells/5f:Mathf.Sign(value)*(cells*.5f+Mathf.Abs(value)-2.5f);
         public static Mesh Fit(Mesh source,int w,int h,Matrix4x4 sourceTransform) {
             if(!source||!source.isReadable||source.triangles.Length/3<20000)throw new System.InvalidOperationException("Crater crust requires a readable 20k+ triangle FBX");
             var mesh=Object.Instantiate(source);mesh.name="CraterCrust_Fitted";var v=mesh.vertices;var uv=new Vector2[v.Length];var normals=mesh.normals;

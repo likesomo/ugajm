@@ -20,3 +20,13 @@ MonoBehaviour:
   - {fileID: 2523501515675563311, guid: 19a10ea2e8ef6bb42b85340b85abbad2, type: 3}
   - {fileID: 5459232415367630444, guid: b2c44aacd57040545bb248a95894fabf, type: 3}
   material: {fileID: 2100000, guid: df9ffb1a77172904393efba61f862de0, type: 2}
+  layout: {fileID: 4900000, guid: 257d3419edf3234906c678bdcdcdddb5, type: 3}
+  layoutModels:
+  - {fileID: 919132149155446097, guid: bb5aec66bf796f54dbdaa450509ae214, type: 3}
+  - {fileID: 919132149155446097, guid: b6924c7750725084189d6ec7b5d2591a, type: 3}
+  - {fileID: 919132149155446097, guid: f7aacb8ba2a771a4c8db9144704e9a51, type: 3}
+  - {fileID: 919132149155446097, guid: c1879ed5f65142d4d927afb0c86f78a4, type: 3}
+  - {fileID: 919132149155446097, guid: 674ed7759a5424048a30ec5407acea63, type: 3}
+  - {fileID: 919132149155446097, guid: 0e9cd6ab325c356468c561ce4caa1294, type: 3}
+  - {fileID: 919132149155446097, guid: 753ddd346ef32f94f9de6621bdde272b, type: 3}
+  stoneMaterial: {fileID: 2100000, guid: cac25c65cbabcb2faa01e655aabbbcac, type: 2}

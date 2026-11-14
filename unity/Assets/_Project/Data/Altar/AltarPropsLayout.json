@@ -1,0 +1,1200 @@
+{
+    "coordinateSystem":  "Unity-style crust-local metres: X right, Y up, Z back; negative Z is near side",
+    "referenceBoardCells":  [
+                                5,
+                                5
+                            ],
+    "previewBoardCells":  [
+                              10,
+                              3
+                          ],
+    "fit":  "Apply existing FitAxis independently to source X/Z for target width/height; height raycast to fitted crust. previewFittedPosition is exact10x3 render placement.",
+    "stoneOrder":  "1..7 clockwise, beginning near-left, then left/back/right, ending near-right",
+    "stoneGrooves":  {
+                         "spacingM":  0.175,
+                         "depthM":  0.085,
+                         "widthM":  0.48,
+                         "method":  "real inset horizontal channels; clean bevel shoulders, separate flat stone bands"
+                     },
+    "stoneMeshes":  "staging/Menhir_Count1.fbx ... Menhir_Count7.fbx; no metas yet",
+    "scaleOrder":  "Unity XYZ; preview Z-up conversion handled in generator",
+    "props":  [
+                  {
+                      "kind":  "standingStone",
+                      "name":  "Preview_Count1",
+                      "mesh":  "Menhir_Count1.fbx",
+                      "sourceReferenceXZ":  [
+                                                -3.2,
+                                                -3.9
+                                            ],
+                      "position":  [
+                                       -3.2,
+                                       -0.07143058000285765,
+                                       -3.9
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   0,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                      "previewFittedPosition":  [
+                                                    -5.699999999999999,
+                                                    -0.07143058000285765,
+                                                    -2.9000000000000004
+                                                ],
+                      "heightM":  2.28,
+                      "stagedMesh":  "staging/Menhir_Count1.fbx",
+                      "intendedProductionPath":  "Assets/Art/RuinsHenge/PlanetDressing/Menhir_Count1.fbx"
+                  },
+                  {
+                      "kind":  "standingStone",
+                      "name":  "Preview_Count2",
+                      "mesh":  "Menhir_Count2.fbx",
+                      "sourceReferenceXZ":  [
+                                                -4.5,
+                                                -0.8
+                                            ],
+                      "position":  [
+                                       -4.5,
+                                       -0.307964029273518,
+                                       -0.8
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   12,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    1.04,
+                                    1.04,
+                                    1.04
+                                ],
+                      "previewFittedPosition":  [
+                                                    -7.0,
+                                                    -0.307964029273518,
+                                                    -0.4800000000000001
+                                                ],
+                      "heightM":  2.3712,
+                      "stagedMesh":  "staging/Menhir_Count2.fbx",
+                      "intendedProductionPath":  "Assets/Art/RuinsHenge/PlanetDressing/Menhir_Count2.fbx"
+                  },
+                  {
+                      "kind":  "standingStone",
+                      "name":  "Preview_Count3",
+                      "mesh":  "Menhir_Count3.fbx",
+                      "sourceReferenceXZ":  [
+                                                -3.8,
+                                                3.5
+                                            ],
+                      "position":  [
+                                       -3.8,
+                                       -0.09492451115027307,
+                                       3.5
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   4,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    1.12,
+                                    1.12,
+                                    1.12
+                                ],
+                      "previewFittedPosition":  [
+                                                    -6.300000000000001,
+                                                    -0.09492451115027307,
+                                                    2.5
+                                                ],
+                      "heightM":  2.5536,
+                      "stagedMesh":  "staging/Menhir_Count3.fbx",
+                      "intendedProductionPath":  "Assets/Art/RuinsHenge/PlanetDressing/Menhir_Count3.fbx"
+                  },
+                  {
+                      "kind":  "standingStone",
+                      "name":  "Preview_Count4",
+                      "mesh":  "Menhir_Count4.fbx",
+                      "sourceReferenceXZ":  [
+                                                -1.5,
+                                                4.5
+                                            ],
+                      "position":  [
+                                       -1.5,
+                                       -0.03859445191575283,
+                                       4.5
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   0,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    1.12,
+                                    1.12,
+                                    1.12
+                                ],
+                      "previewFittedPosition":  [
+                                                    -3.0,
+                                                    -0.03859445191575283,
+                                                    3.5
+                                                ],
+                      "heightM":  2.5536,
+                      "stagedMesh":  "staging/Menhir_Count4.fbx",
+                      "intendedProductionPath":  "Assets/Art/RuinsHenge/PlanetDressing/Menhir_Count4.fbx"
+                  },
+                  {
+                      "kind":  "standingStone",
+                      "name":  "Preview_Count5",
+                      "mesh":  "Menhir_Count5.fbx",
+                      "sourceReferenceXZ":  [
+                                                3.6,
+                                                3.8
+                                            ],
+                      "position":  [
+                                       3.6,
+                                       -0.18732974732478846,
+                                       3.8
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   -6,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    1.12,
+                                    1.12,
+                                    1.12
+                                ],
+                      "previewFittedPosition":  [
+                                                    6.1,
+                                                    -0.18732974732478846,
+                                                    2.8
+                                                ],
+                      "heightM":  2.5536,
+                      "stagedMesh":  "staging/Menhir_Count5.fbx",
+                      "intendedProductionPath":  "Assets/Art/RuinsHenge/PlanetDressing/Menhir_Count5.fbx"
+                  },
+                  {
+                      "kind":  "standingStone",
+                      "name":  "Preview_Count6",
+                      "mesh":  "Menhir_Count6.fbx",
+                      "sourceReferenceXZ":  [
+                                                4.5,
+                                                -0.5
+                                            ],
+                      "position":  [
+                                       4.5,
+                                       -0.09575566235785987,
+                                       -0.5
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   -12,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    1.04,
+                                    1.04,
+                                    1.04
+                                ],
+                      "previewFittedPosition":  [
+                                                    7.0,
+                                                    -0.09575566235785987,
+                                                    -0.3
+                                                ],
+                      "heightM":  2.3712,
+                      "stagedMesh":  "staging/Menhir_Count6.fbx",
+                      "intendedProductionPath":  "Assets/Art/RuinsHenge/PlanetDressing/Menhir_Count6.fbx"
+                  },
+                  {
+                      "kind":  "standingStone",
+                      "name":  "Preview_Count7",
+                      "mesh":  "Menhir_Count7.fbx",
+                      "sourceReferenceXZ":  [
+                                                3.2,
+                                                -3.9
+                                            ],
+                      "position":  [
+                                       3.2,
+                                       -0.0013528507580761323,
+                                       -3.9
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   0,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                      "previewFittedPosition":  [
+                                                    5.699999999999999,
+                                                    -0.0013528507580761323,
+                                                    -2.9000000000000004
+                                                ],
+                      "heightM":  2.28,
+                      "stagedMesh":  "staging/Menhir_Count7.fbx",
+                      "intendedProductionPath":  "Assets/Art/RuinsHenge/PlanetDressing/Menhir_Count7.fbx"
+                  },
+                  {
+                      "kind":  "dais",
+                      "name":  "LowRoundDais",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_StarAltarDisc.fbx",
+                      "sourceReferenceXZ":  [
+                                                0,
+                                                -3.9
+                                            ],
+                      "position":  [
+                                       0,
+                                       -0.1635591553614235,
+                                       -3.9
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   0,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    1.6,
+                                    0.7,
+                                    1.6
+                                ],
+                      "previewFittedPosition":  [
+                                                    0.0,
+                                                    -0.1635591553614235,
+                                                    -2.9000000000000004
+                                                ]
+                  },
+                  {
+                      "kind":  "steppingStone",
+                      "name":  "Step_00",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_LichenStone.fbx",
+                      "sourceReferenceXZ":  [
+                                                0.6,
+                                                -3.9
+                                            ],
+                      "position":  [
+                                       0.6,
+                                       -0.16458950267131595,
+                                       -3.9
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   0.0,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.3598914871905396,
+                                    0.13838250160660248,
+                                    0.4148418648617908
+                                ],
+                      "previewFittedPosition":  [
+                                                    1.2,
+                                                    -0.16458950267131595,
+                                                    -2.9000000000000004
+                                                ]
+                  },
+                  {
+                      "kind":  "steppingStone",
+                      "name":  "Step_01",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_LichenStone.fbx",
+                      "sourceReferenceXZ":  [
+                                                0.5405813207414515,
+                                                -3.466116260882442
+                                            ],
+                      "position":  [
+                                       0.5405813207414515,
+                                       -0.16615581276622826,
+                                       -3.466116260882442
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   25.714285714285715,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.3598914871905396,
+                                    0.13838250160660248,
+                                    0.4148418648617908
+                                ],
+                      "previewFittedPosition":  [
+                                                    1.081162641482903,
+                                                    -0.16615581276622826,
+                                                    -2.4661162608824423
+                                                ]
+                  },
+                  {
+                      "kind":  "steppingStone",
+                      "name":  "Step_02",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_LichenStone.fbx",
+                      "sourceReferenceXZ":  [
+                                                0.37409388111524017,
+                                                -3.11816851753197
+                                            ],
+                      "position":  [
+                                       0.37409388111524017,
+                                       -0.16225697191203364,
+                                       -3.11816851753197
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   51.42857142857143,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.3598914871905396,
+                                    0.13838250160660248,
+                                    0.4148418648617908
+                                ],
+                      "previewFittedPosition":  [
+                                                    0.7481877622304803,
+                                                    -0.16225697191203364,
+                                                    -2.11816851753197
+                                                ]
+                  },
+                  {
+                      "kind":  "steppingStone",
+                      "name":  "Step_03",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_LichenStone.fbx",
+                      "sourceReferenceXZ":  [
+                                                0.13351256037378867,
+                                                -2.9250720878181764
+                                            ],
+                      "position":  [
+                                       0.13351256037378867,
+                                       -0.15500000000000003,
+                                       -2.9250720878181764
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   77.14285714285714,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.3598914871905396,
+                                    0.13838250160660248,
+                                    0.4148418648617908
+                                ],
+                      "previewFittedPosition":  [
+                                                    0.26702512074757734,
+                                                    -0.15500000000000003,
+                                                    -1.925072087818176
+                                                ]
+                  },
+                  {
+                      "kind":  "steppingStone",
+                      "name":  "Step_04",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_LichenStone.fbx",
+                      "sourceReferenceXZ":  [
+                                                -0.13351256037378859,
+                                                -2.9250720878181764
+                                            ],
+                      "position":  [
+                                       -0.13351256037378859,
+                                       -0.15500000000000003,
+                                       -2.9250720878181764
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   102.85714285714286,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.3598914871905396,
+                                    0.13838250160660248,
+                                    0.4148418648617908
+                                ],
+                      "previewFittedPosition":  [
+                                                    -0.26702512074757717,
+                                                    -0.15500000000000003,
+                                                    -1.925072087818176
+                                                ]
+                  },
+                  {
+                      "kind":  "steppingStone",
+                      "name":  "Step_05",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_LichenStone.fbx",
+                      "sourceReferenceXZ":  [
+                                                -0.37409388111524006,
+                                                -3.11816851753197
+                                            ],
+                      "position":  [
+                                       -0.37409388111524006,
+                                       -0.16733031966686657,
+                                       -3.11816851753197
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   128.57142857142858,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.3598914871905396,
+                                    0.13838250160660248,
+                                    0.4148418648617908
+                                ],
+                      "previewFittedPosition":  [
+                                                    -0.7481877622304801,
+                                                    -0.16733031966686657,
+                                                    -2.11816851753197
+                                                ]
+                  },
+                  {
+                      "kind":  "steppingStone",
+                      "name":  "Step_06",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_LichenStone.fbx",
+                      "sourceReferenceXZ":  [
+                                                -0.5405813207414514,
+                                                -3.466116260882442
+                                            ],
+                      "position":  [
+                                       -0.5405813207414514,
+                                       -0.14377635806648043,
+                                       -3.466116260882442
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   154.28571428571428,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.3598914871905396,
+                                    0.13838250160660248,
+                                    0.4148418648617908
+                                ],
+                      "previewFittedPosition":  [
+                                                    -1.0811626414829028,
+                                                    -0.14377635806648043,
+                                                    -2.4661162608824423
+                                                ]
+                  },
+                  {
+                      "kind":  "steppingStone",
+                      "name":  "Step_07",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_LichenStone.fbx",
+                      "sourceReferenceXZ":  [
+                                                -0.6,
+                                                -3.9
+                                            ],
+                      "position":  [
+                                       -0.6,
+                                       -0.19582598615785335,
+                                       -3.9
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   180.0,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.3598914871905396,
+                                    0.13838250160660248,
+                                    0.4148418648617908
+                                ],
+                      "previewFittedPosition":  [
+                                                    -1.2,
+                                                    -0.19582598615785335,
+                                                    -2.9000000000000004
+                                                ]
+                  },
+                  {
+                      "kind":  "steppingStone",
+                      "name":  "Step_08",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_LichenStone.fbx",
+                      "sourceReferenceXZ":  [
+                                                -0.5405813207414515,
+                                                -4.3338837391175575
+                                            ],
+                      "position":  [
+                                       -0.5405813207414515,
+                                       -0.11870826286679943,
+                                       -4.3338837391175575
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   205.71428571428572,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.3598914871905396,
+                                    0.13838250160660248,
+                                    0.4148418648617908
+                                ],
+                      "previewFittedPosition":  [
+                                                    -1.081162641482903,
+                                                    -0.11870826286679943,
+                                                    -3.3338837391175575
+                                                ]
+                  },
+                  {
+                      "kind":  "steppingStone",
+                      "name":  "Step_09",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_LichenStone.fbx",
+                      "sourceReferenceXZ":  [
+                                                -0.3740938811152402,
+                                                -4.68183148246803
+                                            ],
+                      "position":  [
+                                       -0.3740938811152402,
+                                       -0.16984059823816283,
+                                       -4.68183148246803
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   231.42857142857142,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.3598914871905396,
+                                    0.13838250160660248,
+                                    0.4148418648617908
+                                ],
+                      "previewFittedPosition":  [
+                                                    -0.7481877622304804,
+                                                    -0.16984059823816283,
+                                                    -3.68183148246803
+                                                ]
+                  },
+                  {
+                      "kind":  "steppingStone",
+                      "name":  "Step_10",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_LichenStone.fbx",
+                      "sourceReferenceXZ":  [
+                                                -0.13351256037378875,
+                                                -4.874927912181824
+                                            ],
+                      "position":  [
+                                       -0.13351256037378875,
+                                       -0.17066305805770676,
+                                       -4.874927912181824
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   257.14285714285717,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.3598914871905396,
+                                    0.13838250160660248,
+                                    0.4148418648617908
+                                ],
+                      "previewFittedPosition":  [
+                                                    -0.2670251207475775,
+                                                    -0.17066305805770676,
+                                                    -3.874927912181824
+                                                ]
+                  },
+                  {
+                      "kind":  "steppingStone",
+                      "name":  "Step_11",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_LichenStone.fbx",
+                      "sourceReferenceXZ":  [
+                                                0.133512560373788,
+                                                -4.874927912181824
+                                            ],
+                      "position":  [
+                                       0.133512560373788,
+                                       -0.17266443517639807,
+                                       -4.874927912181824
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   282.85714285714283,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.3598914871905396,
+                                    0.13838250160660248,
+                                    0.4148418648617908
+                                ],
+                      "previewFittedPosition":  [
+                                                    0.267025120747576,
+                                                    -0.17266443517639807,
+                                                    -3.874927912181824
+                                                ]
+                  },
+                  {
+                      "kind":  "steppingStone",
+                      "name":  "Step_12",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_LichenStone.fbx",
+                      "sourceReferenceXZ":  [
+                                                0.37409388111524,
+                                                -4.68183148246803
+                                            ],
+                      "position":  [
+                                       0.37409388111524,
+                                       -0.172606737552721,
+                                       -4.68183148246803
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   308.57142857142856,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.3598914871905396,
+                                    0.13838250160660248,
+                                    0.4148418648617908
+                                ],
+                      "previewFittedPosition":  [
+                                                    0.74818776223048,
+                                                    -0.172606737552721,
+                                                    -3.68183148246803
+                                                ]
+                  },
+                  {
+                      "kind":  "steppingStone",
+                      "name":  "Step_13",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_LichenStone.fbx",
+                      "sourceReferenceXZ":  [
+                                                0.5405813207414516,
+                                                -4.3338837391175575
+                                            ],
+                      "position":  [
+                                       0.5405813207414516,
+                                       -0.16866014229323978,
+                                       -4.3338837391175575
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   334.2857142857143,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.3598914871905396,
+                                    0.13838250160660248,
+                                    0.4148418648617908
+                                ],
+                      "previewFittedPosition":  [
+                                                    1.0811626414829032,
+                                                    -0.16866014229323978,
+                                                    -3.3338837391175575
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_00",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                -4.5,
+                                                2.1
+                                            ],
+                      "position":  [
+                                       -4.5,
+                                       -0.09673009789346039,
+                                       2.1
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   0,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    -7.0,
+                                                    -0.09673009789346039,
+                                                    1.2600000000000002
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_01",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                -3.7,
+                                                1.7
+                                            ],
+                      "position":  [
+                                       -3.7,
+                                       -0.08471455453289801,
+                                       1.7
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   47,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    -6.199999999999999,
+                                                    -0.08471455453289801,
+                                                    1.02
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_02",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                -4.5,
+                                                -2
+                                            ],
+                      "position":  [
+                                       -4.5,
+                                       -0.09600518251382435,
+                                       -2
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   94,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    -7.0,
+                                                    -0.09600518251382435,
+                                                    -1.2
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_03",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                -3.5,
+                                                -2.5
+                                            ],
+                      "position":  [
+                                       -3.5,
+                                       -0.13621957294415998,
+                                       -2.5
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   141,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    -6.0,
+                                                    -0.13621957294415998,
+                                                    -1.5
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_04",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                4.5,
+                                                1.8
+                                            ],
+                      "position":  [
+                                       4.5,
+                                       -0.130341955311714,
+                                       1.8
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   188,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    7.0,
+                                                    -0.130341955311714,
+                                                    1.08
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_05",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                3.4,
+                                                1.9
+                                            ],
+                      "position":  [
+                                       3.4,
+                                       -0.12907276939297968,
+                                       1.9
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   235,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    5.9,
+                                                    -0.12907276939297968,
+                                                    1.14
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_06",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                4.5,
+                                                -2.1
+                                            ],
+                      "position":  [
+                                       4.5,
+                                       -0.0975657379308621,
+                                       -2.1
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   282,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    7.0,
+                                                    -0.0975657379308621,
+                                                    -1.2600000000000002
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_07",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                3.4,
+                                                -2.7
+                                            ],
+                      "position":  [
+                                       3.4,
+                                       -0.026108416892442858,
+                                       -2.7
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   329,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    5.9,
+                                                    -0.026108416892442858,
+                                                    -1.7000000000000002
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_08",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                -1.2,
+                                                3.45
+                                            ],
+                      "position":  [
+                                       -1.2,
+                                       -0.032493972319899866,
+                                       3.45
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   376,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    -2.4,
+                                                    -0.032493972319899866,
+                                                    2.45
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_09",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                2.0,
+                                                4.4
+                                            ],
+                      "position":  [
+                                       2.0,
+                                       -0.0905306462929049,
+                                       4.4
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   423,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    4.0,
+                                                    -0.0905306462929049,
+                                                    3.4000000000000004
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_10",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                0.7,
+                                                4.6
+                                            ],
+                      "position":  [
+                                       0.7,
+                                       -0.21054070537805664,
+                                       4.6
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   470,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    1.4,
+                                                    -0.21054070537805664,
+                                                    3.5999999999999996
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_11",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                -2.4,
+                                                4.5
+                                            ],
+                      "position":  [
+                                       -2.4,
+                                       -0.0815446847326504,
+                                       4.5
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   517,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    -4.8,
+                                                    -0.0815446847326504,
+                                                    3.5
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_12",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                -2.6,
+                                                -3.5
+                                            ],
+                      "position":  [
+                                       -2.6,
+                                       -0.20139667963457603,
+                                       -3.5
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   564,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    -5.1,
+                                                    -0.20139667963457603,
+                                                    -2.5
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_13",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                -1.1,
+                                                -4.6
+                                            ],
+                      "position":  [
+                                       -1.1,
+                                       -0.1060531450496853,
+                                       -4.6
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   611,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    -2.2,
+                                                    -0.1060531450496853,
+                                                    -3.5999999999999996
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_14",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                1.4,
+                                                -4.6
+                                            ],
+                      "position":  [
+                                       1.4,
+                                       -0.1348157870707981,
+                                       -4.6
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   658,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    2.8,
+                                                    -0.1348157870707981,
+                                                    -3.5999999999999996
+                                                ]
+                  },
+                  {
+                      "kind":  "tuft",
+                      "name":  "Tuft_15",
+                      "mesh":  "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx",
+                      "sourceReferenceXZ":  [
+                                                2.4,
+                                                -3.4
+                                            ],
+                      "position":  [
+                                       2.4,
+                                       -0.021771992943789578,
+                                       -3.4
+                                   ],
+                      "rotationEulerDegrees":  [
+                                                   0,
+                                                   705,
+                                                   0
+                                               ],
+                      "scale":  [
+                                    0.95,
+                                    1.15,
+                                    0.95
+                                ],
+                      "previewFittedPosition":  [
+                                                    4.8,
+                                                    -0.021771992943789578,
+                                                    -2.4000000000000004
+                                                ]
+                  }
+              ],
+    "previewOnly":  "Board proxy is not a production level; camera pitch50 yaw0 and 10x3 fit match stage43 framing. Existing prop pivots normalized to centered-bottom for render; for original game FBX apply imported transform and subtract bounds bottom/centre as described.",
+    "existingPropPivotNormalization":  {
+                                           "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_StarAltarDisc.fbx":  {
+                                                                                                                   "originalBakedBoundsCentreXY":  [
+                                                                                                                                                       0.0,
+                                                                                                                                                       2.9802322387695313E-08
+                                                                                                                                                   ],
+                                                                                                                   "originalBakedBottomZ":  -9.2864780754098319E-08,
+                                                                                                                   "normalization":  "Apply imported FBX transform; subtract XY centre and bottom Z in Z-up space. Preview reflects Y only to show Unity X-right/Z-back orientation."
+                                                                                                               },
+                                           "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_LichenStone.fbx":  {
+                                                                                                                 "originalBakedBoundsCentreXY":  [
+                                                                                                                                                     -0.017131313681602478,
+                                                                                                                                                     -0.006617888808250427
+                                                                                                                                                 ],
+                                                                                                                 "originalBakedBottomZ":  -0.0725218653678894,
+                                                                                                                 "normalization":  "Apply imported FBX transform; subtract XY centre and bottom Z in Z-up space. Preview reflects Y only to show Unity X-right/Z-back orientation."
+                                                                                                             },
+                                           "Assets/Art/RuinsHenge/PlanetDressing/PD_altar_GrassTuft.fbx":  {
+                                                                                                               "originalBakedBoundsCentreXY":  [
+                                                                                                                                                   0.002488374710083008,
+                                                                                                                                                   -0.00453755259513855
+                                                                                                                                               ],
+                                                                                                               "originalBakedBottomZ":  -0.008319598622620106,
+                                                                                                               "normalization":  "Apply imported FBX transform; subtract XY centre and bottom Z in Z-up space. Preview reflects Y only to show Unity X-right/Z-back orientation."
+                                                                                                           },
+                                           "Assets/Art/RuinsHenge/Models/SS_Actor_Player.fbx":  {
+                                                                                                    "originalBakedBoundsCentreXY":  [
+                                                                                                                                        -0.01502421498298645,
+                                                                                                                                        0.0
+                                                                                                                                    ],
+                                                                                                    "originalBakedBottomZ":  -1.3382400965156194E-08,
+                                                                                                    "normalization":  "Apply imported FBX transform; subtract XY centre and bottom Z in Z-up space. Preview reflects Y only to show Unity X-right/Z-back orientation."
+                                                                                                }
+                                       },
+    "camera":  {
+                   "pitchDegrees":  50,
+                   "yawDegrees":  0,
+                   "orthographicWidth":  18.3,
+                   "positionUnity":  [
+                                         0,
+                                         21.351564666695779,
+                                         -18
+                                     ],
+                   "targetUnity":  [
+                                       0,
+                                       -0.1,
+                                       0
+                                   ],
+                   "renderSize":  [
+                                      1920,
+                                      1080
+                                  ]
+               }
+}

@@ -22,6 +22,7 @@ namespace SevenSteps.Art
             }
             try
             {
+                if(set.layout){PlaceLayout(parent,root,colliders,set,w,h);return root;}
                 int[][] scatter={new[]{0,1,4,3,0,1,3,0},new[]{0,1,2,3,4,0,2,1},new[]{0,1,2,3,4,0,1,2},new[]{0,1,3,0,1,3,0,2},new[]{0,4,2,4,0,2,4,1},new[]{0,1,3,1,4,3,1,3},new[]{1,0,2,3,1,0,2,4}};
                 string[] planets={"moss","hollow","carved","frost","joinery","crumble","altar"};
                 int planetIndex=Array.IndexOf(planets,set.planetId);if(planetIndex<0)planetIndex=0;
@@ -113,6 +114,73 @@ namespace SevenSteps.Art
                 }
             }
             return root;
+        }
+
+        [Serializable] sealed class LayoutFile { public LayoutProp[] props; }
+        [Serializable] sealed class LayoutProp { public string kind, name, mesh; public float[] position, rotationEulerDegrees, scale; }
+
+        /// The props of <see cref="PlanetDressingSet.layout"/> (altar A, 2026-11-14): each at its fitted crust-local X/Z
+        /// (CraterCrust.FitAxis per board size), set on the crust by a downward ray, its model centred and its bottom sunk
+        /// a little into the ground. A prop that would enter the board clearance on a small board is left out.
+        static void PlaceLayout(Transform parent, GameObject root, System.Collections.Generic.List<MeshCollider> colliders, PlanetDressingSet set, int w, int h)
+        {
+            var file = JsonUtility.FromJson<LayoutFile>(set.layout.text.TrimStart('﻿'));
+            if (file == null || file.props == null) throw new InvalidOperationException("[PlanetDressing] layout has no props: " + set.layout.name);
+            GameObject Find(string mesh)
+            {
+                string key = System.IO.Path.GetFileNameWithoutExtension(mesh ?? "");
+                foreach (var m in set.layoutModels ?? new GameObject[0]) if (m && m.name == key) return m;
+                foreach (var m in set.modules ?? new GameObject[0]) if (m && m.name == key) return m;
+                return null;
+            }
+            int placed = 0, skipped = 0;
+            foreach (var p in file.props)
+            {
+                var model = Find(p.mesh);
+                if (model == null || p.position == null || p.position.Length < 3) { Debug.LogWarning("[PlanetDressing] layout prop without a model: " + p.name + " (" + p.mesh + ")"); skipped++; continue; }
+                float x = CraterCrust.FitAxis(p.position[0], w), z = CraterCrust.FitAxis(p.position[2], h);
+                var ray = new Ray(parent.TransformPoint(new Vector3(x, 6, z)), parent.TransformDirection(Vector3.down));
+                float ground = float.NegativeInfinity;
+                foreach (var c in colliders) if (c.Raycast(ray, out var hit, 14 * parent.lossyScale.y)) ground = Mathf.Max(ground, parent.InverseTransformPoint(hit.point).y);
+                if (float.IsNegativeInfinity(ground)) { skipped++; continue; }
+                var go = UnityEngine.Object.Instantiate(model, root.transform);
+                go.name = p.name;
+                go.transform.localPosition = Vector3.zero;
+                var e = p.rotationEulerDegrees != null && p.rotationEulerDegrees.Length >= 3 ? new Vector3(p.rotationEulerDegrees[0], p.rotationEulerDegrees[1], p.rotationEulerDegrees[2]) : Vector3.zero;
+                go.transform.localRotation = Quaternion.Euler(e) * model.transform.localRotation;
+                var s = p.scale != null && p.scale.Length >= 3 ? new Vector3(p.scale[0], p.scale[1], p.scale[2]) : Vector3.one;
+                go.transform.localScale = Vector3.Scale(model.transform.localScale, s);
+                // Centre the model on (x, z) and stand its bottom on the ground, slightly sunk.
+                Bounds b = default; bool any = false;
+                foreach (var r in go.GetComponentsInChildren<Renderer>()) { if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds); }
+                if (!any) { UnityEngine.Object.Destroy(go); skipped++; continue; }
+                var centre = parent.InverseTransformPoint(b.center);
+                var bottom = parent.InverseTransformPoint(new Vector3(b.center.x, b.min.y, b.center.z)).y;
+                float sink = p.kind == "standingStone" ? .12f : .03f;
+                go.transform.localPosition = new Vector3(x - centre.x, ground - bottom - sink, z - centre.z);
+                bool clear = true;
+                foreach (var renderer in go.GetComponentsInChildren<Renderer>())
+                {
+                    var mat = p.kind == "standingStone" && set.stoneMaterial ? set.stoneMaterial : set.material;
+                    var materials = renderer.sharedMaterials;
+                    for (int m = 0; m < materials.Length; m++) materials[m] = mat;
+                    renderer.sharedMaterials = materials; renderer.shadowCastingMode = ShadowCastingMode.Off; renderer.receiveShadows = false;
+                    var filter = renderer.GetComponent<MeshFilter>();
+                    if (filter && filter.sharedMesh) foreach (var vertex in filter.sharedMesh.vertices)
+                    {
+                        var point = parent.InverseTransformPoint(filter.transform.TransformPoint(vertex));
+                        if (Mathf.Abs(point.x) < w * .5f + .20f && Mathf.Abs(point.z) < h * .5f + .20f) { clear = false; break; }
+                    }
+                }
+                if (!clear)
+                {
+                    if (Application.isPlaying) UnityEngine.Object.Destroy(go); else UnityEngine.Object.DestroyImmediate(go);
+                    skipped++;
+                    continue;
+                }
+                placed++;
+            }
+            Debug.Log($"[PlanetDressing] {set.planetId} layout {w}x{h}: {placed} placed, {skipped} left out");
         }
     }
 }
