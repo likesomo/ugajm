@@ -27,7 +27,7 @@ namespace SevenSteps.Tests
             var hints = new HintProvider(Levels, loc);
             Assert.AreEqual("Shortest solution from the start: Right x7", hints.For(0));
             loc.Set(Language.Ko);
-            Assert.AreEqual("처음부터의 최단 풀이: 우 7번", hints.For(0), "reworded in the new language, route cached");
+            Assert.AreEqual("처음부터 푸는 최단 풀이: 우 7번", hints.For(0), "reworded in the new language, route cached");
         }
 
         [Test]

@@ -26,7 +26,7 @@
       "id": "hollow",
       "planet": "별구멍 달",
       "concept": "표면 곳곳이 뚫려 아래로 별이 보이는 달",
-      "intro": "구멍 너머로 잇는 셈을 찾는다.",
+      "intro": "구멍을 건너는 셈을 찾는다.",
       "tagline": "별이 비치는 구멍의 달",
       "artPreset": "hollow",
       "text": [
@@ -94,7 +94,7 @@
       "id": "crumble",
       "planet": "무너지는 행성",
       "concept": "금 간 바닥과 선돌 수를 세는 문이 있는 부서지는 행성",
-      "intro": "원으로 가는 마지막 디딤이다.",
+      "intro": "원으로 가는 마지막 디딤돌이다.",
       "tagline": "밟으면 갈라지는 땅",
       "artPreset": "crumble",
       "text": [
@@ -103,7 +103,7 @@
           "planet": "Crumbling World",
           "concept": "Cracked floors and gates that count the standing stones",
           "intro": "The last foothold before the circle.",
-          "tagline": "A crumbling stone world"
+          "tagline": "Cracking ground underfoot"
         }
       ]
     },
@@ -111,7 +111,7 @@
       "id": "altar",
       "planet": "원형 제단",
       "concept": "선돌 원형 제단과 이끼 늪이 있는 마지막 행성",
-      "intro": "한 밤 안에 원을 맞춰야 한다.",
+      "intro": "하룻밤 안에 원을 맞춰야 한다.",
       "tagline": "늪 너머 선돌의 원",
       "artPreset": "altar",
       "text": [
@@ -119,7 +119,7 @@
           "lang": "en",
           "planet": "The Stone Circle",
           "concept": "The last planet: a ring of standing stones beyond a mossy bog",
-          "intro": "The circle must align this one night.",
+          "intro": "The circle must align on this one night.",
           "tagline": "The circle past the bog"
         }
       ]

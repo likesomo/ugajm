@@ -91,7 +91,7 @@ namespace SevenSteps.Tests.Game
             try
             {
                 v.Show(ResultModel.Clear(49, 2, 1, 1, true, stars: 2, bestStars: 2));
-                Assert.That(v.NudgeLine, Is.EqualTo("If all of us had walked, the line would have shone brighter."));
+                Assert.That(v.NudgeLine, Is.EqualTo("If all the brothers had walked, the line would have shone brighter."));
                 Assert.That(v.NudgePlate.anchoredPosition.y, Is.LessThan(-U5ClearView.Safe - 40), "under the journey line");
             }
             finally { Object.DestroyImmediate(v.gameObject); }

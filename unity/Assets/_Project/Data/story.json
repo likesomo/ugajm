@@ -46,7 +46,7 @@
       "on": "title", "chapter": "", "brother": 0, "stones": -1, "card": 0, "after": "ending",
       "image": "",
       "lines": [
-        { "id": "1", "line": "일곱 별이 다시 이어졌다.", "text": [{ "lang": "en", "line": "The Seven Stars are joined again." }] }
+        { "id": "1", "line": "일곱 별이 다시 이어졌다.", "text": [{ "lang": "en", "line": "The seven stars are joined again." }] }
       ]
     },
     {
@@ -70,7 +70,7 @@
       "on": "finale", "chapter": "hollow", "brother": 0, "stones": -1, "card": 0, "after": "",
       "image": "",
       "lines": [
-        { "id": "1", "line": "건넨 자리에서 다음이 깼다.", "text": [{ "lang": "en", "line": "Each woke where the map was handed." }] }
+        { "id": "1", "line": "건넨 자리에서 동생이 깼다.", "text": [{ "lang": "en", "line": "Each woke where the map was handed." }] }
       ]
     },
     {
@@ -126,7 +126,7 @@
       "on": "ending", "chapter": "", "brother": 2, "stones": -1, "card": 1, "after": "",
       "image": "ending.1",
       "lines": [
-        { "id": "1", "line": "둘째가 닿자, 일곱 별이 섰다.", "text": [{ "lang": "en", "line": "The middle one ran in. The sky lined up." }] }
+        { "id": "1", "line": "둘째가 닿자 하늘이 맞춰졌다.", "text": [{ "lang": "en", "line": "The middle one ran in. The sky lined up." }] }
       ]
     },
     {
@@ -190,7 +190,7 @@
       "on": "lose", "chapter": "", "brother": 0, "stones": -1, "card": 0, "after": "",
       "image": "",
       "lines": [
-        { "id": "1", "line": "별이 덜 모였다.", "text": [{ "lang": "en", "line": "Not all the stars came." }] },
+        { "id": "1", "line": "별이 덜 모였다.", "text": [{ "lang": "en", "line": "Too few stars gathered." }] },
         { "id": "2", "line": "하늘이 아직이었다.", "text": [{ "lang": "en", "line": "The sky wasn't ready." }] },
         { "id": "3", "line": "셋은 다시 센다.", "text": [{ "lang": "en", "line": "The three count again." }] }
       ]
