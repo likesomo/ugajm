@@ -80,6 +80,8 @@ namespace SevenSteps.Contracts
             (AppState.Game, AppState.Result) => true,
             (AppState.Game, AppState.StageSelect) => true,
             (AppState.Game, AppState.Game) => true,           // stage change inside the game scene
+            (AppState.Game, AppState.Title) => true,          // settings "처음부터 다시" (progress reset, 2026-11-14)
+            (AppState.Result, AppState.Title) => true,        // same, from the clear result
             (AppState.Result, AppState.Game) => true,         // next / retry
             (AppState.Result, AppState.StageSelect) => true,
             _ => false,
@@ -154,6 +156,7 @@ namespace SevenSteps.Contracts
                     throw;
                 }
             }
+            if (to == AppState.Title) Tutorial = -1; // a reset from a tutorial board leaves it (Game -> Title)
             Changed?.Invoke(from, to);
         }
 

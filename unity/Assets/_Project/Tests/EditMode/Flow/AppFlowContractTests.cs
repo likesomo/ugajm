@@ -30,6 +30,7 @@ namespace SevenSteps.Tests
             (AppState.StageSelect, AppState.Title), (AppState.StageSelect, AppState.Game),
             (AppState.Game, AppState.Result), (AppState.Game, AppState.StageSelect), (AppState.Game, AppState.Game),
             (AppState.Result, AppState.Game), (AppState.Result, AppState.StageSelect),
+            (AppState.Game, AppState.Title), (AppState.Result, AppState.Title), // settings progress reset
         };
 
         [Test]

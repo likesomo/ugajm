@@ -130,6 +130,22 @@ namespace SevenSteps.Core
             return n;
         }
 
+        /// Still playing but every direction bumps (wall, closed door, wrong number gate, mud with one step left, statues
+        /// round the start): only Undo or Restart help (user report 2026-11-14, stage 44). The same test as Step's Bump;
+        /// presentation only, the rules and the solver do not use it.
+        public static bool IsStuck(State s)
+        {
+            if (s == null) throw new ArgumentNullException(nameof(s));
+            if (s.Status != Status.Play) return false;
+            for (var d = Dir.Up; d <= Dir.Right; d++)
+            {
+                int first = Neighbor(s.Level, s.Pos, d);
+                int stepIdx = s.Used + (first >= 0 && IsMud(TileAt(s, first)) ? 2 : 1);
+                if (stepIdx <= Steps && Passable(s, first, stepIdx)) return false;
+            }
+            return true;
+        }
+
         /// One step. An illegal move returns the same state object with a Bump event.
         public static StepResult Step(State s, Dir dir)
         {

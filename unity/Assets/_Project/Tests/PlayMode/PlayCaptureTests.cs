@@ -825,6 +825,105 @@ namespace SevenSteps.Tests.PlayMode
             AssertVaried(name, px.Value);
         }
 
+        /// Settings "처음부터 다시" (2026-11-14), KO and EN: the title settings with the reset button, the confirm panel, then
+        /// [처음부터 다시] erases a played save (prologue seen, a last stage) and New Game plays the prologue page 1 again.
+        /// The same reset from the in-game settings (stage 4) goes back to the title. `unity.sh playcapture ResetProgress`.
+        [UnityTest]
+        public IEnumerator ResetProgress()
+        {
+            foreach (string lang in new[] { "ko", "en" })
+            {
+                PlayEnv.Reset();
+                yield return Start(AppState.Title, AppScenes.Title, "-ui5", "-lang", lang, "-settings");
+                var save = Services.Get<SaveSystem>();
+                save.Progress.lastStage = save.Progress.lastStage.Length > 0 ? save.Progress.lastStage : "played";
+                save.SaveProgress();
+                save.MarkTutorialSeen(TutorialIds.Prologue);
+                var panel = Object.FindAnyObjectByType<SevenSteps.Game.UI.SettingsPanel>();
+                Assert.IsNotNull(panel, "-settings: the settings panel is open");
+                Assert.IsTrue(panel.ResetButton.gameObject.activeInHierarchy, "the reset button");
+                var px = new Pixels();
+                yield return Capture($"reset-settings-{lang}", px);
+                AssertVaried($"reset-settings-{lang}", px.Value);
+                AssertInside(panel.ResetButton.transform as RectTransform, $"reset button {lang}");
+                panel.ResetButton.onClick.Invoke();
+                Assert.IsTrue(panel.ResetConfirmOpen, "the confirm panel");
+                yield return Capture($"reset-confirm-{lang}", px, 0.5f);
+                AssertVaried($"reset-confirm-{lang}", px.Value);
+                AssertInside(panel.ResetYes.transform as RectTransform, $"confirm yes {lang}");
+                AssertInside(panel.ResetNo.transform as RectTransform, $"confirm no {lang}");
+                panel.ResetNo.onClick.Invoke();
+                Assert.IsFalse(panel.ResetConfirmOpen, "Cancel closes the confirm only");
+                Assert.IsTrue(panel.gameObject.activeSelf, "settings stay open after Cancel");
+                Assert.IsTrue(save.TutorialSeen(TutorialIds.Prologue), "Cancel erased nothing");
+                panel.ResetButton.onClick.Invoke();
+                panel.ResetYes.onClick.Invoke();
+                yield return null;
+                Assert.IsFalse(panel.gameObject.activeSelf, "settings closed after the reset");
+                Assert.IsFalse(save.TutorialSeen(TutorialIds.Prologue), "prologue seen erased");
+                Assert.AreEqual("", save.Progress.lastStage, "last stage erased");
+                Assert.AreEqual(lang == "en" ? Language.En : Language.Ko, Services.Get<Localizer>().Current, "language kept");
+                var title = Object.FindAnyObjectByType<SevenSteps.Game.UI.TitleScreen>();
+                yield return Capture($"reset-title-{lang}", px, 0.8f);
+                title.U5Title.Play.Press();
+                var c = title.Cutscene;
+                Assert.IsTrue(c.IsOpen, lang + ": New Game after the reset plays the prologue");
+                Assert.AreEqual(0, c.Page, "prologue page 1");
+                yield return Capture($"reset-prologue-p1-{lang}", px, 0.5f);
+                AssertVaried($"reset-prologue-p1-{lang}", px.Value);
+            }
+            // In-game: stage 4 settings -> reset -> the title.
+            PlayEnv.Reset();
+            yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-level", "4", "-settings");
+            var gamePanel = Object.FindAnyObjectByType<SevenSteps.Game.UI.SettingsPanel>();
+            Assert.IsNotNull(gamePanel, "in-game settings open");
+            gamePanel.ResetButton.onClick.Invoke();
+            var shot = new Pixels();
+            yield return Capture("reset-confirm-game-ko", shot, 0.8f);
+            AssertVaried("reset-confirm-game-ko", shot.Value);
+            gamePanel.ResetYes.onClick.Invoke();
+            yield return PlayEnv.WaitForState(AppState.Title, AppScenes.Title, 20f);
+        }
+
+        /// No legal move (stage 44 "진흙과 숫자", core.js BFS: UULLD = 6 steps, mud and walls all round): the HUD line says Undo /
+        /// Restart (msg.stuck), KO and EN. The last step is sent live so the message presenter sees it. `unity.sh playcapture Stuck`.
+        [UnityTest]
+        public IEnumerator Stuck()
+        {
+            foreach (string lang in new[] { "ko", "en" })
+            {
+                PlayEnv.Reset();
+                yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", lang, "-level", "44", "-replay", "UULL");
+                var game = Object.FindAnyObjectByType<GameController>();
+                float tw = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - tw < 0.8f) yield return null;
+                yield return SendLetters(game, "D");
+                Assert.IsTrue(Core.Rules.IsStuck(game.Board.State), "UULLD on stage 44 leaves no legal move");
+                string want = lang == "ko" ? "더 디딜 곳이 없다. 되돌리기(Z)나 다시 하기(R)로." : "Nowhere left to step. Undo (Z) or restart (R).";
+                Assert.AreEqual(want, game.Board.MessageLine, lang + " stuck line");
+                var px = new Pixels();
+                yield return Capture($"stuck-44-{lang}", px, 1f);
+                AssertVaried($"stuck-44-{lang}", px.Value);
+                yield return SendLetters(game, "R"); // a bump keeps the line
+                Assert.AreEqual(want, game.Board.MessageLine, lang + " stuck line after a bump");
+            }
+        }
+
+        /// The rect lies inside the 1280x720 capture (no clipping at the WebGL / desktop reference size).
+        static void AssertInside(RectTransform r, string what)
+        {
+            Assert.IsNotNull(r, what);
+            var corners = new Vector3[4];
+            r.GetWorldCorners(corners);
+            var canvas = r.GetComponentInParent<Canvas>().rootCanvas;
+            var cam = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+            foreach (var w in corners)
+            {
+                var p = RectTransformUtility.WorldToScreenPoint(cam, w);
+                Assert.IsTrue(p.x >= -0.5f && p.x <= Width + 0.5f && p.y >= -0.5f && p.y <= Height + 0.5f, $"{what}: corner {p} outside {Width}x{Height}");
+            }
+        }
+
         // ---------- ----------
 
         static IEnumerator Start(AppState state, string scene, params string[] args)

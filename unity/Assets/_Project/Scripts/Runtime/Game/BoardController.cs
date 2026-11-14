@@ -57,6 +57,8 @@ namespace SevenSteps.Game
         /// A tutorial board is on the board (LoadTutorial): not a stage, so no hint, no level_* telemetry, and the stage flow
         /// (GameFlowController) leaves its win and loss alone.
         public bool InTutorial => tutorialBoard >= 0;
+        /// The HUD message line now, in the current language (MessagePresenter; tests and captures).
+        public string MessageLine => messages != null ? messages.Current : "";
         /// 0-based tutorial board on the board, -1 for a stage.
         public int TutorialBoard => tutorialBoard;
         int tutorialBoard = -1;

@@ -210,7 +210,18 @@ namespace SevenSteps.Game.UI
             }
             language = new LanguageController(u5 ? (ILanguagePanel)u5Language : languagePanel, overlays, localizer, save, Services.Get<LaunchOptions>().Language);
             settingsController.OpenLanguage = OpenLanguage; // the settings language button opens the picker
+            settingsController.AfterReset = AfterProgressReset;
             overlays.Changed += OnOverlaysChanged;
+        }
+
+        /// Settings "처음부터 다시" confirmed (save already erased): every overlay closes and the title shows again with no
+        /// Continue, so Play / Begin is a new game (prologue → T1..T3 → stage 1). From the map it goes back to the title.
+        void AfterProgressReset()
+        {
+            while (overlays.Pop()) { }
+            if (Services.TryGet<JourneyDive>(out var dive) && dive.Pending) dive.Cancel();
+            if (flow.State != AppState.Title && !flow.IsLoading && AppFlow.CanGo(flow.State, AppState.Title)) flow.Go(AppState.Title);
+            else Show(AppState.Title);
         }
 
         void Open(IOverlay overlay)

@@ -168,6 +168,26 @@ namespace SevenSteps.Contracts
             SaveSettings();
         }
 
+        /// Settings "처음부터 다시" / "Reset progress" (user request 2026-11-14): the game as on a fresh install. Progress
+        /// (stages, stars, best bodies, attempts, last stage), the one-time guides (prologue, T1..T3 done, KEEP / SWITCH
+        /// explain count) and the story memory are emptied and their keys deleted (also the v1 backup and the v0 key); every settings value
+        /// (volumes, language, consent, playerId, accessibility) stays. The three objects are reset in place, so services that
+        /// hold them (StoryBook holds Story) see the empty state. Overrides a newer build's read-only data. Saved and flushed
+        /// (PlayerPrefs.Save: IndexedDB on WebGL). The caller also clears ClearNews (see StartNewPlayer).
+        public void ResetProgress()
+        {
+            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(new ProgressData()), Progress);
+            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(new TutorialData()), Tutorial);
+            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(new StoryProgress()), Story);
+            progressReadOnly = tutorialReadOnly = storyReadOnly = false;
+            store.Delete(ProgressBackupKey);
+            store.Delete(LegacyClearedKey);
+            store.Delete(ProgressKey); // no key loads as empty progress / guides / story, as on a fresh install
+            store.Delete(TutorialKey);
+            store.Delete(StoryKey);
+            store.Flush();
+        }
+
         // ---------- One-time guides (11.3.2). Counted only from applied commands (SessionUpdate Present), never from Snap,
         // Rebuild or Replay; language change, Undo and Restart leave them as they are. Not part of any replay / QA hash. ----------
 

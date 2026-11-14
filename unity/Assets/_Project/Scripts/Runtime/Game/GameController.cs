@@ -176,6 +176,13 @@ namespace SevenSteps.Game
             overlays = new OverlayStack();
             languageController = new LanguageController(languagePanel, overlays, localizer, save, launch.Language);
             settingsController.OpenLanguage = languageController.Open;
+            // Settings "처음부터 다시" (2026-11-14): save erased by the controller; close the overlays and go to the title.
+            settingsController.AfterReset = () =>
+            {
+                while (overlays.Pop()) { }
+                if (Services.TryGet<JourneyDive>(out var dive) && dive.Pending) dive.Cancel();
+                if (!flow.IsLoading && AppFlow.CanGo(flow.State, AppState.Title)) flow.Go(AppState.Title);
+            };
 
             // Board controller, then the flow controller on top of it
             board.Init(assets, levels, save, hud, cam, tiles, overrideCamera ? cameraRig : (CameraRig?)null, Services.Get<ITelemetry>(), localizer);
@@ -268,6 +275,7 @@ namespace SevenSteps.Game
                 canReplayLine: () => storyLines != null && flow.State != AppState.Result && StartLineHere().Length > 0,
                 replayLine: () => ReplayStartLine());
             hud.MenuRequested += menu.Toggle; // the HUD menu button (settings, stages, solution, controls)
+            board.Updated += PulseIfStuck; // no legal move: the line says Undo / Restart and both buttons pop (2026-11-14)
             // Move guide (first play, or Menu > controls) in the HUD's left margin; the KEEP / SWITCH guide goes with the choice cards.
             hud.Guide = tutorial.ShowMoveGuide;
             // Choice cards: both result lines for the first confirms, the guide line the first time (shown after Presented, 4.4).
@@ -426,8 +434,25 @@ namespace SevenSteps.Game
         /// ebdb653). The menu item and its wiring are scene-flow's.
         public bool ReplayStartLine() => storyLines != null && flow.State != AppState.Result && storyLines.ReplayStartLine();
 
+        bool wasStuck;
+
+        /// Rules.IsStuck (stage 44 report, 2026-11-14): on entering a state with no legal move, the undo and restart
+        /// buttons pop once (MessagePresenter already says "msg.stuck"). Reduced motion: the line only.
+        void PulseIfStuck(SessionUpdate u)
+        {
+            bool stuck = u.State != null && SevenSteps.Core.Rules.IsStuck(u.State);
+            if (stuck && !wasStuck)
+            {
+                bool still = Services.TryGet<SaveSystem>(out var s) && s.Settings.reduceMotion;
+                if (u5Hud != null) { UiPop.Play(u5Hud.Undo.Rect, still); UiPop.Play(u5Hud.Restart.Rect, still); }
+                else if (hud != null) { UiPop.Play((RectTransform)hud.undo.transform, still); UiPop.Play((RectTransform)hud.restart.transform, still); }
+            }
+            wasStuck = stuck;
+        }
+
         void OnDestroy()
         {
+            if (board != null) board.Updated -= PulseIfStuck;
             storyLines?.Dispose();
             flowController?.Dispose();
             settingsController?.Dispose();

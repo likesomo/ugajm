@@ -76,7 +76,12 @@ namespace SevenSteps.Game
                     }
                     break;
             }
+            // No legal move left (Rules.IsStuck): say Undo / Restart, over whatever the move said (user report 2026-11-14).
+            if (u.State != null && Rules.IsStuck(u.State)) Key(Stuck);
         }
+
+        /// "더 디딜 곳이 없다. 되돌리기(Z)나 다시 하기(R)로." after any update that leaves the player with no legal move.
+        public const string Stuck = "msg.stuck";
 
         /// Replaces the line with other text, worded again on each read (the H solution in the current language).
         public void Show(Func<string> text) => line = text ?? throw new ArgumentNullException(nameof(text));

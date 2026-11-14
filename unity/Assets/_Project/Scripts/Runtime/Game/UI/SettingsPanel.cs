@@ -94,6 +94,8 @@ namespace SevenSteps.Game.UI
             telemetryStatus.text = "";
             (stepNumbersLabel, stepNumbersToggle, stepNumbersText) = CopyToggleRow("StepNumbers", () => StepNumbersToggled?.Invoke());
             (reduceMotionLabel, reduceMotionToggle, reduceMotionText) = CopyToggleRow("ReduceMotion", () => ReduceMotionToggled?.Invoke());
+            resetButton = CopyButton(close, "ResetProgress", close.transform.parent, () => ShowResetConfirm(true));
+            BuildResetConfirm();
             Layout();
             wired = true;
         }
@@ -108,6 +110,86 @@ namespace SevenSteps.Game.UI
             toggle.onClick = new Button.ButtonClickedEvent(); // the copy must not also toggle play data
             toggle.onClick.AddListener(() => click());
             return (label, toggle, toggle.GetComponentInChildren<Text>(true));
+        }
+
+        // ---------- "처음부터 다시" / "Reset progress" (user request 2026-11-14): a button beside Close and an in-panel confirm ----------
+
+        /// The player confirmed the reset (the confirm panel's [처음부터 다시] / [Reset]). The controller erases and leaves.
+        public event Action ResetConfirmed;
+
+        Button resetButton, resetYes, resetNo;
+        GameObject resetConfirm;
+        Text resetMessage;
+
+        /// The confirm panel is up (the settings Esc closes it first: SettingsController.Back is not needed, Hide closes both).
+        public bool ResetConfirmOpen => resetConfirm != null && resetConfirm.activeSelf;
+        public Button ResetButton => resetButton;
+        public Button ResetYes => resetYes;
+        public Button ResetNo => resetNo;
+
+        Button CopyButton(Button source, string name, Transform panelParent, Action click)
+        {
+            var b = Instantiate(source.gameObject, panelParent, false).GetComponent<Button>();
+            b.name = name;
+            b.onClick = new Button.ButtonClickedEvent(); // the copy must not also close the panel
+            b.onClick.AddListener(() => click());
+            return b;
+        }
+
+        /// A dim over the whole settings panel with a box: the message and [처음부터 다시] [취소]. Built in code from the
+        /// panel's own skin (box image, Close button, label), so it is never a browser dialog and follows the theme.
+        void BuildResetConfirm()
+        {
+            var root = new GameObject("ResetConfirm", typeof(RectTransform), typeof(Image));
+            var rr = (RectTransform)root.transform;
+            rr.SetParent(transform, false);
+            rr.anchorMin = Vector2.zero; rr.anchorMax = Vector2.one; rr.offsetMin = rr.offsetMax = Vector2.zero;
+            var dim = root.GetComponent<Image>();
+            dim.color = new Color(0, 0, 0, 0.6f);
+            dim.raycastTarget = true; // blocks the settings rows under it
+            var box = new GameObject("Box", typeof(RectTransform), typeof(Image));
+            var br = (RectTransform)box.transform;
+            br.SetParent(rr, false);
+            br.anchorMin = br.anchorMax = br.pivot = new Vector2(0.5f, 0.5f);
+            br.sizeDelta = new Vector2(600, 300);
+            var boxImage = box.GetComponent<Image>();
+            if (masterLabel.transform.parent.TryGetComponent<Image>(out var panelImage))
+            {
+                boxImage.sprite = panelImage.sprite; boxImage.type = panelImage.type; boxImage.color = panelImage.color;
+                boxImage.pixelsPerUnitMultiplier = panelImage.pixelsPerUnitMultiplier;
+            }
+            else boxImage.color = new Color(0.1f, 0.12f, 0.2f, 0.98f);
+            boxImage.raycastTarget = true;
+            resetMessage = Instantiate(telemetryLabel.gameObject, br, false).GetComponent<Text>();
+            resetMessage.name = "Message";
+            ((RectTransform)resetMessage.transform).TopLeft(40, 40, 520, 140);
+            resetMessage.fontSize = 26;
+            resetMessage.alignment = TextAnchor.MiddleCenter;
+            resetMessage.horizontalOverflow = HorizontalWrapMode.Wrap;
+            resetMessage.verticalOverflow = VerticalWrapMode.Overflow;
+            resetMessage.resizeTextForBestFit = false;
+            resetMessage.color = Ui.Ink;
+            resetYes = CopyButton(close, "ResetYes", br, () => { ShowResetConfirm(false); ResetConfirmed?.Invoke(); });
+            resetNo = CopyButton(close, "ResetNo", br, () => ShowResetConfirm(false));
+            ((RectTransform)resetYes.transform).TopLeft(52, 204, 240, 64);
+            ((RectTransform)resetNo.transform).TopLeft(308, 204, 240, 64);
+            foreach (var b in new[] { resetYes, resetNo })
+            {
+                Ui.FitButtonSkin(b);
+                foreach (var t in b.GetComponentsInChildren<Text>(true)) { t.resizeTextForBestFit = false; t.fontSize = 24; }
+            }
+            root.SetActive(false);
+            resetConfirm = root;
+        }
+
+        /// Opens (Cancel focused, the safe choice) or closes the confirm panel.
+        public void ShowResetConfirm(bool open)
+        {
+            if (resetConfirm == null) return;
+            resetConfirm.transform.SetAsLastSibling();
+            resetConfirm.SetActive(open);
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es != null) es.SetSelectedGameObject(open ? resetNo.gameObject : resetButton.gameObject);
         }
 
         /// Row layout in code over the prefab's rects (docs/architecture.md 14): 680x672 panel, six 64-pitch rows with 24-size
@@ -159,7 +241,9 @@ namespace SevenSteps.Game.UI
             Ui.Secondary(telemetryNote);
             Put(telemetryStatus, 44, y + 48, 592, 28); Size(telemetryStatus, 18);
             Ui.Secondary(telemetryStatus);
-            Put(close, 240, 576, 200, 64); ButtonText(close, 24);
+            // [처음부터 다시] beside [닫기]: 232 + 16 + 232 centered in the 680 panel.
+            Put(resetButton, 100, 572, 232, 70); ButtonText(resetButton, 24); // 70: "Reset progress" descenders need 8 inside
+            Put(close, 348, 572, 232, 70); ButtonText(close, 24);
         }
 
         Text telemetryStatus;
@@ -205,7 +289,11 @@ namespace SevenSteps.Game.UI
             Redraw();
         }
 
-        public void Hide() => gameObject.SetActive(false);
+        public void Hide()
+        {
+            if (resetConfirm != null) resetConfirm.SetActive(false); // Esc closes the settings and its confirm together
+            gameObject.SetActive(false);
+        }
 
         /// The settings changed (the controller calls this after it saved).
         public void Redraw()
@@ -233,6 +321,10 @@ namespace SevenSteps.Game.UI
             Set(stepNumbersText, s.showStepNumbers ? "settings.on" : "settings.off");
             Set(reduceMotionText, s.reduceMotion ? "settings.on" : "settings.off");
             Set(close.GetComponentInChildren<Text>(true), "settings.close");
+            Set(resetButton.GetComponentInChildren<Text>(true), "settings.reset");
+            Set(resetMessage, "settings.reset_confirm");
+            Set(resetYes.GetComponentInChildren<Text>(true), "settings.reset_yes");
+            Set(resetNo.GetComponentInChildren<Text>(true), "settings.reset_no");
             if (languageLabel != null) Set(languageLabel, "settings.language");
             // The button opens the language picker (scene-flow S7c): it says what it does, the current language sits beside it.
             if (languageToggle != null) Set(languageToggle.GetComponentInChildren<Text>(true), "settings.language_change");
@@ -291,11 +383,25 @@ namespace SevenSteps.Game.UI
             view.LanguageToggled += OnLanguageButton;
             view.StepNumbersToggled += ToggleStepNumbers;
             view.ReduceMotionToggled += ToggleReduceMotion;
+            view.ResetConfirmed += ResetProgress;
         }
 
         /// The settings language button opens the language picker (lead decision 2026-11-10) when the scene root sets this;
         /// without it the button switches to the next language (ToggleLanguage).
         public Action OpenLanguage { get; set; }
+
+        /// After a confirmed reset (save erased and flushed, ClearNews emptied): the scene root closes its overlays and
+        /// returns to the title, so New Game plays prologue → T1..T3 → stage 1 as on a fresh install.
+        public Action AfterReset { get; set; }
+
+        /// The confirm panel's [처음부터 다시]: progress, guides and story erased, settings kept (SaveSystem.ResetProgress).
+        public void ResetProgress()
+        {
+            save.ResetProgress();
+            if (Services.TryGet<ClearNews>(out var news)) news.Clear(); // its notes no longer match the save (review M2)
+            Debug.Log("[SevenSteps] Progress reset from settings");
+            AfterReset?.Invoke();
+        }
 
         void OnLanguageButton()
         {
@@ -311,6 +417,7 @@ namespace SevenSteps.Game.UI
             view.LanguageToggled -= OnLanguageButton;
             view.StepNumbersToggled -= ToggleStepNumbers;
             view.ReduceMotionToggled -= ToggleReduceMotion;
+            view.ResetConfirmed -= ResetProgress;
         }
 
         void StepMaster(float delta) { save.SetMasterVolume(save.Settings.masterVolume + Step(delta)); Saved(); }
