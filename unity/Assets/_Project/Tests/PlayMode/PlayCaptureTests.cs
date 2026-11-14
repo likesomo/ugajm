@@ -985,6 +985,11 @@ namespace SevenSteps.Tests.PlayMode
                 while (c.Shown < c.Frame.Lines.Count) game.CutsceneView.Next.Press(); // page 1 with its origin caption
                 yield return Capture($"interlude-moss-p1-{lang}", px, 0.5f);
                 AssertVaried($"interlude-moss-p1-{lang}", px.Value);
+                Assert.IsTrue(game.CutsceneView.HasPicture, "moss page 1 (picture moss.2) has its Codex picture");
+                while (c.Page < 1 || c.Shown < c.Frame.Lines.Count) game.CutsceneView.Next.Press(); // page 2 (picture moss.1)
+                Assert.IsTrue(game.CutsceneView.HasPicture, "moss page 2 (picture moss.1)");
+                yield return Capture($"interlude-moss-p2-{lang}", px, 0.5f);
+                AssertVaried($"interlude-moss-p2-{lang}", px.Value);
                 game.CutsceneView.Skip.Press();
                 yield return null;
                 Assert.IsFalse(c.IsOpen, "skipped");
@@ -993,6 +998,35 @@ namespace SevenSteps.Tests.PlayMode
                 save.ResetProgress();
                 Assert.AreEqual(0, save.Story.Count(seen), "a reset brings the interlude back");
                 yield return new WaitForSecondsRealtime(3f);
+            }
+        }
+
+        /// Interlude pages played on the title's viewer (same view as the Game scene): the first page of each interlude with
+        /// its picture wired, KO / EN. `unity.sh playcapture InterludePages` -> interlude-<planet>-p1-{ko,en}.png.
+        [UnityTest]
+        public IEnumerator InterludePages()
+        {
+            foreach (string lang in new[] { "ko", "en" })
+            {
+                PlayEnv.Reset();
+                yield return Start(AppState.Title, AppScenes.Title, "-ui5", "-lang", lang);
+                var title = Object.FindAnyObjectByType<SevenSteps.Game.UI.TitleScreen>();
+                var catalog = SevenSteps.Game.CutsceneLoad.Catalog(title.assets);
+                var c = title.Cutscene;
+                var v = title.CutsceneView;
+                foreach (string planet in new[] { "hollow", "carved", "frost", "joinery", "crumble", "altar" })
+                {
+                    var scene = catalog.Interlude(planet);
+                    if (title.assets.cutsceneImages.Get(scene.pages[0].image) == null) continue; // not painted yet
+                    c.Begin(scene, _ => { });
+                    while (c.Shown < c.Frame.Lines.Count) v.Next.Press();
+                    Assert.IsTrue(v.HasPicture, $"{planet} page 1: its picture");
+                    var px = new Pixels();
+                    yield return Capture($"interlude-{planet}-p1-{lang}", px, 0.5f);
+                    AssertVaried($"interlude-{planet}-p1-{lang}", px.Value);
+                    c.Skip();
+                    yield return null;
+                }
             }
         }
 
