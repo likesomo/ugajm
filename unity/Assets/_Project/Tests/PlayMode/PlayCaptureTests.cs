@@ -1464,7 +1464,7 @@ namespace SevenSteps.Tests.PlayMode
         [UnityTest]
         public IEnumerator StageCheck()
         {
-            foreach (int stage in new[] { 36, 37 })
+            foreach (int stage in new[] { 43, 44, 50 })
             {
                 PlayEnv.Reset();
                 yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", "ko", "-level", stage.ToString());

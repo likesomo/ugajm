@@ -46,8 +46,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: SevenSteps.Art::SevenSteps.Art.RuinsHengeSky
   space: {fileID: 2100000, guid: e6ffd8589b79ac145a2f66b46406ffda, type: 2}
   lowSpecSpace: {fileID: 2100000, guid: b23ba78b2a13bcd48bc9892e03ce788f, type: 2}
-  distantWorlds: 1
+  distantWorlds: 0
   worldStyle: 6
-  nebulaTint: {r: 0.5529412, g: 0.45882353, b: 0.2509804, a: 1}
-  backgroundTint: {r: 0.12941177, g: 0.101960786, b: 0.047058824, a: 1}
-  secondaryTint: {r: 0.9490196, g: 0.83137256, b: 0.5254902, a: 1}
+  nebulaTint: {r: 0.141, g: 0.204, b: 0.247, a: 1}
+  backgroundTint: {r: 0.047, g: 0.094, b: 0.169, a: 1}
+  secondaryTint: {r: 0.25, g: 0.32, b: 0.42, a: 1}

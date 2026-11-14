@@ -10,7 +10,8 @@ namespace SevenSteps.Art {
             var normalTransform=sourceTransform.inverse.transpose;
             for(int i=0;i<v.Length;i++){v[i]=sourceTransform.MultiplyPoint3x4(v[i]);normals[i]=normalTransform.MultiplyVector(normals[i]);if(Mathf.Abs(v[i].x)<=2.5f)normals[i].x*=5f/w;if(Mathf.Abs(v[i].z)<=2.5f)normals[i].z*=5f/h;normals[i].Normalize();uv[i]=new Vector2((.05f+.90f*(v[i].x/10.6f+.5f))/4f,(.05f+.90f*(v[i].z/10.6f+.5f))/4f);v[i].x=FitAxis(v[i].x,w);v[i].z=FitAxis(v[i].z,h);}
             // Keep the stone atlas coordinates continuous across the centre and crater rims.
-            mesh.vertices=v;mesh.uv=uv;mesh.normals=normals;mesh.RecalculateTangents();mesh.RecalculateBounds();return mesh;
+            mesh.vertices=v;mesh.uv=uv;mesh.normals=normals;
+            mesh.RecalculateTangents();mesh.RecalculateBounds();return mesh;
         }
         // Highest intersection of the actual triangular surface. Used only while constructing the combined environment.
         public static float Height(Vector3[] vertices,int[] indices,float x,float z) {

@@ -22,6 +22,10 @@ Shader "SevenSteps/RuinsSurface"
   _PlanetDetail("Planet RG normal B roughness A cavity",2D)="gray"{}
   _PlanetDressing("Planet material identity",Range(0,1))=0
   _PigmentSmooth("Pigment smoothing: fades dark pores and speckle toward the average colour",Range(0,1))=0
+  _Meadow("Meadow crust (altar A): colour the crust from its BogMask uv3",Range(0,1))=0
+  _MeadowMoss("Meadow moss",Color)=(.30,.40,.22,1)
+  _MeadowBog("Meadow bog",Color)=(.14,.29,.29,1)
+  _MeadowRock("Meadow granite",Color)=(.47,.49,.45,1)
   _PlanetIce("Cracked glossy ice",Range(0,1))=0
   _SlideIce("Gameplay sliding ice",Range(0,1))=0
   _PlanetPigment("Stone pigment",Color)=(.58,.61,.55,1)
@@ -56,7 +60,7 @@ Shader "SevenSteps/RuinsSurface"
    float _BoardMoss,_BoardNormalStrength,_SurfaceAlpha,_BoardStoneSlot;
    float _EnvironmentDetail,_EnvironmentWood,_EnvironmentMoss;
    float _UseAtlas,_UseMoss,_UseVertexColor,_Unlit,_AmbientFloor;
-   float _PlanetDressing,_PlanetIce,_PigmentSmooth;
+   float _PlanetDressing,_PlanetIce,_PigmentSmooth,_Meadow;float4 _MeadowMoss,_MeadowBog,_MeadowRock;
    float _SlideIce;
    float4 _PlanetPigment;
    CBUFFER_END
@@ -88,9 +92,9 @@ Shader "SevenSteps/RuinsSurface"
     }
     return 1-shade;
    }
-   struct Attributes {float4 positionOS:POSITION;float3 normalOS:NORMAL;float4 tangentOS:TANGENT;float2 uv:TEXCOORD0;float2 style:TEXCOORD1;float4 color:COLOR;};
-   struct Varyings {float4 positionCS:SV_POSITION;float3 normalWS:TEXCOORD0;float2 uv:TEXCOORD1;float4 color:COLOR;float3 positionWS:TEXCOORD2;float fog:TEXCOORD3;float2 style:TEXCOORD4;half3 fill:TEXCOORD5;float4 tangentWS:TEXCOORD6;};
-   Varyings Vert(Attributes a){Varyings o;VertexPositionInputs p=GetVertexPositionInputs(a.positionOS.xyz);o.positionCS=p.positionCS;o.positionWS=p.positionWS;o.normalWS=TransformObjectToWorldNormal(a.normalOS);o.tangentWS=float4(TransformObjectToWorldDir(a.tangentOS.xyz),a.tangentOS.w*GetOddNegativeScale());o.uv=TRANSFORM_TEX(a.uv,_BaseMap);o.color=a.color;o.style=a.style;if(a.style.x>3.5){float3 origin=TransformObjectToWorld(float3(0,0,0));o.style.y=frac(a.style.y+frac(sin(dot(origin.xz,float2(12.9898,78.233)))*43758.5453));}o.fill=VertexLighting(p.positionWS,o.normalWS);o.fog=ComputeFogFactor(p.positionCS.z);return o;}
+   struct Attributes {float4 positionOS:POSITION;float3 normalOS:NORMAL;float4 tangentOS:TANGENT;float2 uv:TEXCOORD0;float2 style:TEXCOORD1;float2 meadow:TEXCOORD2;float2 crust:TEXCOORD3;float4 color:COLOR;};
+   struct Varyings {float4 positionCS:SV_POSITION;float3 normalWS:TEXCOORD0;float2 uv:TEXCOORD1;float4 color:COLOR;float3 positionWS:TEXCOORD2;float fog:TEXCOORD3;float2 style:TEXCOORD4;half3 fill:TEXCOORD5;float4 tangentWS:TEXCOORD6;float3 meadow:TEXCOORD7;};
+   Varyings Vert(Attributes a){Varyings o;VertexPositionInputs p=GetVertexPositionInputs(a.positionOS.xyz);o.positionCS=p.positionCS;o.positionWS=p.positionWS;o.normalWS=TransformObjectToWorldNormal(a.normalOS);o.tangentWS=float4(TransformObjectToWorldDir(a.tangentOS.xyz),a.tangentOS.w*GetOddNegativeScale());o.uv=TRANSFORM_TEX(a.uv,_BaseMap);o.color=a.color;o.style=a.style;o.meadow=float3(a.meadow,(abs(a.crust.x-7.25)<.01&&abs(a.crust.y-3.5)<.01)?1:0);if(a.style.x>3.5){float3 origin=TransformObjectToWorld(float3(0,0,0));o.style.y=frac(a.style.y+frac(sin(dot(origin.xz,float2(12.9898,78.233)))*43758.5453));}o.fill=VertexLighting(p.positionWS,o.normalWS);o.fog=ComputeFogFactor(p.positionCS.z);return o;}
    half4 Frag(Varyings i):SV_Target {
     half3 color;
     half3 n=normalize(i.normalWS);
@@ -173,6 +177,16 @@ Shader "SevenSteps/RuinsSurface"
       if(_PigmentSmooth>0)pigment.rgb=lerp(pigment.rgb,SAMPLE_TEXTURE2D_LOD(_PlanetColor,sampler_PlanetColor,py,6).rgb,_PigmentSmooth);
       // Vertex pigment is the production floor/blocker value separation. Never normalize it away.
       color=pigment.rgb*i.color.rgb;surface=micro;
+      if(_Meadow>.5&&i.meadow.z>.5)
+      {
+       // Altar A meadow (2026-11-14): crust colour from BogMask (x bog, y moss); granite where neither. Broad value from a
+       // low mip of the pigment only, so the meadow has patches but no speckle.
+       half lum=dot(SAMPLE_TEXTURE2D_LOD(_PlanetColor,sampler_PlanetColor,py,4).rgb,half3(.3,.59,.11));
+       half moss=saturate(i.meadow.y),bog=saturate(i.meadow.x);
+       half3 meadow=lerp(_MeadowRock.rgb*lerp(.85,1.12,lum),_MeadowMoss.rgb*lerp(.78,1.18,lum),moss);
+       meadow=lerp(meadow,_MeadowBog.rgb,bog);
+       color=meadow*lerp(.75,1,saturate(dot(i.color.rgb,half3(.33,.33,.34))));
+      }
       if(_PlanetIce>.5&&!frostSnow&&_SlideIce<.5)color*=.62;
       if(frostSnow)
       {

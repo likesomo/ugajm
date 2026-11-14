@@ -59,6 +59,7 @@ Material:
     - _EnvironmentWood: 0
     - _PlanetDressing: 1
     - _PlanetIce: 0
+    - _Meadow: 1
     - _SlideIce: 0
     - _SrcBlend: 1
     - _SurfaceAlpha: 1
@@ -72,6 +73,9 @@ Material:
     - _BoardRockTint: {r: 1, g: 1, b: 1, a: 1}
     - _MossColor: {r: 0.6392157, g: 0.5803922, b: 0.43529412, a: 1}
     - _PlanetPigment: {r: 0.68, g: 0.63, b: 0.43, a: 1}
+    - _MeadowMoss: {r: 0.302, g: 0.396, b: 0.216, a: 1}
+    - _MeadowBog: {r: 0.141, g: 0.294, b: 0.294, a: 1}
+    - _MeadowRock: {r: 0.467, g: 0.49, b: 0.451, a: 1}
     - _WallColor: {r: 0.69254905, g: 0.65137255, b: 0.55803925, a: 1}
     - _WeatherTint: {r: 0.34901962, g: 0.4, b: 0.30980393, a: 1}
   m_BuildTextureStacks: []

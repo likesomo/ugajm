@@ -196,6 +196,14 @@ namespace SevenSteps.Art
             }
             if(cursor!=styles.Length)throw new InvalidOperationException("BoardShapeA combine lost UV seeds");
             mesh.uv2=styles;
+            // Meadow colouring (altar A, 2026-11-14): the crust (the first part) carries uv4 = (7.25, 3.5) and its BogMask uv3; every
+            // other part 0, written here because CombineMeshes does not keep a channel only some parts have.
+            {
+                var flag=new Vector2[mesh.vertexCount];var mask=new Vector2[mesh.vertexCount];
+                // A magic pair: tile FBX meshes may carry their own uv4.
+                if(crater){var src=crater.uv3;int n=Mathf.Min(crater.vertexCount,flag.Length);for(int v=0;v<n;v++){flag[v]=new Vector2(7.25f,3.5f);if(src!=null&&src.Length==crater.vertexCount)mask[v]=src[v];}}
+                mesh.uv3=mask;mesh.uv4=flag;
+            }
             if(mesh.triangles.Length/3>50000)throw new InvalidOperationException("BoardShapeA environment exceeds 50k tris");
             if(crater){if(Application.isPlaying)UnityEngine.Object.Destroy(crater);else UnityEngine.Object.DestroyImmediate(crater);}
             // Exterior dressing fits against this exact surface once, using a temporary MeshCollider.
