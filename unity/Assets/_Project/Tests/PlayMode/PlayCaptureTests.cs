@@ -1002,7 +1002,7 @@ namespace SevenSteps.Tests.PlayMode
         }
 
         /// Interlude pages played on the title's viewer (same view as the Game scene): the first page of each interlude with
-        /// its picture wired, KO / EN. `unity.sh playcapture InterludePages` -> interlude-<planet>-p1-{ko,en}.png.
+        /// its picture, KO / EN; since art batch 2 every page of every scene. `unity.sh playcapture InterludePages` -> cutscene-<scene>-<page>-{ko,en}.png.
         [UnityTest]
         public IEnumerator InterludePages()
         {
@@ -1014,16 +1014,18 @@ namespace SevenSteps.Tests.PlayMode
                 var catalog = SevenSteps.Game.CutsceneLoad.Catalog(title.assets);
                 var c = title.Cutscene;
                 var v = title.CutsceneView;
-                foreach (string planet in new[] { "hollow", "carved", "frost", "joinery", "crumble", "altar" })
+                foreach (var scene in catalog.Scenes) // every page of every scene (prologue, 7 interludes, epilogue): 30
                 {
-                    var scene = catalog.Interlude(planet);
-                    if (title.assets.cutsceneImages.Get(scene.pages[0].image) == null) continue; // not painted yet
                     c.Begin(scene, _ => { });
-                    while (c.Shown < c.Frame.Lines.Count) v.Next.Press();
-                    Assert.IsTrue(v.HasPicture, $"{planet} page 1: its picture");
-                    var px = new Pixels();
-                    yield return Capture($"interlude-{planet}-p1-{lang}", px, 0.5f);
-                    AssertVaried($"interlude-{planet}-p1-{lang}", px.Value);
+                    for (int i = 0; i < scene.pages.Length; i++)
+                    {
+                        while (c.Page < i || c.Shown < c.Frame.Lines.Count) v.Next.Press();
+                        string name = $"cutscene-{scene.id}-{scene.pages[i].id}-{lang}";
+                        Assert.IsTrue(v.HasPicture, name + ": its picture");
+                        var px = new Pixels();
+                        yield return Capture(name, px, 0.3f);
+                        AssertVaried(name, px.Value);
+                    }
                     c.Skip();
                     yield return null;
                 }
