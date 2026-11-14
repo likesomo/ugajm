@@ -79,6 +79,8 @@ namespace SevenSteps.Game
 
         /// The board controller (tests, tools).
         public BoardController Board => board;
+        /// The scene's overlay stack (tests, captures).
+        public OverlayStack Overlays => overlays;
         /// The U5 HUD (tests); null with -ui4.
         public UI.U5.U5GameHud U5Hud => u5Hud;
         /// Stage on the board and the stage list (art preview scripts read these).
@@ -291,7 +293,8 @@ namespace SevenSteps.Game
             var cutscenes = devRun ? null : CutsceneLoad.Catalog(assets);
             epilogue = cutscenes?.SceneFor(CutsceneCatalog.WhenAfterEnding);
             bool interludes = cutscenes != null && System.Linq.Enumerable.Any(cutscenes.Scenes, s => s.when == CutsceneCatalog.WhenPlanetComplete);
-            if (epilogue != null || interludes)
+            bool arrivals = cutscenes != null && System.Linq.Enumerable.Any(cutscenes.Scenes, s => s.when == CutsceneCatalog.WhenPlanetArrival);
+            if (epilogue != null || interludes || arrivals)
             {
                 cutsceneView = UI.U5.U5CutsceneView.Build(assets.cutsceneImages, assets.uiIcons, localizer);
                 cutscene = new CutsceneController(overlays, cutsceneView, () => localizer.Current);
@@ -334,6 +337,13 @@ namespace SevenSteps.Game
             board.FinaleStarting = storyLines.FinaleStarting;
             // Planet interludes (2026-11-14): once, leaving the result of a chapter's first finale clear (not in dev runs).
             if (interludes) flowController.Interlude = (stage, then) => PlayInterlude(cutscenes, chapterKeys, stage, then);
+            // Planet arrivals (2026-11-14): once, as a planet's first stage starts (moss: right after T3), instead of its card.
+            if (arrivals)
+            {
+                board.StageEntered += (stage, _) => { PlayArrival(cutscenes, chapterKeys, stage); stageEnteredOnce = true; };
+                var cardSkips = chapterIntro.Skips;
+                chapterIntro.Skips = stage => cardSkips(stage) || ArrivalDue(cutscenes, chapterKeys, stage) != null;
+            }
             overlays.Changed += storyLines.CoverChanged;
 
             // Tutorial boards (docs/tutorial.md 2.4): AppFlow.Tutorial puts one on the board; the run shows its cues, restarts a
@@ -503,6 +513,34 @@ namespace SevenSteps.Game
         /// GameFlowController.Interlude: the chapter's interlude when <paramref name="stage"/> is its finale and the interlude
         /// was not shown yet (StoryProgress, so "처음부터 다시" brings it back). Marked and saved before it plays, so the
         /// leave that follows (<paramref name="then"/>) does not ask again.
+        /// The arrival to play as <paramref name="stage"/> starts, or null: the stage opens its chapter (its first stage), the
+        /// chapter has an arrival and it was not shown yet (StoryProgress; "진행 초기화" brings it back).
+        bool stageEnteredOnce;
+
+        CutsceneSceneDto ArrivalDue(CutsceneCatalog catalog, string[] chapterKeys, int stage)
+        {
+            if (cutscene == null || flow.InTutorial || stage < 0 || stage >= chapterKeys.Length) return null;
+            // A direct -level / ?level= launch (QA, captures, tests) starts on its board; later entries in the run play it.
+            if (!stageEnteredOnce && Services.Get<LaunchOptions>().DirectToGame) return null;
+            string chapter = chapterKeys[stage];
+            if (string.IsNullOrEmpty(chapter) || (stage > 0 && chapterKeys[stage - 1] == chapter)) return null;
+            var scene = catalog.Arrival(chapter);
+            if (scene == null || Services.Get<SaveSystem>().Story.Count(CutsceneCatalog.ArrivalSeenId(chapter)) > 0) return null;
+            return scene;
+        }
+
+        /// Board StageEntered: a planet's first stage plays its arrival once, over the board (input waits under the overlay).
+        void PlayArrival(CutsceneCatalog catalog, string[] chapterKeys, int stage)
+        {
+            var scene = ArrivalDue(catalog, chapterKeys, stage);
+            if (scene == null || cutscene.IsOpen) return;
+            var save = Services.Get<SaveSystem>();
+            save.Story.MarkShown(CutsceneCatalog.ArrivalSeenId(chapterKeys[stage]));
+            save.SaveStory();
+            Debug.Log($"[SevenSteps] Arrival {scene.id} before stage {stage + 1}");
+            cutscene.Begin(scene, _ => { });
+        }
+
         bool PlayInterlude(CutsceneCatalog catalog, string[] chapterKeys, int stage, Action then)
         {
             if (cutscene == null || stage < 0 || stage >= chapterKeys.Length || !StoryTruths.IsFinaleStage(chapterKeys, stage)) return false;

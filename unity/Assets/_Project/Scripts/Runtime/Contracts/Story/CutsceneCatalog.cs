@@ -44,6 +44,9 @@ namespace SevenSteps.Contracts
         /// The plain-language rule caption under the lines (cutscenes v2, user request 2026-11-13), ko base + text[];
         /// none = no caption (no ko line).
         public StoryLineDto rule;
+        /// Another page's picture key this page shows (no new art, e.g. the planet arrivals 2026-11-14); "" = its own.
+        /// Editor wiring only (CutsceneArtImport): the entry for <see cref="image"/> gets that sprite.
+        public string reuse = "";
         /// The Codex prompt for the picture. Not read at run time.
         public string art = "";
     }
@@ -64,6 +67,8 @@ namespace SevenSteps.Contracts
         /// A planet interlude (user request 2026-11-14): scene id "interlude.<chapter>", played once after the first clear of
         /// that chapter's finale stage (StoryTruths.FinaleStage), before the map.
         public const string WhenPlanetComplete = "planetComplete", InterludePrefix = "interlude.";
+        /// A planet arrival (user request 2026-11-14): "arrival.<chapter>", played once before that chapter's first stage.
+        public const string WhenPlanetArrival = "planetArrival", ArrivalPrefix = "arrival.";
         public const string ReplayTitle = "title";
         public const string Prologue = "prologue", Epilogue = "epilogue";
 
@@ -96,7 +101,8 @@ namespace SevenSteps.Contracts
             {
                 if (s == null || string.IsNullOrEmpty(s.id)) throw new FormatException("cutscenes.json: a scene without id");
                 if (!ids.Add(s.id)) throw new FormatException($"cutscenes.json: scene \"{s.id}\" twice");
-                if (s.when != WhenNewGame && s.when != WhenAfterEnding && s.when != WhenPlanetComplete) throw new FormatException($"cutscenes.json {s.id}: when \"{s.when}\" is not {WhenNewGame}, {WhenAfterEnding} or {WhenPlanetComplete}");
+                if (s.when != WhenNewGame && s.when != WhenAfterEnding && s.when != WhenPlanetComplete && s.when != WhenPlanetArrival) throw new FormatException($"cutscenes.json {s.id}: when \"{s.when}\" is not {WhenNewGame}, {WhenAfterEnding}, {WhenPlanetComplete} or {WhenPlanetArrival}");
+                if (s.when == WhenPlanetArrival != s.id.StartsWith(ArrivalPrefix, StringComparison.Ordinal)) throw new FormatException($"cutscenes.json {s.id}: a {WhenPlanetArrival} scene is \"{ArrivalPrefix}<chapter>\" and only it");
                 if (s.when == WhenPlanetComplete != s.id.StartsWith(InterludePrefix, StringComparison.Ordinal)) throw new FormatException($"cutscenes.json {s.id}: a {WhenPlanetComplete} scene is \"{InterludePrefix}<chapter>\" and only it");
                 if (s.replay != "" && s.replay != ReplayTitle) throw new FormatException($"cutscenes.json {s.id}: replay \"{s.replay}\" is not \"{ReplayTitle}\" or empty");
                 if (s.pages == null || s.pages.Length == 0) throw new FormatException($"cutscenes.json {s.id}: no pages");
@@ -133,6 +139,13 @@ namespace SevenSteps.Contracts
 
         /// Story memory id that the interlude was shown (StoryProgress counts; cleared by a progress reset).
         public static string InterludeSeenId(string chapter) => "cutscene." + InterludePrefix + chapter;
+
+        /// The planet arrival of a chapter ("arrival.<chapter>"), or null when it has none.
+        public CutsceneSceneDto Arrival(string chapter) =>
+            string.IsNullOrEmpty(chapter) ? null : Scene(ArrivalPrefix + chapter) is CutsceneSceneDto s && s.when == WhenPlanetArrival ? s : null;
+
+        /// Story memory id that the arrival was shown (StoryProgress counts; cleared by a progress reset).
+        public static string ArrivalSeenId(string chapter) => "cutscene." + ArrivalPrefix + chapter;
 
         /// The first scene that plays <paramref name="when"/> (WhenNewGame, WhenAfterEnding), or null.
         public CutsceneSceneDto SceneFor(string when)

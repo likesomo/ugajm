@@ -62,14 +62,19 @@ namespace SevenSteps.EditorTools
             if (ga == null) throw new InvalidOperationException("[SevenSteps] Assets/_Project/Data/GameAssets.asset is missing (unity.sh setup)");
             var set = ga.cutsceneImages;
             if (set == null) throw new InvalidOperationException("[SevenSteps] GameAssets.cutsceneImages is not set (unity.sh setup)");
-            return Fill(set, ga.cutscenesJson != null ? CutsceneCatalog.FromJson(ga.cutscenesJson.text).ImageKeys : null);
+            if (ga.cutscenesJson == null) return Fill(set);
+            var catalog = CutsceneCatalog.FromJson(ga.cutscenesJson.text);
+            var reuse = new System.Collections.Generic.Dictionary<string, string>();
+            foreach (var s in catalog.Scenes) foreach (var p in s.pages) if (!string.IsNullOrEmpty(p.reuse)) reuse[p.image] = p.reuse;
+            return Fill(set, catalog.ImageKeys, reuse);
         }
 
         /// Fills empty entries of <paramref name="set"/> from the folder (key = file name) and saves it when it changed.
         /// With <paramref name="keys"/> (the catalog's picture keys): a key the set lacks gets an entry first (a new page,
         /// e.g. prologue 5b on 2026-11-13), and <see cref="StoryImageSet.required"/> follows the set: on once every
         /// entry has its picture, off while one is still out (a plain card, a scene-validate warning).
-        public static int Fill(StoryImageSet set, System.Collections.Generic.IReadOnlyList<string> keys = null)
+        /// <param name="reuse">Page key -> the key of the picture it shows instead of its own file (CutscenePageDto.reuse).</param>
+        public static int Fill(StoryImageSet set, System.Collections.Generic.IReadOnlyList<string> keys = null, System.Collections.Generic.IReadOnlyDictionary<string, string> reuse = null)
         {
             if (set == null) throw new ArgumentNullException(nameof(set));
             int n = 0;
@@ -84,7 +89,8 @@ namespace SevenSteps.EditorTools
             foreach (var e in set.entries)
             {
                 if (e == null || e.sprite != null) continue;
-                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{Folder}/{e.key}.png");
+                string file = reuse != null && reuse.TryGetValue(e.key, out var other) ? other : e.key; // arrivals reuse a picture
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{Folder}/{file}.png");
                 if (sprite == null) continue;
                 e.sprite = sprite;
                 n++;

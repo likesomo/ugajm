@@ -57,7 +57,7 @@ namespace SevenSteps.Tests
             Assert.AreEqual("5b", prologue.pages[5].id);
             Assert.AreSame(prologue, c.TitleReplay(), "the title's story entry replays the prologue");
             Assert.AreEqual(CutsceneCatalog.Epilogue, c.SceneFor(CutsceneCatalog.WhenAfterEnding).id);
-            Assert.AreEqual(9 + 21, c.ImageKeys.Count); // prologue 8 + epilogue 1 + seven planet interludes of 3 (2026-11-14)
+            Assert.AreEqual(9 + 21 + 7, c.ImageKeys.Count); // prologue 8 + epilogue 1 + 7 interludes of 3 + 7 one-page arrivals (2026-11-14)
             Assert.AreEqual("cutscene.prologue.1", c.ImageKeys[0]);
             foreach (var s in c.Scenes)
                 foreach (var p in s.pages)
@@ -81,7 +81,8 @@ namespace SevenSteps.Tests
             {
                 // wired: imported with the CutsceneArtImport rule
                 var path = AssetDatabase.GetAssetPath(e.sprite);
-                Assert.AreEqual($"Assets/Shared/Art/Story/Cutscenes/{e.key}.png", path, e.key);
+                string file = c.Scenes.SelectMany(s => s.pages).First(p => p.image == e.key).reuse is string r && r.Length > 0 ? r : e.key; // arrivals reuse a picture
+                Assert.AreEqual($"Assets/Shared/Art/Story/Cutscenes/{file}.png", path, e.key);
                 var ti = (TextureImporter)AssetImporter.GetAtPath(path);
                 Assert.AreEqual(TextureImporterType.Sprite, ti.textureType, e.key);
                 Assert.IsFalse(ti.mipmapEnabled, e.key);

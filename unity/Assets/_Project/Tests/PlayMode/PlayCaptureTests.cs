@@ -1079,6 +1079,65 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
+        /// Planet arrivals (2026-11-14): entering a planet's first stage in a run plays arrival.<planet> once, instead of the
+        /// chapter card (a direct -level launch skips its own first board). Moss (stage 1) and frost (stage 22), KO / EN.
+        /// `unity.sh playcapture Arrival` -> arrival-{moss,frost}-{ko,en}.png.
+        [UnityTest]
+        public IEnumerator Arrival()
+        {
+            foreach (string lang in new[] { "ko", "en" })
+            {
+                PlayEnv.Reset();
+                yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", lang, "-level", "2");
+                var game = Object.FindAnyObjectByType<GameController>();
+                var flow = Services.Get<AppFlow>();
+                var save = Services.Get<SaveSystem>();
+                Assert.IsFalse(game.Cutscene != null && game.Cutscene.IsOpen, "a direct launch starts on its board");
+                foreach (var (planet, stage) in new[] { ("moss", 0), ("frost", 21) })
+                {
+                    while (game.Overlays.Count > 0) game.Overlays.Pop();
+                    while (flow.IsLoading || game.Board.Session.IsLocked) yield return null;
+                    flow.GoToGame(stage);
+                    float t0 = Time.realtimeSinceStartup;
+                    while (!(game.Cutscene != null && game.Cutscene.IsOpen)) { Assert.Less(Time.realtimeSinceStartup - t0, 10f, planet + ": the arrival"); yield return null; }
+                    Assert.AreEqual("arrival." + planet, game.Cutscene.Scene.id);
+                    Assert.AreEqual(1, save.Story.Count(CutsceneCatalog.ArrivalSeenId(planet)), "marked seen");
+                    Assert.AreEqual(1, game.Overlays.Count, planet + ": no chapter card under the arrival");
+                    while (game.Cutscene.Shown < game.Cutscene.Frame.Lines.Count) game.CutsceneView.Next.Press();
+                    Assert.IsTrue(game.CutsceneView.HasPicture, planet + ": the reused interlude picture");
+                    var px = new Pixels();
+                    yield return Capture($"arrival-{planet}-{lang}", px, 0.6f);
+                    AssertVaried($"arrival-{planet}-{lang}", px.Value);
+                    game.CutsceneView.Next.Press(); // the end
+                    yield return null;
+                    Assert.IsFalse(game.Cutscene.IsOpen, "one page");
+                }
+                // Once: the same first stage again plays nothing.
+                flow.GoToGame(0);
+                for (int f = 0; f < 30; f++) yield return null;
+                Assert.IsFalse(game.Cutscene.IsOpen, "the moss arrival plays once");
+            }
+        }
+
+        /// Stage background check (user report 2026-11-14 "stage 2 background is a mess"): stages 1-3 on load, KO, the chapter
+        /// card closed. `unity.sh playcapture StageCheck` -> stage2-check-{1,2,3}.png.
+        [UnityTest]
+        public IEnumerator StageCheck()
+        {
+            foreach (int stage in new[] { 1, 2, 3, 8, 9, 15, 22 })
+            {
+                PlayEnv.Reset();
+                yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", "ko", "-level", stage.ToString());
+                var game = Object.FindAnyObjectByType<GameController>();
+                float t0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - t0 < 1f) yield return null;
+                while (game.Overlays.Count > 0) game.Overlays.Pop(); // the chapter card
+                var px = new Pixels();
+                yield return Capture($"stage2-check-{stage}", px, 1.2f);
+                AssertVaried($"stage2-check-{stage}", px.Value);
+            }
+        }
+
         /// The rect lies inside the 1280x720 capture (no clipping at the WebGL / desktop reference size).
         static void AssertInside(RectTransform r, string what)
         {

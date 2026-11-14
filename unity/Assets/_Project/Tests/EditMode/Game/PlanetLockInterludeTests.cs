@@ -55,6 +55,40 @@ namespace SevenSteps.Tests
             Assert.AreEqual("prologue", c.SceneFor(CutsceneCatalog.WhenNewGame).id, "the prologue still plays on a new game");
         }
 
+        /// Planet arrivals (2026-11-14): one per chapter, one page, reusing that planet's interlude picture (no new art);
+        /// the origin moved there, so the interlude's first page has no caption any more.
+        [Test]
+        public void EveryChapterHasAnArrivalThatReusesItsInterludePicture()
+        {
+            var c = Shipped();
+            foreach (var chapter in new[] { "moss", "hollow", "carved", "frost", "joinery", "crumble", "altar" })
+            {
+                var a = c.Arrival(chapter);
+                Assert.IsNotNull(a, chapter);
+                Assert.AreEqual(CutsceneCatalog.WhenPlanetArrival, a.when);
+                Assert.AreEqual(1, a.pages.Length, chapter);
+                StringAssert.StartsWith($"cutscene.interlude.{chapter}.", a.pages[0].reuse, chapter + ": reuses its interlude picture");
+                Assert.IsTrue(CutsceneCatalog.HasRule(a.pages[0]), chapter + ": the caption (mechanic or the watchers' answer)");
+                var origin = c.Interlude(chapter).pages[0];
+                Assert.AreEqual(a.pages[0].reuse, origin.image, chapter + ": the interlude's first page is the trimmed origin page");
+                Assert.IsFalse(CutsceneCatalog.HasRule(origin), chapter + ": its caption moved to the arrival");
+            }
+            Assert.IsNull(c.Arrival("nowhere"));
+        }
+
+        [Test]
+        public void ArrivalSeenIsStoryMemoryAndAResetClearsIt()
+        {
+            var store = new MemoryStore();
+            var save = new SaveSystem(store);
+            string id = CutsceneCatalog.ArrivalSeenId("moss");
+            save.Story.MarkShown(id);
+            save.SaveStory();
+            Assert.AreEqual(1, new SaveSystem(store).Story.Count(id));
+            save.ResetProgress();
+            Assert.AreEqual(0, new SaveSystem(store).Story.Count(id), "reset: the arrival plays again");
+        }
+
         [Test]
         public void InterludeSeenIsStoryMemoryAndAResetClearsIt()
         {
