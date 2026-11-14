@@ -46,8 +46,8 @@
     {
       "sheet": "cutscene",
       "id": "cutscene.prologue.1.line2",
-      "ko": "별마다 그 아래에 작은 행성이 하나씩 있다.",
-      "en": "Under each star lies one small planet."
+      "ko": "별마다 작은 행성이 있고, 고향은 첫 별 아래다.",
+      "en": "Under each star lies one small planet; home lies under the first."
     },
     {
       "sheet": "cutscene",
@@ -70,8 +70,8 @@
     {
       "sheet": "cutscene",
       "id": "cutscene.prologue.2.line2",
-      "ko": "국자에 별 넷, 자루에 별 셋, 끝에는 선돌의 원이 있다.",
-      "en": "Four stars in the bowl, three in the handle, and at the end a ring of standing stones."
+      "ko": "별은 국자에 넷, 자루에 셋. 자루 끝 아래엔 선돌의 원.",
+      "en": "Four stars in the bowl, three in the handle, the ring of stones under the handle's tip."
     },
     {
       "sheet": "cutscene",
@@ -84,6 +84,54 @@
       "id": "cutscene.prologue.2.rule",
       "ko": "옛 관측자는 아주 먼 옛날 일곱 행성을 걸어 별을 이은 사람들이다.",
       "en": "The old watchers walked the seven planets long ago and joined the stars."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.4.line1",
+      "ko": "일곱 번째 걸음이 닿는 곳만 바뀐다.",
+      "en": "Only the place the seventh step lands on changes."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.4.line2",
+      "ko": "여섯째 걸음에 문 앞에 서도 문은 열리지 않는다.",
+      "en": "Stand at the door on the sixth step and it stays shut."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.4.line3",
+      "ko": "일곱 걸음을 꼭 맞게 세어야 한다.",
+      "en": "All seven steps have to count, no more and no less."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.4.rule",
+      "ko": "앞의 여섯 걸음은 땅이 듣지 못하고, 일곱째가 닿은 곳만 깨어난다.",
+      "en": "The ground cannot hear the first six; only where the seventh lands wakes up."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.6.line1",
+      "ko": "별 사이의 선은 한 사람의 걸음으로는 다 이어지지 않는다.",
+      "en": "One walker alone cannot join the whole line between two stars."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.6.line2",
+      "ko": "셋이 모두 걸어야 선이 가장 밝게 이어진다.",
+      "en": "It shines brightest only when all three of us walk it."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.6.line3",
+      "ko": "닿으면 별 하나, 풀이 없이 닿으면 둘, 셋이 걸으면 셋.",
+      "en": "Arrive: one star. Without the solution: two. All three walk: three."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.6.rule",
+      "ko": "그러니 하나도 빠지지 말자. 셋이 함께 걸어야 별 셋이 켜진다.",
+      "en": "So none of us stays behind: three stars light only when all three walk."
     },
     {
       "sheet": "cutscene",
@@ -100,14 +148,14 @@
     {
       "sheet": "cutscene",
       "id": "cutscene.prologue.7.line3",
-      "ko": "끝은 움직이지 않는 별 아래, 선돌의 원이다.",
-      "en": "The end is the ring of stones under the still star."
+      "ko": "끝은 자루 끝 별 아래, 선돌의 원이다.",
+      "en": "The end is the ring of stones under the handle's last star."
     },
     {
       "sheet": "cutscene",
       "id": "cutscene.prologue.7.rule",
-      "ko": "국자가 움직이지 않는 별을 한 번 도는 동안을 한 바퀴라 한다.",
-      "en": "One turn is the time it takes the dipper to circle the still star once."
+      "ko": "국자는 움직이지 않는 별을 돈다. 한 번 도는 동안이 한 바퀴다.",
+      "en": "The dipper circles the still star; one time around is one turn."
     },
     {
       "sheet": "cutscene",
@@ -167,7 +215,7 @@
       "sheet": "cutscene",
       "id": "cutscene.interlude.hollow.2.line1",
       "ko": "둘째 별 아래, 별구멍 달.",
-      "en": "Under the second star: the Starhole Moon."
+      "en": "Under the second star: Starhole Moon."
     },
     {
       "sheet": "cutscene",
@@ -227,7 +275,7 @@
       "sheet": "cutscene",
       "id": "cutscene.interlude.carved.2.line1",
       "ko": "셋째 별 아래, 새김돌 행성.",
-      "en": "Under the third star: the Carved Stone World."
+      "en": "Under the third star: Carved Stone World."
     },
     {
       "sheet": "cutscene",
@@ -287,13 +335,13 @@
       "sheet": "cutscene",
       "id": "cutscene.interlude.frost.1.line1",
       "ko": "넷째 별 아래, 서리 위성.",
-      "en": "Under the fourth star: the Frost Moon."
+      "en": "Under the fourth star: Frost Moon."
     },
     {
       "sheet": "cutscene",
       "id": "cutscene.interlude.frost.1.line2",
-      "ko": "가장 먼저 별이 꺼져, 별빛 없이 얼어붙은 달이다.",
-      "en": "Its star went out before any other, and the moon froze without starlight."
+      "ko": "별이 가장 먼저 완전히 꺼져, 별빛 없이 얼어붙었다.",
+      "en": "Its star was the first to go out completely, and the moon froze without starlight."
     },
     {
       "sheet": "cutscene",
@@ -328,8 +376,8 @@
     {
       "sheet": "cutscene",
       "id": "cutscene.interlude.frost.2.rule",
-      "ko": "별은 바퀴마다 흐려졌고, 그때마다 다시 걷는 이가 있었다.",
-      "en": "The stars dimmed every turn, and every turn someone walked them again."
+      "ko": "별 넷이 돌아오자, 닫혀 가던 고향의 문 하나가 다시 열렸다.",
+      "en": "With four stars back, one of the closing gates of home opened again."
     },
     {
       "sheet": "cutscene",
@@ -353,13 +401,13 @@
       "sheet": "cutscene",
       "id": "cutscene.interlude.joinery.2.line1",
       "ko": "다섯째 별 아래, 결구의 행성.",
-      "en": "Under the fifth star: the Joinery World."
+      "en": "Under the fifth star: Joinery World."
     },
     {
       "sheet": "cutscene",
       "id": "cutscene.interlude.joinery.2.line2",
-      "ko": "별이 길을 열지 못하자, 옛 장인들이 장치를 만들었다.",
-      "en": "When its star could no longer open the ways, the old craftsmen built machines."
+      "ko": "별이 길을 열지 못하자, 옛 관측자들이 장치를 만들었다.",
+      "en": "When its star could no longer open the ways, the old watchers built machines."
     },
     {
       "sheet": "cutscene",
@@ -413,7 +461,7 @@
       "sheet": "cutscene",
       "id": "cutscene.interlude.crumble.1.line1",
       "ko": "여섯째 별 아래, 무너지는 행성.",
-      "en": "Under the sixth star: the Crumbling World."
+      "en": "Under the sixth star: Crumbling World."
     },
     {
       "sheet": "cutscene",
@@ -436,8 +484,8 @@
     {
       "sheet": "cutscene",
       "id": "cutscene.interlude.crumble.2.line1",
-      "ko": "늘 남겠다던 큰형이, 처음으로 지도만 건넸다.",
-      "en": "Our eldest, who always wanted to stay, handed on just the map for the first time."
+      "ko": "선돌을 세는 문 앞에서, 큰형은 남지 않고 지도만 건넸다.",
+      "en": "At the stone-counting gate, our eldest handed on just the map instead of staying."
     },
     {
       "sheet": "cutscene",
@@ -473,7 +521,7 @@
       "sheet": "cutscene",
       "id": "cutscene.interlude.altar.1.line1",
       "ko": "일곱째 별 아래, 원형 제단.",
-      "en": "Under the seventh star: the Stone Circle."
+      "en": "Under the seventh star: The Stone Circle."
     },
     {
       "sheet": "cutscene",
@@ -502,8 +550,8 @@
     {
       "sheet": "cutscene",
       "id": "cutscene.interlude.altar.2.line2",
-      "ko": "자루 끝 별이 다시 켜졌다. 일곱 중 일곱.",
-      "en": "The star at the tip of the handle is lit again: seven of seven."
+      "ko": "자루 끝 별이 깨어나기 시작했다.",
+      "en": "The star at the tip of the handle began to wake."
     },
     {
       "sheet": "cutscene",
@@ -514,20 +562,26 @@
     {
       "sheet": "cutscene",
       "id": "cutscene.interlude.altar.2.rule",
-      "ko": "원은 이 바퀴의 하룻밤, 자루 끝이 그 별 아래 설 때만 맞춰진다.",
-      "en": "The circle aligns only on this turn's one night, when the handle's tip stands under that star."
+      "ko": "일곱 중 여섯은 켜졌다. 마지막 별은 원 한가운데서 켜진다.",
+      "en": "Six of seven are lit. The last star lights at the heart of the circle."
     },
     {
       "sheet": "cutscene",
       "id": "cutscene.interlude.altar.3.line1",
-      "ko": "오늘이 그 밤이다. 일곱 별을 하나로 잇는다.",
-      "en": "Tonight is that night. We will join the seven stars into one."
+      "ko": "오늘이 그 밤, 자루 끝이 움직이지 않는 별 아래 선다.",
+      "en": "Tonight is that night: the tip of the handle stands under the still star."
     },
     {
       "sheet": "cutscene",
       "id": "cutscene.interlude.altar.3.line2",
       "ko": "셋이 함께, 마지막 일곱 걸음을 센다.",
       "en": "Together, the three of us count out the last seven steps."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.altar.3.rule",
+      "ko": "원은 이 바퀴의 단 하룻밤에만 맞춰진다.",
+      "en": "The circle aligns only on this one night of the turn."
     }
   ]
 }

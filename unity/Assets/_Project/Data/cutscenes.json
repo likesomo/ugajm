@@ -26,11 +26,11 @@
               ]
             },
             {
-              "line": "별마다 그 아래에 작은 행성이 하나씩 있다.",
+              "line": "별마다 작은 행성이 있고, 고향은 첫 별 아래다.",
               "text": [
                 {
                   "lang": "en",
-                  "line": "Under each star lies one small planet."
+                  "line": "Under each star lies one small planet; home lies under the first."
                 }
               ]
             },
@@ -69,11 +69,11 @@
               ]
             },
             {
-              "line": "국자에 별 넷, 자루에 별 셋, 끝에는 선돌의 원이 있다.",
+              "line": "별은 국자에 넷, 자루에 셋. 자루 끝 아래엔 선돌의 원.",
               "text": [
                 {
                   "lang": "en",
-                  "line": "Four stars in the bowl, three in the handle, and at the end a ring of standing stones."
+                  "line": "Four stars in the bowl, three in the handle, the ring of stones under the handle's tip."
                 }
               ]
             },
@@ -137,11 +137,11 @@
           "image": "cutscene.prologue.4",
           "lines": [
             {
-              "line": "그래서 일곱 번째 걸음이 닿는 곳만 바뀐다.",
+              "line": "일곱 번째 걸음이 닿는 곳만 바뀐다.",
               "text": [
                 {
                   "lang": "en",
-                  "line": "So only the place the seventh step lands on changes."
+                  "line": "Only the place the seventh step lands on changes."
                 }
               ]
             },
@@ -275,11 +275,11 @@
               ]
             },
             {
-              "line": "닿으면 별 하나, 스스로 세면 둘, 셋이 모두 걸으면 셋.",
+              "line": "닿으면 별 하나, 풀이 없이 닿으면 둘, 셋이 걸으면 셋.",
               "text": [
                 {
                   "lang": "en",
-                  "line": "Arrive: one star. Count it yourselves: two. All three walk: three."
+                  "line": "Arrive: one star. Without the solution: two. All three walk: three."
                 }
               ]
             }
@@ -318,22 +318,22 @@
               ]
             },
             {
-              "line": "끝은 움직이지 않는 별 아래, 선돌의 원이다.",
+              "line": "끝은 자루 끝 별 아래, 선돌의 원이다.",
               "text": [
                 {
                   "lang": "en",
-                  "line": "The end is the ring of stones under the still star."
+                  "line": "The end is the ring of stones under the handle's last star."
                 }
               ]
             }
           ],
           "art": "Back view, wide: the three brothers walk away along a mossy path toward the horizon of their small planet, the scroll on the youngest's back. In the deep indigo sky the faint dipper, and far away a tiny planet crowned by a ring of standing stones.",
           "rule": {
-            "line": "국자가 움직이지 않는 별을 한 번 도는 동안을 한 바퀴라 한다.",
+            "line": "국자는 움직이지 않는 별을 돈다. 한 번 도는 동안이 한 바퀴다.",
             "text": [
               {
                 "lang": "en",
-                "line": "One turn is the time it takes the dipper to circle the still star once."
+                "line": "The dipper circles the still star; one time around is one turn."
               }
             ]
           }
@@ -496,7 +496,7 @@
               "text": [
                 {
                   "lang": "en",
-                  "line": "Under the second star: the Starhole Moon."
+                  "line": "Under the second star: Starhole Moon."
                 }
               ]
             },
@@ -614,7 +614,7 @@
               "text": [
                 {
                   "lang": "en",
-                  "line": "Under the third star: the Carved Stone World."
+                  "line": "Under the third star: Carved Stone World."
                 }
               ]
             },
@@ -732,16 +732,16 @@
               "text": [
                 {
                   "lang": "en",
-                  "line": "Under the fourth star: the Frost Moon."
+                  "line": "Under the fourth star: Frost Moon."
                 }
               ]
             },
             {
-              "line": "가장 먼저 별이 꺼져, 별빛 없이 얼어붙은 달이다.",
+              "line": "별이 가장 먼저 완전히 꺼져, 별빛 없이 얼어붙었다.",
               "text": [
                 {
                   "lang": "en",
-                  "line": "Its star went out before any other, and the moon froze without starlight."
+                  "line": "Its star was the first to go out completely, and the moon froze without starlight."
                 }
               ]
             },
@@ -800,11 +800,11 @@
           ],
           "art": "Night sky over the frost moon: the dipper's four bowl stars are now joined in a closed, bright four-sided shape, while the three handle stars are still faint. Far away, a tiny mossy home planet glows a little warmer. The three brothers sit together on the ice, looking up.",
           "rule": {
-            "line": "별은 바퀴마다 흐려졌고, 그때마다 다시 걷는 이가 있었다.",
+            "line": "별 넷이 돌아오자, 닫혀 가던 고향의 문 하나가 다시 열렸다.",
             "text": [
               {
                 "lang": "en",
-                "line": "The stars dimmed every turn, and every turn someone walked them again."
+                "line": "With four stars back, one of the closing gates of home opened again."
               }
             ]
           }
@@ -859,16 +859,16 @@
               "text": [
                 {
                   "lang": "en",
-                  "line": "Under the fifth star: the Joinery World."
+                  "line": "Under the fifth star: Joinery World."
                 }
               ]
             },
             {
-              "line": "별이 길을 열지 못하자, 옛 장인들이 장치를 만들었다.",
+              "line": "별이 길을 열지 못하자, 옛 관측자들이 장치를 만들었다.",
               "text": [
                 {
                   "lang": "en",
-                  "line": "When its star could no longer open the ways, the old craftsmen built machines."
+                  "line": "When its star could no longer open the ways, the old watchers built machines."
                 }
               ]
             },
@@ -977,7 +977,7 @@
               "text": [
                 {
                   "lang": "en",
-                  "line": "Under the sixth star: the Crumbling World."
+                  "line": "Under the sixth star: Crumbling World."
                 }
               ]
             },
@@ -1016,11 +1016,11 @@
           "image": "cutscene.interlude.crumble.2",
           "lines": [
             {
-              "line": "늘 남겠다던 큰형이, 처음으로 지도만 건넸다.",
+              "line": "선돌을 세는 문 앞에서, 큰형은 남지 않고 지도만 건넸다.",
               "text": [
                 {
                   "lang": "en",
-                  "line": "Our eldest, who always wanted to stay, handed on just the map for the first time."
+                  "line": "At the stone-counting gate, our eldest handed on just the map instead of staying."
                 }
               ]
             },
@@ -1095,7 +1095,7 @@
               "text": [
                 {
                   "lang": "en",
-                  "line": "Under the seventh star: the Stone Circle."
+                  "line": "Under the seventh star: The Stone Circle."
                 }
               ]
             },
@@ -1143,11 +1143,11 @@
               ]
             },
             {
-              "line": "자루 끝 별이 다시 켜졌다. 일곱 중 일곱.",
+              "line": "자루 끝 별이 깨어나기 시작했다.",
               "text": [
                 {
                   "lang": "en",
-                  "line": "The star at the tip of the handle is lit again: seven of seven."
+                  "line": "The star at the tip of the handle began to wake."
                 }
               ]
             },
@@ -1163,11 +1163,11 @@
           ],
           "art": "Low view from inside the stone circle looking up: on each grey stone seven small simple carved marks (abstract shapes, no letters) glow faintly; overhead one bright still star, with the whole dipper wheeling around it, the tip of its handle almost touching the circle's edge. The three brothers' hooded silhouettes at the bottom edge.",
           "rule": {
-            "line": "원은 이 바퀴의 하룻밤, 자루 끝이 그 별 아래 설 때만 맞춰진다.",
+            "line": "일곱 중 여섯은 켜졌다. 마지막 별은 원 한가운데서 켜진다.",
             "text": [
               {
                 "lang": "en",
-                "line": "The circle aligns only on this turn's one night, when the handle's tip stands under that star."
+                "line": "Six of seven are lit. The last star lights at the heart of the circle."
               }
             ]
           }
@@ -1177,11 +1177,11 @@
           "image": "cutscene.interlude.altar.3",
           "lines": [
             {
-              "line": "오늘이 그 밤이다. 일곱 별을 하나로 잇는다.",
+              "line": "오늘이 그 밤, 자루 끝이 움직이지 않는 별 아래 선다.",
               "text": [
                 {
                   "lang": "en",
-                  "line": "Tonight is that night. We will join the seven stars into one."
+                  "line": "Tonight is that night: the tip of the handle stands under the still star."
                 }
               ]
             },
@@ -1195,7 +1195,16 @@
               ]
             }
           ],
-          "art": "The three brothers stand side by side at the edge of the circle, holding scarf ends, ready to step in. In front of them seven faint star marks wait on the ground leading to the centre stone. Hushed, hopeful."
+          "art": "The three brothers stand side by side at the edge of the circle, holding scarf ends, ready to step in. In front of them seven faint star marks wait on the ground leading to the centre stone. Hushed, hopeful.",
+          "rule": {
+            "line": "원은 이 바퀴의 단 하룻밤에만 맞춰진다.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "The circle aligns only on this one night of the turn."
+              }
+            ]
+          }
         }
       ]
     }

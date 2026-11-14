@@ -50,9 +50,9 @@ namespace SevenSteps.Tests.Game
             Assert.AreSame(assets.cutsceneImages.Get("cutscene.prologue.1"), view.Picture.sprite);
             Assert.IsFalse(view.Card.gameObject.activeSelf, "no plain card under a picture");
             Assert.AreEqual("고향 하늘의 일곱 별은 국자 모양으로 떠 있다.", view.ShownText);
-            StringAssert.Contains("\n<color=#00000000>별마다 그 아래에", view.Text.text, "laid out whole: the next line is there, clear");
+            StringAssert.Contains("\n<color=#00000000>별마다 작은 행성이", view.Text.text, "laid out whole: the next line is there, clear");
             view.Next.Press();
-            StringAssert.Contains("\n별마다 그 아래에", view.ShownText, "the second line under the first");
+            StringAssert.Contains("\n별마다 작은 행성이", view.ShownText, "the second line under the first");
             view.Next.Press(); // rev4: page 1 has three lines
             StringAssert.DoesNotContain("<color", view.Text.text, "every line out");
             view.Skip.Press();
