@@ -294,7 +294,7 @@ test('arrival before a planet\'s first stage and the interlude after its finale,
   let out = '';
   for (const c of path) out = 'UDLR'.includes(c) ? run(['move', '--tester', 'S', c]) : run([c === 'K' ? 'keep' : 'switch', '--tester', 'S']);
   assert.match(out, /\[이야기 interlude\.moss\]/);
-  assert.match(out, /strands: /);
+  assert.doesNotMatch(out, /strands: /, 'the strand ribbon was removed from the clear (2026-11-14)');
 });
 
 const exportedPath = (n) => JSON.parse(readFileSync(new URL('../Assets/_Project/Data/levels.json', import.meta.url), 'utf8')).levels[n - 1].expected.path;

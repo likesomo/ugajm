@@ -640,8 +640,6 @@ function applyTokens(ss, s0, tokens) {
           // A clear with fewer brothers counts as 3 tries for the hint (BoardController.CountTry, QA-4).
           if (used < bodies) { ss.tries ??= {}; ss.tries[ss.level] = (ss.tries[ss.level] ?? 0) + 3; }
           if (line.stars === 1) out.push(gameText(ss.lang, 'result.hint_again'));
-          const names = ['teal', 'ochre', 'terracotta'].slice(0, Math.min(3, bodies));
-          out.push(`strands: ${names.map((c, k) => (k < used ? c : '-')).join(' ')}${line.stars === 3 && used === bodies ? ' (braided)' : ''}`);
           // A planet's finale: its interlude, once per player.
           const id = `interlude.${st.def.chapter}`;
           ss.story ??= [];

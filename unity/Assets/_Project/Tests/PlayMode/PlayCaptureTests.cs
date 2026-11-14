@@ -1389,21 +1389,17 @@ namespace SevenSteps.Tests.PlayMode
                     while (clear == null || !clear.IsShown) { Assert.Less(Time.realtimeSinceStartup - t0, 30f, "the clear"); yield return null; clear = Object.FindAnyObjectByType<SevenSteps.Game.UI.U5.U5ClearView>(FindObjectsInactive.Include); }
                     if (tag == "3star")
                     {
-                        Assert.AreEqual(3, clear.StrandsLit > 0 ? game.Board.State.Level.Bodies : 0, "all strands");
+                        Assert.IsFalse(clear.Strands.gameObject.activeSelf, "no strand ribbon (removed 2026-11-14)");
                         t0 = Time.realtimeSinceStartup;
                         while (clear.LitStones < 3 && Time.realtimeSinceStartup - t0 < 5f) yield return null;
-                        yield return Capture($"strands-3star-mid-{lang}", px, 0.15f);
-                        t0 = Time.realtimeSinceStartup;
-                        while (!clear.Braided && Time.realtimeSinceStartup - t0 < 5f) yield return null;
-                        Assert.IsTrue(clear.Braided, "the strands braid on a 3-star clear");
                         yield return Capture($"strands-3star-{lang}", px, 0.3f);
                         AssertVaried($"strands-3star-{lang}", px.Value);
                     }
                     else
                     {
-                        Assert.Less(clear.StrandsLit, game.Board.State.Level.Bodies, "a missing strand");
+                        Assert.IsFalse(clear.Strands.gameObject.activeSelf, "no strand ribbon (removed 2026-11-14)");
                         yield return Capture($"strands-2star-{lang}", px, 2f);
-                        Assert.IsFalse(clear.Braided, "no braid below 3 stars");
+
                         AssertVaried($"strands-2star-{lang}", px.Value);
                     }
                 }

@@ -530,6 +530,8 @@ namespace SevenSteps.Game.UI.U5
         /// The strands braided into one bright line (a 3-star clear, after the third star).
         public bool Braided { get; private set; }
         public RectTransform Strands => strands;
+        /// The strand ribbon is not shown (user 2026-11-14).
+        public const bool Hidden = true;
 
         void BuildStrands(Transform root)
         {
@@ -548,6 +550,11 @@ namespace SevenSteps.Game.UI.U5
         void ShowStrands(ResultModel m, float top)
         {
             if (strandRun != null) { StopCoroutine(strandRun); strandRun = null; }
+            // Removed (user 2026-11-14: the ribbon under the title read as a broken UI bar). Kept hidden; the bigger 3rd-star
+            // pop, the HUD scarf dots, the brother-coloured trails and the nudge lines stay.
+            strands.gameObject.SetActive(false);
+            StrandsLit = 0; Braided = false;
+            if (Hidden) return;
             strands.anchoredPosition = new Vector2(0, -top);
             strands.gameObject.SetActive(true);
             int walked = Mathf.Clamp(m.BodiesUsed, 0, 3);
