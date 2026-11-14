@@ -739,6 +739,53 @@ namespace SevenSteps.Tests.PlayMode
             }
             Assert.GreaterOrEqual(seventh, 0, "an early stage with a 7-step first walk");
             yield return ShotAfterLive("shot-3-seventh-step", seventh, LevelCatalog.PathOf(seventh).Substring(0, 7), 0.55f);
+            {
+                // 4) The same choice with KEEP focused: its tip says what KEEP does.
+                var g = Object.FindAnyObjectByType<GameController>();
+                g.Board.Choice.Focus(true);
+                var es = UnityEngine.EventSystems.EventSystem.current;
+                g.U5Hud.Keep.OnPointerEnter(new UnityEngine.EventSystems.PointerEventData(es)); // hover: the KEEP tip
+                var p4 = new Pixels();
+                yield return Capture("shot-4-keep-switch", p4, 0.6f);
+                AssertVaried("shot-4-keep-switch", p4.Value);
+            }
+
+            // 1) Title, 2) mid-game map, 7) prologue page 6, 8) a planet interlude (c1ff970 content, 2026-11-14 re-take).
+            PlayEnv.Reset();
+            yield return Start(AppState.Title, AppScenes.Title, "-ui5", "-lang", "en");
+            {
+                var p1 = new Pixels();
+                yield return Capture("shot-1-title", p1, 2f);
+                AssertVaried("shot-1-title", p1.Value);
+                var title = Object.FindAnyObjectByType<SevenSteps.Game.UI.TitleScreen>();
+                var save = Services.Get<SaveSystem>();
+                var levels = LevelCatalog.Load(title.assets);
+                var planets = SevenSteps.Game.UI.PlanetEntry.FromCatalog(levels.Length);
+                // Mid-game: moss, hollow, carved completed (3 stars), frost under way (4 of 7); joinery on stays locked.
+                for (int q = 0; q < 3; q++) foreach (int s in planets[q].Stages) save.Progress.MarkCleared(levels[s], levels[s].Bodies, 3);
+                for (int k = 0; k < 4; k++) { var l = levels[planets[3].Stages[k]]; save.Progress.MarkCleared(l, l.Bodies, k == 1 ? 2 : 3); }
+                save.Progress.SetLastStage(levels[planets[3].Stages[4]]);
+                title.U5Title.Map.Press();
+                yield return PlayEnv.WaitForState(AppState.StageSelect, AppScenes.Title);
+                Assert.IsTrue(title.StageSelect.Model.Locked(4), "joinery locked in the mid-game map");
+                var p2 = new Pixels();
+                yield return Capture("shot-2-map", p2, 2f);
+                AssertVaried("shot-2-map", p2.Value);
+                var catalog = SevenSteps.Game.CutsceneLoad.Catalog(title.assets);
+                foreach (var (name, scene, pageId) in new[] { ("shot-7-cutscene", catalog.Scene("prologue"), "6"), ("shot-8-interlude", catalog.Interlude("hollow"), "2") })
+                {
+                    int at = Array.FindIndex(scene.pages, p => p.id == pageId);
+                    Assert.GreaterOrEqual(at, 0, name);
+                    title.Cutscene.Begin(scene, _ => { });
+                    while (title.Cutscene.Page < at || title.Cutscene.Shown < title.Cutscene.Frame.Lines.Count) title.CutsceneView.Next.Press();
+                    Assert.IsTrue(title.CutsceneView.HasPicture, name + ": its picture");
+                    var pc = new Pixels();
+                    yield return Capture(name, pc, 0.6f);
+                    AssertVaried(name, pc.Value);
+                    title.Cutscene.Skip();
+                    yield return null;
+                }
+            }
 
             // 2) Three brothers: a later stage (from 20) with 3+ brothers whose first KEEP puts a stone on a plate, then 3 steps.
             int three = -1, cut = 0;
