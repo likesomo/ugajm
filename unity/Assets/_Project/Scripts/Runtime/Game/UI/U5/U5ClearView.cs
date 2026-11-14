@@ -276,7 +276,7 @@ namespace SevenSteps.Game.UI.U5
             if (nudge)
             {
                 nudgeText.font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
-                nudgeText.text = loc.Get(m.HintNudge ? "result.hint_again" : "result.star3_nudge");
+                nudgeText.text = loc.Get(m.HintNudge ? "result.hint_again" : m.LevelBodies == 2 ? "result.star3_nudge_two" : "result.star3_nudge");
                 float w = nudgeText.cachedTextGeneratorForLayout.GetPreferredWidth(nudgeText.text, nudgeText.GetGenerationSettings(Vector2.zero))
                           / Mathf.Max(0.01f, nudgeText.pixelsPerUnit);
                 float top = Safe + (line.Length > 0 ? finalePlate.rectTransform.sizeDelta.y + 8 : 0);

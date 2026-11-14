@@ -459,6 +459,14 @@ namespace SevenSteps.Game
         void CountTry(SessionUpdate u)
         {
             if (InTutorial || loadedStage < 0 || u.Result == null || u.Kind == SessionUpdateKind.Rebuild || u.Kind == SessionUpdateKind.Feedback) return;
+            // QA-4 (2026-11-14): a clear with fewer brothers than the stage has counts as 3 tries, so the hint's first tier is
+            // ready when the player tries again for the third star (testers thought 3 stars impossible and never saw a hint).
+            if (u.Result.Has(GameEventType.Win) && u.State != null && Stars.BodiesUsed(u.State) < u.State.Level.Bodies)
+            {
+                for (int k = 0; k < HintGate.Step; k++) save.Progress.CountTry(levels[loadedStage]);
+                save.SaveProgress();
+                return;
+            }
             bool lose = u.Result.Has(GameEventType.Lose);
             bool restart = u.Result.Has(GameEventType.Restart) && u.Prev != null && u.Prev.Prev != null && u.Prev.Status != Status.Lose;
             if (!lose && !restart) return;
