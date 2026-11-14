@@ -589,8 +589,10 @@ namespace SevenSteps.Game
             // Chapter card: a board key dismisses it and still counts as a move (rehearsal 2026-11-10: the first arrow was lost).
             if (OnlyChapterCard() && BoardController.AnyBoardKeyPressed(kb)) back.Back();
             if (overlays.Count > 0 || flow.InTutorial) return; // a tutorial board has no [ ] or result keys
-            if (kb.leftBracketKey.wasPressedThisFrame) flowController.SelectStage(flow.Stage - 1);
-            else if (kb.rightBracketKey.wasPressedThisFrame) flowController.SelectStage(flow.Stage + 1);
+            // [ ] skip stages: a dev key only (final QA M1 2026-11-14: in a release it entered stages of locked planets).
+            bool devKeys = Debug.isDebugBuild || Application.isEditor;
+            if (devKeys && kb.leftBracketKey.wasPressedThisFrame) flowController.SelectStage(flow.Stage - 1);
+            else if (devKeys && kb.rightBracketKey.wasPressedThisFrame) flowController.SelectStage(flow.Stage + 1);
             else if ((kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) && flow.State == AppState.Result) flowController.Next();
             else if (flow.State == AppState.Result && result.StarRowShown)
             {

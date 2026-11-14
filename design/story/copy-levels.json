@@ -15,7 +15,7 @@
     { "n": 11, "chapter": "hollow", "story": "다리가 될까, 돌이 될까.", "en": "To be a bridge, or a stone?" },
     { "n": 12, "chapter": "hollow", "story": "건넌 자리에서 다음 형제가 깨어난다.", "en": "Across the hole, the next one wakes." },
     { "n": 13, "chapter": "hollow", "story": "발밑의 별이 더 깊어진다.", "en": "The stars below grow deeper." },
-    { "n": 14, "chapter": "hollow", "story": "구멍 너머, 다음 별이 비친다.", "en": "Past the holes, the next star shines." },
+    { "n": 14, "chapter": "hollow", "story": "별구멍 너머로 다음 별이 비친다.", "en": "Past the starhole, the next star shines." },
     { "n": 15, "chapter": "carved", "intro": true, "story": "문은 새긴 수의 걸음에만 열린다.", "en": "Gates open only on their carved step.", "alt": { "story": "기둥마다 관측자의 손이 남아 있다.", "en": "The watchers' hands live on the pillars." } },
     { "n": 16, "chapter": "carved", "story": "새김 너머에 붙들 자리가 있다.", "en": "Beyond the carving, a place to hold." },
     { "n": 17, "chapter": "carved", "story": "두 문의 새김을 한 셈에 맞춘다.", "en": "One count must fit both carved gates." },

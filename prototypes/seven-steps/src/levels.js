@@ -204,10 +204,10 @@ export const LEVELS = [
   {
     name: '떠나온 자리',
     chapter: 'hollow',
-    story: '구멍 너머, 다음 별이 비친다.',
+    story: '별구멍 너머로 다음 별이 비친다.',
     hint: '출발점을 옮기면 돌아오는 길도 멀어진다.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Where We Started', hint: 'Move the start far away, and the way back gets longer too.', story: 'Past the holes, the next star shines.' }],
+    text: [{ lang: 'en', name: 'Where We Started', hint: 'Move the start far away, and the way back gets longer too.', story: 'Past the starhole, the next star shines.' }],
     map: [
       '#################',
       '#E.A...S.......a#',
