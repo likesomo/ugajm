@@ -21,6 +21,7 @@ Shader "SevenSteps/RuinsSurface"
   _PlanetColor("Planet surface color",2D)="white"{}
   _PlanetDetail("Planet RG normal B roughness A cavity",2D)="gray"{}
   _PlanetDressing("Planet material identity",Range(0,1))=0
+  _PigmentSmooth("Pigment smoothing: fades dark pores and speckle toward the average colour",Range(0,1))=0
   _PlanetIce("Cracked glossy ice",Range(0,1))=0
   _SlideIce("Gameplay sliding ice",Range(0,1))=0
   _PlanetPigment("Stone pigment",Color)=(.58,.61,.55,1)
@@ -55,7 +56,7 @@ Shader "SevenSteps/RuinsSurface"
    float _BoardMoss,_BoardNormalStrength,_SurfaceAlpha,_BoardStoneSlot;
    float _EnvironmentDetail,_EnvironmentWood,_EnvironmentMoss;
    float _UseAtlas,_UseMoss,_UseVertexColor,_Unlit,_AmbientFloor;
-   float _PlanetDressing,_PlanetIce;
+   float _PlanetDressing,_PlanetIce,_PigmentSmooth;
    float _SlideIce;
    float4 _PlanetPigment;
    CBUFFER_END
@@ -102,6 +103,7 @@ Shader "SevenSteps/RuinsSurface"
      half3 weights=pow(abs(i.normalWS),4);weights/=max(dot(weights,half3(1,1,1)),.001);
      float2 px=i.positionWS.zy*.72,py=i.positionWS.xz*.72,pz=i.positionWS.xy*.72;
      half4 pigment=SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,px)*weights.x+SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,py)*weights.y+SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,pz)*weights.z;
+     if(_PigmentSmooth>0)pigment.rgb=lerp(pigment.rgb,SAMPLE_TEXTURE2D_LOD(_PlanetColor,sampler_PlanetColor,py,6).rgb,_PigmentSmooth); // speckle off (2026-11-14)
      half4 detail=SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,px)*weights.x+SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,py)*weights.y+SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,pz)*weights.z;
      // Unity linearizes material Color properties; FBX vertex pigment remains the authored attribute.
      half3 authored=LinearToSRGB(_PlanetPigment.rgb);
@@ -167,6 +169,8 @@ Shader "SevenSteps/RuinsSurface"
       float2 px=i.positionWS.zy*.72,py=i.positionWS.xz*.72,pz=i.positionWS.xy*.72;
       half4 pigment=SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,px)*weights.x+SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,py)*weights.y+SAMPLE_TEXTURE2D(_PlanetColor,sampler_PlanetColor,pz)*weights.z;
       half4 micro=SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,px)*weights.x+SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,py)*weights.y+SAMPLE_TEXTURE2D(_PlanetDetail,sampler_PlanetDetail,pz)*weights.z;
+      // Speckle (user 2026-11-14): blend toward the colour's own low mip (its average) so pores and dots fade, hue kept.
+      if(_PigmentSmooth>0)pigment.rgb=lerp(pigment.rgb,SAMPLE_TEXTURE2D_LOD(_PlanetColor,sampler_PlanetColor,py,6).rgb,_PigmentSmooth);
       // Vertex pigment is the production floor/blocker value separation. Never normalize it away.
       color=pigment.rgb*i.color.rgb;surface=micro;
       if(_PlanetIce>.5&&!frostSnow&&_SlideIce<.5)color*=.62;
@@ -192,6 +196,7 @@ Shader "SevenSteps/RuinsSurface"
      // Environment only. Board tiles keep their existing atlas and clear numeric surfaces.
      half4 weather=SAMPLE_TEXTURE2D(_WeatherMap,sampler_WeatherMap,i.positionWS.xz*.45);
      half grain=lerp(weather.r,weather.b,_EnvironmentWood);
+     grain=lerp(grain,.7,_PigmentSmooth); // .7 = no darkening: the speckle fades with the same setting as the stone
      color=i.color.rgb*lerp(1,lerp(.52,1.20,grain),_EnvironmentDetail);
      half patina=smoothstep(.54,.77,weather.g)*_EnvironmentMoss*saturate(i.normalWS.y)*(1-_EnvironmentWood);
      color=lerp(color,_WeatherTint.rgb,patina);
