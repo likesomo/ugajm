@@ -1399,6 +1399,11 @@ namespace SevenSteps.Tests.PlayMode
                     {
                         Assert.IsFalse(clear.Strands.gameObject.activeSelf, "no strand ribbon (removed 2026-11-14)");
                         yield return Capture($"strands-2star-{lang}", px, 2f);
+                        // Concept A: the same clear as a hinted one (1 star, the hint_again line, the ? still on the third stone).
+                        int used = Core.Stars.BodiesUsed(game.Board.State);
+                        clear.Show(SevenSteps.Game.UI.ResultModel.Clear(stage + 1, game.Board.State.Level.Bodies, used, used, false, stars: 1, bestStars: 1));
+                        yield return Capture($"strands-hinted-{lang}", px, 1.5f);
+                        AssertVaried($"strands-hinted-{lang}", px.Value);
 
                         AssertVaried($"strands-2star-{lang}", px.Value);
                     }

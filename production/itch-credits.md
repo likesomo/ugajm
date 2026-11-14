@@ -9,6 +9,8 @@ Confirmed by the coordinator from the shared-folder notes (2026-11-13): only the
 
 **Seven Steps**: a picture-book grid puzzle about three brothers and the seven-star dipper.
 
+Made by somon
+
 Music (CC0, credit given voluntarily)
 - "musicbox2_cute_tune" (4 Music Box Tracks) by Aureolus_Omicron: https://opengameart.org/content/4-music-box-tracks
 - "Somnium" by Adiutorium: https://opengameart.org/content/somnium (excerpt, looped)

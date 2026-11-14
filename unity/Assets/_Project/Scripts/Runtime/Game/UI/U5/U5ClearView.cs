@@ -151,6 +151,10 @@ namespace SevenSteps.Game.UI.U5
                 s.Glyph.rectTransform.offsetMax = new Vector2(-12, -12);
                 stones[k] = s;
             }
+            waitingMark = Ui.Label(stones[2].transform, "?", 26, Ui.Gold, TextAnchor.MiddleCenter, "Waiting");
+            waitingMark.rectTransform.Place(new Vector2(1, 1), new Vector2(1, 1), new Vector2(4, 6), new Vector2(24, 30));
+            waitingMark.raycastTarget = false;
+            waitingMark.gameObject.SetActive(false);
 
             finalePlate = Ui.Plate(root, "Finale plate");
             // Top centre, between Map and Retry: the band the hidden HUD title leaves free (Next's words go by the exit).
@@ -271,12 +275,15 @@ namespace SevenSteps.Game.UI.U5
                           / Mathf.Max(0.01f, finaleText.pixelsPerUnit);
                 finalePlate.rectTransform.sizeDelta = new Vector2(Mathf.Ceil(w) + 32, FocusPlate.PlateHeight(finaleText, finaleText.text, w, 8));
             }
-            bool nudge = m.Star3Nudge || m.HintNudge;
+            string said = NudgeText(m);
+            bool nudge = said.Length > 0;
             nudgePlate.gameObject.SetActive(nudge);
+            missingBrothers = m.LevelBodies >= 3 ? Mathf.Max(0, m.LevelBodies - m.BodiesUsed) : 0;
+            waitingMark.gameObject.SetActive(missingBrothers > 0);
             if (nudge)
             {
                 nudgeText.font = Ui.Theme.FontFor(loc.Current, FontRole.Body);
-                nudgeText.text = loc.Get(m.HintNudge ? "result.hint_again" : m.LevelBodies == 2 ? "result.star3_nudge_two" : "result.star3_nudge");
+                nudgeText.text = said;
                 float w = nudgeText.cachedTextGeneratorForLayout.GetPreferredWidth(nudgeText.text, nudgeText.GetGenerationSettings(Vector2.zero))
                           / Mathf.Max(0.01f, nudgeText.pixelsPerUnit);
                 float top = Safe + (line.Length > 0 ? finalePlate.rectTransform.sizeDelta.y + 8 : 0);
@@ -284,6 +291,20 @@ namespace SevenSteps.Game.UI.U5
                 nudgePlate.rectTransform.sizeDelta = new Vector2(Mathf.Ceil(w) + 32, FocusPlate.PlateHeight(nudgeText, nudgeText.text, w, 8));
             }
             ShowStrands(m, Safe + (line.Length > 0 ? finalePlate.rectTransform.sizeDelta.y + 8 : 0) + (nudge ? nudgePlate.rectTransform.sizeDelta.y + 8 : 0));
+        }
+
+        /// Concept A (user choice 2026-11-14): who walked, said under the title. A hinted clear: try again without a hint.
+        /// All three walked: say so. A brother left out: how many still wait, and that all three can walk this one too.
+        /// Tutorials (fewer than three brothers) say nothing.
+        string NudgeText(ResultModel m)
+        {
+            if (!m.Cleared) return "";
+            if (m.HintNudge) return loc.Get("result.hint_again");
+            if (m.LevelBodies < 3) return "";
+            if (m.Stars == 3) return loc.Get("result.all_walked");
+            int missing = m.LevelBodies - m.BodiesUsed;
+            if (missing <= 0) return "";
+            return loc.Get(missing == 1 ? "result.waiting_one" : "result.waiting_two") + "\n" + loc.Get("result.star3_nudge");
         }
 
         /// World stones (or the 2D row) and their hits; Next beside the board at the exit's height (or width), nearest
@@ -500,7 +521,11 @@ namespace SevenSteps.Game.UI.U5
             if (lit) LitStones = Mathf.Max(LitStones, k + 1);
             if (worldStones[k] != null && worldStones[k].activeSelf)
             {
-                if (worldInlays[k] != null) worldInlays[k].sharedMaterial = lit ? icons.starLit : icons.starUnlit;
+                if (worldInlays[k] != null)
+                {
+                    worldInlays[k].sharedMaterial = lit ? icons.starLit : icons.starUnlit;
+                    worldInlays[k].SetPropertyBlock(lit ? ScarfBlock(k) : null);
+                }
                 stoneBodies[k].enabled = false; // a transparent hit over the 3D stone
                 stones[k].Glyph.enabled = false;
                 return;
@@ -511,8 +536,28 @@ namespace SevenSteps.Game.UI.U5
             body.sprite = art != null ? art : Ui.Circle;
             body.color = art != null ? Color.white : (lit ? new Color(0.36f, 0.33f, 0.27f, 1) : new Color(0.2f, 0.21f, 0.24f, 0.9f));
             stones[k].Glyph.enabled = art == null; // the art stone carries its own star
-            stones[k].Glyph.color = lit ? Ui.Gold : Ui.Dim;
+            stones[k].Glyph.color = lit ? StarTint(k) : Ui.Dim;
         }
+
+        /// Concept A: each earned star wears a brother's scarf colour (star 1 teal, 2 ochre, 3 terracotta) with a gold edge
+        /// of light. The star rules are unchanged (clear / no solution view / all brothers).
+        public static Color StarTint(int k) => Color.Lerp(StrandColors[k], Ui.Gold, 0.15f);
+        MaterialPropertyBlock scarf;
+        MaterialPropertyBlock ScarfBlock(int k)
+        {
+            scarf ??= new MaterialPropertyBlock();
+            scarf.Clear();
+            var c = StarTint(k);
+            scarf.SetColor("_BaseColor", c);
+            scarf.SetColor("_Color", c);
+            scarf.SetColor("_EmissionColor", c * 2.6f + new Color(0.35f, 0.26f, 0.06f, 0)); // bright, with a gold edge of light
+            return scarf;
+        }
+        /// Brothers who did not walk on the shown clear (0 on a tutorial); the third stone shows a small '?' when any.
+        public int MissingBrothers => missingBrothers;
+        public bool WaitingMarkShown => waitingMark != null && waitingMark.gameObject.activeSelf;
+        int missingBrothers;
+        Text waitingMark;
 
         // ---------- The three strands (user request 2026-11-14): who walked, braided into one line on a 3-star clear ----------
 

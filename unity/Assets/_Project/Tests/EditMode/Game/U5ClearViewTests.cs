@@ -66,13 +66,22 @@ namespace SevenSteps.Tests.Game
         {
             // No hint, 2 of 3 brothers: two stars and the nudge (user request 2026-11-13), at the top centre.
             view.Show(ResultModel.Clear(3, 3, 2, 2, false, stars: 2, bestStars: 2));
-            Assert.That(view.NudgeLine, Is.EqualTo("이 판도 셋이 모두 걸을 수 있다. 다시 해 보자."));
+            Assert.That(view.NudgeLine, Is.EqualTo("형제 한 명이 아직 기다린다.\n이 판도 셋이 모두 걸을 수 있다. 다시 해 보자."), "concept A: who waits, then the retry line");
+            Assert.That(view.WaitingMarkShown, Is.True, "the third stone wears a small ?");
             Assert.That(view.NudgePlate.anchoredPosition.y, Is.EqualTo(-U5ClearView.Safe));
             Assert.That(view.NudgePlate.sizeDelta.x, Is.LessThan(600f), "a short plate, not a band");
             view.Hide();
-            // Everyone walked (3 stars): no nudge. A hinted clear (1 star) says a try without a hint earns up to 3 (2026-11-14).
+            // Everyone walked (3 stars): concept A says so. A hinted clear (1 star) says a try without a hint earns up to 3 (2026-11-14).
             view.Show(ResultModel.Clear(3, 3, 3, 3, false, stars: 3, bestStars: 3));
-            Assert.That(view.NudgeLine, Is.Empty);
+            Assert.That(view.NudgeLine, Is.EqualTo("셋이 모두 걸었다."));
+            Assert.That(view.WaitingMarkShown, Is.False);
+            view.Hide();
+            view.Show(ResultModel.Clear(3, 3, 1, 1, false, stars: 2, bestStars: 2));
+            StringAssert.StartsWith("형제 둘이 아직 기다린다.", view.NudgeLine);
+            view.Hide();
+            view.Show(ResultModel.Clear(1, 2, 1, 1, false, stars: 2, bestStars: 2));
+            Assert.That(view.NudgeLine, Is.Empty, "a tutorial with fewer brothers says nothing");
+            Assert.That(view.WaitingMarkShown, Is.False);
             view.Hide();
             view.Show(ResultModel.Clear(3, 3, 2, 2, false, stars: 1, bestStars: 1));
             StringAssert.Contains("힌트 없이", view.NudgeLine, "the hinted clear's line");
@@ -90,8 +99,8 @@ namespace SevenSteps.Tests.Game
             var v = U5ClearView.Build(a.uiIcons, loc);
             try
             {
-                v.Show(ResultModel.Clear(49, 2, 1, 1, true, stars: 2, bestStars: 2));
-                Assert.That(v.NudgeLine, Is.EqualTo("All of us can walk this one too. Try again.") /* a 2-brother stage (QA-4 2026-11-14) */);
+                v.Show(ResultModel.Clear(49, 3, 2, 2, true, stars: 2, bestStars: 2));
+                Assert.That(v.NudgeLine, Is.EqualTo("One brother is still waiting.\nAll three of us can walk this one too. Try again."));
                 Assert.That(v.NudgePlate.anchoredPosition.y, Is.LessThan(-U5ClearView.Safe - 40), "under the journey line");
             }
             finally { Object.DestroyImmediate(v.gameObject); }

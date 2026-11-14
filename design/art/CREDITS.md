@@ -68,6 +68,7 @@ CC0 크레딧은 자발적으로 표시한다. OFL 폰트를 실제로 배포할
 ## 게임 크레딧 화면·itch.io용 문구 (현재)
 
 ```
+Made by somon
 Font: Gaegu by The Gaegu Project Authors (SIL Open Font License 1.1)
 Font: Patrick Hand by Patrick Wagesreiter (SIL Open Font License 1.1)
 Font: Kaushan Script by Pablo Impallari and Igino Marini (SIL Open Font License 1.1)

@@ -636,10 +636,12 @@ function applyTokens(ss, s0, tokens) {
           out.push(`\n클리어! ${'★'.repeat(line.stars)}${'☆'.repeat(3 - line.stars)} (시도 ${line.attempt})\n${starLines(ss.lang, line.stars, st.level.bodies)}`);
           // The clear screen's extra lines (U5ClearView): the 3rd-star nudge, the hinted line, and the strands as text.
           const bodies = st.level.bodies, used = line.bodiesUsed;
-          if (line.stars === 2 && used < bodies) out.push(gameText(ss.lang, bodies === 2 ? 'result.star3_nudge_two' : 'result.star3_nudge'));
+          // Concept A (2026-11-14): the stars wear the scarf colours; the line says who walked (U5ClearView.NudgeText).
+          if (line.stars === 1) out.push(gameText(ss.lang, 'result.hint_again'));
+          else if (bodies >= 3 && line.stars === 3) out.push(gameText(ss.lang, 'result.all_walked'));
+          else if (bodies >= 3 && used < bodies) out.push(gameText(ss.lang, bodies - used === 1 ? 'result.waiting_one' : 'result.waiting_two') + ' (3번째 별: ?)\n' + gameText(ss.lang, 'result.star3_nudge'));
           // A clear with fewer brothers counts as 3 tries for the hint (BoardController.CountTry, QA-4).
           if (used < bodies) { ss.tries ??= {}; ss.tries[ss.level] = (ss.tries[ss.level] ?? 0) + 3; }
-          if (line.stars === 1) out.push(gameText(ss.lang, 'result.hint_again'));
           // A planet's finale: its interlude, once per player.
           const id = `interlude.${st.def.chapter}`;
           ss.story ??= [];
