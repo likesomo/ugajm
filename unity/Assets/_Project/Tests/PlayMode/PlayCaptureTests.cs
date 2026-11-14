@@ -1202,7 +1202,7 @@ namespace SevenSteps.Tests.PlayMode
                 while (game.Overlays.Count > 0) game.Overlays.Pop(); // the chapter card: the start line follows it
                 string want = lang == "ko" ? "내 걸음을 내주어야" : "We give our steps";
                 t0 = Time.realtimeSinceStartup;
-                while (!Object.FindObjectsByType<UnityEngine.UI.Text>(FindObjectsInactive.Exclude).Any(t => t.text.Contains(want)))
+                while (!(game.U5StoryLine != null && game.U5StoryLine.Text.Contains(want))) // the U5 story line plate (on screen)
                 {
                     Assert.Less(Time.realtimeSinceStartup - t0, 8f, lang + ": stage 2's start line on screen");
                     yield return null;
@@ -1218,7 +1218,7 @@ namespace SevenSteps.Tests.PlayMode
         [UnityTest]
         public IEnumerator StageCheck()
         {
-            foreach (int stage in new[] { 1, 2, 3, 8, 9, 15, 22 })
+            foreach (int stage in new[] { 1, 2, 8, 9, 15, 16, 22, 23, 29, 30, 36, 37, 43, 44 })
             {
                 PlayEnv.Reset();
                 yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", "ko", "-level", stage.ToString());

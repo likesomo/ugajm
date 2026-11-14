@@ -332,7 +332,9 @@ namespace SevenSteps.Game
             var chapterKeys = new string[levels.Length];
             for (int i = 0; i < chapterKeys.Length; i++) chapterKeys[i] = LevelCatalog.ChapterKeyOf(i);
             bool FinaleHere() => story.On && !board.InTutorial && StoryTruths.IsFinaleStage(chapterKeys, board.LevelIndex);
-            storyLines = new Story.StoryDirector(board.Session, hud, devRun || launch.ArtPerf,
+            // U5 hides the current HUD's guide plate, so its story line gets its own plate (U5StoryLine, 2026-11-14).
+            Story.ITransientLine lineView = u5Hud != null ? (Story.ITransientLine)(u5StoryLine = UI.U5.U5StoryLine.Build(u5Hud.transform, localizer)) : hud;
+            storyLines = new Story.StoryDirector(board.Session, lineView, devRun || launch.ArtPerf,
                 startLine: StartLineHere,
                 finaleLine: () => FinaleHere() ? story.FinaleLine(chapterKeys[board.LevelIndex], localizer.Current) : null,
                 finaleShown: () => story.Progress.MarkShown(story.Catalog.Find(StoryRules.Finale(chapterKeys[board.LevelIndex])).id),
@@ -620,6 +622,9 @@ namespace SevenSteps.Game
         /// Canvas for overlays above the HUD (0) and the result panel (5).
         UI.U5.U5GameHud u5Hud;
         UI.HintConfirmPanel hintConfirm;
+        UI.U5.U5StoryLine u5StoryLine;
+        /// The U5 story line plate (tests, captures); null without U5.
+        public UI.U5.U5StoryLine U5StoryLine => u5StoryLine;
         /// The hint popup (tests, captures).
         public UI.HintConfirmPanel HintConfirm => hintConfirm;
         UI.U5.U5ClearView u5Clear;
