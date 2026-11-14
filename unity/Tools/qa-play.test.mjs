@@ -2,7 +2,7 @@
 // The tests use the solver to find inputs; the harness itself never does.
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -21,10 +21,13 @@ const play = (word) => {
   // Moves go through `move`, K/X through keep/switch, Z through undo, H through hint.
   for (const c of word) {
     if ('UDLR'.includes(c)) run(['move', ...T, c]);
-    else run([{ K: 'keep', X: 'switch', Z: 'undo', H: 'hint' }[c], ...T]);
+    else if (c === 'H') run(['hint', ...T, '--confirm']);
+    else run([{ K: 'keep', X: 'switch', Z: 'undo' }[c], ...T]);
   }
 };
 const count = (str) => [...str].filter((c) => 'UDLR'.includes(c)).length;
+// Hints unlock by tries (HintGate, 2026-11-14): set the tester's try count for a stage in its session file.
+const seedTries = (tester, level, n) => { const p = join(process.env.QA_DIR, 'sessions', `${tester}.json`); const ss = JSON.parse(readFileSync(p, 'utf8')); ss.tries = { ...(ss.tries ?? {}), [level]: n }; writeFileSync(p, JSON.stringify(ss)); };
 const errors = (argv, re) => assert.throws(() => run(argv), (e) => e instanceof QaError && (typeof re === 'function' ? re(e.message) : re.test(e.message)));
 // A board's ko cue line by on (levels.js TUTORIALS), so the tests follow wording changes.
 const cueOf = (k, on) => TUTORIALS[k].cues.find((c) => c.on === on).line;
@@ -89,7 +92,7 @@ test('stage 4 with every brother: 3 stars even after undo or restart; a hint 1 s
   run(['start', ...T, '--level', '4']); play(path[0] + 'Z' + path);
   assert.equal(last().stars, 3); assert.equal(last().undos, 1); assert.equal(last().inputs, path[0] + 'Z' + path);
   assert.equal(last().bodiesUsed, stage(4).level.bodies);
-  run(['start', ...T, '--level', '4']); play('H' + path);
+  run(['start', ...T, '--level', '4']); seedTries('A', 4, 3); play('H' + path);
   assert.equal(last().stars, 1); assert.equal(last().hints, 1); assert.equal(last().attempt, 2);
   run(['start', ...T, '--level', '4']);
   run(['restart', ...T]); // fresh: not counted, no line
@@ -274,4 +277,46 @@ test('naive: show, status, help and errors say no rule beyond the game texts', (
   }
   const text = said.join('\n');
   for (const re of RULE_WORDS) assert.ok(!re.test(text), `harness text matches ${re}`);
+});
+
+// 2026-11-14 (QA-4, c82d833 content): story scenes once per tester, hints by tries with the popup, clear-screen lines.
+test('arrival before a planet\'s first stage and the interlude after its finale, once per tester', () => {
+  const first = run(['start', '--tester', 'S', '--level', '1']);
+  assert.match(first, /\[이야기 arrival\.moss\]/);
+  assert.ok(first.includes(storyPages('arrival.moss', 'ko')[0][0]), 'the arrival page as the game shows it');
+  run(['giveup', '--tester', 'S']);
+  assert.doesNotMatch(run(['start', '--tester', 'S', '--level', '1']), /arrival\.moss/, 'once');
+  run(['giveup', '--tester', 'S']);
+  assert.doesNotMatch(run(['start', '--tester', 'S', '--level', '2']), /arrival/, 'not on a later stage');
+  run(['giveup', '--tester', 'S']);
+  run(['start', '--tester', 'S', '--level', '7']); // moss finale
+  const path = exportedPath(7);
+  let out = '';
+  for (const c of path) out = 'UDLR'.includes(c) ? run(['move', '--tester', 'S', c]) : run([c === 'K' ? 'keep' : 'switch', '--tester', 'S']);
+  assert.match(out, /\[이야기 interlude\.moss\]/);
+  assert.match(out, /strands: /);
+});
+
+const exportedPath = (n) => JSON.parse(readFileSync(new URL('../Assets/_Project/Data/levels.json', import.meta.url), 'utf8')).levels[n - 1].expected.path;
+
+test('hints: locked until 3 tries, the popup before the first, tiers 1-3 at 3/6/9 tries, the 1-star line', () => {
+  const H = ['--tester', 'H'];
+  run(['start', ...H, '--level', '4']);
+  assert.equal(run(['hint', ...H]), gameText('ko', 'msg.hint_locked', 3));
+  run(['move', ...H, 'D']); const r = run(['restart', ...H]);
+  assert.doesNotMatch(r, /힌트가 나타났다/);
+  assert.equal(run(['hint', ...H]), gameText('ko', 'msg.hint_locked', 2), 'a restart from a played state counts a try');
+  run(['move', ...H, 'D']); run(['restart', ...H]);
+  run(['move', ...H, 'D']); assert.match(run(['restart', ...H]), new RegExp(gameText('ko', 'msg.hint_ready')));
+  const popup = run(['hint', ...H]);
+  assert.match(popup, /\[팝업\] 힌트 1\/3/); assert.ok(popup.includes(gameText('ko', 'hint.popup_body')));
+  const t1 = run(['hint', ...H, '--confirm']);
+  assert.match(t1, /힌트 1\/3/); assert.ok(t1.includes(gameText('ko', 'hint.used_cap')));
+  assert.match(run(['hint', ...H]), /힌트 1\/3/, 'only tier 1 is open: the highest again, no popup');
+  seedTries('H', 4, 9);
+  assert.match(run(['hint', ...H]), /힌트 2\/3[\s\S]*빛나는 칸/);
+  assert.match(run(['hint', ...H]), /힌트 3\/3/);
+  let out = '';
+  for (const c of exportedPath(4)) out = 'UDLR'.includes(c) ? run(['move', ...H, c]) : run([c === 'K' ? 'keep' : 'switch', ...H]);
+  assert.match(out, /★☆☆/); assert.ok(out.includes(gameText('ko', 'result.hint_again')));
 });

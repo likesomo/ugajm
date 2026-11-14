@@ -13,7 +13,10 @@
 //   show --tester T [--json]          board, HUD, the line the game shows now
 //   move --tester T UDLR...           one or more moves, e.g. move RRDD (stops at the first blocked move)
 //   keep | switch --tester T          on the KEEP / SWITCH choice
-//   undo | restart | hint | giveup | status --tester T
+//   undo | restart | giveup | status --tester T
+//   hint --tester T [--confirm]       as the game: locked until 3 tries of the stage (a loss or a restart from a played
+//                                     state), tiers 1/2/3 at 3/6/9; the first of an attempt shows the popup, --confirm opens it
+//   (start prints a planet's arrival scene before its first stage, a finale clear its interlude; once per tester)
 //   story prologue|epilogue [--lang ko|en]   the cutscene's pages, as the game shows them
 //   verify                            re-check every line of attempts.jsonl (docs/qa-attempts.md 7)
 // QA_DIR (env) overrides the output folder (default <repo>/reports/qa).
@@ -21,7 +24,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 import { createHash } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { parseLevel, newState, dispatch, tileAt, doorOpen, isDoor, statueCount, stars, STEPS } from '../../prototypes/seven-steps/src/core.js';
+import { parseLevel, newState, dispatch, tileAt, doorOpen, isDoor, statueCount, stars, STEPS, keyOf } from '../../prototypes/seven-steps/src/core.js';
 import { LEVELS, TUTORIALS } from '../../prototypes/seven-steps/src/levels.js';
 
 export const FORMAT_VERSION = 1;
@@ -84,7 +87,7 @@ export function stage(n) {
   const ex = exportedFile().levels[n - 1];
   if (!ex || ex.name !== def.name || mapHash(ex.map) !== mapHash(def.map) || !ex.expected?.minBodies)
     fail(`levels.json is stale for stage ${n} (run unity/Tools/unity.sh levels)`);
-  return { def, level: parseLevel(def), minBodies: ex.expected.minBodies, tutorial: null };
+  return { def, level: parseLevel(def), minBodies: ex.expected.minBodies, tutorial: null, n };
 }
 
 /// "--level" text: "12" -> 12, "T2" / "t2" -> "T2".
@@ -367,6 +370,98 @@ function starLines(lang, got, bodies) {
   return reasons.map((r, k) => `  ${k < got ? '★' : '☆'} ${r}`).join('\n');
 }
 
+
+// ---------- story scenes and hint tiers as the game shows them (c82d833, 2026-11-14) ----------
+
+/// "[이야기 arrival.moss]" + its pages, for the once-per-player story scenes (arrival before a planet's first stage,
+/// interlude after its finale clear). The game keeps "seen" in its story memory; the harness keeps it per tester.
+function storyBlock(scene, lang) {
+  const pages = storyPages(scene, lang);
+  return `[이야기 ${scene}]\n` + pages.map((lines, k) => `(${k + 1}/${pages.length})\n${lines.join('\n')}`).join('\n') + '\n';
+}
+const hasScene = (scene) => JSON.parse(readFileSync(join(data, 'cutscenes.json'), 'utf8')).scenes.some((s) => s.id === scene);
+/// 1-based stage whose clear ends its planet (StoryTruths.FinaleStage): its chapter's last stage, or the one before
+/// when that is the game's last stage (stage 50 plays the ending instead).
+export function finaleStage(chapter) {
+  let last = -1;
+  LEVELS.forEach((d, i) => { if (d.chapter === chapter) last = i; });
+  if (last < 0) return -1;
+  if (last === LEVELS.length - 1) return last > 0 && LEVELS[last - 1].chapter === chapter ? last : -1;
+  return last + 1;
+}
+/// Hint tiers unlock by failed or restarted tries of the stage (HintGate): 3 / 6 / 9.
+export const hintsUnlocked = (tries) => Math.min(3, Math.floor(Math.max(0, tries) / 3));
+const triesToNext = (tries) => (hintsUnlocked(tries) >= 3 ? 0 : 3 * (hintsUnlocked(tries) + 1) - Math.max(0, tries));
+/// The game's HintPlan.From: the stored route's goal per brother (where and how his run ends) and the goal index per state.
+function hintPlan(st) {
+  const path = exportedFile().levels[st.n - 1]?.expected?.path ?? '';
+  const goals = [];
+  const bodyAt = {};
+  let s = newState(st.level);
+  bodyAt[keyOf(s)] = 0;
+  let choosing = -1;
+  for (const c of path) {
+    const cmd = TOKEN_CMD[c];
+    const r = dispatch(s, cmd);
+    if (choosing >= 0) { goals[choosing].kind = c === 'K' ? 'keep' : 'switch'; choosing = -1; }
+    const lever = r.events.some((e) => e.type === 'flip');
+    for (const e of r.events) {
+      const kind = e.type === 'choose' ? 'keep' : ['bridge', 'seal', 'vanish', 'fall'].includes(e.type) ? e.type : e.type === 'stone' && cmd.type === 'move' ? 'stone' : null;
+      if (!kind) continue;
+      if (e.type === 'choose') choosing = goals.length;
+      goals.push({ body: goals.length, cell: e.at, kind, lever });
+    }
+    s = r.state;
+    if (choosing < 0 && !(keyOf(s) in bodyAt)) bodyAt[keyOf(s)] = goals.length;
+  }
+  return { goals, path, bodyAt };
+}
+function goalWords(g, lang) {
+  const kind = gameText(lang, `hint.kind_${g.kind}`);
+  return g.lever ? gameText(lang, 'hint.with_lever', kind) : kind;
+}
+/// The route in words, repeats grouped (HintProvider.Describe).
+function routeWords(path, lang) {
+  const word = { U: gameText(lang, 'hint.up'), D: gameText(lang, 'hint.down'), L: gameText(lang, 'hint.left'), R: gameText(lang, 'hint.right'), K: 'KEEP', X: 'SWITCH' };
+  const parts = [];
+  for (let i = 0; i < path.length;) {
+    let run = 1;
+    while (i + run < path.length && path[i + run] === path[i]) run++;
+    parts.push(run === 1 ? word[path[i]] : gameText(lang, 'hint.repeat', word[path[i]], run));
+    i += run;
+  }
+  return parts.join(', ');
+}
+/// One tier's line as BoardController.TierText words it, plus the 1-star line under it.
+function tierText(st, tier, s, lang) {
+  const plan = hintPlan(st);
+  const head = gameText(lang, 'hint.tier', tier, 3);
+  const bro = (g) => gameText(lang, `hint.brother${(g.body % 3) + 1}`);
+  let body;
+  let extra = '';
+  if (!plan.path || tier === 3) body = plan.path ? gameText(lang, 'hint.route', routeWords(plan.path, lang)) : gameText(lang, 'hint.not_found');
+  else if (tier === 1) {
+    const nudge = gameText(lang, 'hint.nudge', plan.goals.length, plan.goals.map((g) => gameText(lang, 'hint.nudge_one', bro(g), goalWords(g, lang))).join(', '));
+    const principle = textOf(st.def, lang).hint;
+    body = principle ? `${principle} ${nudge}` : nudge;
+  } else {
+    const k = keyOf(s);
+    const onRoute = k in plan.bodyAt;
+    const g = plan.goals[Math.min(onRoute ? plan.bodyAt[k] : 0, plan.goals.length - 1)];
+    body = gameText(lang, 'hint.goal', bro(g), goalWords(g, lang));
+    extra = `\n(빛나는 칸: ${xy(st.level, g.cell)})`;
+    if (s.prev && !onRoute) return `${head} ${gameText(lang, 'hint.from_start')}  ${body}\n${gameText(lang, 'hint.used_cap')}${extra}`;
+  }
+  return `${gameText(lang, 'hint.line', head, body)}\n${gameText(lang, 'hint.used_cap')}${extra}`;
+}
+/// One failed / restarted try (a loss, or a restart from a played state that was not already lost). Returns the line the
+/// game shows when it unlocks a tier ('' otherwise).
+function countTry(ss) {
+  ss.tries ??= {};
+  const before = hintsUnlocked(ss.tries[ss.level] ?? 0);
+  ss.tries[ss.level] = (ss.tries[ss.level] ?? 0) + 1;
+  return hintsUnlocked(ss.tries[ss.level]) > before ? gameText(ss.lang, 'msg.hint_ready') : '';
+}
 // ---------- commands ----------
 
 const TESTER_RE = /^[A-Za-z0-9_-]{1,32}$/;
@@ -396,19 +491,25 @@ export function run(argv) {
     const lang = langOpt();
     const st = stage(level);
     const p = sessionPath(tester);
-    let guides = [];
+    let guides = [], story = [], tries = {};
     if (existsSync(p)) {
       const old = JSON.parse(readFileSync(p, 'utf8'));
       if (old.active) fail(`${old.level} is still in progress: clear it or run giveup first`);
-      guides = old.guides ?? [];
+      guides = old.guides ?? []; story = old.story ?? []; tries = old.tries ?? {};
     }
     const now = new Date().toISOString();
     const ss = { tester, level, lang, active: true, inputs: '', from: 0, levelUndos: 0, levelHints: 0, levelRestarts: 0, startT: now, attemptT: now,
-      msg: '', cue: st.tutorial ? cueStart(st.tutorial) : -1, guides };
+      msg: '', cue: st.tutorial ? cueStart(st.tutorial) : -1, guides, story, tries, hintOpened: 0 };
+    // A planet's first stage: its arrival scene, once per player (GameController.PlayArrival).
+    let scene = '';
+    if (!st.tutorial && st.def.chapter && (level === 1 || LEVELS[level - 2].chapter !== st.def.chapter)) {
+      const id = `arrival.${st.def.chapter}`;
+      if (hasScene(id) && !story.includes(id)) { story.push(id); scene = storyBlock(id, lang) + '\n'; }
+    }
     saveSession(ss);
     const n = nextAttemptNo(tester, level);
     const what = st.tutorial ? `튜토리얼 ${level}` : `스테이지 ${level}`;
-    return `${what} 시작 (시도 ${n}번째)\n\n` + printView(view(ss, newState(st.level)));
+    return scene + `${what} 시작 (시도 ${n}번째)\n\n` + printView(view(ss, newState(st.level)));
   }
 
   const ss = loadSession(tester);
@@ -445,11 +546,18 @@ export function run(argv) {
     case 'hint': {
       // The game's H on a stage opens its hint line first (BoardController HintTier Principle); a tutorial board has no H.
       if (st.tutorial) fail('no hint on a tutorial board');
+      // Hints unlock by tries (HintGate): locked = the line saying how many more.
+      const tries = ss.tries?.[ss.level] ?? 0;
+      const unlocked = hintsUnlocked(tries);
+      if (unlocked === 0) return gameText(ss.lang, 'msg.hint_locked', triesToNext(tries));
+      const tier = Math.min(unlocked, (ss.hintOpened ?? 0) + 1);
+      // The first hint of an attempt asks first (the in-game popup): the tester confirms with hint --confirm.
+      if (ss.levelHints === 0 && !flag('--confirm'))
+        return `[팝업] ${gameText(ss.lang, 'hint.tier', tier, 3)}\n${gameText(ss.lang, 'hint.popup_body')}\n[${gameText(ss.lang, 'hint.popup_show')}] = hint --confirm   [${gameText(ss.lang, 'hint.popup_cancel')}] = (아무것도 하지 않음)`;
       ss.inputs += 'H'; ss.levelHints++;
+      ss.hintOpened = Math.max(ss.hintOpened ?? 0, tier);
       saveSession(ss);
-      const line = textOf(st.def, ss.lang).hint || gameText(ss.lang, 'hint.not_found');
-      // The game asks first (hint.confirm: a hint caps this attempt at 1 star); the harness counts at once.
-      return `${line}\n(힌트 사용 ${ss.levelHints}회 기록. ${gameText(ss.lang, 'hint.confirm').split(/(?<=[.!?])\s/)[0]})`;
+      return tierText(st, tier, s0, ss.lang);
     }
     case 'restart': {
       let msg = '';
@@ -458,8 +566,11 @@ export function run(argv) {
       if (s0.prev) { ss.inputs += '!'; ss.levelRestarts++; }
       ss.attemptT = new Date().toISOString();
       noteRestart(ss, st);
+      // A restart from a played state counts a try for the hints (a lost state's loss already counted).
+      const ready = !st.tutorial && s0.prev && s0.status !== 'lose' ? countTry(ss) : '';
+      if (ready) ss.msg = 'msg.hint_ready';
       saveSession(ss);
-      return msg + '재시작\n\n' + printView(view(ss, newState(lv)));
+      return msg + '재시작\n' + (ready ? ready + '\n' : '') + '\n' + printView(view(ss, newState(lv)));
     }
     case 'giveup': {
       // Nothing played since the last line: the line is only a stop marker (steps+keeps+switches+undos+hints = 0).
@@ -521,7 +632,19 @@ function applyTokens(ss, s0, tokens) {
         ss.active = false; ss.ended = 'clear';
         // A tutorial board has no clear screen: its win cue, then the next board (TutorialRunController).
         if (st.tutorial) out.push(`\n튜토리얼 ${ss.level} 클리어 (시도 ${line.attempt})\n안내: ${cueLine(st.tutorial.cues[ss.cue] ?? { line: '', text: [] }, ss.lang)}`);
-        else out.push(`\n클리어! ${'★'.repeat(line.stars)}${'☆'.repeat(3 - line.stars)} (시도 ${line.attempt})\n${starLines(ss.lang, line.stars, st.level.bodies)}`);
+        else {
+          out.push(`\n클리어! ${'★'.repeat(line.stars)}${'☆'.repeat(3 - line.stars)} (시도 ${line.attempt})\n${starLines(ss.lang, line.stars, st.level.bodies)}`);
+          // The clear screen's extra lines (U5ClearView): the 3rd-star nudge, the hinted line, and the strands as text.
+          const bodies = st.level.bodies, used = line.bodiesUsed;
+          if (line.stars === 2 && used < bodies) out.push(gameText(ss.lang, 'result.star3_nudge'));
+          if (line.stars === 1) out.push(gameText(ss.lang, 'result.hint_again'));
+          const names = ['teal', 'ochre', 'terracotta'].slice(0, Math.min(3, bodies));
+          out.push(`strands: ${names.map((c, k) => (k < used ? c : '-')).join(' ')}${line.stars === 3 && used === bodies ? ' (braided)' : ''}`);
+          // A planet's finale: its interlude, once per player.
+          const id = `interlude.${st.def.chapter}`;
+          ss.story ??= [];
+          if (finaleStage(st.def.chapter) === ss.level && hasScene(id) && !ss.story.includes(id)) { ss.story.push(id); out.push('\n' + storyBlock(id, ss.lang)); }
+        }
       } else if (st.tutorial) {
         // The game shows the lose cue, then restarts by itself (1.2 s).
         const lost = cueLine(st.tutorial.cues[ss.cue] ?? { line: '(없음)', text: [] }, ss.lang);
@@ -529,7 +652,11 @@ function applyTokens(ss, s0, tokens) {
         noteRestart(ss, st);
         s = newState(s.level);
         out.push(`\n시도 ${line.attempt} 기록: ${outcome}\n안내: ${lost}\n(자동 재시작)`);
-      } else out.push(`\n시도 ${line.attempt} 기록: ${outcome}. undo 로 이어 하거나 restart / giveup`);
+      } else {
+        out.push(`\n시도 ${line.attempt} 기록: ${outcome}. undo 로 이어 하거나 restart / giveup`);
+        const ready = countTry(ss); // a loss counts a try for the hints (HintGate)
+        if (ready) { ss.msg = 'msg.hint_ready'; out.push(ready); }
+      }
       if (applied < tokens.length) out.push(`(남은 입력 ${tokens.slice(applied)}는 무시)`);
       break;
     }
