@@ -290,7 +290,8 @@ namespace SevenSteps.Game
             // ending was read through; dev runs (flow check) go straight to the map as before.
             var cutscenes = devRun ? null : CutsceneLoad.Catalog(assets);
             epilogue = cutscenes?.SceneFor(CutsceneCatalog.WhenAfterEnding);
-            if (epilogue != null)
+            bool interludes = cutscenes != null && System.Linq.Enumerable.Any(cutscenes.Scenes, s => s.when == CutsceneCatalog.WhenPlanetComplete);
+            if (epilogue != null || interludes)
             {
                 cutsceneView = UI.U5.U5CutsceneView.Build(assets.cutsceneImages, assets.uiIcons, localizer);
                 cutscene = new CutsceneController(overlays, cutsceneView, () => localizer.Current);
@@ -331,6 +332,8 @@ namespace SevenSteps.Game
                 finaleShown: () => story.Progress.MarkShown(story.Catalog.Find(StoryRules.Finale(chapterKeys[board.LevelIndex])).id),
                 covered: () => overlays.Count > 0);
             board.FinaleStarting = storyLines.FinaleStarting;
+            // Planet interludes (2026-11-14): once, leaving the result of a chapter's first finale clear (not in dev runs).
+            if (interludes) flowController.Interlude = (stage, then) => PlayInterlude(cutscenes, chapterKeys, stage, then);
             overlays.Changed += storyLines.CoverChanged;
 
             // Tutorial boards (docs/tutorial.md 2.4): AppFlow.Tutorial puts one on the board; the run shows its cues, restarts a
@@ -496,6 +499,26 @@ namespace SevenSteps.Game
         }
 
         void RedrawCutscene(Language _) => cutscene.Redraw();
+
+        /// GameFlowController.Interlude: the chapter's interlude when <paramref name="stage"/> is its finale and the interlude
+        /// was not shown yet (StoryProgress, so "처음부터 다시" brings it back). Marked and saved before it plays, so the
+        /// leave that follows (<paramref name="then"/>) does not ask again.
+        bool PlayInterlude(CutsceneCatalog catalog, string[] chapterKeys, int stage, Action then)
+        {
+            if (cutscene == null || stage < 0 || stage >= chapterKeys.Length || !StoryTruths.IsFinaleStage(chapterKeys, stage)) return false;
+            string chapter = chapterKeys[stage];
+            var scene = catalog.Interlude(chapter);
+            if (scene == null) return false;
+            var save = Services.Get<SaveSystem>();
+            string seen = CutsceneCatalog.InterludeSeenId(chapter);
+            if (save.Story.Count(seen) > 0) return false;
+            save.Story.MarkShown(seen);
+            save.SaveStory();
+            Debug.Log($"[SevenSteps] Interlude {scene.id} after stage {stage + 1}");
+            cutscene.Begin(scene, _ => then());
+            return true;
+        }
+
 
         /// The ending is the top overlay (its keys: Enter / Space / Right = next; Esc skips through the BackNavigator).
         bool EndingOnTop => ending != null && ending.IsOpen && overlays.Top == endingPanel;

@@ -61,6 +61,9 @@ namespace SevenSteps.Contracts
         public const int Version = 3;
         public const int MaxLines = 3;
         public const string WhenNewGame = "newGame", WhenAfterEnding = "afterEnding";
+        /// A planet interlude (user request 2026-11-14): scene id "interlude.<chapter>", played once after the first clear of
+        /// that chapter's finale stage (StoryTruths.FinaleStage), before the map.
+        public const string WhenPlanetComplete = "planetComplete", InterludePrefix = "interlude.";
         public const string ReplayTitle = "title";
         public const string Prologue = "prologue", Epilogue = "epilogue";
 
@@ -93,7 +96,8 @@ namespace SevenSteps.Contracts
             {
                 if (s == null || string.IsNullOrEmpty(s.id)) throw new FormatException("cutscenes.json: a scene without id");
                 if (!ids.Add(s.id)) throw new FormatException($"cutscenes.json: scene \"{s.id}\" twice");
-                if (s.when != WhenNewGame && s.when != WhenAfterEnding) throw new FormatException($"cutscenes.json {s.id}: when \"{s.when}\" is not {WhenNewGame} or {WhenAfterEnding}");
+                if (s.when != WhenNewGame && s.when != WhenAfterEnding && s.when != WhenPlanetComplete) throw new FormatException($"cutscenes.json {s.id}: when \"{s.when}\" is not {WhenNewGame}, {WhenAfterEnding} or {WhenPlanetComplete}");
+                if (s.when == WhenPlanetComplete != s.id.StartsWith(InterludePrefix, StringComparison.Ordinal)) throw new FormatException($"cutscenes.json {s.id}: a {WhenPlanetComplete} scene is \"{InterludePrefix}<chapter>\" and only it");
                 if (s.replay != "" && s.replay != ReplayTitle) throw new FormatException($"cutscenes.json {s.id}: replay \"{s.replay}\" is not \"{ReplayTitle}\" or empty");
                 if (s.pages == null || s.pages.Length == 0) throw new FormatException($"cutscenes.json {s.id}: no pages");
                 foreach (var p in s.pages)
@@ -122,6 +126,13 @@ namespace SevenSteps.Contracts
             foreach (var s in file.scenes) if (s.id == id) return s;
             return null;
         }
+
+        /// The planet interlude of a chapter ("interlude.<chapter>"), or null when it has none.
+        public CutsceneSceneDto Interlude(string chapter) =>
+            string.IsNullOrEmpty(chapter) ? null : Scene(InterludePrefix + chapter) is CutsceneSceneDto s && s.when == WhenPlanetComplete ? s : null;
+
+        /// Story memory id that the interlude was shown (StoryProgress counts; cleared by a progress reset).
+        public static string InterludeSeenId(string chapter) => "cutscene." + InterludePrefix + chapter;
 
         /// The first scene that plays <paramref name="when"/> (WhenNewGame, WhenAfterEnding), or null.
         public CutsceneSceneDto SceneFor(string when)

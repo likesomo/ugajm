@@ -217,6 +217,11 @@ namespace SevenSteps.Game.Flow
         /// as the story's finale and scene-flow's journey return (JourneyReturn.Begin), whatever else is left to replay.
         public bool FinaleCleared(int planet) => cleared[Check(planet)][cleared[planet].Length - 1];
 
+        /// Locked (user request 2026-11-14): the planet before it in map order is not completed (<see cref="FinaleCleared"/>,
+        /// the rule that lights its trail and plays the journey return). The first planet is never locked. The map draws a
+        /// locked planet dark and a click or focus shows "map.locked" instead of diving.
+        public bool Locked(int planet) => Check(planet) > 0 && !FinaleCleared(planet - 1);
+
         /// A trail is lit when the planet it leaves is completed (<see cref="FinaleCleared"/>; "a completed world's outgoing
         /// trail lights toward the next world even when that destination is unfinished", v3). <paramref name="held"/>: a
         /// planet whose new trail waits for the journey return pullback (JourneyReturn.Pending), -1 = none.

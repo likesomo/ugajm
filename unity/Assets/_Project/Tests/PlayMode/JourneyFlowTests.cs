@@ -92,6 +92,10 @@ namespace SevenSteps.Tests.PlayMode
             var panel = Object.FindAnyObjectByType<ResultView>(FindObjectsInactive.Include);
             yield return WinToTheClear(game, last, () => panel != null && panel.IsShown);
             game.Flow.Next(); // the current result panel's Next
+            // 2026-11-14: the first finale clear plays the planet interlude first; skipping it goes on with the return.
+            Assert.IsTrue(game.Cutscene != null && game.Cutscene.IsOpen, "the moss interlude before the map");
+            Assert.AreEqual("interlude.moss", game.Cutscene.Scene.id);
+            game.Cutscene.Skip();
             yield return PlayEnv.WaitForState(AppState.StageSelect, AppScenes.Title, Timeout);
             var ret = Services.Get<JourneyReturn>();
             yield return WaitFor(() => !ret.Pending, "the return pullback to settle");

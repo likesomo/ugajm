@@ -59,6 +59,7 @@
     { "key": "msg.undo", "text": "한 걸음 되돌렸다." },
     { "key": "msg.restart", "text": "처음부터." },
     { "key": "msg.stuck", "text": "더 디딜 곳이 없다. 되돌리기(Z)나 다시 하기(R)로." },
+    { "key": "map.locked", "text": "앞 행성의 별을 먼저 잇자." },
     { "key": "msg.restart_hinted", "text": "힌트를 본 판은 다시 해도 별 최대 1개." },
     { "key": "tutorial.slide", "text": "얼음에선 멈출 곳까지 미끄러져요: 얼음 다음 첫 바닥 칸, 또는 벽이나 석상 앞. 몇 칸이든 한 걸음." },
     { "key": "msg.flip", "text": "7번째 걸음으로 레버를 당겼다. 벽이 뒤집혔다." },

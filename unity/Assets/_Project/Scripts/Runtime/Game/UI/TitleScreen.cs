@@ -86,6 +86,8 @@ namespace SevenSteps.Game.UI
         public U5MapControls U5Map => u5Map;
         /// The planet surface view (new map; null without it). Tests and captures read its constellation.
         public Planets.PlanetSurfaceView SurfaceView => stageViews != null ? stageViews.Surface : null;
+        /// The star map and surface views (tests, captures); null without the new map.
+        public Planets.StageSelectViews StageViews => stageViews;
 
         void Awake()
         {

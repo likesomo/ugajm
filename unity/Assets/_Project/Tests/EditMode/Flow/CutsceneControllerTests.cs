@@ -57,25 +57,29 @@ namespace SevenSteps.Tests
             Assert.AreEqual("5b", prologue.pages[5].id);
             Assert.AreSame(prologue, c.TitleReplay(), "the title's story entry replays the prologue");
             Assert.AreEqual(CutsceneCatalog.Epilogue, c.SceneFor(CutsceneCatalog.WhenAfterEnding).id);
-            Assert.AreEqual(9, c.ImageKeys.Count);
+            Assert.AreEqual(9 + 21, c.ImageKeys.Count); // prologue 8 + epilogue 1 + seven planet interludes of 3 (2026-11-14)
             Assert.AreEqual("cutscene.prologue.1", c.ImageKeys[0]);
             foreach (var s in c.Scenes)
                 foreach (var p in s.pages)
                     foreach (var l in Languages.All)
                         Assert.That(CutsceneCatalog.Lines(p, l), Has.All.Not.Empty, $"{p.image} {l}");
             // Rule captions (user request 2026-11-13) on prologue 3, 4, 5, 5b and 6; KEEP and SWITCH say where the next one wakes.
-            Assert.That(prologue.pages.Where(CutsceneCatalog.HasRule).Select(p => p.id), Is.EqualTo(new[] { "3", "4", "5", "5b", "6" }));
+            // Rev4 (2026-11-14): world captions on 1 (fading star), 2 (the old watchers) and 7 (a turn) too.
+            Assert.That(prologue.pages.Where(CutsceneCatalog.HasRule).Select(p => p.id), Is.EqualTo(new[] { "1", "2", "3", "4", "5", "5b", "6", "7" }));
             Assert.That(CutsceneCatalog.Rule(prologue.pages[4], Language.En), Does.Contain("KEEP"));
             Assert.That(CutsceneCatalog.Rule(prologue.pages[5], Language.En), Does.Contain("SWITCH"));
-            Assert.AreEqual("", CutsceneCatalog.Rule(prologue.pages[0], Language.Ko), "no caption");
+            StringAssert.Contains("저마다", CutsceneCatalog.Rule(prologue.pages[0], Language.Ko), "page 1: each planet forgets steps its own way");
             var set = AssetDatabase.LoadAssetAtPath<GameAssets>("Assets/_Project/Data/GameAssets.asset").cutsceneImages;
             Assert.IsNotNull(set, "GameAssets.cutsceneImages");
             Assert.That(set.entries.Select(e => e.key), Is.EquivalentTo(c.ImageKeys), "one entry per page");
             // Codex pictures (shared-assets) wired by unity.sh cutscene-art, imported by the CutsceneArtImport rule.
-            Assert.IsTrue(set.required, "every page has its picture (5b since 2026-11-13): a missing one is a scene-validate error");
-            foreach (var e in set.entries)
+            foreach (var p in prologue.pages) Assert.IsNotNull(set.Get(p.image), p.image + ": the prologue has every picture");
+            // required follows the set (CutsceneArtImport.Fill): on once every page has its picture; the planet interludes
+            // (2026-11-14) show plain cards until their Codex pictures are wired.
+            Assert.AreEqual(c.ImageKeys.All(k => set.Get(k) != null), set.required, "required = every page has its picture");
+            foreach (var e in set.entries.Where(e => e.sprite != null)) // pictures not delivered yet: plain cards (above)
             {
-                Assert.IsNotNull(e.sprite, e.key);
+                // wired: imported with the CutsceneArtImport rule
                 var path = AssetDatabase.GetAssetPath(e.sprite);
                 Assert.AreEqual($"Assets/Shared/Art/Story/Cutscenes/{e.key}.png", path, e.key);
                 var ti = (TextureImporter)AssetImporter.GetAtPath(path);

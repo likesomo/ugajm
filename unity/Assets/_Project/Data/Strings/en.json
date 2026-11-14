@@ -59,6 +59,7 @@
     { "key": "msg.undo", "text": "One step undone." },
     { "key": "msg.restart", "text": "From the start." },
     { "key": "msg.stuck", "text": "Nowhere left to step. Undo (Z) or restart (R)." },
+    { "key": "map.locked", "text": "Join the previous planet's star first." },
     { "key": "msg.restart_hinted", "text": "Hinted run: max 1 star even after restart." },
     { "key": "tutorial.slide", "text": "On ice you slide until you stop: the first floor cell past the ice, or in front of a wall or statue. Any distance is one step." },
     { "key": "msg.flip", "text": "The 7th step pulled the lever. The walls flipped." },

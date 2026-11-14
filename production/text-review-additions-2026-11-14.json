@@ -1,0 +1,533 @@
+{
+  "about": "New player-facing lines 2026-11-14 for the user text review (reset, stuck, map lock, planet interludes). Source of truth: Data/Strings/*.json and design/story/cutscenes.json.",
+  "rows": [
+    {
+      "sheet": "ui",
+      "id": "settings.reset",
+      "ko": "처음부터 다시",
+      "en": "Reset progress"
+    },
+    {
+      "sheet": "ui",
+      "id": "settings.reset_confirm",
+      "ko": "모든 진행, 별, 튜토리얼 기록이 지워집니다.",
+      "en": "All progress, stars and the tutorial will be erased."
+    },
+    {
+      "sheet": "ui",
+      "id": "settings.reset_yes",
+      "ko": "처음부터 다시",
+      "en": "Reset"
+    },
+    {
+      "sheet": "ui",
+      "id": "settings.reset_no",
+      "ko": "취소",
+      "en": "Cancel"
+    },
+    {
+      "sheet": "ui",
+      "id": "msg.stuck",
+      "ko": "더 디딜 곳이 없다. 되돌리기(Z)나 다시 하기(R)로.",
+      "en": "Nowhere left to step. Undo (Z) or restart (R)."
+    },
+    {
+      "sheet": "ui",
+      "id": "map.locked",
+      "ko": "앞 행성의 별을 먼저 잇자.",
+      "en": "Join the previous planet's star first."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.1.line1",
+      "ko": "고향 하늘의 일곱 별은 국자 모양으로 떠 있다.",
+      "en": "The seven stars over home hang in the shape of a dipper."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.1.line2",
+      "ko": "별마다 그 아래에 작은 행성이 하나씩 있다.",
+      "en": "Under each star lies one small planet."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.1.line3",
+      "ko": "그 별들이 해마다 흐려지고, 고향의 문도 닫혀 간다.",
+      "en": "Year by year the stars grow fainter, and the gates of home are closing."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.1.rule",
+      "ko": "별이 흐려지면 그 아래 땅은 저마다의 방식으로 걸음을 잊는다.",
+      "en": "When a star fades, the ground beneath it forgets our steps, each planet in its own way."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.2.line1",
+      "ko": "관측소 마지막 문 너머에서 옛 관측자의 별지도를 찾았다.",
+      "en": "Beyond the observatory's last door we found the old watchers' star map."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.2.line2",
+      "ko": "국자에 별 넷, 자루에 별 셋, 끝에는 선돌의 원이 있다.",
+      "en": "Four stars in the bowl, three in the handle, and at the end a ring of standing stones."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.2.line3",
+      "ko": "지도는 같은 밤에 태어난 우리 셋의 손에서만 빛났다.",
+      "en": "It shines only in our hands, the three born on the same night."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.2.rule",
+      "ko": "옛 관측자는 아주 먼 옛날 일곱 행성을 걸어 별을 이은 사람들이다.",
+      "en": "The old watchers walked the seven planets long ago and joined the stars."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.7.line1",
+      "ko": "별 아래 행성을 차례로 걸어, 별을 하나씩 다시 켠다.",
+      "en": "We will walk the planets in order and light their stars again, one by one."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.7.line2",
+      "ko": "별이 켜지면 지도에 다음 행성으로 가는 선이 생긴다.",
+      "en": "Each star we light draws the line on the map to the next planet."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.7.line3",
+      "ko": "끝은 움직이지 않는 별 아래, 선돌의 원이다.",
+      "en": "The end is the ring of stones under the still star."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.prologue.7.rule",
+      "ko": "국자가 움직이지 않는 별을 한 번 도는 동안을 한 바퀴라 한다.",
+      "en": "One turn is the time it takes the dipper to circle the still star once."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.moss.2.line1",
+      "ko": "첫째 별 아래, 이끼의 궤도. 우리 고향이다.",
+      "en": "Under the first star: Mossy Orbit, our home."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.moss.2.line2",
+      "ko": "별이 흐려지자 아무도 걷지 않았고, 길마다 이끼가 덮였다.",
+      "en": "When its star dimmed, no one walked anymore, and moss covered every path."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.moss.2.rule",
+      "ko": "옛 관측자는 문마다 발판을 두어, 누가 머물면 문이 열리게 했다.",
+      "en": "The old watchers set a plate by every door, so a door stays open while someone stays on it."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.moss.1.line1",
+      "ko": "형이 발판 위에 선돌로 남자, 문이 열려 있었다.",
+      "en": "My brother stayed on the plate as a standing stone, and the door stood open."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.moss.1.line2",
+      "ko": "누군가 머물러 주어야 길이 열린다는 걸 배웠다.",
+      "en": "We learned that a way opens only when someone stays for it."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.moss.1.rule",
+      "ko": "국자의 첫 별이 다시 켜졌다. 일곱 중 하나.",
+      "en": "The first star of the bowl is lit again: one of seven."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.moss.3.line1",
+      "ko": "켜진 별이 지도에 다음 선을 그었다.",
+      "en": "The relit star drew the next line on the map."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.moss.3.line2",
+      "ko": "선 끝 둘째 별 아래엔, 땅이 꺼진 구멍투성이 달이 있다.",
+      "en": "At its end, under the second star, hangs a moon whose ground has sunk into holes."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.moss.3.line3",
+      "ko": "그 별도 흐려지고 있다. 서둘러야 한다.",
+      "en": "That star is dimming too. We must hurry."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.hollow.2.line1",
+      "ko": "둘째 별 아래, 별구멍 달.",
+      "en": "Under the second star: the Starhole Moon."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.hollow.2.line2",
+      "ko": "별이 꺼져 가자 땅이 제자리를 잊고 꺼져, 구멍이 났다.",
+      "en": "As its star faded, the ground forgot its place and sank, leaving holes."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.hollow.2.line3",
+      "ko": "떨어져도 별 사이를 떠돌다, 하늘이 맞춰지면 돌아온다.",
+      "en": "Whoever falls drifts between the stars, and comes back when the sky lines up."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.hollow.2.rule",
+      "ko": "옛 관측자는 일곱째 걸음으로 구멍을 메워 다리를 놓았다.",
+      "en": "The old watchers filled holes with a seventh step and made bridges."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.hollow.1.line1",
+      "ko": "일곱째 걸음이 구멍에 닿자, 형이 누워 다리가 되었다.",
+      "en": "When the seventh step landed on a hole, my brother lay down and became a bridge."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.hollow.1.line2",
+      "ko": "언제 딛느냐가 전부라는 걸 배웠다.",
+      "en": "We learned that when you step is everything."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.hollow.1.rule",
+      "ko": "국자의 둘째 별이 다시 켜졌다. 일곱 중 둘.",
+      "en": "The second star of the bowl is lit again: two of seven."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.hollow.3.line1",
+      "ko": "새 선은 가장 깊은 구멍 아래로 이어졌다.",
+      "en": "The new line ran down through the deepest hole."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.hollow.3.line2",
+      "ko": "셋째 별 아래, 기둥마다 숫자가 새겨진 행성이 보인다.",
+      "en": "Under the third star we saw a planet with numbers carved on every pillar."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.hollow.3.line3",
+      "ko": "거기선 몇째 걸음인지를 돌이 묻는다.",
+      "en": "There, the stones ask which step you are on."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.carved.2.line1",
+      "ko": "셋째 별 아래, 새김돌 행성.",
+      "en": "Under the third star: the Carved Stone World."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.carved.2.line2",
+      "ko": "별이 흐려져 아무도 걸음을 세지 못하게 되자,",
+      "en": "When its star dimmed and no one could count their steps,"
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.carved.2.line3",
+      "ko": "옛 관측자가 기둥마다 셈을 새겨 두었다.",
+      "en": "the old watchers carved the counts into every pillar."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.carved.2.rule",
+      "ko": "그래서 숫자 문은 꼭 그 숫자째 걸음에만 열린다.",
+      "en": "That is why a number gate opens only on that very step."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.carved.1.line1",
+      "ko": "서두르지도 늦지도 않게 세어, 숫자 문을 지났다.",
+      "en": "Neither hurrying nor late, we counted our way through the number gates."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.carved.1.line2",
+      "ko": "옛 관측자도 우리처럼 세며 걷던 사람들이었다.",
+      "en": "The old watchers were walkers like us, who counted as they went."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.carved.1.rule",
+      "ko": "국자의 셋째 별이 다시 켜졌다. 일곱 중 셋.",
+      "en": "The third star of the bowl is lit again: three of seven."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.carved.3.line1",
+      "ko": "새 선은 서리 덮인 마지막 기둥 너머로 이어졌다.",
+      "en": "The new line ran past the last pillar, white with frost."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.carved.3.line2",
+      "ko": "넷째 별 아래, 별빛 없이 얼어붙은 푸른 달이 있다.",
+      "en": "Under the fourth star hangs a blue moon frozen without starlight."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.carved.3.line3",
+      "ko": "거기선 세기 전에 발이 미끄러진다.",
+      "en": "There, your feet slide before you can count."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.frost.1.line1",
+      "ko": "넷째 별 아래, 서리 위성.",
+      "en": "Under the fourth star: the Frost Moon."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.frost.1.line2",
+      "ko": "가장 먼저 별이 꺼져, 별빛 없이 얼어붙은 달이다.",
+      "en": "Its star went out before any other, and the moon froze without starlight."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.frost.1.line3",
+      "ko": "얼음 위에선 멈추고 싶은 곳에 멈출 수 없었다.",
+      "en": "On the ice we could not stop where we wanted."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.frost.1.rule",
+      "ko": "옛 관측자는 얼음 위에 선돌을 세워, 미끄러지는 걸음을 붙잡았다.",
+      "en": "The old watchers raised standing stones on the ice to catch sliding steps."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.frost.2.line1",
+      "ko": "형이 남긴 돌이 벽이 되어 나를 세워 주었다.",
+      "en": "The stone my brother left became the wall that stopped me."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.frost.2.line2",
+      "ko": "국자의 넷째 별이 켜지자, 국자가 닫혔다.",
+      "en": "When the fourth star lit, the bowl closed."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.frost.2.line3",
+      "ko": "고향 하늘이 조금 밝아졌다. 일곱 중 넷.",
+      "en": "The sky over home grew a little brighter: four of seven."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.frost.2.rule",
+      "ko": "별은 바퀴마다 흐려졌고, 그때마다 다시 걷는 이가 있었다.",
+      "en": "The stars dimmed every turn, and every turn someone walked them again."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.frost.3.line1",
+      "ko": "새 선은 자루의 첫 별로 뻗었다.",
+      "en": "The new line reached out to the first star of the handle."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.frost.3.line2",
+      "ko": "얼음 속 놋쇠 쐐기에서 톱니 도는 소리가 들렸다.",
+      "en": "From a brass wedge in the ice we heard gears turning."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.frost.3.line3",
+      "ko": "다섯째 별 아래, 장치가 벽을 움직이는 행성이다.",
+      "en": "Under the fifth star, machines move the walls."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.joinery.2.line1",
+      "ko": "다섯째 별 아래, 결구의 행성.",
+      "en": "Under the fifth star: the Joinery World."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.joinery.2.line2",
+      "ko": "별이 길을 열지 못하자, 옛 장인들이 장치를 만들었다.",
+      "en": "When its star could no longer open the ways, the old craftsmen built machines."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.joinery.2.line3",
+      "ko": "레버는 모두 꼭 우리 손 높이에 있었다.",
+      "en": "Every lever sat right at our hand height."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.joinery.2.rule",
+      "ko": "옛 관측자는 뒤에 올 사람을 알고, 장치를 손질해 두었다.",
+      "en": "The old watchers knew someone would come after them, and kept the machines in repair."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.joinery.1.line1",
+      "ko": "레버를 당기면 한쪽 벽이 열리고, 다른 쪽이 닫혔다.",
+      "en": "Pull a lever and one wall opens while another closes."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.joinery.1.line2",
+      "ko": "하나를 얻으려면 하나를 내려놓아야 했다.",
+      "en": "To gain one way, we had to let another go."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.joinery.1.rule",
+      "ko": "자루의 첫 별이 다시 켜졌다. 일곱 중 다섯.",
+      "en": "The first star of the handle is lit again: five of seven."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.joinery.3.line1",
+      "ko": "새 선을 따라, 큰 축이 금 간 행성을 가리켰다.",
+      "en": "Along the new line, the great axle pointed at a cracked planet."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.joinery.3.line2",
+      "ko": "여섯째 별은 거의 꺼져, 그 땅은 한 번만 버틴다.",
+      "en": "The sixth star is nearly out, and its ground holds only once."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.joinery.3.line3",
+      "ko": "더 늦기 전에 건너야 한다.",
+      "en": "We must cross before it is too late."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.crumble.1.line1",
+      "ko": "여섯째 별 아래, 무너지는 행성.",
+      "en": "Under the sixth star: the Crumbling World."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.crumble.1.line2",
+      "ko": "별이 거의 꺼져, 땅이 디딘 걸음을 곧바로 잊는다.",
+      "en": "Its star is nearly gone, so the ground forgets each step at once."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.crumble.1.line3",
+      "ko": "금 간 바닥은 한 번만 버티고, 지나가면 무너졌다.",
+      "en": "Cracked floor held only once, then fell away behind us."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.crumble.1.rule",
+      "ko": "옛 관측자는 선돌의 수를 세는 문을 세워, 머문 이를 기억하게 했다.",
+      "en": "The old watchers built gates that count the standing stones, so the ground remembers who stayed."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.crumble.2.line1",
+      "ko": "늘 남겠다던 큰형이, 처음으로 지도만 건넸다.",
+      "en": "Our eldest, who always wanted to stay, handed on just the map for the first time."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.crumble.2.line2",
+      "ko": "남지 않고 건네는 것도, 지키는 일이었다.",
+      "en": "Handing on without staying was a way of keeping, too."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.crumble.2.rule",
+      "ko": "자루의 둘째 별이 다시 켜졌다. 일곱 중 여섯.",
+      "en": "The second star of the handle is lit again: six of seven."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.crumble.3.line1",
+      "ko": "부서진 조각들이 떠올라 늪 위에 디딤돌을 놓았다.",
+      "en": "The broken pieces rose and laid stepping stones across the bog."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.crumble.3.line2",
+      "ko": "그 끝, 일곱째 별 아래에 선돌의 원이 있다.",
+      "en": "At the end, under the seventh star, stands the ring of stones."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.crumble.3.line3",
+      "ko": "원을 맞출 단 하룻밤이 다가온다.",
+      "en": "The one night to align the circle is coming."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.altar.1.line1",
+      "ko": "일곱째 별 아래, 원형 제단.",
+      "en": "Under the seventh star: the Stone Circle."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.altar.1.line2",
+      "ko": "바퀴마다 모든 행성의 물과 이끼가 흘러와 늪이 되었다.",
+      "en": "Every turn, the water and moss of all the planets ran down here and became the bog."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.altar.1.line3",
+      "ko": "잊힌 걸음이 쌓인 늪에선 한 걸음이 두 걸음만큼 무겁다.",
+      "en": "In a bog heavy with forgotten steps, one step weighs as much as two."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.altar.1.rule",
+      "ko": "옛 관측자는 원의 선돌마다 일곱 행성의 셈을 새겨 두었다.",
+      "en": "The old watchers carved the counts of all seven planets into every stone of the circle."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.altar.2.line1",
+      "ko": "배운 것을 모두 합쳐서야, 원 한가운데에 닿았다.",
+      "en": "Only everything we had learned, together, brought us to the circle's heart."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.altar.2.line2",
+      "ko": "자루 끝 별이 다시 켜졌다. 일곱 중 일곱.",
+      "en": "The star at the tip of the handle is lit again: seven of seven."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.altar.2.line3",
+      "ko": "머리 위에는 움직이지 않는 별이 있었다.",
+      "en": "Overhead hung the still star."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.altar.2.rule",
+      "ko": "원은 이 바퀴의 하룻밤, 자루 끝이 그 별 아래 설 때만 맞춰진다.",
+      "en": "The circle aligns only on this turn's one night, when the handle's tip stands under that star."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.altar.3.line1",
+      "ko": "오늘이 그 밤이다. 일곱 별을 하나로 잇는다.",
+      "en": "Tonight is that night. We will join the seven stars into one."
+    },
+    {
+      "sheet": "cutscene",
+      "id": "cutscene.interlude.altar.3.line2",
+      "ko": "셋이 함께, 마지막 일곱 걸음을 센다.",
+      "en": "Together, the three of us count out the last seven steps."
+    }
+  ]
+}

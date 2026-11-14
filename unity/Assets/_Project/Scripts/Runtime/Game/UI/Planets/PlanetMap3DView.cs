@@ -30,7 +30,10 @@ namespace SevenSteps.Game.UI.Planets
         const float DimWidth = 2f, LitWidth = 4f;
         const float MinTarget = 96f, StarSize = 14f, StarGap = 18f, HoldPreview = 0.5f, LightSeconds = 0.8f;
         static readonly Vector2 LabelSize = new Vector2(360, 64);
-        static readonly Color DimTint = new Color(0.7f, 0.72f, 0.78f, 1f); // "slightly dimmed" (research point 2)
+        /// Locked planets (the one before is not completed, 2026-11-14): a dark silhouette of what lies ahead.
+        static readonly Color LockedTint = new Color(0.3f, 0.32f, 0.4f, 1f);
+        /// The label line of a locked planet (Data/Strings).
+        public const string LockedKey = "map.locked";
         /// Scarf colours of the three brothers (v3 current-place dots).
         public static readonly Color[] Scarves = { new Color(0.95f, 0.76f, 0.31f), new Color(0.6f, 0.82f, 0.85f), new Color(0.85f, 0.59f, 0.46f) };
 
@@ -216,7 +219,7 @@ namespace SevenSteps.Game.UI.Planets
             if (held < 0) Frame();
             panel.SetActive(true);
             BuildStars();
-            for (int i = 0; i < bodies.Length; i++) bodies[i].SetTint(model.Visited(i) ? Color.white : DimTint);
+            Tint();
             BuildLines();
             ApplyOverlay();
             Layout();
@@ -231,9 +234,17 @@ namespace SevenSteps.Game.UI.Planets
             lighting = planet;
             lightStart = Time.unscaledTime;
             Frame();
+            Tint(); // the next planet unlocks with this trail
             ApplyOverlay();
             Layout();
             Select(focus);
+        }
+
+        /// Body tints: locked dark, open as painted.
+        void Tint()
+        {
+            // 2026-11-14: open planets are lit (moss always); only locked ones dim. The old "unvisited" dim (DimTint) is off.
+            for (int i = 0; i < bodies.Length; i++) bodies[i].SetTint(model.Locked(i) ? LockedTint : Color.white);
         }
 
         /// A stage choice is pending (dive): everything but the bodies hides and input stops; camera and bodies stay as they are.
@@ -296,6 +307,14 @@ namespace SevenSteps.Game.UI.Planets
         {
             if (suppressClick) { suppressClick = false; return; }
             if (pending || held >= 0 || lighting >= 0) return;
+            if (model != null && model.Locked(planet))
+            {
+                // Locked (2026-11-14): no dive; the label says to complete the planet before first ("map.locked").
+                focused = planet;
+                labelArmed = true;
+                Refresh();
+                return;
+            }
             PlanetChosen?.Invoke(planet);
         }
 
@@ -479,7 +498,7 @@ namespace SevenSteps.Game.UI.Planets
             label.gameObject.SetActive(show);
             if (!show) return;
             nameText.text = planets[p].Name(loc);
-            string tag = planets[p].Tagline(loc);
+            string tag = model.Locked(p) ? loc.Get(LockedKey) : planets[p].Tagline(loc);
             taglineText.text = tag;
             taglineText.gameObject.SetActive(!string.IsNullOrEmpty(tag));
             var bounds = new Rect(rect.rect.xMin + 24, rect.rect.yMin + 24, rect.rect.width - 48, rect.rect.height - 48);

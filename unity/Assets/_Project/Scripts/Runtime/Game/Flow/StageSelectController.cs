@@ -181,6 +181,7 @@ namespace SevenSteps.Game.Flow
         void OnPlanetChosen(int planet)
         {
             if (model == null || Pending != null || heldPlanet >= 0) return; // a dive or a return pullback is running
+            if (model.Locked(planet)) return; // the planet before is not completed (the view shows map.locked)
             if (!SurfaceFirst && model.ChoosePlays(planet, out int slot)) Choose(planet, slot, StageChoiceSource.Map);
             else OpenSurface(planet);
         }

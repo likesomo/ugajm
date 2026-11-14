@@ -31,4 +31,46 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 8fbbfec6a3f589b4abb410170ab79524, type: 3}
   - key: cutscene.epilogue.1
     sprite: {fileID: 21300000, guid: 2f6eff2049bdf8e43bba808060f5dd51, type: 3}
-  required: 1
+  - key: cutscene.interlude.moss.2
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.moss.1
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.moss.3
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.hollow.2
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.hollow.1
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.hollow.3
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.carved.2
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.carved.1
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.carved.3
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.frost.1
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.frost.2
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.frost.3
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.joinery.2
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.joinery.1
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.joinery.3
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.crumble.1
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.crumble.2
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.crumble.3
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.altar.1
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.altar.2
+    sprite: {fileID: 0}
+  - key: cutscene.interlude.altar.3
+    sprite: {fileID: 0}
+  required: 0

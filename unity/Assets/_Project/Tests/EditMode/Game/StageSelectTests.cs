@@ -209,7 +209,7 @@ namespace SevenSteps.Tests
             var news = new ClearNews();
             news.Record(4, true, 0, 2);
             news.Record(6, true, 0, 1);
-            var c = Controller(Model(Rows(new[] { true, false, false }, new[] { false, true, false }, new bool[2])), news: news);
+            var c = Controller(Model(Rows(new[] { true, false, true }, new[] { false, true, false }, new bool[2])), news: news);
             c.SurfaceFirst = true;
             c.Show();
             view.Choose(1);
@@ -226,7 +226,7 @@ namespace SevenSteps.Tests
         {
             var news = new ClearNews();
             news.Record(4, true, 0, 2);
-            var c = Controller(Model(Rows(new[] { true, false, false }, new[] { false, true, false }, new bool[2])), news: news);
+            var c = Controller(Model(Rows(new[] { true, false, true }, new[] { false, true, false }, new bool[2])), news: news);
             c.SurfaceFirst = true;
             c.Show();
             view.opens = false;
@@ -249,11 +249,11 @@ namespace SevenSteps.Tests
         }
 
         /// U5 (D2b constellation): every planet opens its surface, unfinished and untouched ones too; an untouched stage
-        /// beyond the first unfinished one plays (no locks).
+        /// beyond the first unfinished one plays (no stage locks; planet 0's finale is cleared so planet 1 is open, 2026-11-14).
         [Test]
         public void SurfaceFirstOpensAnUnfinishedPlanetAndAnyStagePlays()
         {
-            var c = Controller(Model(Rows(new[] { true, false, false }, new bool[3], new bool[2])));
+            var c = Controller(Model(Rows(new[] { true, false, true }, new bool[3], new bool[2])));
             c.SurfaceFirst = true;
             c.Show();
             view.Choose(1);
@@ -278,7 +278,7 @@ namespace SevenSteps.Tests
         [Test]
         public void TheDiveGetsOneChoiceThatEndsOnce()
         {
-            var c = Controller(Model(Rows(new bool[3], new bool[3], new bool[2])));
+            var c = Controller(Model(Rows(new[] { false, false, true }, new bool[3], new bool[2])));
             StageChoice got = null;
             c.StageChosen += ch => got = ch;
             c.Show();
@@ -317,7 +317,7 @@ namespace SevenSteps.Tests
         [Test]
         public void CancelGivesInputBack()
         {
-            var c = Controller(Model(Rows(new bool[3], new bool[3], new bool[2])));
+            var c = Controller(Model(Rows(new bool[3], new[] { false, false, true }, new bool[2])));
             StageChoice got = null;
             c.StageChosen += ch => got = ch;
             c.Show();

@@ -283,6 +283,8 @@ namespace SevenSteps.Tests.PlayMode
                     else save.Progress.MarkCleared(level, level.Bodies, s);
                 }
             if (state == "perfect") foreach (int s in stages) save.Progress.MarkCleared(levels[s], levels[s].Bodies, 3);
+            // The planets before are completed (finale cleared): otherwise this one is locked (2026-11-14) and does not open.
+            for (int q = 0; q < p; q++) { var fin = levels[planets[q].Stages[planets[q].Stages.Count - 1]]; save.Progress.MarkCleared(fin, fin.Bodies, 3); }
             title.U5Title.Map.Press();
             yield return PlayEnv.WaitForState(AppState.StageSelect, AppScenes.Title);
             GameObject.Find($"TitleUI/PlanetMap3D/Planet {p + 1}").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
@@ -906,6 +908,91 @@ namespace SevenSteps.Tests.PlayMode
                 AssertVaried($"stuck-44-{lang}", px.Value);
                 yield return SendLetters(game, "R"); // a bump keeps the line
                 Assert.AreEqual(want, game.Board.MessageLine, lang + " stuck line after a bump");
+            }
+        }
+
+        /// Locked planets (2026-11-14), KO and EN: a fresh save (only moss open; a click on hollow shows map.locked and does
+        /// not dive), the middle (moss, hollow, carved completed: frost open, joinery on locked) and everything done.
+        /// `unity.sh playcapture MapLock` -> map-lock-{fresh,middle,done}-{ko,en}.png.
+        [UnityTest]
+        public IEnumerator MapLock()
+        {
+            foreach (string lang in new[] { "ko", "en" })
+                foreach (string state in new[] { "fresh", "middle", "done" })
+                {
+                    PlayEnv.Reset();
+                    yield return Start(AppState.Title, AppScenes.Title, "-ui5", "-lang", lang);
+                    var save = Services.Get<SaveSystem>();
+                    var title = Object.FindAnyObjectByType<SevenSteps.Game.UI.TitleScreen>();
+                    var levels = LevelCatalog.Load(title.assets);
+                    var planets = SevenSteps.Game.UI.PlanetEntry.FromCatalog(levels.Length);
+                    int completed = state == "fresh" ? 0 : state == "middle" ? 3 : planets.Count;
+                    for (int q = 0; q < completed; q++)
+                        foreach (int s in planets[q].Stages) save.Progress.MarkCleared(levels[s], levels[s].Bodies, 3);
+                    title.U5Title.Map.Press();
+                    yield return PlayEnv.WaitForState(AppState.StageSelect, AppScenes.Title);
+                    var model = title.StageSelect.Model;
+                    for (int p = 0; p < planets.Count; p++)
+                        Assert.AreEqual(p > 0 && p > completed, model.Locked(p), $"{state}: planet {p} locked");
+                    int locked = completed + 1;
+                    if (locked < planets.Count)
+                    {
+                        GameObject.Find($"TitleUI/PlanetMap3D/Planet {locked + 1}").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+                        yield return null;
+                        var map = title.StageViews.Map;
+                        Assert.AreEqual(locked, map.LabelShown, "a locked planet's click shows its label");
+                        Assert.AreEqual(AppState.StageSelect, Services.Get<AppFlow>().State, "no dive into a locked planet");
+                    }
+                    var px = new Pixels();
+                    yield return Capture($"map-lock-{state}-{lang}", px, 1.2f);
+                    AssertVaried($"map-lock-{state}-{lang}", px.Value);
+                }
+        }
+
+        /// Planet interlude (2026-11-14): moss's finale (stage 7) won live on a fresh save, the clear's Next plays
+        /// interlude.moss once (page 1 captured KO / EN), then the journey goes on; the seen flag is saved and a reset clears
+        /// it. `unity.sh playcapture Interlude` -> interlude-moss-p1-{ko,en}.png.
+        [UnityTest]
+        public IEnumerator Interlude()
+        {
+            foreach (string lang in new[] { "ko", "en" })
+            {
+                PlayEnv.Reset();
+                yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", lang, "-level", "7");
+                var game = Object.FindAnyObjectByType<GameController>();
+                var flow = Services.Get<AppFlow>();
+                var save = Services.Get<SaveSystem>();
+                string seen = CutsceneCatalog.InterludeSeenId("moss");
+                Assert.AreEqual(0, save.Story.Count(seen), "fresh save");
+                float tw = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - tw < 1.5f) yield return null; // chapter card
+                while (Object.FindAnyObjectByType<GameController>().Board.Session.IsLocked) yield return null;
+                var sol = Core.Solver.Solve(game.Board.State.Level);
+                Assert.IsNotNull(sol, "stage 7 solvable");
+                yield return SendLetters(game, sol.Letters());
+                float t0 = Time.realtimeSinceStartup;
+                while (flow.State != AppState.Result) { Assert.Less(Time.realtimeSinceStartup - t0, 30f, "the clear"); yield return null; }
+                t0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - t0 < 2.5f) yield return null; // the star trail finale
+                game.Flow.Next();
+                var c = game.Cutscene;
+                Assert.IsNotNull(c, "a cutscene player in the Game scene");
+                Assert.IsTrue(c.IsOpen, lang + ": Next after moss's finale plays its interlude");
+                Assert.AreEqual("interlude.moss", c.Scene.id);
+                Assert.AreEqual(1, save.Story.Count(seen), "marked seen");
+                Assert.AreEqual(AppState.Result, flow.State, "the journey waits for the interlude");
+                var px = new Pixels();
+                while (c.Shown < c.Frame.Lines.Count) game.CutsceneView.Next.Press(); // page 1 with its origin caption
+                yield return Capture($"interlude-moss-p1-{lang}", px, 0.5f);
+                AssertVaried($"interlude-moss-p1-{lang}", px.Value);
+                game.CutsceneView.Skip.Press();
+                yield return null;
+                Assert.IsFalse(c.IsOpen, "skipped");
+                Assert.IsTrue(game.Flow.Leaving || flow.State != AppState.Result, "the journey goes on after the interlude");
+                Assert.IsFalse(game.Flow.Interlude(6, () => { }), "once only");
+                save.ResetProgress();
+                Assert.AreEqual(0, save.Story.Count(seen), "a reset brings the interlude back");
+                yield return new WaitForSecondsRealtime(3f);
             }
         }
 

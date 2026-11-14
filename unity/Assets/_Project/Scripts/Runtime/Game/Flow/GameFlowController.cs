@@ -101,6 +101,14 @@ namespace SevenSteps.Game.Flow
 
         // ---------- Player actions ----------
 
+        /// Planet interlude (user request 2026-11-14): asked with (stage, then) when the player leaves a won stage's result
+        /// (Next, map, Esc). True = it plays the interlude now and calls <c>then</c> when it ends (so the leave runs again,
+        /// with the interlude marked seen); false = nothing to play. Null = no interludes (tests, dev runs).
+        public Func<int, Action, bool> Interlude { get; set; }
+
+        bool InterludeFirst(Action then) =>
+            Interlude != null && flow.State == AppState.Result && !flow.InTutorial && Interlude(flow.Stage, then);
+
         /// Stage list buttons, [ and ].
         public void SelectStage(int stage)
         {
@@ -114,6 +122,7 @@ namespace SevenSteps.Game.Flow
         {
             if (flow.State != AppState.Result || flow.IsLoading || Leaving) return;
             if (IsLast) { EndingRequested?.Invoke(); return; }
+            if (InterludeFirst(Next)) return; // a planet's first finale clear: its interlude, then Next again
             if (!flow.CanGoToGame(flow.Stage + 1)) return;
             switch (JourneyRoute.After(Journey, flow.Stage, flow.StageCount, chapterOf))
             {
@@ -151,6 +160,7 @@ namespace SevenSteps.Game.Flow
         public void OpenStageSelect()
         {
             if (flow.IsLoading || !AppFlow.CanGo(flow.State, AppState.StageSelect)) return;
+            if (!Leaving && InterludeFirst(OpenStageSelect)) return;
             if (Journey && flow.State == AppState.Result)
             {
                 // From the clear: the journey return first (FinishReturn when the pullback is over); nothing while leaving.

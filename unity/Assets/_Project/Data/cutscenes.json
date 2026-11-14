@@ -17,36 +17,63 @@
           "image": "cutscene.prologue.1",
           "lines": [
             {
-              "line": "고향 하늘의 일곱 별이 해마다 흐려진다.",
+              "line": "고향 하늘의 일곱 별은 국자 모양으로 떠 있다.",
               "text": [
                 {
                   "lang": "en",
-                  "line": "Every year the seven stars over home grow fainter."
+                  "line": "The seven stars over home hang in the shape of a dipper."
                 }
               ]
             },
             {
-              "line": "별이 다 꺼지면 땅은 걸음을 잊고, 길은 모두 닫힌다.",
+              "line": "별마다 그 아래에 작은 행성이 하나씩 있다.",
               "text": [
                 {
                   "lang": "en",
-                  "line": "If they all go out, the ground forgets our steps and every path closes."
+                  "line": "Under each star lies one small planet."
+                }
+              ]
+            },
+            {
+              "line": "그 별들이 해마다 흐려지고, 고향의 문도 닫혀 간다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Year by year the stars grow fainter, and the gates of home are closing."
                 }
               ]
             }
           ],
-          "art": "Night over a small mossy home planet. Wide shot: the three hooded brothers stand small on a mossy hill beside broken observatory pillars, looking up at a faint, half-faded seven-star dipper. A shut stone gate in the moss below them."
+          "art": "Night over a small mossy home planet. Wide shot: the three hooded brothers stand small on a mossy hill beside broken observatory pillars, looking up at a faint, half-faded seven-star dipper. A shut stone gate in the moss below them.",
+          "rule": {
+            "line": "별이 흐려지면 그 아래 땅은 저마다의 방식으로 걸음을 잊는다.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "When a star fades, the ground beneath it forgets our steps, each planet in its own way."
+              }
+            ]
+          }
         },
         {
           "id": "2",
           "image": "cutscene.prologue.2",
           "lines": [
             {
-              "line": "관측소 마지막 문 너머에서 별지도를 찾았다.",
+              "line": "관측소 마지막 문 너머에서 옛 관측자의 별지도를 찾았다.",
               "text": [
                 {
                   "lang": "en",
-                  "line": "Beyond the observatory's last door we found the star map."
+                  "line": "Beyond the observatory's last door we found the old watchers' star map."
+                }
+              ]
+            },
+            {
+              "line": "국자에 별 넷, 자루에 별 셋, 끝에는 선돌의 원이 있다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Four stars in the bowl, three in the handle, and at the end a ring of standing stones."
                 }
               ]
             },
@@ -60,7 +87,16 @@
               ]
             }
           ],
-          "art": "Inside a ruined mossy observatory, lit by the map itself. Close-medium shot: the three brothers kneel around an unrolled scroll that glows softly. On it: seven star points and a small ring of stones at one edge, with no lines between the stars yet. Their three scarves hang into the glow."
+          "art": "Inside a ruined mossy observatory, lit by the map itself. Close-medium shot: the three brothers kneel around an unrolled scroll that glows softly. On it: seven star points and a small ring of stones at one edge, with no lines between the stars yet. Their three scarves hang into the glow.",
+          "rule": {
+            "line": "옛 관측자는 아주 먼 옛날 일곱 행성을 걸어 별을 이은 사람들이다.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "The old watchers walked the seven planets long ago and joined the stars."
+              }
+            ]
+          }
         },
         {
           "id": "3",
@@ -264,25 +300,43 @@
           "image": "cutscene.prologue.7",
           "lines": [
             {
-              "line": "지도 끝 선돌의 원까지, 일곱 별을 다시 잇는다.",
+              "line": "별 아래 행성을 차례로 걸어, 별을 하나씩 다시 켠다.",
               "text": [
                 {
                   "lang": "en",
-                  "line": "All the way to the ring of stones at the map's end, we join the seven stars again."
+                  "line": "We will walk the planets in order and light their stars again, one by one."
                 }
               ]
             },
             {
-              "line": "별이 다 꺼지기 전에.",
+              "line": "별이 켜지면 지도에 다음 행성으로 가는 선이 생긴다.",
               "text": [
                 {
                   "lang": "en",
-                  "line": "Before they all go out."
+                  "line": "Each star we light draws the line on the map to the next planet."
+                }
+              ]
+            },
+            {
+              "line": "끝은 움직이지 않는 별 아래, 선돌의 원이다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "The end is the ring of stones under the still star."
                 }
               ]
             }
           ],
-          "art": "Back view, wide: the three brothers walk away along a mossy path toward the horizon of their small planet, the scroll on the youngest's back. In the deep indigo sky the faint dipper, and far away a tiny planet crowned by a ring of standing stones."
+          "art": "Back view, wide: the three brothers walk away along a mossy path toward the horizon of their small planet, the scroll on the youngest's back. In the deep indigo sky the faint dipper, and far away a tiny planet crowned by a ring of standing stones.",
+          "rule": {
+            "line": "국자가 움직이지 않는 별을 한 번 도는 동안을 한 바퀴라 한다.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "One turn is the time it takes the dipper to circle the still star once."
+              }
+            ]
+          }
         }
       ]
     },
@@ -316,6 +370,832 @@
             }
           ],
           "art": "Night above the ring of standing stones, seen from behind three small figures sitting together on the grass. The whole dipper is bright, and lines of three woven colours (teal, ochre, terracotta) run between its stars across the sky."
+        }
+      ]
+    },
+    {
+      "id": "interlude.moss",
+      "when": "planetComplete",
+      "replay": "",
+      "pages": [
+        {
+          "id": "2",
+          "image": "cutscene.interlude.moss.2",
+          "lines": [
+            {
+              "line": "첫째 별 아래, 이끼의 궤도. 우리 고향이다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Under the first star: Mossy Orbit, our home."
+                }
+              ]
+            },
+            {
+              "line": "별이 흐려지자 아무도 걷지 않았고, 길마다 이끼가 덮였다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "When its star dimmed, no one walked anymore, and moss covered every path."
+                }
+              ]
+            }
+          ],
+          "art": "The three brothers look back from the edge of the home planet at the mossy observatory far behind them. Its round stone floor plates and old worn footpaths glow faintly in the moss where long-ago walkers once stood and went. Gentle, a little wistful.",
+          "rule": {
+            "line": "옛 관측자는 문마다 발판을 두어, 누가 머물면 문이 열리게 했다.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "The old watchers set a plate by every door, so a door stays open while someone stays on it."
+              }
+            ]
+          }
+        },
+        {
+          "id": "1",
+          "image": "cutscene.interlude.moss.1",
+          "lines": [
+            {
+              "line": "형이 발판 위에 선돌로 남자, 문이 열려 있었다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "My brother stayed on the plate as a standing stone, and the door stood open."
+                }
+              ]
+            },
+            {
+              "line": "누군가 머물러 주어야 길이 열린다는 걸 배웠다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "We learned that a way opens only when someone stays for it."
+                }
+              ]
+            }
+          ],
+          "art": "Inside the mossy home observatory among cut pillars. The eldest brother (teal scarf) stands on a round stone floor plate, half turned into a plain grey standing stone in his own hooded shape; beside him a stone door stands open, held by his weight. The other two brothers walk through the open door, looking back at him gratefully.",
+          "rule": {
+            "line": "국자의 첫 별이 다시 켜졌다. 일곱 중 하나.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "The first star of the bowl is lit again: one of seven."
+              }
+            ]
+          }
+        },
+        {
+          "id": "3",
+          "image": "cutscene.interlude.moss.3",
+          "lines": [
+            {
+              "line": "켜진 별이 지도에 다음 선을 그었다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "The relit star drew the next line on the map."
+                }
+              ]
+            },
+            {
+              "line": "선 끝 둘째 별 아래엔, 땅이 꺼진 구멍투성이 달이 있다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "At its end, under the second star, hangs a moon whose ground has sunk into holes."
+                }
+              ]
+            },
+            {
+              "line": "그 별도 흐려지고 있다. 서둘러야 한다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "That star is dimming too. We must hurry."
+                }
+              ]
+            }
+          ],
+          "art": "Past the observatory's last open door, the three brothers kneel at a round hole in the mossy stone floor; stars glow far below through it. The youngest (terracotta scarf) holds the glowing scroll, where one bright line now joins the first star to the second. Through the doorway, low in the indigo sky, a pale small moon pierced with round holes."
+        }
+      ]
+    },
+    {
+      "id": "interlude.hollow",
+      "when": "planetComplete",
+      "replay": "",
+      "pages": [
+        {
+          "id": "2",
+          "image": "cutscene.interlude.hollow.2",
+          "lines": [
+            {
+              "line": "둘째 별 아래, 별구멍 달.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Under the second star: the Starhole Moon."
+                }
+              ]
+            },
+            {
+              "line": "별이 꺼져 가자 땅이 제자리를 잊고 꺼져, 구멍이 났다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "As its star faded, the ground forgot its place and sank, leaving holes."
+                }
+              ]
+            },
+            {
+              "line": "떨어져도 별 사이를 떠돌다, 하늘이 맞춰지면 돌아온다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Whoever falls drifts between the stars, and comes back when the sky lines up."
+                }
+              ]
+            }
+          ],
+          "art": "Cut-away side view of the hollow moon: a thin crust with round holes, and under it a deep space full of soft stars that hold up the path of stone tiles from below. Through one hole the eldest brother (teal scarf) floats gently back up on a column of starlight to the two brothers waiting at its rim.",
+          "rule": {
+            "line": "옛 관측자는 일곱째 걸음으로 구멍을 메워 다리를 놓았다.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "The old watchers filled holes with a seventh step and made bridges."
+              }
+            ]
+          }
+        },
+        {
+          "id": "1",
+          "image": "cutscene.interlude.hollow.1",
+          "lines": [
+            {
+              "line": "일곱째 걸음이 구멍에 닿자, 형이 누워 다리가 되었다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "When the seventh step landed on a hole, my brother lay down and became a bridge."
+                }
+              ]
+            },
+            {
+              "line": "언제 딛느냐가 전부라는 걸 배웠다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "We learned that when you step is everything."
+                }
+              ]
+            }
+          ],
+          "art": "On the pale starhole moon: the middle brother (ochre scarf) lies across a round hole as a calm bridge of grey stone and soft starlight, and the youngest walks over him carefully with the scroll. Stars glow deep inside the hole beneath. Other holes dot the moon around them.",
+          "rule": {
+            "line": "국자의 둘째 별이 다시 켜졌다. 일곱 중 둘.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "The second star of the bowl is lit again: two of seven."
+              }
+            ]
+          }
+        },
+        {
+          "id": "3",
+          "image": "cutscene.interlude.hollow.3",
+          "lines": [
+            {
+              "line": "새 선은 가장 깊은 구멍 아래로 이어졌다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "The new line ran down through the deepest hole."
+                }
+              ]
+            },
+            {
+              "line": "셋째 별 아래, 기둥마다 숫자가 새겨진 행성이 보인다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Under the third star we saw a planet with numbers carved on every pillar."
+                }
+              ]
+            },
+            {
+              "line": "거기선 몇째 걸음인지를 돌이 묻는다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "There, the stones ask which step you are on."
+                }
+              ]
+            }
+          ],
+          "art": "The three brothers kneel at the rim of the largest hole and look down through it. Far below, framed by the hole, a sandstone planet covered in a forest of tall pillars, each carved with simple notches (no real numerals or letters)."
+        }
+      ]
+    },
+    {
+      "id": "interlude.carved",
+      "when": "planetComplete",
+      "replay": "",
+      "pages": [
+        {
+          "id": "2",
+          "image": "cutscene.interlude.carved.2",
+          "lines": [
+            {
+              "line": "셋째 별 아래, 새김돌 행성.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Under the third star: the Carved Stone World."
+                }
+              ]
+            },
+            {
+              "line": "별이 흐려져 아무도 걸음을 세지 못하게 되자,",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "When its star dimmed and no one could count their steps,"
+                }
+              ]
+            },
+            {
+              "line": "옛 관측자가 기둥마다 셈을 새겨 두었다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "the old watchers carved the counts into every pillar."
+                }
+              ]
+            }
+          ],
+          "art": "Close view: the youngest brother (terracotta scarf) presses a small round dot into the soft sandstone of a pillar, just beside rows of old worn notches. His brothers watch over his shoulders. The new dot glows faintly terracotta.",
+          "rule": {
+            "line": "그래서 숫자 문은 꼭 그 숫자째 걸음에만 열린다.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "That is why a number gate opens only on that very step."
+              }
+            ]
+          }
+        },
+        {
+          "id": "1",
+          "image": "cutscene.interlude.carved.1",
+          "lines": [
+            {
+              "line": "서두르지도 늦지도 않게 세어, 숫자 문을 지났다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Neither hurrying nor late, we counted our way through the number gates."
+                }
+              ]
+            },
+            {
+              "line": "옛 관측자도 우리처럼 세며 걷던 사람들이었다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "The old watchers were walkers like us, who counted as they went."
+                }
+              ]
+            }
+          ],
+          "art": "Among tall sandstone pillars carved with notches, the middle brother (ochre scarf) steps through a stone gate carved with a row of notches; a small star mark glows under his foot as the gate opens, matching the notches. Nearby, one person-high plain grey standing stone stands alone. Late warm light, long shadows.",
+          "rule": {
+            "line": "국자의 셋째 별이 다시 켜졌다. 일곱 중 셋.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "The third star of the bowl is lit again: three of seven."
+              }
+            ]
+          }
+        },
+        {
+          "id": "3",
+          "image": "cutscene.interlude.carved.3",
+          "lines": [
+            {
+              "line": "새 선은 서리 덮인 마지막 기둥 너머로 이어졌다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "The new line ran past the last pillar, white with frost."
+                }
+              ]
+            },
+            {
+              "line": "넷째 별 아래, 별빛 없이 얼어붙은 푸른 달이 있다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Under the fourth star hangs a blue moon frozen without starlight."
+                }
+              ]
+            },
+            {
+              "line": "거기선 세기 전에 발이 미끄러진다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "There, your feet slide before you can count."
+                }
+              ]
+            }
+          ],
+          "art": "Wide dusk view: the last and tallest carved pillar, its notches hidden under white frost, with a thin trail of frost crystals drifting up from it toward a small cold blue moon in the indigo sky. The three brothers stand at its foot, breath misting, the scroll on the eldest's back."
+        }
+      ]
+    },
+    {
+      "id": "interlude.frost",
+      "when": "planetComplete",
+      "replay": "",
+      "pages": [
+        {
+          "id": "1",
+          "image": "cutscene.interlude.frost.1",
+          "lines": [
+            {
+              "line": "넷째 별 아래, 서리 위성.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Under the fourth star: the Frost Moon."
+                }
+              ]
+            },
+            {
+              "line": "가장 먼저 별이 꺼져, 별빛 없이 얼어붙은 달이다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Its star went out before any other, and the moon froze without starlight."
+                }
+              ]
+            },
+            {
+              "line": "얼음 위에선 멈추고 싶은 곳에 멈출 수 없었다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "On the ice we could not stop where we wanted."
+                }
+              ]
+            }
+          ],
+          "art": "A frozen moon with frosted stone tiles and wooden rails. The middle brother slides across shining ice and comes to a gentle stop against a plain grey standing stone in the shape of a hooded brother; the third brother watches from the start. Cold blues with warm scarf colours.",
+          "rule": {
+            "line": "옛 관측자는 얼음 위에 선돌을 세워, 미끄러지는 걸음을 붙잡았다.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "The old watchers raised standing stones on the ice to catch sliding steps."
+              }
+            ]
+          }
+        },
+        {
+          "id": "2",
+          "image": "cutscene.interlude.frost.2",
+          "lines": [
+            {
+              "line": "형이 남긴 돌이 벽이 되어 나를 세워 주었다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "The stone my brother left became the wall that stopped me."
+                }
+              ]
+            },
+            {
+              "line": "국자의 넷째 별이 켜지자, 국자가 닫혔다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "When the fourth star lit, the bowl closed."
+                }
+              ]
+            },
+            {
+              "line": "고향 하늘이 조금 밝아졌다. 일곱 중 넷.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "The sky over home grew a little brighter: four of seven."
+                }
+              ]
+            }
+          ],
+          "art": "Night sky over the frost moon: the dipper's four bowl stars are now joined in a closed, bright four-sided shape, while the three handle stars are still faint. Far away, a tiny mossy home planet glows a little warmer. The three brothers sit together on the ice, looking up.",
+          "rule": {
+            "line": "별은 바퀴마다 흐려졌고, 그때마다 다시 걷는 이가 있었다.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "The stars dimmed every turn, and every turn someone walked them again."
+              }
+            ]
+          }
+        },
+        {
+          "id": "3",
+          "image": "cutscene.interlude.frost.3",
+          "lines": [
+            {
+              "line": "새 선은 자루의 첫 별로 뻗었다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "The new line reached out to the first star of the handle."
+                }
+              ]
+            },
+            {
+              "line": "얼음 속 놋쇠 쐐기에서 톱니 도는 소리가 들렸다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "From a brass wedge in the ice we heard gears turning."
+                }
+              ]
+            },
+            {
+              "line": "다섯째 별 아래, 장치가 벽을 움직이는 행성이다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Under the fifth star, machines move the walls."
+                }
+              ]
+            }
+          ],
+          "art": "Close view: the eldest brother (teal scarf) holds up a small worn brass wedge just freed from clear ice, the other two leaning in to listen. Reflected in the brass, a distant planet of timber beams, brass gears, levers and moving wooden walls."
+        }
+      ]
+    },
+    {
+      "id": "interlude.joinery",
+      "when": "planetComplete",
+      "replay": "",
+      "pages": [
+        {
+          "id": "2",
+          "image": "cutscene.interlude.joinery.2",
+          "lines": [
+            {
+              "line": "다섯째 별 아래, 결구의 행성.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Under the fifth star: the Joinery World."
+                }
+              ]
+            },
+            {
+              "line": "별이 길을 열지 못하자, 옛 장인들이 장치를 만들었다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "When its star could no longer open the ways, the old craftsmen built machines."
+                }
+              ]
+            },
+            {
+              "line": "레버는 모두 꼭 우리 손 높이에 있었다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Every lever sat right at our hand height."
+                }
+              ]
+            }
+          ],
+          "art": "Quiet close view: three small gloved hands of the brothers rest on a row of polished brass levers set at exactly their height. Old oil cans and neat tools hang on the wall beside them, as if someone has just tidied up. Warm lamplight.",
+          "rule": {
+            "line": "옛 관측자는 뒤에 올 사람을 알고, 장치를 손질해 두었다.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "The old watchers knew someone would come after them, and kept the machines in repair."
+              }
+            ]
+          }
+        },
+        {
+          "id": "1",
+          "image": "cutscene.interlude.joinery.1",
+          "lines": [
+            {
+              "line": "레버를 당기면 한쪽 벽이 열리고, 다른 쪽이 닫혔다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Pull a lever and one wall opens while another closes."
+                }
+              ]
+            },
+            {
+              "line": "하나를 얻으려면 하나를 내려놓아야 했다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "To gain one way, we had to let another go."
+                }
+              ]
+            }
+          ],
+          "art": "Inside a planet of wooden joinery and brass: the middle brother pulls a brass lever; on the left a timber wall swings open with light, on the right another one swings shut. The other brothers watch from the doorway.",
+          "rule": {
+            "line": "자루의 첫 별이 다시 켜졌다. 일곱 중 다섯.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "The first star of the handle is lit again: five of seven."
+              }
+            ]
+          }
+        },
+        {
+          "id": "3",
+          "image": "cutscene.interlude.joinery.3",
+          "lines": [
+            {
+              "line": "새 선을 따라, 큰 축이 금 간 행성을 가리켰다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Along the new line, the great axle pointed at a cracked planet."
+                }
+              ]
+            },
+            {
+              "line": "여섯째 별은 거의 꺼져, 그 땅은 한 번만 버틴다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "The sixth star is nearly out, and its ground holds only once."
+                }
+              ]
+            },
+            {
+              "line": "더 늦기 전에 건너야 한다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "We must cross before it is too late."
+                }
+              ]
+            }
+          ],
+          "art": "A huge wooden-and-brass axle at the top of the joinery planet, still now, points like a hand at a grey planet webbed with cracks floating in the night. The three brothers stand on the axle's base beside a pulled brass lever, tiny against it."
+        }
+      ]
+    },
+    {
+      "id": "interlude.crumble",
+      "when": "planetComplete",
+      "replay": "",
+      "pages": [
+        {
+          "id": "1",
+          "image": "cutscene.interlude.crumble.1",
+          "lines": [
+            {
+              "line": "여섯째 별 아래, 무너지는 행성.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Under the sixth star: the Crumbling World."
+                }
+              ]
+            },
+            {
+              "line": "별이 거의 꺼져, 땅이 디딘 걸음을 곧바로 잊는다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Its star is nearly gone, so the ground forgets each step at once."
+                }
+              ]
+            },
+            {
+              "line": "금 간 바닥은 한 번만 버티고, 지나가면 무너졌다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Cracked floor held only once, then fell away behind us."
+                }
+              ]
+            }
+          ],
+          "art": "On a crumbling grey planet, a path of cracked stone tiles: behind the youngest brother the tiles break away into starry darkness, but one tile he crossed has set into smooth, solid, softly glowing stone for those behind.",
+          "rule": {
+            "line": "옛 관측자는 선돌의 수를 세는 문을 세워, 머문 이를 기억하게 했다.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "The old watchers built gates that count the standing stones, so the ground remembers who stayed."
+              }
+            ]
+          }
+        },
+        {
+          "id": "2",
+          "image": "cutscene.interlude.crumble.2",
+          "lines": [
+            {
+              "line": "늘 남겠다던 큰형이, 처음으로 지도만 건넸다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Our eldest, who always wanted to stay, handed on just the map for the first time."
+                }
+              ]
+            },
+            {
+              "line": "남지 않고 건네는 것도, 지키는 일이었다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Handing on without staying was a way of keeping, too."
+                }
+              ]
+            }
+          ],
+          "art": "In front of a heavy stone gate with a row of empty round sockets (it opens for standing stones), the eldest brother (teal scarf) holds out the glowing scroll to the middle brother (ochre scarf) with both hands, and begins to dissolve into a ribbon of starlight. Calm and warm, not sad. No standing stone in this picture.",
+          "rule": {
+            "line": "자루의 둘째 별이 다시 켜졌다. 일곱 중 여섯.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "The second star of the handle is lit again: six of seven."
+              }
+            ]
+          }
+        },
+        {
+          "id": "3",
+          "image": "cutscene.interlude.crumble.3",
+          "lines": [
+            {
+              "line": "부서진 조각들이 떠올라 늪 위에 디딤돌을 놓았다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "The broken pieces rose and laid stepping stones across the bog."
+                }
+              ]
+            },
+            {
+              "line": "그 끝, 일곱째 별 아래에 선돌의 원이 있다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "At the end, under the seventh star, stands the ring of stones."
+                }
+              ]
+            },
+            {
+              "line": "원을 맞출 단 하룻밤이 다가온다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "The one night to align the circle is coming."
+                }
+              ]
+            }
+          ],
+          "art": "Wide view: fragments of the crumbling planet float up and settle as a line of stepping stones over a dark mossy bog. At the far end, on a low hill, a ring of plain grey standing stones under the dipper, whose handle tip leans toward it."
+        }
+      ]
+    },
+    {
+      "id": "interlude.altar",
+      "when": "planetComplete",
+      "replay": "",
+      "pages": [
+        {
+          "id": "1",
+          "image": "cutscene.interlude.altar.1",
+          "lines": [
+            {
+              "line": "일곱째 별 아래, 원형 제단.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Under the seventh star: the Stone Circle."
+                }
+              ]
+            },
+            {
+              "line": "바퀴마다 모든 행성의 물과 이끼가 흘러와 늪이 되었다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Every turn, the water and moss of all the planets ran down here and became the bog."
+                }
+              ]
+            },
+            {
+              "line": "잊힌 걸음이 쌓인 늪에선 한 걸음이 두 걸음만큼 무겁다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "In a bog heavy with forgotten steps, one step weighs as much as two."
+                }
+              ]
+            }
+          ],
+          "art": "The three brothers wade slowly through a dark mossy bog, mud up to their knees, the youngest carrying the scroll high. Ahead, on a low hill, the ring of plain grey standing stones waits under the night sky; behind them their deep footprints fill with starlight.",
+          "rule": {
+            "line": "옛 관측자는 원의 선돌마다 일곱 행성의 셈을 새겨 두었다.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "The old watchers carved the counts of all seven planets into every stone of the circle."
+              }
+            ]
+          }
+        },
+        {
+          "id": "2",
+          "image": "cutscene.interlude.altar.2",
+          "lines": [
+            {
+              "line": "배운 것을 모두 합쳐서야, 원 한가운데에 닿았다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Only everything we had learned, together, brought us to the circle's heart."
+                }
+              ]
+            },
+            {
+              "line": "자루 끝 별이 다시 켜졌다. 일곱 중 일곱.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "The star at the tip of the handle is lit again: seven of seven."
+                }
+              ]
+            },
+            {
+              "line": "머리 위에는 움직이지 않는 별이 있었다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Overhead hung the still star."
+                }
+              ]
+            }
+          ],
+          "art": "Low view from inside the stone circle looking up: on each grey stone seven small simple carved marks (abstract shapes, no letters) glow faintly; overhead one bright still star, with the whole dipper wheeling around it, the tip of its handle almost touching the circle's edge. The three brothers' hooded silhouettes at the bottom edge.",
+          "rule": {
+            "line": "원은 이 바퀴의 하룻밤, 자루 끝이 그 별 아래 설 때만 맞춰진다.",
+            "text": [
+              {
+                "lang": "en",
+                "line": "The circle aligns only on this turn's one night, when the handle's tip stands under that star."
+              }
+            ]
+          }
+        },
+        {
+          "id": "3",
+          "image": "cutscene.interlude.altar.3",
+          "lines": [
+            {
+              "line": "오늘이 그 밤이다. 일곱 별을 하나로 잇는다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Tonight is that night. We will join the seven stars into one."
+                }
+              ]
+            },
+            {
+              "line": "셋이 함께, 마지막 일곱 걸음을 센다.",
+              "text": [
+                {
+                  "lang": "en",
+                  "line": "Together, the three of us count out the last seven steps."
+                }
+              ]
+            }
+          ],
+          "art": "The three brothers stand side by side at the edge of the circle, holding scarf ends, ready to step in. In front of them seven faint star marks wait on the ground leading to the centre stone. Hushed, hopeful."
         }
       ]
     }
