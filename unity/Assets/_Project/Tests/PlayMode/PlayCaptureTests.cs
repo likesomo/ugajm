@@ -1187,6 +1187,32 @@ namespace SevenSteps.Tests.PlayMode
             }
         }
 
+        /// Stage story arc (2026-11-14): stage 2's start line (the steps given away), KO / EN, on the HUD line after the card.
+        /// `unity.sh playcapture StoryArc` -> arc-stage2-{ko,en}.png.
+        [UnityTest]
+        public IEnumerator StoryArc()
+        {
+            foreach (string lang in new[] { "ko", "en" })
+            {
+                PlayEnv.Reset();
+                yield return Start(AppState.Game, AppScenes.Game, "-ui5", "-lang", lang, "-level", "2");
+                var game = Object.FindAnyObjectByType<GameController>();
+                float t0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - t0 < 1f) yield return null;
+                while (game.Overlays.Count > 0) game.Overlays.Pop(); // the chapter card: the start line follows it
+                string want = lang == "ko" ? "내 걸음을 내주어야" : "We give our steps";
+                t0 = Time.realtimeSinceStartup;
+                while (!Object.FindObjectsByType<UnityEngine.UI.Text>(FindObjectsInactive.Exclude).Any(t => t.text.Contains(want)))
+                {
+                    Assert.Less(Time.realtimeSinceStartup - t0, 8f, lang + ": stage 2's start line on screen");
+                    yield return null;
+                }
+                var px = new Pixels();
+                yield return Capture($"arc-stage2-{lang}", px, 0.3f);
+                AssertVaried($"arc-stage2-{lang}", px.Value);
+            }
+        }
+
         /// Stage background check (user report 2026-11-14 "stage 2 background is a mess"): stages 1-3 on load, KO, the chapter
         /// card closed. `unity.sh playcapture StageCheck` -> stage2-check-{1,2,3}.png.
         [UnityTest]

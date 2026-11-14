@@ -34,13 +34,13 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "moss",
-      "story": "문이 코앞이어도, 별은 아직이다.",
+      "story": "내 걸음을 내주어야 문이 열린다.",
       "text": [
         {
           "lang": "en",
           "name": "Arrive Late",
           "hint": "The exit is close. Stepping on it early does nothing. Wander, and arrive on the 7th.",
-          "story": "The door is near. The stars aren't."
+          "story": "We give our steps. The door opens."
         }
       ],
       "map": [
@@ -63,7 +63,7 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "moss",
-      "story": "길은 많아도, 일곱 걸음 길은 하나.",
+      "story": "길은 많아도 일곱 걸음 길은 하나.",
       "text": [
         {
           "lang": "en",
@@ -93,14 +93,14 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "moss",
-      "story": "일곱째에 서면 돌이 되어 붙든다.",
+      "story": "옛 발판은 머무는 이에게 문을 연다.",
       "startLine": "hint",
       "text": [
         {
           "lang": "en",
           "name": "Turned to Stone",
           "hint": "After 7 steps, you choose. KEEP: leave a standing stone here. A stone keeps a plate pressed.",
-          "story": "On the seventh step, stay as stone."
+          "story": "Old plates open doors for whoever stays."
         }
       ],
       "map": [
@@ -123,13 +123,13 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "moss",
-      "story": "발판은 서 있는 이를 기다린다.",
+      "story": "발판마다 제 문이 따로 있다.",
       "text": [
         {
           "lang": "en",
           "name": "The Near Plate",
           "hint": "Two plates. Which one can you stand on with your 7th step?",
-          "story": "The plate waits for someone on it."
+          "story": "Each plate keeps its own door."
         }
       ],
       "map": [
@@ -243,7 +243,7 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "hollow",
-      "story": "혼자는 못 가도, 셋은 잇는다.",
+      "story": "혼자는 못 가도 셋은 잇는다.",
       "text": [
         {
           "lang": "en",
@@ -272,13 +272,13 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "hollow",
-      "story": "일곱째 걸음에만 구멍이 다리가 된다.",
+      "story": "꺼진 땅도 일곱째엔 다리가 된다.",
       "text": [
         {
           "lang": "en",
           "name": "A Bridge of Brothers",
           "hint": "Step into a hole on your 7th step and the fallen brother becomes a bridge.",
-          "story": "Only a seventh step bridges a hole."
+          "story": "Sunken ground bridges on the seventh step."
         }
       ],
       "map": [
@@ -415,13 +415,13 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "carved",
-      "story": "문에 새긴 수는 지나갈 걸음의 차례.",
+      "story": "문은 새긴 수의 걸음에만 열린다.",
       "text": [
         {
           "lang": "en",
           "name": "Numbered Gate",
           "hint": "A numbered gate lets you through only on that step.",
-          "story": "The carved number says which step passes."
+          "story": "Gates open only on their carved step."
         }
       ],
       "map": [
@@ -472,13 +472,13 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "carved",
-      "story": "가까운 길도 새김이 지킨다.",
+      "story": "두 문의 새김을 한 셈에 맞춘다.",
       "text": [
         {
           "lang": "en",
           "name": "Numbers at the Fork",
           "hint": "Numbered gates are not shortcuts. Count which step gets you there.",
-          "story": "Even the short way is carved."
+          "story": "One count must fit both carved gates."
         }
       ],
       "map": [
@@ -502,13 +502,13 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "carved",
-      "story": "먼 문 앞에서 처음부터 다시 센다.",
+      "story": "둘째 걸음을 묻는 문도 있다.",
       "text": [
         {
           "lang": "en",
           "name": "Count Again from One",
           "hint": "From a new start, counting begins again at 1.",
-          "story": "A far door. Count again from one."
+          "story": "Some gates ask for the second step."
         }
       ],
       "map": [
@@ -617,13 +617,13 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "frost",
-      "story": "얼음 위에선 미끄러져도 한 걸음.",
+      "story": "언 땅에선 미끄러져도 한 걸음.",
       "text": [
         {
           "lang": "en",
           "name": "A Slippery First Step",
           "hint": "On ice you slide to the first floor cell past the ice, or stop in front of a wall or stone. Any distance is one step.",
-          "story": "On ice, one slide is one step."
+          "story": "On ice, a full slide counts once."
         }
       ],
       "map": [
@@ -829,13 +829,13 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "joinery",
-      "story": "일곱째에 당기면 벽이 뒤집힌다.",
+      "story": "일곱째에 당긴 레버가 벽을 뒤집는다.",
       "text": [
         {
           "lang": "en",
           "name": "Lowering the Wall",
           "hint": "Step on the lever with your 7th step and the wall goes down. Unlike a plate, one pull is enough.",
-          "story": "On the seventh, the handle flips walls."
+          "story": "On the seventh, the lever flips walls."
         }
       ],
       "map": [
@@ -858,13 +858,13 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "joinery",
-      "story": "하나가 열리면, 하나가 닫힌다.",
+      "story": "내려간 벽은 레버 한 번에 솟는다.",
       "text": [
         {
           "lang": "en",
           "name": "Open One, Close One",
           "hint": "The lever flips every wall. An open way can close.",
-          "story": "One opens, and another closes."
+          "story": "A lowered wall rises at one pull."
         }
       ],
       "map": [
@@ -1041,13 +1041,13 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "crumble",
-      "story": "지난 곳은 무너지고 선 곳은 굳는다.",
+      "story": "금 간 바닥은 한 번만 버틴다.",
       "text": [
         {
           "lang": "en",
           "name": "Floor That Holds Once",
           "hint": "Cracked floor breaks after you cross it. End your 7th step on it and it seals into a path.",
-          "story": "Pass, it falls. Stop, it holds."
+          "story": "Cracked floor holds only once."
         }
       ],
       "map": [
@@ -1100,13 +1100,13 @@
       "bodies": 3,
       "statueCount": 1,
       "chapter": "crumble",
-      "story": "문은 서 있는 선돌의 수를 센다.",
+      "story": "옛 문은 서 있는 선돌을 센다.",
       "text": [
         {
           "lang": "en",
           "name": "Leave Only One",
           "hint": "The number on the gate is the number of standing stones. It opens only at exactly that many.",
-          "story": "The gate counts the stones still standing."
+          "story": "The old gate counts standing stones."
         }
       ],
       "map": [
@@ -1250,13 +1250,13 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "altar",
-      "story": "늪의 진흙은 한 칸에 두 걸음.",
+      "story": "물이 모인 늪, 진흙은 두 걸음.",
       "text": [
         {
           "lang": "en",
           "name": "Two Steps a Square",
           "hint": "Mud takes two steps per square.",
-          "story": "Bog mud takes two steps a square."
+          "story": "In the bog, mud costs two steps."
         }
       ],
       "map": [
@@ -1309,7 +1309,7 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "altar",
-      "story": "얼음은 빠르고, 진흙은 무겁다.",
+      "story": "얼음은 빠르고 진흙은 무겁다.",
       "text": [
         {
           "lang": "en",
@@ -1403,13 +1403,13 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "altar",
-      "story": "흔적 위로 마지막 걸음이 지난다.",
+      "story": "남은 돌도 놓인 다리도 우리 길이다.",
       "text": [
         {
           "lang": "en",
           "name": "Brothers Become the Road",
           "hint": "Cracked floor falls once crossed, and holds if your seventh step ends on it.",
-          "story": "Over the traces, the last steps pass."
+          "story": "Our stones and bridges became the road."
         }
       ],
       "map": [
@@ -1434,13 +1434,13 @@
       "bodies": 3,
       "statueCount": 0,
       "chapter": "altar",
-      "story": "일곱 칸 일곱 줄, 원이 가까워진다.",
+      "story": "자루 끝 별이 깬다. 원이 가깝다.",
       "text": [
         {
           "lang": "en",
           "name": "Seven Sevens",
           "hint": "Seven squares by seven squares. Count them all.",
-          "story": "Seven by seven. The circle draws near."
+          "story": "The last star stirs. The circle nears."
         }
       ],
       "map": [
@@ -1467,13 +1467,13 @@
       "bodies": 3,
       "statueCount": 2,
       "chapter": "altar",
-      "story": "이번 바퀴의 하룻밤, 원 한가운데로.",
+      "story": "오늘 밤 일곱째 걸음이 별을 잇는다.",
       "text": [
         {
           "lang": "en",
           "name": "The Stone Circle",
           "hint": "The altar gate counts the standing stones.",
-          "story": "One night this turn. Into the circle."
+          "story": "Tonight a seventh step joins the stars."
         }
       ],
       "map": [

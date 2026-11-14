@@ -18,10 +18,10 @@ export const LEVELS = [
   {
     name: '늦게 도착하기',
     chapter: 'moss',
-    story: '문이 코앞이어도, 별은 아직이다.',
+    story: '내 걸음을 내주어야 문이 열린다.',
     hint: '출구가 가깝다. 일찍 밟으면 아무 일도 없다. 돌아서 7번째에 도착하자.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Arrive Late', hint: 'The exit is close. Stepping on it early does nothing. Wander, and arrive on the 7th.', story: 'The door is near. The stars aren\'t.' }],
+    text: [{ lang: 'en', name: 'Arrive Late', hint: 'The exit is close. Stepping on it early does nothing. Wander, and arrive on the 7th.', story: 'We give our steps. The door opens.' }],
     map: [
       '#######',
       '#.....#',
@@ -33,7 +33,7 @@ export const LEVELS = [
   {
     name: '딱 맞는 길',
     chapter: 'moss',
-    story: '길은 많아도, 일곱 걸음 길은 하나.',
+    story: '길은 많아도 일곱 걸음 길은 하나.',
     hint: '출구까지 꼭 7걸음인 길은 하나뿐이다.',
     bodies: 3,
     text: [{ lang: 'en', name: 'Just the Right Path', hint: 'Only one path to the exit is exactly 7 steps long.', story: 'Many roads. Only one is seven steps.' }],
@@ -49,11 +49,11 @@ export const LEVELS = [
   {
     name: '돌이 된 몸',
     chapter: 'moss',
-    story: '일곱째에 서면 돌이 되어 붙든다.',
+    story: '옛 발판은 머무는 이에게 문을 연다.',
     hint: '7걸음을 다 쓰면 고른다. KEEP: 그 자리에 선돌을 남긴다. 선돌은 발판을 계속 눌러 준다.',
     startLine: 'hint',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Turned to Stone', hint: 'After 7 steps, you choose. KEEP: leave a standing stone here. A stone keeps a plate pressed.', story: 'On the seventh step, stay as stone.' }],
+    text: [{ lang: 'en', name: 'Turned to Stone', hint: 'After 7 steps, you choose. KEEP: leave a standing stone here. A stone keeps a plate pressed.', story: 'Old plates open doors for whoever stays.' }],
     map: [
       '#########',
       '#S....a.#',
@@ -65,10 +65,10 @@ export const LEVELS = [
   {
     name: '가까운 발판',
     chapter: 'moss',
-    story: '발판은 서 있는 이를 기다린다.',
+    story: '발판마다 제 문이 따로 있다.',
     hint: '발판이 둘. 7번째 걸음으로 설 수 있는 쪽은 어디일까?',
     bodies: 3,
-    text: [{ lang: 'en', name: 'The Near Plate', hint: 'Two plates. Which one can you stand on with your 7th step?', story: 'The plate waits for someone on it.' }],
+    text: [{ lang: 'en', name: 'The Near Plate', hint: 'Two plates. Which one can you stand on with your 7th step?', story: 'Each plate keeps its own door.' }],
     map: [
       '########',
       '#b.S..a#',
@@ -129,7 +129,7 @@ export const LEVELS = [
   {
     name: '바통 넘기기',
     chapter: 'hollow',
-    story: '혼자는 못 가도, 셋은 잇는다.',
+    story: '혼자는 못 가도 셋은 잇는다.',
     hint: '혼자서는 닿지 않는다. 형제에게 7걸음째 자리를 넘겨 잇자.',
     bodies: 3,
     text: [{ lang: 'en', name: 'Pass It On', hint: 'No one gets there alone. Hand your 7th-step spot to the next brother.', story: 'Too far for one. Not for three.' }],
@@ -144,10 +144,10 @@ export const LEVELS = [
   {
     name: '몸으로 놓는 다리',
     chapter: 'hollow',
-    story: '일곱째 걸음에만 구멍이 다리가 된다.',
+    story: '꺼진 땅도 일곱째엔 다리가 된다.',
     hint: '구멍을 7번째 걸음으로 밟으면, 떨어진 형제가 다리가 된다.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'A Bridge of Brothers', hint: 'Step into a hole on your 7th step and the fallen brother becomes a bridge.', story: 'Only a seventh step bridges a hole.' }],
+    text: [{ lang: 'en', name: 'A Bridge of Brothers', hint: 'Step into a hole on your 7th step and the fallen brother becomes a bridge.', story: 'Sunken ground bridges on the seventh step.' }],
     map: [
       '########',
       '#S..o.E#',
@@ -217,10 +217,10 @@ export const LEVELS = [
   {
     name: '숫자 문',
     chapter: 'carved',
-    story: '문에 새긴 수는 지나갈 걸음의 차례.',
+    story: '문은 새긴 수의 걸음에만 열린다.',
     hint: '숫자 문은 적힌 숫자와 같은 번째 걸음에만 지나갈 수 있다.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Numbered Gate', hint: 'A numbered gate lets you through only on that step.', story: 'The carved number says which step passes.' }],
+    text: [{ lang: 'en', name: 'Numbered Gate', hint: 'A numbered gate lets you through only on that step.', story: 'Gates open only on their carved step.' }],
     map: [
       '########',
       '#.#.####',
@@ -246,10 +246,10 @@ export const LEVELS = [
   {
     name: '갈림길의 숫자',
     chapter: 'carved',
-    story: '가까운 길도 새김이 지킨다.',
+    story: '두 문의 새김을 한 셈에 맞춘다.',
     hint: '숫자 문은 지름길이 아니다. 몇 번째에 닿는지 세자.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Numbers at the Fork', hint: 'Numbered gates are not shortcuts. Count which step gets you there.', story: 'Even the short way is carved.' }],
+    text: [{ lang: 'en', name: 'Numbers at the Fork', hint: 'Numbered gates are not shortcuts. Count which step gets you there.', story: 'One count must fit both carved gates.' }],
     map: [
       '#########',
       '#......##',
@@ -262,10 +262,10 @@ export const LEVELS = [
   {
     name: '처음부터 다시 세기',
     chapter: 'carved',
-    story: '먼 문 앞에서 처음부터 다시 센다.',
+    story: '둘째 걸음을 묻는 문도 있다.',
     hint: '새 출발점에서는 1부터 다시 센다.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Count Again from One', hint: 'From a new start, counting begins again at 1.', story: 'A far door. Count again from one.' }],
+    text: [{ lang: 'en', name: 'Count Again from One', hint: 'From a new start, counting begins again at 1.', story: 'Some gates ask for the second step.' }],
     map: [
       '###########',
       '#S....2..E#',
@@ -321,10 +321,10 @@ export const LEVELS = [
   {
     name: '미끄러운 첫걸음',
     chapter: 'frost',
-    story: '얼음 위에선 미끄러져도 한 걸음.',
+    story: '언 땅에선 미끄러져도 한 걸음.',
     hint: '얼음에선 얼음이 끝난 첫 바닥 칸, 또는 벽이나 선돌 앞까지 미끄러진다. 몇 칸을 가도 한 걸음.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'A Slippery First Step', hint: 'On ice you slide to the first floor cell past the ice, or stop in front of a wall or stone. Any distance is one step.', story: 'On ice, one slide is one step.' }],
+    text: [{ lang: 'en', name: 'A Slippery First Step', hint: 'On ice you slide to the first floor cell past the ice, or stop in front of a wall or stone. Any distance is one step.', story: 'On ice, a full slide counts once.' }],
     map: [
       '#########',
       '#S~~~~~.#',
@@ -435,10 +435,10 @@ export const LEVELS = [
   {
     name: '내리는 벽',
     chapter: 'joinery',
-    story: '일곱째에 당기면 벽이 뒤집힌다.',
+    story: '일곱째에 당긴 레버가 벽을 뒤집는다.',
     hint: '레버를 7번째 걸음으로 밟으면 벽이 내려간다. 발판과 달리 한 번 당기면 그대로다.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Lowering the Wall', hint: 'Step on the lever with your 7th step and the wall goes down. Unlike a plate, one pull is enough.', story: 'On the seventh, the handle flips walls.' }],
+    text: [{ lang: 'en', name: 'Lowering the Wall', hint: 'Step on the lever with your 7th step and the wall goes down. Unlike a plate, one pull is enough.', story: 'On the seventh, the lever flips walls.' }],
     map: [
       '#########',
       '#S....L.#',
@@ -450,10 +450,10 @@ export const LEVELS = [
   {
     name: '열면 닫힌다',
     chapter: 'joinery',
-    story: '하나가 열리면, 하나가 닫힌다.',
+    story: '내려간 벽은 레버 한 번에 솟는다.',
     hint: '레버는 모든 벽을 뒤집는다. 열린 길도 닫힌다.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Open One, Close One', hint: 'The lever flips every wall. An open way can close.', story: 'One opens, and another closes.' }],
+    text: [{ lang: 'en', name: 'Open One, Close One', hint: 'The lever flips every wall. An open way can close.', story: 'A lowered wall rises at one pull.' }],
     map: [
       '##########',
       '#S..r..L.#',
@@ -549,10 +549,10 @@ export const LEVELS = [
   {
     name: '한 번만 버티는 바닥',
     chapter: 'crumble',
-    story: '지난 곳은 무너지고 선 곳은 굳는다.',
+    story: '금 간 바닥은 한 번만 버틴다.',
     hint: '금 간 바닥은 지나가면 무너진다. 7번째 걸음으로 그 위에 서면 굳어서 길이 된다.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Floor That Holds Once', hint: 'Cracked floor breaks after you cross it. End your 7th step on it and it seals into a path.', story: 'Pass, it falls. Stop, it holds.' }],
+    text: [{ lang: 'en', name: 'Floor That Holds Once', hint: 'Cracked floor breaks after you cross it. End your 7th step on it and it seals into a path.', story: 'Cracked floor holds only once.' }],
     map: [
       '#########',
       '#S..x.a.#',
@@ -580,10 +580,10 @@ export const LEVELS = [
   {
     name: '하나만 남겨라',
     chapter: 'crumble',
-    story: '문은 서 있는 선돌의 수를 센다.',
+    story: '옛 문은 서 있는 선돌을 센다.',
     hint: '문의 숫자는 서 있는 선돌 수. 정확히 그 수일 때만 열린다.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Leave Only One', hint: 'The number on the gate is the number of standing stones. It opens only at exactly that many.', story: 'The gate counts the stones still standing.' }],
+    text: [{ lang: 'en', name: 'Leave Only One', hint: 'The number on the gate is the number of standing stones. It opens only at exactly that many.', story: 'The old gate counts standing stones.' }],
     statueCount: 1,
     map: [
       '########',
@@ -665,10 +665,10 @@ export const LEVELS = [
   {
     name: '한 칸에 두 걸음',
     chapter: 'altar',
-    story: '늪의 진흙은 한 칸에 두 걸음.',
+    story: '물이 모인 늪, 진흙은 두 걸음.',
     hint: '진흙은 한 칸에 두 걸음이 든다.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Two Steps a Square', hint: 'Mud takes two steps per square.', story: 'Bog mud takes two steps a square.' }],
+    text: [{ lang: 'en', name: 'Two Steps a Square', hint: 'Mud takes two steps per square.', story: 'In the bog, mud costs two steps.' }],
     map: [
       '#########',
       '#S..m..E#',
@@ -696,7 +696,7 @@ export const LEVELS = [
   {
     name: '얼음과 진흙',
     chapter: 'altar',
-    story: '얼음은 빠르고, 진흙은 무겁다.',
+    story: '얼음은 빠르고 진흙은 무겁다.',
     hint: '얼음은 여러 칸에 한 걸음, 진흙은 한 칸에 두 걸음.',
     bodies: 3,
     text: [{ lang: 'en', name: 'Ice and Mud', hint: 'Ice: many squares, one step. Mud: one square, two steps.', story: 'Ice runs fast. Mud weighs heavy.' }],
@@ -749,10 +749,10 @@ export const LEVELS = [
   {
     name: '길이 된 형제들',
     chapter: 'altar',
-    story: '흔적 위로 마지막 걸음이 지난다.',
+    story: '남은 돌도 놓인 다리도 우리 길이다.',
     hint: '금 간 바닥은 지나가면 무너지고, 7번째 걸음으로 서면 굳는다.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Brothers Become the Road', hint: 'Cracked floor falls once crossed, and holds if your seventh step ends on it.', story: 'Over the traces, the last steps pass.' }],
+    text: [{ lang: 'en', name: 'Brothers Become the Road', hint: 'Cracked floor falls once crossed, and holds if your seventh step ends on it.', story: 'Our stones and bridges became the road.' }],
     map: [
       '##########',
       '#..Sx#.x.#',
@@ -766,10 +766,10 @@ export const LEVELS = [
   {
     name: '일곱의 일곱',
     chapter: 'altar',
-    story: '일곱 칸 일곱 줄, 원이 가까워진다.',
+    story: '자루 끝 별이 깬다. 원이 가깝다.',
     hint: '일곱 칸 곱하기 일곱 칸. 전부 세자.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'Seven Sevens', hint: 'Seven squares by seven squares. Count them all.', story: 'Seven by seven. The circle draws near.' }],
+    text: [{ lang: 'en', name: 'Seven Sevens', hint: 'Seven squares by seven squares. Count them all.', story: 'The last star stirs. The circle nears.' }],
     map: [
       '#########',
       '#.S.....#',
@@ -785,10 +785,10 @@ export const LEVELS = [
   {
     name: '원형 제단',
     chapter: 'altar',
-    story: '이번 바퀴의 하룻밤, 원 한가운데로.',
+    story: '오늘 밤 일곱째 걸음이 별을 잇는다.',
     hint: '제단의 문은 서 있는 선돌 수를 센다.',
     bodies: 3,
-    text: [{ lang: 'en', name: 'The Stone Circle', hint: 'The altar gate counts the standing stones.', story: 'One night this turn. Into the circle.' }],
+    text: [{ lang: 'en', name: 'The Stone Circle', hint: 'The altar gate counts the standing stones.', story: 'Tonight a seventh step joins the stars.' }],
     statueCount: 2,
     map: [
       '#########',

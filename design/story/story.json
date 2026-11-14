@@ -182,7 +182,7 @@
       "on": "ending", "chapter": "", "brother": 0, "stones": -1, "card": 4, "after": "",
       "image": "ending.4",
       "lines": [
-        { "id": "1", "line": "다음 길은 우리가 그린다.", "text": [{ "lang": "en", "line": "The next road is ours to draw." }] }
+        { "id": "1", "line": "문이 열린 고향으로 셋이 걷는다.", "text": [{ "lang": "en", "line": "We three walk home through open gates." }] }
       ]
     },
     {
